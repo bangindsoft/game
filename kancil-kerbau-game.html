@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kancil Mencuri Timun - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  #kkg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #3A2E1F;
+    background: linear-gradient(180deg, #E8F4E1 0%, #F7F3E8 100%);
+    border: 3px solid #7CB342;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #kkg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #4C7A25;
+  }
+  #kkg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #kkg-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    margin-bottom: 6px;
+    padding: 0 2px;
+  }
+  #kkg-score { background: #FFC857; padding: 3px 12px; border-radius: 20px; color: #5c3d00; font-weight: 700; }
+  #kkg-status {
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    transition: background .15s, color .15s;
+    background: #2A9D8F;
+    color: #eafff9;
+  }
+  #kkg-status.danger { background: #E76F51; color: #fff2ee; }
+  #kkg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #6b8f47;
+    background: #BEE3F8;
+  }
+  #kkg-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .kkg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(58,46,31,0.82);
+    color: #fff;
+    padding: 20px;
+  }
+  .kkg-overlay.show { display: flex; }
+  .kkg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .kkg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .kkg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .kkg-btn:active { transform: scale(0.97); }
+  .kkg-link { color: #FFE29A; font-size: 12px; margin-top: 10px; text-decoration: underline; }
+  #kkg-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 10px;
+  }
+  #kkg-dpad {
+    display: grid;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px 44px;
+    gap: 4px;
+  }
+  .kkg-dbtn {
+    background: #7CB342;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    cursor: pointer;
+  }
+  .kkg-dbtn:active { background: #5f8f2c; }
+  #kkg-hint { text-align: center; font-size: 12px; color: #6b5f4f; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="kkg-wrap">
+  <h2>🦌 Kancil Mencuri Timun</h2>
+  <p id="kkg-sub">Bantu Si Kancil mengambil timun sambil bersembunyi di balik Kerbau &mdash; jangan sampai ketahuan Pak Tani!</p>
+
+  <div id="kkg-hud">
+    <span id="kkg-score">🥒 0/6</span>
+    <span id="kkg-status">🙈 Tersembunyi</span>
+  </div>
+
+  <div id="kkg-canvas-holder">
+    <canvas id="kkg-canvas"></canvas>
+
+    <div class="kkg-overlay show" id="kkg-start">
+      <h3>Kancil Mencuri Timun</h3>
+      <p>Kancil ingin mengambil timun di ladang Pak Tani. Kancil hanya aman kalau berdiri tepat di balik tubuh besar Kerbau, di sisi yang berlawanan dari Pak Tani. Kumpulkan 6 timun, lalu kembali ke titik awal di sebelah kiri untuk menang!</p>
+      <button class="kkg-btn" id="kkg-startBtn">Mulai Main</button>
+    </div>
+
+    <div class="kkg-overlay" id="kkg-caught">
+      <h3>Ketahuan Pak Tani! 😱</h3>
+      <p>"Kurang ajar, siapa yang berani mencuri timunku!" Pak Tani hampir memergokimu. Coba lagi, dan ingat: selalu berlindung di balik Kerbau ya!</p>
+      <button class="kkg-btn" id="kkg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="kkg-overlay" id="kkg-win">
+      <h3>Berhasil! 🥒🎉</h3>
+      <p>Kancil berhasil mengumpulkan semua timun tanpa ketahuan Pak Tani. Cerdik sekali! Tapi hati-hati, dalam dongeng aslinya, Kerbau yang baik hati justru yang akhirnya kena getahnya. Jangan ditiru ya, jujur itu lebih baik daripada licik.</p>
+      <button class="kkg-btn" id="kkg-playAgainBtn">Main Lagi</button>
+      <a class="kkg-link" href="https://caritasato.blogspot.com/2014/10/dongeng-si-kancil-dan-kerbau-dungu.html" target="_blank" rel="noopener">Baca dongeng lengkapnya di blog</a>
+    </div>
+  </div>
+
+  <div id="kkg-controls">
+    <div id="kkg-dpad">
+      <span></span>
+      <button class="kkg-dbtn" data-dir="up">▲</button>
+      <span></span>
+      <button class="kkg-dbtn" data-dir="left">◀</button>
+      <span></span>
+      <button class="kkg-dbtn" data-dir="right">▶</button>
+      <span></span>
+      <button class="kkg-dbtn" data-dir="down">▼</button>
+      <span></span>
+    </div>
+  </div>
+  <p id="kkg-hint">Gunakan tombol panah / WASD di keyboard, atau tombol arah di atas pada layar sentuh.</p>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById('kkg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var scoreEl = document.getElementById('kkg-score');
+  var statusEl = document.getElementById('kkg-status');
+  var startOverlay = document.getElementById('kkg-start');
+  var caughtOverlay = document.getElementById('kkg-caught');
+  var winOverlay = document.getElementById('kkg-win');
+
+  var TOTAL_TIMUN = 6;
+  var HIDE_RADIUS = 40;
+  var SIGHT_RADIUS = 210;
+  var KANCIL_SPEED = 150;
+  var KANCIL_R = 16;
+
+  var state = 'idle';
+  var t = 0;
+
+  var kancil = { x: 55, y: 380 };
+  var kerbau = { x: 200, y: 300, dir: 1, speed: 42, minX: 150, maxX: 650 };
+  var pakTani = { x: 250, y: 78, dir: 1, speed: 26, minX: 250, maxX: 600 };
+  var escapeZone = { x: 45, y: 380, r: 30 };
+
+  var timunPositions = [
+    {x:300,y:230},{x:430,y:200},{x:560,y:250},
+    {x:270,y:340},{x:400,y:360},{x:540,y:340}
+  ];
+  var timuns = [];
+
+  var keys = { up:false, down:false, left:false, right:false };
+  var collected = 0;
+  var floaters = [];
+
+  function resetGame(){
+    kancil.x = 55; kancil.y = 380;
+    kerbau.x = 200; kerbau.dir = 1;
+    pakTani.x = 250; pakTani.dir = 1;
+    collected = 0;
+    timuns = timunPositions.map(function(p){ return {x:p.x, y:p.y, taken:false}; });
+    floaters = [];
+    updateScoreHUD();
+  }
+
+  function updateScoreHUD(){
+    scoreEl.textContent = '🥒 ' + collected + '/' + TOTAL_TIMUN;
+  }
+
+  function dist(a,b){
+    var dx=a.x-b.x, dy=a.y-b.y;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  function getSafeSpot(){
+    var vx = kerbau.x - pakTani.x, vy = kerbau.y - pakTani.y;
+    var len = Math.sqrt(vx*vx+vy*vy) || 1;
+    vx/=len; vy/=len;
+    return { x: kerbau.x + vx*34, y: kerbau.y + vy*34 };
+  }
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  var lastTime = null;
+  function step(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    if(state==='playing'){
+      update(dt);
+    }
+    draw();
+    requestAnimationFrame(step);
+  }
+
+  function update(dt){
+    kerbau.x += kerbau.dir * kerbau.speed * dt;
+    if(kerbau.x > kerbau.maxX){ kerbau.x = kerbau.maxX; kerbau.dir = -1; }
+    if(kerbau.x < kerbau.minX){ kerbau.x = kerbau.minX; kerbau.dir = 1; }
+
+    pakTani.x += pakTani.dir * pakTani.speed * dt;
+    if(pakTani.x > pakTani.maxX){ pakTani.x = pakTani.maxX; pakTani.dir = -1; }
+    if(pakTani.x < pakTani.minX){ pakTani.x = pakTani.minX; pakTani.dir = 1; }
+
+    var mx=0, my=0;
+    if(keys.up) my -= 1;
+    if(keys.down) my += 1;
+    if(keys.left) mx -= 1;
+    if(keys.right) mx += 1;
+    if(mx!==0 && my!==0){ mx*=0.7071; my*=0.7071; }
+    kancil.x += mx * KANCIL_SPEED * dt;
+    kancil.y += my * KANCIL_SPEED * dt;
+    kancil.x = clamp(kancil.x, 20, 780);
+    kancil.y = clamp(kancil.y, 55, 430);
+
+    var safeSpot = getSafeSpot();
+    var hidden = dist(kancil, safeSpot) < HIDE_RADIUS;
+    var seen = dist(kancil, pakTani) < SIGHT_RADIUS && !hidden;
+
+    statusEl.textContent = seen ? '👀 Terlihat!' : '🙈 Tersembunyi';
+    statusEl.className = seen ? 'danger' : '';
+
+    if(seen){
+      triggerCaught();
+      return;
+    }
+
+    if(hidden){
+      for(var i=0;i<timuns.length;i++){
+        var tm = timuns[i];
+        if(!tm.taken && dist(kancil, tm) < 26){
+          tm.taken = true;
+          collected++;
+          updateScoreHUD();
+          floaters.push({x:tm.x, y:tm.y, life:1});
+        }
+      }
+    }
+
+    if(collected >= TOTAL_TIMUN && dist(kancil, escapeZone) < escapeZone.r){
+      triggerWin();
+    }
+
+    for(var f=floaters.length-1; f>=0; f--){
+      floaters[f].y -= 30*dt;
+      floaters[f].life -= dt*1.2;
+      if(floaters[f].life<=0) floaters.splice(f,1);
+    }
+  }
+
+  function triggerCaught(){
+    state = 'caught';
+    caughtOverlay.classList.add('show');
+  }
+  function triggerWin(){
+    state = 'won';
+    winOverlay.classList.add('show');
+  }
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    var sky = ctx.createLinearGradient(0,0,0,150);
+    sky.addColorStop(0,'#BEE3F8');
+    sky.addColorStop(1,'#EAF6E9');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,150);
+
+    ctx.fillStyle = '#DCEFC4';
+    ctx.fillRect(0,150,W,H-150);
+
+    ctx.strokeStyle = 'rgba(85,139,47,0.35)';
+    ctx.lineWidth = 2;
+    for(var row=170; row<H; row+=34){
+      ctx.beginPath();
+      ctx.moveTo(0,row);
+      ctx.lineTo(W,row);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(85,139,47,0.5)';
+    for(var lx=20; lx<W; lx+=46){
+      for(var ly=170; ly<H; ly+=34){
+        ctx.beginPath();
+        ctx.arc(lx + (ly%68===0?0:23), ly+8, 5, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    ctx.fillStyle = 'rgba(141,110,99,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(45, 400, 42, 24, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    var sightGrad = ctx.createRadialGradient(pakTani.x,pakTani.y,10,pakTani.x,pakTani.y,SIGHT_RADIUS);
+    sightGrad.addColorStop(0,'rgba(231,111,81,0.28)');
+    sightGrad.addColorStop(1,'rgba(231,111,81,0)');
+    ctx.fillStyle = sightGrad;
+    ctx.beginPath();
+    ctx.arc(pakTani.x, pakTani.y, SIGHT_RADIUS, 0, Math.PI*2);
+    ctx.fill();
+
+    var safeSpot = getSafeSpot();
+    var pulse = 1 + 0.06*Math.sin(t*4);
+    var safeGrad = ctx.createRadialGradient(safeSpot.x,safeSpot.y,4,safeSpot.x,safeSpot.y,HIDE_RADIUS*pulse);
+    safeGrad.addColorStop(0,'rgba(42,157,143,0.45)');
+    safeGrad.addColorStop(1,'rgba(42,157,143,0)');
+    ctx.fillStyle = safeGrad;
+    ctx.beginPath();
+    ctx.arc(safeSpot.x, safeSpot.y, HIDE_RADIUS*pulse, 0, Math.PI*2);
+    ctx.fill();
+
+    if(collected >= TOTAL_TIMUN){
+      ctx.fillStyle = 'rgba(255,200,87,0.35)';
+      ctx.beginPath();
+      ctx.arc(escapeZone.x, escapeZone.y, escapeZone.r*(1+0.08*Math.sin(t*5)), 0, Math.PI*2);
+      ctx.fill();
+      drawEmoji('🏡', escapeZone.x, escapeZone.y-2, 30);
+    }
+
+    timuns.forEach(function(tm){
+      if(!tm.taken) drawEmoji('🥒', tm.x, tm.y, 26);
+    });
+
+    drawEmoji('👨\u200d🌾', pakTani.x, pakTani.y, 40);
+    drawEmoji('🐃', kerbau.x, kerbau.y, 46);
+
+    var bob = Math.sin(t*8)*2;
+    drawEmoji('🦌', kancil.x, kancil.y+bob, 32);
+
+    ctx.font = '700 13px Nunito, sans-serif';
+    ctx.fillStyle = '#4C7A25';
+    floaters.forEach(function(f){
+      ctx.globalAlpha = Math.max(0,f.life);
+      ctx.fillText('+1', f.x, f.y-10);
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  window.addEventListener('keydown', function(e){
+    var k = e.key.toLowerCase();
+    if(k==='arrowup'||k==='w') keys.up = true;
+    if(k==='arrowdown'||k==='s') keys.down = true;
+    if(k==='arrowleft'||k==='a') keys.left = true;
+    if(k==='arrowright'||k==='d') keys.right = true;
+    if(['arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>-1) e.preventDefault();
+  });
+  window.addEventListener('keyup', function(e){
+    var k = e.key.toLowerCase();
+    if(k==='arrowup'||k==='w') keys.up = false;
+    if(k==='arrowdown'||k==='s') keys.down = false;
+    if(k==='arrowleft'||k==='a') keys.left = false;
+    if(k==='arrowright'||k==='d') keys.right = false;
+  });
+
+  document.querySelectorAll('.kkg-dbtn').forEach(function(btn){
+    var dir = btn.getAttribute('data-dir');
+    var setKey = function(v){ keys[dir] = v; };
+    btn.addEventListener('pointerdown', function(e){ e.preventDefault(); setKey(true); });
+    btn.addEventListener('pointerup', function(e){ e.preventDefault(); setKey(false); });
+    btn.addEventListener('pointerleave', function(){ setKey(false); });
+    btn.addEventListener('pointercancel', function(){ setKey(false); });
+  });
+
+  document.getElementById('kkg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+    state = 'playing';
+  });
+  document.getElementById('kkg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+    state = 'playing';
+  });
+  document.getElementById('kkg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+    state = 'playing';
+  });
+
+  resize();
+  resetGame();
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
