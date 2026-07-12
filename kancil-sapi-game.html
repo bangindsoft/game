@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kancil Menyelamatkan Anak Sapi - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #ksg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E3A3A;
+    background: linear-gradient(180deg, #E4F3F2 0%, #F7F3E8 100%);
+    border: 3px solid #4C9A96;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #ksg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2E7A75;
+  }
+  #ksg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #ksg-hud {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  #ksg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #ksg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #4C9A96;
+    background: #BEE3F8;
+  }
+  #ksg-canvas { display: block; width: 100%; height: 100%; }
+  .ksg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(30,46,45,0.85);
+    color: #fff;
+    padding: 20px;
+  }
+  .ksg-overlay.show { display: flex; }
+  .ksg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .ksg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .ksg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .ksg-btn:active { transform: scale(0.97); }
+  .ksg-link { color: #C9F0EC; font-size: 12px; margin-top: 10px; text-decoration: underline; }
+
+  #ksg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #4C9A96;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #ksg-action-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  #ksg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #4C9A96;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #ksg-actionBtn.hold { background: #6B8F47; }
+  #ksg-actionBtn.qte { background: #E76F51; }
+  #ksg-actionBtn:active { transform: scale(0.97); }
+  #ksg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #ksg-progressWrap.show { display: block; }
+  #ksg-progressBar {
+    height: 100%;
+    width: 0%;
+    background: #6B8F47;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="ksg-wrap">
+  <h2>🐄 Kancil Menyelamatkan Anak Sapi</h2>
+  <p id="ksg-sub">Bantu Anak Sapi lolos dari Pak Buaya yang licik, berkat akal cerdik Si Kancil!</p>
+
+  <div id="ksg-hud"><span id="ksg-phase">Tahap 1 / 3</span></div>
+
+  <div id="ksg-canvas-holder">
+    <canvas id="ksg-canvas"></canvas>
+
+    <div class="ksg-overlay show" id="ksg-start">
+      <h3>Kancil Menyelamatkan Anak Sapi</h3>
+      <p>Anak Sapi menolong Pak Buaya yang terjepit pohon tumbang, tapi malah digigit! Ikuti ceritanya dan bantu setiap tahap sampai Si Kancil berhasil menyelamatkan Anak Sapi.</p>
+      <button class="ksg-btn" id="ksg-startBtn">Mulai Cerita</button>
+    </div>
+
+    <div class="ksg-overlay" id="ksg-caught">
+      <h3>Hampir Tertangkap! 😬</h3>
+      <p>Pak Buaya keburu lepas sebelum kalian sempat kabur. Coba lagi, ikuti lagi ceritanya dari awal!</p>
+      <button class="ksg-btn" id="ksg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="ksg-overlay" id="ksg-win">
+      <h3>Berhasil Kabur! 🎉</h3>
+      <p>Berkat kecerdikan Si Kancil, Anak Sapi berhasil selamat dari Pak Buaya yang ingkar janji. Ingat ya, menolong itu baik, tapi tetap harus waspada dan bijak seperti Si Kancil.</p>
+      <button class="ksg-btn" id="ksg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="ksg-caption">Bersiap memulai cerita...</div>
+
+  <div id="ksg-progressWrap"><div id="ksg-progressBar"></div></div>
+  <div id="ksg-action-row">
+    <button id="ksg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById('ksg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('ksg-phase');
+  var captionEl = document.getElementById('ksg-caption');
+  var actionBtn = document.getElementById('ksg-actionBtn');
+  var progressWrap = document.getElementById('ksg-progressWrap');
+  var progressBar = document.getElementById('ksg-progressBar');
+  var startOverlay = document.getElementById('ksg-start');
+  var caughtOverlay = document.getElementById('ksg-caught');
+  var winOverlay = document.getElementById('ksg-win');
+
+  var LOG_TRAPPED = { x: 430, y: 300 };
+  var LOG_RELEASED = { x: 620, y: 260 };
+  var sapi = { x: 380, y: 300 };
+  var buaya = { x: 440, y: 320 };
+  var kancil = { x: 120, y: 330, visible: false };
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var biteFlash = 0;
+  var kancilTargetX = 260;
+
+  var qteActive = false;
+  var qteTimeLeft = 0;
+  var QTE_DURATION = 1.7;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1,
+      text:'Anak Sapi mendengar teriakan minta tolong dari Pak Buaya yang terjepit pohon tumbang di sungai.' },
+    { type:'caption', phase:1,
+      text:'"Tolong aku hai Sapi yang baik," pinta Pak Buaya. "Aku janji tidak akan memakanmu."' },
+    { type:'hold', phase:1, dir:'release',
+      text:'Tahan tombol di bawah untuk membantu Anak Sapi mendorong batang pohon.' },
+    { type:'bite', phase:1,
+      text:'Setelah bebas, Pak Buaya malah menggigit kaki Anak Sapi! Ingkar janji!' },
+    { type:'caption', phase:2,
+      text:'Untunglah Si Kancil lewat. "Ulangi dulu kejadiannya dari awal," kata Si Kancil dengan tenang.' },
+    { type:'hold', phase:2, dir:'trap',
+      text:'Tahan tombol di bawah untuk mengembalikan batang pohon ke posisi semula di atas Pak Buaya.' },
+    { type:'caption', phase:3,
+      text:'Pak Buaya kembali terjepit seperti semula! Ini kesempatan untuk kabur secepatnya!' },
+    { type:'qte', phase:3,
+      text:'Cepat, tekan tombol LARI sebelum Pak Buaya sempat lepas lagi!' }
+  ];
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = 'Tahap ' + p + ' / 3'; }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    qteActive = false;
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = 'Lanjut ▶';
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'bite'){
+      actionBtn.className = '';
+      actionBtn.textContent = 'Lanjut ▶';
+      progressWrap.classList.remove('show');
+      biteFlash = 1;
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = 'Tahan untuk Dorong';
+      progressWrap.classList.add('show');
+    } else if(step.type === 'qte'){
+      actionBtn.className = 'qte';
+      actionBtn.textContent = '🏃 LARI!';
+      progressWrap.classList.remove('show');
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+    if(steps[stepIndex].phase >= 2) kancil.visible = true;
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    kancil.visible = false;
+    biteFlash = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption' || step.type === 'bite'){
+      nextStep();
+    } else if(step.type === 'qte'){
+      if(qteActive){
+        qteActive = false;
+        nextStep();
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('ksg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('ksg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('ksg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function lerp(a,b,f){ return a + (b-a)*f; }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      qteTimeLeft -= dt;
+      if(qteTimeLeft <= 0){
+        qteActive = false;
+        caughtOverlay.classList.add('show');
+      }
+    }
+
+    if(biteFlash > 0) biteFlash = Math.max(0, biteFlash - dt*1.2);
+
+    kancil.x = lerp(kancil.x, kancil.visible ? kancilTargetX : 120, dt*3);
+
+    var holdStep = (step && step.type === 'hold') ? step : null;
+    var logPos;
+    if(holdStep){
+      var f = progress;
+      if(holdStep.dir === 'release'){
+        logPos = { x: lerp(LOG_TRAPPED.x, LOG_RELEASED.x, f), y: lerp(LOG_TRAPPED.y, LOG_RELEASED.y, f) };
+      } else {
+        logPos = { x: lerp(LOG_RELEASED.x, LOG_TRAPPED.x, f), y: lerp(LOG_RELEASED.y, LOG_TRAPPED.y, f) };
+      }
+    } else if(stepIndex <= 2){
+      logPos = LOG_TRAPPED;
+    } else if(stepIndex <= 4){
+      logPos = LOG_RELEASED;
+    } else {
+      logPos = LOG_TRAPPED;
+    }
+
+    draw(logPos, step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function draw(logPos, step){
+    ctx.clearRect(0,0,W,H);
+
+    var sky = ctx.createLinearGradient(0,0,0,140);
+    sky.addColorStop(0,'#BEE3F8');
+    sky.addColorStop(1,'#EAF6E9');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,140);
+
+    ctx.fillStyle = '#C7E6B0';
+    ctx.fillRect(0,120,W,H-120);
+
+    ctx.fillStyle = '#7FBFDB';
+    ctx.beginPath();
+    ctx.moveTo(0,220);
+    ctx.quadraticCurveTo(400,180,800,240);
+    ctx.lineTo(800,340);
+    ctx.quadraticCurveTo(400,300,0,330);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 3;
+    for(var i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.moveTo(50+i*260, 250+i*8);
+      ctx.quadraticCurveTo(250+i*260,235+i*8,450+i*260,260+i*8);
+      ctx.stroke();
+    }
+
+    var shakeX = 0, shakeY = 0;
+    if(biteFlash > 0){
+      shakeX = (Math.random()-0.5) * 10 * biteFlash;
+      shakeY = (Math.random()-0.5) * 6 * biteFlash;
+      ctx.fillStyle = 'rgba(231,111,81,' + (0.28*biteFlash) + ')';
+      ctx.fillRect(0,0,W,H);
+    }
+
+    var bob = Math.sin(t*3)*2;
+
+    drawEmoji('🪵', logPos.x, logPos.y - 6, 70);
+
+    drawEmoji('🐊', buaya.x + shakeX, buaya.y + bob*0.5, 56);
+
+    var sapiBiteOffset = (step && step.type==='bite') ? shakeX : 0;
+    drawEmoji('🐄', sapi.x + sapiBiteOffset, sapi.y + bob, 50);
+
+    if(kancil.visible || kancil.x > 125){
+      drawEmoji('🦌', kancil.x, kancil.y + Math.sin(t*6)*2, 40);
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      var frac = qteTimeLeft / QTE_DURATION;
+      ctx.strokeStyle = '#E76F51';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(400, 70, 34, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
+      ctx.stroke();
+      ctx.font = '700 20px sans-serif';
+      ctx.fillStyle = '#E76F51';
+      ctx.textAlign = 'center';
+      ctx.fillText('⏱', 400, 76);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('ksg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'ksg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl2 = document.getElementById('ksg-wrap');
+    if(wrapEl2) new ResizeObserver(sendHeight).observe(wrapEl2);
+  }
+})();
+</script>
+</body>
+</html>
