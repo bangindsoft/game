@@ -11,8 +11,6 @@
   html, body {
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    height: 100%;
     background: transparent;
   }
   #kkg-wrap {
@@ -453,6 +451,22 @@
   resize();
   resetGame();
   requestAnimationFrame(step);
+
+  function sendHeight(){
+    var wrap = document.getElementById('kkg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'kkg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('kkg-wrap');
+    if(wrapEl){
+      new ResizeObserver(sendHeight).observe(wrapEl);
+    }
+  }
 })();
 </script>
 </body>
