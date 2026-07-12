@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dewi Lanjar - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #dlg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #22303A;
+    background: linear-gradient(180deg, #E1EEF3 0%, #F7F3E8 100%);
+    border: 3px solid #2E6B78;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #dlg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #1E4E58;
+  }
+  #dlg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #dlg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #dlg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #dlg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #2E6B78;
+    background: #1E4E58;
+  }
+  #dlg-canvas { display: block; width: 100%; height: 100%; }
+  .dlg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,30,36,0.85);
+    color: #fff;
+    padding: 20px;
+  }
+  .dlg-overlay.show { display: flex; }
+  .dlg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .dlg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .dlg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .dlg-btn:active { transform: scale(0.97); }
+
+  #dlg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #2E6B78;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #dlg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #dlg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #2E6B78;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #dlg-actionBtn.hold { background: #3D7A4C; }
+  #dlg-actionBtn.qte { background: #C99A2E; }
+  #dlg-actionBtn:active { transform: scale(0.97); }
+  #dlg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #dlg-progressWrap.show { display: block; }
+  #dlg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="dlg-wrap">
+  <h2>🌊 Ki Buyut dan Dewi Lanjar</h2>
+  <p id="dlg-sub">Ikuti kisah Ki Buyut sang nelayan yang bertemu Dewi Lanjar, penguasa Laut Utara Jawa.</p>
+
+  <div id="dlg-hud"><span id="dlg-phase">Tahap 1 / 5</span></div>
+
+  <div id="dlg-canvas-holder">
+    <canvas id="dlg-canvas"></canvas>
+
+    <div class="dlg-overlay show" id="dlg-start">
+      <h3>Ki Buyut dan Dewi Lanjar</h3>
+      <p>Ki Buyut, nelayan yang rajin dan bersyukur, suatu hari menangkap ikan ajaib di tengah badai. Ikuti kisahnya bertemu Dewi Lanjar, penguasa Laut Utara Jawa, hingga saat sang dewi harus menegakkan keseimbangan alam.</p>
+      <button class="dlg-btn" id="dlg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="dlg-overlay" id="dlg-caught">
+      <h3>Ikan Itu Terlepas 🐟</h3>
+      <p>Jalanya belum sempat menjerat ikan ajaib itu. Ombak besar membuatnya lolos. Coba lagi dari awal perjalanan Ki Buyut!</p>
+      <button class="dlg-btn" id="dlg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="dlg-overlay" id="dlg-win">
+      <h3>Laut Kembali Tenang 🌅</h3>
+      <p>Para pendatang serakah pergi meninggalkan desa. Warga kembali hidup damai, menghormati Dewi Lanjar dan menjaga laut mereka. Alam akan menjaga manusia, selama manusia menjaga alam.</p>
+      <button class="dlg-btn" id="dlg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="dlg-caption">Bersiap memulai kisah...</div>
+
+  <div id="dlg-progressWrap"><div id="dlg-progressBar"></div></div>
+  <div id="dlg-action-row">
+    <button id="dlg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById('dlg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('dlg-phase');
+  var captionEl = document.getElementById('dlg-caption');
+  var actionBtn = document.getElementById('dlg-actionBtn');
+  var progressWrap = document.getElementById('dlg-progressWrap');
+  var progressBar = document.getElementById('dlg-progressBar');
+  var startOverlay = document.getElementById('dlg-start');
+  var caughtOverlay = document.getElementById('dlg-caught');
+  var winOverlay = document.getElementById('dlg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var qteActive = false;
+  var qteTimeLeft = 0;
+  var QTE_DURATION = 1.6;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'storm_row',
+      text:'Di sebuah desa nelayan di pesisir utara Jawa, hiduplah Ki Buyut, nelayan yang rajin dan selalu bersyukur. Suatu hari cuaca sangat buruk, namun ia tetap nekat melaut.' },
+    { type:'hold', phase:1, scene:'storm_row',
+      text:'Tahan tombol untuk membantu Ki Buyut mendayung melawan ombak besar.' },
+    { type:'qte', phase:2, scene:'catch_fish',
+      text:'Sesuatu menarik jalanya dengan kuat! Tekan TANGKAP tepat pada waktunya.' },
+    { type:'caption', phase:2, scene:'catch_fish',
+      text:'Ikan itu bersisik keemasan dengan mata bersinar seperti permata. Ki Buyut membawanya pulang dengan penuh kagum.' },
+    { type:'caption', phase:3, scene:'dream',
+      text:'"Ki Buyut, aku Dewi Lanjar, penguasa laut ini. Ikan yang kau tangkap adalah jelmaanku," kata sosok anggun dalam mimpinya. Paginya, ikan itu telah berubah menjadi kerang besar yang indah.' },
+    { type:'caption', phase:3, scene:'village_peace',
+      text:'Sejak itu, Dewi Lanjar sering memberi berkah kepada warga desa: hasil tangkapan melimpah dan cuaca baik untuk melaut.' },
+    { type:'caption', phase:4, scene:'village_traders',
+      text:'Namun datanglah sekelompok pendatang yang menangkap ikan secara berlebihan, merusak ekosistem laut tanpa menghormati adat setempat.' },
+    { type:'hold', phase:4, scene:'village_warning',
+      text:'Tahan tombol untuk membantu Ki Buyut mendayung cepat menasihati para pendatang itu.' },
+    { type:'caption', phase:4, scene:'village_warning',
+      text:'Sayangnya, para pendatang sama sekali tidak menghiraukan nasihat baik Ki Buyut.' },
+    { type:'caption', phase:5, scene:'storm_punish',
+      text:'Dewi Lanjar murka. Malam itu juga, laut bergelora hebat menghantam kapal-kapal para pendatang.' },
+    { type:'hold', phase:5, scene:'storm_punish',
+      text:'Tahan tombol untuk membantu warga desa mengamankan perahu-perahu mereka dari badai besar.' },
+    { type:'caption', phase:5, scene:'village_peace',
+      text:'Esoknya, kapal-kapal pendatang telah hancur dan mereka pun pergi meninggalkan desa untuk selamanya.' }
+  ];
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = 'Tahap ' + p + ' / 5'; }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    qteActive = false;
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = 'Lanjut ▶';
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = 'Tahan untuk Berjuang';
+      progressWrap.classList.add('show');
+    } else if(step.type === 'qte'){
+      actionBtn.className = 'qte';
+      actionBtn.textContent = '🎣 TANGKAP!';
+      progressWrap.classList.remove('show');
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'qte'){
+      if(qteActive){
+        qteActive = false;
+        nextStep();
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('dlg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('dlg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('dlg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawBoat(px, py, size, rock){
+    var s = size/60;
+    ctx.save();
+    ctx.translate(px, py + rock);
+    ctx.rotate(rock*0.02);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.beginPath();
+    ctx.moveTo(-30*s, 0);
+    ctx.quadraticCurveTo(0, 14*s, 30*s, 0);
+    ctx.quadraticCurveTo(0, 6*s, -30*s, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#4a3115';
+    ctx.lineWidth = 1.5*s;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawKiBuyut(px, py, size){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#8B5E3C';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,6*s); ctx.lineTo(11*s,6*s); ctx.lineTo(9*s,20*s); ctx.lineTo(-9*s,20*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#E8D9B5';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-9*s);
+    ctx.quadraticCurveTo(-16*s,2*s,-12*s,8*s);
+    ctx.lineTo(12*s,8*s);
+    ctx.quadraticCurveTo(16*s,2*s,12*s,-9*s);
+    ctx.quadraticCurveTo(0,-14*s,-12*s,-9*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#C97B3D';
+    ctx.beginPath();
+    ctx.arc(0,-15*s,7.5*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#2E4A5A';
+    ctx.beginPath();
+    ctx.ellipse(0,-20*s,9*s,3.5*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-3*s,-21*s); ctx.lineTo(9*s,-25*s); ctx.lineTo(6*s,-19*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawDewiLanjar(px, py, size, glowAmt){
+    var s = size/60;
+    ctx.save();
+    ctx.translate(px, py);
+
+    if(glowAmt > 0){
+      var g = ctx.createRadialGradient(0,-10*s,4,0,-10*s,44*s);
+      g.addColorStop(0,'rgba(255,241,196,'+(0.45*glowAmt)+')');
+      g.addColorStop(1,'rgba(255,241,196,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0,-10*s,44*s,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = '#2E6B78';
+    ctx.beginPath();
+    ctx.moveTo(-16*s,10*s);
+    ctx.quadraticCurveTo(-22*s,26*s,-12*s,34*s);
+    ctx.lineTo(12*s,34*s);
+    ctx.quadraticCurveTo(22*s,26*s,16*s,10*s);
+    ctx.quadraticCurveTo(0,18*s,-16*s,10*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#EFDFC0';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-10*s);
+    ctx.quadraticCurveTo(-17*s,2*s,-13*s,11*s);
+    ctx.lineTo(13*s,11*s);
+    ctx.quadraticCurveTo(17*s,2*s,13*s,-10*s);
+    ctx.quadraticCurveTo(0,-16*s,-13*s,-10*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-9*s); ctx.lineTo(-3*s,-9*s); ctx.lineTo(6*s,10*s); ctx.lineTo(0,10*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath();
+    ctx.ellipse(0,-22*s,9*s,10*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-30*s,4.5*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath();
+    ctx.arc(0,-18*s,7*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-6*s,-27*s); ctx.lineTo(0,-33*s); ctx.lineTo(6*s,-27*s); ctx.lineTo(0,-25*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawGoldFish(px, py, size, wiggle){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(wiggle*0.3);
+    var g = ctx.createLinearGradient(-14*s,0,14*s,0);
+    g.addColorStop(0,'#FFE9A8');
+    g.addColorStop(1,'#D9A24A');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(0,0,14*s,7*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14*s,0); ctx.lineTo(-22*s,-7*s); ctx.lineTo(-22*s,7*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFF7E0';
+    ctx.beginPath();
+    ctx.arc(8*s,-2*s,2*s,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawShip(px, py, size){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath();
+    ctx.moveTo(-18*s,4*s); ctx.lineTo(18*s,4*s); ctx.lineTo(12*s,14*s); ctx.lineTo(-12*s,14*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8B5E3C';
+    ctx.fillRect(-1.5*s,-24*s,3*s,28*s);
+    ctx.fillStyle = '#C0392B';
+    ctx.beginPath();
+    ctx.moveTo(1.5*s,-22*s); ctx.lineTo(16*s,-6*s); ctx.lineTo(1.5*s,-6*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWaves(y, amp, color, phase){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    ctx.lineTo(0,y);
+    for(var x=0;x<=W;x+=20){
+      ctx.lineTo(x, y + Math.sin(x*0.02+phase)*amp);
+    }
+    ctx.lineTo(W,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      qteTimeLeft -= dt;
+      if(qteTimeLeft <= 0){
+        qteActive = false;
+        caughtOverlay.classList.add('show');
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='storm_row' || scene==='storm_punish'){
+      sky.addColorStop(0,'#101B26'); sky.addColorStop(1,'#2C3E4A');
+    } else if(scene==='dream'){
+      sky.addColorStop(0,'#1B2A4A'); sky.addColorStop(1,'#3A4E78');
+    } else if(scene==='catch_fish'){
+      sky.addColorStop(0,'#16324A'); sky.addColorStop(1,'#2E5C74');
+    } else if(scene==='village_traders' || scene==='village_warning'){
+      sky.addColorStop(0,'#6E8A9A'); sky.addColorStop(1,'#B7CDD6');
+    } else {
+      sky.addColorStop(0,'#FDD98A'); sky.addColorStop(1,'#BEE3F8');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawLightning(){
+    if(Math.sin(t*9) > 0.9){
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(560,0); ctx.lineTo(540,60); ctx.lineTo(570,60); ctx.lineTo(545,140);
+      ctx.stroke();
+    }
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'storm_row';
+    drawSky(scene);
+
+    var rock = Math.sin(t*3)*4;
+    var bigRock = Math.sin(t*2)*10;
+
+    if(scene==='storm_row'){
+      drawLightning();
+      drawWaves(280, 18, 'rgba(30,60,80,0.9)', t*1.2);
+      drawWaves(320, 14, '#1E4E58', t*1.6+2);
+      drawBoat(360, 330, 60, bigRock);
+      drawKiBuyut(360, 306+bigRock*0.5, 42);
+    } else if(scene==='catch_fish'){
+      drawWaves(300, 10, '#1E4E58', t*1.2);
+      drawWaves(330, 8, '#164048', t*1.6+1);
+      drawBoat(320, 340, 60, rock);
+      drawKiBuyut(320, 316+rock*0.5, 42);
+      var wiggle = Math.sin(t*8);
+      drawGoldFish(470, 330 + Math.sin(t*4)*6, 34, wiggle);
+    } else if(scene==='dream'){
+      drawWaves(320, 8, '#22344E', t);
+      drawDewiLanjar(400, 260 + Math.sin(t*1.5)*6, 60, 1);
+    } else if(scene==='village_peace'){
+      ctx.fillStyle = '#F6D48A';
+      ctx.beginPath();
+      ctx.arc(650,90,40,0,Math.PI*2);
+      ctx.fill();
+      drawWaves(300, 6, '#4C90A6', t);
+      drawWaves(330, 5, '#3A7A90', t+1.5);
+      ctx.fillStyle = '#C9A24E';
+      ctx.beginPath();
+      ctx.moveTo(90,300); ctx.lineTo(140,250); ctx.lineTo(190,300); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#E8D9B5';
+      ctx.fillRect(105,300,70,40);
+      drawBoat(400, 350, 50, rock*0.5);
+      drawKiBuyut(400, 330+rock*0.3, 38);
+    } else if(scene==='village_traders' || scene==='village_warning'){
+      drawWaves(300, 8, '#5C8A9A', t);
+      drawWaves(330, 6, '#4A7686', t+1);
+      drawShip(560, 300 + rock*0.4, 44);
+      drawShip(650, 310 + rock*0.5, 40);
+      drawShip(500, 320 + rock*0.3, 36);
+      var kbX = scene==='village_warning' ? 300 : 260;
+      drawBoat(kbX, 350, 50, rock*0.5);
+      drawKiBuyut(kbX, 330+rock*0.3, 38);
+    } else if(scene==='storm_punish'){
+      drawLightning();
+      drawWaves(260, 22, 'rgba(20,40,55,0.95)', t*1.5);
+      drawWaves(310, 16, '#132C36', t*2+2);
+      drawShip(560, 300+bigRock, 44);
+      drawShip(640, 320+bigRock*1.2, 40);
+      drawDewiLanjar(260, 220 + Math.sin(t*1.5)*8, 54, 0.8);
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      var frac = qteTimeLeft / QTE_DURATION;
+      ctx.strokeStyle = '#C99A2E';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(400, 60, 30, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('dlg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'dlg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('dlg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
