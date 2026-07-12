@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banta Beuransah - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #bbg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #3A2E1F;
+    background: linear-gradient(180deg, #FCEFD6 0%, #F7F3E8 100%);
+    border: 3px solid #B5842A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #bbg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A5A1E;
+  }
+  #bbg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #bbg-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 0 2px;
+  }
+  #bbg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #bbg-hari { font-size: 18px; letter-spacing: 2px; }
+  .hari-icon { opacity: 1; transition: opacity .3s; }
+  .hari-icon.spent { opacity: 0.25; filter: grayscale(100%); }
+
+  #bbg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5842A;
+    background: #BEE3F8;
+  }
+  #bbg-canvas { display: block; width: 100%; height: 100%; }
+  .bbg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(58,46,31,0.85);
+    color: #fff;
+    padding: 20px;
+  }
+  .bbg-overlay.show { display: flex; }
+  .bbg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .bbg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .bbg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .bbg-btn:active { transform: scale(0.97); }
+
+  #bbg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5842A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #bbg-action-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  #bbg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5842A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #bbg-actionBtn.hold { background: #6B8F47; }
+  #bbg-actionBtn.qte { background: #E76F51; }
+  #bbg-actionBtn:active { transform: scale(0.97); }
+  #bbg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #bbg-progressWrap.show { display: block; }
+  #bbg-progressBar {
+    height: 100%;
+    width: 0%;
+    background: #6B8F47;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="bbg-wrap">
+  <h2>🌸 Banta Beuransah</h2>
+  <p id="bbg-sub">Bantu Banta Beuransah menempuh perjalanan berat mencari Bunga Kehidupan untuk menyembuhkan Putri Sri.</p>
+
+  <div id="bbg-hud">
+    <span id="bbg-phase">Tahap 1 / 4</span>
+    <span id="bbg-hari"></span>
+  </div>
+
+  <div id="bbg-canvas-holder">
+    <canvas id="bbg-canvas"></canvas>
+
+    <div class="bbg-overlay show" id="bbg-start">
+      <h3>Banta Beuransah</h3>
+      <p>Putri Sri sakit parah dan hanya Bunga Kehidupan di puncak gunung yang bisa menyembuhkannya. Raja memberi waktu tiga hari. Bantu Banta Beuransah melewati jurang, hutan lebat, dan binatang buas sebelum waktu habis!</p>
+      <button class="bbg-btn" id="bbg-startBtn">Mulai Perjalanan</button>
+    </div>
+
+    <div class="bbg-overlay" id="bbg-caught">
+      <h3>Waktu Tiga Hari Habis 😔</h3>
+      <p>Banta Beuransah belum berhasil sampai puncak gunung dalam waktu yang diberikan Raja. Semangat, coba lagi dari awal perjalanan!</p>
+      <button class="bbg-btn" id="bbg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="bbg-overlay" id="bbg-win">
+      <h3>Putri Sri Sembuh! 🎉</h3>
+      <p>Berkat ketulusan dan keberanian Banta Beuransah, Bunga Kehidupan berhasil dipetik dan Putri Sri pun sembuh total. Kejujuran dan kerja keras selalu membawa hasil yang baik.</p>
+      <button class="bbg-btn" id="bbg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="bbg-caption">Bersiap memulai cerita...</div>
+
+  <div id="bbg-progressWrap"><div id="bbg-progressBar"></div></div>
+  <div id="bbg-action-row">
+    <button id="bbg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById('bbg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('bbg-phase');
+  var hariEl = document.getElementById('bbg-hari');
+  var captionEl = document.getElementById('bbg-caption');
+  var actionBtn = document.getElementById('bbg-actionBtn');
+  var progressWrap = document.getElementById('bbg-progressWrap');
+  var progressBar = document.getElementById('bbg-progressBar');
+  var startOverlay = document.getElementById('bbg-start');
+  var caughtOverlay = document.getElementById('bbg-caught');
+  var winOverlay = document.getElementById('bbg-win');
+
+  var MAX_HARI = 3;
+  var hariLeft = MAX_HARI;
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var qteActive = false;
+  var qteTimeLeft = 0;
+  var QTE_DURATION = 1.6;
+
+  var banta = { x: 120, y: 340 };
+  var bantaTargetX = 120;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'village',
+      text:'Banta Beuransah, pemuda miskin namun cerdas dan pemberani, mendengar Putri Sri sakit parah dan tak seorang tabib pun mampu menyembuhkannya.' },
+    { type:'caption', phase:1, scene:'village',
+      text:'Raja mengizinkan Banta Beuransah mencari obat, dengan waktu tiga hari. Seorang tua bijak di hutan berkata: hanya Bunga Kehidupan di puncak gunung yang bisa menyembuhkan Putri Sri.',
+      bantaX: 260 },
+    { type:'qte', phase:2, scene:'ravine', risk:true,
+      text:'Jurang yang dalam menghadang di depan! Tekan LOMPAT tepat pada waktunya.' },
+    { type:'caption', phase:2, scene:'forest',
+      text:'Banta Beuransah berhasil melewati jurang, lalu tiba di hutan yang gelap dan lebat.' },
+    { type:'hold', phase:2, scene:'forest',
+      text:'Tahan tombol untuk menerobos semak belukar yang rapat dan berduri.' },
+    { type:'qte', phase:3, scene:'wild', risk:true,
+      text:'Seekor binatang buas tiba-tiba menerkam dari semak! Tekan HINDAR secepatnya!' },
+    { type:'caption', phase:3, scene:'peak',
+      text:'Setelah melewati berbagai rintangan, Banta Beuransah akhirnya mendekati puncak gunung yang tinggi.' },
+    { type:'hold', phase:3, scene:'peak',
+      text:'Tahan tombol untuk mendaki jalan terjal terakhir menuju puncak.' },
+    { type:'caption', phase:4, scene:'peak_flower',
+      text:'Di puncak, Banta Beuransah menemukan Bunga Kehidupan yang bercahaya indah, dan memetiknya dengan hati-hati.' },
+    { type:'caption', phase:4, scene:'palace',
+      text:'Ia bergegas kembali ke istana dan memberikan Bunga Kehidupan itu kepada Putri Sri.' }
+  ];
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = 'Tahap ' + p + ' / 4'; }
+
+  function renderHariHUD(){
+    var html = '';
+    for(var i=1;i<=MAX_HARI;i++){
+      html += '<span class="hari-icon' + (i>hariLeft?' spent':'') + '">☀️</span>';
+    }
+    hariEl.innerHTML = html;
+  }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    qteActive = false;
+    holdAdvancing = false;
+    if(step.bantaX) bantaTargetX = step.bantaX;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = 'Lanjut ▶';
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = 'Tahan untuk Berjuang';
+      progressWrap.classList.add('show');
+    } else if(step.type === 'qte'){
+      actionBtn.className = 'qte';
+      actionBtn.textContent = step.scene==='ravine' ? '🦵 LOMPAT!' : '🏃 HINDAR!';
+      progressWrap.classList.remove('show');
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    hariLeft = MAX_HARI;
+    banta.x = 120; bantaTargetX = 120;
+    renderHariHUD();
+    showStep();
+  }
+
+  function failQte(){
+    hariLeft--;
+    renderHariHUD();
+    if(hariLeft <= 0){
+      caughtOverlay.classList.add('show');
+    } else {
+      captionEl.textContent = 'Belum berhasil! Satu hari telah berlalu. Sisa waktu tinggal ' + hariLeft + ' hari. Coba lagi!';
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'qte'){
+      if(qteActive){
+        qteActive = false;
+        nextStep();
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('bbg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('bbg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('bbg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function lerp(a,b,f){ return a + (b-a)*f; }
+
+  function drawBanta(px, py, size){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+
+    ctx.fillStyle = '#2E4A2E';
+    ctx.beginPath();
+    ctx.moveTo(-11*s, 6*s);
+    ctx.lineTo(11*s, 6*s);
+    ctx.lineTo(9*s, 20*s);
+    ctx.lineTo(-9*s, 20*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.moveTo(-12*s, -9*s);
+    ctx.quadraticCurveTo(-16*s, 2*s, -12*s, 8*s);
+    ctx.lineTo(12*s, 8*s);
+    ctx.quadraticCurveTo(16*s, 2*s, 12*s, -9*s);
+    ctx.quadraticCurveTo(0, -14*s, -12*s, -9*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#B5842A';
+    ctx.beginPath();
+    ctx.moveTo(-9*s, -8*s);
+    ctx.lineTo(-3*s, -8*s);
+    ctx.lineTo(5*s, 7*s);
+    ctx.lineTo(-1*s, 7*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath();
+    ctx.arc(0, -15*s, 7.5*s, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#C0392B';
+    ctx.beginPath();
+    ctx.moveTo(-8*s, -19*s);
+    ctx.quadraticCurveTo(0, -26*s, 8*s, -19*s);
+    ctx.quadraticCurveTo(6*s, -14*s, 0, -14*s);
+    ctx.quadraticCurveTo(-6*s, -14*s, -8*s, -19*s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#A93226';
+    ctx.beginPath();
+    ctx.moveTo(6*s, -18*s);
+    ctx.lineTo(13*s, -13*s);
+    ctx.lineTo(8*s, -11*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawTiger(px, py, size){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#D9722C';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 20*s, 12*s, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#2b2b2b';
+    for(var i=-14;i<=14;i+=7){
+      ctx.beginPath();
+      ctx.moveTo(i*s, -10*s);
+      ctx.lineTo((i+3)*s, 10*s);
+      ctx.lineTo((i-1)*s, 10*s);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.ellipse(4*s, 3*s, 6*s, 5*s, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath();
+    ctx.arc(-8*s, -6*s, 2.2*s, 0, Math.PI*2);
+    ctx.arc(0*s, -9*s, 2.2*s, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFlower(px, py, size, glowAmt){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    if(glowAmt > 0){
+      var g = ctx.createRadialGradient(0,0,2,0,0,30*s);
+      g.addColorStop(0, 'rgba(255,214,102,' + (0.5*glowAmt) + ')');
+      g.addColorStop(1, 'rgba(255,214,102,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0,0,30*s,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#F7CFE0';
+    for(var i=0;i<5;i++){
+      ctx.save();
+      ctx.rotate(i * Math.PI*2/5);
+      ctx.beginPath();
+      ctx.ellipse(0, -9*s, 5*s, 9*s, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath();
+    ctx.arc(0,0,5*s,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      qteTimeLeft -= dt;
+      if(qteTimeLeft <= 0){
+        qteActive = false;
+        failQte();
+      }
+    }
+
+    banta.x = lerp(banta.x, bantaTargetX, dt*3);
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawScene(scene){
+    var sky = ctx.createLinearGradient(0,0,0,160);
+    if(scene==='forest' || scene==='wild'){
+      sky.addColorStop(0,'#7C9E8E');
+      sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='palace'){
+      sky.addColorStop(0,'#F6D48A');
+      sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='peak' || scene==='peak_flower'){
+      sky.addColorStop(0,'#AEDBF2');
+      sky.addColorStop(1,'#F0F8FF');
+    } else {
+      sky.addColorStop(0,'#BEE3F8');
+      sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+
+    if(scene==='village'){
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#B5842A';
+      ctx.beginPath();
+      ctx.moveTo(560,220); ctx.lineTo(660,150); ctx.lineTo(760,220); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#E8D9B5';
+      ctx.fillRect(590,220,140,90);
+    }
+    if(scene==='ravine'){
+      ctx.fillStyle = '#8D6E63';
+      ctx.fillRect(0,260,320,H-260);
+      ctx.fillRect(480,260,320,H-260);
+      ctx.fillStyle = '#5C4433';
+      ctx.beginPath();
+      ctx.moveTo(320,260); ctx.lineTo(480,260); ctx.lineTo(430,H); ctx.lineTo(370,H); ctx.closePath();
+      ctx.fill();
+    }
+    if(scene==='forest'){
+      ctx.fillStyle = '#4C7A4C';
+      ctx.fillRect(0,300,W,H-300);
+      for(var i=0;i<7;i++){
+        ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+        ctx.beginPath();
+        ctx.moveTo(60+i*110, 300);
+        ctx.lineTo(60+i*110+40, 180);
+        ctx.lineTo(60+i*110+80, 300);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(20,30,20,0.25)';
+      ctx.fillRect(0,0,W,H);
+    }
+    if(scene==='wild'){
+      ctx.fillStyle = '#3C5C40';
+      ctx.fillRect(0,300,W,H-300);
+      for(var j=0;j<6;j++){
+        ctx.fillStyle = '#274A2C';
+        ctx.beginPath();
+        ctx.arc(90+j*130, 320, 46, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(10,15,10,0.35)';
+      ctx.fillRect(0,0,W,H);
+    }
+    if(scene==='peak' || scene==='peak_flower'){
+      ctx.fillStyle = '#D9E6EC';
+      ctx.beginPath();
+      ctx.moveTo(0,350); ctx.lineTo(300,140); ctx.lineTo(560,350); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#EFF6FA';
+      ctx.beginPath();
+      ctx.moveTo(220,220); ctx.lineTo(300,140); ctx.lineTo(380,220); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#C9DCE6';
+      ctx.beginPath();
+      ctx.moveTo(300,350); ctx.lineTo(560,180); ctx.lineTo(800,350); ctx.closePath();
+      ctx.fill();
+    }
+    if(scene==='palace'){
+      ctx.fillStyle = '#E8C88A';
+      ctx.fillRect(0,320,W,H-320);
+      for(var k=0;k<5;k++){
+        ctx.fillStyle = '#C9A24E';
+        ctx.fillRect(90+k*150, 160, 22, 170);
+        ctx.beginPath();
+        ctx.arc(90+k*150+11, 160, 22, Math.PI, 0);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#B5842A';
+      ctx.fillRect(0,150,W,20);
+    }
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'village';
+    drawScene(scene);
+
+    var bob = Math.sin(t*4)*2;
+    var groundY = (scene==='palace') ? 300 : (scene==='peak'||scene==='peak_flower' ? 330 : (scene==='ravine' ? 260 : 320));
+
+    if(scene==='ravine' && step && step.type==='qte'){
+      var jumpArc = qteActive ? Math.sin(Math.min(1,(QTE_DURATION-qteTimeLeft)/QTE_DURATION)*Math.PI) : 0;
+      drawBanta(200 + jumpArc*300, groundY - jumpArc*70 + bob, 46);
+    } else if(scene==='wild'){
+      drawTiger(560, 330, 46);
+      drawBanta(banta.x, groundY + bob, 46);
+    } else if(scene==='peak_flower'){
+      drawFlower(400, 210, 50, 1);
+      drawBanta(420, 260 + bob, 44);
+    } else if(scene==='palace'){
+      ctx.font = '54px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('👑', 620, 250);
+      ctx.fillText('🤒', 500, 260);
+      drawFlower(400, 250, 30, 0.6);
+      drawBanta(320, 270 + bob, 44);
+    } else {
+      drawBanta(banta.x, groundY + bob, 46);
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      var frac = qteTimeLeft / QTE_DURATION;
+      ctx.strokeStyle = '#E76F51';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(400, 60, 30, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('bbg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'bbg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('bbg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
