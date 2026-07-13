@@ -175,6 +175,89 @@
 
 <script>
 (function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Kancil Menyelamatkan Anak Sapi - Game',
+      h2: '🐄 Kancil Menyelamatkan Anak Sapi',
+      sub: 'Bantu Anak Sapi lolos dari Pak Buaya yang licik, berkat akal cerdik Si Kancil!',
+      startTitle: 'Kancil Menyelamatkan Anak Sapi',
+      startBody: 'Anak Sapi menolong Pak Buaya yang terjepit pohon tumbang, tapi malah digigit! Ikuti ceritanya dan bantu setiap tahap sampai Si Kancil berhasil menyelamatkan Anak Sapi.',
+      startBtn: 'Mulai Cerita',
+      caughtTitle: 'Hampir Tertangkap! 😬',
+      caughtBody: 'Pak Buaya keburu lepas sebelum kalian sempat kabur. Coba lagi, ikuti lagi ceritanya dari awal!',
+      retryBtn: 'Coba Lagi',
+      winTitle: 'Berhasil Kabur! 🎉',
+      winBody: 'Berkat kecerdikan Si Kancil, Anak Sapi berhasil selamat dari Pak Buaya yang ingkar janji. Ingat ya, menolong itu baik, tapi tetap harus waspada dan bijak seperti Si Kancil.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai cerita...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Dorong',
+      runBtn: '🏃 LARI!',
+      phase: function(p){ return 'Tahap ' + p + ' / 3'; },
+      steps: [
+        'Anak Sapi mendengar teriakan minta tolong dari Pak Buaya yang terjepit pohon tumbang di sungai.',
+        '"Tolong aku hai Sapi yang baik," pinta Pak Buaya. "Aku janji tidak akan memakanmu."',
+        'Tahan tombol di bawah untuk membantu Anak Sapi mendorong batang pohon.',
+        'Setelah bebas, Pak Buaya malah menggigit kaki Anak Sapi! Ingkar janji!',
+        'Untunglah Si Kancil lewat. "Ulangi dulu kejadiannya dari awal," kata Si Kancil dengan tenang.',
+        'Tahan tombol di bawah untuk mengembalikan batang pohon ke posisi semula di atas Pak Buaya.',
+        'Pak Buaya kembali terjepit seperti semula! Ini kesempatan untuk kabur secepatnya!',
+        'Cepat, tekan tombol LARI sebelum Pak Buaya sempat lepas lagi!'
+      ]
+    },
+    en: {
+      title: 'Kancil Saves the Calf - Game',
+      h2: '🐄 Kancil Saves the Calf',
+      sub: 'Help the Calf escape the cunning Crocodile, thanks to Kancil the mouse-deer\'s clever trick!',
+      startTitle: 'Kancil Saves the Calf',
+      startBody: 'A Calf helps a Crocodile trapped under a fallen tree, but gets bitten in return! Follow the story and help at every stage until Kancil manages to save the Calf.',
+      startBtn: 'Start the Story',
+      caughtTitle: 'Almost Caught! 😬',
+      caughtBody: 'The Crocodile broke free before you could escape. Try again, and follow the story from the beginning!',
+      retryBtn: 'Try Again',
+      winTitle: 'Escaped Safely! 🎉',
+      winBody: 'Thanks to Kancil\'s clever trick, the Calf escaped the promise-breaking Crocodile. Remember: helping others is good, but stay alert and wise like Kancil.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the story ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Push',
+      runBtn: '🏃 RUN!',
+      phase: function(p){ return 'Stage ' + p + ' / 3'; },
+      steps: [
+        'A Calf hears a cry for help from a Crocodile trapped under a fallen tree by the river.',
+        '"Please help me, kind Calf," begs the Crocodile. "I promise I won\'t eat you."',
+        'Hold the button below to help the Calf push the log away.',
+        'Once free, the Crocodile bites the Calf\'s leg instead! A broken promise!',
+        'Luckily, Kancil happens to pass by. "Let\'s replay what happened from the start," Kancil says calmly.',
+        'Hold the button below to push the log back into place, trapping the Crocodile again.',
+        'The Crocodile is trapped again, just like before! Now\'s the moment to run!',
+        'Quick, tap the RUN button before the Crocodile can break free again!'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#ksg-wrap h2').textContent = TXT.h2;
+  document.getElementById('ksg-sub').textContent = TXT.sub;
+  document.querySelector('#ksg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#ksg-start p').textContent = TXT.startBody;
+  document.getElementById('ksg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#ksg-caught h3').textContent = TXT.caughtTitle;
+  document.querySelector('#ksg-caught p').textContent = TXT.caughtBody;
+  document.getElementById('ksg-retryBtn').textContent = TXT.retryBtn;
+  document.querySelector('#ksg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#ksg-win p').textContent = TXT.winBody;
+  document.getElementById('ksg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('ksg-caption').textContent = TXT.captionInit;
+  document.getElementById('ksg-actionBtn').textContent = TXT.nextBtn;
+
   var canvas = document.getElementById('ksg-canvas');
   var ctx = canvas.getContext('2d');
   var W = 800, H = 450;
@@ -216,26 +299,19 @@
   var holdAdvancing = false;
 
   var steps = [
-    { type:'caption', phase:1,
-      text:'Anak Sapi mendengar teriakan minta tolong dari Pak Buaya yang terjepit pohon tumbang di sungai.' },
-    { type:'caption', phase:1,
-      text:'"Tolong aku hai Sapi yang baik," pinta Pak Buaya. "Aku janji tidak akan memakanmu."' },
-    { type:'hold', phase:1, dir:'release',
-      text:'Tahan tombol di bawah untuk membantu Anak Sapi mendorong batang pohon.' },
-    { type:'bite', phase:1,
-      text:'Setelah bebas, Pak Buaya malah menggigit kaki Anak Sapi! Ingkar janji!' },
-    { type:'caption', phase:2,
-      text:'Untunglah Si Kancil lewat. "Ulangi dulu kejadiannya dari awal," kata Si Kancil dengan tenang.' },
-    { type:'hold', phase:2, dir:'trap',
-      text:'Tahan tombol di bawah untuk mengembalikan batang pohon ke posisi semula di atas Pak Buaya.' },
-    { type:'caption', phase:3,
-      text:'Pak Buaya kembali terjepit seperti semula! Ini kesempatan untuk kabur secepatnya!' },
-    { type:'qte', phase:3,
-      text:'Cepat, tekan tombol LARI sebelum Pak Buaya sempat lepas lagi!' }
+    { type:'caption', phase:1 },
+    { type:'caption', phase:1 },
+    { type:'hold', phase:1, dir:'release' },
+    { type:'bite', phase:1 },
+    { type:'caption', phase:2 },
+    { type:'hold', phase:2, dir:'trap' },
+    { type:'caption', phase:3 },
+    { type:'qte', phase:3 }
   ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
   var stepIndex = 0;
 
-  function setPhaseLabel(p){ phaseEl.textContent = 'Tahap ' + p + ' / 3'; }
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
 
   function showStep(){
     var step = steps[stepIndex];
@@ -248,20 +324,20 @@
 
     if(step.type === 'caption'){
       actionBtn.className = '';
-      actionBtn.textContent = 'Lanjut ▶';
+      actionBtn.textContent = TXT.nextBtn;
       progressWrap.classList.remove('show');
     } else if(step.type === 'bite'){
       actionBtn.className = '';
-      actionBtn.textContent = 'Lanjut ▶';
+      actionBtn.textContent = TXT.nextBtn;
       progressWrap.classList.remove('show');
       biteFlash = 1;
     } else if(step.type === 'hold'){
       actionBtn.className = 'hold';
-      actionBtn.textContent = 'Tahan untuk Dorong';
+      actionBtn.textContent = TXT.holdBtn;
       progressWrap.classList.add('show');
     } else if(step.type === 'qte'){
       actionBtn.className = 'qte';
-      actionBtn.textContent = '🏃 LARI!';
+      actionBtn.textContent = TXT.runBtn;
       progressWrap.classList.remove('show');
       qteActive = true;
       qteTimeLeft = QTE_DURATION;
