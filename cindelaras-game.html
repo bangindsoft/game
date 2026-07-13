@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cindelaras - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #cdg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FCEFD6 0%, #F7F3E8 100%);
+    border: 3px solid #B5842A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #cdg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A5A1E;
+  }
+  #cdg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #cdg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #cdg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #cdg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5842A;
+    background: #BEE3F8;
+  }
+  #cdg-canvas { display: block; width: 100%; height: 100%; }
+  .cdg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(46,42,31,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .cdg-overlay.show { display: flex; }
+  .cdg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .cdg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .cdg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .cdg-btn:active { transform: scale(0.97); }
+
+  #cdg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5842A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #cdg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #cdg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5842A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #cdg-actionBtn.hold { background: #3D7A4C; }
+  #cdg-actionBtn:active { transform: scale(0.97); }
+  #cdg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #cdg-progressWrap.show { display: block; }
+  #cdg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="cdg-wrap">
+  <h2>🐓 Cindelaras</h2>
+  <p id="cdg-sub">Ikuti kisah Cindelaras, putra Raja Jenggala yang dibesarkan di hutan bersama ayam jago ajaibnya.</p>
+
+  <div id="cdg-hud"><span id="cdg-phase">Tahap 1 / 5</span></div>
+
+  <div id="cdg-canvas-holder">
+    <canvas id="cdg-canvas"></canvas>
+
+    <div class="cdg-overlay show" id="cdg-start">
+      <h3>Cindelaras</h3>
+      <p>Permaisuri Kerajaan Jenggala difitnah dan diasingkan ke hutan. Di sanalah putranya, Cindelaras, tumbuh bersama ayam jago ajaib yang kelak membongkar kebenaran. Ikuti kisahnya sampai akhir.</p>
+      <button class="cdg-btn" id="cdg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="cdg-overlay" id="cdg-win">
+      <h3>Kebenaran Terungkap! 👑</h3>
+      <p>Selir dan tabib akhirnya mengakui kejahatan mereka. Sang Permaisuri dijemput kembali ke istana, dan hidup berbahagia bersama Cindelaras. Kebenaran pada akhirnya selalu mengalahkan kejahatan.</p>
+      <button class="cdg-btn" id="cdg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="cdg-caption">Bersiap memulai kisah...</div>
+
+  <div id="cdg-progressWrap"><div id="cdg-progressBar"></div></div>
+  <div id="cdg-action-row">
+    <button id="cdg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById('cdg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('cdg-phase');
+  var captionEl = document.getElementById('cdg-caption');
+  var actionBtn = document.getElementById('cdg-actionBtn');
+  var progressWrap = document.getElementById('cdg-progressWrap');
+  var progressBar = document.getElementById('cdg-progressBar');
+  var startOverlay = document.getElementById('cdg-start');
+  var winOverlay = document.getElementById('cdg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'istana_fitnah',
+      text:'Raden Putra, Raja Jenggala, memiliki Permaisuri yang baik hati dan Selir yang iri hati. Selir bersekongkol dengan tabib istana memfitnah Permaisuri telah meracuninya.' },
+    { type:'caption', phase:1, scene:'istana_fitnah',
+      text:'Raja murka dan memerintahkan Patih membuang Permaisuri ke hutan, bahkan membunuhnya di sana.' },
+    { type:'hold', phase:1, scene:'hutan_asing',
+      text:'Sang Patih diam-diam tak tega. Tahan tombol untuk membantunya membangun rumah kecil bagi Permaisuri di tengah hutan.' },
+    { type:'caption', phase:1, scene:'hutan_asing',
+      text:'Patih mengusap darah kelinci pada kerisnya sebagai bukti palsu, lalu berpamitan. Permaisuri, yang sedang mengandung, kini tinggal sendiri di hutan.' },
+    { type:'caption', phase:2, scene:'hutan_bayi',
+      text:'Permaisuri melahirkan seorang putra bernama Cindelaras. Ia tumbuh cerdas dan tangkas, akrab dengan hewan-hewan hutan.' },
+    { type:'hold', phase:3, scene:'telur_erat',
+      text:'Seekor rajawali menjatuhkan sebutir telur ayam. Tahan tombol untuk membantu Cindelaras mengerami telur itu bersama ayam hutan sahabatnya.' },
+    { type:'caption', phase:3, scene:'ayam_ajaib',
+      text:'Telur itu menetas menjadi ayam jago sakti yang bisa berkokok mengucap kata-kata, mengungkap bahwa ayah Cindelaras adalah Raden Putra sendiri!' },
+    { type:'caption', phase:4, scene:'jalan_istana',
+      text:'Cindelaras meminta izin ibunya untuk pergi ke istana, membawa ayam jagonya, demi membersihkan nama baik sang ibu.' },
+    { type:'hold', phase:4, scene:'adu_pertama',
+      text:'Di tengah jalan, para pengadu ayam menantangnya. Tahan tombol untuk mengerahkan semangat ayam jago Cindelaras!' },
+    { type:'caption', phase:4, scene:'adu_pertama',
+      text:'Ayam jago Cindelaras menang dengan mudah. Namanya pun tersohor ke seantero negeri, hingga terdengar oleh Raden Putra sendiri.' },
+    { type:'caption', phase:5, scene:'istana_tantangan',
+      text:'Raden Putra memanggil Cindelaras untuk mengadu ayam di alun-alun istana, disaksikan seluruh rakyat Jenggala.' },
+    { type:'hold', phase:5, scene:'adu_final',
+      text:'Tahan tombol untuk mengerahkan seluruh semangat ayam jago Cindelaras dalam pertarungan penentu ini!' },
+    { type:'caption', phase:5, scene:'adu_final',
+      text:'Ayam jago Raden Putra kalah dan lari dari arena. Seketika itu, ayam jago Cindelaras berkokok mengucap jati diri tuannya di hadapan seluruh rakyat.' },
+    { type:'caption', phase:5, scene:'kebenaran',
+      text:'Raden Putra terkejut. Sang Patih pun akhirnya bersaksi bahwa Permaisuri tak bersalah, dan Selir beserta tabib mengakui kejahatan mereka.' }
+  ];
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = 'Tahap ' + p + ' / 5'; }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = 'Lanjut ▶';
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = 'Tahan untuk Berjuang';
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('cdg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('cdg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawPermaisuri(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7FA8C9';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,10*s,-11*s,24*s);
+    ctx.lineTo(11*s,24*s); ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.arc(0,-25*s,4*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRaja(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5A2E5A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-5*s); ctx.lineTo(-4*s,-5*s); ctx.lineTo(6*s,9*s); ctx.lineTo(0,9*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPatih(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D5A4A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-8*s); ctx.quadraticCurveTo(-16*s,2*s,-12*s,10*s);
+    ctx.lineTo(12*s,10*s); ctx.quadraticCurveTo(16*s,2*s,12*s,-8*s);
+    ctx.quadraticCurveTo(0,-13*s,-12*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,8*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCindelaras(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8B5E3C';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,4*s); ctx.lineTo(10*s,4*s); ctx.lineTo(8*s,20*s); ctx.lineTo(-8*s,20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.ellipse(0,-8*s,10*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath(); ctx.ellipse(0,-20*s,7.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRooster(px, py, size, powerAmt){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(powerAmt > 0){
+      var g = ctx.createRadialGradient(0,0,2,0,0,30*s);
+      g.addColorStop(0,'rgba(255,200,87,'+(0.4*powerAmt)+')');
+      g.addColorStop(1,'rgba(255,200,87,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,30*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#2E4A3A';
+    for(var i=0;i<4;i++){
+      ctx.save();
+      ctx.rotate(-0.5 + i*0.28);
+      ctx.beginPath();
+      ctx.ellipse(-10*s,-2*s,4*s,12*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#8B5E3C';
+    ctx.beginPath();
+    ctx.ellipse(2*s,2*s,13*s,9*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.arc(11*s,-4*s,6*s,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#E76F51';
+    ctx.beginPath();
+    ctx.moveTo(9*s,-9*s); ctx.lineTo(12*s,-15*s); ctx.lineTo(14*s,-8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#F0A93A';
+    ctx.beginPath();
+    ctx.moveTo(16*s,-4*s); ctx.lineTo(21*s,-2*s); ctx.lineTo(16*s,0);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E76F51';
+    ctx.fillRect(0,10*s,2*s,6*s);
+    ctx.fillRect(6*s,10*s,2*s,6*s);
+    ctx.restore();
+  }
+
+  function drawEagle(px,py,size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.ellipse(0,0,8*s,5*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-6*s,0); ctx.lineTo(-22*s,-10*s); ctx.lineTo(-8*s,3*s);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(6*s,0); ctx.lineTo(22*s,-10*s); ctx.lineTo(8*s,3*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawEgg(px,py,size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.ellipse(0,0,6*s,8*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(-26*s,8*s); ctx.lineTo(0,-20*s); ctx.lineTo(26*s,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(-18*s,8*s,36*s,22*s);
+    ctx.restore();
+  }
+
+  function drawThrone(px,py,size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9A24E';
+    ctx.fillRect(-18*s,-30*s,36*s,50*s);
+    ctx.fillStyle = '#8A2E2E';
+    ctx.fillRect(-14*s,-24*s,28*s,42*s);
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='istana_fitnah' || scene==='istana_tantangan' || scene==='adu_final' || scene==='kebenaran'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='hutan_asing' || scene==='hutan_bayi' || scene==='telur_erat' || scene==='ayam_ajaib'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'istana_fitnah';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='istana_fitnah'){
+      for(var k=0;k<5;k++){
+        ctx.fillStyle = '#C9A24E';
+        ctx.fillRect(90+k*150, 160, 22, 170);
+        ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+      }
+      ctx.fillStyle = '#E8C88A';
+      ctx.fillRect(0,320,W,H-320);
+      drawThrone(400, 300, 60);
+      drawRaja(400, 300+bob, 46);
+    }
+
+    if(scene==='hutan_asing' || scene==='hutan_bayi'){
+      ctx.fillStyle = '#4C7A4C';
+      ctx.fillRect(0,300,W,H-300);
+      for(var i=0;i<6;i++){
+        ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+        ctx.beginPath();
+        ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+        ctx.closePath(); ctx.fill();
+      }
+      drawHut(600, 300, 60);
+      drawPermaisuri(360, 340+bob, 46);
+      if(scene==='hutan_bayi'){
+        drawCindelaras(420, 356+bob*0.6, 26);
+      }
+    }
+
+    if(scene==='telur_erat' || scene==='ayam_ajaib'){
+      ctx.fillStyle = '#4C7A4C';
+      ctx.fillRect(0,300,W,H-300);
+      drawCindelaras(340, 340+bob, 44);
+      if(scene==='telur_erat'){
+        drawEagle(500, 120 + Math.sin(t*2)*10, 40);
+        drawEgg(460, 340+Math.sin(t*3)*4, 30);
+      } else {
+        drawRooster(460, 335+bob, 46, 0.6);
+      }
+    }
+
+    if(scene==='jalan_istana'){
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      drawCindelaras(300, 340+bob, 44);
+      drawRooster(360, 340+bob, 34, 0);
+      drawPermaisuri(220, 340+bob*0.7, 40);
+    }
+
+    if(scene==='adu_pertama' || scene==='adu_final'){
+      ctx.fillStyle = '#E8C88A';
+      ctx.fillRect(0,300,W,H-300);
+      for(var kk=0;kk<5;kk++){
+        ctx.fillStyle = 'rgba(139,94,60,0.4)';
+        ctx.beginPath();
+        ctx.arc(60+kk*170, 260, 14, 0, Math.PI*2);
+        ctx.fill();
+      }
+      var powerAmt = progress;
+      drawCindelaras(230, 340+bob, 40);
+      drawRooster(330, 330+bob, 40, powerAmt);
+      if(scene==='adu_final'){
+        drawRaja(600, 340+bob, 42);
+        drawRooster(500, 330+bob, 40, Math.max(0,0.5-powerAmt*0.5));
+      } else {
+        drawRooster(500, 330+bob, 34, Math.max(0,0.4-powerAmt*0.4));
+      }
+    }
+
+    if(scene==='istana_tantangan' || scene==='kebenaran'){
+      for(var m=0;m<5;m++){
+        ctx.fillStyle = '#C9A24E';
+        ctx.fillRect(90+m*150, 160, 22, 170);
+        ctx.beginPath(); ctx.arc(90+m*150+11, 160, 22, Math.PI, 0); ctx.fill();
+      }
+      ctx.fillStyle = '#E8C88A';
+      ctx.fillRect(0,320,W,H-320);
+      drawThrone(600, 300, 60);
+      drawRaja(600, 300+bob, 46);
+      drawCindelaras(300, 340+bob, 44);
+      drawRooster(360, 335+bob, 34, 0.6);
+      if(scene==='kebenaran'){
+        drawPatih(460, 340+bob*0.7, 40);
+      }
+    }
+
+    if(step && step.type === 'hold' && (step.scene==='adu_pertama' || step.scene==='adu_final')){
+      ctx.font = '700 14px sans-serif';
+      ctx.fillStyle = '#8A5A1E';
+      ctx.textAlign = 'center';
+      ctx.fillText('Semangat Ayam Jago', 400, 40);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('cdg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'cdg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('cdg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
