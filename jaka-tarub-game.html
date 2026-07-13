@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jaka Tarub dan Dewi Nawang Wulan - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #jtg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A3A;
+    background: linear-gradient(180deg, #F0E9F7 0%, #F7F3E8 100%);
+    border: 3px solid #6E5A9A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #jtg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #4A3B78;
+  }
+  #jtg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f7a;
+    margin: 0 0 10px;
+  }
+  #jtg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #jtg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #jtg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #6E5A9A;
+    background: #2E2A4A;
+  }
+  #jtg-canvas { display: block; width: 100%; height: 100%; }
+  .jtg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(30,24,46,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .jtg-overlay.show { display: flex; }
+  .jtg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .jtg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .jtg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .jtg-btn:active { transform: scale(0.97); }
+
+  #jtg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #6E5A9A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #jtg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #jtg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #6E5A9A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #jtg-actionBtn.hold { background: #3D7A4C; }
+  #jtg-actionBtn.qte { background: #E76F51; }
+  #jtg-actionBtn:active { transform: scale(0.97); }
+  #jtg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #jtg-progressWrap.show { display: block; }
+  #jtg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="jtg-wrap">
+  <h2>🌙 Jaka Tarub &amp; Dewi Nawang Wulan</h2>
+  <p id="jtg-sub">Ikuti kisah Jaka Tarub bertemu para bidadari kahyangan hingga akhir kisahnya dengan Nawang Wulan.</p>
+
+  <div id="jtg-hud"><span id="jtg-phase">Tahap 1 / 5</span></div>
+
+  <div id="jtg-canvas-holder">
+    <canvas id="jtg-canvas"></canvas>
+
+    <div class="jtg-overlay show" id="jtg-start">
+      <h3>Jaka Tarub &amp; Dewi Nawang Wulan</h3>
+      <p>Jaka Tarub, pemuda desa Tarub, suatu hari tersesat ke sebuah telaga tersembunyi di hutan dan menemukan tujuh bidadari kahyangan sedang mandi. Ikuti kisahnya hingga pertemuannya dengan Dewi Nawang Wulan.</p>
+      <button class="jtg-btn" id="jtg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="jtg-overlay" id="jtg-caught">
+      <h3>Terlambat! 😅</h3>
+      <p>Para bidadari keburu selesai mandi dan terbang kembali ke kahyangan sebelum Jaka Tarub sempat mengambil selendang. Coba lagi dari awal kisahnya!</p>
+      <button class="jtg-btn" id="jtg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="jtg-overlay" id="jtg-win">
+      <h3>Kisah Berakhir Haru 🌾</h3>
+      <p>Setiap malam, Nawang Wulan turun dari kahyangan untuk menyusui Nawangsih di dangau, dan Jaka Tarub selalu menghormati permintaan terakhir istrinya untuk tidak mengintip. Jaka Tarub kelak dikenal sebagai Ki Ageng Tarub, leluhur Dinasti Mataram.</p>
+      <button class="jtg-btn" id="jtg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="jtg-caption">Bersiap memulai kisah...</div>
+
+  <div id="jtg-progressWrap"><div id="jtg-progressBar"></div></div>
+  <div id="jtg-action-row">
+    <button id="jtg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById('jtg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('jtg-phase');
+  var captionEl = document.getElementById('jtg-caption');
+  var actionBtn = document.getElementById('jtg-actionBtn');
+  var progressWrap = document.getElementById('jtg-progressWrap');
+  var progressBar = document.getElementById('jtg-progressBar');
+  var startOverlay = document.getElementById('jtg-start');
+  var caughtOverlay = document.getElementById('jtg-caught');
+  var winOverlay = document.getElementById('jtg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var qteActive = false;
+  var qteTimeLeft = 0;
+  var QTE_DURATION = 1.6;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'forest_hunt',
+      text:'Jaka Tarub, pemuda desa Tarub, gemar berburu di hutan dengan sumpitnya. Sejak ibu angkatnya, Mbok Randa, wafat, ia sering melamun sendirian.' },
+    { type:'caption', phase:1, scene:'forest_hunt',
+      text:'Suatu hari, kelelahan berburu, ia tertidur di sebuah batu besar. Sayup-sayup ia mendengar suara perempuan tertawa dari kejauhan.' },
+    { type:'hold', phase:2, scene:'telaga_far',
+      text:'Tahan tombol untuk membantu Jaka Tarub mengendap-endap mendekati telaga tanpa membuat suara.' },
+    { type:'caption', phase:2, scene:'telaga_bath',
+      text:'Dari balik batu besar, Jaka Tarub melihat tujuh bidadari cantik jelita tengah mandi di telaga tersembunyi itu.' },
+    { type:'qte', phase:2, scene:'telaga_bath',
+      text:'Jaka Tarub ingin menikahi salah satunya. Cepat, tekan AMBIL untuk mengambil salah satu selendang sebelum mereka selesai mandi!' },
+    { type:'caption', phase:2, scene:'telaga_fly',
+      text:'Enam bidadari segera terbang pulang ke kahyangan. Hanya Nawang Wulan yang kebingungan karena selendangnya hilang, dan menangis sendirian.' },
+    { type:'caption', phase:2, scene:'telaga_fly',
+      text:'Jaka Tarub menghampiri dan menawarkan tempat tinggal. Nawang Wulan pun terpaksa menerima karena tak tahu harus berbuat apa.' },
+    { type:'caption', phase:3, scene:'rumah_bahagia',
+      text:'Mereka menikah dan hidup bahagia bersama putri mereka, Nawangsih. Namun anehnya, lumbung padi Jaka Tarub tak pernah berkurang.' },
+    { type:'hold', phase:3, scene:'rumah_masak',
+      text:'Tahan tombol untuk membantu Jaka Tarub menjaga api, sambil menahan rasa penasarannya pada kukusan nasi istrinya.' },
+    { type:'caption', phase:4, scene:'rumah_masak',
+      text:'Karena tak tahan penasaran, Jaka membuka tutup kukusan. Di dalamnya hanya ada sebutir beras — kesaktian Nawang Wulan pun lenyap seketika.' },
+    { type:'caption', phase:4, scene:'lumbung_habis',
+      text:'Sejak itu Nawang Wulan harus bekerja seperti manusia biasa menumbuk padi, dan lumbung mereka lambat laun habis.' },
+    { type:'caption', phase:4, scene:'selendang_temu',
+      text:'Suatu hari, Nawang Wulan menemukan selendangnya yang tersembunyi di lumbung. Ia pun sadar semua ulah suaminya, dan memutuskan kembali ke kahyangan.' },
+    { type:'hold', phase:5, scene:'dangau_bangun',
+      text:'Tahan tombol untuk membantu Jaka Tarub membangun dangau, tempat menyusui Nawangsih setiap malam sesuai pesan Nawang Wulan.' },
+    { type:'caption', phase:5, scene:'dangau_malam',
+      text:'Setiap malam, Nawang Wulan turun dari kahyangan untuk menyusui Nawangsih. Jaka Tarub pun menghormati permintaan terakhir istrinya untuk tidak pernah mengintip.' }
+  ];
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = 'Tahap ' + p + ' / 5'; }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    qteActive = false;
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = 'Lanjut ▶';
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = 'Tahan untuk Berjuang';
+      progressWrap.classList.add('show');
+    } else if(step.type === 'qte'){
+      actionBtn.className = 'qte';
+      actionBtn.textContent = '🧣 AMBIL!';
+      progressWrap.classList.remove('show');
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'qte'){
+      if(qteActive){
+        qteActive = false;
+        nextStep();
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('jtg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('jtg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('jtg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawJaka(px, py, size){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,6*s); ctx.lineTo(11*s,6*s); ctx.lineTo(9*s,20*s); ctx.lineTo(-9*s,20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 1*s;
+    for(var i=-8;i<=8;i+=5){
+      ctx.beginPath(); ctx.moveTo(i*s,7*s); ctx.lineTo(i*0.75*s,19*s); ctx.stroke();
+    }
+
+    ctx.fillStyle = '#C9A24E';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-9*s);
+    ctx.quadraticCurveTo(-15*s,2*s,-11*s,8*s);
+    ctx.lineTo(11*s,8*s);
+    ctx.quadraticCurveTo(15*s,2*s,11*s,-9*s);
+    ctx.quadraticCurveTo(0,-13*s,-11*s,-9*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath();
+    ctx.arc(0,-15*s,7.5*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#3A2E5A';
+    ctx.beginPath();
+    ctx.ellipse(0,-20*s,9*s,4*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(6*s,-20*s); ctx.lineTo(14*s,-15*s); ctx.lineTo(8*s,-13*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawBidadari(px, py, size, glowAmt, colorMain){
+    var s = size/56;
+    var col = colorMain || '#EFDFC0';
+    ctx.save();
+    ctx.translate(px, py);
+
+    if(glowAmt > 0){
+      var g = ctx.createRadialGradient(0,-6*s,4,0,-6*s,38*s);
+      g.addColorStop(0,'rgba(255,250,225,'+(0.45*glowAmt)+')');
+      g.addColorStop(1,'rgba(255,250,225,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0,-6*s,38*s,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s);
+    ctx.quadraticCurveTo(-18*s,10*s,-11*s,26*s);
+    ctx.lineTo(11*s,26*s);
+    ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath();
+    ctx.ellipse(0,-16*s,7.5*s,8.5*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-23*s,4*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath();
+    ctx.arc(0,-13*s,6*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawSelendang(px, py, size, wave){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(Math.sin(wave)*0.1);
+    var g = ctx.createLinearGradient(-16*s,0,16*s,0);
+    g.addColorStop(0,'#F7CFE0');
+    g.addColorStop(1,'#D9AF3C');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-16*s,-3*s);
+    ctx.quadraticCurveTo(0,4*s,16*s,-3*s);
+    ctx.lineTo(16*s,3*s);
+    ctx.quadraticCurveTo(0,10*s,-16*s,3*s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(px, py, size){
+    var s = size/60;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(-30*s,10*s); ctx.lineTo(0,-24*s); ctx.lineTo(30*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(-20*s,10*s,40*s,26*s);
+    ctx.fillStyle = '#5C4433';
+    ctx.fillRect(-6*s,20*s,12*s,16*s);
+    ctx.restore();
+  }
+
+  function drawLumbung(px, py, size, fillAmt){
+    var s = size/50;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#B5842A';
+    ctx.beginPath();
+    ctx.moveTo(-20*s,4*s); ctx.lineTo(0,-16*s); ctx.lineTo(20*s,4*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9C48A';
+    ctx.fillRect(-16*s,4*s,32*s,22*s);
+    var fh = 20*s*Math.max(0.08,fillAmt);
+    ctx.fillStyle = '#EBC94A';
+    ctx.fillRect(-14*s, 24*s-fh, 28*s, fh);
+    ctx.restore();
+  }
+
+  function drawDangau(px, py, size, built){
+    var s = size/50;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.strokeStyle = '#6b4a2a';
+    ctx.lineWidth = 3*s;
+    ctx.beginPath();
+    ctx.moveTo(-16*s,20*s); ctx.lineTo(-16*s,-6*s);
+    ctx.moveTo(16*s,20*s); ctx.lineTo(16*s,-6*s);
+    ctx.stroke();
+    if(built > 0.3){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(-18*s,-8*s,36*s,6*s*built);
+      ctx.fillStyle = '#8D6E63';
+      ctx.beginPath();
+      ctx.moveTo(-20*s,-8*s); ctx.lineTo(0,-24*s*built-8*s); ctx.lineTo(20*s,-8*s);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      qteTimeLeft -= dt;
+      if(qteTimeLeft <= 0){
+        qteActive = false;
+        caughtOverlay.classList.add('show');
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='telaga_bath' || scene==='telaga_far' || scene==='telaga_fly'){
+      sky.addColorStop(0,'#3A4E78'); sky.addColorStop(1,'#6E8AAA');
+    } else if(scene==='forest_hunt'){
+      sky.addColorStop(0,'#4C7A6E'); sky.addColorStop(1,'#A8C79E');
+    } else if(scene==='dangau_malam'){
+      sky.addColorStop(0,'#141B33'); sky.addColorStop(1,'#2E3A5C');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'forest_hunt';
+    drawSky(scene);
+
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='forest_hunt'){
+      ctx.fillStyle = '#2F5233';
+      for(var i=0;i<6;i++){
+        ctx.beginPath();
+        ctx.moveTo(50+i*130,300);
+        ctx.lineTo(50+i*130+35,190);
+        ctx.lineTo(50+i*130+70,300);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      drawJaka(400, 330+bob, 50);
+    }
+
+    if(scene==='telaga_far'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#5C8AA6';
+      ctx.beginPath();
+      ctx.ellipse(560,340,180,60,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#6b4a2a';
+      ctx.beginPath();
+      ctx.arc(360,320,26,0,Math.PI*2);
+      ctx.fill();
+      drawJaka(340, 300+bob, 40);
+    }
+
+    if(scene==='telaga_bath' || scene==='telaga_fly'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#5C8AA6';
+      ctx.beginPath();
+      ctx.ellipse(480,330,260,70,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#6b4a2a';
+      ctx.beginPath();
+      ctx.arc(220,310,28,0,Math.PI*2);
+      ctx.fill();
+      drawJaka(200, 288+bob*0.6, 34);
+
+      if(scene==='telaga_bath'){
+        var colors = ['#EFDFC0','#F2D9E6','#E3E7CF','#D8E6E3'];
+        var positions = [[380,320],[460,300],[540,330],[620,300],[560,350]];
+        for(var b=0;b<positions.length;b++){
+          drawBidadari(positions[b][0], positions[b][1]+Math.sin(t*2+b)*3, 40, 0, colors[b%colors.length]);
+        }
+        drawSelendang(340, 360, 30, t*1.5);
+        drawSelendang(400, 372, 30, t*1.5+1);
+        drawSelendang(460, 366, 30, t*1.5+2);
+      } else {
+        for(var k=0;k<3;k++){
+          ctx.strokeStyle = 'rgba(255,250,225,0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(430+k*60, 260 - (t*40+k*30)%260);
+          ctx.lineTo(430+k*60+10, 260 - (t*40+k*30)%260 - 30);
+          ctx.stroke();
+        }
+        drawBidadari(420, 330 + bob, 44, 0.3, '#F2D9E6');
+      }
+    }
+
+    if(scene==='rumah_bahagia'){
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      drawHut(560, 300, 70);
+      drawLumbung(300, 310, 46, 0.95);
+      drawJaka(420, 340+bob, 42);
+      drawBidadari(470, 330+bob*0.7, 40, 0, '#EFDFC0');
+    }
+
+    if(scene==='rumah_masak'){
+      ctx.fillStyle = '#DDD3B8';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#3A2E24';
+      ctx.beginPath();
+      ctx.arc(430,340,26,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      for(var sm=0;sm<3;sm++){
+        ctx.beginPath();
+        ctx.arc(430+Math.sin(t*3+sm)*6, 310 - sm*16 - (t*20)%40, 6, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#E76F51';
+      ctx.beginPath();
+      ctx.moveTo(410,366); ctx.lineTo(420,350); ctx.lineTo(430,366); ctx.lineTo(440,352); ctx.lineTo(450,366);
+      ctx.closePath(); ctx.fill();
+      drawJaka(330, 340+bob, 42);
+    }
+
+    if(scene==='lumbung_habis'){
+      ctx.fillStyle = '#C9BFA0';
+      ctx.fillRect(0,300,W,H-300);
+      drawLumbung(400, 320, 50, 0.12);
+      drawBidadari(500, 330+bob, 40, 0, '#EFDFC0');
+    }
+
+    if(scene==='selendang_temu'){
+      ctx.fillStyle = '#C9BFA0';
+      ctx.fillRect(0,300,W,H-300);
+      drawLumbung(320, 320, 46, 0.08);
+      drawBidadari(460, 320+bob, 46, 0, '#EFDFC0');
+      drawSelendang(500, 300+bob, 32, t*2);
+      drawJaka(620, 340+bob, 40);
+    }
+
+    if(scene==='dangau_bangun'){
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      var built = Math.min(1, (t%6)/3);
+      drawDangau(460, 330, 60, 0.9);
+      drawJaka(360, 340+bob, 42);
+    }
+
+    if(scene==='dangau_malam'){
+      ctx.fillStyle = '#EFE6C8';
+      ctx.beginPath();
+      ctx.arc(680,80,32,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#1E2A3E';
+      ctx.fillRect(0,300,W,H-300);
+      drawDangau(430, 330, 60, 1);
+      drawBidadari(430, 260 + Math.sin(t*1.5)*6, 50, 1, '#F2D9E6');
+      drawJaka(560, 340, 40);
+      drawHut(620, 300, 60);
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      var frac = qteTimeLeft / QTE_DURATION;
+      ctx.strokeStyle = '#E76F51';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(400, 60, 30, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('jtg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'jtg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('jtg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
