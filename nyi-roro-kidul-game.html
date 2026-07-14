@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Nyi Roro Kidul - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #nrk-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #1F3A34;
+    background: linear-gradient(180deg, #E1F3EC 0%, #F7F3E8 100%);
+    border: 3px solid #1E6E5A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #nrk-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #14503F;
+  }
+  #nrk-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #nrk-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #nrk-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #nrk-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #1E6E5A;
+    background: #1E4E58;
+  }
+  #nrk-canvas { display: block; width: 100%; height: 100%; }
+  .nrk-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,36,32,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .nrk-overlay.show { display: flex; }
+  .nrk-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .nrk-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .nrk-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .nrk-btn:active { transform: scale(0.97); }
+
+  #nrk-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #1E6E5A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #nrk-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #nrk-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #1E6E5A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #nrk-actionBtn.hold { background: #3D7A4C; }
+  #nrk-actionBtn:active { transform: scale(0.97); }
+  #nrk-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #nrk-progressWrap.show { display: block; }
+  #nrk-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="nrk-wrap">
+  <h2>🌊 Asal Usul Nyi Roro Kidul</h2>
+  <p id="nrk-sub">Ikuti kisah Putri Kandita dari Kerajaan Pakuan Pajajaran hingga menjadi Ratu Laut Pantai Selatan.</p>
+
+  <div id="nrk-hud"><span id="nrk-phase">Tahap 1 / 5</span></div>
+
+  <div id="nrk-canvas-holder">
+    <canvas id="nrk-canvas"></canvas>
+
+    <div class="nrk-overlay show" id="nrk-start">
+      <h3>Asal Usul Nyi Roro Kidul</h3>
+      <p>Putri Kandita, putri kesayangan Prabu Siliwangi dari Kerajaan Pakuan Pajajaran, difitnah oleh para selir yang iri hati. Ikuti kisahnya hingga ia dikenal sebagai Ratu Laut Pantai Selatan, Nyi Roro Kidul.</p>
+      <button class="nrk-btn" id="nrk-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="nrk-overlay" id="nrk-win">
+      <h3>Ratu Laut Pantai Selatan 👑🌊</h3>
+      <p>Hingga kini, Nyi Roro Kidul dikenal luas dalam cerita rakyat Jawa Barat sebagai Ratu Laut Pantai Selatan — sosok putri yang bangkit dari kesedihan menjadi penguasa lautan yang dihormati oleh masyarakat pesisir.</p>
+      <button class="nrk-btn" id="nrk-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="nrk-caption">Bersiap memulai kisah...</div>
+
+  <div id="nrk-progressWrap"><div id="nrk-progressBar"></div></div>
+  <div id="nrk-action-row">
+    <button id="nrk-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Asal Usul Nyi Roro Kidul - Game',
+      h2: '🌊 Asal Usul Nyi Roro Kidul',
+      sub: 'Ikuti kisah Putri Kandita dari Kerajaan Pakuan Pajajaran hingga menjadi Ratu Laut Pantai Selatan.',
+      startTitle: 'Asal Usul Nyi Roro Kidul',
+      startBody: 'Putri Kandita, putri kesayangan Prabu Siliwangi dari Kerajaan Pakuan Pajajaran, difitnah oleh para selir yang iri hati. Ikuti kisahnya hingga ia dikenal sebagai Ratu Laut Pantai Selatan, Nyi Roro Kidul.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Ratu Laut Pantai Selatan 👑🌊',
+      winBody: 'Hingga kini, Nyi Roro Kidul dikenal luas dalam cerita rakyat Jawa Barat sebagai Ratu Laut Pantai Selatan — sosok putri yang bangkit dari kesedihan menjadi penguasa lautan yang dihormati oleh masyarakat pesisir.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      walkBtn: '🚶 TERUS BERJALAN',
+      leapBtn: '🌊 TERJUN!',
+      powerBtn: '✨ KERAHKAN KESAKTIAN',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala, Kerajaan Pakuan Pajajaran dipimpin oleh Prabu Siliwangi. Dari permaisurinya, ia dikaruniai seorang putri yang cantik, arif, dan bijaksana bernama Putri Kandita.',
+        'Karena sifat-sifatnya yang baik, Prabu Siliwangi bermaksud menjadikan Putri Kandita penerusnya kelak. Rencana ini membuat para selir dan anak-anak mereka cemburu, hingga bersekongkol mengupah seorang dukun ilmu hitam.',
+        'Dengan ilmu hitamnya, sang dukun menyihir Putri Kandita dan ibunya dengan penyakit kulit yang parah. Seluruh istana gempar, namun tak satu tabib pun mampu menyembuhkan mereka.',
+        'Sang permaisuri akhirnya wafat karena sakitnya. Putri Kandita dan Prabu Siliwangi larut dalam kesedihan yang mendalam.',
+        'Para selir menghasut Prabu Siliwangi agar mengusir Putri Kandita, dengan alasan sakitnya akan membawa petaka bagi istana. Dengan berat hati, sang raja pun terpaksa mengusir putri kesayangannya sendiri.',
+        'Tahan tombol untuk membantu Putri Kandita berjalan berhari-hari tanpa arah yang pasti, hingga tiba di Pantai Selatan yang luas dan sunyi.',
+        'Kelelahan, Putri Kandita tertidur di tepi pantai. Dalam tidurnya, ia mendengar bisikan gaib yang menyuruhnya menceburkan diri ke laut agar sembuh dari sakitnya.',
+        'Tahan tombol untuk membantu Putri Kandita memberanikan diri menceburkan diri ke laut lepas.',
+        'Ajaib, seluruh penyakit kulitnya lenyap seketika. Tubuhnya kembali bersih seperti sediakala, dan ia kini memiliki kesaktian yang luar biasa.',
+        'Putri Kandita memilih menetap di Pantai Selatan, dan sejak saat itu dikenal luas sebagai Ratu Laut Pantai Selatan, atau Nyi Roro Kidul.',
+        'Banyak pangeran datang melamarnya, namun harus mengalahkan kesaktiannya lebih dulu di atas gelombang laut. Tahan tombol untuk mengerahkan kesaktian Nyi Roro Kidul menghadapi mereka!',
+        'Tak satu pun pangeran mampu menandinginya. Banyak dari mereka akhirnya menjadi pengikut setia Nyi Roro Kidul.'
+      ]
+    },
+    en: {
+      title: 'The Origin of Nyi Roro Kidul - Game',
+      h2: '🌊 The Origin of Nyi Roro Kidul',
+      sub: 'Follow Princess Kandita\'s tale from the Pakuan Pajajaran Kingdom to becoming the Queen of the Southern Sea.',
+      startTitle: 'The Origin of Nyi Roro Kidul',
+      startBody: 'Princess Kandita, the beloved daughter of King Siliwangi of the Pakuan Pajajaran Kingdom, is slandered by jealous concubines. Follow her story to becoming known as the Queen of the Southern Sea, Nyi Roro Kidul.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Queen of the Southern Sea 👑🌊',
+      winBody: 'To this day, Nyi Roro Kidul is widely known in West Java folklore as the Queen of the Southern Sea — a princess who rose from sorrow to become a ruler of the sea, respected by coastal communities.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      walkBtn: '🚶 KEEP WALKING',
+      leapBtn: '🌊 LEAP IN!',
+      powerBtn: '✨ CALL ON YOUR POWER',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, the Pakuan Pajajaran Kingdom was ruled by King Siliwangi. His queen bore him a beautiful, wise, and kind-hearted daughter named Princess Kandita.',
+        'Because of her fine character, King Siliwangi intends to make Princess Kandita his successor. This plan makes his concubines and their children jealous, and they conspire to hire a black-magic sorcerer.',
+        'Using his dark arts, the sorcerer curses Princess Kandita and her mother with a severe skin illness. The whole palace is in an uproar, but no healer can cure them.',
+        'The queen eventually passes away from her illness. Princess Kandita and King Siliwangi are consumed by deep grief.',
+        'The concubines pressure King Siliwangi to banish Princess Kandita, claiming her illness will bring disaster to the palace. Reluctantly, the king is forced to banish his own beloved daughter.',
+        'Hold the button to help Princess Kandita walk for days without a clear direction, until she reaches the vast, quiet Southern Coast.',
+        'Exhausted, Princess Kandita falls asleep by the shore. In her sleep, she hears a mystical whisper telling her to throw herself into the sea to be healed.',
+        'Hold the button to help Princess Kandita gather her courage and leap into the open sea.',
+        'Miraculously, her skin illness vanishes at once. Her body becomes clear and smooth again, and she now possesses extraordinary powers.',
+        'Princess Kandita chooses to settle on the Southern Coast, and from then on becomes widely known as the Queen of the Southern Sea, Nyi Roro Kidul.',
+        'Many princes come to court her, but each must first defeat her in a duel upon the ocean waves. Hold the button to summon Nyi Roro Kidul\'s power against them!',
+        'Not a single prince manages to match her power. Many of them eventually become loyal followers of Nyi Roro Kidul.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#nrk-wrap h2').textContent = TXT.h2;
+  document.getElementById('nrk-sub').textContent = TXT.sub;
+  document.querySelector('#nrk-start h3').textContent = TXT.startTitle;
+  document.querySelector('#nrk-start p').textContent = TXT.startBody;
+  document.getElementById('nrk-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#nrk-win h3').textContent = TXT.winTitle;
+  document.querySelector('#nrk-win p').textContent = TXT.winBody;
+  document.getElementById('nrk-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('nrk-caption').textContent = TXT.captionInit;
+  document.getElementById('nrk-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('nrk-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('nrk-phase');
+  var captionEl = document.getElementById('nrk-caption');
+  var actionBtn = document.getElementById('nrk-actionBtn');
+  var progressWrap = document.getElementById('nrk-progressWrap');
+  var progressBar = document.getElementById('nrk-progressBar');
+  var startOverlay = document.getElementById('nrk-start');
+  var winOverlay = document.getElementById('nrk-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'istana_pajajaran' },
+    { type:'caption', phase:1, scene:'selir_iri' },
+    { type:'caption', phase:2, scene:'kusta_menimpa' },
+    { type:'caption', phase:2, scene:'permaisuri_wafat' },
+    { type:'caption', phase:2, scene:'diusir_istana' },
+    { type:'hold', phase:3, scene:'mengembara' },
+    { type:'caption', phase:3, scene:'bisikan_gaib' },
+    { type:'hold', phase:4, scene:'terjun_laut' },
+    { type:'caption', phase:4, scene:'sembuh_sakti' },
+    { type:'caption', phase:5, scene:'jadi_ratu' },
+    { type:'hold', phase:5, scene:'tantangan_pangeran' },
+    { type:'caption', phase:5, scene:'pengikut_setia' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'mengembara') actionBtn.textContent = TXT.walkBtn;
+      else if(step.scene === 'terjun_laut') actionBtn.textContent = TXT.leapBtn;
+      else if(step.scene === 'tantangan_pangeran') actionBtn.textContent = TXT.powerBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('nrk-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('nrk-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawKing(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E4A8A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-5*s); ctx.lineTo(-4*s,-5*s); ctx.lineTo(6*s,9*s); ctx.lineTo(0,9*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawQueen(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7FA8C9';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,10*s,-11*s,24*s);
+    ctx.lineTo(11*s,24*s); ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.arc(0,-25*s,4*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPutriKandita(px, py, size, sick, robeColor){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    if(sick){
+      ctx.filter = 'saturate(0.5) brightness(0.85)';
+    }
+    ctx.fillStyle = robeColor || '#EFDFC0';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,7*s); ctx.lineTo(0,7*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6*s,0,0,Math.PI*2); ctx.fill();
+    ctx.filter = 'none';
+    ctx.restore();
+  }
+
+  function drawDukun(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E2A24';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-4*s); ctx.quadraticCurveTo(-16*s,6*s,-11*s,20*s);
+    ctx.lineTo(11*s,20*s); ctx.quadraticCurveTo(16*s,6*s,12*s,-4*s);
+    ctx.quadraticCurveTo(0,-16*s,-12*s,-4*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A7060';
+    ctx.beginPath(); ctx.arc(0,-8*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawNyiRoroKidul(px, py, size, glow){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    if(glow > 0){
+      var g = ctx.createRadialGradient(0,-6*s,4,0,-6*s,40*s);
+      g.addColorStop(0,'rgba(150,255,220,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(150,255,220,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-6*s,40*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#1E6E5A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-20*s,12*s,-12*s,30*s);
+    ctx.lineTo(12*s,30*s); ctx.quadraticCurveTo(20*s,12*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2E9A78';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(6*s,9*s); ctx.lineTo(0,9*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-21*s,7.5*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.arc(0,-28*s,4*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawWaves(y, amp, color, phase){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    ctx.lineTo(0,y);
+    for(var x=0;x<=W;x+=20){
+      ctx.lineTo(x, y + Math.sin(x*0.02+phase)*amp);
+    }
+    ctx.lineTo(W,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='istana_pajajaran' || scene==='selir_iri' || scene==='kusta_menimpa' || scene==='permaisuri_wafat' || scene==='diusir_istana'){
+      sky.addColorStop(0,'#E9C7A0'); sky.addColorStop(1,'#F6E4CE');
+    } else if(scene==='mengembara'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#C9DCC2');
+    } else if(scene==='bisikan_gaib' || scene==='terjun_laut'){
+      sky.addColorStop(0,'#1E2A4A'); sky.addColorStop(1,'#3A4E78');
+    } else if(scene==='sembuh_sakti' || scene==='jadi_ratu' || scene==='tantangan_pangeran' || scene==='pengikut_setia'){
+      sky.addColorStop(0,'#16324A'); sky.addColorStop(1,'#2E5C74');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'istana_pajajaran';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='istana_pajajaran'){
+      drawPalaceBg();
+      drawKing(560, 300+bob, 46);
+      drawPutriKandita(420, 330+bob, 40, false);
+    }
+    if(scene==='selir_iri'){
+      drawPalaceBg();
+      drawDukun(600, 330+bob, 40);
+      drawQueen(300, 335+bob, 34);
+      drawQueen(360, 335+bob, 30);
+    }
+    if(scene==='kusta_menimpa'){
+      drawPalaceBg();
+      drawPutriKandita(360, 330+bob, 42, true);
+      drawQueen(440, 330+bob, 40);
+    }
+    if(scene==='permaisuri_wafat'){
+      drawPalaceBg();
+      drawKing(400, 300+bob, 46);
+      drawPutriKandita(480, 330+bob, 38, true);
+    }
+    if(scene==='diusir_istana'){
+      drawPalaceBg();
+      drawKing(300, 300+bob, 46);
+      drawPutriKandita(460, 330+bob, 40, true);
+    }
+    if(scene==='mengembara'){
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      drawPutriKandita(200+progress*400, 330+bob, 40, true);
+    }
+    if(scene==='bisikan_gaib'){
+      ctx.fillStyle = '#5C8AA6';
+      ctx.fillRect(0,300,W,H-300);
+      drawPutriKandita(400, 340, 40, true);
+    }
+    if(scene==='terjun_laut'){
+      drawWaves(300, 12, '#1E4E58', t*1.2);
+      drawWaves(340, 10, '#164048', t*1.6+1);
+      var edgeY = 320 - progress*40;
+      drawPutriKandita(400, edgeY, 40, true);
+    }
+    if(scene==='sembuh_sakti'){
+      drawWaves(280, 10, '#1E5E62', t*1.2);
+      drawWaves(320, 8, '#164048', t*1.6+1);
+      drawNyiRoroKidul(400, 260, 60, 1);
+    }
+    if(scene==='jadi_ratu' || scene==='pengikut_setia'){
+      drawWaves(280, 10, '#1E5E62', t*1.2);
+      drawWaves(320, 8, '#164048', t*1.6+1);
+      drawNyiRoroKidul(400, 250, 56, 0.6);
+      if(scene==='pengikut_setia'){
+        drawKing(250, 320+bob*0.6, 34);
+        drawKing(560, 320+bob*0.6, 34);
+      }
+    }
+    if(scene==='tantangan_pangeran'){
+      drawWaves(280, 14+progress*10, '#1E5E62', t*2);
+      drawWaves(320, 10+progress*8, '#164048', t*2.4+1);
+      drawNyiRoroKidul(320, 250, 56, 0.5+progress*0.5);
+      drawKing(560, 280+bob, 40);
+      drawKing(630, 300+bob, 34);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('nrk-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'nrk-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('nrk-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
