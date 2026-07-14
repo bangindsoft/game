@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sangkuriang - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #skg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #skg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #skg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #skg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #skg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #skg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #skg-canvas { display: block; width: 100%; height: 100%; }
+  .skg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .skg-overlay.show { display: flex; }
+  .skg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .skg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .skg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .skg-btn:active { transform: scale(0.97); }
+
+  #skg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #skg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #skg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #skg-actionBtn.hold { background: #8A5A1E; }
+  #skg-actionBtn:active { transform: scale(0.97); }
+  #skg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #skg-progressWrap.show { display: block; }
+  #skg-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="skg-wrap">
+  <h2>⛰️ Sangkuriang</h2>
+  <p id="skg-sub">Ikuti kisah Sangkuriang hingga asal usul terbentuknya Gunung Tangkuban Perahu.</p>
+
+  <div id="skg-hud"><span id="skg-phase">Tahap 1 / 5</span></div>
+
+  <div id="skg-canvas-holder">
+    <canvas id="skg-canvas"></canvas>
+
+    <div class="skg-overlay show" id="skg-start">
+      <h3>Sangkuriang</h3>
+      <p>Sangkuriang, pemuda sakti dari Jawa Barat, tanpa sengaja bertemu kembali dengan ibunya, Dayang Sumbi, setelah bertahun-tahun mengembara. Ikuti kisahnya hingga terbentuknya Gunung Tangkuban Perahu.</p>
+      <button class="skg-btn" id="skg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="skg-overlay" id="skg-win">
+      <h3>Asal Usul Gunung Tangkuban Perahu ⛰️</h3>
+      <p>Perahu raksasa yang tertendang dan jatuh tertelungkup itu menjelma menjadi Gunung Tangkuban Perahu, yang kini berdiri di utara Bandung, Jawa Barat — dinamai demikian karena bentuknya menyerupai perahu yang terbalik.</p>
+      <button class="skg-btn" id="skg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="skg-caption">Bersiap memulai kisah...</div>
+
+  <div id="skg-progressWrap"><div id="skg-progressBar"></div></div>
+  <div id="skg-action-row">
+    <button id="skg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Sangkuriang - Game',
+      h2: '⛰️ Sangkuriang',
+      sub: 'Ikuti kisah Sangkuriang hingga asal usul terbentuknya Gunung Tangkuban Perahu.',
+      startTitle: 'Sangkuriang',
+      startBody: 'Sangkuriang, pemuda sakti dari Jawa Barat, tanpa sengaja bertemu kembali dengan ibunya, Dayang Sumbi, setelah bertahun-tahun mengembara. Ikuti kisahnya hingga terbentuknya Gunung Tangkuban Perahu.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Usul Gunung Tangkuban Perahu ⛰️',
+      winBody: 'Perahu raksasa yang tertendang dan jatuh tertelungkup itu menjelma menjadi Gunung Tangkuban Perahu, yang kini berdiri di utara Bandung, Jawa Barat — dinamai demikian karena bentuknya menyerupai perahu yang terbalik.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      chopBtn: '🪓 TEBANG POHON',
+      damBtn: '💧 BENDUNG SUNGAI',
+      clothBtn: '🧵 TEBARKAN KAIN',
+      kickBtn: '🦵 TENDANG!',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala, seekor babi hutan tanpa sengaja meminum air seni Raja Sungging Perbangkara yang sakti mandraguna, hingga ajaib hamil dan melahirkan bayi perempuan.',
+        'Sang raja menemukan bayi itu dan membawanya ke istana, memberinya nama Dayang Sumbi. Ia tumbuh menjadi gadis yang sangat cantik.',
+        'Karena lamaran para raja dan pangeran justru menimbulkan peperangan, Dayang Sumbi meminta izin mengasingkan diri ke sebuah bukit, ditemani seekor anjing jantan bernama Tumang.',
+        'Suatu hari, alat tenun Dayang Sumbi terjatuh. Tanpa sadar, ia berjanji akan menikahi siapa pun yang mengambilkannya. Si Tumang, yang ternyata jelmaan seorang Dewa, mengambilkannya. Dayang Sumbi pun menikahinya, dan lahirlah seorang putra bernama Sangkuriang.',
+        'Sangkuriang tumbuh menjadi pemuda tampan dan sakti, gemar berburu ditemani Si Tumang, tanpa tahu bahwa anjing itu adalah ayah kandungnya sendiri.',
+        'Suatu hari saat berburu kijang, Si Tumang menolak perintah Sangkuriang untuk pertama kalinya. Sangkuriang marah besar dan membunuh Si Tumang, lalu membawa pulang hatinya.',
+        'Dayang Sumbi memasak dan memakan hati itu, tak tahu itu hati Si Tumang. Setelah tahu kebenarannya dari Sangkuriang, ia sangat marah dan memukul kepala Sangkuriang dengan batok kelapa.',
+        'Terluka dan marah, Sangkuriang pergi mengembara jauh meninggalkan ibunya, tanpa arah tujuan yang jelas selama bertahun-tahun.',
+        'Bertahun-tahun kemudian, dalam pengembaraannya, Sangkuriang tanpa sadar kembali ke tempat Dayang Sumbi, yang telah dikaruniai kecantikan abadi oleh para Dewa. Keduanya tak saling mengenali, dan berniat untuk menikah.',
+        'Saat mengikatkan ikat kepala sebelum berburu, Dayang Sumbi melihat bekas luka di kepala Sangkuriang. Ia sadar pria itu adalah anaknya sendiri, dan meminta pernikahan itu dibatalkan. Namun Sangkuriang bersikeras ingin tetap menikahinya.',
+        'Dayang Sumbi pun mengajukan syarat yang sangat berat sebagai jalan keluar: Sangkuriang harus membendung Sungai Citarum dan membuat perahu raksasa, semuanya selesai dalam waktu satu malam.',
+        'Tahan tombol untuk membantu Sangkuriang menebang pohon raksasa dan membuat perahu besar dari kayunya.',
+        'Tahan tombol untuk membantu Sangkuriang memanggil makhluk-makhluk halus membendung Sungai Citarum.',
+        'Cemas melihat pekerjaan Sangkuriang hampir selesai, Dayang Sumbi meminta pertolongan Dewa. Tahan tombol untuk membantunya menebarkan kain tenun putih agar fajar cepat tiba.',
+        'Fajar pun tiba lebih cepat. Para makhluk halus yang membantu Sangkuriang berhamburan pergi. Sangkuriang sadar telah ditipu dan menjadi murka.',
+        'Dengan penuh amarah, Sangkuriang menjebol bendungan hingga menjelma Gunung Manglayang. Tahan tombol untuk membantunya menendang perahu raksasa itu hingga terbalik!',
+        'Perahu yang tertelungkup itu menjelma menjadi Gunung Tangkuban Perahu. Dayang Sumbi berlari ketakutan hingga menghilang menjadi Bunga Jaksi, sementara Sangkuriang menghilang ke alam gaib di Ujung Berung.'
+      ]
+    },
+    en: {
+      title: 'Sangkuriang - Game',
+      h2: '⛰️ Sangkuriang',
+      sub: 'Follow the tale of Sangkuriang, all the way to the origin of Mount Tangkuban Perahu.',
+      startTitle: 'Sangkuriang',
+      startBody: 'Sangkuriang, a powerful young man from West Java, unknowingly reunites with his mother, Dayang Sumbi, after years of wandering. Follow the tale to the origin of Mount Tangkuban Perahu.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of Mount Tangkuban Perahu ⛰️',
+      winBody: 'The giant boat, kicked over and left lying face-down, became Mount Tangkuban Perahu, which now stands north of Bandung, West Java — named for its resemblance to an overturned boat.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      chopBtn: '🪓 CHOP THE TREE',
+      damBtn: '💧 DAM THE RIVER',
+      clothBtn: '🧵 SPREAD THE CLOTH',
+      kickBtn: '🦵 KICK IT OVER!',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, a wild boar unknowingly drank the urine of King Sungging Perbangkara, a man of great mystical power, and became miraculously pregnant, later giving birth to a human baby girl.',
+        'The king finds the baby and brings her back to the palace, naming her Dayang Sumbi. She grows into a strikingly beautiful young woman.',
+        'Since proposals from kings and princes only spark wars between them, Dayang Sumbi asks permission to retreat to a secluded hill, accompanied only by a male dog named Tumang.',
+        'One day, her weaving tools fall to the ground. Without thinking, she promises to marry whoever retrieves them for her. Tumang, who is actually a god in disguise, fetches them. Dayang Sumbi keeps her word and marries him, and they have a son named Sangkuriang.',
+        'Sangkuriang grows into a handsome, powerful young man who loves hunting alongside Tumang, never knowing the dog is actually his own father.',
+        'One day while hunting deer, Tumang refuses Sangkuriang\'s order for the first time. Furious, Sangkuriang kills Tumang and brings his heart home.',
+        'Dayang Sumbi cooks and eats the heart, not knowing it\'s Tumang\'s. Once Sangkuriang tells her the truth, she is furious and strikes his head with a coconut-shell ladle.',
+        'Wounded and angry, Sangkuriang leaves his mother and wanders far away, with no clear direction, for years.',
+        'Years later, still wandering, Sangkuriang unknowingly returns to where Dayang Sumbi lives, now blessed with eternal beauty by the gods. Neither recognizes the other, and they plan to marry.',
+        'While tying a headband on him before a hunt, Dayang Sumbi notices the old scar on Sangkuriang\'s head. She realizes he is her own son, and asks to call off the marriage. But Sangkuriang refuses to give her up.',
+        'Dayang Sumbi sets an extremely difficult condition as a way out: Sangkuriang must dam the Citarum River and build a giant boat, all completed within a single night.',
+        'Hold the button to help Sangkuriang fell a giant tree and carve a great boat from its wood.',
+        'Hold the button to help Sangkuriang summon spirits to dam the Citarum River.',
+        'Anxious seeing Sangkuriang\'s work nearly done, Dayang Sumbi prays for the gods\' help. Hold the button to help her spread a white woven cloth to make the dawn arrive early.',
+        'Dawn breaks earlier than it should. The spirits helping Sangkuriang scatter and flee. Sangkuriang realizes he\'s been tricked and grows furious.',
+        'In a rage, Sangkuriang breaks the dam, which becomes Mount Manglayang. Hold the button to help him kick the giant boat until it flips over!',
+        'The overturned boat becomes Mount Tangkuban Perahu. Dayang Sumbi flees in terror and vanishes, transforming into a Jaksi flower, while Sangkuriang disappears into the spirit realm at Ujung Berung.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#skg-wrap h2').textContent = TXT.h2;
+  document.getElementById('skg-sub').textContent = TXT.sub;
+  document.querySelector('#skg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#skg-start p').textContent = TXT.startBody;
+  document.getElementById('skg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#skg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#skg-win p').textContent = TXT.winBody;
+  document.getElementById('skg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('skg-caption').textContent = TXT.captionInit;
+  document.getElementById('skg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('skg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('skg-phase');
+  var captionEl = document.getElementById('skg-caption');
+  var actionBtn = document.getElementById('skg-actionBtn');
+  var progressWrap = document.getElementById('skg-progressWrap');
+  var progressBar = document.getElementById('skg-progressBar');
+  var startOverlay = document.getElementById('skg-start');
+  var winOverlay = document.getElementById('skg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'hutan_babi' },
+    { type:'caption', phase:1, scene:'istana_bayi' },
+    { type:'caption', phase:1, scene:'dayang_asing' },
+    { type:'caption', phase:2, scene:'sangkuriang_lahir' },
+    { type:'caption', phase:2, scene:'berburu_hutan' },
+    { type:'caption', phase:3, scene:'tumang_menolak' },
+    { type:'caption', phase:3, scene:'dayang_marah' },
+    { type:'caption', phase:3, scene:'sangkuriang_pergi' },
+    { type:'caption', phase:4, scene:'bertemu_lagi' },
+    { type:'caption', phase:4, scene:'luka_terungkap' },
+    { type:'caption', phase:4, scene:'syarat_berat' },
+    { type:'hold', phase:5, scene:'buat_perahu' },
+    { type:'hold', phase:5, scene:'bendung_sungai' },
+    { type:'hold', phase:5, scene:'kain_putih' },
+    { type:'caption', phase:5, scene:'fajar_tiba' },
+    { type:'hold', phase:5, scene:'tendang_perahu' },
+    { type:'caption', phase:5, scene:'asal_gunung' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'buat_perahu') actionBtn.textContent = TXT.chopBtn;
+      else if(step.scene === 'bendung_sungai') actionBtn.textContent = TXT.damBtn;
+      else if(step.scene === 'kain_putih') actionBtn.textContent = TXT.clothBtn;
+      else if(step.scene === 'tendang_perahu') actionBtn.textContent = TXT.kickBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('skg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('skg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawKingSungging(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#B5842A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDayangSumbi(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9799A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSangkuriang(px, py, size, scar){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D5A7A';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,4*s); ctx.lineTo(10*s,4*s); ctx.lineTo(8*s,20*s); ctx.lineTo(-8*s,20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#C9A24E';
+    ctx.beginPath(); ctx.ellipse(0,-8*s,10*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E4A5A';
+    ctx.beginPath(); ctx.ellipse(0,-20*s,7.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    if(scar){
+      ctx.strokeStyle = '#8A2E2E';
+      ctx.lineWidth = 1.5*s;
+      ctx.beginPath();
+      ctx.moveTo(-2*s,-21*s); ctx.lineTo(2*s,-17*s);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawBoat(px, py, size, flipAmt){
+    var s = size/60;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(Math.PI*flipAmt);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.beginPath();
+    ctx.moveTo(-30*s, 0);
+    ctx.quadraticCurveTo(0, 14*s, 30*s, 0);
+    ctx.quadraticCurveTo(0, 6*s, -30*s, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMountain(px, py, size, colorTop, colorBase){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorBase || '#7A5A3A';
+    ctx.beginPath();
+    ctx.moveTo(-30*s,10*s); ctx.lineTo(0,-30*s); ctx.lineTo(30*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = colorTop || '#9A7A54';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-10*s); ctx.lineTo(0,-30*s); ctx.lineTo(10*s,-10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCloth(px, py, radius, spread){
+    ctx.save();
+    ctx.fillStyle = 'rgba(244,239,226,0.9)';
+    ctx.beginPath();
+    ctx.ellipse(px, py, radius*spread, radius*0.4*spread, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='hutan_babi' || scene==='berburu_hutan' || scene==='tumang_menolak'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='istana_bayi' || scene==='syarat_berat' || scene==='luka_terungkap' || scene==='bertemu_lagi'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='dayang_asing' || scene==='sangkuriang_lahir' || scene==='sangkuriang_pergi'){
+      sky.addColorStop(0,'#8AA6D9'); sky.addColorStop(1,'#D9E9F4');
+    } else if(scene==='dayang_marah'){
+      sky.addColorStop(0,'#E9C7A0'); sky.addColorStop(1,'#F6E4CE');
+    } else if(scene==='buat_perahu' || scene==='bendung_sungai' || scene==='kain_putih' || scene==='tendang_perahu'){
+      sky.addColorStop(0,'#1E2A4A'); sky.addColorStop(1,'#3A4E78');
+    } else if(scene==='fajar_tiba' || scene==='asal_gunung'){
+      sky.addColorStop(0,'#F6A94A'); sky.addColorStop(1,'#FDE7DA');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'hutan_babi';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='hutan_babi'){
+      drawForestBg();
+      drawEmoji('🐗', 400, 340, 60);
+    }
+    if(scene==='istana_bayi'){
+      drawPalaceBg();
+      drawKingSungging(400, 300+bob, 46);
+      drawEmoji('👶', 480, 340, 34);
+    }
+    if(scene==='dayang_asing'){
+      drawForestBg();
+      drawDayangSumbi(360, 330+bob, 42);
+      drawEmoji('🐕', 440, 340, 40);
+    }
+    if(scene==='sangkuriang_lahir'){
+      drawForestBg();
+      drawDayangSumbi(340, 330+bob, 42);
+      drawEmoji('🐕', 420, 340, 38);
+      drawEmoji('👶', 460, 350, 28);
+    }
+    if(scene==='berburu_hutan'){
+      drawForestBg();
+      drawSangkuriang(360, 330+bob, 42, false);
+      drawEmoji('🐕', 440, 340, 38);
+    }
+    if(scene==='tumang_menolak'){
+      drawForestBg();
+      drawSangkuriang(340, 330+bob, 42, false);
+      drawEmoji('🐕', 430, 340, 38);
+      drawEmoji('🦌', 560, 320, 34);
+    }
+    if(scene==='dayang_marah'){
+      drawPalaceBg();
+      drawDayangSumbi(360, 330+bob, 42);
+      drawSangkuriang(460, 330+bob, 40, false);
+    }
+    if(scene==='sangkuriang_pergi'){
+      drawForestBg();
+      drawSangkuriang(500, 330+bob, 40, false);
+    }
+    if(scene==='bertemu_lagi'){
+      drawGardenTint();
+      drawDayangSumbi(360, 330+bob, 42);
+      drawSangkuriang(460, 330+bob, 42, false);
+    }
+    if(scene==='luka_terungkap'){
+      drawGardenTint();
+      drawDayangSumbi(360, 320+bob, 42);
+      drawSangkuriang(460, 320+bob, 42, true);
+    }
+    if(scene==='syarat_berat'){
+      drawGardenTint();
+      drawDayangSumbi(340, 330+bob, 42);
+      drawSangkuriang(460, 330+bob, 42, true);
+    }
+    if(scene==='buat_perahu'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      drawSangkuriang(280, 330+bob, 42, true);
+      var boatW = 20+progress*160;
+      ctx.fillStyle = '#6b4a2a';
+      ctx.fillRect(400-boatW/2, 340, boatW, 24);
+    }
+    if(scene==='bendung_sungai'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#3A6EA5';
+      ctx.fillRect(0,360,W,H-360);
+      drawSangkuriang(280, 330+bob, 42, true);
+      var damW = 20+progress*300;
+      ctx.fillStyle = '#8D6E63';
+      ctx.fillRect(400-damW/2, 350, damW, 20);
+    }
+    if(scene==='kain_putih'){
+      ctx.fillStyle = '#3A6EA5';
+      ctx.fillRect(0,340,W,H-340);
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,340-300);
+      drawDayangSumbi(260, 320+bob, 40);
+      drawCloth(500, 220, 140, progress);
+    }
+    if(scene==='fajar_tiba'){
+      ctx.fillStyle = '#3A6EA5';
+      ctx.fillRect(0,340,W,H-340);
+      ctx.fillStyle = 'rgba(255,180,90,0.5)';
+      ctx.beginPath(); ctx.arc(650,120,60,0,Math.PI*2); ctx.fill();
+      drawSangkuriang(300, 320+bob, 44, true);
+    }
+    if(scene==='tendang_perahu'){
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,300,W,H-300);
+      drawSangkuriang(280, 330+bob, 44, true);
+      drawBoat(480, 330, 70, progress);
+    }
+    if(scene==='asal_gunung'){
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,300,W,H-300);
+      drawMountain(560, 260, 150, '#9A7A54', '#6E4E30');
+      drawEmoji('🌸', 260, 330, 34);
+    }
+  }
+
+  function drawGardenTint(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,280,W,H-280);
+    ctx.fillStyle = '#2F5233';
+    ctx.beginPath();
+    ctx.moveTo(560,260); ctx.lineTo(640,140); ctx.lineTo(720,260);
+    ctx.closePath(); ctx.fill();
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('skg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'skg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('skg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
