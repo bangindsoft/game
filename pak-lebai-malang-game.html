@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pak Lebai Malang - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #plm-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E1EEF3 0%, #F7F3E8 100%);
+    border: 3px solid #2E6B78;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #plm-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #1E4E58;
+  }
+  #plm-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #plm-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #2E6B78;
+    background: #BEE3F8;
+  }
+  #plm-canvas { display: block; width: 100%; height: 100%; }
+  .plm-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(20,30,36,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .plm-overlay.show { display: flex; }
+  .plm-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .plm-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .plm-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .plm-btn:active { transform: scale(0.97); }
+
+  #plm-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #2E6B78;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 40px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  #plm-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .plm-dirBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    background: #2E6B78;
+    border: none;
+    border-radius: 24px;
+    padding: 13px 20px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    flex: 1;
+    max-width: 220px;
+  }
+  .plm-dirBtn:active { transform: scale(0.97); }
+  #plm-hint { text-align: center; font-size: 12px; color: #6b5f4f; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="plm-wrap">
+  <h2>🛶 Pak Lebai Malang</h2>
+  <p id="plm-sub">Bantu Pak Lebai memutuskan: kenduri di hulu, atau di hilir sungai?</p>
+
+  <div id="plm-canvas-holder">
+    <canvas id="plm-canvas"></canvas>
+
+    <div class="plm-overlay show" id="plm-start">
+      <h3>Pak Lebai Malang</h3>
+      <p>Pak Lebai mendapat dua undangan kenduri: satu di hulu sungai, satu di hilir sungai. Ia harus mendayung sampannya memilih salah satu sebelum kenduri itu usai. Tapi hati-hati, setiap kali berganti arah, sampannya perlu waktu untuk berbalik!</p>
+      <button class="plm-btn" id="plm-startBtn">Mulai Main</button>
+    </div>
+
+    <div class="plm-overlay" id="plm-lose">
+      <h3>Pak Lebai Malang 😔</h3>
+      <p>Karena terlalu sering berganti pikiran, Pak Lebai tidak sampai ke kenduri manapun sebelum keduanya usai. Begitulah nasib orang yang serakah dan sulit menentukan pilihan — bisa jadi tidak mendapatkan apa-apa sama sekali!</p>
+      <button class="plm-btn" id="plm-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="plm-overlay" id="plm-win">
+      <h3 id="plm-winTitle">Berhasil! 🎉</h3>
+      <p id="plm-winBody">Pak Lebai berhasil sampai tepat waktu karena teguh dengan pilihannya. Berbeda dengan kisah aslinya — tetap fokus pada satu pilihan ternyata lebih membawa hasil daripada bimbang karena serakah.</p>
+      <button class="plm-btn" id="plm-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="plm-caption">Bersiap mendayung...</div>
+
+  <div id="plm-controls">
+    <button class="plm-dirBtn" id="plm-huluBtn">◀ Dayung ke Hulu</button>
+    <button class="plm-dirBtn" id="plm-hilirBtn">Dayung ke Hilir ▶</button>
+  </div>
+  <p id="plm-hint">Tahan salah satu tombol untuk mendayung. Tanda panah kiri/kanan di keyboard juga bisa dipakai.</p>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Pak Lebai Malang - Game',
+      h2: '🛶 Pak Lebai Malang',
+      sub: 'Bantu Pak Lebai memutuskan: kenduri di hulu, atau di hilir sungai?',
+      startTitle: 'Pak Lebai Malang',
+      startBody: 'Pak Lebai mendapat dua undangan kenduri: satu di hulu sungai, satu di hilir sungai. Ia harus mendayung sampannya memilih salah satu sebelum kenduri itu usai. Tapi hati-hati, setiap kali berganti arah, sampannya perlu waktu untuk berbalik!',
+      startBtn: 'Mulai Main',
+      loseTitle: 'Pak Lebai Malang 😔',
+      loseBody: 'Karena terlalu sering berganti pikiran, Pak Lebai tidak sampai ke kenduri manapun sebelum keduanya usai. Begitulah nasib orang yang serakah dan sulit menentukan pilihan — bisa jadi tidak mendapatkan apa-apa sama sekali!',
+      retryBtn: 'Coba Lagi',
+      winHuluTitle: 'Sampai di Hulu! 🍛🎉',
+      winHuluBody: 'Pak Lebai berhasil sampai ke kenduri hulu tepat waktu dan menikmati masakan yang lezat. Berbeda dengan kisah aslinya — teguh pada satu pilihan ternyata membawa hasil, bukannya bimbang karena serakah.',
+      winHilirTitle: 'Sampai di Hilir! 🐃🎉',
+      winHilirBody: 'Pak Lebai berhasil sampai ke kenduri hilir tepat waktu dan menikmati daging kerbau yang diinginkannya. Berbeda dengan kisah aslinya — teguh pada satu pilihan ternyata membawa hasil, bukannya bimbang karena serakah.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap mendayung...',
+      huluBtn: '◀ Dayung ke Hulu',
+      hilirBtn: 'Dayung ke Hilir ▶',
+      hint: 'Tahan salah satu tombol untuk mendayung. Tanda panah kiri/kanan di keyboard juga bisa dipakai.',
+      turning: 'Sampan sedang berbalik arah...',
+      huluOver: 'Yah, kenduri di hulu sudah usai...',
+      hilirOver: 'Yah, kenduri di hilir sudah usai...',
+      huluLabel: 'Kenduri Hulu',
+      hilirLabel: 'Kenduri Hilir'
+    },
+    en: {
+      title: 'Unlucky Pak Lebai - Game',
+      h2: '🛶 Unlucky Pak Lebai',
+      sub: 'Help Pak Lebai decide: the feast upstream, or the feast downstream?',
+      startTitle: 'Unlucky Pak Lebai',
+      startBody: 'Pak Lebai receives two feast invitations: one upstream, one downstream. He must paddle his canoe and pick one before that feast ends. But careful — every time he changes direction, the canoe needs time to turn around!',
+      startBtn: 'Start Playing',
+      loseTitle: 'Unlucky Pak Lebai 😔',
+      loseBody: 'By changing his mind too often, Pak Lebai never made it to either feast before both ended. Such is the fate of someone greedy and indecisive — he may end up with nothing at all!',
+      retryBtn: 'Try Again',
+      winHuluTitle: 'Made It Upstream! 🍛🎉',
+      winHuluBody: 'Pak Lebai reached the upstream feast in time and enjoyed the delicious food. Unlike the original tale — sticking to one choice actually paid off, instead of wavering out of greed.',
+      winHilirTitle: 'Made It Downstream! 🐃🎉',
+      winHilirBody: 'Pak Lebai reached the downstream feast in time and enjoyed the buffalo meat he wanted. Unlike the original tale — sticking to one choice actually paid off, instead of wavering out of greed.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting ready to paddle...',
+      huluBtn: '◀ Paddle Upstream',
+      hilirBtn: 'Paddle Downstream ▶',
+      hint: 'Hold either button to paddle. The left/right arrow keys also work.',
+      turning: 'The canoe is turning around...',
+      huluOver: 'Oh no, the upstream feast has ended...',
+      hilirOver: 'Oh no, the downstream feast has ended...',
+      huluLabel: 'Upstream Feast',
+      hilirLabel: 'Downstream Feast'
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#plm-wrap h2').textContent = TXT.h2;
+  document.getElementById('plm-sub').textContent = TXT.sub;
+  document.querySelector('#plm-start h3').textContent = TXT.startTitle;
+  document.querySelector('#plm-start p').textContent = TXT.startBody;
+  document.getElementById('plm-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#plm-lose h3').textContent = TXT.loseTitle;
+  document.querySelector('#plm-lose p').textContent = TXT.loseBody;
+  document.getElementById('plm-retryBtn').textContent = TXT.retryBtn;
+  document.getElementById('plm-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('plm-caption').textContent = TXT.captionInit;
+  document.getElementById('plm-huluBtn').textContent = TXT.huluBtn;
+  document.getElementById('plm-hilirBtn').textContent = TXT.hilirBtn;
+  document.getElementById('plm-hint').textContent = TXT.hint;
+
+  var canvas = document.getElementById('plm-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var captionEl = document.getElementById('plm-caption');
+  var startOverlay = document.getElementById('plm-start');
+  var loseOverlay = document.getElementById('plm-lose');
+  var winOverlay = document.getElementById('plm-win');
+  var winTitleEl = document.getElementById('plm-winTitle');
+  var winBodyEl = document.getElementById('plm-winBody');
+
+  var HULU_X = 140, HILIR_X = 660, RIVER_Y = 300;
+  var SPEED = 130;
+  var TURN_PENALTY = 1.0;
+  var HULU_DURATION = 17;
+  var HILIR_DURATION = 13;
+
+  var state = 'idle';
+  var t = 0;
+  var playerX = 400;
+  var huluHeld = false, hilirHeld = false;
+  var committedDir = 0;
+  var turningTimer = 0;
+  var huluTimeLeft, hilirTimeLeft;
+  var huluExpired, hilirExpired;
+  var huluOverShown, hilirOverShown;
+
+  function resetGame(){
+    playerX = 400;
+    committedDir = 0;
+    turningTimer = 0;
+    huluTimeLeft = HULU_DURATION;
+    hilirTimeLeft = HILIR_DURATION;
+    huluExpired = false;
+    hilirExpired = false;
+    huluOverShown = false;
+    hilirOverShown = false;
+    captionEl.textContent = TXT.captionInit;
+    state = 'playing';
+  }
+
+  document.getElementById('plm-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('plm-retryBtn').addEventListener('click', function(){
+    loseOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('plm-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  var huluBtn = document.getElementById('plm-huluBtn');
+  var hilirBtn = document.getElementById('plm-hilirBtn');
+  huluBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); huluHeld = true; });
+  hilirBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); hilirHeld = true; });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    huluBtn.addEventListener(evt, function(){ huluHeld = false; });
+    hilirBtn.addEventListener(evt, function(){ hilirHeld = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a'){ e.preventDefault(); huluHeld = true; }
+    if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd'){ e.preventDefault(); hilirHeld = true; }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') huluHeld = false;
+    if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') hilirHeld = false;
+  });
+
+  function triggerWin(which){
+    state = which === 'hulu' ? 'won_hulu' : 'won_hilir';
+    if(which === 'hulu'){
+      winTitleEl.textContent = TXT.winHuluTitle;
+      winBodyEl.textContent = TXT.winHuluBody;
+    } else {
+      winTitleEl.textContent = TXT.winHilirTitle;
+      winBodyEl.textContent = TXT.winHilirBody;
+    }
+    winOverlay.classList.add('show');
+  }
+  function triggerLose(){
+    state = 'lost';
+    loseOverlay.classList.add('show');
+  }
+
+  function drawBoat(px, py, size, wobble){
+    var s = size/50;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(wobble*0.15);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.beginPath();
+    ctx.moveTo(-26*s, 0);
+    ctx.quadraticCurveTo(0, 12*s, 26*s, 0);
+    ctx.quadraticCurveTo(0, 5*s, -26*s, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#8B5E3C';
+    ctx.beginPath(); ctx.ellipse(2*s,-10*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(2*s,-17*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E4A5A';
+    ctx.beginPath(); ctx.ellipse(2*s,-22*s,7*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawShoreHulu(px, py){
+    ctx.fillStyle = '#C9A24E';
+    ctx.beginPath();
+    ctx.moveTo(px-30,py+10); ctx.lineTo(px,py-24); ctx.lineTo(px+30,py+10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(px-18,py+10,36,20);
+    ctx.font = '26px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🍛', px, py-6);
+  }
+  function drawShoreHilir(px, py){
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(px-30,py+10); ctx.lineTo(px,py-24); ctx.lineTo(px+30,py+10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(px-18,py+10,36,20);
+    ctx.font = '26px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🐃', px, py-6);
+  }
+
+  function drawTimerRing(px, py, frac, expired, label){
+    ctx.strokeStyle = expired ? 'rgba(120,120,120,0.5)' : '#E76F51';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(px, py, 26, -Math.PI/2, -Math.PI/2 + Math.max(0,frac)*Math.PI*2);
+    ctx.stroke();
+    ctx.font = '600 11px sans-serif';
+    ctx.fillStyle = expired ? '#888' : '#3A2A22';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py+46);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    if(state === 'playing'){
+      update(dt);
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function update(dt){
+    if(!huluExpired){
+      huluTimeLeft -= dt;
+      if(huluTimeLeft <= 0){ huluTimeLeft = 0; huluExpired = true; }
+    }
+    if(!hilirExpired){
+      hilirTimeLeft -= dt;
+      if(hilirTimeLeft <= 0){ hilirTimeLeft = 0; hilirExpired = true; }
+    }
+
+    var desired = 0;
+    if(huluHeld && !hilirHeld) desired = -1;
+    else if(hilirHeld && !huluHeld) desired = 1;
+
+    if(turningTimer > 0){
+      turningTimer -= dt;
+      captionEl.textContent = TXT.turning;
+      if(turningTimer <= 0){
+        turningTimer = 0;
+      }
+    } else if(desired !== 0){
+      if(committedDir !== 0 && desired !== committedDir){
+        turningTimer = TURN_PENALTY;
+        committedDir = desired;
+      } else {
+        committedDir = desired;
+        playerX += desired * SPEED * dt;
+        playerX = Math.max(60, Math.min(740, playerX));
+        if(!(turningTimer>0)) captionEl.textContent = TXT.captionInit;
+      }
+    }
+
+    if(playerX <= HULU_X + 35){
+      if(!huluExpired){
+        triggerWin('hulu');
+      } else if(!huluOverShown){
+        huluOverShown = true;
+        captionEl.textContent = TXT.huluOver;
+      }
+    }
+    if(playerX >= HILIR_X - 35){
+      if(!hilirExpired){
+        triggerWin('hilir');
+      } else if(!hilirOverShown){
+        hilirOverShown = true;
+        captionEl.textContent = TXT.hilirOver;
+      }
+    }
+
+    if(huluExpired && hilirExpired && state === 'playing'){
+      triggerLose();
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    var sky = ctx.createLinearGradient(0,0,0,200);
+    sky.addColorStop(0,'#BEE3F8');
+    sky.addColorStop(1,'#EAF6E9');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,200);
+
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,200,W,H-200);
+
+    ctx.fillStyle = '#5C8AA6';
+    ctx.beginPath();
+    ctx.moveTo(0,260); ctx.lineTo(W,260); ctx.lineTo(W,340); ctx.lineTo(0,340);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<4;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 280+w*15);
+      ctx.quadraticCurveTo(400, 270+w*15+Math.sin(t*2+w)*4, 800, 280+w*15);
+      ctx.stroke();
+    }
+
+    drawShoreHulu(HULU_X, RIVER_Y);
+    drawShoreHilir(HILIR_X, RIVER_Y);
+
+    drawTimerRing(HULU_X, RIVER_Y-70, huluTimeLeft/HULU_DURATION, huluExpired, TXT.huluLabel);
+    drawTimerRing(HILIR_X, RIVER_Y-70, hilirTimeLeft/HILIR_DURATION, hilirExpired, TXT.hilirLabel);
+
+    var wobble = turningTimer > 0 ? Math.sin(t*14) : Math.sin(t*3)*0.15;
+    drawBoat(playerX, RIVER_Y + Math.sin(t*3)*2, 50, wobble);
+  }
+
+  resize();
+  captionEl.textContent = TXT.captionInit;
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('plm-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'plm-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('plm-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
