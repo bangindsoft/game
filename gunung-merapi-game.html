@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Gunung Merapi - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #gmg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #3A2A22;
+    background: linear-gradient(180deg, #FDE7DA 0%, #F7F3E8 100%);
+    border: 3px solid #B5502A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #gmg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A3A1E;
+  }
+  #gmg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #gmg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #gmg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #gmg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5502A;
+    background: #BEE3F8;
+  }
+  #gmg-canvas { display: block; width: 100%; height: 100%; }
+  .gmg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(46,26,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .gmg-overlay.show { display: flex; }
+  .gmg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .gmg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .gmg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .gmg-btn:active { transform: scale(0.97); }
+
+  #gmg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5502A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #gmg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #gmg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5502A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #gmg-actionBtn.hold { background: #3D7A4C; }
+  #gmg-actionBtn.qte { background: #4A7EC9; }
+  #gmg-actionBtn:active { transform: scale(0.97); }
+  #gmg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #gmg-progressWrap.show { display: block; }
+  #gmg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="gmg-wrap">
+  <h2>🌋 Asal Usul Gunung Merapi</h2>
+  <p id="gmg-sub">Ikuti kisah para dewa memindahkan Gunung Jamurdwipa ke tengah Pulau Jawa.</p>
+
+  <div id="gmg-hud"><span id="gmg-phase">Tahap 1 / 5</span></div>
+
+  <div id="gmg-canvas-holder">
+    <canvas id="gmg-canvas"></canvas>
+
+    <div class="gmg-overlay show" id="gmg-start">
+      <h3>Asal Usul Gunung Merapi</h3>
+      <p>Dahulu kala, Pulau Jawa miring ke selatan dan terancam tenggelam. Para dewa harus memindahkan sebuah gunung dari laut selatan ke tengah pulau untuk menyeimbangkannya. Ikuti kisah asal usul Gunung Merapi ini.</p>
+      <button class="gmg-btn" id="gmg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="gmg-overlay" id="gmg-caught">
+      <h3>Belum Berhasil 💨</h3>
+      <p>Tiupan Dewa Bayu belum cukup kuat untuk mengangkat Gunung Jamurdwipa. Coba lagi dari awal kisahnya!</p>
+      <button class="gmg-btn" id="gmg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="gmg-overlay" id="gmg-win">
+      <h3>Gunung Merapi Terbentuk 🌋</h3>
+      <p>Pulau Jawa pun seimbang. Bara api dari keris yang tak sempat selesai terus membakar tanah gunung, membentuk kawah yang hingga kini dikenal sebagai kawah Gunung Merapi.</p>
+      <button class="gmg-btn" id="gmg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="gmg-caption">Bersiap memulai kisah...</div>
+
+  <div id="gmg-progressWrap"><div id="gmg-progressBar"></div></div>
+  <div id="gmg-action-row">
+    <button id="gmg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Asal Usul Gunung Merapi - Game',
+      h2: '🌋 Asal Usul Gunung Merapi',
+      sub: 'Ikuti kisah para dewa memindahkan Gunung Jamurdwipa ke tengah Pulau Jawa.',
+      startTitle: 'Asal Usul Gunung Merapi',
+      startBody: 'Dahulu kala, Pulau Jawa miring ke selatan dan terancam tenggelam. Para dewa harus memindahkan sebuah gunung dari laut selatan ke tengah pulau untuk menyeimbangkannya. Ikuti kisah asal usul Gunung Merapi ini.',
+      startBtn: 'Mulai Kisah',
+      caughtTitle: 'Belum Berhasil 💨',
+      caughtBody: 'Tiupan Dewa Bayu belum cukup kuat untuk mengangkat Gunung Jamurdwipa. Coba lagi dari awal kisahnya!',
+      retryBtn: 'Coba Lagi',
+      winTitle: 'Gunung Merapi Terbentuk 🌋',
+      winBody: 'Pulau Jawa pun seimbang. Bara api dari keris yang tak sempat selesai terus membakar tanah gunung, membentuk kawah yang hingga kini dikenal sebagai kawah Gunung Merapi.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      blowBtn: '💨 TIUP!',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala, Pulau Jawa belum banyak dihuni manusia, dan sebagian besar wilayahnya masih berupa hutan belantara. Tanpa disadari, letak pulau ini ternyata miring ke selatan.',
+        'Para dewa di kahyangan mulai khawatir. Jika dibiarkan, seisi Pulau Jawa — manusia dan hewan-hewannya — bisa tenggelam ke laut selatan.',
+        'Setelah berunding lama, para dewa sepakat memindahkan Gunung Jamurdwipa dari laut selatan ke tengah Pulau Jawa, untuk dijadikan pemberat penyeimbang.',
+        'Dewa Panyarikan dan Batara Narada pun diutus untuk memberi tahu penghuni bagian tengah pulau agar segera pindah.',
+        'Di tengah hutan, dua empu pembuat keris, Mpu Permadi dan Mpu Rama, tengah menempa keris sakti — mencampur logam dengan tangan kosong tanpa terluka oleh api yang menyala-nyala.',
+        'Namun keduanya menolak pindah. "Keris ini harus selesai ditempa, atau keselamatan umat manusia akan terancam," kata mereka kepada utusan para dewa.',
+        'Tahan tombol untuk mengerahkan kesaktian dalam pertarungan panjang antara utusan para dewa dan kedua empu yang sama-sama sakti.',
+        'Di kahyangan, Batara Guru kesal karena pertarungan berlarut-larut sementara Pulau Jawa makin miring. Ia pun memerintahkan Dewa Bayu untuk segera memindahkan gunung itu.',
+        'Tekan TIUP tepat waktu untuk membantu Dewa Bayu meniupkan angin saktinya, menerbangkan Gunung Jamurdwipa ke tengah Pulau Jawa!',
+        'Gunung Jamurdwipa melayang di angkasa dan jatuh tepat di tempat kedua empu berada. Pulau Jawa pun akhirnya seimbang.',
+        'Karena telah menentang para dewa, arwah kedua empu tak diterima di alam baka, dan menjadi penunggu gunung itu. Bara api dari keris yang belum selesai terus membakar tanah hingga membentuk kawah — itulah asal usul Gunung Merapi.'
+      ]
+    },
+    en: {
+      title: 'The Origin of Mount Merapi - Game',
+      h2: '🌋 The Origin of Mount Merapi',
+      sub: 'Follow the tale of the gods moving Mount Jamurdwipa to the center of Java Island.',
+      startTitle: 'The Origin of Mount Merapi',
+      startBody: 'Long ago, Java Island tilted toward the south and was in danger of sinking. The gods had to move a mountain from the southern sea to the center of the island to balance it out. Follow this tale of how Mount Merapi came to be.',
+      startBtn: 'Start the Tale',
+      caughtTitle: 'Not Quite 💨',
+      caughtBody: 'Dewa Bayu\'s gust wasn\'t strong enough to lift Mount Jamurdwipa. Try the tale again from the start!',
+      retryBtn: 'Try Again',
+      winTitle: 'Mount Merapi Is Formed 🌋',
+      winBody: 'Java Island became balanced at last. The embers from the unfinished dagger kept burning the mountain\'s earth, forming the crater known today as the crater of Mount Merapi.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Strive',
+      blowBtn: '💨 BLOW!',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, Java Island was barely inhabited, and most of it was still wild forest. Unknown to anyone, the island had tilted toward the south.',
+        'The gods in the heavens grew worried. If left unchecked, all of Java — its people and animals alike — could sink into the southern sea.',
+        'After a long deliberation, the gods agreed to move Mount Jamurdwipa from the southern sea to the center of Java, to serve as a balancing weight.',
+        'Dewa Panyarikan and Batara Narada were sent to tell the people living in the center of the island that they must leave.',
+        'Deep in the forest, two master blacksmiths, Mpu Permadi and Mpu Rama, were forging a sacred dagger — mixing metal with their bare hands, untouched by the roaring flames.',
+        'But the two refused to leave. "This dagger must be finished, or humankind\'s safety will be at risk," they told the gods\' messengers.',
+        'Hold the button to rally your strength through the long clash between the gods\' messengers and the two equally powerful blacksmiths.',
+        'In the heavens, Batara Guru grew furious as the struggle dragged on while Java kept tilting further. He ordered Dewa Bayu to move the mountain at once.',
+        'Tap BLOW at just the right moment to help Dewa Bayu unleash his mighty wind, sending Mount Jamurdwipa flying to the center of Java!',
+        'Mount Jamurdwipa soared through the sky and landed right where the two blacksmiths stood. Java Island was finally balanced.',
+        'Because they had defied the gods, the spirits of the two blacksmiths were not accepted into the afterlife, and became guardians of the mountain. The embers from their unfinished dagger kept burning the earth, forming a great crater — and that is the origin of Mount Merapi.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#gmg-wrap h2').textContent = TXT.h2;
+  document.getElementById('gmg-sub').textContent = TXT.sub;
+  document.querySelector('#gmg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#gmg-start p').textContent = TXT.startBody;
+  document.getElementById('gmg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#gmg-caught h3').textContent = TXT.caughtTitle;
+  document.querySelector('#gmg-caught p').textContent = TXT.caughtBody;
+  document.getElementById('gmg-retryBtn').textContent = TXT.retryBtn;
+  document.querySelector('#gmg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#gmg-win p').textContent = TXT.winBody;
+  document.getElementById('gmg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('gmg-caption').textContent = TXT.captionInit;
+  document.getElementById('gmg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('gmg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('gmg-phase');
+  var captionEl = document.getElementById('gmg-caption');
+  var actionBtn = document.getElementById('gmg-actionBtn');
+  var progressWrap = document.getElementById('gmg-progressWrap');
+  var progressBar = document.getElementById('gmg-progressBar');
+  var startOverlay = document.getElementById('gmg-start');
+  var caughtOverlay = document.getElementById('gmg-caught');
+  var winOverlay = document.getElementById('gmg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var qteActive = false;
+  var qteTimeLeft = 0;
+  var QTE_DURATION = 1.6;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'jawa_miring' },
+    { type:'caption', phase:1, scene:'jawa_miring' },
+    { type:'caption', phase:2, scene:'musyawarah_dewa' },
+    { type:'caption', phase:2, scene:'utusan_dewa' },
+    { type:'caption', phase:3, scene:'empu_bekerja' },
+    { type:'caption', phase:3, scene:'empu_menolak' },
+    { type:'hold', phase:3, scene:'pertarungan' },
+    { type:'caption', phase:4, scene:'batara_guru_marah' },
+    { type:'qte', phase:4, scene:'dewa_bayu_tiup' },
+    { type:'caption', phase:5, scene:'gunung_jatuh' },
+    { type:'caption', phase:5, scene:'kawah_terbentuk' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    qteActive = false;
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    } else if(step.type === 'qte'){
+      actionBtn.className = 'qte';
+      actionBtn.textContent = TXT.blowBtn;
+      progressWrap.classList.remove('show');
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'qte'){
+      if(qteActive){
+        qteActive = false;
+        nextStep();
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('gmg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('gmg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('gmg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawDewa(px, py, size, robeColor){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    var g = ctx.createRadialGradient(0,-10*s,4,0,-10*s,34*s);
+    g.addColorStop(0,'rgba(255,250,225,0.4)');
+    g.addColorStop(1,'rgba(255,250,225,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0,-10*s,34*s,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = robeColor || '#EFDFC0';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,10*s,-11*s,26*s);
+    ctx.lineTo(11*s,26*s); ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-22*s,7*s,6*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawEmpu(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,4*s); ctx.lineTo(10*s,4*s); ctx.lineTo(8*s,20*s); ctx.lineTo(-8*s,20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#B5502A';
+    ctx.beginPath(); ctx.ellipse(0,-8*s,10*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-20*s,7.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawForge(px, py, size, glowAmt){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#4A4A4A';
+    ctx.fillRect(-14*s,-4*s,28*s,10*s);
+    ctx.fillRect(-4*s,-4*s,8*s,16*s);
+    if(glowAmt > 0){
+      var g = ctx.createRadialGradient(0,-2*s,1,0,-2*s,16*s);
+      g.addColorStop(0,'rgba(255,150,50,'+(0.7*glowAmt)+')');
+      g.addColorStop(1,'rgba(255,150,50,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-2*s,16*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawMountain(px, py, size, colorTop, colorBase){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorBase || '#7A5A3A';
+    ctx.beginPath();
+    ctx.moveTo(-30*s,10*s); ctx.lineTo(0,-30*s); ctx.lineTo(30*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = colorTop || '#9A7A54';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-10*s); ctx.lineTo(0,-30*s); ctx.lineTo(10*s,-10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawIsland(px, py, size, tilt){
+    var s = size/300;
+    ctx.save();
+    ctx.translate(px,py);
+    ctx.rotate(tilt);
+    ctx.fillStyle = '#7CB342';
+    ctx.beginPath();
+    ctx.ellipse(0,0,140*s,36*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      qteTimeLeft -= dt;
+      if(qteTimeLeft <= 0){
+        qteActive = false;
+        caughtOverlay.classList.add('show');
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='musyawarah_dewa' || scene==='utusan_dewa' || scene==='batara_guru_marah'){
+      sky.addColorStop(0,'#3A4E9A'); sky.addColorStop(1,'#8AA6D9');
+    } else if(scene==='empu_bekerja' || scene==='empu_menolak' || scene==='pertarungan'){
+      sky.addColorStop(0,'#4C7A6E'); sky.addColorStop(1,'#A8C79E');
+    } else if(scene==='dewa_bayu_tiup' || scene==='gunung_jatuh'){
+      sky.addColorStop(0,'#7EA8D9'); sky.addColorStop(1,'#D9E9F4');
+    } else if(scene==='kawah_terbentuk'){
+      sky.addColorStop(0,'#F6A94A'); sky.addColorStop(1,'#FDE7DA');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'jawa_miring';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='jawa_miring'){
+      ctx.fillStyle = '#7FA8C9';
+      ctx.fillRect(0,280,W,H-280);
+      drawIsland(400, 300, 320, 0.12);
+    }
+
+    if(scene==='musyawarah_dewa' || scene==='utusan_dewa' || scene==='batara_guru_marah'){
+      for(var c=0;c<4;c++){
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(120+c*180, 90+Math.sin(t+c)*6, 50, 22, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+      if(scene==='musyawarah_dewa'){
+        drawDewa(320, 320+bob, 46, '#EFDFC0');
+        drawDewa(460, 320+bob, 46, '#C9DDEF');
+      } else if(scene==='utusan_dewa'){
+        drawDewa(360, 320+bob, 44, '#EFDFC0');
+        drawDewa(440, 320+bob, 44, '#D9C9EF');
+      } else {
+        drawDewa(400, 300+bob, 54, '#F2D9E6');
+      }
+    }
+
+    if(scene==='empu_bekerja' || scene==='empu_menolak' || scene==='pertarungan'){
+      ctx.fillStyle = '#2F5233';
+      for(var i=0;i<6;i++){
+        ctx.beginPath();
+        ctx.moveTo(40+i*140,300); ctx.lineTo(40+i*140+35,190); ctx.lineTo(40+i*140+70,300);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#4C7A4C';
+      ctx.fillRect(0,300,W,H-300);
+      drawForge(400, 340, 40, scene==='pertarungan'?0.3:0.8);
+      drawEmpu(340, 330+bob, 40);
+      drawEmpu(460, 330+bob, 40);
+      if(scene==='pertarungan'){
+        drawDewa(230, 300+bob, 42, '#EFDFC0');
+        drawDewa(570, 300+bob, 42, '#C9DDEF');
+        var glow = 0.3+0.3*Math.sin(t*6);
+        var g = ctx.createRadialGradient(400,300,4,400,300,120);
+        g.addColorStop(0,'rgba(255,220,120,'+glow+')');
+        g.addColorStop(1,'rgba(255,220,120,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(400,300,120,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    if(scene==='dewa_bayu_tiup'){
+      ctx.fillStyle = '#EAF3F8';
+      ctx.fillRect(0,300,W,H-300);
+      var floatY = 200 + Math.sin(t*2)*10;
+      drawMountain(560, floatY, 90, '#9A7A54', '#7A5A3A');
+      drawDewa(230, 300, 50, '#C9DDEF');
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = 3;
+      for(var w=0;w<4;w++){
+        ctx.beginPath();
+        ctx.moveTo(280+w*20, 280-(t*160+w*40)%200);
+        ctx.quadraticCurveTo(340+w*20, 260-(t*160+w*40)%200, 400+w*20, 280-(t*160+w*40)%200);
+        ctx.stroke();
+      }
+    }
+
+    if(scene==='gunung_jatuh'){
+      ctx.fillStyle = '#2F5233';
+      ctx.fillRect(0,300,W,H-300);
+      drawMountain(400, 260, 130, '#9A7A54', '#7A5A3A');
+      ctx.fillStyle = 'rgba(180,170,150,0.5)';
+      ctx.beginPath();
+      ctx.arc(400, 330, 60+Math.sin(t*6)*8, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    if(scene==='kawah_terbentuk'){
+      ctx.fillStyle = '#D9C48A';
+      ctx.fillRect(0,320,W,H-320);
+      drawMountain(400, 260, 160, '#9A7A54', '#6E4E30');
+      var glow2 = ctx.createRadialGradient(400,200,4,400,200,50);
+      glow2.addColorStop(0,'rgba(255,140,40,0.9)');
+      glow2.addColorStop(1,'rgba(255,140,40,0)');
+      ctx.fillStyle = glow2;
+      ctx.beginPath(); ctx.arc(400,200,50,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(120,120,120,0.4)';
+      for(var sm=0;sm<3;sm++){
+        ctx.beginPath();
+        ctx.arc(400+Math.sin(t*2+sm)*10, 170 - sm*20 - (t*15)%40, 10, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      var frac = qteTimeLeft / QTE_DURATION;
+      ctx.strokeStyle = '#4A7EC9';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(400, 60, 30, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('gmg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'gmg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('gmg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
