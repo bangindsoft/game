@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Batu Keramat - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #bkg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FCE9D6 0%, #F7F3E8 100%);
+    border: 3px solid #B5502A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #bkg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A3A1E;
+  }
+  #bkg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #bkg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #bkg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #bkg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5502A;
+    background: #BEE3F8;
+  }
+  #bkg-canvas { display: block; width: 100%; height: 100%; }
+  .bkg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,26,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .bkg-overlay.show { display: flex; }
+  .bkg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .bkg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .bkg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .bkg-btn:active { transform: scale(0.97); }
+
+  #bkg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5502A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #bkg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #bkg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5502A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #bkg-actionBtn.hold { background: #3D7A4C; }
+  #bkg-actionBtn:active { transform: scale(0.97); }
+  #bkg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #bkg-progressWrap.show { display: block; }
+  #bkg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="bkg-wrap">
+  <h2>🪨 Legenda Batu Keramat</h2>
+  <p id="bkg-sub">Ikuti kisah Irimiami dan Isoray menemukan batu ajaib di Kepulauan Yapen, Papua.</p>
+
+  <div id="bkg-hud"><span id="bkg-phase">Tahap 1 / 5</span></div>
+
+  <div id="bkg-canvas-holder">
+    <canvas id="bkg-canvas"></canvas>
+
+    <div class="bkg-overlay show" id="bkg-start">
+      <h3>Legenda Batu Keramat</h3>
+      <p>Di Gunung Kamboi Rama, Kepulauan Yapen, Papua, sepasang suami istri bernama Irimiami dan Isoray menemukan sebuah batu besar yang panas secara ajaib. Ikuti kisahnya hingga batu itu menjadi Batu Keramat yang dilestarikan hingga kini.</p>
+      <button class="bkg-btn" id="bkg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="bkg-overlay" id="bkg-win">
+      <h3>Batu Keramat Kepulauan Yapen 🪨</h3>
+      <p>Sejak saat itu, warga mengadakan pesta adat setahun sekali di batu tersebut. Hingga kini, masyarakat Kepulauan Yapen masih melestarikan tradisi ini, berkumpul di Batu Keramat sambil mempererat persaudaraan, seperti yang dimulai oleh Irimiami dan Isoray.</p>
+      <button class="bkg-btn" id="bkg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="bkg-caption">Bersiap memulai kisah...</div>
+
+  <div id="bkg-progressWrap"><div id="bkg-progressBar"></div></div>
+  <div id="bkg-action-row">
+    <button id="bkg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Batu Keramat - Game',
+      h2: '🪨 Legenda Batu Keramat',
+      sub: 'Ikuti kisah Irimiami dan Isoray menemukan batu ajaib di Kepulauan Yapen, Papua.',
+      startTitle: 'Legenda Batu Keramat',
+      startBody: 'Di Gunung Kamboi Rama, Kepulauan Yapen, Papua, sepasang suami istri bernama Irimiami dan Isoray menemukan sebuah batu besar yang panas secara ajaib. Ikuti kisahnya hingga batu itu menjadi Batu Keramat yang dilestarikan hingga kini.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Batu Keramat Kepulauan Yapen 🪨',
+      winBody: 'Sejak saat itu, warga mengadakan pesta adat setahun sekali di batu tersebut. Hingga kini, masyarakat Kepulauan Yapen masih melestarikan tradisi ini, berkumpul di Batu Keramat sambil mempererat persaudaraan, seperti yang dimulai oleh Irimiami dan Isoray.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      testMeatBtn: '🥩 UJI DAGING',
+      testLeafBtn: '🍂 UJI DEDAUNAN',
+      extinguishBtn: '💧 PADAMKAN API',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di Gunung Kamboi Rama, Kepulauan Yapen, Papua, berdiri dua desa kecil: Desa Kamboi Rama yang dihuni manusia, dan Desa Aroempi yang penuh tanaman sagu milik Dewa Iriwonawani.',
+        'Kaum lelaki Desa Kamboi Rama biasa berburu, sementara kaum wanitanya mencari sagu di Desa Aroempi — selalu didahului dengan pemujaan kepada Dewa Iriwonawani.',
+        'Namun sagu di Desa Aroempi kian berkurang karena terus-menerus diambil. Dewa Iriwonawani menjadi murka, lalu memindahkan seluruh tanaman sagunya ke tempat lain.',
+        'Penduduk yang ketakutan, atas perintah kepala suku, pindah mendirikan desa baru di tepi pantai bernama Desa Randuayaivi — kecuali sepasang suami istri, Irimiami dan Isoray, yang memilih tetap tinggal.',
+        'Suatu hari sepulang dari ladang, Isoray duduk di atas sebuah batu besar dan tiba-tiba berteriak kepanasan. Irimiami penasaran dan menyentuh batu itu — ternyata benar-benar panas.',
+        'Tahan tombol untuk membantu Irimiami meletakkan daging rusa di atas batu panas itu, untuk menguji keanehannya.',
+        'Tak lama, daging itu matang dengan sendirinya! Mereka berdua ketakutan melihat api keluar dari batu itu, lalu berdoa kepada Dewa Iriwonawani agar tidak terjadi kebakaran hutan. Doa mereka pun dikabulkan.',
+        'Keesokan harinya, mereka kembali menguji batu itu. Tahan tombol untuk membantu meletakkan dedaunan kering di atas batu tersebut.',
+        'Kali ini dedaunan dan rumput di sekitarnya justru terbakar. Mereka berdoa lagi, namun kali ini Dewa Iriwonawani tidak mengabulkannya. Api pun kian membesar hingga terlihat dari Desa Randuayaivi di tepi pantai.',
+        'Penduduk Desa Randuayaivi melihat kepulan asap dan berteriak ada kebakaran. Tahan tombol untuk membantu mereka bergegas naik ke Kamboi Rama memadamkan api bersama-sama.',
+        'Berkat kerja sama semua penduduk, api berhasil dipadamkan. Setelah keadaan tenang, Irimiami menceritakan keanehan batu itu. Penduduk pun mencoba memasak daging di atasnya — dan benar saja, daging itu matang dengan sendirinya.',
+        'Irimiami mengusulkan agar diadakan pesta adat setahun sekali di batu tersebut. Ketua adat Desa Randuayaivi menyetujuinya, dan batu itu pun mulai dianggap sebagai Batu Keramat oleh warga setempat.'
+      ]
+    },
+    en: {
+      title: 'The Legend of Batu Keramat - Game',
+      h2: '🪨 The Legend of Batu Keramat',
+      sub: 'Follow Irimiami and Isoray discovering a magical stone on the Yapen Islands, Papua.',
+      startTitle: 'The Legend of Batu Keramat',
+      startBody: 'On Mount Kamboi Rama, Yapen Islands, Papua, a married couple named Irimiami and Isoray discover a large stone that is mysteriously hot. Follow the story to how it became the Sacred Stone (Batu Keramat) still honored today.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Sacred Stone of Yapen 🪨',
+      winBody: 'From then on, the villagers held a traditional feast at the stone once a year. To this day, the people of the Yapen Islands still keep this tradition alive, gathering at Batu Keramat to strengthen their bond as one community, just as Irimiami and Isoray began.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      testMeatBtn: '🥩 TEST WITH MEAT',
+      testLeafBtn: '🍂 TEST WITH LEAVES',
+      extinguishBtn: '💧 PUT OUT THE FIRE',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'On Mount Kamboi Rama, Yapen Islands, Papua, stood two small villages: Kamboi Rama, home to people, and Aroempi, filled with sago palms belonging to the god Iriwonawani.',
+        'The men of Kamboi Rama usually hunted, while the women gathered sago in Aroempi — always preceded by a ritual of worship to the god Iriwonawani.',
+        'But the sago in Aroempi kept dwindling from being harvested again and again. The god Iriwonawani grew furious, and moved all his sago palms elsewhere.',
+        'Frightened, the villagers, on the chief\'s orders, moved to found a new village by the coast called Randuayaivi — except for a married couple, Irimiami and Isoray, who chose to stay behind.',
+        'One day, returning from the field, Isoray sits on a large stone and suddenly cries out from the heat. Curious, Irimiami touches the stone — and it truly is hot.',
+        'Hold the button to help Irimiami place a piece of deer meat on the hot stone, to test the strange phenomenon.',
+        'Before long, the meat cooks on its own! Frightened to see fire coming from the stone, the two pray to the god Iriwonawani that no forest fire will break out. Their prayer is granted.',
+        'The next day, they test the stone again. Hold the button to help place dry leaves on top of it.',
+        'This time, the leaves and grass around it catch fire instead. They pray again, but this time the god Iriwonawani does not grant it. The fire grows larger, visible all the way from the coastal village of Randuayaivi.',
+        'The people of Randuayaivi see the smoke and cry out that there\'s a fire. Hold the button to help them rush up to Kamboi Rama to put out the fire together.',
+        'Thanks to everyone working together, the fire is finally put out. Once things settle, Irimiami tells everyone about the strange stone. The villagers try cooking meat on it themselves — and sure enough, it cooks on its own.',
+        'Irimiami suggests holding a traditional feast at the stone once a year. The chief of Randuayaivi agrees, and the stone begins to be regarded as a Sacred Stone by the local people.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#bkg-wrap h2').textContent = TXT.h2;
+  document.getElementById('bkg-sub').textContent = TXT.sub;
+  document.querySelector('#bkg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#bkg-start p').textContent = TXT.startBody;
+  document.getElementById('bkg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#bkg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#bkg-win p').textContent = TXT.winBody;
+  document.getElementById('bkg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('bkg-caption').textContent = TXT.captionInit;
+  document.getElementById('bkg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('bkg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('bkg-phase');
+  var captionEl = document.getElementById('bkg-caption');
+  var actionBtn = document.getElementById('bkg-actionBtn');
+  var progressWrap = document.getElementById('bkg-progressWrap');
+  var progressBar = document.getElementById('bkg-progressBar');
+  var startOverlay = document.getElementById('bkg-start');
+  var winOverlay = document.getElementById('bkg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'dua_desa' },
+    { type:'caption', phase:1, scene:'tugas_desa' },
+    { type:'caption', phase:2, scene:'sagu_berkurang' },
+    { type:'caption', phase:2, scene:'pindah_pantai' },
+    { type:'caption', phase:3, scene:'batu_panas' },
+    { type:'hold', phase:3, scene:'uji_daging' },
+    { type:'caption', phase:3, scene:'berdoa_aman' },
+    { type:'hold', phase:4, scene:'uji_daun' },
+    { type:'caption', phase:4, scene:'api_membesar' },
+    { type:'hold', phase:4, scene:'padamkan_api' },
+    { type:'caption', phase:5, scene:'api_padam' },
+    { type:'caption', phase:5, scene:'pesta_adat' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'uji_daging') actionBtn.textContent = TXT.testMeatBtn;
+      else if(step.scene === 'uji_daun') actionBtn.textContent = TXT.testLeafBtn;
+      else if(step.scene === 'padamkan_api') actionBtn.textContent = TXT.extinguishBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('bkg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('bkg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawVillager(px, py, size, colorMain){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = colorMain || '#B5502A';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3C6B40';
+    ctx.beginPath();
+    ctx.moveTo(4*s,-22*s); ctx.lineTo(8*s,-30*s); ctx.lineTo(6*s,-20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStone(px, py, size, heat){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    if(heat > 0){
+      var g = ctx.createRadialGradient(0,0,4,0,0,36*s);
+      g.addColorStop(0,'rgba(255,140,40,'+(0.5*heat)+')');
+      g.addColorStop(1,'rgba(255,140,40,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,36*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = heat > 0.4 ? '#8A5A3A' : '#7A7A7A';
+    ctx.beginPath();
+    ctx.ellipse(0,4*s,26*s,14*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = heat > 0.4 ? '#A9723F' : '#8F8F8F';
+    ctx.beginPath();
+    ctx.ellipse(-4*s,0*s,18*s,10*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFire(px, py, size, amt){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#E76F51';
+    ctx.beginPath();
+    ctx.moveTo(0,-18*s*amt);
+    ctx.quadraticCurveTo(10*s,-6*s*amt,4*s,4*s);
+    ctx.quadraticCurveTo(0,10*s,-4*s,4*s);
+    ctx.quadraticCurveTo(-10*s,-6*s*amt,0,-18*s*amt);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath();
+    ctx.moveTo(0,-10*s*amt);
+    ctx.quadraticCurveTo(5*s,-2*s*amt,2*s,4*s);
+    ctx.quadraticCurveTo(0,7*s,-2*s,4*s);
+    ctx.quadraticCurveTo(-5*s,-2*s*amt,0,-10*s*amt);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawBeachBg(){
+    ctx.fillStyle = '#EBDCA8';
+    ctx.fillRect(0,320,W,H-320);
+    ctx.fillStyle = '#5C8AA6';
+    ctx.fillRect(0,280,W,40);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,320); ctx.lineTo(610,260); ctx.lineTo(660,320);
+    ctx.closePath(); ctx.fill();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='dua_desa' || scene==='tugas_desa'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='sagu_berkurang'){
+      sky.addColorStop(0,'#4C7A6E'); sky.addColorStop(1,'#8AAE9E');
+    } else if(scene==='pindah_pantai'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else if(scene==='batu_panas' || scene==='uji_daging' || scene==='berdoa_aman' || scene==='uji_daun'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='api_membesar' || scene==='padamkan_api'){
+      sky.addColorStop(0,'#E9906A'); sky.addColorStop(1,'#F6C99A');
+    } else if(scene==='api_padam' || scene==='pesta_adat'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'dua_desa';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='dua_desa'){
+      drawForestBg();
+      drawHutBg();
+      drawVillager(340, 340+bob, 42, '#B5502A');
+    }
+    if(scene==='tugas_desa'){
+      drawForestBg();
+      drawVillager(320, 330+bob, 40, '#B5502A');
+      drawVillager(460, 330+bob, 40, '#7A9E4A');
+    }
+    if(scene==='sagu_berkurang'){
+      drawForestBg();
+      ctx.font='40px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🌴', 500, 300);
+      drawVillager(300, 340+bob, 40, '#7A9E4A');
+    }
+    if(scene==='pindah_pantai'){
+      drawBeachBg();
+      drawVillager(340, 340+bob, 38, '#B5502A');
+      drawVillager(420, 340+bob, 38, '#7A9E4A');
+    }
+    if(scene==='batu_panas' || scene==='uji_daging' || scene==='berdoa_aman'){
+      drawForestBg();
+      var heat = scene==='batu_panas' ? 0.3 : (scene==='uji_daging' ? 0.5+progress*0.3 : 0.6);
+      drawStone(420, 340, 60, heat);
+      drawVillager(320, 330+bob, 40, '#B5502A');
+      drawVillager(480, 330+bob*0.8, 34, '#7A9E4A');
+      if(scene!=='batu_panas'){
+        ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('🥩', 420, 320);
+      }
+    }
+    if(scene==='uji_daun'){
+      drawForestBg();
+      drawStone(420, 340, 60, 0.5+progress*0.4);
+      drawVillager(320, 330+bob, 40, '#B5502A');
+      drawVillager(480, 330+bob*0.8, 34, '#7A9E4A');
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🍂', 420, 315);
+    }
+    if(scene==='api_membesar'){
+      drawForestBg();
+      drawStone(420, 340, 60, 1);
+      drawFire(420, 320, 50, 1);
+      drawFire(460, 330, 34, 0.8);
+      drawFire(380, 330, 30, 0.7);
+      drawVillager(300, 340+bob, 38, '#B5502A');
+    }
+    if(scene==='padamkan_api'){
+      drawForestBg();
+      drawStone(420, 340, 60, 1-progress*0.6);
+      drawFire(420, 320, 50*(1-progress), Math.max(0.1,1-progress));
+      drawVillager(280, 340+bob, 36, '#B5502A');
+      drawVillager(340, 340+bob*0.8, 34, '#7A9E4A');
+      drawVillager(500, 340+bob*0.9, 34, '#4A7EC9');
+    }
+    if(scene==='api_padam' || scene==='pesta_adat'){
+      drawForestBg();
+      drawStone(400, 340, 60, 0.4);
+      drawVillager(300, 330+bob, 36, '#B5502A');
+      drawVillager(360, 330+bob*0.8, 34, '#7A9E4A');
+      drawVillager(460, 330+bob*0.9, 34, '#4A7EC9');
+      drawVillager(520, 330+bob*0.7, 34, '#C9A24E');
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('bkg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'bkg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('bkg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
