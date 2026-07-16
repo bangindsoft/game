@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Towjatuwa dan Buaya Sakti - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #twg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #1F3A34;
+    background: linear-gradient(180deg, #E1F0EC 0%, #F7F3E8 100%);
+    border: 3px solid #1E6E5A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #twg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #14503F;
+  }
+  #twg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #twg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #twg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #twg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #1E6E5A;
+    background: #BEE3F8;
+  }
+  #twg-canvas { display: block; width: 100%; height: 100%; }
+  .twg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,36,32,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .twg-overlay.show { display: flex; }
+  .twg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .twg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .twg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .twg-btn:active { transform: scale(0.97); }
+
+  #twg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #1E6E5A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #twg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #twg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #1E6E5A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #twg-actionBtn.hold { background: #C9A24E; color: #402E00; }
+  #twg-actionBtn:active { transform: scale(0.97); }
+  #twg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #twg-progressWrap.show { display: block; }
+  #twg-progressBar { height: 100%; width: 0%; background: #C9A24E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="twg-wrap">
+  <h2>🐊 Towjatuwa dan Buaya Sakti</h2>
+  <p id="twg-sub">Ikuti kisah tolong-menolong Towjatuwa dan Watuwe, buaya sakti dari Sungai Tami, Papua.</p>
+
+  <div id="twg-hud"><span id="twg-phase">Tahap 1 / 5</span></div>
+
+  <div id="twg-canvas-holder">
+    <canvas id="twg-canvas"></canvas>
+
+    <div class="twg-overlay show" id="twg-start">
+      <h3>Towjatuwa dan Buaya Sakti</h3>
+      <p>Istri Towjatuwa kesulitan melahirkan. Dalam perjalanan mencari obat, Towjatuwa bertemu Watuwe, buaya sakti penguasa Sungai Tami. Ikuti kisah tolong-menolong dan balas budi mereka berdua sampai akhir.</p>
+      <button class="twg-btn" id="twg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="twg-overlay" id="twg-win">
+      <h3>Pesan Watuwe untuk Selamanya 🐊</h3>
+      <p>Watuwe berpesan agar Towjatuwa dan keturunannya tak pernah memburu atau memakan buaya Sungai Tami. Sejak saat itu, keluarga Towjatuwa selalu menjaga buaya-buaya di sana hingga sekarang — kisah tentang tolong-menolong yang dibalas dengan kebaikan.</p>
+      <button class="twg-btn" id="twg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="twg-caption">Bersiap memulai kisah...</div>
+
+  <div id="twg-progressWrap"><div id="twg-progressBar"></div></div>
+  <div id="twg-action-row">
+    <button id="twg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Towjatuwa dan Buaya Sakti - Game',
+      h2: '🐊 Towjatuwa dan Buaya Sakti',
+      sub: 'Ikuti kisah tolong-menolong Towjatuwa dan Watuwe, buaya sakti dari Sungai Tami, Papua.',
+      startTitle: 'Towjatuwa dan Buaya Sakti',
+      startBody: 'Istri Towjatuwa kesulitan melahirkan. Dalam perjalanan mencari obat, Towjatuwa bertemu Watuwe, buaya sakti penguasa Sungai Tami. Ikuti kisah tolong-menolong dan balas budi mereka berdua sampai akhir.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Pesan Watuwe untuk Selamanya 🐊',
+      winBody: 'Watuwe berpesan agar Towjatuwa dan keturunannya tak pernah memburu atau memakan buaya Sungai Tami. Sejak saat itu, keluarga Towjatuwa selalu menjaga buaya-buaya di sana hingga sekarang — kisah tentang tolong-menolong yang dibalas dengan kebaikan.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      searchBtn: '🌿 CARI RUMPUT AIR',
+      liftBtn: '🪨 ANGKAT BATU',
+      healBtn: '✨ KERAHKAN KESAKTIAN',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala, di Kampung Sawjatami, Jayapura, Papua, hiduplah sepasang suami istri. Sang suami bernama Towjatuwa. Istrinya yang tengah hamil tua mengalami kesulitan melahirkan.',
+        'Panik melihat istrinya kesakitan, Towjatuwa bergegas meminta bantuan seorang nenek dukun di kampungnya.',
+        'Nenek dukun memeriksa keadaan istri Towjatuwa. "Bayi di dalam kandungan istrimu terlalu besar sehingga sulit keluar. Aku membutuhkan rumput air. Carilah di Sungai Tami," katanya.',
+        'Tahan tombol untuk membantu Towjatuwa bergegas mencari rumput air di sepanjang Sungai Tami.',
+        'Di tepi sungai, Towjatuwa terkejut melihat seekor buaya besar yang ditumbuhi bulu-bulu seperti burung kasuari. "Tunggu, anak muda!" panggil buaya itu. "Namaku Watuwe, penguasa Sungai Tami. Bisakah kau menolongku mengangkat batu besar yang menghimpit ekorku?"',
+        'Tahan tombol untuk membantu Towjatuwa mengangkat batu besar yang menghimpit ekor Watuwe.',
+        'Watuwe mengetahui kesulitan Towjatuwa, lalu berjanji: "Pulanglah dahulu, jangan khawatir. Aku akan datang ke rumahmu malam ini untuk membantu istrimu."',
+        'Malam harinya, Watuwe menepati janjinya. Tahan tombol untuk membantu Watuwe mengerahkan kekuatan saktinya menolong persalinan istri Towjatuwa.',
+        'Istri Towjatuwa akhirnya berhasil melahirkan seorang anak laki-laki yang sehat. Mereka memberinya nama Narrowra.',
+        'Towjatuwa beserta istrinya mengucapkan terima kasih yang tulus kepada Watuwe atas jasa dan kebaikannya.',
+        'Sebelum pergi, Watuwe berpesan: "Tolong jangan pernah memburu atau memakan buaya-buaya di sini. Jika kalian melanggar, keturunan kalian akan habis satu-persatu. Jika aku mati kelak, bawalah kantung air seniku ke Gunung Sankria."'
+      ]
+    },
+    en: {
+      title: 'Towjatuwa and the Magical Crocodile - Game',
+      h2: '🐊 Towjatuwa and the Magical Crocodile',
+      sub: 'Follow the story of mutual help between Towjatuwa and Watuwe, the magical crocodile of the Tami River, Papua.',
+      startTitle: 'Towjatuwa and the Magical Crocodile',
+      startBody: 'Towjatuwa\'s wife struggles through a difficult labor. While searching for medicine, Towjatuwa meets Watuwe, the magical crocodile ruling the Tami River. Follow their story of mutual help and gratitude to the end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Watuwe\'s Promise Forever 🐊',
+      winBody: 'Watuwe asks Towjatuwa and his descendants to never hunt or eat the crocodiles of the Tami River. From then on, Towjatuwa\'s family has protected the crocodiles there to this day — a story of help repaid with kindness.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      searchBtn: '🌿 SEARCH FOR WATER GRASS',
+      liftBtn: '🪨 LIFT THE ROCK',
+      healBtn: '✨ CALL ON YOUR POWER',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, in Sawjatami village, Jayapura, Papua, there lived a married couple. The husband was named Towjatuwa. His wife, far along in pregnancy, was struggling through a difficult labor.',
+        'Panicking at his wife\'s pain, Towjatuwa rushes to ask for help from an elderly healer in the village.',
+        'The healer examines Towjatuwa\'s wife. "The baby is too large to come out easily. I need water grass. Look for it by the Tami River," she says.',
+        'Hold the button to help Towjatuwa hurry along the Tami River searching for water grass.',
+        'By the riverbank, Towjatuwa is startled to see a huge crocodile covered in feathers like a cassowary. "Wait, young man!" the crocodile calls. "My name is Watuwe, ruler of the Tami River. Could you help me lift this boulder pinning my tail?"',
+        'Hold the button to help Towjatuwa lift the huge boulder pinning Watuwe\'s tail.',
+        'Learning of Towjatuwa\'s troubles, Watuwe makes a promise: "Go home first, don\'t worry. I\'ll come to your house tonight to help your wife."',
+        'That night, Watuwe keeps his promise. Hold the button to help Watuwe summon his magical power to assist with the birth of Towjatuwa\'s child.',
+        'Towjatuwa\'s wife finally gives birth to a healthy baby boy. They name him Narrowra.',
+        'Towjatuwa and his wife offer their heartfelt thanks to Watuwe for his help and kindness.',
+        'Before leaving, Watuwe leaves a warning: "Please never hunt or eat the crocodiles here. If you break this promise, your descendants will die out one by one. When I die someday, take my bladder sac to Mount Sankria."'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#twg-wrap h2').textContent = TXT.h2;
+  document.getElementById('twg-sub').textContent = TXT.sub;
+  document.querySelector('#twg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#twg-start p').textContent = TXT.startBody;
+  document.getElementById('twg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#twg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#twg-win p').textContent = TXT.winBody;
+  document.getElementById('twg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('twg-caption').textContent = TXT.captionInit;
+  document.getElementById('twg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('twg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('twg-phase');
+  var captionEl = document.getElementById('twg-caption');
+  var actionBtn = document.getElementById('twg-actionBtn');
+  var progressWrap = document.getElementById('twg-progressWrap');
+  var progressBar = document.getElementById('twg-progressBar');
+  var startOverlay = document.getElementById('twg-start');
+  var winOverlay = document.getElementById('twg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'kampung_intro' },
+    { type:'caption', phase:1, scene:'panik_minta_tolong' },
+    { type:'caption', phase:2, scene:'dukun_periksa' },
+    { type:'hold', phase:2, scene:'cari_rumput' },
+    { type:'caption', phase:3, scene:'bertemu_watuwe' },
+    { type:'hold', phase:3, scene:'angkat_batu' },
+    { type:'caption', phase:3, scene:'watuwe_janji' },
+    { type:'hold', phase:4, scene:'bantu_persalinan' },
+    { type:'caption', phase:4, scene:'anak_lahir' },
+    { type:'caption', phase:5, scene:'ucap_terimakasih' },
+    { type:'caption', phase:5, scene:'pesan_watuwe' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'cari_rumput') actionBtn.textContent = TXT.searchBtn;
+      else if(step.scene === 'angkat_batu') actionBtn.textContent = TXT.liftBtn;
+      else if(step.scene === 'bantu_persalinan') actionBtn.textContent = TXT.healBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('twg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('twg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawTowjatuwa(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#B5502A';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWife(px, py, size, distress){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = distress ? '#C98A8A' : '#C9799A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,14*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-8*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-12*s,7*s,6*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDukun(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-4*s); ctx.quadraticCurveTo(-13*s,6*s,-9*s,18*s);
+    ctx.lineTo(9*s,18*s); ctx.quadraticCurveTo(13*s,6*s,9*s,-4*s);
+    ctx.quadraticCurveTo(0,-12*s,-9*s,-4*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-8*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.beginPath(); ctx.ellipse(0,-12*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWatuwe(px, py, size, glow){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(glow > 0){
+      var g = ctx.createRadialGradient(0,0,4,0,0,40*s);
+      g.addColorStop(0,'rgba(150,255,220,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(150,255,220,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,40*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#3C6B40';
+    ctx.beginPath();
+    ctx.ellipse(0,4*s,26*s,10*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#2F5233';
+    ctx.beginPath();
+    ctx.moveTo(20*s,0); ctx.lineTo(34*s,-4*s); ctx.lineTo(20*s,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6B3E2E';
+    for(var i=0;i<4;i++){
+      ctx.save();
+      ctx.translate(-6*s+i*4*s, -6*s);
+      ctx.rotate(-0.3+i*0.15);
+      ctx.beginPath();
+      ctx.ellipse(0,-8*s,3*s,10*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath(); ctx.arc(-16*s,-2*s,2*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRock(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A8A8A';
+    ctx.beginPath();
+    ctx.ellipse(0,0,16*s,12*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#9F9F9F';
+    ctx.beginPath();
+    ctx.ellipse(-4*s,-3*s,8*s,6*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMountain(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7A5A3A';
+    ctx.beginPath();
+    ctx.moveTo(-30*s,10*s); ctx.lineTo(0,-30*s); ctx.lineTo(30*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#9A7A54';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-10*s); ctx.lineTo(0,-30*s); ctx.lineTo(10*s,-10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawRiverBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#3A6EA5';
+    ctx.beginPath();
+    ctx.ellipse(500,340,240,60,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<3;w++){
+      ctx.beginPath();
+      ctx.moveTo(300, 320+w*15);
+      ctx.quadraticCurveTo(500, 310+w*15+Math.sin(t*2+w)*5, 700, 320+w*15);
+      ctx.stroke();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='kampung_intro' || scene==='panik_minta_tolong' || scene==='dukun_periksa'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='cari_rumput' || scene==='bertemu_watuwe' || scene==='angkat_batu' || scene==='watuwe_janji'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='bantu_persalinan'){
+      sky.addColorStop(0,'#1E2A4A'); sky.addColorStop(1,'#3A4E78');
+    } else if(scene==='anak_lahir' || scene==='ucap_terimakasih'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='pesan_watuwe'){
+      sky.addColorStop(0,'#AEDBF2'); sky.addColorStop(1,'#F0F8FF');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'kampung_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='kampung_intro'){
+      drawHutBg();
+      drawTowjatuwa(340, 330+bob, 44);
+      drawWife(460, 335, 40, true);
+    }
+    if(scene==='panik_minta_tolong'){
+      drawHutBg();
+      drawTowjatuwa(340, 330+bob, 44);
+      drawDukun(480, 335+bob*0.7, 40);
+    }
+    if(scene==='dukun_periksa'){
+      drawHutBg();
+      drawDukun(360, 330+bob, 40);
+      drawWife(460, 335, 40, true);
+    }
+    if(scene==='cari_rumput'){
+      drawRiverBg();
+      drawTowjatuwa(200+progress*400, 340+bob, 42);
+    }
+    if(scene==='bertemu_watuwe' || scene==='angkat_batu'){
+      drawRiverBg();
+      drawWatuwe(460, 350, 60, 0);
+      if(scene==='angkat_batu'){
+        drawRock(400, 340-progress*20);
+      } else {
+        drawRock(400, 340);
+      }
+      drawTowjatuwa(320, 330+bob, 40);
+    }
+    if(scene==='watuwe_janji'){
+      drawRiverBg();
+      drawWatuwe(460, 350, 60, 0.3);
+      drawTowjatuwa(320, 330+bob, 40);
+    }
+    if(scene==='bantu_persalinan'){
+      drawHutBg();
+      var glow = 0.3+progress*0.6;
+      drawWatuwe(500, 330+bob, 50, glow);
+      drawWife(360, 335, 40, true);
+      drawTowjatuwa(300, 340+bob, 36);
+    }
+    if(scene==='anak_lahir'){
+      drawHutBg();
+      drawWife(380, 335, 40, false);
+      drawTowjatuwa(300, 340+bob, 40);
+      ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('👶', 440, 330);
+    }
+    if(scene==='ucap_terimakasih'){
+      drawHutBg();
+      drawTowjatuwa(280, 330+bob, 40);
+      drawWife(340, 335, 38, false);
+      drawWatuwe(500, 340, 54, 0.2);
+    }
+    if(scene==='pesan_watuwe'){
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,300,W,H-300);
+      drawMountain(600, 280, 130);
+      drawWatuwe(320, 340, 56, 0.3);
+      drawTowjatuwa(220, 330+bob, 40);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('twg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'twg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('twg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
