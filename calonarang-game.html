@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kisah Calonarang - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #cag-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2A2430;
+    background: linear-gradient(180deg, #ECE4F0 0%, #F7F3E8 100%);
+    border: 3px solid #5A3E7A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #cag-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #422C5E;
+  }
+  #cag-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f6f;
+    margin: 0 0 10px;
+  }
+  #cag-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #cag-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #cag-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #5A3E7A;
+    background: #2E2440;
+  }
+  #cag-canvas { display: block; width: 100%; height: 100%; }
+  .cag-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(28,20,36,0.88);
+    color: #fff;
+    padding: 20px;
+  }
+  .cag-overlay.show { display: flex; }
+  .cag-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .cag-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .cag-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .cag-btn:active { transform: scale(0.97); }
+
+  #cag-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #5A3E7A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #cag-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #cag-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #5A3E7A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #cag-actionBtn.hold { background: #C9A24E; color: #402E00; }
+  #cag-actionBtn:active { transform: scale(0.97); }
+  #cag-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #cag-progressWrap.show { display: block; }
+  #cag-progressBar { height: 100%; width: 0%; background: #C9A24E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="cag-wrap">
+  <h2>📖 Kisah Calonarang</h2>
+  <p id="cag-sub">Ikuti kisah legendaris dari Bali tentang kebijaksanaan Mpu Baradah menghadapi kesaktian Calonarang.</p>
+
+  <div id="cag-hud"><span id="cag-phase">Tahap 1 / 5</span></div>
+
+  <div id="cag-canvas-holder">
+    <canvas id="cag-canvas"></canvas>
+
+    <div class="cag-overlay show" id="cag-start">
+      <h3>Kisah Calonarang</h3>
+      <p>Calonarang, seorang janda sakti pemilik ilmu hitam, murka karena fitnah terhadap putrinya. Raja Airlangga meminta bantuan penasihatnya yang bijaksana, Mpu Baradah, untuk menghadapinya. Ikuti kisah legendaris dari Bali ini sampai akhir.</p>
+      <button class="cag-btn" id="cag-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="cag-overlay" id="cag-win">
+      <h3>Kebijaksanaan Mengalahkan Dendam 🕊️</h3>
+      <p>Calonarang akhirnya mempelajari ajaran kebenaran dan mencapai moksa — pembebasan jiwa yang damai. Kisah ini mengajarkan bahwa kebijaksanaan dan belas kasih, pada akhirnya, mampu mengalahkan kemarahan dan dendam yang paling sakti sekalipun.</p>
+      <button class="cag-btn" id="cag-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="cag-caption">Bersiap memulai kisah...</div>
+
+  <div id="cag-progressWrap"><div id="cag-progressBar"></div></div>
+  <div id="cag-action-row">
+    <button id="cag-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Kisah Calonarang - Game',
+      h2: '📖 Kisah Calonarang',
+      sub: 'Ikuti kisah legendaris dari Bali tentang kebijaksanaan Mpu Baradah menghadapi kesaktian Calonarang.',
+      startTitle: 'Kisah Calonarang',
+      startBody: 'Calonarang, seorang janda sakti pemilik ilmu hitam, murka karena fitnah terhadap putrinya. Raja Airlangga meminta bantuan penasihatnya yang bijaksana, Mpu Baradah, untuk menghadapinya. Ikuti kisah legendaris dari Bali ini sampai akhir.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Kebijaksanaan Mengalahkan Dendam 🕊️',
+      winBody: 'Calonarang akhirnya mempelajari ajaran kebenaran dan mencapai moksa — pembebasan jiwa yang damai. Kisah ini mengajarkan bahwa kebijaksanaan dan belas kasih, pada akhirnya, mampu mengalahkan kemarahan dan dendam yang paling sakti sekalipun.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      stealBtn: '📖 AMBIL KITAB',
+      powerBtn: '✨ KERAHKAN KEKUATAN',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di daerah yang kini dikenal sebagai Girah, hiduplah seorang janda sakti bernama Calonarang, yang menguasai ilmu hitam bersama empat murid setianya.',
+        'Calonarang memiliki putri cantik bernama Diah Ratna Mengali. Namun tak seorang pemuda pun berani melamarnya, karena khawatir sang putri juga menguasai ilmu hitam seperti ibunya.',
+        'Mendengar kabar fitnah itu, Calonarang menjadi sangat murka. Ia memerintahkan murid-muridnya untuk menyerang rakyat Kediri sebagai balasan.',
+        'Pada malam yang disebut Kajeng Kliwon, suasana desa tiba-tiba mencekam. Keesokan harinya, wabah penyakit misterius melanda banyak penduduk, bahkan para balian yang berusaha menolong pun ikut jatuh sakit.',
+        'Raja Airlangga mengirim pasukannya untuk menghentikan Calonarang, namun pasukan itu dikalahkan dengan mudah, membuat Calonarang semakin murka.',
+        'Raja Airlangga pun meminta saran penasihatnya yang sakti, Mpu Baradah. Sang Mpu menyarankan siasat damai: menikahkan muridnya, Mpu Bahula, dengan Diah Ratna Mengali.',
+        'Calonarang menyetujui lamaran itu dengan senang hati. Mpu Bahula pun menikah dengan Diah Ratna Mengali dan tinggal di kediaman Calonarang.',
+        'Tahan tombol untuk membantu Mpu Bahula diam-diam mengambil kitab ilmu hitam milik ibu mertuanya, untuk dipelajari kelemahannya.',
+        'Mpu Baradah mempelajari kitab itu dengan saksama, lalu menyuruh Mpu Bahula segera mengembalikannya agar Calonarang tak menyadarinya.',
+        'Mpu Baradah menemui Calonarang secara langsung, mengingatkannya dengan bijak agar menghentikan sihirnya terhadap rakyat Kediri.',
+        'Calonarang meminta untuk diruwat agar dosa-dosanya bisa dileburkan. Namun Mpu Baradah menolak, karena dosanya sudah terlalu besar untuk diruwat saat itu.',
+        'Mendengar penolakan itu, Calonarang murka dan menyerang. Tahan tombol untuk membantu Mpu Baradah mengerahkan kekuatannya menghadapi serangan sengit itu.',
+        'Karena lebih sakti, Mpu Baradah berhasil mengalahkan Calonarang. Namun mengingat niat tobat dan penyesalannya, Mpu Baradah pun menghidupkannya kembali.',
+        'Calonarang akhirnya mempelajari ajaran kebenaran, hingga mencapai moksa — pembebasan jiwa yang damai, menutup segala dendam dan amarahnya untuk selamanya.'
+      ]
+    },
+    en: {
+      title: 'The Tale of Calon Arang - Game',
+      h2: '📖 The Tale of Calon Arang',
+      sub: 'Follow the legendary Balinese tale of the wise Mpu Baradah confronting the powerful Calon Arang.',
+      startTitle: 'The Tale of Calon Arang',
+      startBody: 'Calon Arang, a powerful widow skilled in black magic, grows furious over slander against her daughter. King Airlangga seeks the help of his wise advisor, Mpu Baradah, to confront her. Follow this legendary Balinese tale to the end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Wisdom Overcomes Vengeance 🕊️',
+      winBody: 'Calon Arang eventually learns the teachings of truth and attains moksha — a peaceful liberation of the soul. This tale teaches that wisdom and compassion can, in the end, overcome even the most powerful rage and vengeance.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      stealBtn: '📖 TAKE THE BOOK',
+      powerBtn: '✨ CALL ON YOUR POWER',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'In a region now known as Girah, there lived a powerful widow named Calon Arang, who practiced black magic alongside four loyal disciples.',
+        'Calon Arang had a beautiful daughter named Diah Ratna Mengali. But no young man dared propose to her, fearing she too possessed her mother\'s dark powers.',
+        'Hearing this slander, Calon Arang grows furious. She orders her disciples to strike the people of Kediri in retaliation.',
+        'On the night known as Kajeng Kliwon, the village suddenly turns eerie and tense. The next day, a mysterious plague strikes many villagers, and even the healers who try to help fall ill themselves.',
+        'King Airlangga sends his troops to stop Calon Arang, but they are defeated with ease, only making her angrier still.',
+        'King Airlangga seeks advice from his wise counselor, Mpu Baradah, who suggests a peaceful strategy: marrying his student, Mpu Bahula, to Diah Ratna Mengali.',
+        'Calon Arang happily accepts the proposal. Mpu Bahula marries Diah Ratna Mengali and moves into Calon Arang\'s household.',
+        'Hold the button to help Mpu Bahula quietly take his mother-in-law\'s book of black magic, to study its weaknesses.',
+        'Mpu Baradah studies the book carefully, then tells Mpu Bahula to return it at once, so Calon Arang won\'t notice it was taken.',
+        'Mpu Baradah meets Calon Arang face to face, wisely urging her to stop her sorcery against the people of Kediri.',
+        'Calon Arang asks to be spiritually cleansed of her sins. But Mpu Baradah refuses, for her sins are still too great to be absolved at this time.',
+        'Hearing this refusal, Calon Arang grows furious and attacks. Hold the button to help Mpu Baradah summon his power against her fierce assault.',
+        'Being the more powerful of the two, Mpu Baradah manages to defeat Calon Arang. But remembering her intent to repent, he brings her back to life.',
+        'Calon Arang finally learns the teachings of truth, and eventually attains moksha — a peaceful liberation of the soul, closing all her rage and vengeance for good.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#cag-wrap h2').textContent = TXT.h2;
+  document.getElementById('cag-sub').textContent = TXT.sub;
+  document.querySelector('#cag-start h3').textContent = TXT.startTitle;
+  document.querySelector('#cag-start p').textContent = TXT.startBody;
+  document.getElementById('cag-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#cag-win h3').textContent = TXT.winTitle;
+  document.querySelector('#cag-win p').textContent = TXT.winBody;
+  document.getElementById('cag-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('cag-caption').textContent = TXT.captionInit;
+  document.getElementById('cag-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('cag-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('cag-phase');
+  var captionEl = document.getElementById('cag-caption');
+  var actionBtn = document.getElementById('cag-actionBtn');
+  var progressWrap = document.getElementById('cag-progressWrap');
+  var progressBar = document.getElementById('cag-progressBar');
+  var startOverlay = document.getElementById('cag-start');
+  var winOverlay = document.getElementById('cag-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'girah_intro' },
+    { type:'caption', phase:1, scene:'ratna_fitnah' },
+    { type:'caption', phase:2, scene:'calonarang_murka' },
+    { type:'caption', phase:2, scene:'malam_kajeng_kliwon' },
+    { type:'caption', phase:3, scene:'pasukan_kalah' },
+    { type:'caption', phase:3, scene:'minta_saran' },
+    { type:'caption', phase:4, scene:'pernikahan' },
+    { type:'hold', phase:4, scene:'curi_kitab' },
+    { type:'caption', phase:4, scene:'kitab_dipelajari' },
+    { type:'caption', phase:5, scene:'mpu_menemui' },
+    { type:'caption', phase:5, scene:'calonarang_minta_ruwat' },
+    { type:'hold', phase:5, scene:'pertarungan_akhir' },
+    { type:'caption', phase:5, scene:'calonarang_kalah' },
+    { type:'caption', phase:5, scene:'calonarang_moksa' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'curi_kitab') actionBtn.textContent = TXT.stealBtn;
+      else if(step.scene === 'pertarungan_akhir') actionBtn.textContent = TXT.powerBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('cag-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('cag-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawCalonarang(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#4A2E4A';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,10*s,-11*s,26*s);
+    ctx.lineTo(11*s,26*s); ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A2A';
+    ctx.beginPath(); ctx.ellipse(0,-21*s,7.5*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRatna(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9799A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMpuBahula(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-8*s); ctx.quadraticCurveTo(-15*s,3*s,-10*s,20*s);
+    ctx.lineTo(10*s,20*s); ctx.quadraticCurveTo(15*s,3*s,11*s,-8*s);
+    ctx.quadraticCurveTo(0,-13*s,-11*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-20*s,7*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMpuBaradah(px, py, size, glow){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    if(glow > 0){
+      var g = ctx.createRadialGradient(0,-6*s,4,0,-6*s,36*s);
+      g.addColorStop(0,'rgba(255,250,220,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(255,250,220,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-6*s,36*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,10*s,-11*s,26*s);
+    ctx.lineTo(11*s,26*s); ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#EEEEEE';
+    ctx.beginPath(); ctx.ellipse(0,-21*s,7.5*s,6*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawKing(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E4A8A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBook(px, py, size, glow){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(glow>0){
+      var g = ctx.createRadialGradient(0,0,2,0,0,26*s);
+      g.addColorStop(0,'rgba(180,90,220,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(180,90,220,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,26*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#5A3E2A';
+    ctx.fillRect(-12*s,-16*s,24*s,32*s);
+    ctx.fillStyle = '#8A6A4A';
+    ctx.fillRect(-9*s,-13*s,18*s,26*s);
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawVillageBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(140,300); ctx.lineTo(190,240); ctx.lineTo(240,300);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(610,240); ctx.lineTo(660,300);
+    ctx.closePath(); ctx.fill();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='girah_intro' || scene==='ratna_fitnah' || scene==='calonarang_murka'){
+      sky.addColorStop(0,'#3E2E4A'); sky.addColorStop(1,'#5A4468');
+    } else if(scene==='malam_kajeng_kliwon'){
+      sky.addColorStop(0,'#4A1E24'); sky.addColorStop(1,'#6E2E30');
+    } else if(scene==='pasukan_kalah'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='minta_saran' || scene==='pernikahan'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='curi_kitab' || scene==='kitab_dipelajari'){
+      sky.addColorStop(0,'#2E2A4A'); sky.addColorStop(1,'#4A4468');
+    } else if(scene==='mpu_menemui' || scene==='calonarang_minta_ruwat'){
+      sky.addColorStop(0,'#5A4A6A'); sky.addColorStop(1,'#8A7A98');
+    } else if(scene==='pertarungan_akhir' || scene==='calonarang_kalah'){
+      sky.addColorStop(0,'#2E1E3A'); sky.addColorStop(1,'#4A2E58');
+    } else if(scene==='calonarang_moksa'){
+      sky.addColorStop(0,'#AEDBF2'); sky.addColorStop(1,'#F0F8FF');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'girah_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='girah_intro'){
+      drawHutBg();
+      drawCalonarang(360, 330+bob, 46);
+    }
+    if(scene==='ratna_fitnah'){
+      drawHutBg();
+      drawCalonarang(320, 330+bob, 42);
+      drawRatna(440, 330+bob, 40);
+    }
+    if(scene==='calonarang_murka'){
+      drawHutBg();
+      var glow = 0.3+0.3*Math.sin(t*4);
+      var g = ctx.createRadialGradient(400,320,4,400,320,90);
+      g.addColorStop(0,'rgba(150,50,180,'+glow+')');
+      g.addColorStop(1,'rgba(150,50,180,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(400,320,90,0,Math.PI*2); ctx.fill();
+      drawCalonarang(400, 320+bob, 48);
+    }
+    if(scene==='malam_kajeng_kliwon'){
+      drawVillageBg();
+      ctx.fillStyle = 'rgba(120,20,30,0.25)';
+      ctx.fillRect(0,0,W,H);
+    }
+    if(scene==='pasukan_kalah'){
+      drawVillageBg();
+      drawCalonarang(400, 320+bob, 48);
+      drawKing(260, 340+bob, 34);
+      drawKing(320, 350+bob, 30);
+    }
+    if(scene==='minta_saran' || scene==='pernikahan'){
+      drawPalaceBg();
+      drawKing(340, 300+bob, 46);
+      if(scene==='minta_saran'){
+        drawMpuBaradah(500, 300+bob, 46, 0.4);
+      } else {
+        drawMpuBahula(340, 330+bob, 40);
+        drawRatna(460, 330+bob, 40);
+      }
+    }
+    if(scene==='curi_kitab' || scene==='kitab_dipelajari'){
+      drawHutBg();
+      ctx.fillStyle = 'rgba(20,15,30,0.4)';
+      ctx.fillRect(0,0,W,H);
+      if(scene==='curi_kitab'){
+        drawMpuBahula(340, 330+bob, 40);
+        drawBook(460, 320+Math.sin(t*3)*4, 40, progress);
+      } else {
+        drawMpuBaradah(400, 300+bob, 46, 0.3);
+        drawBook(400, 260, 36, 0.5);
+      }
+    }
+    if(scene==='mpu_menemui' || scene==='calonarang_minta_ruwat'){
+      drawHutBg();
+      drawCalonarang(340, 330+bob, 44);
+      drawMpuBaradah(480, 320+bob, 46, 0.3);
+    }
+    if(scene==='pertarungan_akhir' || scene==='calonarang_kalah'){
+      drawVillageBg();
+      var clashAmt = scene==='pertarungan_akhir' ? (0.3+0.5*progress) : 0.2;
+      drawCalonarang(320, 320+bob, 46);
+      drawMpuBaradah(500, 300+bob, 50, clashAmt);
+      var g2 = ctx.createRadialGradient(410,300,4,410,300,90);
+      g2.addColorStop(0,'rgba(200,150,255,'+clashAmt+')');
+      g2.addColorStop(1,'rgba(200,150,255,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(410,300,90,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='calonarang_moksa'){
+      ctx.fillStyle = '#F0F8FF';
+      ctx.fillRect(0,300,W,H-300);
+      var g3 = ctx.createRadialGradient(400,270,4,400,270,80);
+      g3.addColorStop(0,'rgba(255,250,225,0.6)');
+      g3.addColorStop(1,'rgba(255,250,225,0)');
+      ctx.fillStyle = g3;
+      ctx.beginPath(); ctx.arc(400,270,80,0,Math.PI*2); ctx.fill();
+      drawCalonarang(400, 300+Math.sin(t*1.5)*6, 40);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('cag-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'cag-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('cag-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
