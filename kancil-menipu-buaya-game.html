@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Kancil Menipu Buaya - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #kbg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #kbg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #kbg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #kbg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #kbg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #kbg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #kbg-canvas { display: block; width: 100%; height: 100%; }
+  .kbg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .kbg-overlay.show { display: flex; }
+  .kbg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .kbg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .kbg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .kbg-btn:active { transform: scale(0.97); }
+
+  #kbg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #kbg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #kbg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #kbg-actionBtn.hold { background: #8A5A1E; }
+  #kbg-actionBtn.tapcount { background: #4A7EC9; }
+  #kbg-actionBtn:active { transform: scale(0.97); }
+  #kbg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #kbg-progressWrap.show { display: block; }
+  #kbg-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="kbg-wrap">
+  <h2>🐊 Si Kancil Menipu Buaya</h2>
+  <p id="kbg-sub">Bantu Si Kancil menyeberangi sungai dengan menghitung dan melompati punggung para buaya!</p>
+
+  <div id="kbg-hud"><span id="kbg-phase">Tahap 1 / 5</span></div>
+
+  <div id="kbg-canvas-holder">
+    <canvas id="kbg-canvas"></canvas>
+
+    <div class="kbg-overlay show" id="kbg-start">
+      <h3>Si Kancil Menipu Buaya</h3>
+      <p>Setelah lolos dari kurungan Pak Tani, Si Kancil terhalang sungai besar. Ikuti kisahnya menipu Pak Buaya dan teman-temannya dengan cara menghitung sambil melompati punggung mereka menyeberangi sungai!</p>
+      <button class="kbg-btn" id="kbg-startBtn">Mulai Cerita</button>
+    </div>
+
+    <div class="kbg-overlay" id="kbg-win">
+      <h3>Si Kancil Berhasil Menyeberang! 🎉</h3>
+      <p>Berkat kecerdikannya, Si Kancil berhasil menyeberangi sungai tanpa basah sedikit pun. Namun ingat, menipu tetaplah bukan cara yang baik — akan lebih baik jika kecerdikan dipakai untuk mencari solusi secara jujur.</p>
+      <button class="kbg-btn" id="kbg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="kbg-caption">Bersiap memulai cerita...</div>
+
+  <div id="kbg-progressWrap"><div id="kbg-progressBar"></div></div>
+  <div id="kbg-action-row">
+    <button id="kbg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var TOTAL_JUMPS = 5;
+
+  var I18N = {
+    id: {
+      title: 'Si Kancil Menipu Buaya - Game',
+      h2: '🐊 Si Kancil Menipu Buaya',
+      sub: 'Bantu Si Kancil menyeberangi sungai dengan menghitung dan melompati punggung para buaya!',
+      startTitle: 'Si Kancil Menipu Buaya',
+      startBody: 'Setelah lolos dari kurungan Pak Tani, Si Kancil terhalang sungai besar. Ikuti kisahnya menipu Pak Buaya dan teman-temannya dengan cara menghitung sambil melompati punggung mereka menyeberangi sungai!',
+      startBtn: 'Mulai Cerita',
+      winTitle: 'Si Kancil Berhasil Menyeberang! 🎉',
+      winBody: 'Berkat kecerdikannya, Si Kancil berhasil menyeberangi sungai tanpa basah sedikit pun. Namun ingat, menipu tetaplah bukan cara yang baik — akan lebih baik jika kecerdikan dipakai untuk mencari solusi secara jujur.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai cerita...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      pushBtn: '🌴 DORONG POHON',
+      jumpBtn: '🐊 LOMPAT!',
+      countLabel: function(n){ return 'Hitungan: ' + n + ' / ' + TOTAL_JUMPS; },
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Si Kancil berlari kencang meninggalkan rumah Pak Tani, setelah berhasil menipu Anjing dan lolos dari kurungan ayam.',
+        'Merasa aman, ia beristirahat sejenak di bawah pohon rindang sebelum melanjutkan perjalanan ke tengah hutan.',
+        'Di tengah perjalanan, Si Kancil terhalang sebuah sungai besar. Badannya kecil dan ia tak pandai berenang — tak mungkin ia nekat menyeberang begitu saja.',
+        'Si Kancil melihat serumpun pohon pisang di dekat sungai. Tahan tombol untuk membantunya mendorong batang-batang pohon pisang itu hingga roboh.',
+        'Saat sibuk mendorong pohon pisang, seekor buaya lapar diam-diam mendekat dan tiba-tiba menggigit kaki Si Kancil!',
+        'Si Kancil ketakutan, namun dengan tenang ia membujuk, "Biarkan aku mencari makan dulu sampai kenyang, baru kalian boleh memakanku."',
+        'Pak Buaya yang lapar dan tak curiga pun memanggil teman-temannya, ingin ikut menyantap Si Kancil bersama-sama nanti.',
+        'Si Kancil kembali membujuk, "Agar dagingku bisa dibagi rata, biar kuhitung dulu jumlah kalian. Berbarislah dari sini sampai ke seberang sungai!"',
+        'Para buaya berbaris menuruti permintaan Si Kancil. Tekan tombol LOMPAT berulang kali sambil menghitung, hingga Si Kancil melompati semua punggung buaya ke seberang sungai!',
+        'Begitu sampai di seberang, Si Kancil segera melarikan diri sambil melambaikan tangan, "Terima kasih sudah menolongku menyeberang, Pak Buaya!"',
+        'Para buaya baru sadar telah tertipu dan sangat marah, namun Si Kancil sudah kabur jauh ke tengah hutan sambil tertawa terbahak-bahak.'
+      ]
+    },
+    en: {
+      title: 'Kancil Tricks the Crocodiles - Game',
+      h2: '🐊 Kancil Tricks the Crocodiles',
+      sub: 'Help Kancil cross the river by counting and hopping across the crocodiles\' backs!',
+      startTitle: 'Kancil Tricks the Crocodiles',
+      startBody: 'After escaping the Farmer\'s cage, Kancil is blocked by a wide river. Follow the story of tricking the Crocodile and his friends by counting them while hopping across their backs to the other side!',
+      startBtn: 'Start the Story',
+      winTitle: 'Kancil Makes It Across! 🎉',
+      winBody: 'Thanks to his cleverness, Kancil crosses the river without getting even a little wet. But remember, tricking others still isn\'t a good habit — it\'s better to use cleverness to find honest solutions.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the story ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      pushBtn: '🌴 PUSH THE TREE',
+      jumpBtn: '🐊 HOP!',
+      countLabel: function(n){ return 'Count: ' + n + ' / ' + TOTAL_JUMPS; },
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Kancil runs fast, leaving the Farmer\'s house behind, having just tricked the Dog and escaped the chicken cage.',
+        'Feeling safe, he rests a while under a shady tree before continuing his journey into the forest.',
+        'Along the way, Kancil is blocked by a wide river. He\'s small and can\'t swim well — there\'s no way he can cross on his own.',
+        'Kancil spots a cluster of banana trees near the river. Hold the button to help him push the trunks down one by one.',
+        'While busy pushing the banana trees, a hungry crocodile quietly slips closer and suddenly bites Kancil\'s leg!',
+        'Frightened, Kancil calmly pleads, "Let me find food first until I\'m full, then you can all eat me."',
+        'The hungry, unsuspecting Crocodile calls his friends over, wanting them to join in eating Kancil together later.',
+        'Kancil pleads again, "So my meat can be shared fairly, let me count how many of you there are first. Line up from here across to the other side!"',
+        'The crocodiles line up as Kancil asked. Tap the HOP button again and again while counting, until Kancil hops across every crocodile\'s back to the far shore!',
+        'The moment he reaches the other side, Kancil dashes off, waving, "Thanks for helping me cross, Mr. Crocodile!"',
+        'The crocodiles realize too late they\'ve been tricked and grow furious, but Kancil is already long gone into the forest, laughing all the way.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#kbg-wrap h2').textContent = TXT.h2;
+  document.getElementById('kbg-sub').textContent = TXT.sub;
+  document.querySelector('#kbg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#kbg-start p').textContent = TXT.startBody;
+  document.getElementById('kbg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#kbg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#kbg-win p').textContent = TXT.winBody;
+  document.getElementById('kbg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('kbg-caption').textContent = TXT.captionInit;
+  document.getElementById('kbg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('kbg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('kbg-phase');
+  var captionEl = document.getElementById('kbg-caption');
+  var actionBtn = document.getElementById('kbg-actionBtn');
+  var progressWrap = document.getElementById('kbg-progressWrap');
+  var progressBar = document.getElementById('kbg-progressBar');
+  var startOverlay = document.getElementById('kbg-start');
+  var winOverlay = document.getElementById('kbg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+  var jumpCount = 0;
+  var jumpAdvancing = false;
+  var hopBounce = 0;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'lari_kabur' },
+    { type:'caption', phase:1, scene:'istirahat' },
+    { type:'caption', phase:2, scene:'sungai_besar' },
+    { type:'hold', phase:2, scene:'dorong_pisang' },
+    { type:'caption', phase:3, scene:'digigit_buaya' },
+    { type:'caption', phase:3, scene:'kancil_membujuk' },
+    { type:'caption', phase:4, scene:'panggil_teman' },
+    { type:'caption', phase:4, scene:'minta_berbaris' },
+    { type:'tapcount', phase:5, scene:'lompat_hitung' },
+    { type:'caption', phase:5, scene:'berhasil_kabur' },
+    { type:'caption', phase:5, scene:'buaya_marah' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+    jumpCount = 0;
+    jumpAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = TXT.pushBtn;
+      progressWrap.classList.add('show');
+    } else if(step.type === 'tapcount'){
+      actionBtn.className = 'tapcount';
+      actionBtn.textContent = TXT.jumpBtn;
+      progressWrap.classList.remove('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'tapcount'){
+      if(jumpAdvancing) return;
+      if(jumpCount < TOTAL_JUMPS){
+        jumpCount++;
+        hopBounce = 1;
+        if(jumpCount >= TOTAL_JUMPS){
+          jumpAdvancing = true;
+          var capturedIndex = stepIndex;
+          setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 500);
+        }
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('kbg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('kbg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawBananaTree(px, py, size, fallenAmt){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(fallenAmt * Math.PI/2.2);
+    ctx.fillStyle = '#5C8A3C';
+    ctx.fillRect(-3*s, -30*s, 6*s, 30*s);
+    ctx.fillStyle = '#7CB342';
+    for(var i=0;i<4;i++){
+      ctx.save();
+      ctx.translate(0,-28*s);
+      ctx.rotate(-0.6+i*0.4);
+      ctx.beginPath();
+      ctx.ellipse(0,-8*s,5*s,12*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawCroc(px, py, size, bite){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3C6B40';
+    ctx.beginPath();
+    ctx.ellipse(0,4*s,20*s,9*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#2F5233';
+    ctx.beginPath();
+    ctx.moveTo(16*s,2*s); ctx.lineTo(28*s,-2*s); ctx.lineTo(16*s,6*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath(); ctx.arc(-12*s,-1*s,2*s,0,Math.PI*2); ctx.fill();
+    if(bite){
+      ctx.fillStyle = '#E76F51';
+      ctx.beginPath(); ctx.ellipse(-16*s,4*s,4*s,3*s,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawRiverBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,260,W,60);
+    ctx.fillStyle = '#3A6EA5';
+    ctx.fillRect(0,260,W,H-260);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<4;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 300+w*20);
+      ctx.quadraticCurveTo(400, 290+w*20+Math.sin(t*2+w)*5, 800, 300+w*20);
+      ctx.stroke();
+    }
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(hopBounce > 0) hopBounce = Math.max(0, hopBounce - dt*3);
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='lari_kabur' || scene==='istirahat'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='sungai_besar' || scene==='dorong_pisang'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='digigit_buaya' || scene==='kancil_membujuk' || scene==='panggil_teman' || scene==='minta_berbaris'){
+      sky.addColorStop(0,'#8AA6D9'); sky.addColorStop(1,'#D9E9F4');
+    } else if(scene==='lompat_hitung'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else if(scene==='berhasil_kabur' || scene==='buaya_marah'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'lari_kabur';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='lari_kabur' || scene==='istirahat'){
+      drawForestBg();
+      drawEmoji('🦌', scene==='lari_kabur' ? 300+Math.sin(t*10)*20 : 400, 340+bob, 46);
+    }
+    if(scene==='sungai_besar'){
+      drawRiverBg();
+      drawEmoji('🦌', 200, 300+bob, 42);
+    }
+    if(scene==='dorong_pisang'){
+      drawRiverBg();
+      drawBananaTree(300, 330, 40, progress);
+      drawBananaTree(360, 330, 40, Math.max(0,progress-0.3));
+      drawEmoji('🦌', 240, 320+bob, 40);
+    }
+    if(scene==='digigit_buaya'){
+      drawRiverBg();
+      drawEmoji('🦌', 260, 310+bob, 42);
+      drawCroc(310, 330, 44, true);
+    }
+    if(scene==='kancil_membujuk'){
+      drawRiverBg();
+      drawEmoji('🦌', 240, 300+bob, 40);
+      drawCroc(320, 330, 44, false);
+    }
+    if(scene==='panggil_teman'){
+      drawRiverBg();
+      drawEmoji('🦌', 220, 300+bob, 38);
+      drawCroc(300, 330, 40, false);
+      drawCroc(380, 335, 34, false);
+      drawCroc(460, 330, 34, false);
+    }
+    if(scene==='minta_berbaris'){
+      drawRiverBg();
+      drawEmoji('🦌', 200, 300+bob, 38);
+      for(var i=0;i<5;i++){
+        drawCroc(280+i*100, 330+Math.sin(t*2+i)*3, 40, false);
+      }
+    }
+    if(scene==='lompat_hitung'){
+      drawRiverBg();
+      var crocXs = [];
+      for(var c=0;c<TOTAL_JUMPS;c++){
+        var cx = 220+c*100;
+        crocXs.push(cx);
+        drawCroc(cx, 330, 42, false);
+      }
+      var idx = Math.min(jumpCount, TOTAL_JUMPS-1);
+      var kancilX = jumpCount===0 ? 150 : crocXs[idx];
+      var jumpArc = hopBounce>0 ? Math.sin(hopBounce*Math.PI)*30 : 0;
+      drawEmoji('🦌', kancilX, 300 - jumpArc, 40);
+
+      ctx.font = '700 16px sans-serif';
+      ctx.fillStyle = '#2E4A34';
+      ctx.textAlign = 'center';
+      ctx.fillText(TXT.countLabel(jumpCount), 400, 60);
+    }
+    if(scene==='berhasil_kabur' || scene==='buaya_marah'){
+      drawForestBg();
+      drawEmoji('🦌', 400+Math.sin(t*8)*20, 330+bob, 44);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('kbg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'kbg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('kbg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
