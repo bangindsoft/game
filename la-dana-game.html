@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Dana dan Kerbaunya - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #ldg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #F3E7DA 0%, #F7F3E8 100%);
+    border: 3px solid #8A4A2A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #ldg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #6E3A1E;
+  }
+  #ldg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #ldg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #ldg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #ldg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8A4A2A;
+    background: #BEE3F8;
+  }
+  #ldg-canvas { display: block; width: 100%; height: 100%; }
+  .ldg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,28,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .ldg-overlay.show { display: flex; }
+  .ldg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .ldg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .ldg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .ldg-btn:active { transform: scale(0.97); }
+
+  #ldg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8A4A2A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #ldg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #ldg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #8A4A2A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #ldg-actionBtn.hold { background: #3D7A4C; }
+  #ldg-actionBtn.tapcount { background: #4A7EC9; }
+  #ldg-actionBtn:active { transform: scale(0.97); }
+  #ldg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #ldg-progressWrap.show { display: block; }
+  #ldg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="ldg-wrap">
+  <h2>🐃 La Dana dan Kerbaunya</h2>
+  <p id="ldg-sub">Cerita rakyat Tana Toraja tentang La Dana yang cerdik namun licik pada temannya sendiri.</p>
+
+  <div id="ldg-hud"><span id="ldg-phase">Tahap 1 / 5</span></div>
+
+  <div id="ldg-canvas-holder">
+    <canvas id="ldg-canvas"></canvas>
+
+    <div class="ldg-overlay show" id="ldg-start">
+      <h3>La Dana dan Kerbaunya</h3>
+      <p>La Dana dan temannya mendapat bagian daging kerbau yang tidak seimbang dari sebuah upacara adat di Tana Toraja. La Dana pun mencari akal untuk mendapatkan lebih. Ikuti kisahnya sampai akhir.</p>
+      <button class="ldg-btn" id="ldg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="ldg-overlay" id="ldg-win">
+      <h3>Kecerdikan yang Disalahgunakan 😕</h3>
+      <p>La Dana memang anak yang pintar dan cerdik. Namun ia sering menggunakan kecerdikannya untuk memperdaya temannya sendiri, sehingga masyarakat sekitar kurang menyukainya. Jangan berlaku curang untuk mencapai tujuan, ya!</p>
+      <button class="ldg-btn" id="ldg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="ldg-caption">Bersiap memulai kisah...</div>
+
+  <div id="ldg-progressWrap"><div id="ldg-progressBar"></div></div>
+  <div id="ldg-action-row">
+    <button id="ldg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var TOTAL_VISITS = 4;
+
+  var I18N = {
+    id: {
+      title: 'La Dana dan Kerbaunya - Game',
+      h2: '🐃 La Dana dan Kerbaunya',
+      sub: 'Cerita rakyat Tana Toraja tentang La Dana yang cerdik namun licik pada temannya sendiri.',
+      startTitle: 'La Dana dan Kerbaunya',
+      startBody: 'La Dana dan temannya mendapat bagian daging kerbau yang tidak seimbang dari sebuah upacara adat di Tana Toraja. La Dana pun mencari akal untuk mendapatkan lebih. Ikuti kisahnya sampai akhir.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Kecerdikan yang Disalahgunakan 😕',
+      winBody: 'La Dana memang anak yang pintar dan cerdik. Namun ia sering menggunakan kecerdikannya untuk memperdaya temannya sendiri, sehingga masyarakat sekitar kurang menyukainya. Jangan berlaku curang untuk mencapai tujuan, ya!',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      searchBtn: '🔄 CARI ORANG TUKAR',
+      persuadeBtn: '🗣️ BUJUK LAGI',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di Tana Toraja, ada seorang pemuda pintar namun licik bernama La Dana. Suatu ketika, ada tetangga yang meninggal dunia. Sesuai tradisi, keluarga yang berduka mengadakan upacara pemotongan kerbau, dan La Dana bersama temannya diundang menghadirinya.',
+        'Sesuai tradisi, daging kerbau itu dibagikan kepada para pelayat. La Dana hanya mendapat bagian kaki belakang, sementara temannya mendapat bagian jauh lebih besar: seluruh badan kerbau.',
+        '"Masa aku hanya dapat kaki kerbau, sementara temanku dapat seluruh badan?" gerutu La Dana dalam hati. Ia pun mencari akal.',
+        'La Dana mengusulkan menukar bagian daging mereka dengan seekor kerbau hidup, agar bisa dirawat bersama sampai gemuk. Tahan tombol untuk membantu mereka mencari orang yang mau menukarkan kerbaunya.',
+        'Meski kerbau hidup yang mereka dapat lebih kecil, keduanya senang, lalu merawatnya bersama-sama selama beberapa waktu.',
+        'Tak lama, La Dana mulai tak sabar. Tekan tombol BUJUK berulang kali sambil La Dana bolak-balik mendatangi rumah temannya, merengek minta agar kerbau itu segera dipotong.',
+        'Karena sudah kesal, temannya akhirnya menyerah dan memberikan seluruh kerbau hidup itu kepada La Dana. Dengan gembira, La Dana pun membawa pulang kerbau itu utuh.',
+        'Begitulah sifat buruk La Dana — meskipun pintar dan cerdik, ia sering menggunakan kecerdikannya untuk memperdaya temannya sendiri, sehingga masyarakat sekitar kurang menyukainya.'
+      ],
+      visits: [
+        '"Ayo kita potong saja kerbau kita," bujuk La Dana. "Jangan dulu, tunggu sampai gemuk," jawab temannya.',
+        '"Begini saja, potong saja bagianku, kaki belakang kerbau itu," kata La Dana. Temannya kesal, "Kalau dipotong kakinya, kerbau itu bisa mati! Sabarlah, nanti kuberi kau kaki depannya juga."',
+        'Beberapa hari kemudian, La Dana datang lagi membujuk. Temannya menolak, namun berjanji akan memberi bagian badan kerbau asalkan La Dana mau bersabar.',
+        'La Dana tak bosan-bosannya bolak-balik membujuk, hingga akhirnya temannya benar-benar tak tahan. "Sudahlah, kau ambil saja kerbau ini! Jangan ganggu aku lagi!"'
+      ]
+    },
+    en: {
+      title: 'La Dana and His Buffalo - Game',
+      h2: '🐃 La Dana and His Buffalo',
+      sub: 'A Toraja folktale about La Dana, a clever but sly boy who tricks his own friend.',
+      startTitle: 'La Dana and His Buffalo',
+      startBody: 'La Dana and his friend receive unequal shares of buffalo meat from a traditional ceremony in Tana Toraja. La Dana schemes to get more. Follow the story to the end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Cleverness Misused 😕',
+      winBody: 'La Dana truly is a clever, sharp-witted boy. But he often uses his cleverness to trick his own friend, which is why the people around him don\'t care for him much. Don\'t be sly to get what you want!',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      searchBtn: '🔄 FIND A TRADE',
+      persuadeBtn: '🗣️ ASK AGAIN',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'In Tana Toraja lived a clever but sly boy named La Dana. One day, a neighbor passes away. Following tradition, the grieving family holds a buffalo-slaughtering ceremony, and La Dana and his friend are invited to attend.',
+        'As tradition dictates, the buffalo meat is shared among the mourners. La Dana only gets the hind leg, while his friend gets a far larger share: the rest of the buffalo\'s body.',
+        '"Why do I only get the leg, while my friend gets the whole body?" La Dana grumbles to himself. He starts scheming.',
+        'La Dana suggests trading their shares of meat for a live buffalo, so they can raise it together until it\'s fattened up. Hold the button to help them find someone willing to trade.',
+        'Even though the live buffalo they get is smaller, they\'re both happy, and raise it together for a while.',
+        'Before long, La Dana grows impatient. Tap the ASK AGAIN button repeatedly as La Dana keeps visiting his friend\'s house, pestering him to slaughter the buffalo already.',
+        'Fed up at last, his friend gives in and hands over the entire live buffalo to La Dana. Delighted, La Dana takes the whole buffalo home.',
+        'Such was La Dana\'s bad habit — clever and sharp-witted as he was, he often used his cleverness to trick his own friend, which is why the people around him didn\'t care for him much.'
+      ],
+      visits: [
+        '"Come on, let\'s just slaughter our buffalo," La Dana pleads. "Not yet, let\'s wait till it\'s fattened up," his friend replies.',
+        '"How about this — just slaughter my share, the hind leg," La Dana says. His friend, annoyed, says, "If we cut off its leg, the buffalo will die! Be patient, I\'ll give you the front leg too."',
+        'A few days later, La Dana comes back to plead again. His friend refuses, but promises to give him a share of the body if La Dana will just be patient.',
+        'La Dana keeps pestering him again and again, until his friend can\'t take it anymore. "Fine, just take the whole buffalo! Stop bothering me!"'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#ldg-wrap h2').textContent = TXT.h2;
+  document.getElementById('ldg-sub').textContent = TXT.sub;
+  document.querySelector('#ldg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#ldg-start p').textContent = TXT.startBody;
+  document.getElementById('ldg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#ldg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#ldg-win p').textContent = TXT.winBody;
+  document.getElementById('ldg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('ldg-caption').textContent = TXT.captionInit;
+  document.getElementById('ldg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('ldg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('ldg-phase');
+  var captionEl = document.getElementById('ldg-caption');
+  var actionBtn = document.getElementById('ldg-actionBtn');
+  var progressWrap = document.getElementById('ldg-progressWrap');
+  var progressBar = document.getElementById('ldg-progressBar');
+  var startOverlay = document.getElementById('ldg-start');
+  var winOverlay = document.getElementById('ldg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+  var visitCount = 0;
+  var visitAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'upacara_adat' },
+    { type:'caption', phase:1, scene:'pembagian_daging' },
+    { type:'caption', phase:2, scene:'ide_licik' },
+    { type:'hold', phase:2, scene:'tukar_kerbau' },
+    { type:'caption', phase:3, scene:'rawat_kerbau' },
+    { type:'tapcount', phase:4, scene:'bujuk_teman' },
+    { type:'caption', phase:5, scene:'kerbau_dibawa_pulang' },
+    { type:'caption', phase:5, scene:'moral_cerita' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+    visitCount = 0;
+    visitAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = TXT.searchBtn;
+      progressWrap.classList.add('show');
+    } else if(step.type === 'tapcount'){
+      actionBtn.className = 'tapcount';
+      actionBtn.textContent = TXT.persuadeBtn;
+      progressWrap.classList.remove('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'tapcount'){
+      if(visitAdvancing) return;
+      if(visitCount < TOTAL_VISITS){
+        captionEl.textContent = TXT.visits[visitCount];
+        visitCount++;
+        if(visitCount >= TOTAL_VISITS){
+          visitAdvancing = true;
+          var capturedIndex = stepIndex;
+          setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 1400);
+        }
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('ldg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('ldg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawLaDana(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A4A2A';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFriend(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3D6B4A';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTongkonan(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A4A2A';
+    ctx.beginPath();
+    ctx.moveTo(-34*s,4*s);
+    ctx.quadraticCurveTo(-30*s,-24*s,0,-30*s);
+    ctx.quadraticCurveTo(30*s,-24*s,34*s,4*s);
+    ctx.quadraticCurveTo(0,-8*s,-34*s,4*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3D2A1A';
+    ctx.fillRect(-22*s,4*s,44*s,24*s);
+    ctx.restore();
+  }
+
+  function drawMeatShare(px, py, size, big){
+    ctx.font = (big?38:24)+'px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🍖', px, py);
+  }
+
+  function drawVillageBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='upacara_adat' || scene==='pembagian_daging'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'upacara_adat';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='upacara_adat'){
+      drawVillageBg();
+      drawTongkonan(560, 300, 90);
+      drawLaDana(300, 340+bob, 42);
+      drawFriend(360, 340+bob, 42);
+    }
+    if(scene==='pembagian_daging'){
+      drawVillageBg();
+      drawLaDana(280, 340+bob, 40);
+      drawMeatShare(320, 320, 30, false);
+      drawFriend(460, 340+bob, 40);
+      drawMeatShare(500, 310, 30, true);
+    }
+    if(scene==='ide_licik'){
+      drawVillageBg();
+      drawLaDana(400, 330+bob, 44);
+      ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('💭', 440, 290);
+    }
+    if(scene==='tukar_kerbau'){
+      drawVillageBg();
+      drawLaDana(280, 330+bob, 40);
+      drawFriend(340, 330+bob, 40);
+      var buffaloSize = 20+progress*40;
+      drawEmoji('🐃', 500, 340, buffaloSize);
+    }
+    if(scene==='rawat_kerbau'){
+      drawVillageBg();
+      drawLaDana(300, 330+bob, 40);
+      drawFriend(360, 330+bob, 40);
+      drawEmoji('🐃', 480, 340, 60);
+    }
+    if(scene==='bujuk_teman'){
+      drawVillageBg();
+      drawTongkonan(600, 300, 70);
+      drawLaDana(300+Math.sin(t*3)*10, 340+bob, 42);
+      drawFriend(460, 340+bob, 42);
+      var buffSize = 60 - visitCount*3;
+      drawEmoji('🐃', 400, 350, Math.max(40,buffSize));
+      ctx.font='700 15px sans-serif';
+      ctx.fillStyle = '#5C3D1E';
+      ctx.textAlign='center';
+      ctx.fillText((LANG==='en'?'Visits: ':'Kunjungan: ') + visitCount + ' / ' + TOTAL_VISITS, 400, 60);
+    }
+    if(scene==='kerbau_dibawa_pulang'){
+      drawVillageBg();
+      drawLaDana(340, 330+bob, 44);
+      drawEmoji('🐃', 420, 340, 60);
+    }
+    if(scene==='moral_cerita'){
+      drawVillageBg();
+      drawLaDana(400, 330+bob, 46);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('ldg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'ldg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('ldg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
