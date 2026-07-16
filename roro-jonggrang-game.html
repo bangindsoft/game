@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Roro Jonggrang - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #rjg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #F0E9D6 0%, #F7F3E8 100%);
+    border: 3px solid #8A5A1E;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #rjg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #6E3E12;
+  }
+  #rjg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #rjg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #rjg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #rjg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8A5A1E;
+    background: #2E2440;
+  }
+  #rjg-canvas { display: block; width: 100%; height: 100%; }
+  .rjg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,30,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .rjg-overlay.show { display: flex; }
+  .rjg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .rjg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .rjg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .rjg-btn:active { transform: scale(0.97); }
+
+  #rjg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8A5A1E;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #rjg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #rjg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #8A5A1E;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #rjg-actionBtn.hold { background: #3D7A4C; }
+  #rjg-actionBtn:active { transform: scale(0.97); }
+  #rjg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #rjg-progressWrap.show { display: block; }
+  #rjg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="rjg-wrap">
+  <h2>🛕 Legenda Roro Jonggrang</h2>
+  <p id="rjg-sub">Ikuti kisah Bandung Bondowoso membangun seribu candi dalam semalam, asal usul Candi Prambanan.</p>
+
+  <div id="rjg-hud"><span id="rjg-phase">Tahap 1 / 5</span></div>
+
+  <div id="rjg-canvas-holder">
+    <canvas id="rjg-canvas"></canvas>
+
+    <div class="rjg-overlay show" id="rjg-start">
+      <h3>Legenda Roro Jonggrang</h3>
+      <p>Bandung Bondowoso menaklukkan Kerajaan Prambanan dan ingin menikahi Roro Jonggrang. Sang putri mengajukan syarat mustahil: seribu candi dalam satu malam. Ikuti kisahnya hingga asal usul Candi Prambanan.</p>
+      <button class="rjg-btn" id="rjg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="rjg-overlay" id="rjg-win">
+      <h3>Asal Usul Candi Prambanan 🛕</h3>
+      <p>Hingga kini, Candi Prambanan berdiri megah sebagai salah satu candi terbesar di Indonesia. Arca dewi cantik di dalamnya dipercaya masyarakat setempat sebagai penjelmaan Roro Jonggrang.</p>
+      <button class="rjg-btn" id="rjg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="rjg-caption">Bersiap memulai kisah...</div>
+
+  <div id="rjg-progressWrap"><div id="rjg-progressBar"></div></div>
+  <div id="rjg-action-row">
+    <button id="rjg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Roro Jonggrang - Game',
+      h2: '🛕 Legenda Roro Jonggrang',
+      sub: 'Ikuti kisah Bandung Bondowoso membangun seribu candi dalam semalam, asal usul Candi Prambanan.',
+      startTitle: 'Legenda Roro Jonggrang',
+      startBody: 'Bandung Bondowoso menaklukkan Kerajaan Prambanan dan ingin menikahi Roro Jonggrang. Sang putri mengajukan syarat mustahil: seribu candi dalam satu malam. Ikuti kisahnya hingga asal usul Candi Prambanan.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Usul Candi Prambanan 🛕',
+      winBody: 'Hingga kini, Candi Prambanan berdiri megah sebagai salah satu candi terbesar di Indonesia. Arca dewi cantik di dalamnya dipercaya masyarakat setempat sebagai penjelmaan Roro Jonggrang.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      buildBtn: '🛕 BANGUN CANDI',
+      trickBtn: '🔥 BAKAR JERAMI',
+      aloneBtn: '🪨 LANJUTKAN SENDIRI',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala, ada dua kerajaan bertetangga: Kerajaan Prambanan, dipimpin Raja Boko yang memiliki putri cantik bernama Roro Jonggrang, dan Kerajaan Pengging, dipimpin raja yang sombong dan haus kekuasaan.',
+        'Raja Pengging memerintahkan ksatria perkasanya, Bandung Bondowoso, untuk menaklukkan Kerajaan Prambanan agar tunduk padanya.',
+        'Dalam waktu singkat, pasukan Bandung Bondowoso berhasil menaklukkan Prambanan. Raja Boko sendiri gugur dalam peperangan itu.',
+        'Terpesona oleh kecantikan Roro Jonggrang, Bandung Bondowoso melamarnya. Meski membenci pembunuh ayahnya itu, Roro Jonggrang pun mengajukan syarat yang sangat berat: seribu candi dan dua buah sumur, semuanya harus selesai dalam satu malam.',
+        'Tahan tombol untuk membantu Bandung Bondowoso mengerahkan ribuan pasukan jin, membangun candi demi candi dengan sangat cepat.',
+        'Dua pertiga malam telah berlalu. Ribuan candi telah berdiri megah, hanya tersisa tiga candi dan satu sumur yang belum rampung. Roro Jonggrang menjadi sangat cemas melihatnya.',
+        'Roro Jonggrang pun menyusun akal. Tahan tombol untuk membantu para dayang membakar jerami dan memukul lesung bertalu-talu, seolah fajar telah tiba.',
+        'Mendengar suara lesung dan melihat langit memerah, ribuan jin pasukan Bandung Bondowoso ketakutan dan berhamburan pergi, mengira hari sudah pagi.',
+        'Panik kehilangan pasukannya, namun demi cintanya pada Roro Jonggrang, Bandung Bondowoso melanjutkan pembangunan candi terakhir seorang diri. Tahan tombol untuk membantunya.',
+        'Pagi pun tiba. Hanya tersisa satu patung yang belum selesai. Roro Jonggrang menyatakan bahwa syaratnya telah gagal dipenuhi, sehingga ia tak perlu menikahi Bandung Bondowoso.',
+        'Mengetahui dirinya telah ditipu, Bandung Bondowoso murka. Ia pun mengutuk Roro Jonggrang menjadi sebuah arca batu, untuk melengkapi candi ke seribu yang masih kurang itu.'
+      ]
+    },
+    en: {
+      title: 'The Legend of Roro Jonggrang - Game',
+      h2: '🛕 The Legend of Roro Jonggrang',
+      sub: 'Follow Bandung Bondowoso building a thousand temples in one night, the origin of Prambanan Temple.',
+      startTitle: 'The Legend of Roro Jonggrang',
+      startBody: 'Bandung Bondowoso conquers the Prambanan Kingdom and wants to marry Roro Jonggrang. The princess sets an impossible condition: a thousand temples in a single night. Follow the story to the origin of Prambanan Temple.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of Prambanan Temple 🛕',
+      winBody: 'To this day, Prambanan Temple stands as one of the grandest temples in Indonesia. The statue of the beautiful goddess within is believed by local people to be Roro Jonggrang, turned to stone.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      buildBtn: '🛕 BUILD THE TEMPLES',
+      trickBtn: '🔥 LIGHT THE STRAW',
+      aloneBtn: '🪨 CONTINUE ALONE',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, there were two neighboring kingdoms: Prambanan, ruled by King Boko, whose beautiful daughter was named Roro Jonggrang, and Pengging, ruled by a king who was arrogant and hungry for power.',
+        'The King of Pengging orders his mighty knight, Bandung Bondowoso, to conquer the Prambanan Kingdom and force it to submit.',
+        'In a short time, Bandung Bondowoso\'s forces conquer Prambanan. King Boko himself falls in the battle.',
+        'Captivated by Roro Jonggrang\'s beauty, Bandung Bondowoso proposes to her. Though she despises her father\'s killer, Roro Jonggrang sets an extremely difficult condition: a thousand temples and two wells, all completed within a single night.',
+        'Hold the button to help Bandung Bondowoso command thousands of spirits, building temple after temple at incredible speed.',
+        'Two-thirds of the night has passed. Thousands of temples now stand magnificently, with only three temples and one well left unfinished. Roro Jonggrang grows very anxious watching this.',
+        'Roro Jonggrang devises a plan. Hold the button to help the palace maids set fire to bundles of straw and pound rice mortars loudly, as if dawn had already arrived.',
+        'Hearing the pounding sound and seeing the reddened sky, Bandung Bondowoso\'s thousands of spirits panic and scatter away, thinking morning has come.',
+        'Panicking at losing his workforce, but driven by his love for Roro Jonggrang, Bandung Bondowoso continues building the last temple alone. Hold the button to help him.',
+        'Morning arrives. Only one statue remains unfinished. Roro Jonggrang declares that his condition has failed, so he has no right to marry her.',
+        'Realizing he has been tricked, Bandung Bondowoso grows furious. He curses Roro Jonggrang into a stone statue, to complete the thousandth temple that was still missing.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#rjg-wrap h2').textContent = TXT.h2;
+  document.getElementById('rjg-sub').textContent = TXT.sub;
+  document.querySelector('#rjg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#rjg-start p').textContent = TXT.startBody;
+  document.getElementById('rjg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#rjg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#rjg-win p').textContent = TXT.winBody;
+  document.getElementById('rjg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('rjg-caption').textContent = TXT.captionInit;
+  document.getElementById('rjg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('rjg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('rjg-phase');
+  var captionEl = document.getElementById('rjg-caption');
+  var actionBtn = document.getElementById('rjg-actionBtn');
+  var progressWrap = document.getElementById('rjg-progressWrap');
+  var progressBar = document.getElementById('rjg-progressBar');
+  var startOverlay = document.getElementById('rjg-start');
+  var winOverlay = document.getElementById('rjg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'dua_kerajaan' },
+    { type:'caption', phase:1, scene:'perintah_serang' },
+    { type:'caption', phase:2, scene:'penaklukan' },
+    { type:'caption', phase:2, scene:'lamaran_syarat' },
+    { type:'hold', phase:3, scene:'kerahkan_jin' },
+    { type:'caption', phase:3, scene:'hampir_selesai' },
+    { type:'hold', phase:4, scene:'tipu_daya' },
+    { type:'caption', phase:4, scene:'jin_kabur' },
+    { type:'hold', phase:5, scene:'selesai_sendiri' },
+    { type:'caption', phase:5, scene:'gagal_syarat' },
+    { type:'caption', phase:5, scene:'kutukan' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'kerahkan_jin') actionBtn.textContent = TXT.buildBtn;
+      else if(step.scene === 'tipu_daya') actionBtn.textContent = TXT.trickBtn;
+      else if(step.scene === 'selesai_sendiri') actionBtn.textContent = TXT.aloneBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('rjg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('rjg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawKing(px, py, size, colorMain){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain || '#2E5A3A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRoro(px, py, size, stoneAmt){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    var col1 = stoneAmt>0 ? '#9A9A9A' : '#D9AF6A';
+    var col2 = stoneAmt>0 ? '#8A8A8A' : '#8B5A3C';
+    ctx.fillStyle = col1;
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = stoneAmt>0 ? '#9F9F9F' : '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = col2;
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBandung(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D3D5A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-8*s); ctx.quadraticCurveTo(-17*s,4*s,-12*s,20*s);
+    ctx.lineTo(12*s,20*s); ctx.quadraticCurveTo(17*s,4*s,12*s,-8*s);
+    ctx.quadraticCurveTo(0,-15*s,-12*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.fillRect(-13*s,0,26*s,4*s);
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-21*s,7.5*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawJin(px, py, size, glow){
+    var s = size/30;
+    ctx.save(); ctx.translate(px,py);
+    var g = ctx.createRadialGradient(0,0,2,0,0,14*s);
+    g.addColorStop(0,'rgba(150,200,255,'+(0.5*glow)+')');
+    g.addColorStop(1,'rgba(150,200,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0,0,14*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(200,220,255,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(0,-10*s); ctx.quadraticCurveTo(6*s,0,3*s,10*s); ctx.lineTo(-3*s,10*s); ctx.quadraticCurveTo(-6*s,0,0,-10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCandi(px, py, size, heightAmt){
+    var s = size/50;
+    ctx.save(); ctx.translate(px, py);
+    var h = Math.max(0.1, heightAmt);
+    ctx.fillStyle = '#8A7A5A';
+    ctx.fillRect(-16*s, -10*s*h, 32*s, 10*s*h);
+    ctx.fillStyle = '#7A6A4A';
+    ctx.fillRect(-11*s, -20*s*h, 22*s, 10*s*h);
+    ctx.fillStyle = '#6A5A3A';
+    ctx.beginPath();
+    ctx.moveTo(-7*s,-20*s*h); ctx.lineTo(0,-32*s*h); ctx.lineTo(7*s,-20*s*h);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMaid(px, py, size){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9A24E';
+    ctx.beginPath(); ctx.ellipse(0,4*s,9*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-9*s,6*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFireGlow(px, py, size, amt){
+    if(amt<=0) return;
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#E76F51';
+    ctx.beginPath();
+    ctx.moveTo(0,-18*s*amt);
+    ctx.quadraticCurveTo(9*s,-4*s*amt,3*s,4*s);
+    ctx.quadraticCurveTo(0,8*s,-3*s,4*s);
+    ctx.quadraticCurveTo(-9*s,-4*s*amt,0,-18*s*amt);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='dua_kerajaan' || scene==='perintah_serang'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='penaklukan'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='lamaran_syarat'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='kerahkan_jin' || scene==='hampir_selesai' || scene==='tipu_daya' || scene==='selesai_sendiri'){
+      sky.addColorStop(0,'#141B33'); sky.addColorStop(1,'#2E3A5C');
+    } else if(scene==='jin_kabur'){
+      sky.addColorStop(0,'#6E2E30'); sky.addColorStop(1,'#9A5A44');
+    } else if(scene==='gagal_syarat' || scene==='kutukan'){
+      sky.addColorStop(0,'#F6A94A'); sky.addColorStop(1,'#FDE7DA');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'dua_kerajaan';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='dua_kerajaan' || scene==='perintah_serang'){
+      drawPalaceBg();
+      drawKing(300, 300+bob, 46, '#2E5A3A');
+      drawRoro(400, 330+bob, 40, 0);
+      if(scene==='perintah_serang'){
+        drawKing(580, 320+bob, 44, '#6E1E1E');
+        drawBandung(650, 340+bob, 40);
+      }
+    }
+    if(scene==='penaklukan'){
+      ctx.fillStyle = '#7C9E8E';
+      ctx.fillRect(0,300,W,H-300);
+      drawBandung(400, 320+bob, 50);
+      drawKing(300, 340+bob, 40, '#2E5A3A');
+    }
+    if(scene==='lamaran_syarat'){
+      drawPalaceBg();
+      drawBandung(340, 320+bob, 46);
+      drawRoro(460, 330+bob, 44, 0);
+    }
+    if(scene==='kerahkan_jin' || scene==='hampir_selesai'){
+      var built = scene==='kerahkan_jin' ? progress : 0.95;
+      for(var i=0;i<5;i++){
+        drawCandi(140+i*130, 380, 46, Math.min(1, built*5 - i*0.6 + 0.3));
+      }
+      for(var j=0;j<6;j++){
+        drawJin(150+j*110+Math.sin(t*3+j)*10, 260+Math.sin(t*2+j)*8, 30, 0.7);
+      }
+      drawBandung(700, 360+bob, 40);
+    }
+    if(scene==='tipu_daya'){
+      for(var i2=0;i2<5;i2++){
+        drawCandi(140+i2*130, 380, 46, 0.9);
+      }
+      drawMaid(300, 380, 34);
+      drawMaid(360, 385, 30);
+      drawFireGlow(330, 400, 40, progress);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🥁', 260, 390);
+    }
+    if(scene==='jin_kabur'){
+      for(var i3=0;i3<5;i3++){
+        drawCandi(140+i3*130, 380, 46, 0.9);
+      }
+      for(var j2=0;j2<6;j2++){
+        drawJin(150+j2*110+t*40%600, 240-t*30%100, 26, 0.4);
+      }
+      drawBandung(600, 360+bob, 40);
+    }
+    if(scene==='selesai_sendiri'){
+      for(var i4=0;i4<4;i4++){
+        drawCandi(140+i4*130, 380, 46, 0.95);
+      }
+      drawCandi(660, 380, 46, 0.5+progress*0.45);
+      drawBandung(660, 360+bob, 40);
+    }
+    if(scene==='gagal_syarat'){
+      for(var i5=0;i5<4;i5++){
+        drawCandi(120+i5*130, 380, 44, 0.95);
+      }
+      drawCandi(640, 380, 44, 0.9);
+      drawRoro(400, 340+bob, 42, 0);
+      drawBandung(500, 350+bob, 40);
+    }
+    if(scene==='kutukan'){
+      for(var i6=0;i6<4;i6++){
+        drawCandi(120+i6*130, 380, 44, 0.95);
+      }
+      drawBandung(500, 350+bob, 42);
+      drawRoro(640, 380, 44, Math.min(1,(t%3)/2));
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('rjg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'rjg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('rjg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
