@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Danau Lipan - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #dlg2-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #F3E7DA 0%, #F7F3E8 100%);
+    border: 3px solid #8A4A2A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #dlg2-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #6E3A1E;
+  }
+  #dlg2-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #dlg2-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #dlg2-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #dlg2-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8A4A2A;
+    background: #BEE3F8;
+  }
+  #dlg2-canvas { display: block; width: 100%; height: 100%; }
+  .dlg2-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,28,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .dlg2-overlay.show { display: flex; }
+  .dlg2-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .dlg2-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .dlg2-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .dlg2-btn:active { transform: scale(0.97); }
+
+  #dlg2-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8A4A2A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #dlg2-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #dlg2-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #8A4A2A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #dlg2-actionBtn.hold { background: #3D7A4C; }
+  #dlg2-actionBtn:active { transform: scale(0.97); }
+  #dlg2-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #dlg2-progressWrap.show { display: block; }
+  #dlg2-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="dlg2-wrap">
+  <h2>🐛 Asal Usul Danau Lipan</h2>
+  <p id="dlg2-sub">Cerita rakyat Kalimantan Timur tentang Putri Aji Bedarah Putih dan sumpah lipan raksasanya.</p>
+
+  <div id="dlg2-hud"><span id="dlg2-phase">Tahap 1 / 5</span></div>
+
+  <div id="dlg2-canvas-holder">
+    <canvas id="dlg2-canvas"></canvas>
+
+    <div class="dlg2-overlay show" id="dlg2-start">
+      <h3>Asal Usul Danau Lipan</h3>
+      <p>Putri Aji Bedarah Putih menolak lamaran seorang raja yang sombong, hingga kerajaannya diserang pasukan besar. Ikuti kisahnya hingga asal usul Danau Lipan di Kalimantan Timur.</p>
+      <button class="dlg2-btn" id="dlg2-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="dlg2-overlay" id="dlg2-win">
+      <h3>Asal Usul Danau Lipan 🐛</h3>
+      <p>Daerah bekas medan perang itu kini dikenal dengan nama Danau Lipan, sebuah kawasan di Muara Kaman, Kutai Kartanegara, Kalimantan Timur — dinamai demikian karena dahulu pernah dipenuhi binatang lipan besar.</p>
+      <button class="dlg2-btn" id="dlg2-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="dlg2-caption">Bersiap memulai kisah...</div>
+
+  <div id="dlg2-progressWrap"><div id="dlg2-progressBar"></div></div>
+  <div id="dlg2-action-row">
+    <button id="dlg2-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Asal Usul Danau Lipan - Game',
+      h2: '🐛 Asal Usul Danau Lipan',
+      sub: 'Cerita rakyat Kalimantan Timur tentang Putri Aji Bedarah Putih dan sumpah lipan raksasanya.',
+      startTitle: 'Asal Usul Danau Lipan',
+      startBody: 'Putri Aji Bedarah Putih menolak lamaran seorang raja yang sombong, hingga kerajaannya diserang pasukan besar. Ikuti kisahnya hingga asal usul Danau Lipan di Kalimantan Timur.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Usul Danau Lipan 🐛',
+      winBody: 'Daerah bekas medan perang itu kini dikenal dengan nama Danau Lipan, sebuah kawasan di Muara Kaman, Kutai Kartanegara, Kalimantan Timur — dinamai demikian karena dahulu pernah dipenuhi binatang lipan besar.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      chewBtn: '🍃 KUNYAH SIRIH',
+      spitBtn: '💨 SEMBURKAN SEPAH',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Konon, di sebuah kerajaan di Kalimantan Timur hiduplah seorang putri bernama Putri Aji Bedarah Putih, yang terkenal memiliki paras sangat cantik.',
+        'Kabar kecantikannya tersiar hingga ke sebuah kerajaan jauh di seberang lautan. Raja kerajaan itu berminat meminangnya, dan segera mengirim utusan menyampaikan niatnya.',
+        'Raja dari seberang lautan itu pun datang. Namun sikapnya sombong dan kurang menghormati tuan rumah selama perjamuan, membuat Putri Aji merasa tidak dihormati.',
+        '"Mohon maaf, hamba tidak bersedia, Paduka. Masih banyak gadis lain yang lebih cantik dari hamba," tolak Putri Aji dengan tegas.',
+        'Raja itu murka besar mendengar penolakan tersebut. Ia menganggapnya sebagai penghinaan besar, lalu menyatakan perang kepada kerajaan Putri Aji.',
+        'Ribuan pasukan dari seberang lautan menyerang. Perang yang sangat tidak seimbang pun terjadi, karena pasukan kerajaan Putri Aji jauh lebih sedikit jumlahnya.',
+        'Putri Aji sangat marah melihat perang yang tidak adil itu. Tahan tombol untuk membantunya mengunyah daun sirih sambil bersumpah kepada Yang Maha Kuasa.',
+        '"Ya Tuhan, jadikanlah sepah sirihku ini menjadi lipan-lipan besar yang akan menghentikan peperangan ini," ucap Putri Aji penuh keyakinan.',
+        'Tahan tombol untuk membantu Putri Aji menyemburkan sepah-sepah sirih itu ke arah medan perang yang tengah berkecamuk.',
+        'Keanehan pun terjadi — sepah-sepah sirih itu berubah menjadi lipan-lipan raksasa yang mengerikan, membuat pasukan penyerang kocar-kacir dan mundur secepatnya.',
+        'Kerajaan Putri Aji Bedarah Putih pun berhasil mempertahankan diri. Daerah bekas medan perang itu kemudian dikenal dengan nama Danau Lipan.'
+      ]
+    },
+    en: {
+      title: 'The Origin of Danau Lipan - Game',
+      h2: '🐛 The Origin of Danau Lipan',
+      sub: 'An East Kalimantan folktale about Princess Aji Bedarah Putih and her vow of giant centipedes.',
+      startTitle: 'The Origin of Danau Lipan',
+      startBody: 'Princess Aji Bedarah Putih refuses the proposal of an arrogant king, and her kingdom is attacked by a massive army in retaliation. Follow the story to the origin of Lake Lipan in East Kalimantan.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of Danau Lipan 🐛',
+      winBody: 'The former battlefield is now known as Danau Lipan (Centipede Lake), an area in Muara Kaman, Kutai Kartanegara, East Kalimantan — named for once being swarming with giant centipedes.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      chewBtn: '🍃 CHEW THE BETEL LEAF',
+      spitBtn: '💨 SPIT IT OUT',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Legend has it that in a kingdom in East Kalimantan lived a princess named Aji Bedarah Putih, famed for her stunning beauty.',
+        'Word of her beauty reaches a kingdom far across the sea. Its king takes an interest in courting her, and quickly sends an envoy to announce his intentions.',
+        'The king from across the sea arrives. But his arrogant manner and lack of respect for his hosts during the feast leave Princess Aji feeling disrespected.',
+        '"My apologies, Your Majesty, but I cannot accept. There are many other women more beautiful than I," Princess Aji firmly refuses.',
+        'The king, furious at the rejection, takes it as a grave insult, and declares war on Princess Aji\'s kingdom.',
+        'Thousands of troops from across the sea attack. A deeply unequal battle unfolds, as Princess Aji\'s kingdom has far fewer soldiers.',
+        'Furious at the unfair battle, Princess Aji hold the button to help her chew betel leaf while vowing to God Almighty.',
+        '"O God, turn this chewed betel leaf into giant centipedes that will end this war," Princess Aji declares with total conviction.',
+        'Hold the button to help Princess Aji spit the chewed betel leaf toward the raging battlefield.',
+        'Something extraordinary happens — the chewed leaf transforms into terrifying giant centipedes, scattering the attacking army into a hasty retreat.',
+        'Princess Aji Bedarah Putih\'s kingdom successfully defends itself. The former battlefield later becomes known as Danau Lipan.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#dlg2-wrap h2').textContent = TXT.h2;
+  document.getElementById('dlg2-sub').textContent = TXT.sub;
+  document.querySelector('#dlg2-start h3').textContent = TXT.startTitle;
+  document.querySelector('#dlg2-start p').textContent = TXT.startBody;
+  document.getElementById('dlg2-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#dlg2-win h3').textContent = TXT.winTitle;
+  document.querySelector('#dlg2-win p').textContent = TXT.winBody;
+  document.getElementById('dlg2-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('dlg2-caption').textContent = TXT.captionInit;
+  document.getElementById('dlg2-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('dlg2-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('dlg2-phase');
+  var captionEl = document.getElementById('dlg2-caption');
+  var actionBtn = document.getElementById('dlg2-actionBtn');
+  var progressWrap = document.getElementById('dlg2-progressWrap');
+  var progressBar = document.getElementById('dlg2-progressBar');
+  var startOverlay = document.getElementById('dlg2-start');
+  var winOverlay = document.getElementById('dlg2-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'putri_intro' },
+    { type:'caption', phase:1, scene:'kabar_tersiar' },
+    { type:'caption', phase:2, scene:'raja_datang' },
+    { type:'caption', phase:2, scene:'lamaran_ditolak' },
+    { type:'caption', phase:3, scene:'raja_marah' },
+    { type:'caption', phase:3, scene:'pasukan_menyerang' },
+    { type:'hold', phase:4, scene:'kunyah_sirih' },
+    { type:'caption', phase:4, scene:'sumpah_putri' },
+    { type:'hold', phase:5, scene:'sembur_sepah' },
+    { type:'caption', phase:5, scene:'lipan_raksasa' },
+    { type:'caption', phase:5, scene:'perang_usai' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'kunyah_sirih') actionBtn.textContent = TXT.chewBtn;
+      else if(step.scene === 'sembur_sepah') actionBtn.textContent = TXT.spitBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('dlg2-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('dlg2-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawPrincess(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.arc(0,-24*s,3.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawKing(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#6E1E1E';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSoldierRow(colorMain, count, y, dir){
+    for(var i=0;i<count;i++){
+      var s = 26;
+      var x = 400 + dir*(80 + i*40);
+      ctx.save(); ctx.translate(x,y);
+      ctx.fillStyle = colorMain;
+      ctx.beginPath(); ctx.ellipse(0,4,10,8,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#E8B08A';
+      ctx.beginPath(); ctx.arc(0,-6,5,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawCentipede(px, py, size, wiggle){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.rotate(Math.sin(wiggle)*0.1);
+    ctx.strokeStyle = '#B5642A';
+    ctx.lineWidth = 9*s;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-26*s, 0);
+    ctx.quadraticCurveTo(0, -10*s*Math.sin(wiggle), 26*s, 0);
+    ctx.stroke();
+    ctx.strokeStyle = '#8A4A1E';
+    ctx.lineWidth = 2*s;
+    for(var i=-20;i<=20;i+=8){
+      ctx.beginPath();
+      ctx.moveTo(i*s, -2*s); ctx.lineTo(i*s-3*s, 6*s);
+      ctx.moveTo(i*s, -2*s); ctx.lineTo(i*s+3*s, 6*s);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath(); ctx.arc(26*s,-2*s,2*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawFieldBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='putri_intro' || scene==='kabar_tersiar' || scene==='raja_datang' || scene==='lamaran_ditolak'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='raja_marah' || scene==='pasukan_menyerang' || scene==='kunyah_sirih' || scene==='sumpah_putri' || scene==='sembur_sepah'){
+      sky.addColorStop(0,'#E9906A'); sky.addColorStop(1,'#F6C99A');
+    } else if(scene==='lipan_raksasa' || scene==='perang_usai'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'putri_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='putri_intro' || scene==='kabar_tersiar'){
+      drawPalaceBg();
+      drawPrincess(400, 330+bob, 46);
+    }
+    if(scene==='raja_datang' || scene==='lamaran_ditolak'){
+      drawPalaceBg();
+      drawPrincess(340, 330+bob, 44);
+      drawKing(480, 330+bob, 46);
+    }
+    if(scene==='raja_marah'){
+      drawPalaceBg();
+      var glow = 0.3+0.3*Math.sin(t*4);
+      var g = ctx.createRadialGradient(500,320,4,500,320,80);
+      g.addColorStop(0,'rgba(200,60,40,'+glow+')');
+      g.addColorStop(1,'rgba(200,60,40,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(500,320,80,0,Math.PI*2); ctx.fill();
+      drawKing(500, 320+bob, 48);
+    }
+    if(scene==='pasukan_menyerang'){
+      drawFieldBg();
+      drawSoldierRow('#6E1E1E', 4, 340, 1);
+      drawSoldierRow('#3A5A7A', 2, 340, -1);
+      drawPrincess(300, 330+bob, 40);
+    }
+    if(scene==='kunyah_sirih'){
+      drawFieldBg();
+      drawPrincess(400, 330+bob, 46);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🍃', 420+Math.sin(progress*10)*4, 320);
+    }
+    if(scene==='sumpah_putri'){
+      drawFieldBg();
+      drawPrincess(400, 330+bob, 46);
+      var glow2 = 0.3+0.3*Math.sin(t*5);
+      var g2 = ctx.createRadialGradient(400,300,4,400,300,60);
+      g2.addColorStop(0,'rgba(255,220,150,'+glow2+')');
+      g2.addColorStop(1,'rgba(255,220,150,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(400,300,60,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='sembur_sepah'){
+      drawFieldBg();
+      drawPrincess(280, 330+bob, 44);
+      drawSoldierRow('#6E1E1E', 4, 340, 1);
+      var pd = 300 + progress*300;
+      ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('💨', pd, 320);
+    }
+    if(scene==='lipan_raksasa'){
+      drawFieldBg();
+      drawPrincess(240, 330+bob, 40);
+      drawCentipede(420, 330, 70, t*3);
+      drawCentipede(520, 350, 60, t*3+1);
+      drawSoldierRow('#6E1E1E', 3, 300, 1);
+    }
+    if(scene==='perang_usai'){
+      drawFieldBg();
+      drawPrincess(350, 330+bob, 46);
+      drawCentipede(500, 350, 60, t*2);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('dlg2-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'dlg2-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('dlg2-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
