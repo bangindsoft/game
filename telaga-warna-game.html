@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Telaga Warna - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #twg2-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #1F3A40;
+    background: linear-gradient(180deg, #E1F0F0 0%, #F7F3E8 100%);
+    border: 3px solid #2E6E7A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #twg2-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #1E4E58;
+  }
+  #twg2-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #twg2-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #twg2-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #twg2-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #2E6E7A;
+    background: #BEE3F8;
+  }
+  #twg2-canvas { display: block; width: 100%; height: 100%; }
+  .twg2-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,32,36,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .twg2-overlay.show { display: flex; }
+  .twg2-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .twg2-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .twg2-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .twg2-btn:active { transform: scale(0.97); }
+
+  #twg2-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #2E6E7A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #twg2-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #twg2-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #2E6E7A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #twg2-actionBtn.hold { background: #C9A24E; color: #402E00; }
+  #twg2-actionBtn:active { transform: scale(0.97); }
+  #twg2-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #twg2-progressWrap.show { display: block; }
+  #twg2-progressBar { height: 100%; width: 0%; background: #C9A24E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="twg2-wrap">
+  <h2>🌈 Legenda Telaga Warna</h2>
+  <p id="twg2-sub">Cerita rakyat Jawa Barat tentang seorang putri manja dan keajaiban telaga berwarna-warni.</p>
+
+  <div id="twg2-hud"><span id="twg2-phase">Tahap 1 / 5</span></div>
+
+  <div id="twg2-canvas-holder">
+    <canvas id="twg2-canvas"></canvas>
+
+    <div class="twg2-overlay show" id="twg2-start">
+      <h3>Legenda Telaga Warna</h3>
+      <p>Kerajaan Kutatanggeuhan lama dinanti kehadiran seorang putri. Namun kasih sayang berlebihan membuat Putri Gilang Rukmini tumbuh menjadi gadis yang sangat manja. Ikuti kisahnya hingga terbentuknya Telaga Warna.</p>
+      <button class="twg2-btn" id="twg2-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="twg2-overlay" id="twg2-win">
+      <h3>Telaga Warna Terbentuk 🌈</h3>
+      <p>Warna-warni indah dari kalung sang putri yang tenggelam memberi warna pada telaga itu. Hingga kini, Telaga Warna nyata berada di kawasan Puncak, Jawa Barat, dengan air berwarna-warni yang memesona.</p>
+      <button class="twg2-btn" id="twg2-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="twg2-caption">Bersiap memulai kisah...</div>
+
+  <div id="twg2-progressWrap"><div id="twg2-progressBar"></div></div>
+  <div id="twg2-action-row">
+    <button id="twg2-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Telaga Warna - Game',
+      h2: '🌈 Legenda Telaga Warna',
+      sub: 'Cerita rakyat Jawa Barat tentang seorang putri manja dan keajaiban telaga berwarna-warni.',
+      startTitle: 'Legenda Telaga Warna',
+      startBody: 'Kerajaan Kutatanggeuhan lama dinanti kehadiran seorang putri. Namun kasih sayang berlebihan membuat Putri Gilang Rukmini tumbuh menjadi gadis yang sangat manja. Ikuti kisahnya hingga terbentuknya Telaga Warna.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Telaga Warna Terbentuk 🌈',
+      winBody: 'Warna-warni indah dari kalung sang putri yang tenggelam memberi warna pada telaga itu. Hingga kini, Telaga Warna nyata berada di kawasan Puncak, Jawa Barat, dengan air berwarna-warni yang memesona.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      meditateBtn: '🙏 BERTAPA',
+      craftBtn: '💎 BUAT KALUNG',
+      springBtn: '💧 MATA AIR MUNCUL',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala, ada sebuah kerajaan di Jawa Barat bernama Kutatanggeuhan, diperintah raja adil dan bijaksana bernama Prabu Suwartalaya. Namun Sang Prabu resah karena belum dikaruniai seorang anak.',
+        'Sang Prabu memutuskan bertapa di hutan memohon petunjuk Tuhan Yang Maha Kuasa. Tahan tombol untuk membantunya bertapa dengan khusyuk.',
+        'Doa Sang Prabu pun dikabulkan — Ratu Purbamanah mengandung. Sembilan bulan kemudian, lahirlah seorang putri sangat cantik yang diberi nama Putri Gilang Rukmini.',
+        'Sang Prabu sangat menyayangi putrinya. Namun karena kasih sayang yang berlebihan, Putri Gilang Rukmini tumbuh menjadi gadis cantik namun sangat manja di usianya yang ke-17.',
+        'Untuk merayakan hari ulang tahunnya, Sang Prabu mengadakan pesta meriah. Rakyat berdatangan membawa bingkisan, namun Sang Prabu justru mengumpulkan hadiah-hadiah itu untuk kepentingan rakyatnya, membuat sang putri sangat marah.',
+        'Untuk menenangkan putrinya, Sang Prabu meminta ahli perhiasan terbaik membuatkan kalung yang sangat indah. Tahan tombol untuk membantu sang ahli menyelesaikannya.',
+        'Kalung berwarna-warni yang sangat indah itu pun diberikan pada sang putri. Namun ia tak menyukainya sama sekali, dan melemparkannya begitu saja ke halaman istana.',
+        'Melihat tingkah putrinya, Ratu Purbamanah menangis sedih. Seluruh istana pun terdiam menyaksikan kejadian itu.',
+        'Tiba-tiba, keajaiban terjadi. Tahan tombol untuk melihat sebuah mata air muncul di halaman istana, terus memancar hingga menggenangi seluruh halaman.',
+        'Genangan air itu terus meluas menjadi telaga yang sangat luas, hingga istana lama pun tenggelam. Warna-warni indah dari kalung sang putri yang ikut tenggelam memberi warna pada air telaga itu.'
+      ]
+    },
+    en: {
+      title: 'The Legend of Telaga Warna - Game',
+      h2: '🌈 The Legend of Telaga Warna',
+      sub: 'A West Java folktale about a spoiled princess and a magical, colorful lake.',
+      startTitle: 'The Legend of Telaga Warna',
+      startBody: 'The Kutatanggeuhan Kingdom had long awaited the arrival of a princess. But too much affection made Princess Gilang Rukmini grow up terribly spoiled. Follow the story to the creation of Telaga Warna, the Colorful Lake.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Telaga Warna Is Formed 🌈',
+      winBody: 'The beautiful colors of the princess\'s sunken necklace gave the lake its color. To this day, Telaga Warna is a real lake in the Puncak area of West Java, with stunning, colorful waters.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      meditateBtn: '🙏 MEDITATE',
+      craftBtn: '💎 CRAFT THE NECKLACE',
+      springBtn: '💧 THE SPRING APPEARS',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, there was a kingdom in West Java called Kutatanggeuhan, ruled by a fair and wise king named Prabu Suwartalaya. Yet the king was troubled, for he had no child of his own.',
+        'The king decides to meditate in the forest, seeking guidance from God Almighty. Hold the button to help him meditate with deep devotion.',
+        'The king\'s prayer is answered — Queen Purbamanah becomes pregnant. Nine months later, a beautiful daughter is born, named Princess Gilang Rukmini.',
+        'The king adores his daughter dearly. But from too much affection, Princess Gilang Rukmini grows into a beautiful yet terribly spoiled young woman by the age of seventeen.',
+        'To celebrate her birthday, the king holds a grand feast. The people come bearing gifts, but the king collects them instead for the good of his people, making the princess furious.',
+        'To calm his daughter, the king asks the finest jeweler to craft a beautiful necklace. Hold the button to help the jeweler finish it.',
+        'The stunningly colorful necklace is presented to the princess. But she despises it at once, and flings it carelessly onto the palace grounds.',
+        'Seeing her daughter\'s behavior, Queen Purbamanah weeps in sorrow. The entire palace falls silent, watching the scene unfold.',
+        'Suddenly, something miraculous happens. Hold the button to watch a spring appear on the palace grounds, gushing water until it floods the entire courtyard.',
+        'The flooding keeps spreading into a vast lake, until the old palace itself sinks beneath it. The beautiful colors of the princess\'s sunken necklace give the lake its stunning color.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#twg2-wrap h2').textContent = TXT.h2;
+  document.getElementById('twg2-sub').textContent = TXT.sub;
+  document.querySelector('#twg2-start h3').textContent = TXT.startTitle;
+  document.querySelector('#twg2-start p').textContent = TXT.startBody;
+  document.getElementById('twg2-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#twg2-win h3').textContent = TXT.winTitle;
+  document.querySelector('#twg2-win p').textContent = TXT.winBody;
+  document.getElementById('twg2-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('twg2-caption').textContent = TXT.captionInit;
+  document.getElementById('twg2-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('twg2-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('twg2-phase');
+  var captionEl = document.getElementById('twg2-caption');
+  var actionBtn = document.getElementById('twg2-actionBtn');
+  var progressWrap = document.getElementById('twg2-progressWrap');
+  var progressBar = document.getElementById('twg2-progressBar');
+  var startOverlay = document.getElementById('twg2-start');
+  var winOverlay = document.getElementById('twg2-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'kerajaan_intro' },
+    { type:'hold', phase:1, scene:'bertapa_hutan' },
+    { type:'caption', phase:2, scene:'ratu_hamil' },
+    { type:'caption', phase:2, scene:'putri_manja' },
+    { type:'caption', phase:3, scene:'pesta_ultah' },
+    { type:'hold', phase:3, scene:'buat_kalung' },
+    { type:'caption', phase:4, scene:'kalung_ditolak' },
+    { type:'caption', phase:4, scene:'ratu_menangis' },
+    { type:'hold', phase:5, scene:'mata_air_muncul' },
+    { type:'caption', phase:5, scene:'telaga_terbentuk' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'bertapa_hutan') actionBtn.textContent = TXT.meditateBtn;
+      else if(step.scene === 'buat_kalung') actionBtn.textContent = TXT.craftBtn;
+      else if(step.scene === 'mata_air_muncul') actionBtn.textContent = TXT.springBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('twg2-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('twg2-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawKing(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#1E6E7A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawQueen(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7FA8C9';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,10*s,-11*s,24*s);
+    ctx.lineTo(11*s,24*s); ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.arc(0,-25*s,4*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPrincess(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#E796C9';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawJeweler(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A5A1E';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawNecklace(px, py, size, glow){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(glow>0){
+      var g = ctx.createRadialGradient(0,0,2,0,0,20*s);
+      g.addColorStop(0,'rgba(255,200,255,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(255,200,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,20*s,0,Math.PI*2); ctx.fill();
+    }
+    var colors = ['#E76F51','#FFD166','#4A9A6E','#4A7EC9','#B45AC9'];
+    for(var i=0;i<5;i++){
+      ctx.fillStyle = colors[i];
+      ctx.beginPath();
+      ctx.arc(-8*s+i*4*s, Math.abs(i-2)*2*s, 3*s, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPalaceBg(waterLevel){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+    if(waterLevel > 0){
+      ctx.fillStyle = 'rgba(74,158,201,0.75)';
+      var wy = H - (H-320)*waterLevel;
+      ctx.fillRect(0,wy,W,H-wy);
+    }
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='kerajaan_intro' || scene==='ratu_hamil' || scene==='putri_manja' || scene==='pesta_ultah' || scene==='buat_kalung' || scene==='kalung_ditolak' || scene==='ratu_menangis'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='bertapa_hutan'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='mata_air_muncul' || scene==='telaga_terbentuk'){
+      sky.addColorStop(0,'#AEDBF2'); sky.addColorStop(1,'#F0F8FF');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'kerajaan_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='kerajaan_intro'){
+      drawPalaceBg(0);
+      drawKing(340, 320+bob, 46);
+      drawQueen(460, 325+bob, 44);
+    }
+    if(scene==='bertapa_hutan'){
+      drawForestBg();
+      var glow = progress*0.6;
+      var g = ctx.createRadialGradient(400,320,4,400,320,70);
+      g.addColorStop(0,'rgba(255,220,150,'+glow+')');
+      g.addColorStop(1,'rgba(255,220,150,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(400,320,70,0,Math.PI*2); ctx.fill();
+      drawKing(400, 340, 46);
+    }
+    if(scene==='ratu_hamil'){
+      drawPalaceBg(0);
+      drawQueen(380, 320+bob, 46);
+      drawKing(460, 325+bob, 44);
+      ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('👶', 420, 290);
+    }
+    if(scene==='putri_manja'){
+      drawPalaceBg(0);
+      drawPrincess(400, 320+bob, 46);
+    }
+    if(scene==='pesta_ultah'){
+      drawPalaceBg(0);
+      drawKing(300, 320+bob, 44);
+      drawPrincess(460, 320+bob, 44);
+    }
+    if(scene==='buat_kalung'){
+      drawPalaceBg(0);
+      drawJeweler(360, 340, 40);
+      drawNecklace(440, 330, 40, progress);
+    }
+    if(scene==='kalung_ditolak'){
+      drawPalaceBg(0);
+      drawKing(300, 320+bob, 44);
+      drawPrincess(460, 320+bob, 44);
+      drawNecklace(400, 380, 30, 0.4);
+    }
+    if(scene==='ratu_menangis'){
+      drawPalaceBg(0);
+      drawQueen(360, 320+bob, 44);
+      drawKing(460, 325+bob, 42);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('💧', 380, 300);
+    }
+    if(scene==='mata_air_muncul'){
+      drawPalaceBg(progress*0.6);
+      var burstGlow = 0.3+0.3*Math.sin(t*8);
+      var g2 = ctx.createRadialGradient(400,360,4,400,360,60+progress*40);
+      g2.addColorStop(0,'rgba(120,200,255,'+burstGlow+')');
+      g2.addColorStop(1,'rgba(120,200,255,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(400,360,60+progress*40,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='telaga_terbentuk'){
+      ctx.fillStyle = '#4A9AC9';
+      ctx.fillRect(0,260,W,H-260);
+      for(var c=0;c<5;c++){
+        ctx.fillStyle = ['#E76F51','#FFD166','#4A9A6E','#4A7EC9','#B45AC9'][c];
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.ellipse(150+c*130, 340+Math.sin(t*2+c)*6, 60, 20, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,H-30,W,30);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('twg2-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'twg2-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('twg2-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
