@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kancil Menipu Harimau - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #khg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #khg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #khg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #khg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #khg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #khg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #khg-canvas { display: block; width: 100%; height: 100%; }
+  .khg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .khg-overlay.show { display: flex; }
+  .khg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .khg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .khg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .khg-btn:active { transform: scale(0.97); }
+
+  #khg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #khg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #khg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #khg-actionBtn.hold { background: #8A5A1E; }
+  #khg-actionBtn:active { transform: scale(0.97); }
+  #khg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #khg-progressWrap.show { display: block; }
+  #khg-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="khg-wrap">
+  <h2>🐯 Kancil Menipu Harimau</h2>
+  <p id="khg-sub">Lanjutan kisah Si Kancil, kali ini menipu Pak Harimau yang lapar dengan dua akal cerdiknya.</p>
+
+  <div id="khg-hud"><span id="khg-phase">Tahap 1 / 5</span></div>
+
+  <div id="khg-canvas-holder">
+    <canvas id="khg-canvas"></canvas>
+
+    <div class="khg-overlay show" id="khg-start">
+      <h3>Kancil Menipu Harimau</h3>
+      <p>Setelah menyeberangi sungai dengan menipu para buaya, Si Kancil bertemu Pak Harimau yang lapar. Ikuti dua akal cerdik Si Kancil untuk lolos dari terkaman Harimau.</p>
+      <button class="khg-btn" id="khg-startBtn">Mulai Cerita</button>
+    </div>
+
+    <div class="khg-overlay" id="khg-win">
+      <h3>Si Kancil Berhasil Lolos! 🎉</h3>
+      <p>Berkat dua akal cerdiknya, Si Kancil lolos dari Pak Harimau yang lapar, meninggalkannya bertarung dengan seekor ular. Kecerdikan memang bisa jadi jalan keluar, tapi menipu tetap bukanlah cara yang baik untuk dicontoh.</p>
+      <button class="khg-btn" id="khg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="khg-caption">Bersiap memulai cerita...</div>
+
+  <div id="khg-progressWrap"><div id="khg-progressBar"></div></div>
+  <div id="khg-action-row">
+    <button id="khg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Kancil Menipu Harimau - Game',
+      h2: '🐯 Kancil Menipu Harimau',
+      sub: 'Lanjutan kisah Si Kancil, kali ini menipu Pak Harimau yang lapar dengan dua akal cerdiknya.',
+      startTitle: 'Kancil Menipu Harimau',
+      startBody: 'Setelah menyeberangi sungai dengan menipu para buaya, Si Kancil bertemu Pak Harimau yang lapar. Ikuti dua akal cerdik Si Kancil untuk lolos dari terkaman Harimau.',
+      startBtn: 'Mulai Cerita',
+      winTitle: 'Si Kancil Berhasil Lolos! 🎉',
+      winBody: 'Berkat dua akal cerdiknya, Si Kancil lolos dari Pak Harimau yang lapar, meninggalkannya bertarung dengan seekor ular. Kecerdikan memang bisa jadi jalan keluar, tapi menipu tetap bukanlah cara yang baik untuk dicontoh.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai cerita...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      sneakBtn: '🏃 KABUR DIAM-DIAM',
+      runBtn: '💨 LARI SEKENCANGNYA',
+      escapeBtn: '🐍 KABUR SEKARANG!',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Setelah berhasil menyeberangi sungai dengan menipu para buaya, Si Kancil beristirahat sejenak di tengah hutan. Perutnya lapar, ia pun berjalan-jalan mencari makan.',
+        'Tiba-tiba, seekor Harimau lapar menghadangnya. "Senang sekali bertemu kamu, Kancil. Kebetulan perutku sedang lapar," kata Pak Harimau sambil menyeringai.',
+        'Kancil tampak tenang meski ketakutan. "Izinkan aku mencari makan dulu, Pak Harimau. Setelah kenyang, kau boleh memakanku," katanya. "Tapi tolong bisakah Pak Harimau membalik badan dulu? Aku takut melihat taring tajammu."',
+        'Tahan tombol untuk membantu Si Kancil kabur diam-diam selagi Pak Harimau membalikkan badannya.',
+        'Harimau menunggu lama tak sabar. Setelah membalik badan, ia terkejut menyadari Kancil telah kabur. Sangat marah, ia segera mengejar jejak-jejak Si Kancil.',
+        'Si Kancil berlari kencang di tengah hutan dengan napas tersengal-sengal. Tahan tombol untuk membantunya berlari sekencang mungkin menghindari kejaran Harimau.',
+        'Di suatu tempat, Kancil melihat seekor ular besar tengah tidur. Ia berhenti, takut membangunkannya — namun juga takut segera tertangkap Harimau yang mengejar dari belakang.',
+        'Harimau pun tiba dan hendak segera menerkam Si Kancil.',
+        '"Sssst, jangan bicara keras-keras, Pak Harimau! Aku sedang menjaga sabuk sakti Baginda Sulaiman," kata Kancil sambil menunjuk ular yang tengah tidur. "Siapa pun yang memakainya akan ditakuti seluruh binatang hutan!"',
+        'Awalnya tak percaya, namun rasa penasaran membuat Harimau tergoda mendekat, menjulurkan lidahnya untuk mengelus-elus "sabuk" itu sebelum mencobanya.',
+        'Ular yang terusik pun terbangun dan sangat marah, lalu membelit tubuh Harimau. Keduanya bertarung sengit. Tahan tombol untuk membantu Si Kancil kabur secepatnya selagi mereka lengah.',
+        'Si Kancil berhasil lolos jauh ke tengah hutan, meninggalkan Harimau dan ular yang masih bertarung sengit di belakangnya.'
+      ]
+    },
+    en: {
+      title: 'Kancil Tricks the Tiger - Game',
+      h2: '🐯 Kancil Tricks the Tiger',
+      sub: 'The next chapter of Kancil\'s story, tricking a hungry Tiger with two clever schemes.',
+      startTitle: 'Kancil Tricks the Tiger',
+      startBody: 'After crossing the river by tricking the crocodiles, Kancil runs into a hungry Tiger. Follow Kancil\'s two clever tricks to escape the Tiger\'s claws.',
+      startBtn: 'Start the Story',
+      winTitle: 'Kancil Gets Away! 🎉',
+      winBody: 'Thanks to two clever tricks, Kancil escapes the hungry Tiger, leaving him fighting a snake instead. Cleverness can be a way out, but tricking others is still not a good habit to follow.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the story ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      sneakBtn: '🏃 SNEAK AWAY',
+      runBtn: '💨 RUN AS FAST AS YOU CAN',
+      escapeBtn: '🐍 ESCAPE NOW!',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Having crossed the river by tricking the crocodiles, Kancil rests a while in the forest. Feeling hungry, he wanders off to find food.',
+        'Suddenly, a hungry Tiger blocks his path. "How nice to run into you, Kancil. As it happens, I\'m quite hungry," the Tiger says, baring his sharp fangs.',
+        'Kancil looks calm despite his fear. "Let me find food first, Mr. Tiger. Once I\'m full, you can eat me," he says. "But could you please turn around first? I\'m scared of your sharp fangs."',
+        'Hold the button to help Kancil sneak away quietly while the Tiger has his back turned.',
+        'The impatient Tiger waits and waits. Turning back around, he\'s shocked to find Kancil gone. Furious, he immediately tracks Kancil\'s footprints.',
+        'Kancil dashes through the forest, gasping for breath. Hold the button to help him run as fast as he can to escape the chasing Tiger.',
+        'At one spot, Kancil spots a large snake sound asleep. He stops, afraid to wake it — but also afraid of being caught by the Tiger closing in from behind.',
+        'The Tiger arrives, ready to pounce on Kancil at once.',
+        '"Shh, don\'t speak so loudly, Mr. Tiger! I\'m guarding the magical belt of King Solomon," Kancil says, pointing at the sleeping snake. "Whoever wears it will be feared by every animal in the forest!"',
+        'Skeptical at first, curiosity gets the better of the Tiger, who steps closer and sticks out his tongue to stroke the "belt" before trying it on.',
+        'The disturbed snake wakes up furious and coils around the Tiger. The two of them fight fiercely. Hold the button to help Kancil slip away while they\'re distracted.',
+        'Kancil escapes deep into the forest, leaving the Tiger and the snake still fighting fiercely behind him.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#khg-wrap h2').textContent = TXT.h2;
+  document.getElementById('khg-sub').textContent = TXT.sub;
+  document.querySelector('#khg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#khg-start p').textContent = TXT.startBody;
+  document.getElementById('khg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#khg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#khg-win p').textContent = TXT.winBody;
+  document.getElementById('khg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('khg-caption').textContent = TXT.captionInit;
+  document.getElementById('khg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('khg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('khg-phase');
+  var captionEl = document.getElementById('khg-caption');
+  var actionBtn = document.getElementById('khg-actionBtn');
+  var progressWrap = document.getElementById('khg-progressWrap');
+  var progressBar = document.getElementById('khg-progressBar');
+  var startOverlay = document.getElementById('khg-start');
+  var winOverlay = document.getElementById('khg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'istirahat_hutan' },
+    { type:'caption', phase:1, scene:'harimau_muncul' },
+    { type:'caption', phase:2, scene:'trik_pertama' },
+    { type:'hold', phase:2, scene:'harimau_balik_badan' },
+    { type:'caption', phase:2, scene:'harimau_sadar_tertipu' },
+    { type:'hold', phase:3, scene:'kancil_berlari' },
+    { type:'caption', phase:3, scene:'lihat_ular_tidur' },
+    { type:'caption', phase:4, scene:'harimau_tiba' },
+    { type:'caption', phase:4, scene:'trik_sabuk' },
+    { type:'caption', phase:4, scene:'harimau_tergoda' },
+    { type:'hold', phase:5, scene:'ular_terbangun' },
+    { type:'caption', phase:5, scene:'kancil_lolos' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'harimau_balik_badan') actionBtn.textContent = TXT.sneakBtn;
+      else if(step.scene === 'kancil_berlari') actionBtn.textContent = TXT.runBtn;
+      else if(step.scene === 'ular_terbangun') actionBtn.textContent = TXT.escapeBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('khg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('khg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'istirahat_hutan';
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+    drawForestBg();
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='istirahat_hutan'){
+      drawEmoji('🦌', 400, 340+bob, 46);
+    }
+    if(scene==='harimau_muncul' || scene==='trik_pertama'){
+      drawEmoji('🦌', 300, 340+bob, 42);
+      drawEmoji('🐯', 460, 335+bob*0.8, 50);
+    }
+    if(scene==='harimau_balik_badan'){
+      var kancilX = 300 - progress*160;
+      drawEmoji('🦌', kancilX, 340+bob, 40);
+      ctx.save();
+      ctx.translate(460, 335);
+      ctx.scale(-1,1);
+      drawEmoji('🐯', 0, 0, 48);
+      ctx.restore();
+    }
+    if(scene==='harimau_sadar_tertipu'){
+      drawEmoji('🐯', 400, 335+bob, 50);
+    }
+    if(scene==='kancil_berlari'){
+      var runX = 200 + progress*400;
+      drawEmoji('🦌', runX, 330+bob, 42);
+      drawEmoji('🐯', runX-120, 340+bob*0.8, 44);
+    }
+    if(scene==='lihat_ular_tidur' || scene==='harimau_tiba'){
+      drawEmoji('🦌', 280, 340+bob, 40);
+      drawEmoji('🐍', 400, 360, 46);
+      if(scene==='harimau_tiba'){
+        drawEmoji('🐯', 520, 335+bob, 46);
+      }
+    }
+    if(scene==='trik_sabuk'){
+      drawEmoji('🦌', 260, 335+bob, 38);
+      drawEmoji('🐍', 400, 360, 46);
+      drawEmoji('🐯', 500, 330+bob, 46);
+    }
+    if(scene==='harimau_tergoda'){
+      drawEmoji('🦌', 240, 335+bob, 38);
+      drawEmoji('🐍', 400, 360, 46);
+      drawEmoji('🐯', 420, 335, 46);
+    }
+    if(scene==='ular_terbangun'){
+      var kx = 260 - progress*140;
+      drawEmoji('🦌', kx, 330+bob, 40);
+      var clash = 0.3+0.3*Math.sin(t*8);
+      var g = ctx.createRadialGradient(440,340,4,440,340,90);
+      g.addColorStop(0,'rgba(231,111,81,'+clash+')');
+      g.addColorStop(1,'rgba(231,111,81,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(440,340,90,0,Math.PI*2); ctx.fill();
+      drawEmoji('🐍', 410, 350, 46);
+      drawEmoji('🐯', 460, 335, 46);
+    }
+    if(scene==='kancil_lolos'){
+      drawEmoji('🦌', 350+Math.sin(t*8)*20, 335+bob, 44);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('khg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'khg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('khg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
