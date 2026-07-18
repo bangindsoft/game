@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bawang Merah dan Bawang Putih - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #bmg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FCE9D6 0%, #F7F3E8 100%);
+    border: 3px solid #B5502A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #bmg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A3A1E;
+  }
+  #bmg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #bmg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #bmg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #bmg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5502A;
+    background: #BEE3F8;
+  }
+  #bmg-canvas { display: block; width: 100%; height: 100%; }
+  .bmg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,26,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .bmg-overlay.show { display: flex; }
+  .bmg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .bmg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .bmg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .bmg-btn:active { transform: scale(0.97); }
+
+  #bmg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5502A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #bmg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #bmg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5502A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #bmg-actionBtn.hold { background: #3D7A4C; }
+  #bmg-actionBtn:active { transform: scale(0.97); }
+  #bmg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #bmg-progressWrap.show { display: block; }
+  #bmg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="bmg-wrap">
+  <h2>🎃 Bawang Merah dan Bawang Putih</h2>
+  <p id="bmg-sub">Cerita rakyat klasik Indonesia tentang dua saudara tiri dan dua buah labu ajaib.</p>
+
+  <div id="bmg-hud"><span id="bmg-phase">Tahap 1 / 5</span></div>
+
+  <div id="bmg-canvas-holder">
+    <canvas id="bmg-canvas"></canvas>
+
+    <div class="bmg-overlay show" id="bmg-start">
+      <h3>Bawang Merah dan Bawang Putih</h3>
+      <p>Bawang Putih diperlakukan tidak adil oleh ibu tiri dan saudara tirinya, Bawang Merah. Namun ketulusan hatinya membawanya bertemu seorang nenek tua yang baik hati. Ikuti kisahnya sampai akhir.</p>
+      <button class="bmg-btn" id="bmg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="bmg-overlay" id="bmg-win">
+      <h3>Ketulusan Membawa Berkah 🎃</h3>
+      <p>Begitulah nasib orang yang serakah dan culas — pada akhirnya berakhir mengenaskan. Sebaliknya, ketulusan dan kerja keras Bawang Putih membawanya pada kebahagiaan. Kejujuran dan kebaikan hati selalu membuahkan hasil yang baik.</p>
+      <button class="bmg-btn" id="bmg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="bmg-caption">Bersiap memulai kisah...</div>
+
+  <div id="bmg-progressWrap"><div id="bmg-progressBar"></div></div>
+  <div id="bmg-action-row">
+    <button id="bmg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Bawang Merah dan Bawang Putih - Game',
+      h2: '🎃 Bawang Merah dan Bawang Putih',
+      sub: 'Cerita rakyat klasik Indonesia tentang dua saudara tiri dan dua buah labu ajaib.',
+      startTitle: 'Bawang Merah dan Bawang Putih',
+      startBody: 'Bawang Putih diperlakukan tidak adil oleh ibu tiri dan saudara tirinya, Bawang Merah. Namun ketulusan hatinya membawanya bertemu seorang nenek tua yang baik hati. Ikuti kisahnya sampai akhir.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Ketulusan Membawa Berkah 🎃',
+      winBody: 'Begitulah nasib orang yang serakah dan culas — pada akhirnya berakhir mengenaskan. Sebaliknya, ketulusan dan kerja keras Bawang Putih membawanya pada kebahagiaan. Kejujuran dan kebaikan hati selalu membuahkan hasil yang baik.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      searchBtn: '🔍 SUSURI SUNGAI',
+      helpBtn: '🧹 BANTU PEKERJAAN RUMAH',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Bawang Putih tinggal bersama ayahnya setelah ibunya meninggal dunia. Ayahnya kemudian menikah dengan seorang janda yang memiliki anak perempuan bernama Bawang Merah.',
+        'Mereka hidup bahagia sebagai keluarga, hingga sang ayah pun meninggal dunia karena sakit. Sejak itu, sikap ibu tiri dan Bawang Merah berubah drastis terhadap Bawang Putih.',
+        'Setiap hari, Bawang Putih dipaksa mengerjakan seluruh pekerjaan rumah tangga, sementara Bawang Merah dan ibunya hanya bermalas-malasan.',
+        'Suatu hari saat mencuci di sungai, sehelai pakaian ibu tirinya hanyut terbawa arus tanpa disadari Bawang Putih. Ibu tirinya sangat marah dan mengusirnya mencari pakaian itu sampai ketemu.',
+        'Tahan tombol untuk membantu Bawang Putih menyusuri sungai mencari pakaian ibu tirinya yang hanyut.',
+        'Hari mulai petang, Bawang Putih bertemu seorang nenek tua di sebuah gubuk. Ternyata pakaian itu tersangkut di depan rumahnya. Nenek pun mengajaknya masuk dan meminta ia tinggal seminggu untuk menemaninya.',
+        'Tahan tombol untuk membantu Bawang Putih dengan ikhlas mengerjakan pekerjaan rumah nenek selama seminggu.',
+        'Setelah seminggu, nenek berterima kasih dan menawarkan dua labu sebagai hadiah — satu besar, satu kecil. Bawang Putih memilih labu kecil karena lebih mudah dibawa pulang.',
+        'Sesampainya di rumah, betapa terkejutnya Bawang Putih saat membelah labu itu — ternyata berisi perhiasan emas permata yang berkilauan!',
+        'Ibu tiri dan Bawang Merah yang tergiur segera pergi menyusuri sungai mencari rumah nenek tua yang sama, berharap mendapat hadiah serupa.',
+        'Nenek menyambut baik dan meminta mereka tinggal seminggu. Namun tak seperti Bawang Putih, Bawang Merah hanya bermalas-malasan setiap harinya.',
+        'Seminggu berlalu, nenek kembali menawarkan pilihan labu besar dan kecil. Tanpa pikir panjang, Bawang Merah dan ibunya memilih labu yang besar, berharap mendapat lebih banyak emas permata.',
+        'Diliputi kegembiraan, mereka bergegas membelah labu itu di rumah. Namun yang muncul bukan emas permata, melainkan seekor ular berbisa yang menggigit keduanya hingga tewas.'
+      ]
+    },
+    en: {
+      title: 'Bawang Merah and Bawang Putih - Game',
+      h2: '🎃 Bawang Merah and Bawang Putih',
+      sub: 'A classic Indonesian folktale of two stepsisters and two magical pumpkins.',
+      startTitle: 'Bawang Merah and Bawang Putih',
+      startBody: 'Bawang Putih is treated unfairly by her stepmother and stepsister, Bawang Merah. But her sincerity leads her to meet a kind old woman. Follow the story to the end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Sincerity Brings Blessings 🎃',
+      winBody: 'Such is the fate of the greedy and cunning — it ends in tragedy. In contrast, Bawang Putih\'s sincerity and hard work bring her happiness. Honesty and kindness always pay off in the end.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      searchBtn: '🔍 SEARCH THE RIVER',
+      helpBtn: '🧹 HELP WITH CHORES',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Bawang Putih lives with her father after her mother passes away. Her father then marries a widow with a daughter named Bawang Merah.',
+        'They live happily as a family, until her father passes away from illness. From then on, the stepmother and Bawang Merah\'s attitude toward Bawang Putih changes drastically.',
+        'Every day, Bawang Putih is forced to do all the household chores, while Bawang Merah and her mother do nothing but laze around.',
+        'One day while washing clothes at the river, one of her stepmother\'s garments drifts away in the current without Bawang Putih noticing. Furious, her stepmother banishes her to find it, no matter what.',
+        'Hold the button to help Bawang Putih search along the river for her stepmother\'s drifted garment.',
+        'As dusk falls, Bawang Putih meets an old woman at a small hut. It turns out the garment had snagged right in front of her house. The old woman invites her in and asks her to stay a week to keep her company.',
+        'Hold the button to help Bawang Putih sincerely take care of the old woman\'s household chores for a week.',
+        'After a week, the old woman thanks her and offers two pumpkins as a gift — one large, one small. Bawang Putih picks the small one, since it\'s easier to carry home.',
+        'Arriving home, Bawang Putih is stunned when she cuts open the pumpkin — it\'s filled with sparkling gold jewelry!',
+        'Tempted by the jewelry, the stepmother and Bawang Merah rush along the river to find the same old woman\'s house, hoping for a similar gift.',
+        'The old woman welcomes them warmly and asks them to stay a week too. But unlike Bawang Putih, Bawang Merah does nothing but laze around every day.',
+        'A week passes, and the old woman again offers a choice between a large and small pumpkin. Without a second thought, Bawang Merah and her mother pick the large one, hoping for even more jewelry.',
+        'Overjoyed, they rush to cut open the pumpkin at home. But instead of jewelry, out comes a venomous snake, which bites them both fatally.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#bmg-wrap h2').textContent = TXT.h2;
+  document.getElementById('bmg-sub').textContent = TXT.sub;
+  document.querySelector('#bmg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#bmg-start p').textContent = TXT.startBody;
+  document.getElementById('bmg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#bmg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#bmg-win p').textContent = TXT.winBody;
+  document.getElementById('bmg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('bmg-caption').textContent = TXT.captionInit;
+  document.getElementById('bmg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('bmg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('bmg-phase');
+  var captionEl = document.getElementById('bmg-caption');
+  var actionBtn = document.getElementById('bmg-actionBtn');
+  var progressWrap = document.getElementById('bmg-progressWrap');
+  var progressBar = document.getElementById('bmg-progressBar');
+  var startOverlay = document.getElementById('bmg-start');
+  var winOverlay = document.getElementById('bmg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'awal_kisah' },
+    { type:'caption', phase:1, scene:'ayah_meninggal' },
+    { type:'caption', phase:2, scene:'kerja_rumah' },
+    { type:'caption', phase:2, scene:'pakaian_hanyut' },
+    { type:'hold', phase:3, scene:'susuri_sungai' },
+    { type:'caption', phase:3, scene:'bertemu_nenek' },
+    { type:'hold', phase:3, scene:'bantu_nenek' },
+    { type:'caption', phase:4, scene:'pilih_labu_kecil' },
+    { type:'caption', phase:4, scene:'labu_berisi_emas' },
+    { type:'caption', phase:5, scene:'ibu_tiri_tergiur' },
+    { type:'caption', phase:5, scene:'bawang_merah_malas' },
+    { type:'caption', phase:5, scene:'pilih_labu_besar' },
+    { type:'caption', phase:5, scene:'labu_berisi_ular' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'susuri_sungai') actionBtn.textContent = TXT.searchBtn;
+      else if(step.scene === 'bantu_nenek') actionBtn.textContent = TXT.helpBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('bmg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('bmg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawBawangPutih(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBawangMerah(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9506A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStepmother(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5A3E5A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,11*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.arc(0,-7*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A2A';
+    ctx.beginPath(); ctx.ellipse(0,-11*s,6.5*s,5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFather(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A5A3C';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawOldWoman(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPumpkin(px, py, size, big){
+    var s = (big ? size*1.4 : size)/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#E8944A';
+    ctx.beginPath(); ctx.ellipse(0,0,14*s,11*s,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#B5642A';
+    ctx.lineWidth = 1.5*s;
+    ctx.beginPath(); ctx.moveTo(0,-11*s); ctx.lineTo(0,11*s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-8*s,-9*s); ctx.quadraticCurveTo(-11*s,0,-8*s,9*s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8*s,-9*s); ctx.quadraticCurveTo(11*s,0,8*s,9*s); ctx.stroke();
+    ctx.fillStyle = '#5C8A3C';
+    ctx.fillRect(-2*s,-15*s,4*s,5*s);
+    ctx.restore();
+  }
+
+  function drawSnake(px, py, size, thrash){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.strokeStyle = '#2F5233';
+    ctx.lineWidth = 9*s;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-18*s, 8*s + Math.sin(thrash)*4*s);
+    ctx.quadraticCurveTo(0, -12*s + Math.sin(thrash+1)*5*s, 18*s, 6*s + Math.sin(thrash+2)*4*s);
+    ctx.stroke();
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath(); ctx.arc(18*s,6*s,4*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawGubukBg(){
+    ctx.fillStyle = '#7C9E8E';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#6B4A2A';
+    ctx.beginPath();
+    ctx.moveTo(500,300); ctx.lineTo(560,230); ctx.lineTo(620,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4A3218';
+    ctx.fillRect(520,300,80,36);
+  }
+
+  function drawRiverBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,280,W,H-280);
+    ctx.fillStyle = '#5C8AA6';
+    ctx.fillRect(0,260,W,40);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<3;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 270+w*10);
+      ctx.quadraticCurveTo(400, 265+w*10+Math.sin(t*2+w)*4, 800, 270+w*10);
+      ctx.stroke();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='awal_kisah' || scene==='ayah_meninggal' || scene==='kerja_rumah'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='pakaian_hanyut' || scene==='susuri_sungai'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='bertemu_nenek' || scene==='bantu_nenek'){
+      sky.addColorStop(0,'#E9906A'); sky.addColorStop(1,'#F6C99A');
+    } else if(scene==='pilih_labu_kecil' || scene==='labu_berisi_emas'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='ibu_tiri_tergiur' || scene==='bawang_merah_malas' || scene==='pilih_labu_besar'){
+      sky.addColorStop(0,'#E9906A'); sky.addColorStop(1,'#F6C99A');
+    } else if(scene==='labu_berisi_ular'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'awal_kisah';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='awal_kisah'){
+      drawHutBg();
+      drawFather(340, 330+bob, 40);
+      drawBawangPutih(400, 335+bob, 38);
+    }
+    if(scene==='ayah_meninggal'){
+      drawHutBg();
+      drawBawangPutih(340, 335+bob, 40);
+      drawStepmother(440, 330+bob, 40);
+      drawBawangMerah(500, 335+bob*0.8, 36);
+    }
+    if(scene==='kerja_rumah'){
+      drawHutBg();
+      drawBawangPutih(320, 330+bob, 40);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🧹', 360, 350);
+      drawStepmother(520, 340, 36);
+      drawBawangMerah(570, 345, 32);
+    }
+    if(scene==='pakaian_hanyut'){
+      drawRiverBg();
+      drawBawangPutih(300, 330+bob, 38);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('👕', 480+Math.sin(t*2)*20, 300);
+    }
+    if(scene==='susuri_sungai'){
+      drawRiverBg();
+      drawBawangPutih(200+progress*400, 330+bob, 38);
+    }
+    if(scene==='bertemu_nenek'){
+      drawGubukBg();
+      drawBawangPutih(340, 330+bob, 38);
+      drawOldWoman(460, 340, 38);
+    }
+    if(scene==='bantu_nenek'){
+      drawGubukBg();
+      drawOldWoman(460, 340, 38);
+      drawBawangPutih(340, 330+bob, 38);
+      ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🧹', 380, 350);
+    }
+    if(scene==='pilih_labu_kecil'){
+      drawGubukBg();
+      drawOldWoman(320, 340, 38);
+      drawPumpkin(460, 350, 30, false);
+      drawPumpkin(540, 350, 30, true);
+    }
+    if(scene==='labu_berisi_emas'){
+      drawHutBg();
+      drawBawangPutih(360, 330+bob, 40);
+      ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('💎', 440, 340);
+      ctx.fillText('✨', 470, 310);
+    }
+    if(scene==='ibu_tiri_tergiur'){
+      drawRiverBg();
+      drawStepmother(320, 330+bob, 40);
+      drawBawangMerah(380, 335+bob*0.8, 38);
+    }
+    if(scene==='bawang_merah_malas'){
+      drawGubukBg();
+      drawOldWoman(320, 340, 36);
+      drawBawangMerah(460, 350, 38);
+    }
+    if(scene==='pilih_labu_besar'){
+      drawGubukBg();
+      drawOldWoman(280, 340, 36);
+      drawPumpkin(420, 350, 30, false);
+      drawPumpkin(510, 345, 30, true);
+      drawStepmother(600, 340, 36);
+      drawBawangMerah(650, 345, 34);
+    }
+    if(scene==='labu_berisi_ular'){
+      drawHutBg();
+      drawStepmother(340, 330+bob, 40);
+      drawBawangMerah(400, 335+bob*0.8, 38);
+      drawSnake(460, 345, 44, t*4);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('bmg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'bmg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('bmg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
