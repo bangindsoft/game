@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raden Inu Kertapati - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #rik-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2A2440;
+    background: linear-gradient(180deg, #ECE4F0 0%, #F7F3E8 100%);
+    border: 3px solid #5A3E7A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #rik-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #422C5E;
+  }
+  #rik-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f6f;
+    margin: 0 0 10px;
+  }
+  #rik-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #rik-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #rik-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #5A3E7A;
+    background: #BEE3F8;
+  }
+  #rik-canvas { display: block; width: 100%; height: 100%; }
+  .rik-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(28,20,36,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .rik-overlay.show { display: flex; }
+  .rik-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .rik-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .rik-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .rik-btn:active { transform: scale(0.97); }
+
+  #rik-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #5A3E7A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #rik-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #rik-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #5A3E7A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #rik-actionBtn.hold { background: #3D7A4C; }
+  #rik-actionBtn:active { transform: scale(0.97); }
+  #rik-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #rik-progressWrap.show { display: block; }
+  #rik-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="rik-wrap">
+  <h2>👑 Raden Inu Kertapati</h2>
+  <p id="rik-sub">Kisah cinta Raden Inu Kertapati dan Dewi Candra Kirana, cerita rakyat Jawa Timur.</p>
+
+  <div id="rik-hud"><span id="rik-phase">Tahap 1 / 5</span></div>
+
+  <div id="rik-canvas-holder">
+    <canvas id="rik-canvas"></canvas>
+
+    <div class="rik-overlay show" id="rik-start">
+      <h3>Raden Inu Kertapati</h3>
+      <p>Raden Inu Kertapati merindukan tunangannya, Dewi Candra Kirana, dan berangkat menuju Kerajaan Kediri. Namun perjalanannya penuh liku — mulai dari gerombolan misterius hingga sihir jahat. Ikuti kisahnya sampai akhir.</p>
+      <button class="rik-btn" id="rik-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="rik-overlay" id="rik-win">
+      <h3>Reuni yang Membahagiakan 💍</h3>
+      <p>Raden Inu Kertapati dan Dewi Candra Kirana akhirnya menikah dengan pesta yang sangat meriah di Kerajaan Jenggala. Begitulah lika-liku kisah cinta Panji Asmarabangun dan Dewi Sekartaji yang dikenang hingga kini.</p>
+      <button class="rik-btn" id="rik-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="rik-caption">Bersiap memulai kisah...</div>
+
+  <div id="rik-progressWrap"><div id="rik-progressBar"></div></div>
+  <div id="rik-action-row">
+    <button id="rik-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Raden Inu Kertapati - Game',
+      h2: '👑 Raden Inu Kertapati',
+      sub: 'Kisah cinta Raden Inu Kertapati dan Dewi Candra Kirana, cerita rakyat Jawa Timur.',
+      startTitle: 'Raden Inu Kertapati',
+      startBody: 'Raden Inu Kertapati merindukan tunangannya, Dewi Candra Kirana, dan berangkat menuju Kerajaan Kediri. Namun perjalanannya penuh liku — mulai dari gerombolan misterius hingga sihir jahat. Ikuti kisahnya sampai akhir.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Reuni yang Membahagiakan 💍',
+      winBody: 'Raden Inu Kertapati dan Dewi Candra Kirana akhirnya menikah dengan pesta yang sangat meriah di Kerajaan Jenggala. Begitulah lika-liku kisah cinta Panji Asmarabangun dan Dewi Sekartaji yang dikenang hingga kini.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      travelBtn: '🐎 LANJUTKAN PERJALANAN',
+      searchBtn: '🔍 CARI PANJI SEMIRANG',
+      fightBtn: '⚔️ TUMPAS PENJAHAT',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Raden Inu Kertapati, putra mahkota Kerajaan Jenggala, telah lama bertunangan dengan Dewi Candra Kirana, putri Kerajaan Kediri. Suatu hari ia sangat merindukannya, dan berangkat menuju Kediri diiringi para pengawalnya.',
+        'Di tengah perjalanan, rombongan dihadang gerombolan pimpinan Panji Semirang dari negeri Asmarantaka. Namun anehnya, mereka tidak menyerang — dua pengawal Panji Semirang justru mengundang Inu Kertapati untuk bertemu langsung.',
+        'Betapa kagetnya Raden Inu Kertapati, ia disambut sangat baik oleh Panji Semirang, yang wajahnya entah kenapa terasa familiar baginya. "Kabar yang beredar tidak benar, Raden. Kami hanya mengajak orang tinggal di negeri kami," jelas Panji Semirang.',
+        'Tahan tombol untuk membantu Raden Inu Kertapati melanjutkan perjalanan panjang menuju Kerajaan Kediri.',
+        'Rombongan tiba di Kerajaan Kediri dan disambut meriah. Namun saat Raden Inu Kertapati menanyakan Dewi Candra Kirana, Dewi Liku, selir raja Kediri, mengabarkan bahwa sang putri telah lama hilang ingatan dan pergi entah kemana. Raden Inu Kertapati begitu terkejut hingga jatuh pingsan.',
+        'Ternyata Dewi Liku memiliki niat jahat. Dengan sihirnya, ia mempengaruhi pikiran raja Kediri dan Raden Inu Kertapati, mendesak agar Raden dinikahkan dengan putrinya sendiri, Dewi Ajeng.',
+        'Namun tepat sebelum pernikahan itu digelar, terjadilah kebakaran besar di istana. Para pengawal segera membawa Raden Inu Kertapati pergi menjauh dari istana untuk keselamatannya.',
+        'Setelah jauh dari istana, pengaruh sihir Dewi Liku pun hilang. Raden Inu Kertapati sadar akan niat jahat itu, dan tiba-tiba teringat bahwa wajah Panji Semirang sangat mirip dengan Dewi Candra Kirana!',
+        'Tahan tombol untuk membantu Raden Inu Kertapati bergegas menuju negeri Asmarantaka, mencari Panji Semirang.',
+        'Namun sesampainya di sana, warga setempat mengatakan Panji Semirang telah pergi entah kemana. Hati Raden Inu Kertapati hancur berkeping-keping, namun ia memutuskan melanjutkan perjalanan pulang menuju Kerajaan Jenggala.',
+        'Dalam perjalanan pulang, Raden Inu Kertapati singgah di Kerajaan Gagelang, sekutu Jenggala, yang tengah diganggu penjahat sakti pimpinan Lasan dan Setegal. Raden pun bersedia membantu membasminya.',
+        'Tahan tombol untuk mengerahkan kesaktian Raden Inu Kertapati menumpas gerombolan penjahat pimpinan Lasan dan Setegal.',
+        'Berkat kesaktiannya, para penjahat itu berhasil dilumpuhkan. Untuk merayakannya, digelar pesta tujuh hari tujuh malam. Pada malam ketujuh, seorang penyair muda membawakan kisah cinta Inu Kertapati dan Candra Kirana — dan setelah didesak, penyair itu pun mengaku bahwa dialah Dewi Candra Kirana sendiri, yang telah sembuh dari sihir dan berkelana mencarinya.'
+      ]
+    },
+    en: {
+      title: 'Raden Inu Kertapati - Game',
+      h2: '👑 Raden Inu Kertapati',
+      sub: 'The love story of Raden Inu Kertapati and Dewi Candra Kirana, a folktale from East Java.',
+      startTitle: 'Raden Inu Kertapati',
+      startBody: 'Raden Inu Kertapati misses his fiancée, Dewi Candra Kirana, and sets off for the Kediri Kingdom. But his journey is full of twists — from a mysterious band of outlaws to wicked sorcery. Follow the story to the end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'A Joyful Reunion 💍',
+      winBody: 'Raden Inu Kertapati and Dewi Candra Kirana finally marry in a grand celebration at the Jenggala Kingdom. Such is the winding love story of Panji Asmarabangun and Dewi Sekartaji, remembered to this day.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      travelBtn: '🐎 CONTINUE THE JOURNEY',
+      searchBtn: '🔍 SEARCH FOR PANJI SEMIRANG',
+      fightBtn: '⚔️ DEFEAT THE OUTLAWS',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Raden Inu Kertapati, crown prince of the Jenggala Kingdom, has long been betrothed to Dewi Candra Kirana, princess of the Kediri Kingdom. One day, missing her deeply, he sets off for Kediri with his guards.',
+        'Midway through the journey, the group is stopped by an outlaw band led by Panji Semirang of the land of Asmarantaka. Oddly, they don\'t attack — two of Panji Semirang\'s guards instead invite Inu Kertapati to meet their leader in person.',
+        'Much to his surprise, Raden Inu Kertapati is warmly welcomed by Panji Semirang, whose face somehow feels strangely familiar. "The rumors going around aren\'t true, Raden. We only invite people to live in our land," Panji Semirang explains.',
+        'Hold the button to help Raden Inu Kertapati continue the long journey to the Kediri Kingdom.',
+        'The group arrives at Kediri and is warmly welcomed. But when Raden Inu Kertapati asks about Dewi Candra Kirana, Dewi Liku, the king\'s concubine, tells him the princess has long lost her memory and vanished. Raden Inu Kertapati is so shocked he faints.',
+        'It turns out Dewi Liku has wicked intentions. Using sorcery, she influences the minds of the King of Kediri and Raden Inu Kertapati, pushing for Raden to marry her own daughter, Dewi Ajeng instead.',
+        'But just before the wedding takes place, a massive fire breaks out in the palace. His guards quickly whisk Raden Inu Kertapati away from the palace for his safety.',
+        'Once far from the palace, Dewi Liku\'s spell over him breaks. Raden Inu Kertapati realizes her wicked scheme, and suddenly remembers that Panji Semirang\'s face looked remarkably like Dewi Candra Kirana\'s!',
+        'Hold the button to help Raden Inu Kertapati rush to the land of Asmarantaka, searching for Panji Semirang.',
+        'But upon arriving, the locals say Panji Semirang has already left, no one knows where. Raden Inu Kertapati\'s heart is shattered, but he decides to continue his journey home to the Jenggala Kingdom.',
+        'On the way home, Raden Inu Kertapati stops at the Gagelang Kingdom, an ally of Jenggala, which is being troubled by powerful outlaws led by Lasan and Setegal. Raden agrees to help defeat them.',
+        'Hold the button to summon Raden Inu Kertapati\'s power to defeat the outlaw band led by Lasan and Setegal.',
+        'Thanks to his strength, the outlaws are subdued. To celebrate, a seven-day, seven-night feast is held. On the seventh night, a young poet recites the love story of Inu Kertapati and Candra Kirana — and after being pressed, the poet finally admits to being Dewi Candra Kirana herself, healed from the curse and wandering in search of him.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#rik-wrap h2').textContent = TXT.h2;
+  document.getElementById('rik-sub').textContent = TXT.sub;
+  document.querySelector('#rik-start h3').textContent = TXT.startTitle;
+  document.querySelector('#rik-start p').textContent = TXT.startBody;
+  document.getElementById('rik-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#rik-win h3').textContent = TXT.winTitle;
+  document.querySelector('#rik-win p').textContent = TXT.winBody;
+  document.getElementById('rik-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('rik-caption').textContent = TXT.captionInit;
+  document.getElementById('rik-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('rik-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('rik-phase');
+  var captionEl = document.getElementById('rik-caption');
+  var actionBtn = document.getElementById('rik-actionBtn');
+  var progressWrap = document.getElementById('rik-progressWrap');
+  var progressBar = document.getElementById('rik-progressBar');
+  var startOverlay = document.getElementById('rik-start');
+  var winOverlay = document.getElementById('rik-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'berangkat' },
+    { type:'caption', phase:1, scene:'dihadang' },
+    { type:'caption', phase:2, scene:'bertemu_panji' },
+    { type:'hold', phase:2, scene:'perjalanan_kediri' },
+    { type:'caption', phase:3, scene:'sambutan_kediri' },
+    { type:'caption', phase:3, scene:'sihir_dewi_liku' },
+    { type:'caption', phase:3, scene:'kebakaran' },
+    { type:'caption', phase:4, scene:'sihir_hilang' },
+    { type:'hold', phase:4, scene:'cari_asmarantaka' },
+    { type:'caption', phase:4, scene:'hati_hancur' },
+    { type:'caption', phase:5, scene:'singgah_gagelang' },
+    { type:'hold', phase:5, scene:'basmi_penjahat' },
+    { type:'caption', phase:5, scene:'penyair_mengaku' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'perjalanan_kediri') actionBtn.textContent = TXT.travelBtn;
+      else if(step.scene === 'cari_asmarantaka') actionBtn.textContent = TXT.searchBtn;
+      else if(step.scene === 'basmi_penjahat') actionBtn.textContent = TXT.fightBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('rik-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('rik-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawInu(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E4A8A';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s); ctx.quadraticCurveTo(-18*s,9*s,-11*s,24*s);
+    ctx.lineTo(11*s,24*s); ctx.quadraticCurveTo(18*s,9*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-15*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A5A';
+    ctx.beginPath(); ctx.ellipse(0,-20*s,7.5*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCandraKirana(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9799A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPanjiSemirang(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D5A4A';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-8*s); ctx.quadraticCurveTo(-15*s,3*s,-11*s,20*s);
+    ctx.lineTo(11*s,20*s); ctx.quadraticCurveTo(15*s,3*s,11*s,-8*s);
+    ctx.quadraticCurveTo(0,-13*s,-11*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,7*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPoet(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A5A9A';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-6*s); ctx.quadraticCurveTo(-13*s,8*s,-9*s,20*s);
+    ctx.lineTo(9*s,20*s); ctx.quadraticCurveTo(13*s,8*s,9*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-9*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-12*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-16*s,6.5*s,5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDewiLiku(px, py, size, glow){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(glow>0){
+      var g = ctx.createRadialGradient(0,-6*s,4,0,-6*s,30*s);
+      g.addColorStop(0,'rgba(160,60,180,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(160,60,180,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-6*s,30*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#5A3E5A';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-6*s); ctx.quadraticCurveTo(-15*s,7*s,-10*s,20*s);
+    ctx.lineTo(10*s,20*s); ctx.quadraticCurveTo(15*s,7*s,11*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-11*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.arc(0,-13*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A2A';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,6.5*s,5.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawKing(px, py, size, colorMain){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain;
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawOutlaw(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E2A24';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8A7060';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFire(px, py, size, amt){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#E76F51';
+    ctx.beginPath();
+    ctx.moveTo(0,-18*s*amt);
+    ctx.quadraticCurveTo(10*s,-4*s*amt,4*s,4*s);
+    ctx.quadraticCurveTo(0,8*s,-4*s,4*s);
+    ctx.quadraticCurveTo(-10*s,-4*s*amt,0,-18*s*amt);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='berangkat' || scene==='dihadang' || scene==='bertemu_panji' || scene==='perjalanan_kediri'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='sambutan_kediri' || scene==='sihir_dewi_liku'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='kebakaran'){
+      sky.addColorStop(0,'#E9906A'); sky.addColorStop(1,'#F6C99A');
+    } else if(scene==='sihir_hilang' || scene==='cari_asmarantaka' || scene==='hati_hancur'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='singgah_gagelang' || scene==='basmi_penjahat'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='penyair_mengaku'){
+      sky.addColorStop(0,'#3A2E5A'); sky.addColorStop(1,'#5A4A78');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'berangkat';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='berangkat'){
+      drawPalaceBg();
+      drawInu(400, 320+bob, 46);
+    }
+    if(scene==='dihadang'){
+      drawForestBg();
+      drawInu(300, 330+bob, 42);
+      drawOutlaw(460, 340+bob, 36);
+      drawOutlaw(510, 345+bob*0.8, 34);
+    }
+    if(scene==='bertemu_panji'){
+      drawForestBg();
+      drawInu(320, 330+bob, 44);
+      drawPanjiSemirang(480, 330+bob, 44);
+    }
+    if(scene==='perjalanan_kediri'){
+      drawForestBg();
+      drawInu(200+progress*400, 330+bob, 42);
+    }
+    if(scene==='sambutan_kediri'){
+      drawPalaceBg();
+      drawInu(320, 320+bob, 44);
+      drawDewiLiku(480, 330+bob, 42, 0);
+    }
+    if(scene==='sihir_dewi_liku'){
+      drawPalaceBg();
+      drawKing(300, 310+bob, 42, '#8A5A1E');
+      drawDewiLiku(460, 330+bob, 44, 0.6);
+      drawInu(550, 335, 38);
+    }
+    if(scene==='kebakaran'){
+      drawPalaceBg();
+      drawFire(400, 320, 60, 1);
+      drawFire(460, 340, 40, 0.8);
+      drawInu(280, 330+bob, 40);
+    }
+    if(scene==='sihir_hilang'){
+      drawForestBg();
+      drawInu(400, 330+bob, 46);
+    }
+    if(scene==='cari_asmarantaka'){
+      drawForestBg();
+      drawInu(200+progress*400, 330+bob, 42);
+    }
+    if(scene==='hati_hancur'){
+      drawForestBg();
+      drawInu(400, 340, 44);
+    }
+    if(scene==='singgah_gagelang'){
+      drawPalaceBg();
+      drawKing(320, 310+bob, 44, '#2E5A3A');
+      drawInu(460, 320+bob, 44);
+    }
+    if(scene==='basmi_penjahat'){
+      drawForestBg();
+      var glow = progress*0.6;
+      var g = ctx.createRadialGradient(400,320,4,400,320,90);
+      g.addColorStop(0,'rgba(255,220,120,'+glow+')');
+      g.addColorStop(1,'rgba(255,220,120,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(400,320,90,0,Math.PI*2); ctx.fill();
+      drawInu(300, 330+bob, 44);
+      drawOutlaw(480, 330, 38);
+      drawOutlaw(530, 340, 34);
+    }
+    if(scene==='penyair_mengaku'){
+      drawPalaceBg();
+      drawInu(320, 320+bob, 44);
+      drawPoet(480, 330+bob, 40);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('rik-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'rik-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('rik-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
