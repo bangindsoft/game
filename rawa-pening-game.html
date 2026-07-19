@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Rawa Pening - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #rpg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #rpg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #rpg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #rpg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #rpg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #rpg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #rpg-canvas { display: block; width: 100%; height: 100%; }
+  .rpg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .rpg-overlay.show { display: flex; }
+  .rpg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .rpg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .rpg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .rpg-btn:active { transform: scale(0.97); }
+
+  #rpg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #rpg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #rpg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #rpg-actionBtn.hold { background: #8A5A1E; }
+  #rpg-actionBtn:active { transform: scale(0.97); }
+  #rpg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #rpg-progressWrap.show { display: block; }
+  #rpg-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="rpg-wrap">
+  <h2>💧 Legenda Rawa Pening</h2>
+  <p id="rpg-sub">Cerita rakyat Jawa Tengah tentang Jaka Baru Klinting dan kebaikan hati Nyi Lantung.</p>
+
+  <div id="rpg-hud"><span id="rpg-phase">Tahap 1 / 5</span></div>
+
+  <div id="rpg-canvas-holder">
+    <canvas id="rpg-canvas"></canvas>
+
+    <div class="rpg-overlay show" id="rpg-start">
+      <h3>Legenda Rawa Pening</h3>
+      <p>Jaka Baru Klinting sering dihina warga karena kemiskinannya, kecuali oleh Nyi Lantung yang selalu berbaik hati padanya. Ikuti kisahnya hingga terbentuknya Rawa Pening.</p>
+      <button class="rpg-btn" id="rpg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="rpg-overlay" id="rpg-win">
+      <h3>Rawa Pening Terbentuk 💧</h3>
+      <p>Jaka Baru Klinting menepati janjinya membalas budi Nyi Lantung dengan menyelamatkannya dari banjir. Kini, telaga itu dikenal dengan nama Rawa Pening, obyek wisata di Kabupaten Semarang, Jawa Tengah, yang ditumbuhi tanaman eceng gondok.</p>
+      <button class="rpg-btn" id="rpg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="rpg-caption">Bersiap memulai kisah...</div>
+
+  <div id="rpg-progressWrap"><div id="rpg-progressBar"></div></div>
+  <div id="rpg-action-row">
+    <button id="rpg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Rawa Pening - Game',
+      h2: '💧 Legenda Rawa Pening',
+      sub: 'Cerita rakyat Jawa Tengah tentang Jaka Baru Klinting dan kebaikan hati Nyi Lantung.',
+      startTitle: 'Legenda Rawa Pening',
+      startBody: 'Jaka Baru Klinting sering dihina warga karena kemiskinannya, kecuali oleh Nyi Lantung yang selalu berbaik hati padanya. Ikuti kisahnya hingga terbentuknya Rawa Pening.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Rawa Pening Terbentuk 💧',
+      winBody: 'Jaka Baru Klinting menepati janjinya membalas budi Nyi Lantung dengan menyelamatkannya dari banjir. Kini, telaga itu dikenal dengan nama Rawa Pening, obyek wisata di Kabupaten Semarang, Jawa Tengah, yang ditumbuhi tanaman eceng gondok.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      pullBtn: '🌿 CABUT DAUN ITU',
+      floodBtn: '💧 AIR MENYEMBUR',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di sebuah desa di Jawa Tengah, hiduplah seorang pemuda bernama Jaka Baru Klinting. Penduduk desa sering menghinanya dan memperlakukannya secara tidak adil karena kemiskinannya.',
+        'Namun ada seorang janda tua bernama Nyi Lantung yang merasa kasihan padanya. Ia satu-satunya orang yang mau membantu Jaka Baru Klinting, selalu memberinya makan dan minum dengan tulus.',
+        'Suatu hari seperti biasa, warga desa mengejek dan mengusir Jaka Baru Klinting. "Pergilah kau hai Gembel! Kami jijik melihat penampilanmu. Kau tak pantas tinggal di sini," kata mereka.',
+        'Tak tahan lagi dengan ejekan itu, Jaka Baru Klinting menantang seluruh warga: jika ada yang bisa mencabut sehelai daun yang tertancap di tanah, ia akan pergi meninggalkan tempat itu selamanya.',
+        'Satu per satu warga mencoba mencabut daun itu sambil tertawa mengejek. Namun anehnya, tak seorang pun berhasil. Perlahan tawa mereka pun terhenti karena kebingungan.',
+        'Warga pun meminta Jaka Baru Klinting untuk mencobanya sendiri. Tahan tombol untuk membantunya mencabut daun itu dari tanah.',
+        'Jaka Baru Klinting berhasil mencabut daun itu dengan mudahnya. Seluruh warga terdiam. Tak lama kemudian, terjadilah keanehan — dari tempat daun itu tercabut, air mulai menyembur keluar.',
+        'Tahan tombol untuk melihat air itu terus menyembur deras, hingga menggenangi seluruh daerah tersebut menjadi telaga yang sangat luas.',
+        'Air itu terus meluas menenggelamkan seluruh warga yang dulu menghinanya. Namun Jaka Baru Klinting menepati janjinya membalas budi, dan menyelamatkan Nyi Lantung dari banjir besar itu.',
+        'Kini masyarakat Semarang menyebut telaga luas tersebut dengan nama Rawa Pening.'
+      ]
+    },
+    en: {
+      title: 'The Legend of Rawa Pening - Game',
+      h2: '💧 The Legend of Rawa Pening',
+      sub: 'A Central Java folktale about Jaka Baru Klinting and the kindness of Nyi Lantung.',
+      startTitle: 'The Legend of Rawa Pening',
+      startBody: 'Jaka Baru Klinting is often mocked by villagers for his poverty, except by Nyi Lantung, who always treats him kindly. Follow the story to the creation of Rawa Pening.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Rawa Pening Is Formed 💧',
+      winBody: 'Jaka Baru Klinting keeps his promise to repay Nyi Lantung\'s kindness by saving her from the flood. Today, that lake is known as Rawa Pening, a tourist destination in Semarang Regency, Central Java, covered in water hyacinth.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      pullBtn: '🌿 PULL THE LEAF',
+      floodBtn: '💧 WATER GUSHES OUT',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'In a village in Central Java lived a young man named Jaka Baru Klinting. The villagers often mocked him and treated him unfairly because of his poverty.',
+        'But there was an old widow named Nyi Lantung who felt sorry for him. She was the only one willing to help Jaka Baru Klinting, always sincerely giving him food and drink.',
+        'One day, as usual, the villagers mock and chase Jaka Baru Klinting away. "Get lost, you beggar! We\'re disgusted just looking at you. You don\'t belong here," they say.',
+        'Unable to bear the mockery any longer, Jaka Baru Klinting challenges all the villagers: if anyone can pull out a single leaf stuck in the ground, he will leave the place forever.',
+        'One by one, the villagers try to pull out the leaf, laughing mockingly. But strangely, not one of them succeeds. Slowly, their laughter turns to confusion.',
+        'The villagers ask Jaka Baru Klinting to try it himself. Hold the button to help him pull the leaf out of the ground.',
+        'Jaka Baru Klinting pulls it out with ease. The whole village falls silent. Soon after, something strange happens — from where the leaf was pulled, water begins to gush out.',
+        'Hold the button to watch the water keep gushing out powerfully, until it floods the entire area into a vast lake.',
+        'The water keeps rising, drowning all the villagers who once mocked him. But Jaka Baru Klinting keeps his promise to repay kindness, and saves Nyi Lantung from the great flood.',
+        'Today, the people of Semarang call that vast lake Rawa Pening.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#rpg-wrap h2').textContent = TXT.h2;
+  document.getElementById('rpg-sub').textContent = TXT.sub;
+  document.querySelector('#rpg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#rpg-start p').textContent = TXT.startBody;
+  document.getElementById('rpg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#rpg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#rpg-win p').textContent = TXT.winBody;
+  document.getElementById('rpg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('rpg-caption').textContent = TXT.captionInit;
+  document.getElementById('rpg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('rpg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('rpg-phase');
+  var captionEl = document.getElementById('rpg-caption');
+  var actionBtn = document.getElementById('rpg-actionBtn');
+  var progressWrap = document.getElementById('rpg-progressWrap');
+  var progressBar = document.getElementById('rpg-progressBar');
+  var startOverlay = document.getElementById('rpg-start');
+  var winOverlay = document.getElementById('rpg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'jaka_dihina' },
+    { type:'caption', phase:1, scene:'nyi_lantung_baik' },
+    { type:'caption', phase:2, scene:'diusir_warga' },
+    { type:'caption', phase:2, scene:'tantangan_daun' },
+    { type:'caption', phase:3, scene:'warga_gagal' },
+    { type:'hold', phase:3, scene:'jaka_cabut_daun' },
+    { type:'caption', phase:4, scene:'air_menyembur' },
+    { type:'hold', phase:5, scene:'air_meluas' },
+    { type:'caption', phase:5, scene:'nyi_lantung_selamat' },
+    { type:'caption', phase:5, scene:'rawa_pening_lahir' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'jaka_cabut_daun') actionBtn.textContent = TXT.pullBtn;
+      else if(step.scene === 'air_meluas') actionBtn.textContent = TXT.floodBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('rpg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('rpg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawJaka(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#6E5A44';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A7A5A';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawNyiLantung(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawVillager(px, py, size, colorMain){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain;
+    ctx.beginPath(); ctx.ellipse(0,4*s,8*s,8*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-5*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawVillageBg(waterLevel){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+    if(waterLevel > 0){
+      ctx.fillStyle = 'rgba(58,110,165,0.8)';
+      var wy = H - (H-300)*waterLevel;
+      ctx.fillRect(0,wy,W,H-wy);
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='jaka_dihina' || scene==='nyi_lantung_baik' || scene==='diusir_warga' || scene==='tantangan_daun' || scene==='warga_gagal' || scene==='jaka_cabut_daun'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='air_menyembur' || scene==='air_meluas'){
+      sky.addColorStop(0,'#7EA8D9'); sky.addColorStop(1,'#D9E9F4');
+    } else if(scene==='nyi_lantung_selamat' || scene==='rawa_pening_lahir'){
+      sky.addColorStop(0,'#AEDBF2'); sky.addColorStop(1,'#F0F8FF');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'jaka_dihina';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='jaka_dihina'){
+      drawVillageBg(0);
+      drawJaka(340, 340+bob, 40);
+      drawVillager(460, 350, 30, '#7A9E4A');
+      drawVillager(500, 355, 30, '#4A7EC9');
+    }
+    if(scene==='nyi_lantung_baik'){
+      drawVillageBg(0);
+      drawJaka(340, 340+bob, 40);
+      drawNyiLantung(420, 345, 38);
+    }
+    if(scene==='diusir_warga'){
+      drawVillageBg(0);
+      drawJaka(300, 340+bob, 40);
+      drawVillager(400, 350, 28, '#7A9E4A');
+      drawVillager(440, 355, 28, '#4A7EC9');
+      drawVillager(480, 350, 28, '#C9506A');
+    }
+    if(scene==='tantangan_daun'){
+      drawVillageBg(0);
+      drawJaka(400, 335+bob, 42);
+      ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🍃', 400, 385);
+    }
+    if(scene==='warga_gagal'){
+      drawVillageBg(0);
+      drawVillager(340, 350, 30, '#7A9E4A');
+      drawVillager(400, 355, 30, '#4A7EC9');
+      drawVillager(460, 350, 30, '#C9506A');
+      ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🍃', 400, 380);
+    }
+    if(scene==='jaka_cabut_daun'){
+      drawVillageBg(0);
+      drawJaka(400, 335+bob, 42);
+      ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🍃', 400, 385-progress*20);
+    }
+    if(scene==='air_menyembur'){
+      drawVillageBg(0);
+      drawJaka(340, 335+bob, 42);
+      var g = ctx.createRadialGradient(400,380,4,400,380,60);
+      g.addColorStop(0,'rgba(120,200,255,0.8)');
+      g.addColorStop(1,'rgba(120,200,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(400,380,60,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='air_meluas'){
+      drawVillageBg(progress*0.8);
+      var burstGlow = 0.3+0.3*Math.sin(t*8);
+      var g2 = ctx.createRadialGradient(400,380,4,400,380,60+progress*60);
+      g2.addColorStop(0,'rgba(120,200,255,'+burstGlow+')');
+      g2.addColorStop(1,'rgba(120,200,255,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(400,380,60+progress*60,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='nyi_lantung_selamat'){
+      ctx.fillStyle = '#4A7EC9';
+      ctx.fillRect(0,260,W,H-260);
+      drawJaka(360, 300+Math.sin(t*3)*6, 40);
+      drawNyiLantung(430, 300+Math.sin(t*3+1)*6, 38);
+    }
+    if(scene==='rawa_pening_lahir'){
+      ctx.fillStyle = '#4A9AC9';
+      ctx.fillRect(0,260,W,H-260);
+      for(var c=0;c<6;c++){
+        ctx.fillStyle = '#5C9A5C';
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.ellipse(100+c*130, 340+Math.sin(t*2+c)*6, 40, 14, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('rpg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'rpg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('rpg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
