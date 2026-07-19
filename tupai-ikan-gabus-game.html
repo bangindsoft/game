@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tupai dan Ikan Gabus - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #tig-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #tig-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #tig-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #tig-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #tig-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #tig-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #tig-canvas { display: block; width: 100%; height: 100%; }
+  .tig-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .tig-overlay.show { display: flex; }
+  .tig-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .tig-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .tig-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .tig-btn:active { transform: scale(0.97); }
+
+  #tig-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #tig-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #tig-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #tig-actionBtn.hold { background: #8A5A1E; }
+  #tig-actionBtn:active { transform: scale(0.97); }
+  #tig-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #tig-progressWrap.show { display: block; }
+  #tig-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="tig-wrap">
+  <h2>🐿️ Tupai dan Ikan Gabus</h2>
+  <p id="tig-sub">Cerita rakyat Kalimantan Barat tentang persahabatan dan keberanian Tupai menolong sahabatnya.</p>
+
+  <div id="tig-hud"><span id="tig-phase">Tahap 1 / 5</span></div>
+
+  <div id="tig-canvas-holder">
+    <canvas id="tig-canvas"></canvas>
+
+    <div class="tig-overlay show" id="tig-start">
+      <h3>Tupai dan Ikan Gabus</h3>
+      <p>Ikan Gabus jatuh sakit keras, dan hanya hati Ikan Yu yang paling ganas di telaga yang bisa menyembuhkannya. Tupai, sahabatnya, rela mempertaruhkan nyawa demi menolongnya. Ikuti kisahnya sampai akhir.</p>
+      <button class="tig-btn" id="tig-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="tig-overlay" id="tig-win">
+      <h3>Ikan Gabus Sembuh! 🎉</h3>
+      <p>Berkat keberanian dan kegigihan Tupai, Ikan Gabus pun sembuh dari sakitnya. Begitulah persahabatan sejati — rela membantu sahabat, bahkan ketika harus mempertaruhkan nyawa sendiri.</p>
+      <button class="tig-btn" id="tig-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="tig-caption">Bersiap memulai kisah...</div>
+
+  <div id="tig-progressWrap"><div id="tig-progressBar"></div></div>
+  <div id="tig-action-row">
+    <button id="tig-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Tupai dan Ikan Gabus - Game',
+      h2: '🐿️ Tupai dan Ikan Gabus',
+      sub: 'Cerita rakyat Kalimantan Barat tentang persahabatan dan keberanian Tupai menolong sahabatnya.',
+      startTitle: 'Tupai dan Ikan Gabus',
+      startBody: 'Ikan Gabus jatuh sakit keras, dan hanya hati Ikan Yu yang paling ganas di telaga yang bisa menyembuhkannya. Tupai, sahabatnya, rela mempertaruhkan nyawa demi menolongnya. Ikuti kisahnya sampai akhir.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Ikan Gabus Sembuh! 🎉',
+      winBody: 'Berkat keberanian dan kegigihan Tupai, Ikan Gabus pun sembuh dari sakitnya. Begitulah persahabatan sejati — rela membantu sahabat, bahkan ketika harus mempertaruhkan nyawa sendiri.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      hollowBtn: '🥥 LUBANGI KELAPA',
+      floatBtn: '🌊 BERTAHAN TERAPUNG',
+      liverBtn: '💪 AMBIL HATINYA',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Alkisah, bersahabatlah dua ekor binatang, Tupai dan Ikan Gabus, yang tinggal di sebuah telaga di Kalimantan Barat. Mereka telah lama berteman baik dan saling tolong-menolong.',
+        'Suatu hari, Tupai tidak menemukan sahabatnya di tempat biasa mereka bertemu. Ia pun mengunjungi rumah Ikan Gabus, dan mendapati sahabatnya itu tengah sakit keras serta kehilangan nafsu makan.',
+        '"Sakitku hanya bisa diobati dengan memakan hati Ikan Yu," kata Ikan Gabus lemah. Meski tahu Ikan Yu adalah ikan paling ganas di telaga, Tupai bersedia mencarikannya demi sahabatnya.',
+        'Tupai memanjat sebuah pohon kelapa untuk mencari akal. Tahan tombol untuk membantunya melubangi sebutir kelapa hingga airnya keluar semua.',
+        'Tupai pun masuk ke dalam buah kelapa yang telah dilubanginya, lalu menceburkan diri ke telaga.',
+        'Tahan tombol untuk membantu Tupai bertahan terapung-apung di telaga, menunggu Ikan Yu datang mendekat.',
+        'Tidak lama kemudian, Ikan Yu muncul dan langsung menelan bulat-bulat buah kelapa yang ditumpangi Tupai.',
+        'Di dalam perut Ikan Yu, Tupai berlindung aman di dalam kelapa. Tahan tombol untuk membantunya menjulurkan tangan dan mengambil hati Ikan Yu.',
+        'Ikan Yu meronta-ronta kesakitan, hingga akhirnya mati terdampar di pinggir telaga. Tupai pun segera keluar dari buah kelapa dengan membawa hati Ikan Yu.',
+        'Tupai bergegas kembali ke rumah Ikan Gabus. "Ini aku bawakan hati Ikan Yu. Semoga dengan memakannya, engkau akan sembuh," katanya.',
+        'Ikan Gabus segera memakan hati itu. Tak lama kemudian, ia pun sembuh total dari sakitnya, dan sangat berterima kasih pada sahabatnya yang pemberani itu.'
+      ]
+    },
+    en: {
+      title: 'Tupai and Ikan Gabus - Game',
+      h2: '🐿️ Tupai and Ikan Gabus',
+      sub: 'A West Kalimantan folktale about friendship and Tupai\'s courage in helping his friend.',
+      startTitle: 'Tupai and Ikan Gabus',
+      startBody: 'Ikan Gabus falls gravely ill, and only the liver of the fiercest shark in the lake can cure him. Tupai, his friend, is willing to risk his life to help him. Follow the story to the end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Ikan Gabus Recovers! 🎉',
+      winBody: 'Thanks to Tupai\'s courage and determination, Ikan Gabus recovers from his illness. Such is true friendship — willing to help a friend, even at the risk of one\'s own life.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      hollowBtn: '🥥 HOLLOW OUT THE COCONUT',
+      floatBtn: '🌊 STAY AFLOAT',
+      liverBtn: '💪 GRAB THE LIVER',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Once upon a time, two animals were the best of friends: Tupai the squirrel and Ikan Gabus the snakehead fish, living in a lake in West Kalimantan. They had long been close friends, always helping one another.',
+        'One day, Tupai can\'t find his friend at their usual meeting spot. He visits Ikan Gabus\'s home, and finds his friend gravely ill, having lost his appetite entirely.',
+        '"My illness can only be cured by eating the liver of the shark," Ikan Gabus says weakly. Though he knows the shark is the fiercest fish in the lake, Tupai agrees to find it for his friend.',
+        'Tupai climbs a coconut tree to think of a plan. Hold the button to help him hollow out a coconut until all its water drains out.',
+        'Tupai climbs inside the hollowed coconut, then throws himself into the lake.',
+        'Hold the button to help Tupai stay afloat, bobbing on the lake, waiting for the shark to come near.',
+        'Before long, the shark appears and swallows the coconut Tupai is riding in, whole.',
+        'Safe inside the coconut within the shark\'s belly, hold the button to help Tupai reach out and grab the shark\'s liver.',
+        'The shark thrashes about in pain, until it finally dies and washes up on the lakeshore. Tupai quickly climbs out of the coconut, carrying the shark\'s liver.',
+        'Tupai hurries back to Ikan Gabus\'s home. "I brought you the shark\'s liver. I hope eating it will cure you," he says.',
+        'Ikan Gabus eats the liver at once. Before long, he fully recovers from his illness, deeply grateful to his brave friend.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#tig-wrap h2').textContent = TXT.h2;
+  document.getElementById('tig-sub').textContent = TXT.sub;
+  document.querySelector('#tig-start h3').textContent = TXT.startTitle;
+  document.querySelector('#tig-start p').textContent = TXT.startBody;
+  document.getElementById('tig-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#tig-win h3').textContent = TXT.winTitle;
+  document.querySelector('#tig-win p').textContent = TXT.winBody;
+  document.getElementById('tig-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('tig-caption').textContent = TXT.captionInit;
+  document.getElementById('tig-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('tig-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('tig-phase');
+  var captionEl = document.getElementById('tig-caption');
+  var actionBtn = document.getElementById('tig-actionBtn');
+  var progressWrap = document.getElementById('tig-progressWrap');
+  var progressBar = document.getElementById('tig-progressBar');
+  var startOverlay = document.getElementById('tig-start');
+  var winOverlay = document.getElementById('tig-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'sahabat_telaga' },
+    { type:'caption', phase:1, scene:'gabus_sakit' },
+    { type:'caption', phase:2, scene:'janji_bantu' },
+    { type:'hold', phase:2, scene:'lubangi_kelapa' },
+    { type:'caption', phase:3, scene:'masuk_kelapa' },
+    { type:'hold', phase:3, scene:'terapung_telaga' },
+    { type:'caption', phase:4, scene:'ikan_yu_telan' },
+    { type:'hold', phase:4, scene:'ambil_hati' },
+    { type:'caption', phase:5, scene:'ikan_yu_mati' },
+    { type:'caption', phase:5, scene:'bawa_pulang' },
+    { type:'caption', phase:5, scene:'gabus_sembuh' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'lubangi_kelapa') actionBtn.textContent = TXT.hollowBtn;
+      else if(step.scene === 'terapung_telaga') actionBtn.textContent = TXT.floatBtn;
+      else if(step.scene === 'ambil_hati') actionBtn.textContent = TXT.liverBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('tig-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('tig-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawCoconutTree(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8D6E3A';
+    ctx.beginPath();
+    ctx.moveTo(-4*s,20*s);
+    ctx.quadraticCurveTo(-10*s,0,0,-30*s);
+    ctx.quadraticCurveTo(10*s,0,4*s,20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5C8A3C';
+    for(var i=0;i<5;i++){
+      ctx.save();
+      ctx.translate(0,-30*s);
+      ctx.rotate(-0.8+i*0.4);
+      ctx.beginPath();
+      ctx.ellipse(0,-10*s,6*s,16*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawLakeBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,260,W,40);
+    ctx.fillStyle = '#3A6EA5';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<4;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 320+w*20);
+      ctx.quadraticCurveTo(400, 310+w*20+Math.sin(t*2+w)*5, 800, 320+w*20);
+      ctx.stroke();
+    }
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='sahabat_telaga' || scene==='gabus_sakit' || scene==='janji_bantu'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='lubangi_kelapa' || scene==='masuk_kelapa' || scene==='terapung_telaga' || scene==='ikan_yu_telan' || scene==='ambil_hati' || scene==='ikan_yu_mati'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'sahabat_telaga';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='sahabat_telaga' || scene==='gabus_sakit'){
+      drawLakeBg();
+      drawEmoji('🐿️', 300, 320+bob, 44);
+      drawEmoji('🐟', 460, 340, 44);
+    }
+    if(scene==='janji_bantu'){
+      drawLakeBg();
+      drawEmoji('🐿️', 320, 320+bob, 44);
+      drawEmoji('🐟', 460, 340, 40);
+      drawEmoji('🦈', 620, 350, 40);
+    }
+    if(scene==='lubangi_kelapa'){
+      drawLakeBg();
+      drawCoconutTree(300, 340, 60);
+      drawEmoji('🐿️', 300, 300+bob, 34);
+      drawEmoji('🥥', 400, 340, 34+progress*4);
+    }
+    if(scene==='masuk_kelapa' || scene==='terapung_telaga'){
+      drawLakeBg();
+      var floatX = scene==='terapung_telaga' ? 350+Math.sin(t*2)*30 : 400;
+      drawEmoji('🥥', floatX, 340+Math.sin(t*3)*6, 46);
+      ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🐿️', floatX, 332+Math.sin(t*3)*6);
+    }
+    if(scene==='ikan_yu_telan' || scene==='ambil_hati'){
+      drawLakeBg();
+      drawEmoji('🦈', 400, 340+Math.sin(t*2)*8, 70);
+      if(scene==='ambil_hati'){
+        var glow = 0.3+progress*0.4;
+        var g = ctx.createRadialGradient(400,340,4,400,340,50);
+        g.addColorStop(0,'rgba(255,150,150,'+glow+')');
+        g.addColorStop(1,'rgba(255,150,150,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(400,340,50,0,Math.PI*2); ctx.fill();
+      }
+    }
+    if(scene==='ikan_yu_mati'){
+      drawLakeBg();
+      ctx.save();
+      ctx.translate(420,360);
+      ctx.rotate(Math.PI/2);
+      drawEmoji('🦈', 0, 0, 60);
+      ctx.restore();
+      drawEmoji('🐿️', 300, 330, 34);
+    }
+    if(scene==='bawa_pulang'){
+      drawLakeBg();
+      var runX = 200 + progress*0;
+      drawEmoji('🐿️', 400, 330+bob, 40);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('❤️', 440, 310);
+    }
+    if(scene==='gabus_sembuh'){
+      drawHutBg();
+      drawEmoji('🐿️', 340, 330+bob, 42);
+      drawEmoji('🐟', 460, 340+bob*0.7, 42);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('✨', 480, 310);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('tig-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'tig-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('tig-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
