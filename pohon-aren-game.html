@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Pohon Aren - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #pag-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #pag-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #pag-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #pag-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #pag-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #pag-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #pag-canvas { display: block; width: 100%; height: 100%; }
+  .pag-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .pag-overlay.show { display: flex; }
+  .pag-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .pag-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .pag-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .pag-btn:active { transform: scale(0.97); }
+
+  #pag-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #pag-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #pag-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #pag-actionBtn.hold { background: #8A5A1E; }
+  #pag-actionBtn:active { transform: scale(0.97); }
+  #pag-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #pag-progressWrap.show { display: block; }
+  #pag-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="pag-wrap">
+  <h2>🌴 Asal Mula Pohon Aren</h2>
+  <p id="pag-sub">Cerita rakyat Tanah Karo, Sumatera Utara, tentang pengorbanan Beru Sibou demi kakaknya.</p>
+
+  <div id="pag-hud"><span id="pag-phase">Tahap 1 / 5</span></div>
+
+  <div id="pag-canvas-holder">
+    <canvas id="pag-canvas"></canvas>
+
+    <div class="pag-overlay show" id="pag-start">
+      <h3>Asal Mula Pohon Aren</h3>
+      <p>Tare Iluh merantau ke kota demi keluarganya, namun terjerumus dalam kebiasaan buruk hingga terlilit hutang besar. Adiknya, Beru Sibou, rela berkorban apa saja demi menolongnya. Ikuti kisahnya hingga asal mula pohon aren.</p>
+      <button class="pag-btn" id="pag-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="pag-overlay" id="pag-win">
+      <h3>Asal Mula Pohon Aren 🌴</h3>
+      <p>Air mata Beru Sibou menjadi nira untuk minuman tuak, rambutnya menjadi ijuk atap rumah, dan tubuhnya menghasilkan buah kolang-kaling. Pohon aren yang serba guna ini menjadi kenangan abadi akan pengorbanan seorang adik demi kakaknya.</p>
+      <button class="pag-btn" id="pag-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="pag-caption">Bersiap memulai kisah...</div>
+
+  <div id="pag-progressWrap"><div id="pag-progressBar"></div></div>
+  <div id="pag-action-row">
+    <button id="pag-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Asal Mula Pohon Aren - Game',
+      h2: '🌴 Asal Mula Pohon Aren',
+      sub: 'Cerita rakyat Tanah Karo, Sumatera Utara, tentang pengorbanan Beru Sibou demi kakaknya.',
+      startTitle: 'Asal Mula Pohon Aren',
+      startBody: 'Tare Iluh merantau ke kota demi keluarganya, namun terjerumus dalam kebiasaan buruk hingga terlilit hutang besar. Adiknya, Beru Sibou, rela berkorban apa saja demi menolongnya. Ikuti kisahnya hingga asal mula pohon aren.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Mula Pohon Aren 🌴',
+      winBody: 'Air mata Beru Sibou menjadi nira untuk minuman tuak, rambutnya menjadi ijuk atap rumah, dan tubuhnya menghasilkan buah kolang-kaling. Pohon aren yang serba guna ini menjadi kenangan abadi akan pengorbanan seorang adik demi kakaknya.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      travelBtn: '🎒 MERANTAU KE KOTA',
+      climbBtn: '🌳 PANJAT POHON TINGGI',
+      prayBtn: '🙏 KEAJAIBAN TERJADI',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di Tanah Karo, hiduplah keluarga sederhana dengan dua anak: Tare Iluh dan adiknya, Beru Sibou. Meski hidup sederhana, sang ayah bekerja keras siang malam menghidupi keluarganya.',
+        'Karena terlalu keras bekerja, sang ayah jatuh sakit dan meninggal dunia. Tak lama kemudian, sang ibu yang bekerja keras menggantikannya pun ikut jatuh sakit dan meninggal karena tak ada biaya berobat.',
+        'Tare Iluh dan Beru Sibou pun menjadi yatim piatu, diasuh oleh bibi mereka. Tare Iluh berjanji akan bekerja keras kelak agar bisa membalas kebaikan bibinya dan membahagiakan adiknya.',
+        'Setelah dewasa, Tare Iluh memutuskan merantau ke kota untuk mencari nafkah. Tahan tombol untuk membantunya menempuh perjalanan jauh meninggalkan kampung halaman.',
+        'Di kota, Tare Iluh awalnya bekerja keras. Namun karena merasa penghasilannya tak sebanding, ia mulai tergoda mempertaruhkan uangnya dalam permainan judi.',
+        'Sekali menang membuatnya ketagihan. Tare Iluh pun menjadi malas bekerja dan terus berjudi, hingga akhirnya terlilit hutang yang sangat besar dan dihukum pasung karena tak sanggup membayarnya.',
+        'Bertahun-tahun berlalu tanpa kabar sang kakak. Beru Sibou pun mendengar kabar sedih tentang nasib Tare Iluh dari penduduk desa, dan menangis setiap hari memikirkannya.',
+        'Suatu hari, Beru Sibou bertemu seorang kakek tua yang menyarankan agar ia memanjat pohon paling tinggi, lalu bernyanyi memanggil nama kakaknya.',
+        'Tahan tombol untuk membantu Beru Sibou memanjat pohon yang paling tinggi di desanya.',
+        'Meski telah bernyanyi memanggil nama kakaknya berjam-jam, tak ada hasil. Kelelahan, Beru Sibou pun berdoa kepada Yang Maha Kuasa, rela seluruh tubuhnya dimanfaatkan asalkan bisa menolong kakaknya.',
+        'Doanya pun dikabulkan. Angin bertiup kencang, hujan deras disertai kilat menyambar-nyambar. Tahan tombol untuk menyaksikan keajaiban itu terjadi.',
+        'Beru Sibou pun berubah menjadi Pohon Aren. Air matanya menjadi nira untuk minuman tuak, rambutnya menjadi ijuk atap rumah, dan tubuhnya menghasilkan buah kolang-kaling.'
+      ]
+    },
+    en: {
+      title: 'The Origin of the Sugar Palm Tree - Game',
+      h2: '🌴 The Origin of the Sugar Palm Tree',
+      sub: 'A folktale from Tanah Karo, North Sumatra, about Beru Sibou\'s sacrifice for her brother.',
+      startTitle: 'The Origin of the Sugar Palm Tree',
+      startBody: 'Tare Iluh leaves for the city to support his family, but falls into a bad habit that leaves him deep in debt. His sister, Beru Sibou, is willing to sacrifice anything to help him. Follow the story to the origin of the sugar palm tree.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of the Sugar Palm Tree 🌴',
+      winBody: 'Beru Sibou\'s tears become the sap used to make palm wine, her hair becomes fiber for roof thatching, and her body yields sugar-palm fruit. This versatile tree stands as an eternal memory of a sister\'s sacrifice for her brother.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      travelBtn: '🎒 TRAVEL TO THE CITY',
+      climbBtn: '🌳 CLIMB THE TALL TREE',
+      prayBtn: '🙏 THE MIRACLE HAPPENS',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'In Tanah Karo lived a simple family with two children: Tare Iluh and his younger sister, Beru Sibou. Though they lived humbly, their father worked tirelessly day and night to support the family.',
+        'From working himself too hard, the father falls ill and passes away. Soon after, the mother, who takes over supporting the family, also falls ill and dies, having no money for treatment.',
+        'Tare Iluh and Beru Sibou become orphans, raised by their aunt. Tare Iluh vows that once grown, he will work hard to repay his aunt\'s kindness and bring happiness to his only sister.',
+        'Once grown, Tare Iluh decides to leave for the city to earn a living. Hold the button to help him make the long journey away from his hometown.',
+        'In the city, Tare Iluh works hard at first. But feeling his earnings don\'t match his effort, he starts to be tempted into gambling with his money.',
+        'Winning once gets him hooked. Tare Iluh grows lazy and keeps gambling, until he ends up deep in debt and is punished with stocks for being unable to pay it off.',
+        'Years pass with no word from her brother. Beru Sibou hears sad news of Tare Iluh\'s fate from the villagers, and weeps over it every day.',
+        'One day, Beru Sibou meets an old man who suggests she climb the tallest tree and sing out, calling her brother\'s name.',
+        'Hold the button to help Beru Sibou climb the tallest tree in her village.',
+        'Even after singing her brother\'s name for hours, nothing happens. Exhausted, Beru Sibou prays to God Almighty, willing to give her entire body if it means saving her brother.',
+        'Her prayer is answered. The wind howls fiercely, rain pours down hard, and lightning strikes the earth. Hold the button to witness the miracle unfold.',
+        'Beru Sibou transforms into a sugar palm tree. Her tears become the sap used for palm wine, her hair becomes roofing fiber, and her body bears sugar-palm fruit.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#pag-wrap h2').textContent = TXT.h2;
+  document.getElementById('pag-sub').textContent = TXT.sub;
+  document.querySelector('#pag-start h3').textContent = TXT.startTitle;
+  document.querySelector('#pag-start p').textContent = TXT.startBody;
+  document.getElementById('pag-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#pag-win h3').textContent = TXT.winTitle;
+  document.querySelector('#pag-win p').textContent = TXT.winBody;
+  document.getElementById('pag-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('pag-caption').textContent = TXT.captionInit;
+  document.getElementById('pag-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('pag-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('pag-phase');
+  var captionEl = document.getElementById('pag-caption');
+  var actionBtn = document.getElementById('pag-actionBtn');
+  var progressWrap = document.getElementById('pag-progressWrap');
+  var progressBar = document.getElementById('pag-progressBar');
+  var startOverlay = document.getElementById('pag-start');
+  var winOverlay = document.getElementById('pag-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'keluarga_miskin' },
+    { type:'caption', phase:1, scene:'orang_tua_wafat' },
+    { type:'caption', phase:2, scene:'diasuh_bibi' },
+    { type:'hold', phase:2, scene:'merantau_kota' },
+    { type:'caption', phase:3, scene:'tergoda_judi' },
+    { type:'caption', phase:3, scene:'terlilit_hutang' },
+    { type:'caption', phase:4, scene:'beru_sibou_sedih' },
+    { type:'caption', phase:4, scene:'bertemu_kakek' },
+    { type:'hold', phase:4, scene:'panjat_pohon' },
+    { type:'caption', phase:5, scene:'berdoa' },
+    { type:'hold', phase:5, scene:'badai_transformasi' },
+    { type:'caption', phase:5, scene:'jadi_pohon_aren' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'merantau_kota') actionBtn.textContent = TXT.travelBtn;
+      else if(step.scene === 'panjat_pohon') actionBtn.textContent = TXT.climbBtn;
+      else if(step.scene === 'badai_transformasi') actionBtn.textContent = TXT.prayBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('pag-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('pag-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawTareIluh(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,4*s); ctx.lineTo(9*s,4*s); ctx.lineTo(7*s,18*s); ctx.lineTo(-7*s,18*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3D6B4A';
+    ctx.beginPath(); ctx.ellipse(0,-7*s,9*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBeruSibou(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9799A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAunt(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A2A';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawOldMan(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTallTree(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C8A3C';
+    ctx.fillRect(-3*s,-50*s,6*s,50*s);
+    ctx.fillStyle = '#3C6B40';
+    ctx.beginPath(); ctx.arc(0,-55*s,22*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawArenTree(px, py, size, glow){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    if(glow>0){
+      var g = ctx.createRadialGradient(0,-30*s,4,0,-30*s,50*s);
+      g.addColorStop(0,'rgba(255,230,150,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(255,230,150,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-30*s,50*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#8D6E3A';
+    ctx.fillRect(-5*s,-40*s,10*s,42*s);
+    ctx.fillStyle = '#3C6B40';
+    for(var i=0;i<6;i++){
+      ctx.save();
+      ctx.translate(0,-42*s);
+      ctx.rotate(-1+i*0.4);
+      ctx.beginPath();
+      ctx.ellipse(0,-14*s,7*s,20*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(-8*s,-10*s,5*s,8*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawCityBg(){
+    ctx.fillStyle = '#B7C9D6';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<4;i++){
+      ctx.fillStyle = '#8A8FA0';
+      ctx.fillRect(80+i*180, 180, 90, 130);
+    }
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='keluarga_miskin' || scene==='diasuh_bibi'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='orang_tua_wafat'){
+      sky.addColorStop(0,'#9AA6A0'); sky.addColorStop(1,'#C9D4CE');
+    } else if(scene==='merantau_kota' || scene==='tergoda_judi' || scene==='terlilit_hutang'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else if(scene==='beru_sibou_sedih' || scene==='bertemu_kakek' || scene==='panjat_pohon'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='berdoa' || scene==='badai_transformasi'){
+      sky.addColorStop(0,'#2E3A4A'); sky.addColorStop(1,'#4A5A68');
+    } else if(scene==='jadi_pohon_aren'){
+      sky.addColorStop(0,'#F6A94A'); sky.addColorStop(1,'#FDE7DA');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawLightning(){
+    if(Math.sin(t*7) > 0.9){
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'keluarga_miskin';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='keluarga_miskin'){
+      drawHutBg();
+      drawTareIluh(340, 330+bob, 36);
+      drawBeruSibou(400, 335+bob, 32);
+    }
+    if(scene==='orang_tua_wafat'){
+      drawHutBg();
+      drawTareIluh(360, 335+bob, 36);
+      drawBeruSibou(420, 340+bob, 32);
+    }
+    if(scene==='diasuh_bibi'){
+      drawHutBg();
+      drawAunt(340, 330+bob, 40);
+      drawTareIluh(420, 340+bob, 36);
+      drawBeruSibou(460, 345+bob, 30);
+    }
+    if(scene==='merantau_kota'){
+      drawForestBg();
+      drawTareIluh(200+progress*400, 330+bob, 42);
+    }
+    if(scene==='tergoda_judi' || scene==='terlilit_hutang'){
+      drawCityBg();
+      drawTareIluh(400, 335+bob, 44);
+    }
+    if(scene==='beru_sibou_sedih'){
+      drawHutBg();
+      drawBeruSibou(400, 335+bob, 40);
+    }
+    if(scene==='bertemu_kakek'){
+      drawForestBg();
+      drawBeruSibou(340, 335+bob, 38);
+      drawOldMan(460, 335, 40);
+    }
+    if(scene==='panjat_pohon'){
+      drawForestBg();
+      drawTallTree(400, 340, 60);
+      drawBeruSibou(400, 320-progress*100+bob, 30);
+    }
+    if(scene==='berdoa'){
+      drawForestBg();
+      drawTallTree(400, 340, 60);
+      drawBeruSibou(400, 220, 30);
+    }
+    if(scene==='badai_transformasi'){
+      drawForestBg();
+      drawLightning();
+      drawArenTree(400, 340, 60, progress);
+      if(progress < 0.7) drawBeruSibou(400, 320-progress*40, 30);
+    }
+    if(scene==='jadi_pohon_aren'){
+      drawForestBg();
+      drawArenTree(400, 340, 70, 0.5);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('pag-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'pag-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('pag-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>

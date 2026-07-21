@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Pulau Kemaro - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #pkg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #3A2420;
+    background: linear-gradient(180deg, #FCE4D6 0%, #F7F3E8 100%);
+    border: 3px solid #B5302A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #pkg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A241E;
+  }
+  #pkg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #pkg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #pkg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #pkg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5302A;
+    background: #BEE3F8;
+  }
+  #pkg-canvas { display: block; width: 100%; height: 100%; }
+  .pkg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,20,18,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .pkg-overlay.show { display: flex; }
+  .pkg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .pkg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .pkg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .pkg-btn:active { transform: scale(0.97); }
+
+  #pkg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5302A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #pkg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #pkg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5302A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #pkg-actionBtn.hold { background: #3D7A4C; }
+  #pkg-actionBtn:active { transform: scale(0.97); }
+  #pkg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #pkg-progressWrap.show { display: block; }
+  #pkg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="pkg-wrap">
+  <h2>🏮 Legenda Pulau Kemaro</h2>
+  <p id="pkg-sub">Kisah cinta Putri Siti Fatimah dan saudagar Tam Bun An, cerita rakyat Sumatera Selatan.</p>
+
+  <div id="pkg-hud"><span id="pkg-phase">Tahap 1 / 5</span></div>
+
+  <div id="pkg-canvas-holder">
+    <canvas id="pkg-canvas"></canvas>
+
+    <div class="pkg-overlay show" id="pkg-start">
+      <h3>Legenda Pulau Kemaro</h3>
+      <p>Tam Bun An, saudagar dari Cina, jatuh cinta pada Putri Siti Fatimah dari Kerajaan Sriwijaya. Namun sebuah kesalahpahaman tentang guci-guci emas membawa mereka pada akhir yang mengharukan. Ikuti kisahnya hingga terbentuknya Pulau Kemaro.</p>
+      <button class="pkg-btn" id="pkg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="pkg-overlay" id="pkg-win">
+      <h3>Pulau Kemaro Terbentuk 🏮</h3>
+      <p>Bertahun-tahun kemudian, endapan delta muncul di tempat keduanya menceburkan diri, menjadi Pulau Kemaro di Sungai Musi, Palembang. Penduduk sekitar membangun masjid dan kelenteng berdampingan di sana, menghormati kisah cinta Siti Fatimah dan Tam Bun An.</p>
+      <button class="pkg-btn" id="pkg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="pkg-caption">Bersiap memulai kisah...</div>
+
+  <div id="pkg-progressWrap"><div id="pkg-progressBar"></div></div>
+  <div id="pkg-action-row">
+    <button id="pkg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Pulau Kemaro - Game',
+      h2: '🏮 Legenda Pulau Kemaro',
+      sub: 'Kisah cinta Putri Siti Fatimah dan saudagar Tam Bun An, cerita rakyat Sumatera Selatan.',
+      startTitle: 'Legenda Pulau Kemaro',
+      startBody: 'Tam Bun An, saudagar dari Cina, jatuh cinta pada Putri Siti Fatimah dari Kerajaan Sriwijaya. Namun sebuah kesalahpahaman tentang guci-guci emas membawa mereka pada akhir yang mengharukan. Ikuti kisahnya hingga terbentuknya Pulau Kemaro.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Pulau Kemaro Terbentuk 🏮',
+      winBody: 'Bertahun-tahun kemudian, endapan delta muncul di tempat keduanya menceburkan diri, menjadi Pulau Kemaro di Sungai Musi, Palembang. Penduduk sekitar membangun masjid dan kelenteng berdampingan di sana, menghormati kisah cinta Siti Fatimah dan Tam Bun An.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      doveBtn: '🕊️ KIRIM MERPATI',
+      throwBtn: '🏺 LEMPAR GUCI',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Konon pada zaman Kerajaan Sriwijaya, memerintah seorang raja bijaksana yang memiliki putri cantik bernama Siti Fatimah.',
+        'Suatu ketika, rombongan saudagar dari Cina dipimpin Tam Bun An datang ke Kerajaan Sriwijaya membawa arak-arakan musik dan barongsai. Siti Fatimah pun keluar melihat kehebohan itu.',
+        'Tam Bun An dan Siti Fatimah pun berkenalan, sering bertemu, hingga tumbuh benih cinta di antara mereka berdua.',
+        'Tam Bun An melamar Siti Fatimah di hadapan sang raja. Meski sempat berkeberatan karena perbedaan adat, raja akhirnya menyetujui dengan satu syarat: sembilan guci besar berisi emas murni.',
+        'Tahan tombol untuk membantu Tam Bun An mengirimkan surat lewat burung merpati kepada kedua orang tuanya di daratan Cina, meminta dikirimkan sembilan guci emas.',
+        'Beberapa bulan kemudian, kapal pengangkut sembilan guci itu tiba di dermaga. Karena khawatir dibajak perompak di tengah laut, orang tua Tam Bun An menaruh sayuran busuk di bagian atas setiap guci untuk mengelabui mereka.',
+        'Betapa terkejutnya Tam Bun An mendapati isi guci-guci itu hanyalah sayuran busuk. Karena marah, tahan tombol untuk membantu melemparkan guci-guci itu satu per satu ke Sungai Musi.',
+        'Ketika hendak melempar guci kesembilan, guci itu jatuh ke lantai dan pecah, mengeluarkan batangan emas murni! Tam Bun An pun sangat menyesal telah membuang kedelapan guci sebelumnya.',
+        'Meski raja mengatakan syaratnya sudah terpenuhi, Tam Bun An bersikeras ingin mengambil kembali guci-guci emas yang telah dibuangnya. Ia pun melompat ke Sungai Musi, meski telah dicegah semua orang.',
+        'Setelah lama menunggu tanpa kabar, Siti Fatimah panik dan ikut menceburkan diri ke sungai untuk mencari kekasihnya. Warga dan Raja Sriwijaya pun mencari keduanya berjam-jam, namun tak kunjung ditemukan.'
+      ]
+    },
+    en: {
+      title: 'The Legend of Pulau Kemaro - Game',
+      h2: '🏮 The Legend of Pulau Kemaro',
+      sub: 'The love story of Princess Siti Fatimah and merchant Tam Bun An, a South Sumatra folktale.',
+      startTitle: 'The Legend of Pulau Kemaro',
+      startBody: 'Tam Bun An, a merchant from China, falls in love with Princess Siti Fatimah of the Srivijaya Kingdom. But a misunderstanding over jars of gold leads them to a bittersweet end. Follow the story to the creation of Pulau Kemaro.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Pulau Kemaro Is Formed 🏮',
+      winBody: 'Years later, a delta emerges where the two threw themselves into the river, becoming Pulau Kemaro on the Musi River in Palembang. Locals built a mosque and a Chinese temple side by side there, honoring the love story of Siti Fatimah and Tam Bun An.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      doveBtn: '🕊️ SEND THE DOVE',
+      throwBtn: '🏺 THROW THE JARS',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Legend has it that during the era of the Srivijaya Kingdom, a wise king ruled, blessed with a beautiful daughter named Siti Fatimah.',
+        'One day, a group of merchants from China, led by Tam Bun An, arrives at the Srivijaya Kingdom with a parade of music and a lion dance. Siti Fatimah comes out to see the commotion.',
+        'Tam Bun An and Siti Fatimah get acquainted, meeting often, until love blossoms between them.',
+        'Tam Bun An proposes to Siti Fatimah before the king. Though hesitant over their differing customs, the king finally agrees, on one condition: nine large jars filled with pure gold.',
+        'Hold the button to help Tam Bun An send a letter by dove to his parents on the mainland of China, asking them to send nine jars of gold.',
+        'A few months later, the ship carrying the nine jars arrives at the dock. Worried about pirates at sea, Tam Bun An\'s parents had placed rotten vegetables atop each jar to disguise them.',
+        'Tam Bun An is shocked to find the jars contain nothing but rotten vegetables. Furious, hold the button to help him throw the jars, one by one, into the Musi River.',
+        'Just as he\'s about to throw the ninth jar, it falls to the floor and shatters, spilling out pure gold bars! Tam Bun An deeply regrets throwing away the previous eight jars.',
+        'Even though the king declares his condition met, Tam Bun An insists on retrieving the gold jars he\'d thrown away. He leaps into the Musi River, despite everyone trying to stop him.',
+        'After waiting long with no sign of him, Siti Fatimah panics and throws herself into the river too, searching for her love. The villagers and King of Srivijaya search for hours, but neither of them is ever found.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#pkg-wrap h2').textContent = TXT.h2;
+  document.getElementById('pkg-sub').textContent = TXT.sub;
+  document.querySelector('#pkg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#pkg-start p').textContent = TXT.startBody;
+  document.getElementById('pkg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#pkg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#pkg-win p').textContent = TXT.winBody;
+  document.getElementById('pkg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('pkg-caption').textContent = TXT.captionInit;
+  document.getElementById('pkg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('pkg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('pkg-phase');
+  var captionEl = document.getElementById('pkg-caption');
+  var actionBtn = document.getElementById('pkg-actionBtn');
+  var progressWrap = document.getElementById('pkg-progressWrap');
+  var progressBar = document.getElementById('pkg-progressBar');
+  var startOverlay = document.getElementById('pkg-start');
+  var winOverlay = document.getElementById('pkg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'kerajaan_sriwijaya' },
+    { type:'caption', phase:1, scene:'rombongan_tam_bun_an' },
+    { type:'caption', phase:2, scene:'jatuh_cinta' },
+    { type:'caption', phase:2, scene:'melamar_syarat' },
+    { type:'hold', phase:3, scene:'kirim_merpati' },
+    { type:'caption', phase:3, scene:'guci_tiba' },
+    { type:'hold', phase:4, scene:'buang_guci' },
+    { type:'caption', phase:4, scene:'guci_pecah_emas' },
+    { type:'caption', phase:5, scene:'melompat_sungai' },
+    { type:'caption', phase:5, scene:'siti_fatimah_menyusul' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'kirim_merpati') actionBtn.textContent = TXT.doveBtn;
+      else if(step.scene === 'buang_guci') actionBtn.textContent = TXT.throwBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('pkg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('pkg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawKing(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A5A1E';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSitiFatimah(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#4A8A6E';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,8*s,6*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTamBunAn(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#B5302A';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-8*s); ctx.quadraticCurveTo(-15*s,4*s,-11*s,20*s);
+    ctx.lineTo(11*s,20*s); ctx.quadraticCurveTo(15*s,4*s,11*s,-8*s);
+    ctx.quadraticCurveTo(0,-13*s,-11*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.fillRect(-11*s,2*s,22*s,3*s);
+    ctx.fillStyle = '#E8C4A0';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1E1A1A';
+    ctx.beginPath(); ctx.ellipse(0,-19*s,7*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBarongsai(px, py, size, bob){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py+bob);
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.ellipse(0,4*s,20*s,14*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#B5302A';
+    ctx.beginPath(); ctx.ellipse(0,-6*s,16*s,12*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFF7E0';
+    ctx.beginPath(); ctx.arc(-6*s,-8*s,3*s,0,Math.PI*2); ctx.arc(6*s,-8*s,3*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.arc(-6*s,-8*s,1.4*s,0,Math.PI*2); ctx.arc(6*s,-8*s,1.4*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.moveTo(-4*s,-16*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-16*s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawJar(px, py, size, spoiled, broken, gold){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(broken){
+      ctx.fillStyle = '#D9AF3C';
+      ctx.beginPath(); ctx.arc(-4*s,2*s,3*s,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4*s,4*s,3*s,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0,-2*s,3*s,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#8A6A4A';
+      ctx.beginPath();
+      ctx.ellipse(0,4,12*s,10*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#6E5236';
+      ctx.beginPath(); ctx.ellipse(0,-8*s,7*s,3*s,0,0,Math.PI*2); ctx.fill();
+      if(spoiled){
+        ctx.fillStyle = '#5C7A3C';
+        ctx.beginPath(); ctx.ellipse(0,-9*s,6*s,3*s,0,0,Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawDockBg(){
+    ctx.fillStyle = '#8D6E63';
+    ctx.fillRect(0,300,W,60);
+    ctx.fillStyle = '#3A6EA5';
+    ctx.fillRect(0,360,W,H-360);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<3;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 380+w*15);
+      ctx.quadraticCurveTo(400, 375+w*15+Math.sin(t*2+w)*4, 800, 380+w*15);
+      ctx.stroke();
+    }
+  }
+
+  function drawIslandEnding(){
+    ctx.fillStyle = '#4A9AC9';
+    ctx.fillRect(0,260,W,H-260);
+    ctx.fillStyle = '#8CA86B';
+    ctx.beginPath();
+    ctx.ellipse(400,340,220,60,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#F4EFE2';
+    ctx.beginPath(); ctx.arc(320,300,26,Math.PI,0); ctx.fill();
+    ctx.fillRect(300,300,40,20);
+    ctx.fillStyle = '#B5302A';
+    ctx.beginPath();
+    ctx.moveTo(460,320); ctx.lineTo(480,290); ctx.lineTo(500,320);
+    ctx.closePath(); ctx.fill();
+    ctx.fillRect(465,320,30,20);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='melompat_sungai' || scene==='siti_fatimah_menyusul'){
+      sky.addColorStop(0,'#5A6E8A'); sky.addColorStop(1,'#8AA0B7');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'kerajaan_sriwijaya';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='kerajaan_sriwijaya'){
+      drawPalaceBg();
+      drawKing(340, 320+bob, 46);
+      drawSitiFatimah(460, 330+bob, 44);
+    }
+    if(scene==='rombongan_tam_bun_an'){
+      drawPalaceBg();
+      drawBarongsai(340, 340, 60, Math.sin(t*4)*8);
+      drawTamBunAn(500, 330+bob, 42);
+      drawSitiFatimah(600, 330+bob*0.8, 40);
+    }
+    if(scene==='jatuh_cinta'){
+      drawPalaceBg();
+      drawTamBunAn(340, 330+bob, 42);
+      drawSitiFatimah(460, 330+bob, 42);
+    }
+    if(scene==='melamar_syarat'){
+      drawPalaceBg();
+      drawKing(300, 310+bob, 44);
+      drawTamBunAn(460, 330+bob, 42);
+    }
+    if(scene==='kirim_merpati'){
+      drawPalaceBg();
+      drawTamBunAn(340, 335+bob, 42);
+      drawEmoji('🕊️', 460+progress*180, 260-progress*40, 34);
+    }
+    if(scene==='guci_tiba'){
+      drawDockBg();
+      drawTamBunAn(300, 320+bob, 42);
+      for(var i=0;i<3;i++){
+        drawJar(420+i*60, 340, 40, true, false, false);
+      }
+    }
+    if(scene==='buang_guci'){
+      drawDockBg();
+      drawTamBunAn(300, 320+bob, 42);
+      var jarsLeft = Math.max(0, 3 - Math.floor(progress*4));
+      for(var j=0;j<jarsLeft;j++){
+        drawJar(420+j*60, 340, 40, true, false, false);
+      }
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🌊', 500+progress*100, 300);
+    }
+    if(scene==='guci_pecah_emas'){
+      drawDockBg();
+      drawTamBunAn(320, 320+bob, 44);
+      drawJar(460, 340, 44, false, true, true);
+      ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('✨', 480, 310);
+    }
+    if(scene==='melompat_sungai'){
+      drawDockBg();
+      drawKing(280, 320+bob, 40);
+      drawSitiFatimah(340, 325+bob, 38);
+      drawEmoji('🌊', 500+Math.sin(t*4)*10, 350, 40);
+    }
+    if(scene==='siti_fatimah_menyusul'){
+      drawDockBg();
+      drawKing(280, 320+bob, 40);
+      drawEmoji('🌊', 420+Math.sin(t*4)*10, 350, 40);
+      drawEmoji('🌊', 500+Math.sin(t*4+1)*10, 355, 36);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('pkg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'pkg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('pkg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>

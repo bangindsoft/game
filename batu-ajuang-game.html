@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batu Ajuang Batu Peti - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #bag-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #1F3A40;
+    background: linear-gradient(180deg, #E1F0F0 0%, #F7F3E8 100%);
+    border: 3px solid #2E6E7A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #bag-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #1E4E58;
+  }
+  #bag-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #bag-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #bag-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #bag-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #2E6E7A;
+    background: #BEE3F8;
+  }
+  #bag-canvas { display: block; width: 100%; height: 100%; }
+  .bag-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,32,36,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .bag-overlay.show { display: flex; }
+  .bag-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .bag-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .bag-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .bag-btn:active { transform: scale(0.97); }
+
+  #bag-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #2E6E7A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #bag-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #bag-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #2E6E7A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #bag-actionBtn.hold { background: #3D7A4C; }
+  #bag-actionBtn:active { transform: scale(0.97); }
+  #bag-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #bag-progressWrap.show { display: block; }
+  #bag-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="bag-wrap">
+  <h2>🪨 Batu Ajuang Batu Peti</h2>
+  <p id="bag-sub">Cerita rakyat Sumatera Barat tentang akibat sebuah sumpah dusta.</p>
+
+  <div id="bag-hud"><span id="bag-phase">Tahap 1 / 5</span></div>
+
+  <div id="bag-canvas-holder">
+    <canvas id="bag-canvas"></canvas>
+
+    <div class="bag-overlay show" id="bag-start">
+      <h3>Batu Ajuang Batu Peti</h3>
+      <p>Tuan Hendrik, seorang saudagar, berpura-pura menjadi putra mahkota untuk melamar Putri Lenggogeni, bahkan bersumpah dusta. Ikuti kisahnya hingga asal usul Batu Ajuang Batu Peti.</p>
+      <button class="bag-btn" id="bag-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="bag-overlay" id="bag-win">
+      <h3>Kebohongan Dibalas Kehancuran 🪨</h3>
+      <p>Kapal Tuan Hendrik beserta seluruh isinya berubah menjadi batu, sesuai sumpah dustanya sendiri. Hingga kini, Batu Ajuang Batu Peti masih dapat ditemukan di Bukit Koto Nan Tinggi, Sumatera Barat, sebagai pengingat akibat dari kebohongan.</p>
+      <button class="bag-btn" id="bag-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="bag-caption">Bersiap memulai kisah...</div>
+
+  <div id="bag-progressWrap"><div id="bag-progressBar"></div></div>
+  <div id="bag-action-row">
+    <button id="bag-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Batu Ajuang Batu Peti - Game',
+      h2: '🪨 Batu Ajuang Batu Peti',
+      sub: 'Cerita rakyat Sumatera Barat tentang akibat sebuah sumpah dusta.',
+      startTitle: 'Batu Ajuang Batu Peti',
+      startBody: 'Tuan Hendrik, seorang saudagar, berpura-pura menjadi putra mahkota untuk melamar Putri Lenggogeni, bahkan bersumpah dusta. Ikuti kisahnya hingga asal usul Batu Ajuang Batu Peti.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Kebohongan Dibalas Kehancuran 🪨',
+      winBody: 'Kapal Tuan Hendrik beserta seluruh isinya berubah menjadi batu, sesuai sumpah dustanya sendiri. Hingga kini, Batu Ajuang Batu Peti masih dapat ditemukan di Bukit Koto Nan Tinggi, Sumatera Barat, sebagai pengingat akibat dari kebohongan.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      sailBtn: '⛵ BERLAYAR MELAMAR',
+      stormBtn: '⛈️ OMBAK MENGHANTAM',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di Kecamatan Pauh, Kota Padang, Sumatera Barat, terdapat kerajaan kecil bernama Bukit Perasapan, dipimpin oleh Raja Tuo. Sang raja memiliki putri semata wayang yang sangat cantik dan cerdas, bernama Putri Lenggogeni.',
+        'Putri Lenggogeni sering memberi masukan bijak pada ayahnya. Banyak pemuda jatuh cinta padanya, namun tak berani melamar karena tahu sang putri hanya mau menerima lamaran dari seorang putra mahkota.',
+        'Tuan Hendrik, seorang saudagar kaya dari Portugis yang tengah berdagang di daerah itu, mendengar kabar kecantikan sang putri dari dua anak buahnya, Rajo Anggang dan Magek Labu.',
+        'Karena sang putri hanya mau menikah dengan putra mahkota, kedua anak buahnya menyarankan agar Tuan Hendrik berpura-pura menjadi putra mahkota Kerajaan Portugis.',
+        'Tahan tombol untuk membantu Tuan Hendrik berlayar menuju Kerajaan Perasapan untuk melamar sang putri.',
+        'Tuan Hendrik melamar sambil mengaku sebagai putra mahkota. Ia bahkan bersumpah: jika ia berbohong, kapalnya akan karam dan berubah menjadi batu.',
+        'Raja Tuo pun memberinya waktu tiga bulan purnama untuk membuktikan kebenaran sumpahnya.',
+        'Tiga bulan purnama berlalu tanpa kejadian apa pun. Tuan Hendrik merasa yakin akan berhasil, dan bergegas kembali untuk meminta jawaban atas lamarannya.',
+        'Di tengah perjalanan, tiba-tiba langit berubah gelap. Angin bertiup sangat kencang, disertai petir menyambar-nyambar. Tahan tombol untuk menyaksikan ombak besar menghantam kapal Tuan Hendrik.',
+        'Kapal Tuan Hendrik pun karam di Bukit Koto Nan Tinggi. Tak lama kemudian, kapal beserta seluruh isinya berubah menjadi batu — kebohongan dibalas kehancuran.'
+      ]
+    },
+    en: {
+      title: 'Batu Ajuang Batu Peti - Game',
+      h2: '🪨 Batu Ajuang Batu Peti',
+      sub: 'A West Sumatra folktale about the consequence of a false oath.',
+      startTitle: 'Batu Ajuang Batu Peti',
+      startBody: 'Tuan Hendrik, a merchant, pretends to be a crown prince to court Princess Lenggogeni, even swearing a false oath. Follow the story to the origin of Batu Ajuang Batu Peti.',
+      startBtn: 'Start the Tale',
+      winTitle: 'A Lie Repaid with Ruin 🪨',
+      winBody: 'Tuan Hendrik\'s ship and everything aboard it turn to stone, just as his false oath foretold. To this day, Batu Ajuang Batu Peti can still be found on Koto Nan Tinggi Hill, West Sumatra, a reminder of the price of lying.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      sailBtn: '⛵ SAIL TO PROPOSE',
+      stormBtn: '⛈️ THE WAVES STRIKE',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'In the Pauh district of Padang City, West Sumatra, stood a small kingdom called Bukit Perasapan, ruled by King Tuo. The king had an only daughter, stunningly beautiful and clever, named Princess Lenggogeni.',
+        'Princess Lenggogeni often gave her father wise counsel. Many young men fall in love with her, but none dare propose, knowing she will only accept a proposal from a crown prince.',
+        'Tuan Hendrik, a wealthy merchant from Portugal trading in the area, hears of the princess\'s beauty from two of his men, Rajo Anggang and Magek Labu.',
+        'Since the princess will only marry a crown prince, his men suggest Tuan Hendrik pretend to be the crown prince of the Kingdom of Portugal.',
+        'Hold the button to help Tuan Hendrik sail to the Perasapan Kingdom to propose to the princess.',
+        'Tuan Hendrik proposes, claiming to be a crown prince. He even swears an oath: if he\'s lying, may his ship sink and turn to stone.',
+        'King Tuo gives him three full moons to prove the truth of his oath.',
+        'Three full moons pass with nothing happening. Confident of success, Tuan Hendrik hurries back to ask for an answer to his proposal.',
+        'Midway through the journey, the sky suddenly darkens. Fierce winds blow, lightning flashes again and again. Hold the button to witness massive waves crash into Tuan Hendrik\'s ship.',
+        'Tuan Hendrik\'s ship sinks at Koto Nan Tinggi Hill. Soon after, the ship and everything aboard it turn to stone — a lie repaid with ruin.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#bag-wrap h2').textContent = TXT.h2;
+  document.getElementById('bag-sub').textContent = TXT.sub;
+  document.querySelector('#bag-start h3').textContent = TXT.startTitle;
+  document.querySelector('#bag-start p').textContent = TXT.startBody;
+  document.getElementById('bag-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#bag-win h3').textContent = TXT.winTitle;
+  document.querySelector('#bag-win p').textContent = TXT.winBody;
+  document.getElementById('bag-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('bag-caption').textContent = TXT.captionInit;
+  document.getElementById('bag-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('bag-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('bag-phase');
+  var captionEl = document.getElementById('bag-caption');
+  var actionBtn = document.getElementById('bag-actionBtn');
+  var progressWrap = document.getElementById('bag-progressWrap');
+  var progressBar = document.getElementById('bag-progressBar');
+  var startOverlay = document.getElementById('bag-start');
+  var winOverlay = document.getElementById('bag-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'kerajaan_intro' },
+    { type:'caption', phase:1, scene:'putri_bijak' },
+    { type:'caption', phase:2, scene:'saudagar_dengar_kabar' },
+    { type:'caption', phase:2, scene:'rencana_bohong' },
+    { type:'hold', phase:3, scene:'berlayar_lamar' },
+    { type:'caption', phase:3, scene:'lamaran_sumpah' },
+    { type:'caption', phase:3, scene:'raja_beri_waktu' },
+    { type:'caption', phase:4, scene:'tiga_bulan_berlalu' },
+    { type:'hold', phase:5, scene:'badai_menghantam' },
+    { type:'caption', phase:5, scene:'kapal_jadi_batu' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'berlayar_lamar') actionBtn.textContent = TXT.sailBtn;
+      else if(step.scene === 'badai_menghantam') actionBtn.textContent = TXT.stormBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('bag-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('bag-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawKing(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A5A1E';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPrincess(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9799A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath(); ctx.arc(0,-24*s,3.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHendrik(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E2A3A';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-6*s); ctx.quadraticCurveTo(-15*s,6*s,-11*s,20*s);
+    ctx.lineTo(11*s,20*s); ctx.quadraticCurveTo(15*s,6*s,11*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-11*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8C4A0';
+    ctx.beginPath(); ctx.arc(0,-13*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1E1A2A';
+    ctx.beginPath(); ctx.ellipse(0,-20*s,9*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.quadraticCurveTo(0,-30*s,9*s,-22*s); ctx.quadraticCurveTo(0,-26*s,-9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSailor(px, py, size){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C6E7A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,8*s,8*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8C4A0';
+    ctx.beginPath(); ctx.arc(0,-5*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawShip(px, py, size, stoneAmt){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    var hullColor = stoneAmt > 0 ? '#8A8A8A' : '#6b4a2a';
+    var sailColor = stoneAmt > 0 ? '#9F9F9F' : '#E8D9B5';
+    ctx.fillStyle = hullColor;
+    ctx.beginPath();
+    ctx.moveTo(-32*s, 0);
+    ctx.quadraticCurveTo(0, 16*s, 32*s, 0);
+    ctx.quadraticCurveTo(0, 6*s, -32*s, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = hullColor;
+    ctx.fillRect(-1.5*s,-30*s,3*s,32*s);
+    ctx.fillStyle = sailColor;
+    ctx.beginPath();
+    ctx.moveTo(1.5*s,-28*s); ctx.lineTo(20*s,-6*s); ctx.lineTo(1.5*s,-6*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawSeaBg(){
+    ctx.fillStyle = '#3A6EA5';
+    ctx.fillRect(0,260,W,H-260);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<4;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 280+w*20);
+      ctx.quadraticCurveTo(400, 270+w*20+Math.sin(t*2+w)*5, 800, 280+w*20);
+      ctx.stroke();
+    }
+  }
+
+  function drawLightning(){
+    if(Math.sin(t*7) > 0.9){
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='badai_menghantam'){
+      sky.addColorStop(0,'#2E3A4A'); sky.addColorStop(1,'#4A5A68');
+    } else if(scene==='kapal_jadi_batu'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='berlayar_lamar' || scene==='tiga_bulan_berlalu'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'kerajaan_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='kerajaan_intro' || scene==='putri_bijak'){
+      drawPalaceBg();
+      drawKing(340, 320+bob, 46);
+      drawPrincess(460, 330+bob, 44);
+    }
+    if(scene==='saudagar_dengar_kabar'){
+      drawSeaBg();
+      drawHendrik(400, 320+bob, 44);
+      drawSailor(320, 340, 30);
+      drawSailor(480, 345, 30);
+    }
+    if(scene==='rencana_bohong'){
+      drawSeaBg();
+      drawHendrik(400, 320+bob, 44);
+      drawSailor(300, 340, 30);
+    }
+    if(scene==='berlayar_lamar'){
+      drawSeaBg();
+      var sx = 200 + progress*400;
+      drawShip(sx, 330, 60, 0);
+      drawHendrik(sx, 300+bob, 30);
+    }
+    if(scene==='lamaran_sumpah' || scene==='raja_beri_waktu'){
+      drawPalaceBg();
+      drawKing(340, 320+bob, 46);
+      drawHendrik(460, 330+bob, 42);
+    }
+    if(scene==='tiga_bulan_berlalu'){
+      drawSeaBg();
+      drawShip(400, 330, 70, 0);
+    }
+    if(scene==='badai_menghantam'){
+      drawLightning();
+      ctx.fillStyle = '#1E2A3A';
+      ctx.fillRect(0,260,W,H-260);
+      var wave = 10+progress*20;
+      ctx.strokeStyle = 'rgba(200,220,255,0.4)';
+      ctx.lineWidth = 3;
+      for(var w=0;w<3;w++){
+        ctx.beginPath();
+        ctx.moveTo(0, 300+w*30);
+        ctx.quadraticCurveTo(400, 300+w*30-wave, 800, 300+w*30);
+        ctx.stroke();
+      }
+      drawShip(400, 340 + Math.sin(t*8)*8, 60, progress*0.5);
+    }
+    if(scene==='kapal_jadi_batu'){
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,300,W,H-300);
+      drawShip(400, 340, 70, 1);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('bag-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'bag-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('bag-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>

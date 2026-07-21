@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Putri Serindang Bulan - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #psb-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #F3E7DA 0%, #F7F3E8 100%);
+    border: 3px solid #8A4A2A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #psb-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #6E3A1E;
+  }
+  #psb-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #psb-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #psb-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #psb-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8A4A2A;
+    background: #BEE3F8;
+  }
+  #psb-canvas { display: block; width: 100%; height: 100%; }
+  .psb-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,28,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .psb-overlay.show { display: flex; }
+  .psb-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .psb-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .psb-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .psb-btn:active { transform: scale(0.97); }
+
+  #psb-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8A4A2A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #psb-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #psb-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #8A4A2A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #psb-actionBtn.hold { background: #3D7A4C; }
+  #psb-actionBtn:active { transform: scale(0.97); }
+  #psb-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #psb-progressWrap.show { display: block; }
+  #psb-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="psb-wrap">
+  <h2>🌙 Putri Serindang Bulan</h2>
+  <p id="psb-sub">Cerita rakyat Bengkulu tentang putri bungsu yang setia meski disingkirkan kakak-kakaknya.</p>
+
+  <div id="psb-hud"><span id="psb-phase">Tahap 1 / 5</span></div>
+
+  <div id="psb-canvas-holder">
+    <canvas id="psb-canvas"></canvas>
+
+    <div class="psb-overlay show" id="psb-start">
+      <h3>Putri Serindang Bulan</h3>
+      <p>Putri Serindang Bulan terkena penyakit aneh setiap kali hendak menikah, hingga kakak-kakaknya memutuskan menyingkirkannya. Ikuti kisahnya hingga akhir yang penuh haru.</p>
+      <button class="psb-btn" id="psb-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="psb-overlay" id="psb-win">
+      <h3>Reuni yang Mengharukan 🌙</h3>
+      <p>Karang Nio mengenali bekas luka di telinga adiknya, dan mereka pun berpelukan haru tanpa menyimpan dendam. Serindang Bulan menikah dengan Tuanku Raja Alam, dan tetap mengirimi kakak-kakaknya hadiah meski hidup terpisah.</p>
+      <button class="psb-btn" id="psb-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="psb-caption">Bersiap memulai kisah...</div>
+
+  <div id="psb-progressWrap"><div id="psb-progressBar"></div></div>
+  <div id="psb-action-row">
+    <button id="psb-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Putri Serindang Bulan - Game',
+      h2: '🌙 Putri Serindang Bulan',
+      sub: 'Cerita rakyat Bengkulu tentang putri bungsu yang setia meski disingkirkan kakak-kakaknya.',
+      startTitle: 'Putri Serindang Bulan',
+      startBody: 'Putri Serindang Bulan terkena penyakit aneh setiap kali hendak menikah, hingga kakak-kakaknya memutuskan menyingkirkannya. Ikuti kisahnya hingga akhir yang penuh haru.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Reuni yang Mengharukan 🌙',
+      winBody: 'Karang Nio mengenali bekas luka di telinga adiknya, dan mereka pun berpelukan haru tanpa menyimpan dendam. Serindang Bulan menikah dengan Tuanku Raja Alam, dan tetap mengirimi kakak-kakaknya hadiah meski hidup terpisah.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      walkBtn: '🚶 MENUJU HUTAN',
+      raftBtn: '🛶 ARUNGI SUNGAI',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu di Bengkulu, Raja Wawang memiliki tujuh putri. Yang paling bungsu, Putri Serindang Bulan, terkenal paling cantik, namun selalu menolak lamaran karena tak ingin melangkahi keenam kakaknya.',
+        'Keenam kakaknya meminta Serindang Bulan menikah lebih dulu, berjanji akan segera menyusul. Serindang Bulan pun menyanggupi, dan seorang Pangeran Tampan datang melamarnya.',
+        'Menjelang pernikahan, wajah Serindang Bulan tiba-tiba berubah buruk dan tubuhnya dipenuhi penyakit kulit. Sang Pangeran kecewa dan membatalkan pernikahan. Namun anehnya, begitu pernikahan dibatalkan, wajah sang putri kembali cantik seperti semula.',
+        'Kejadian aneh itu terus berulang setiap kali ada pelamar, hingga sembilan kali. Keluarga kerajaan, terutama keenam kakaknya, merasa sangat malu.',
+        'Keenam kakak Serindang Bulan mengadakan rapat rahasia, memutuskan untuk menyingkirkannya. Karang Nio, yang paling dekat dengannya, awalnya menolak — namun justru karena itu, ia yang ditugaskan melakukannya.',
+        'Dengan berat hati, Karang Nio mengajak Serindang Bulan berjalan-jalan. Tahan tombol untuk membantu keduanya menyusuri jalan menuju hutan.',
+        'Karang Nio berterus terang tentang tugasnya. Namun ia memutuskan mengelabui kakak-kakaknya: ia menyembelih seekor anjing hutan untuk diambil darahnya, lalu sedikit melukai telinga Serindang Bulan sebagai bukti palsu.',
+        'Karang Nio menyuruh Serindang Bulan pergi menaiki rakit menyusuri Sungai Ulau Deus. Tahan tombol untuk membantunya mengarungi sungai itu.',
+        'Serindang Bulan turun di daerah Muara Setahun, memanjat sebuah tebing, dan membangun rumah kecil untuk ia tinggali sendirian.',
+        'Setahun kemudian, Tuanku Raja Alam dari Kerajaan Indrapura melihat cahaya kemilau dari atas tebing itu. Penasaran, ia pun mendaki dan menemukan Serindang Bulan di sana.',
+        'Setelah mendengar kisahnya, Raja Alam mengajaknya tinggal di istana. Setelah diuji selama tiga hari dan wajahnya tetap cantik, para penghulu pun menikahkan mereka berdua.',
+        'Kakak-kakaknya datang menghadiri pernikahan itu. Untuk menguji apakah mereka masih mengenali adiknya, disiapkan enam gadis mirip Serindang Bulan. Karang Nio pun teringat bekas luka di telinga adiknya, dan berhasil mengenalinya — mereka pun berpelukan haru tanpa menyimpan dendam.'
+      ]
+    },
+    en: {
+      title: 'Princess Serindang Bulan - Game',
+      h2: '🌙 Princess Serindang Bulan',
+      sub: 'A Bengkulu folktale about the youngest princess, loyal even after being cast aside by her sisters.',
+      startTitle: 'Princess Serindang Bulan',
+      startBody: 'Princess Serindang Bulan suffers a strange ailment every time she\'s about to marry, until her sisters decide to get rid of her. Follow the story to its touching end.',
+      startBtn: 'Start the Tale',
+      winTitle: 'A Touching Reunion 🌙',
+      winBody: 'Karang Nio recognizes the scar on her sister\'s ear, and they embrace tearfully, holding no grudge. Serindang Bulan marries Tuanku Raja Alam, and continues sending gifts to her sisters even while living apart.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      walkBtn: '🚶 HEAD TO THE FOREST',
+      raftBtn: '🛶 RAFT DOWN THE RIVER',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago in Bengkulu, King Wawang had seven daughters. The youngest, Princess Serindang Bulan, was known as the most beautiful, yet always turned down proposals, unwilling to marry before her six older sisters.',
+        'Her six sisters ask Serindang Bulan to marry first, promising they\'ll soon follow. Serindang Bulan agrees, and a handsome prince comes to propose.',
+        'Just before the wedding, Serindang Bulan\'s face suddenly turns unsightly and her body breaks out in a skin ailment. The disappointed prince calls off the wedding. Strangely, the moment the wedding is called off, the princess\'s face returns to normal.',
+        'This strange occurrence keeps repeating with every suitor, up to nine times. The royal family, especially her six sisters, grow deeply ashamed.',
+        'Serindang Bulan\'s six sisters hold a secret meeting, deciding to get rid of her. Karang Nio, closest to her, initially refuses — but because of that refusal, she\'s the one assigned to carry it out.',
+        'Heavy-hearted, Karang Nio invites Serindang Bulan for a walk. Hold the button to help the two of them make their way toward the forest.',
+        'Karang Nio comes clean about her task. But she decides to trick her sisters instead: she slaughters a wild dog for its blood, then lightly wounds Serindang Bulan\'s ear as false proof.',
+        'Karang Nio tells Serindang Bulan to take a raft down the Ulau Deus River. Hold the button to help her navigate the river.',
+        'Serindang Bulan comes ashore at Muara Setahun, climbs a cliff, and builds a small house to live in on her own.',
+        'A year later, Tuanku Raja Alam of the Indrapura Kingdom spots a shimmering light atop that cliff. Curious, he climbs up and finds Serindang Bulan there.',
+        'After hearing her story, Raja Alam invites her to live at the palace. After three days of observation confirm her face stays beautiful, the elders marry the two of them.',
+        'Her sisters come to attend the wedding. To test whether they still recognize their sister, six girls resembling Serindang Bulan are lined up. Karang Nio remembers the scar on her sister\'s ear, and successfully identifies her — they embrace tearfully, holding no grudge.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#psb-wrap h2').textContent = TXT.h2;
+  document.getElementById('psb-sub').textContent = TXT.sub;
+  document.querySelector('#psb-start h3').textContent = TXT.startTitle;
+  document.querySelector('#psb-start p').textContent = TXT.startBody;
+  document.getElementById('psb-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#psb-win h3').textContent = TXT.winTitle;
+  document.querySelector('#psb-win p').textContent = TXT.winBody;
+  document.getElementById('psb-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('psb-caption').textContent = TXT.captionInit;
+  document.getElementById('psb-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('psb-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('psb-phase');
+  var captionEl = document.getElementById('psb-caption');
+  var actionBtn = document.getElementById('psb-actionBtn');
+  var progressWrap = document.getElementById('psb-progressWrap');
+  var progressBar = document.getElementById('psb-progressBar');
+  var startOverlay = document.getElementById('psb-start');
+  var winOverlay = document.getElementById('psb-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'raja_wawang_putri' },
+    { type:'caption', phase:1, scene:'kakak_minta_menikah' },
+    { type:'caption', phase:2, scene:'penyakit_aneh' },
+    { type:'caption', phase:2, scene:'terulang_sembilan_kali' },
+    { type:'caption', phase:3, scene:'rapat_rahasia' },
+    { type:'hold', phase:3, scene:'ajak_ke_hutan' },
+    { type:'caption', phase:4, scene:'karang_nio_mengelabui' },
+    { type:'hold', phase:4, scene:'rakit_sungai' },
+    { type:'caption', phase:5, scene:'tinggal_tebing' },
+    { type:'caption', phase:5, scene:'bertemu_raja_alam' },
+    { type:'caption', phase:5, scene:'menikah_raja_alam' },
+    { type:'caption', phase:5, scene:'reuni_kakak' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'ajak_ke_hutan') actionBtn.textContent = TXT.walkBtn;
+      else if(step.scene === 'rakit_sungai') actionBtn.textContent = TXT.raftBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('psb-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('psb-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawKing(px, py, size, colorMain){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain || '#8A5A1E';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(19*s,10*s,14*s,-6*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-9*s,-22*s); ctx.lineTo(-4*s,-30*s); ctx.lineTo(0,-24*s); ctx.lineTo(4*s,-30*s); ctx.lineTo(9*s,-22*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSerindang(px, py, size, sick){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    if(sick) ctx.filter = 'saturate(0.4) brightness(0.85)';
+    ctx.fillStyle = '#E796C9';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.filter = 'none';
+    ctx.restore();
+  }
+
+  function drawSister(px, py, size, colorMain){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain;
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-5*s); ctx.quadraticCurveTo(-14*s,7*s,-9*s,19*s);
+    ctx.lineTo(9*s,19*s); ctx.quadraticCurveTo(14*s,7*s,10*s,-5*s);
+    ctx.quadraticCurveTo(0,-9*s,-10*s,-5*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-11*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-15*s,6.5*s,5.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPrince(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E4A8A';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-6*s); ctx.quadraticCurveTo(-14*s,6*s,-10*s,20*s);
+    ctx.lineTo(10*s,20*s); ctx.quadraticCurveTo(14*s,6*s,10*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-10*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-13*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A5A';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRaft(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8D6E3A';
+    ctx.fillRect(-24*s,-3*s,48*s,6*s);
+    ctx.strokeStyle = '#6b4a2a';
+    ctx.lineWidth = 1.5*s;
+    for(var i=-20;i<=20;i+=8){
+      ctx.beginPath(); ctx.moveTo(i*s,-3*s); ctx.lineTo(i*s,3*s); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawCliffHouse(px, py, size, built){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A7A5A';
+    ctx.beginPath();
+    ctx.moveTo(-40*s,20*s); ctx.lineTo(-10*s,-30*s); ctx.lineTo(20*s,20*s);
+    ctx.closePath(); ctx.fill();
+    if(built>0){
+      ctx.fillStyle = '#E8D9B5';
+      ctx.fillRect(-6*s,-24*s,24*s,20*s*built);
+      ctx.fillStyle = '#8D6E63';
+      ctx.beginPath();
+      ctx.moveTo(-8*s,-24*s); ctx.lineTo(6*s,-36*s); ctx.lineTo(20*s,-24*s);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawRiverBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,280,W,40);
+    ctx.fillStyle = '#3A6EA5';
+    ctx.fillRect(0,320,W,H-320);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<3;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, 340+w*20);
+      ctx.quadraticCurveTo(400, 330+w*20+Math.sin(t*2+w)*5, 800, 340+w*20);
+      ctx.stroke();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='raja_wawang_putri' || scene==='kakak_minta_menikah' || scene==='penyakit_aneh' || scene==='terulang_sembilan_kali' || scene==='rapat_rahasia'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='ajak_ke_hutan' || scene==='karang_nio_mengelabui'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='rakit_sungai'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else if(scene==='tinggal_tebing' || scene==='bertemu_raja_alam'){
+      sky.addColorStop(0,'#AEDBF2'); sky.addColorStop(1,'#F0F8FF');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'raja_wawang_putri';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='raja_wawang_putri'){
+      drawPalaceBg();
+      drawKing(340, 320+bob, 46);
+      drawSerindang(460, 330+bob, 42, false);
+    }
+    if(scene==='kakak_minta_menikah'){
+      drawPalaceBg();
+      drawSister(320, 335+bob, 36, '#7A9E4A');
+      drawSister(370, 340+bob*0.8, 34, '#4A7EC9');
+      drawSerindang(460, 330+bob, 40, false);
+      drawPrince(560, 335, 38);
+    }
+    if(scene==='penyakit_aneh'){
+      drawPalaceBg();
+      drawPrince(340, 330+bob, 40);
+      drawSerindang(440, 335, 40, true);
+    }
+    if(scene==='terulang_sembilan_kali'){
+      drawPalaceBg();
+      drawSister(320, 335, 34, '#7A9E4A');
+      drawSister(370, 340, 32, '#4A7EC9');
+      drawSerindang(460, 330+bob, 40, false);
+    }
+    if(scene==='rapat_rahasia'){
+      drawPalaceBg();
+      drawSister(300, 335, 34, '#7A9E4A');
+      drawSister(350, 330, 34, '#4A7EC9');
+      drawSister(400, 335, 34, '#C9506A');
+      drawSister(450, 330, 34, '#8A5A9A');
+      drawSister(500, 335, 34, '#C9A24E');
+    }
+    if(scene==='ajak_ke_hutan'){
+      drawForestBg();
+      var kx = 200+progress*400;
+      drawSister(kx, 330+bob, 38, '#7A9E4A');
+      drawSerindang(kx+60, 335+bob, 38, false);
+    }
+    if(scene==='karang_nio_mengelabui'){
+      drawForestBg();
+      drawSister(340, 330+bob, 40, '#7A9E4A');
+      drawSerindang(420, 335+bob, 40, false);
+    }
+    if(scene==='rakit_sungai'){
+      drawRiverBg();
+      var rx = 200+progress*400;
+      drawRaft(rx, 350, 60);
+      drawSerindang(rx, 330, 34, false);
+    }
+    if(scene==='tinggal_tebing'){
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,300,W,H-300);
+      drawCliffHouse(400, 300, 70, 1);
+      drawSerindang(430, 300, 32, false);
+    }
+    if(scene==='bertemu_raja_alam'){
+      ctx.fillStyle = '#8CA86B';
+      ctx.fillRect(0,300,W,H-300);
+      drawCliffHouse(400, 300, 70, 1);
+      drawSerindang(430, 300, 32, false);
+      drawKing(320, 320, 36, '#2E5A8A');
+    }
+    if(scene==='menikah_raja_alam'){
+      drawPalaceBg();
+      drawKing(340, 320+bob, 46, '#2E5A8A');
+      drawSerindang(460, 330+bob, 44, false);
+    }
+    if(scene==='reuni_kakak'){
+      drawPalaceBg();
+      drawSerindang(300, 330+bob, 40, false);
+      drawSister(360, 335, 34, '#7A9E4A');
+      drawSister(410, 330, 34, '#4A7EC9');
+      drawSister(460, 335, 34, '#C9506A');
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('psb-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'psb-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('psb-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
