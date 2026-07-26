@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Moelu Si Anak Yatim - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #lmg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #1F3A34;
+    background: linear-gradient(180deg, #E1F0EC 0%, #F7F3E8 100%);
+    border: 3px solid #1E6E5A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #lmg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #14503F;
+  }
+  #lmg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #lmg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #lmg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #lmg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #1E6E5A;
+    background: #BEE3F8;
+  }
+  #lmg-canvas { display: block; width: 100%; height: 100%; }
+  .lmg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,36,32,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .lmg-overlay.show { display: flex; }
+  .lmg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .lmg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .lmg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .lmg-btn:active { transform: scale(0.97); }
+
+  #lmg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #1E6E5A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #lmg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #lmg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #1E6E5A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #lmg-actionBtn.hold { background: #C9A24E; color: #402E00; }
+  #lmg-actionBtn:active { transform: scale(0.97); }
+  #lmg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #lmg-progressWrap.show { display: block; }
+  #lmg-progressBar { height: 100%; width: 0%; background: #C9A24E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="lmg-wrap">
+  <h2>🐟 La Moelu Si Anak Yatim</h2>
+  <p id="lmg-sub">Cerita rakyat Sulawesi Tenggara tentang anak yatim dan ikan ajaibnya, Jinnade.</p>
+
+  <div id="lmg-hud"><span id="lmg-phase">Tahap 1 / 5</span></div>
+
+  <div id="lmg-canvas-holder">
+    <canvas id="lmg-canvas"></canvas>
+
+    <div class="lmg-overlay show" id="lmg-start">
+      <h3>La Moelu Si Anak Yatim</h3>
+      <p>La Moelu, anak yatim piatu, memelihara seekor ikan ajaib bernama Jinnade yang terus tumbuh membesar. Ikuti kisahnya hingga tumbuhnya sebatang pohon ajaib penuh berkah.</p>
+      <button class="lmg-btn" id="lmg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="lmg-overlay" id="lmg-win">
+      <h3>Pohon Ajaib Penuh Berkah 🐟</h3>
+      <p>Pohon ajaib itu berbuah emas, perak, dan berlian, membuat La Moelu dan ayahnya kaya raya. Namun mereka tetap rendah hati dan gemar menolong sesama, mengenang kebaikan hati Jinnade selamanya.</p>
+      <button class="lmg-btn" id="lmg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="lmg-caption">Bersiap memulai kisah...</div>
+
+  <div id="lmg-progressWrap"><div id="lmg-progressBar"></div></div>
+  <div id="lmg-action-row">
+    <button id="lmg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'La Moelu Si Anak Yatim - Game',
+      h2: '🐟 La Moelu Si Anak Yatim',
+      sub: 'Cerita rakyat Sulawesi Tenggara tentang anak yatim dan ikan ajaibnya, Jinnade.',
+      startTitle: 'La Moelu Si Anak Yatim',
+      startBody: 'La Moelu, anak yatim piatu, memelihara seekor ikan ajaib bernama Jinnade yang terus tumbuh membesar. Ikuti kisahnya hingga tumbuhnya sebatang pohon ajaib penuh berkah.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Pohon Ajaib Penuh Berkah 🐟',
+      winBody: 'Pohon ajaib itu berbuah emas, perak, dan berlian, membuat La Moelu dan ayahnya kaya raya. Namun mereka tetap rendah hati dan gemar menolong sesama, mengenang kebaikan hati Jinnade selamanya.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      growFishBtn: '🐟 RAWAT IKANNYA',
+      growTreeBtn: '🌳 TUMBUHKAN POHON',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di Sulawesi Tenggara, hiduplah La Moelu, seorang anak yatim piatu yang tinggal bersama ayah angkatnya yang sudah tua. Mereka mencari nafkah dengan memancing ikan setiap hari.',
+        'Suatu hari, La Moelu menangkap seekor ikan kecil yang sangat aneh. Ayahnya menyarankan agar ikan itu dipelihara saja, bukan dimakan.',
+        'Tahan tombol untuk merawat ikan itu setiap hari — dan anehnya, ikan itu terus tumbuh semakin besar dari hari ke hari.',
+        'Karena kolam di rumah sudah terlalu kecil, La Moelu melepaskan ikan itu ke laut, dan memberinya nama Jinnade. Ikan itu berjanji akan selalu datang jika dipanggil.',
+        'Beberapa tetangga yang penasaran diam-diam mengikuti La Moelu dan mengetahui kebiasaannya memanggil Jinnade. Mereka pun berniat jahat.',
+        'Tiga tetangga itu memanggil Jinnade dengan meniru cara La Moelu, lalu menombak ikan ajaib itu hingga tewas.',
+        'La Moelu yang kehilangan sahabatnya sangat sedih. Setelah mencari tahu, ia akhirnya mengetahui kebenaran dari teman-temannya tentang siapa yang tega melakukannya.',
+        'Dengan hati pilu, La Moelu mengumpulkan sisa-sisa tulang Jinnade dan menguburkannya di halaman rumah sebagai penghormatan terakhir.',
+        'Tahan tombol untuk menyaksikan sebatang pohon ajaib tumbuh dari tempat Jinnade dikuburkan, semakin lama semakin tinggi menjulang.',
+        'Pohon itu ternyata berbuah emas, perak, dan berlian yang berkilauan indah.'
+      ]
+    },
+    en: {
+      title: 'La Moelu the Orphan - Game',
+      h2: '🐟 La Moelu the Orphan',
+      sub: 'A Southeast Sulawesi folktale about an orphan boy and his magical fish, Jinnade.',
+      startTitle: 'La Moelu the Orphan',
+      startBody: 'La Moelu, an orphan boy, raises a magical fish named Jinnade that keeps growing larger. Follow the story to the growth of a magical tree full of blessings.',
+      startBtn: 'Start the Tale',
+      winTitle: 'A Magical Tree Full of Blessings 🐟',
+      winBody: 'The magical tree bears fruit of gold, silver, and diamonds, making La Moelu and his father wealthy. Yet they remain humble and eager to help others, forever cherishing Jinnade\'s kindness.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      growFishBtn: '🐟 CARE FOR THE FISH',
+      growTreeBtn: '🌳 GROW THE TREE',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'In Southeast Sulawesi lived La Moelu, an orphan boy living with his elderly adoptive father. They made a living fishing every day.',
+        'One day, La Moelu catches a very strange little fish. His father suggests raising it instead of eating it.',
+        'Hold the button to care for the fish every day — and strangely, it keeps growing bigger day by day.',
+        'Since the pond at home has become too small, La Moelu releases the fish into the sea, naming it Jinnade. The fish promises to always come whenever called.',
+        'Some curious neighbors secretly follow La Moelu and learn his habit of calling Jinnade. They plot something wicked.',
+        'Three neighbors call Jinnade by imitating La Moelu\'s way, then spear the magical fish to death.',
+        'Heartbroken at losing his friend, La Moelu investigates and eventually learns the truth from his friends about who was cruel enough to do it.',
+        'With a heavy heart, La Moelu gathers Jinnade\'s remaining bones and buries them in the yard as a final tribute.',
+        'Hold the button to watch a magical tree grow from where Jinnade was buried, rising taller and taller over time.',
+        'The tree turns out to bear fruit of gold, silver, and dazzling diamonds.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#lmg-wrap h2').textContent = TXT.h2;
+  document.getElementById('lmg-sub').textContent = TXT.sub;
+  document.querySelector('#lmg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#lmg-start p').textContent = TXT.startBody;
+  document.getElementById('lmg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#lmg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#lmg-win p').textContent = TXT.winBody;
+  document.getElementById('lmg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('lmg-caption').textContent = TXT.captionInit;
+  document.getElementById('lmg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('lmg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('lmg-phase');
+  var captionEl = document.getElementById('lmg-caption');
+  var actionBtn = document.getElementById('lmg-actionBtn');
+  var progressWrap = document.getElementById('lmg-progressWrap');
+  var progressBar = document.getElementById('lmg-progressBar');
+  var startOverlay = document.getElementById('lmg-start');
+  var winOverlay = document.getElementById('lmg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'la_moelu_intro' },
+    { type:'caption', phase:1, scene:'dapat_ikan' },
+    { type:'hold', phase:2, scene:'ikan_tumbuh' },
+    { type:'caption', phase:2, scene:'lepas_ke_laut' },
+    { type:'caption', phase:3, scene:'tetangga_penasaran' },
+    { type:'caption', phase:3, scene:'jinnade_dibunuh' },
+    { type:'caption', phase:4, scene:'cari_tahu_kebenaran' },
+    { type:'caption', phase:4, scene:'kubur_jinnade' },
+    { type:'hold', phase:5, scene:'pohon_tumbuh' },
+    { type:'caption', phase:5, scene:'pohon_berbuah' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'ikan_tumbuh') actionBtn.textContent = TXT.growFishBtn;
+      else if(step.scene === 'pohon_tumbuh') actionBtn.textContent = TXT.growTreeBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('lmg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('lmg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawLaMoelu(px, py, size){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A4A2A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-4*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFather(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6.5*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawNeighbor(px, py, size){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5A3E5A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-4*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawBeachBg(){
+    ctx.fillStyle = '#EBDCA8';
+    ctx.fillRect(0,320,W,H-320);
+    ctx.fillStyle = '#5C8AA6';
+    ctx.fillRect(0,280,W,40);
+  }
+
+  function drawMagicTree(px, py, size, growAmt, glow){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    var h = Math.max(0.1, growAmt);
+    if(glow>0){
+      var g = ctx.createRadialGradient(0,-30*s*h,4,0,-30*s*h,50*s);
+      g.addColorStop(0,'rgba(255,220,120,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(255,220,120,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-30*s*h,50*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#8D6E3A';
+    ctx.fillRect(-4*s,-40*s*h,8*s,42*s*h);
+    ctx.fillStyle = '#3C6B40';
+    ctx.beginPath(); ctx.arc(0,-42*s*h,20*s*h,0,Math.PI*2); ctx.fill();
+    if(growAmt > 0.6){
+      var colors = ['#D9AF3C','#C0C0C0','#7FDBFF'];
+      for(var i=0;i<5;i++){
+        ctx.fillStyle = colors[i%3];
+        var ang = i*1.3;
+        ctx.beginPath();
+        ctx.arc(Math.cos(ang)*16*s*h, -42*s*h+Math.sin(ang)*14*s*h, 3*s, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='dapat_ikan' || scene==='ikan_tumbuh' || scene==='lepas_ke_laut'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'la_moelu_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='la_moelu_intro'){
+      drawHutBg();
+      drawFather(340, 335+bob, 40);
+      drawLaMoelu(410, 345+bob, 32);
+    }
+    if(scene==='dapat_ikan'){
+      drawBeachBg();
+      drawLaMoelu(340, 330+bob, 34);
+      drawEmoji('🐟', 420, 340, 22);
+    }
+    if(scene==='ikan_tumbuh'){
+      drawBeachBg();
+      drawLaMoelu(300, 330+bob, 34);
+      drawEmoji('🐟', 440, 340, 22+progress*30);
+    }
+    if(scene==='lepas_ke_laut'){
+      drawBeachBg();
+      drawLaMoelu(300, 320+bob, 34);
+      drawEmoji('🐟', 500, 340+Math.sin(t*3)*8, 50);
+    }
+    if(scene==='tetangga_penasaran'){
+      drawBeachBg();
+      drawLaMoelu(280, 320+bob, 32);
+      drawNeighbor(500, 335, 30);
+      drawNeighbor(550, 340, 30);
+    }
+    if(scene==='jinnade_dibunuh'){
+      drawBeachBg();
+      drawNeighbor(400, 330, 32);
+      drawNeighbor(450, 335, 30);
+      drawNeighbor(500, 330, 30);
+      drawEmoji('🐟', 430, 350, 44);
+    }
+    if(scene==='cari_tahu_kebenaran'){
+      drawHutBg();
+      drawLaMoelu(400, 335+bob, 36);
+    }
+    if(scene==='kubur_jinnade'){
+      drawHutBg();
+      drawLaMoelu(360, 335+bob, 36);
+      ctx.fillStyle = '#5C4433';
+      ctx.beginPath(); ctx.ellipse(460,350,26,10,0,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='pohon_tumbuh'){
+      drawHutBg();
+      drawLaMoelu(320, 335+bob, 34);
+      drawMagicTree(460, 340, 50, progress, progress);
+    }
+    if(scene==='pohon_berbuah'){
+      drawHutBg();
+      drawFather(300, 335+bob, 36);
+      drawLaMoelu(340, 345+bob, 32);
+      drawMagicTree(500, 340, 60, 1, 0.6);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('lmg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'lmg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('lmg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>

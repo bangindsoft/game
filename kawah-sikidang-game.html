@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Kawah Sikidang - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #ksd-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FCE9D6 0%, #F7F3E8 100%);
+    border: 3px solid #B5502A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #ksd-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A3A1E;
+  }
+  #ksd-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #ksd-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #ksd-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #ksd-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5502A;
+    background: #BEE3F8;
+  }
+  #ksd-canvas { display: block; width: 100%; height: 100%; }
+  .ksd-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,26,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .ksd-overlay.show { display: flex; }
+  .ksd-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .ksd-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .ksd-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .ksd-btn:active { transform: scale(0.97); }
+
+  #ksd-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5502A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #ksd-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #ksd-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5502A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #ksd-actionBtn.hold { background: #3D7A4C; }
+  #ksd-actionBtn:active { transform: scale(0.97); }
+  #ksd-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #ksd-progressWrap.show { display: block; }
+  #ksd-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="ksd-wrap">
+  <h2>♨️ Legenda Kawah Sikidang</h2>
+  <p id="ksd-sub">Cerita rakyat Dieng, Jawa Tengah, tentang asal usul rambut gimbal dan Kawah Sikidang.</p>
+
+  <div id="ksd-hud"><span id="ksd-phase">Tahap 1 / 5</span></div>
+
+  <div id="ksd-canvas-holder">
+    <canvas id="ksd-canvas"></canvas>
+
+    <div class="ksd-overlay show" id="ksd-start">
+      <h3>Legenda Kawah Sikidang</h3>
+      <p>Putri Shinta Dewi menerima lamaran Pangeran Kidang Garungan yang kaya raya, tanpa tahu bahwa sang pangeran berkepala kijang. Ikuti kisahnya hingga asal usul Kawah Sikidang.</p>
+      <button class="ksd-btn" id="ksd-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="ksd-overlay" id="ksd-win">
+      <h3>Asal Usul Kawah Sikidang ♨️</h3>
+      <p>Lubang bekas galian itu terus mengeluarkan uap panas dan lumpur mendidih, dikenal hingga kini sebagai Kawah Sikidang di Dieng. Masyarakat setempat percaya keturunan Shinta Dewi berambut gimbal sebagai kenangan akan kutukan itu.</p>
+      <button class="ksd-btn" id="ksd-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="ksd-caption">Bersiap memulai kisah...</div>
+
+  <div id="ksd-progressWrap"><div id="ksd-progressBar"></div></div>
+  <div id="ksd-action-row">
+    <button id="ksd-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Kawah Sikidang - Game',
+      h2: '♨️ Legenda Kawah Sikidang',
+      sub: 'Cerita rakyat Dieng, Jawa Tengah, tentang asal usul rambut gimbal dan Kawah Sikidang.',
+      startTitle: 'Legenda Kawah Sikidang',
+      startBody: 'Putri Shinta Dewi menerima lamaran Pangeran Kidang Garungan yang kaya raya, tanpa tahu bahwa sang pangeran berkepala kijang. Ikuti kisahnya hingga asal usul Kawah Sikidang.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Usul Kawah Sikidang ♨️',
+      winBody: 'Lubang bekas galian itu terus mengeluarkan uap panas dan lumpur mendidih, dikenal hingga kini sebagai Kawah Sikidang di Dieng. Masyarakat setempat percaya keturunan Shinta Dewi berambut gimbal sebagai kenangan akan kutukan itu.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      digBtn: '⛏️ GALI SUMUR',
+      buryBtn: '🪨 TIMBUN LUBANG',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Di dataran tinggi Dieng, Jawa Tengah, hiduplah seorang putri yang sangat cantik bernama Shinta Dewi. Banyak pangeran ingin melamarnya, namun tak satu pun berani karena kecantikannya yang luar biasa.',
+        'Suatu hari, seorang pangeran kaya raya bernama Kidang Garungan mengirim utusan untuk melamarnya. Shinta Dewi pun menyetujui lamaran itu karena tergiur kekayaannya, tanpa pernah bertemu langsung.',
+        'Ketika Kidang Garungan tiba untuk pernikahan, betapa terkejutnya Shinta Dewi mendapati wajah calon suaminya ternyata berkepala kijang.',
+        'Shinta Dewi diam-diam ingin membatalkan pertunangan itu. Ia pun mengajukan syarat: Kidang Garungan harus membuatkan sumur besar dan dalam, seorang diri, sebagai bukti kesaktiannya.',
+        'Tahan tombol untuk membantu Pangeran Kidang Garungan menggali sumur itu dengan kesaktiannya.',
+        'Sumur pun hampir selesai digali. Shinta Dewi menjadi panik dan segera memerintahkan para prajurit untuk menimbunnya dengan tanah dan batu selagi Kidang Garungan masih berada di dalamnya.',
+        'Tahan tombol untuk menunjukkan para prajurit menimbun lubang itu dengan tanah dan bebatuan.',
+        'Kidang Garungan berusaha keras keluar dari timbunan tanah itu, namun sia-sia belaka.',
+        'Sebelum akhirnya tak berdaya, dari dalam lubang Kidang Garungan mengucapkan kutukan: seluruh keturunan Shinta Dewi kelak akan memiliki rambut gimbal yang sulit disisir.',
+        'Sesaat kemudian, dari lubang itu keluar uap panas dan lumpur mendidih yang terus menyembur tanpa henti.'
+      ]
+    },
+    en: {
+      title: 'The Legend of Kawah Sikidang - Game',
+      h2: '♨️ The Legend of Kawah Sikidang',
+      sub: 'A folktale from Dieng, Central Java, about the origin of dreadlocked hair and Kawah Sikidang.',
+      startTitle: 'The Legend of Kawah Sikidang',
+      startBody: 'Princess Shinta Dewi accepts the proposal of the wealthy Prince Kidang Garungan, unaware that he has the head of a deer. Follow the story to the origin of Kawah Sikidang.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of Kawah Sikidang ♨️',
+      winBody: 'The dug-out hole keeps releasing hot steam and boiling mud, known to this day as Kawah Sikidang in Dieng. Locals believe Shinta Dewi\'s descendants have dreadlocked hair, a lasting mark of that curse.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      digBtn: '⛏️ DIG THE WELL',
+      buryBtn: '🪨 FILL IN THE HOLE',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'On the Dieng plateau, Central Java, lived a stunningly beautiful princess named Shinta Dewi. Many princes wished to propose, yet none dared, awed by her extraordinary beauty.',
+        'One day, a wealthy prince named Kidang Garungan sends an envoy to propose. Tempted by his wealth, Shinta Dewi agrees to the proposal without ever meeting him in person.',
+        'When Kidang Garungan arrives for the wedding, Shinta Dewi is shocked to find her husband-to-be has the head of a deer.',
+        'Secretly wanting to call off the engagement, Shinta Dewi sets a condition: Kidang Garungan must dig a large, deep well entirely by himself, to prove his power.',
+        'Hold the button to help Prince Kidang Garungan dig the well with his mystical strength.',
+        'The well is nearly finished. Panicking, Shinta Dewi orders her soldiers to fill it in with earth and stone while Kidang Garungan is still inside.',
+        'Hold the button to show the soldiers filling in the hole with earth and rocks.',
+        'Kidang Garungan struggles hard to climb out of the buried hole, but it\'s all in vain.',
+        'Before he\'s overcome, from inside the hole Kidang Garungan utters a curse: all of Shinta Dewi\'s descendants will one day have dreadlocked hair, impossible to comb.',
+        'Moments later, hot steam and boiling mud begin gushing out of that hole without stopping.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#ksd-wrap h2').textContent = TXT.h2;
+  document.getElementById('ksd-sub').textContent = TXT.sub;
+  document.querySelector('#ksd-start h3').textContent = TXT.startTitle;
+  document.querySelector('#ksd-start p').textContent = TXT.startBody;
+  document.getElementById('ksd-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#ksd-win h3').textContent = TXT.winTitle;
+  document.querySelector('#ksd-win p').textContent = TXT.winBody;
+  document.getElementById('ksd-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('ksd-caption').textContent = TXT.captionInit;
+  document.getElementById('ksd-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('ksd-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('ksd-phase');
+  var captionEl = document.getElementById('ksd-caption');
+  var actionBtn = document.getElementById('ksd-actionBtn');
+  var progressWrap = document.getElementById('ksd-progressWrap');
+  var progressBar = document.getElementById('ksd-progressBar');
+  var startOverlay = document.getElementById('ksd-start');
+  var winOverlay = document.getElementById('ksd-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'shinta_dewi_intro' },
+    { type:'caption', phase:1, scene:'kidang_lamar' },
+    { type:'caption', phase:2, scene:'kidang_berkepala_kijang' },
+    { type:'caption', phase:2, scene:'syarat_sumur' },
+    { type:'hold', phase:3, scene:'gali_sumur' },
+    { type:'hold', phase:4, scene:'timbun_lubang' },
+    { type:'caption', phase:4, scene:'kidang_berusaha' },
+    { type:'caption', phase:5, scene:'kutukan_gimbal' },
+    { type:'caption', phase:5, scene:'kawah_terbentuk' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'gali_sumur') actionBtn.textContent = TXT.digBtn;
+      else if(step.scene === 'timbun_lubang') actionBtn.textContent = TXT.buryBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('ksd-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('ksd-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawShinta(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#E796C9';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawKidang(px, py, size, buried){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py+buried*20);
+    ctx.fillStyle = '#8A5A1E';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-8*s); ctx.quadraticCurveTo(-15*s,4*s,-11*s,20*s);
+    ctx.lineTo(11*s,20*s); ctx.quadraticCurveTo(15*s,4*s,11*s,-8*s);
+    ctx.quadraticCurveTo(0,-13*s,-11*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#C97B3D';
+    ctx.beginPath(); ctx.ellipse(0,-14*s,6.5*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#6B4A2A';
+    ctx.lineWidth = 1.5*s;
+    ctx.beginPath();
+    ctx.moveTo(-4*s,-20*s); ctx.lineTo(-6*s,-28*s);
+    ctx.moveTo(4*s,-20*s); ctx.lineTo(6*s,-28*s);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSoldier(px, py, size){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D5A4A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-4*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWell(px, py, size, depth){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A7A5A';
+    ctx.beginPath(); ctx.ellipse(0,0,24*s,8*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E20';
+    ctx.beginPath(); ctx.ellipse(0,0,18*s*Math.max(0.1,1-depth),6*s*Math.max(0.1,1-depth),0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSteam(px, py, size, amt){
+    if(amt<=0) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    for(var i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.arc(px+Math.sin(t*2+i)*8, py-i*16-((t*30)%50)*amt, 8+i*2, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawHighlandBg(){
+    ctx.fillStyle = '#7C9E8E';
+    ctx.fillRect(0,300,W,H-300);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='kawah_terbentuk' || scene==='kutukan_gimbal'){
+      sky.addColorStop(0,'#5A5A5A'); sky.addColorStop(1,'#8A8A8A');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'shinta_dewi_intro';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='shinta_dewi_intro'){
+      drawHighlandBg();
+      drawShinta(400, 330+bob, 46);
+    }
+    if(scene==='kidang_lamar'){
+      drawHighlandBg();
+      drawShinta(340, 330+bob, 44);
+      drawSoldier(500, 340, 32);
+    }
+    if(scene==='kidang_berkepala_kijang' || scene==='syarat_sumur'){
+      drawHighlandBg();
+      drawShinta(340, 330+bob, 42);
+      drawKidang(460, 335+bob, 42, 0);
+    }
+    if(scene==='gali_sumur'){
+      drawHighlandBg();
+      drawKidang(400, 320, 40, 0);
+      drawWell(400, 360, 60, progress);
+    }
+    if(scene==='timbun_lubang'){
+      drawHighlandBg();
+      drawSoldier(320, 335, 32);
+      drawSoldier(480, 335, 32);
+      drawShinta(260, 330, 38);
+      drawWell(400, 360, 60, 1-progress*0.3);
+      drawKidang(400, 355, 34, progress*0.6);
+    }
+    if(scene==='kidang_berusaha'){
+      drawHighlandBg();
+      drawWell(400, 360, 60, 0.9);
+      drawKidang(400, 350, 34, 0.5);
+    }
+    if(scene==='kutukan_gimbal'){
+      drawHighlandBg();
+      var glow = 0.3+0.3*Math.sin(t*4);
+      var g = ctx.createRadialGradient(400,360,4,400,360,60);
+      g.addColorStop(0,'rgba(200,60,40,'+glow+')');
+      g.addColorStop(1,'rgba(200,60,40,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(400,360,60,0,Math.PI*2); ctx.fill();
+      drawWell(400, 360, 60, 1);
+    }
+    if(scene==='kawah_terbentuk'){
+      drawHighlandBg();
+      drawWell(400, 360, 70, 1);
+      drawSteam(400, 350, 40, 1);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('ksd-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'ksd-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('ksd-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>

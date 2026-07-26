@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gunung Mekongga - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #gmk-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #F0E9D6 0%, #F7F3E8 100%);
+    border: 3px solid #8A5A1E;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #gmk-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #6E3E12;
+  }
+  #gmk-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #gmk-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #gmk-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #gmk-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8A5A1E;
+    background: #BEE3F8;
+  }
+  #gmk-canvas { display: block; width: 100%; height: 100%; }
+  .gmk-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,30,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .gmk-overlay.show { display: flex; }
+  .gmk-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .gmk-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .gmk-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .gmk-btn:active { transform: scale(0.97); }
+
+  #gmk-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8A5A1E;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #gmk-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #gmk-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #8A5A1E;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #gmk-actionBtn.hold { background: #3D7A4C; }
+  #gmk-actionBtn:active { transform: scale(0.97); }
+  #gmk-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #gmk-progressWrap.show { display: block; }
+  #gmk-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="gmk-wrap">
+  <h2>🦅 Gunung Mekongga</h2>
+  <p id="gmk-sub">Cerita rakyat Sulawesi Tenggara tentang perjuangan mengalahkan burung garuda raksasa.</p>
+
+  <div id="gmk-hud"><span id="gmk-phase">Tahap 1 / 5</span></div>
+
+  <div id="gmk-canvas-holder">
+    <canvas id="gmk-canvas"></canvas>
+
+    <div class="gmk-overlay show" id="gmk-start">
+      <h3>Gunung Mekongga</h3>
+      <p>Seekor burung garuda raksasa terus meneror negeri Sorume, memangsa ternak dan bahkan manusia. Ikuti kisah perjuangan Tasahea dan Larumbalangi hingga asal usul Gunung Mekongga.</p>
+      <button class="gmk-btn" id="gmk-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="gmk-overlay" id="gmk-win">
+      <h3>Asal Usul Gunung Mekongga 🦅</h3>
+      <p>Bangkai burung garuda raksasa itu membentuk sebuah gunung yang kemudian dikenal dengan nama Gunung Mekongga. Tasahea dan Larumbalangi pun diangkat menjadi pemimpin yang dihormati atas keberanian mereka.</p>
+      <button class="gmk-btn" id="gmk-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="gmk-caption">Bersiap memulai kisah...</div>
+
+  <div id="gmk-progressWrap"><div id="gmk-progressBar"></div></div>
+  <div id="gmk-action-row">
+    <button id="gmk-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Gunung Mekongga - Game',
+      h2: '🦅 Gunung Mekongga',
+      sub: 'Cerita rakyat Sulawesi Tenggara tentang perjuangan mengalahkan burung garuda raksasa.',
+      startTitle: 'Gunung Mekongga',
+      startBody: 'Seekor burung garuda raksasa terus meneror negeri Sorume, memangsa ternak dan bahkan manusia. Ikuti kisah perjuangan Tasahea dan Larumbalangi hingga asal usul Gunung Mekongga.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Usul Gunung Mekongga 🦅',
+      winBody: 'Bangkai burung garuda raksasa itu membentuk sebuah gunung yang kemudian dikenal dengan nama Gunung Mekongga. Tasahea dan Larumbalangi pun diangkat menjadi pemimpin yang dihormati atas keberanian mereka.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      trapBtn: '🎋 PASANG BAMBU RUNCING',
+      stabBtn: '🗡️ TUSUKKAN BAMBU',
+      prayBtn: '🙏 MOHON HUJAN DERAS',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Konon di Sulawesi Tenggara, negeri Sorume diteror seekor burung garuda raksasa yang terus memangsa ternak dan bahkan manusia. Penduduk hidup dalam ketakutan.',
+        'Para tetua negeri pun mengutus rombongan meminta bantuan Larumbalangi, seorang pandai besi yang sakti dan bijaksana.',
+        'Larumbalangi menyarankan strategi: membuat perangkap bambu runcing yang dilumuri racun, lalu mencari seorang pemberani untuk dijadikan umpan.',
+        'Diadakanlah sayembara mencari pemberani. Tasahea, seorang pemuda gagah, pun mengajukan diri menjadi umpan untuk memancing garuda raksasa itu turun.',
+        'Tahan tombol untuk membantu penduduk memasang bambu-bambu runcing beracun mengelilingi tempat Tasahea menunggu.',
+        'Tak lama menunggu, burung garuda raksasa itu muncul dari langit, menukik tajam ke arah Tasahea.',
+        'Tahan tombol untuk membantu Tasahea menusukkan bambu beracun itu tepat ke dada burung garuda raksasa tersebut.',
+        'Burung garuda raksasa itu pun jatuh dan mati di sebuah pegunungan. Namun tak lama kemudian, wabah penyakit menyebar akibat bau busuk bangkainya yang sangat besar.',
+        'Larumbalangi pun berdoa memohon hujan deras. Tahan tombol untuk membantunya memanjatkan doa dengan sepenuh hati.',
+        'Hujan deras pun turun selama tujuh hari tujuh malam, hingga banjir besar menghanyutkan bangkai garuda raksasa itu jauh ke lautan. Wabah penyakit pun akhirnya lenyap.'
+      ]
+    },
+    en: {
+      title: 'Mount Mekongga - Game',
+      h2: '🦅 Mount Mekongga',
+      sub: 'A Southeast Sulawesi legend about the struggle to defeat a giant garuda bird.',
+      startTitle: 'Mount Mekongga',
+      startBody: 'A giant garuda bird terrorizes the land of Sorume, preying on livestock and even people. Follow the struggle of Tasahea and Larumbalangi to the origin of Mount Mekongga.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of Mount Mekongga 🦅',
+      winBody: 'The giant garuda\'s carcass forms a mountain later known as Mount Mekongga. Tasahea and Larumbalangi are honored as respected leaders for their bravery.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      trapBtn: '🎋 SET UP THE SPIKES',
+      stabBtn: '🗡️ STRIKE WITH THE SPIKE',
+      prayBtn: '🙏 PRAY FOR HEAVY RAIN',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Legend has it that in Southeast Sulawesi, the land of Sorume is terrorized by a giant garuda bird that keeps preying on livestock and even people. The villagers live in constant fear.',
+        'The village elders send a group to ask for help from Larumbalangi, a powerful and wise blacksmith.',
+        'Larumbalangi suggests a strategy: build a trap of poisoned bamboo spikes, then find a brave volunteer to serve as bait.',
+        'A contest is held to find someone brave enough. Tasahea, a strong young man, volunteers to be the bait to lure the giant garuda down.',
+        'Hold the button to help the villagers set up poisoned bamboo spikes around the spot where Tasahea waits.',
+        'Before long, the giant garuda appears from the sky, diving sharply toward Tasahea.',
+        'Hold the button to help Tasahea drive the poisoned bamboo spike straight into the giant garuda\'s chest.',
+        'The giant garuda falls and dies on a mountain range. But before long, disease spreads from the terrible stench of its enormous carcass.',
+        'Larumbalangi prays for heavy rain. Hold the button to help him pray with all his heart.',
+        'Heavy rain pours down for seven days and seven nights, until a great flood sweeps the giant garuda\'s carcass far out to sea. The plague finally vanishes.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#gmk-wrap h2').textContent = TXT.h2;
+  document.getElementById('gmk-sub').textContent = TXT.sub;
+  document.querySelector('#gmk-start h3').textContent = TXT.startTitle;
+  document.querySelector('#gmk-start p').textContent = TXT.startBody;
+  document.getElementById('gmk-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#gmk-win h3').textContent = TXT.winTitle;
+  document.querySelector('#gmk-win p').textContent = TXT.winBody;
+  document.getElementById('gmk-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('gmk-caption').textContent = TXT.captionInit;
+  document.getElementById('gmk-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('gmk-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('gmk-phase');
+  var captionEl = document.getElementById('gmk-caption');
+  var actionBtn = document.getElementById('gmk-actionBtn');
+  var progressWrap = document.getElementById('gmk-progressWrap');
+  var progressBar = document.getElementById('gmk-progressBar');
+  var startOverlay = document.getElementById('gmk-start');
+  var winOverlay = document.getElementById('gmk-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'garuda_teror' },
+    { type:'caption', phase:1, scene:'utus_larumbalangi' },
+    { type:'caption', phase:2, scene:'strategi_bambu' },
+    { type:'caption', phase:2, scene:'tasahea_sukarela' },
+    { type:'hold', phase:3, scene:'pasang_bambu' },
+    { type:'caption', phase:3, scene:'garuda_muncul' },
+    { type:'hold', phase:4, scene:'tusuk_garuda' },
+    { type:'caption', phase:4, scene:'wabah_penyakit' },
+    { type:'hold', phase:5, scene:'larumbalangi_berdoa' },
+    { type:'caption', phase:5, scene:'hujan_banjir' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'pasang_bambu') actionBtn.textContent = TXT.trapBtn;
+      else if(step.scene === 'tusuk_garuda') actionBtn.textContent = TXT.stabBtn;
+      else if(step.scene === 'larumbalangi_berdoa') actionBtn.textContent = TXT.prayBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('gmk-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('gmk-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawTasahea(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A4A2A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#6B4A2A';
+    ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.moveTo(9*s,2*s); ctx.lineTo(16*s,-14*s); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLarumbalangi(px, py, size, glow){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(glow>0){
+      var g = ctx.createRadialGradient(0,-6*s,4,0,-6*s,30*s);
+      g.addColorStop(0,'rgba(255,230,150,'+(0.4*glow)+')');
+      g.addColorStop(1,'rgba(255,230,150,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-6*s,30*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#3D5A4A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSpike(px, py, size){
+    var s = size/30;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8D6E3A';
+    ctx.beginPath();
+    ctx.moveTo(-3*s,10*s); ctx.lineTo(0,-10*s); ctx.lineTo(3*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5C7A3C';
+    ctx.beginPath(); ctx.arc(0,-9*s,1.5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGaruda(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C3D2A';
+    ctx.beginPath(); ctx.ellipse(0,0,20*s,12*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-4*s); ctx.lineTo(-40*s,-20*s); ctx.lineTo(-10*s,4*s);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(14*s,-4*s); ctx.lineTo(40*s,-20*s); ctx.lineTo(10*s,4*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3A2A1C';
+    ctx.beginPath(); ctx.arc(16*s,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(22*s,-8*s); ctx.lineTo(32*s,-4*s); ctx.lineTo(22*s,0);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath(); ctx.arc(18*s,-9*s,1.6*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMountainBg(){
+    ctx.fillStyle = '#7A5A3A';
+    ctx.beginPath();
+    ctx.moveTo(0,340); ctx.lineTo(400,140); ctx.lineTo(800,340);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8CA86B';
+    ctx.fillRect(0,340,W,H-340);
+  }
+
+  function drawVillageBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='hujan_banjir' || scene==='larumbalangi_berdoa'){
+      sky.addColorStop(0,'#2E3A4A'); sky.addColorStop(1,'#4A5A68');
+    } else if(scene==='garuda_muncul' || scene==='tusuk_garuda' || scene==='pasang_bambu'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'garuda_teror';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='garuda_teror'){
+      drawVillageBg();
+      drawGaruda(400, 160+Math.sin(t*2)*10, 60);
+    }
+    if(scene==='utus_larumbalangi' || scene==='strategi_bambu'){
+      drawVillageBg();
+      drawLarumbalangi(400, 320+bob, 46, 0);
+    }
+    if(scene==='tasahea_sukarela'){
+      drawVillageBg();
+      drawTasahea(340, 330+bob, 44);
+      drawLarumbalangi(460, 335+bob, 42, 0);
+    }
+    if(scene==='pasang_bambu'){
+      drawMountainBg();
+      drawTasahea(400, 350, 42);
+      var spikesShown = Math.round(progress*6);
+      for(var i=0;i<spikesShown;i++){
+        var ang = (i/6)*Math.PI*2;
+        drawSpike(400+Math.cos(ang)*60, 350+Math.sin(ang)*30, 30);
+      }
+    }
+    if(scene==='garuda_muncul'){
+      drawMountainBg();
+      drawTasahea(400, 350, 42);
+      for(var j=0;j<6;j++){
+        var a2 = (j/6)*Math.PI*2;
+        drawSpike(400+Math.cos(a2)*60, 350+Math.sin(a2)*30, 30);
+      }
+      drawGaruda(400, 150+t*20%150, 60);
+    }
+    if(scene==='tusuk_garuda'){
+      drawMountainBg();
+      var clash = 0.3+0.3*Math.sin(t*8);
+      var g = ctx.createRadialGradient(400,320,4,400,320,80);
+      g.addColorStop(0,'rgba(255,180,120,'+clash+')');
+      g.addColorStop(1,'rgba(255,180,120,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(400,320,80,0,Math.PI*2); ctx.fill();
+      drawTasahea(400, 350, 42);
+      drawGaruda(400, 300-progress*100, 60);
+    }
+    if(scene==='wabah_penyakit'){
+      drawMountainBg();
+      ctx.save();
+      ctx.rotate(0);
+      drawGaruda(400, 360, 70);
+      ctx.restore();
+      ctx.fillStyle = 'rgba(120,150,80,0.3)';
+      ctx.beginPath(); ctx.arc(400,360,90,0,Math.PI*2); ctx.fill();
+    }
+    if(scene==='larumbalangi_berdoa'){
+      drawVillageBg();
+      var glow = progress*0.5;
+      drawLarumbalangi(400, 330+bob, 46, glow);
+    }
+    if(scene==='hujan_banjir'){
+      ctx.fillStyle = '#3A6EA5';
+      ctx.fillRect(0,260,W,H-260);
+      ctx.strokeStyle = 'rgba(220,230,255,0.5)';
+      ctx.lineWidth = 2;
+      for(var k=0;k<12;k++){
+        var rx = (k*70+t*400)%850-20;
+        ctx.beginPath();
+        ctx.moveTo(rx,0); ctx.lineTo(rx-10,260);
+        ctx.stroke();
+      }
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('gmk-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'gmk-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('gmk-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>

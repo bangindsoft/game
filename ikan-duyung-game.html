@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Ikan Duyung - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #idg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #1F3A40;
+    background: linear-gradient(180deg, #E1F0F0 0%, #F7F3E8 100%);
+    border: 3px solid #2E6E7A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #idg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #1E4E58;
+  }
+  #idg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6b6b;
+    margin: 0 0 10px;
+  }
+  #idg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #idg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #idg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #2E6E7A;
+    background: #BEE3F8;
+  }
+  #idg-canvas { display: block; width: 100%; height: 100%; }
+  .idg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,32,36,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .idg-overlay.show { display: flex; }
+  .idg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .idg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .idg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .idg-btn:active { transform: scale(0.97); }
+
+  #idg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #2E6E7A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #idg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #idg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #2E6E7A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #idg-actionBtn.hold { background: #3D7A4C; }
+  #idg-actionBtn:active { transform: scale(0.97); }
+  #idg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #idg-progressWrap.show { display: block; }
+  #idg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="idg-wrap">
+  <h2>🧜‍♀️ Asal Mula Ikan Duyung</h2>
+  <p id="idg-sub">Cerita rakyat Sulawesi Tengah tentang sebuah keluarga dan asal mula ikan duyung.</p>
+
+  <div id="idg-hud"><span id="idg-phase">Tahap 1 / 5</span></div>
+
+  <div id="idg-canvas-holder">
+    <canvas id="idg-canvas"></canvas>
+
+    <div class="idg-overlay show" id="idg-start">
+      <h3>Asal Mula Ikan Duyung</h3>
+      <p>Seorang ibu yang terus disalahkan atas kesalahan kecil akhirnya memutuskan pergi dari rumah menuju laut. Ikuti kisahnya yang penuh haru hingga asal mula ikan duyung.</p>
+      <button class="idg-btn" id="idg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="idg-overlay" id="idg-win">
+      <h3>Asal Mula Ikan Duyung 🧜‍♀️</h3>
+      <p>Sejak saat itu, Sang Ibu tak pernah kembali lagi ke daratan, dan dipercaya menjadi asal mula ikan duyung. Kisah ini mengingatkan kita untuk selalu bersabar dan saling menyayangi dalam keluarga.</p>
+      <button class="idg-btn" id="idg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="idg-caption">Bersiap memulai kisah...</div>
+
+  <div id="idg-progressWrap"><div id="idg-progressBar"></div></div>
+  <div id="idg-action-row">
+    <button id="idg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Asal Mula Ikan Duyung - Game',
+      h2: '🧜‍♀️ Asal Mula Ikan Duyung',
+      sub: 'Cerita rakyat Sulawesi Tengah tentang sebuah keluarga dan asal mula ikan duyung.',
+      startTitle: 'Asal Mula Ikan Duyung',
+      startBody: 'Seorang ibu yang terus disalahkan atas kesalahan kecil akhirnya memutuskan pergi dari rumah menuju laut. Ikuti kisahnya yang penuh haru hingga asal mula ikan duyung.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Asal Mula Ikan Duyung 🧜‍♀️',
+      winBody: 'Sejak saat itu, Sang Ibu tak pernah kembali lagi ke daratan, dan dipercaya menjadi asal mula ikan duyung. Kisah ini mengingatkan kita untuk selalu bersabar dan saling menyayangi dalam keluarga.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      walkBtn: '🌊 MENUJU LAUT',
+      callBtn: '📣 PANGGIL IBU',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala di Sulawesi Tengah, hiduplah sepasang suami istri dengan tiga orang anak. Mereka mencari nafkah dengan melaut mencari ikan dan berladang sayuran, selalu sarapan bersama sebelum sang ayah pergi ke ladang.',
+        'Suatu pagi, karena persediaan ikan cukup banyak, sang suami berpesan agar istrinya menyisakan sebagian untuk makan siang sepulang bekerja nanti.',
+        'Menjelang siang, si bungsu kelaparan setelah seharian bermain, dan terus merengek minta tambah nasi dan ikan. Ibu pun akhirnya memberikan semua sisa lauk ikan kepada anak bungsunya.',
+        'Petang harinya, sang ayah pulang dalam keadaan sangat lapar dan meminta ikan yang dipesannya. Mendengar ikan sudah habis dimakan si bungsu, ia marah besar dan terus menyalahkan istrinya.',
+        'Karena terus-menerus dimarahi, Sang Ibu sangat sedih dan memutuskan pergi dari rumah. Tahan tombol untuk membantunya berjalan menuju laut di tengah malam saat semua orang tertidur.',
+        'Keesokan harinya, anak-anak mencarinya hingga ke pinggir pantai sambil terus memanggil. Ibu mereka menjawab dari tengah laut, memberikan banyak ikan untuk dibawa pulang, namun menolak untuk ikut kembali.',
+        'Sesampainya di rumah, anak-anak menyampaikan pertemuan itu pada ayahnya. Namun sang ayah sama sekali tidak peduli, bahkan menolak menyisakan ikan pemberian ibu untuk ibu mereka sendiri.',
+        'Keesokan harinya, anak-anak kembali pergi ke pantai mencari ibunya. Tahan tombol untuk membantu mereka memanggil-manggil sepanjang pantai.',
+        'Sebuah suara memanggil mereka. Betapa terkejutnya anak-anak mendapati ibu mereka kini bersisik di sekujur tubuhnya, telah berubah menjadi ikan duyung. Mereka pun menjauh, tak yakin itu benar ibu mereka.',
+        'Melihat penolakan itu, Sang Ibu sangat sedih, lalu kembali menyelam ke dalam laut. Sejak saat itu, ia memutuskan tak akan pernah kembali lagi ke rumahnya.'
+      ]
+    },
+    en: {
+      title: 'The Origin of the Mermaid - Game',
+      h2: '🧜‍♀️ The Origin of the Mermaid',
+      sub: 'A Central Sulawesi folktale about a family and the origin of the mermaid.',
+      startTitle: 'The Origin of the Mermaid',
+      startBody: 'A mother, repeatedly blamed over a small mistake, finally decides to leave home for the sea. Follow her touching story to the origin of the mermaid.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Origin of the Mermaid 🧜‍♀️',
+      winBody: 'From then on, the mother never returns to land, and is believed to be the origin of the mermaid. This tale reminds us to always be patient and caring within our families.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      walkBtn: '🌊 HEAD TO THE SEA',
+      callBtn: '📣 CALL FOR MOTHER',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago in Central Sulawesi lived a married couple with three children. They made a living fishing at sea and farming vegetables, always sharing breakfast before the father headed to the field.',
+        'One morning, with plenty of fish on hand, the husband asks his wife to save some for his lunch after work.',
+        'By midday, the youngest child, hungry after playing all day, keeps begging for more rice and fish. The mother eventually gives all the remaining fish to her youngest.',
+        'That evening, the husband comes home very hungry and asks for the fish he\'d requested. Hearing it was all eaten by the youngest, he grows furious and keeps blaming his wife.',
+        'Worn down by the constant blame, the mother, deeply saddened, decides to leave home. Hold the button to help her walk toward the sea in the dead of night while everyone sleeps.',
+        'The next day, the children search for her all the way to the shore, calling out. Their mother answers from out at sea, giving them plenty of fish to bring home, but refuses to come back with them.',
+        'Back home, the children tell their father about the meeting. But he doesn\'t care at all, even refusing to save any of the fish their mother gave them for her.',
+        'The next day, the children go back to the beach to search for their mother. Hold the button to help them call out again and again along the shore.',
+        'A voice calls back to them. The children are stunned to find their mother now covered in scales, transformed into a mermaid. They back away, unsure if it\'s really her.',
+        'Seeing their rejection, the mother is deeply saddened, and dives back into the sea. From that moment on, she decides she will never return home again.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#idg-wrap h2').textContent = TXT.h2;
+  document.getElementById('idg-sub').textContent = TXT.sub;
+  document.querySelector('#idg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#idg-start p').textContent = TXT.startBody;
+  document.getElementById('idg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#idg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#idg-win p').textContent = TXT.winBody;
+  document.getElementById('idg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('idg-caption').textContent = TXT.captionInit;
+  document.getElementById('idg-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('idg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('idg-phase');
+  var captionEl = document.getElementById('idg-caption');
+  var actionBtn = document.getElementById('idg-actionBtn');
+  var progressWrap = document.getElementById('idg-progressWrap');
+  var progressBar = document.getElementById('idg-progressBar');
+  var startOverlay = document.getElementById('idg-start');
+  var winOverlay = document.getElementById('idg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'keluarga_nelayan' },
+    { type:'caption', phase:1, scene:'pesan_suami' },
+    { type:'caption', phase:2, scene:'bungsu_lapar' },
+    { type:'caption', phase:2, scene:'ayah_marah' },
+    { type:'hold', phase:3, scene:'ibu_sedih_pergi' },
+    { type:'caption', phase:3, scene:'anak_temukan_ibu' },
+    { type:'caption', phase:4, scene:'ayah_tak_peduli' },
+    { type:'hold', phase:4, scene:'anak_cari_lagi' },
+    { type:'caption', phase:5, scene:'ibu_jadi_duyung' },
+    { type:'caption', phase:5, scene:'ibu_kembali_laut' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'ibu_sedih_pergi') actionBtn.textContent = TXT.walkBtn;
+      else if(step.scene === 'anak_cari_lagi') actionBtn.textContent = TXT.callBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('idg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('idg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawFather(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5C4433';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6.5*s,3*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMother(px, py, size, mermaid){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = mermaid ? '#2E9A78' : '#C9799A';
+    if(mermaid){
+      ctx.beginPath();
+      ctx.moveTo(-9*s,0); ctx.quadraticCurveTo(0,14*s,9*s,0); ctx.quadraticCurveTo(0,6*s,-9*s,0);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6.5*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawChild(px, py, size, colorMain){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain;
+    ctx.beginPath(); ctx.ellipse(0,4*s,8*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-4*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawBeachBg(night){
+    ctx.fillStyle = night ? '#8A9AA0' : '#EBDCA8';
+    ctx.fillRect(0,320,W,H-320);
+    ctx.fillStyle = night ? '#2E3A4A' : '#5C8AA6';
+    ctx.fillRect(0,280,W,40);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='ibu_sedih_pergi'){
+      sky.addColorStop(0,'#141B33'); sky.addColorStop(1,'#2E3A5C');
+    } else if(scene==='anak_temukan_ibu' || scene==='anak_cari_lagi' || scene==='ibu_jadi_duyung' || scene==='ibu_kembali_laut'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'keluarga_nelayan';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='keluarga_nelayan' || scene==='pesan_suami'){
+      drawHutBg();
+      drawFather(320, 335+bob, 40);
+      drawMother(400, 340+bob, 38, false);
+      drawChild(460, 350, 28, '#7A9E4A');
+    }
+    if(scene==='bungsu_lapar'){
+      drawHutBg();
+      drawMother(360, 335+bob, 38, false);
+      drawChild(420, 345, 30, '#7A9E4A');
+    }
+    if(scene==='ayah_marah'){
+      drawHutBg();
+      drawFather(340, 330+bob, 42);
+      drawMother(440, 340, 38, false);
+    }
+    if(scene==='ibu_sedih_pergi'){
+      drawBeachBg(true);
+      drawMother(200+progress*400, 300+bob, 38, false);
+    }
+    if(scene==='anak_temukan_ibu'){
+      drawBeachBg(false);
+      drawChild(280, 330, 30, '#7A9E4A');
+      drawChild(330, 335, 28, '#4A7EC9');
+      drawMother(520, 340+Math.sin(t*3)*6, 36, true);
+    }
+    if(scene==='ayah_tak_peduli'){
+      drawHutBg();
+      drawFather(340, 330+bob, 42);
+      drawChild(420, 345, 30, '#7A9E4A');
+    }
+    if(scene==='anak_cari_lagi'){
+      drawBeachBg(false);
+      var cx = 200+progress*300;
+      drawChild(cx, 330+bob, 30, '#7A9E4A');
+      drawChild(cx+50, 335+bob*0.8, 28, '#4A7EC9');
+    }
+    if(scene==='ibu_jadi_duyung' || scene==='ibu_kembali_laut'){
+      drawBeachBg(false);
+      drawChild(260, 330, 30, '#7A9E4A');
+      drawChild(310, 335, 28, '#4A7EC9');
+      var my = scene==='ibu_kembali_laut' ? 340+Math.min(1,(t%3)/2)*40 : 340;
+      drawMother(500, my+Math.sin(t*3)*6, 40, true);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('idg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'idg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('idg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
