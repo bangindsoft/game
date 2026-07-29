@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ande Ande Lumut - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #aal-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #E6EFE1 0%, #F7F3E8 100%);
+    border: 3px solid #3D6B4A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #aal-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #2A4E34;
+  }
+  #aal-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #aal-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #aal-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #aal-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #3D6B4A;
+    background: #BEE3F8;
+  }
+  #aal-canvas { display: block; width: 100%; height: 100%; }
+  .aal-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(24,36,26,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .aal-overlay.show { display: flex; }
+  .aal-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .aal-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .aal-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .aal-btn:active { transform: scale(0.97); }
+
+  #aal-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #3D6B4A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #aal-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #aal-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #3D6B4A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #aal-actionBtn.hold { background: #8A5A1E; }
+  #aal-actionBtn:active { transform: scale(0.97); }
+  #aal-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #aal-progressWrap.show { display: block; }
+  #aal-progressBar { height: 100%; width: 0%; background: #8A5A1E; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="aal-wrap">
+  <h2>🦀 Ande Ande Lumut</h2>
+  <p id="aal-sub">Cerita rakyat Jawa Tengah tentang Kleting Kuning yang menjaga kehormatan dirinya.</p>
+
+  <div id="aal-hud"><span id="aal-phase">Tahap 1 / 5</span></div>
+
+  <div id="aal-canvas-holder">
+    <canvas id="aal-canvas"></canvas>
+
+    <div class="aal-overlay show" id="aal-start">
+      <h3>Ande Ande Lumut</h3>
+      <p>Dewi Candra Kirana menyamar sebagai Kleting Kuning untuk mencari suaminya yang hilang. Ikuti perjalanannya menyeberangi sungai berbahaya hingga bertemu Ande Ande Lumut.</p>
+      <button class="aal-btn" id="aal-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="aal-overlay" id="aal-win">
+      <h3>Reuni Penuh Kejutan 💍</h3>
+      <p>Kleting Kuning dan Ande Ande Lumut membuka penyamaran mereka masing-masing: Dewi Candra Kirana dan Raden Putra! Keduanya pun kembali hidup bahagia sebagai suami istri.</p>
+      <button class="aal-btn" id="aal-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="aal-caption">Bersiap memulai kisah...</div>
+
+  <div id="aal-progressWrap"><div id="aal-progressBar"></div></div>
+  <div id="aal-action-row">
+    <button id="aal-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Ande Ande Lumut - Game',
+      h2: '🦀 Ande Ande Lumut',
+      sub: 'Cerita rakyat Jawa Tengah tentang Kleting Kuning yang menjaga kehormatan dirinya.',
+      startTitle: 'Ande Ande Lumut',
+      startBody: 'Dewi Candra Kirana menyamar sebagai Kleting Kuning untuk mencari suaminya yang hilang. Ikuti perjalanannya menyeberangi sungai berbahaya hingga bertemu Ande Ande Lumut.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Reuni Penuh Kejutan 💍',
+      winBody: 'Kleting Kuning dan Ande Ande Lumut membuka penyamaran mereka masing-masing: Dewi Candra Kirana dan Raden Putra! Keduanya pun kembali hidup bahagia sebagai suami istri.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      askBtn: '🙏 MINTA IZIN PERGI',
+      stickBtn: '🪄 PUKULKAN LIDI SAKTI',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Dahulu kala di Jawa Tengah, berdirilah Kerajaan Jenggala. Sang Raja ingin putra mahkotanya, Raden Putra, menggantikannya menjadi raja. Namun Raden Putra menolak, dan pergi meninggalkan kerajaan seorang diri tanpa mengajak istrinya, Dewi Candra Kirana.',
+        'Dewi Candra Kirana sangat sedih. Ia pun menyamar sebagai perempuan desa biasa dan pergi mencari suaminya. Di tengah pengembaraannya, seorang janda kaya bernama Mbok Randa Kawulusan mengangkatnya sebagai anak, dengan nama baru: Kleting Kuning.',
+        'Ketiga kakak angkatnya, Kleting Abang, Kleting Wungu, dan Kleting Biru, sangat iri pada kecantikan Kleting Kuning. Mereka memperlakukannya dengan buruk, menyuruhnya mengenakan pakaian kumal dan mengerjakan seluruh pekerjaan rumah.',
+        'Kabar tersiar bahwa seorang pemuda sangat tampan bernama Ande Ande Lumut sedang mencari istri. Mbok Randa Kawulusan pun mengutus ketiga anaknya pergi melamar, sementara Kleting Kuning disuruh tinggal di rumah.',
+        'Di tengah perjalanan, ketiga kakak beradik itu dihadang sungai lebar dan dalam. Seekor kepiting raksasa bernama Yuyu Kangkang menawarkan bantuan menyeberang, dengan syarat mereka bersedia dicium olehnya. Tanpa berpikir panjang, ketiganya menyetujuinya.',
+        'Sesampainya di desa Dadapan, ketiganya justru ditolak oleh Ande Ande Lumut, karena dianggap tidak mampu menjaga kehormatan diri mereka.',
+        'Tahan tombol untuk membantu Kleting Kuning meyakinkan Mbok Randa Kawulusan agar mengizinkannya menyusul ke desa Dadapan.',
+        'Kleting Kuning pun berangkat dengan pakaian kumal satu-satunya yang ia punya. Di sungai yang sama, Yuyu Kangkang kembali menawarkan bantuan dengan syarat yang sama. Namun kali ini, Kleting Kuning menolaknya dengan tegas.',
+        'Tahan tombol untuk membantu Kleting Kuning memukulkan lidi saktinya ke permukaan sungai, membuat airnya surut seketika.',
+        'Ketakutan karena tak bisa hidup tanpa air, Yuyu Kangkang memohon ampun dan berjanji menyeberangkannya tanpa syarat apa pun. Kleting Kuning pun setuju dan mengembalikan air sungai seperti semula.',
+        'Kleting Kuning akhirnya tiba di desa Dadapan. Begitu melihatnya, Ande Ande Lumut justru langsung bergegas menghampirinya, mengabaikan semua wanita cantik lain yang telah ia tolak.'
+      ]
+    },
+    en: {
+      title: 'Ande Ande Lumut - Game',
+      h2: '🦀 Ande Ande Lumut',
+      sub: 'A Central Java folktale about Kleting Kuning, who guards her own dignity.',
+      startTitle: 'Ande Ande Lumut',
+      startBody: 'Princess Candra Kirana disguises herself as Kleting Kuning to search for her missing husband. Follow her journey crossing a dangerous river, all the way to meeting Ande Ande Lumut.',
+      startBtn: 'Start the Tale',
+      winTitle: 'A Surprising Reunion 💍',
+      winBody: 'Kleting Kuning and Ande Ande Lumut reveal their true identities: Princess Candra Kirana and Prince Putra! The two live happily together once more as husband and wife.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      askBtn: '🙏 ASK FOR PERMISSION',
+      stickBtn: '🪄 STRIKE WITH THE MAGIC STICK',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago in Central Java stood the Jenggala Kingdom. The King wanted his crown prince, Raden Putra, to succeed him as ruler. But Raden Putra refuses, and leaves the kingdom alone, without bringing his wife, Princess Candra Kirana.',
+        'Deeply saddened, Princess Candra Kirana disguises herself as an ordinary village woman and sets out to find her husband. During her travels, a wealthy widow named Mbok Randa Kawulusan takes her in as a daughter, giving her a new name: Kleting Kuning.',
+        'Her three adoptive sisters, Kleting Abang, Kleting Wungu, and Kleting Biru, grow deeply jealous of Kleting Kuning\'s beauty. They treat her poorly, making her wear ragged clothes and do all the housework.',
+        'Word spreads that a very handsome young man named Ande Ande Lumut is looking for a wife. Mbok Randa Kawulusan sends her three daughters to propose, while Kleting Kuning is told to stay home.',
+        'Along the way, the three sisters are blocked by a wide, deep river. A giant crab named Yuyu Kangkang offers to help them cross, on the condition that they let him kiss them. Without a second thought, all three agree.',
+        'Arriving in Dadapan village, all three are rejected by Ande Ande Lumut, who considers them unable to guard their own dignity.',
+        'Hold the button to help Kleting Kuning convince Mbok Randa Kawulusan to let her follow to Dadapan village too.',
+        'Kleting Kuning sets off wearing the only ragged clothes she owns. At the same river, Yuyu Kangkang again offers help under the same condition. But this time, Kleting Kuning firmly refuses.',
+        'Hold the button to help Kleting Kuning strike the river\'s surface with her magic stick, making the water recede instantly.',
+        'Terrified at being unable to live without water, Yuyu Kangkang begs for forgiveness and promises to carry her across with no conditions at all. Kleting Kuning agrees and restores the river to normal.',
+        'Kleting Kuning finally arrives in Dadapan village. The moment he sees her, Ande Ande Lumut rushes straight to her, ignoring every other beautiful woman he\'d turned away.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#aal-wrap h2').textContent = TXT.h2;
+  document.getElementById('aal-sub').textContent = TXT.sub;
+  document.querySelector('#aal-start h3').textContent = TXT.startTitle;
+  document.querySelector('#aal-start p').textContent = TXT.startBody;
+  document.getElementById('aal-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#aal-win h3').textContent = TXT.winTitle;
+  document.querySelector('#aal-win p').textContent = TXT.winBody;
+  document.getElementById('aal-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('aal-caption').textContent = TXT.captionInit;
+  document.getElementById('aal-actionBtn').textContent = TXT.nextBtn;
+
+  var canvas = document.getElementById('aal-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('aal-phase');
+  var captionEl = document.getElementById('aal-caption');
+  var actionBtn = document.getElementById('aal-actionBtn');
+  var progressWrap = document.getElementById('aal-progressWrap');
+  var progressBar = document.getElementById('aal-progressBar');
+  var startOverlay = document.getElementById('aal-start');
+  var winOverlay = document.getElementById('aal-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'raden_putra_pergi' },
+    { type:'caption', phase:1, scene:'jadi_kleting_kuning' },
+    { type:'caption', phase:2, scene:'kakak_iri' },
+    { type:'caption', phase:2, scene:'kabar_ande_lumut' },
+    { type:'caption', phase:3, scene:'yuyu_kangkang_kakak' },
+    { type:'caption', phase:3, scene:'kakak_ditolak' },
+    { type:'hold', phase:4, scene:'minta_izin' },
+    { type:'caption', phase:4, scene:'yuyu_kangkang_tolak' },
+    { type:'hold', phase:4, scene:'lidi_sakti' },
+    { type:'caption', phase:5, scene:'yuyu_kangkang_menyerah' },
+    { type:'caption', phase:5, scene:'tiba_dadapan' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'minta_izin') actionBtn.textContent = TXT.askBtn;
+      else if(step.scene === 'lidi_sakti') actionBtn.textContent = TXT.stickBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('aal-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('aal-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawRadenPutra(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#2E4A8A';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-6*s); ctx.quadraticCurveTo(-14*s,6*s,-10*s,20*s);
+    ctx.lineTo(10*s,20*s); ctx.quadraticCurveTo(14*s,6*s,10*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-10*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-13*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A5A';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawKandra(px, py, size, kumal){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    if(kumal) ctx.filter = 'saturate(0.35) brightness(0.8)';
+    ctx.fillStyle = '#C9799A';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.filter = 'none';
+    ctx.restore();
+  }
+
+  function drawSister(px, py, size, colorMain){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = colorMain;
+    ctx.beginPath();
+    ctx.moveTo(-10*s,-5*s); ctx.quadraticCurveTo(-14*s,7*s,-9*s,19*s);
+    ctx.lineTo(9*s,19*s); ctx.quadraticCurveTo(14*s,7*s,10*s,-5*s);
+    ctx.quadraticCurveTo(0,-9*s,-10*s,-5*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-11*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.ellipse(0,-15*s,6.5*s,5.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMbok(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A2A';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawYuyu(px, py, size, submerged){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    var col = submerged>0 ? '#B5502A' : '#C9506A';
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.ellipse(0,0,18*s,12*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-6*s); ctx.lineTo(-26*s,-16*s); ctx.lineTo(-18*s,2*s);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(14*s,-6*s); ctx.lineTo(26*s,-16*s); ctx.lineTo(18*s,2*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.arc(-6*s,-4*s,2*s,0,Math.PI*2); ctx.arc(6*s,-4*s,2*s,0,Math.PI*2); ctx.fill();
+    for(var i=-10;i<=10;i+=6){
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2*s;
+      ctx.beginPath(); ctx.moveTo(i*s,10*s); ctx.lineTo(i*s,16*s); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawStick(px, py, size, wave){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.rotate(Math.sin(wave)*0.3);
+    ctx.strokeStyle = '#D9AF3C';
+    ctx.lineWidth = 3*s;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0,-16*s); ctx.lineTo(0,16*s); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    for(var k=0;k<5;k++){
+      ctx.fillStyle = '#C9A24E';
+      ctx.fillRect(90+k*150, 160, 22, 170);
+      ctx.beginPath(); ctx.arc(90+k*150+11, 160, 22, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#E8C88A';
+    ctx.fillRect(0,320,W,H-320);
+  }
+
+  function drawHutBg(){
+    ctx.fillStyle = '#DDD3B8';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(580,300,80,40);
+  }
+
+  function drawRiverBg(recede){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,260,W,H-260);
+    var waterY = 300 + recede*80;
+    ctx.fillStyle = '#3A6EA5';
+    ctx.fillRect(0,waterY,W,H-waterY);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var w=0;w<3;w++){
+      ctx.beginPath();
+      ctx.moveTo(0, waterY+20+w*15);
+      ctx.quadraticCurveTo(400, waterY+15+w*15+Math.sin(t*2+w)*4, 800, waterY+20+w*15);
+      ctx.stroke();
+    }
+  }
+
+  function drawVillageBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='raden_putra_pergi' || scene==='jadi_kleting_kuning' || scene==='kakak_iri' || scene==='kabar_ande_lumut'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else if(scene==='yuyu_kangkang_kakak' || scene==='yuyu_kangkang_tolak' || scene==='lidi_sakti' || scene==='yuyu_kangkang_menyerah'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    } else if(scene==='minta_izin'){
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    } else {
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'raden_putra_pergi';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='raden_putra_pergi'){
+      drawPalaceBg();
+      drawKandra(340, 330+bob, 44, false);
+      drawRadenPutra(500+Math.sin(t*6)*10, 335+bob, 40);
+    }
+    if(scene==='jadi_kleting_kuning'){
+      drawHutBg();
+      drawMbok(340, 330+bob, 40);
+      drawKandra(420, 340+bob, 40, false);
+    }
+    if(scene==='kakak_iri'){
+      drawHutBg();
+      drawSister(300, 335, 32, '#C9506A');
+      drawSister(350, 340, 30, '#8A5A9A');
+      drawSister(400, 335, 30, '#4A7EC9');
+      drawKandra(480, 345+bob, 36, true);
+    }
+    if(scene==='kabar_ande_lumut'){
+      drawHutBg();
+      drawMbok(340, 330+bob, 40);
+      drawSister(420, 340, 32, '#C9506A');
+      drawSister(470, 335, 30, '#8A5A9A');
+      drawSister(520, 340, 30, '#4A7EC9');
+    }
+    if(scene==='yuyu_kangkang_kakak'){
+      drawRiverBg(0);
+      drawSister(280, 320, 34, '#C9506A');
+      drawSister(330, 325, 32, '#8A5A9A');
+      drawSister(380, 320, 32, '#4A7EC9');
+      drawYuyu(500, 340, 60, 0);
+    }
+    if(scene==='kakak_ditolak'){
+      drawVillageBg();
+      drawSister(300, 335, 32, '#C9506A');
+      drawSister(350, 340, 30, '#8A5A9A');
+      drawSister(400, 335, 30, '#4A7EC9');
+      drawRadenPutra(520, 330+bob, 42);
+    }
+    if(scene==='minta_izin'){
+      drawHutBg();
+      drawKandra(340, 330+bob, 40, true);
+      drawMbok(440, 340, 40);
+    }
+    if(scene==='yuyu_kangkang_tolak'){
+      drawRiverBg(0);
+      drawKandra(280, 320+bob, 38, true);
+      drawYuyu(500, 340, 60, 0);
+    }
+    if(scene==='lidi_sakti'){
+      drawRiverBg(progress*0.9);
+      drawKandra(280, 320+bob, 38, true);
+      drawStick(320, 310, 40, t*10);
+      drawYuyu(500, 340+progress*60, 60, progress);
+    }
+    if(scene==='yuyu_kangkang_menyerah'){
+      drawRiverBg(0.85);
+      drawKandra(280, 320+bob, 38, true);
+      drawYuyu(480, 370, 54, 1);
+    }
+    if(scene==='tiba_dadapan'){
+      drawVillageBg();
+      drawKandra(360, 335+bob, 40, true);
+      drawRadenPutra(460, 330+Math.sin(t*8)*6, 42);
+      drawSister(560, 350, 28, '#C9506A');
+      drawSister(600, 355, 26, '#8A5A9A');
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('aal-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'aal-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('aal-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
