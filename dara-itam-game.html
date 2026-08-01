@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dara Itam — Bisikan Sungai Tenganap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Mulish:wght@400;600;700&display=swap');
+
+  :root{
+    --bg:#0b120d;
+    --panel:#121d16;
+    --panel-border:#274a34;
+    --gold:#d4af37;
+    --gold-soft:#e8cf7a;
+    --green:#2f7a4f;
+    --green-deep:#173a26;
+    --cream:#ece7d5;
+    --muted:#9fb0a4;
+    --danger:#7a3b2f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Mulish', sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, #14261a 0%, transparent 45%),
+      radial-gradient(circle at 85% 100%, #17301f 0%, transparent 50%),
+      var(--bg);
+    color:var(--cream);
+    min-height:100vh;
+    padding:18px 12px 30px;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:640px;
+  }
+  .brand{
+    text-align:center;
+    margin-bottom:14px;
+    position:relative;
+  }
+  .brand h1{
+    font-family:'Cinzel', serif;
+    font-weight:700;
+    font-size:1.7rem;
+    margin:0;
+    letter-spacing:1px;
+    color:var(--gold-soft);
+    text-shadow:0 0 18px rgba(212,175,55,0.25);
+  }
+  .brand p{
+    margin:4px 0 0;
+    font-size:0.8rem;
+    color:var(--muted);
+    letter-spacing:0.5px;
+  }
+  .langbar{
+    position:absolute;
+    right:0; top:0;
+    display:flex;
+    gap:4px;
+  }
+  .langbtn{
+    background:transparent;
+    border:1px solid var(--panel-border);
+    color:var(--muted);
+    font-size:0.7rem;
+    padding:4px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    font-family:'Mulish',sans-serif;
+  }
+  .langbtn.active{
+    color:var(--bg);
+    background:var(--gold-soft);
+    border-color:var(--gold-soft);
+    font-weight:700;
+  }
+
+  .progress{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#25342a;
+    border:1px solid var(--panel-border);
+    transition:all .3s ease;
+  }
+  .dot.done{background:var(--gold);border-color:var(--gold);}
+  .dot.current{background:var(--green);border-color:var(--gold);box-shadow:0 0 6px var(--gold);}
+
+  .card{
+    background:linear-gradient(180deg, var(--panel) 0%, #0f1911 100%);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:22px 20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4), inset 0 0 40px rgba(47,122,79,0.05);
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:-40%; left:-20%;
+    width:140%; height:140%;
+    background:radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  .scene-title{
+    font-family:'Cinzel', serif;
+    color:var(--gold-soft);
+    font-size:1.1rem;
+    margin:0 0 10px;
+    letter-spacing:0.5px;
+  }
+  .scene-text{
+    font-size:0.98rem;
+    line-height:1.7;
+    color:var(--cream);
+    margin:0 0 18px;
+    white-space:pre-line;
+  }
+  .choices{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .choice-btn{
+    text-align:left;
+    background:var(--green-deep);
+    border:1px solid var(--panel-border);
+    color:var(--cream);
+    padding:13px 16px;
+    border-radius:10px;
+    font-family:'Mulish',sans-serif;
+    font-size:0.92rem;
+    cursor:pointer;
+    transition:all .2s ease;
+    line-height:1.4;
+  }
+  .choice-btn:hover{
+    border-color:var(--gold);
+    background:#1c3524;
+    transform:translateY(-1px);
+    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+  }
+  .choice-btn .tag{
+    display:block;
+    font-size:0.7rem;
+    color:var(--gold-soft);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:4px;
+  }
+
+  .btn-primary{
+    display:inline-block;
+    margin-top:16px;
+    background:linear-gradient(180deg, var(--gold-soft), var(--gold));
+    color:#231a05;
+    border:none;
+    padding:12px 22px;
+    border-radius:10px;
+    font-weight:700;
+    font-family:'Mulish',sans-serif;
+    font-size:0.92rem;
+    cursor:pointer;
+    letter-spacing:0.3px;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+
+  .btn-ghost{
+    display:inline-block;
+    margin-top:10px;
+    margin-left:8px;
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--panel-border);
+    padding:11px 18px;
+    border-radius:10px;
+    font-family:'Mulish',sans-serif;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  .btn-ghost:hover{color:var(--cream);border-color:var(--gold);}
+
+  .result-badge{
+    text-align:center;
+    padding:16px 10px 6px;
+  }
+  .result-badge .icon{font-size:2.4rem;}
+  .result-badge h2{
+    font-family:'Cinzel', serif;
+    color:var(--gold);
+    font-size:1.5rem;
+    margin:6px 0 4px;
+    text-shadow:0 0 20px rgba(212,175,55,0.3);
+  }
+  .result-badge .subtitle{
+    color:var(--muted);
+    font-size:0.85rem;
+    margin-bottom:14px;
+  }
+  .stats{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin:16px 0;
+  }
+  .stat-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.78rem;
+    color:var(--muted);
+  }
+  .stat-label{width:110px;flex-shrink:0;}
+  .stat-bar-bg{
+    flex:1;
+    background:#1a2620;
+    border-radius:6px;
+    height:8px;
+    overflow:hidden;
+  }
+  .stat-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--green), var(--gold));
+    border-radius:6px;
+  }
+
+  .share-box{
+    background:var(--green-deep);
+    border:1px dashed var(--panel-border);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:0.85rem;
+    color:var(--cream);
+    margin-top:12px;
+    line-height:1.5;
+  }
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:6px;
+  }
+  .copy-feedback{
+    font-size:0.78rem;
+    color:var(--gold-soft);
+    margin-top:8px;
+    height:16px;
+  }
+  footer.credit{
+    text-align:center;
+    color:#4b5c50;
+    font-size:0.7rem;
+    margin-top:14px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="brand">
+    <div class="langbar">
+      <button class="langbtn" id="btn-id" onclick="setLang('id')">ID</button>
+      <button class="langbtn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <h1 id="brandTitle">DARA ITAM</h1>
+    <p id="brandSub">Cerita Rakyat Kalimantan Barat — Petualangan Interaktif</p>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card" id="card">
+    <!-- konten diisi oleh JS -->
+  </div>
+
+  <footer class="credit" id="credit">Diadaptasi dari cerita rakyat Kalimantan Barat • caritasato.blogspot.com</footer>
+</div>
+
+<script>
+/* ===================== DATA BAHASA ===================== */
+const TXT = {
+id: {
+  brandTitle: "DARA ITAM",
+  brandSub: "Cerita Rakyat Kalimantan Barat — Petualangan Interaktif",
+  credit: "Diadaptasi dari cerita rakyat Kalimantan Barat • caritasato.blogspot.com",
+  startBtn: "Mulai Perjalanan",
+  nextBtn: "Lanjutkan",
+  restartBtn: "Mainkan Lagi",
+  copyBtn: "Salin Hasil",
+  copied: "Tersalin! Siap dibagikan ✨",
+  yourStats: "Jejak Batinmu",
+  resultSubtitle: "Karaktermu dalam kisah Dara Itam adalah:",
+  stats: {
+    tabib: "Sang Penyembuh",
+    pejuang: "Keteguhan Hati",
+    setia: "Kesetiaan Cinta",
+    bijak: "Kebijaksanaan"
+  },
+  intro: {
+    title: "Prolog: Anak Patih Gumantar",
+    text: "Di kaki hutan Kalimantan Barat, hiduplah Dara Itam, satu-satunya anak Patih Gumantar — pemimpin yang disegani dan makmur. Namun kejayaan itu mengundang iri kerajaan tetangga. Dalam sebuah perang kayau yang kejam, sang ayah gugur, dan Dara Itam tumbuh sebagai yatim yang menyimpan luka mendalam.\n\nSeiring waktu, ia menjelma menjadi dukun Baliatn yang piawai meracik obat dari akar dan daun hutan, dikagumi karena parasnya yang jelita dan hatinya yang teguh. Di antara hutan lebat itu pula tumbuh benih cinta antara dirinya dan seorang pemuda bernama Riya Sinir.\n\nNamun takdir menyimpan ujian lain: seorang raja bernama Pulang Palih mendengar kecantikan dan kesaktiannya, dan berhasrat menjadikannya permaisuri...\n\nPerjalanan ini akan membentuk siapa dirimu — penyembuh, pejuang, kekasih setia, atau penguasa bijaksana. Setiap langkah adalah pilihanmu."
+  },
+  stage1: {
+    title: "Babak I — Persimpangan Hutan",
+    text: "Di tepi hutan menuju Sungai Tenganap, tiga jalur membentang di hadapan Dara Itam. Ke mana ia melangkah untuk mencari bahan ramuan sekaligus petunjuk dari leluhur?",
+    options: [
+      { tag:"Jalur Air", label:"Menyusuri Sungai Tenganap, memetik akar obat di tepian yang jernih.", stats:{tabib:2, setia:1} },
+      { tag:"Jalur Rimba", label:"Mengikuti jejak rusa menembus hutan dalam menuju gua leluhur.", stats:{pejuang:2, bijak:1} },
+      { tag:"Jalur Bukit", label:"Mendaki Bukit Batu untuk membaca pertanda bintang di malam hari.", stats:{bijak:2, pejuang:1} }
+    ]
+  },
+  stage2: {
+    title: "Babak II — Pusaka di Dalam Gua",
+    text: "Di kedalaman gua tersembunyi, tiga benda pusaka tergeletak diselimuti debu waktu. Benda manakah yang dipilih Dara Itam untuk dibawa pulang?",
+    options: [
+      { tag:"Ramuan Leluhur", label:"Ikatan akar dan daun pusaka warisan para dukun Baliatn terdahulu.", stats:{tabib:2} },
+      { tag:"Keris Ayahanda", label:"Keris kecil peninggalan Patih Gumantar, lambang keberanian sang ayah.", stats:{pejuang:2} },
+      { tag:"Kalung Riya Sinir", label:"Kalung manik pemberian Riya Sinir, penanda janji yang belum terucap.", stats:{setia:2} }
+    ]
+  },
+  stage3: {
+    title: "Babak III — Pinangan Sang Raja",
+    text: "Kabar kecantikan dan kesaktian Dara Itam sampai ke telinga Raja Pulang Palih. Sang raja pun datang meminang, sementara hatinya telah bertaut pada Riya Sinir. Bagaimana Dara Itam bersikap?",
+    options: [
+      { tag:"Menerima demi Rakyat", label:"Menerima pinangan demi menjaga kedamaian, sambil diam-diam menyimpan cintanya.", stats:{bijak:2, setia:1} },
+      { tag:"Melarikan Cinta", label:"Menolak halus dan melarikan diri bersama Riya Sinir ke pedalaman hutan.", stats:{pejuang:2, setia:2} },
+      { tag:"Merangkul Keduanya", label:"Bernegosiasi dengan bijak, tetap mengobati rakyat di kedua sisi kerajaan.", stats:{tabib:2, bijak:1} }
+    ]
+  },
+  results: {
+    tabib: {
+      icon:"🌿",
+      title:"Sang Penyembuh — Dukun Baliatn Sejati",
+      desc:"Hatimu tertuju pada penyembuhan dan kehidupan. Seperti Dara Itam yang meracik obat dari hutan, kamu adalah jiwa yang menenangkan luka orang lain sebelum luka sendiri.",
+      share:"Aku adalah Sang Penyembuh — Dukun Baliatn Sejati dalam kisah Dara Itam! 🌿✨ Cari tahu karaktermu di caritasato.blogspot.com #CeritaRakyat #DaraItam #KalimantanBarat"
+    },
+    pejuang: {
+      icon:"🗡️",
+      title:"Pewaris Hutan — Jiwa yang Teguh",
+      desc:"Keberanian dan ketabahan mengalir dalam dirimu. Seperti Dara Itam menghadapi kehilangan sang ayah, kamu memilih melangkah maju walau jalan penuh onak.",
+      share:"Aku adalah Pewaris Hutan — Jiwa yang Teguh dalam kisah Dara Itam! 🗡️🌲 Cari tahu karaktermu di caritasato.blogspot.com #CeritaRakyat #DaraItam #KalimantanBarat"
+    },
+    setia: {
+      icon:"💧",
+      title:"Penjaga Sungai — Kesetiaan Cinta",
+      desc:"Cinta dan kesetiaanmu sedalam Sungai Tenganap. Seperti Dara Itam pada Riya Sinir, kamu memilih hati yang tulus di atas segala tahta.",
+      share:"Aku adalah Penjaga Sungai — Kesetiaan Cinta dalam kisah Dara Itam! 💧💛 Cari tahu karaktermu di caritasato.blogspot.com #CeritaRakyat #DaraItam #KalimantanBarat"
+    },
+    bijak: {
+      icon:"👑",
+      title:"Ratu Bijaksana — Cahaya Penuntun",
+      desc:"Kebijaksanaan adalah mahkotamu. Seperti Dara Itam yang menimbang setiap keputusan demi kedamaian rakyatnya, kamu memimpin dengan kepala dingin dan hati lapang.",
+      share:"Aku adalah Ratu Bijaksana — Cahaya Penuntun dalam kisah Dara Itam! 👑✨ Cari tahu karaktermu di caritasato.blogspot.com #CeritaRakyat #DaraItam #KalimantanBarat"
+    }
+  }
+},
+en: {
+  brandTitle: "DARA ITAM",
+  brandSub: "West Kalimantan Folklore — An Interactive Journey",
+  credit: "Adapted from West Kalimantan folklore • caritasato.blogspot.com",
+  startBtn: "Begin the Journey",
+  nextBtn: "Continue",
+  restartBtn: "Play Again",
+  copyBtn: "Copy Result",
+  copied: "Copied! Ready to share ✨",
+  yourStats: "Your Inner Trail",
+  resultSubtitle: "Your character in the tale of Dara Itam is:",
+  stats: {
+    tabib: "The Healer",
+    pejuang: "Steadfast Spirit",
+    setia: "Loyal Heart",
+    bijak: "Wisdom"
+  },
+  intro: {
+    title: "Prologue: The Daughter of Patih Gumantar",
+    text: "At the foot of a West Kalimantan forest lived Dara Itam, the only daughter of Patih Gumantar, a respected and prosperous chieftain. But such prosperity drew envy from neighboring kingdoms. In a brutal headhunting war, her father fell, leaving Dara Itam an orphan carrying a deep wound.\n\nOver time, she became a skilled Baliatn shaman, brewing remedies from forest roots and leaves, admired for both her beauty and her steady heart. Deep within that same forest, a quiet love grew between her and a young man named Riya Sinir.\n\nBut fate held another trial: a king named Pulang Palih heard of her beauty and power, and desired to make her his queen...\n\nThis journey will shape who you become — a healer, a warrior, a devoted lover, or a wise ruler. Every step is your choice."
+  },
+  stage1: {
+    title: "Chapter I — The Forest Crossroads",
+    text: "At the edge of the forest leading to the Tenganap River, three paths stretch before Dara Itam. Which way does she walk to gather herbs and seek guidance from her ancestors?",
+    options: [
+      { tag:"The Water Path", label:"Following the Tenganap River, gathering healing roots along its clear banks.", stats:{tabib:2, setia:1} },
+      { tag:"The Deep Forest Path", label:"Tracking deer trails deep into the woods toward an ancestral cave.", stats:{pejuang:2, bijak:1} },
+      { tag:"The Stone Hill Path", label:"Climbing Bukit Batu to read the omens written in the night stars.", stats:{bijak:2, pejuang:1} }
+    ]
+  },
+  stage2: {
+    title: "Chapter II — Relics of the Cave",
+    text: "Deep within a hidden cave, three heirlooms lie beneath the dust of time. Which one does Dara Itam choose to bring home?",
+    options: [
+      { tag:"Ancestral Remedy", label:"A bundle of sacred roots and leaves passed down by generations of Baliatn shamans.", stats:{tabib:2} },
+      { tag:"Her Father's Keris", label:"A small dagger left by Patih Gumantar, a symbol of her father's courage.", stats:{pejuang:2} },
+      { tag:"Riya Sinir's Necklace", label:"A beaded necklace from Riya Sinir, marking an unspoken promise.", stats:{setia:2} }
+    ]
+  },
+  stage3: {
+    title: "Chapter III — The King's Proposal",
+    text: "Word of Dara Itam's beauty and power reaches King Pulang Palih, who comes to propose — while her heart already belongs to Riya Sinir. How does she respond?",
+    options: [
+      { tag:"Accept for Her People", label:"She accepts the proposal to preserve peace, quietly keeping her love hidden.", stats:{bijak:2, setia:1} },
+      { tag:"Flee with Her Love", label:"She gently refuses and escapes with Riya Sinir deep into the forest.", stats:{pejuang:2, setia:2} },
+      { tag:"Wisdom over War", label:"She negotiates wisely, continuing to heal people on both sides of the kingdom.", stats:{tabib:2, bijak:1} }
+    ]
+  },
+  results: {
+    tabib: {
+      icon:"🌿",
+      title:"The Healer — True Baliatn Shaman",
+      desc:"Your heart is drawn to healing and life. Like Dara Itam brewing remedies from the forest, you are a soul that soothes others' wounds, sometimes before your own.",
+      share:"I am The Healer — True Baliatn Shaman in the tale of Dara Itam! 🌿✨ Discover your character at caritasato.blogspot.com #FolkTale #DaraItam #WestKalimantan"
+    },
+    pejuang: {
+      icon:"🗡️",
+      title:"Heir of the Rainforest — Steadfast Spirit",
+      desc:"Courage and resilience run through you. Like Dara Itam facing the loss of her father, you choose to move forward no matter how thorny the path.",
+      share:"I am the Heir of the Rainforest — Steadfast Spirit in the tale of Dara Itam! 🗡️🌲 Discover your character at caritasato.blogspot.com #FolkTale #DaraItam #WestKalimantan"
+    },
+    setia: {
+      icon:"💧",
+      title:"Guardian of the River — Loyal Heart",
+      desc:"Your love and loyalty run as deep as the Tenganap River. Like Dara Itam's devotion to Riya Sinir, you choose a true heart over any throne.",
+      share:"I am the Guardian of the River — Loyal Heart in the tale of Dara Itam! 💧💛 Discover your character at caritasato.blogspot.com #FolkTale #DaraItam #WestKalimantan"
+    },
+    bijak: {
+      icon:"👑",
+      title:"The Wise Queen — Guiding Light",
+      desc:"Wisdom is your crown. Like Dara Itam weighing every decision for the peace of her people, you lead with a clear mind and an open heart.",
+      share:"I am The Wise Queen — Guiding Light in the tale of Dara Itam! 👑✨ Discover your character at caritasato.blogspot.com #FolkTale #DaraItam #WestKalimantan"
+    }
+  }
+}
+};
+
+/* ===================== STATE ===================== */
+let lang = "id";
+let step = 0; // 0=intro,1=stage1,2=stage2,3=stage3,4=result
+const stageKeys = ["intro","stage1","stage2","stage3"];
+let score = { tabib:0, pejuang:0, setia:0, bijak:0 };
+
+/* ===================== INIT ===================== */
+(function initLang(){
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('lang');
+  if(q === 'en') lang = 'en';
+})();
+
+function setLang(l){
+  lang = l;
+  render();
+}
+
+function t(){ return TXT[lang]; }
+
+function updateChrome(){
+  document.getElementById('brandTitle').textContent = t().brandTitle;
+  document.getElementById('brandSub').textContent = t().brandSub;
+  document.getElementById('credit').textContent = t().credit;
+  document.getElementById('btn-id').classList.toggle('active', lang==='id');
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+}
+
+function renderProgress(){
+  const wrap = document.getElementById('progress');
+  wrap.innerHTML = "";
+  for(let i=0;i<stageKeys.length;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < step ? ' done' : '') + (i === step ? ' current' : '');
+    wrap.appendChild(d);
+  }
+}
+
+function pickResultKey(){
+  const order = ["tabib","setia","pejuang","bijak"];
+  let best = order[0];
+  for(const k of order){
+    if(score[k] > score[best]) best = k;
+  }
+  return best;
+}
+
+function render(){
+  updateChrome();
+  const card = document.getElementById('card');
+
+  if(step < stageKeys.length){
+    renderProgress();
+    const key = stageKeys[step];
+    const data = t()[key];
+    let html = `<div class="scene-title">${data.title}</div>`;
+    html += `<div class="scene-text">${data.text}</div>`;
+
+    if(key === "intro"){
+      html += `<button class="btn-primary" onclick="goNext()">${t().startBtn}</button>`;
+    } else {
+      html += `<div class="choices">`;
+      data.options.forEach((opt, idx)=>{
+        html += `<button class="choice-btn" onclick="chooseOption(${idx})">
+                   <span class="tag">${opt.tag}</span>${opt.label}
+                 </button>`;
+      });
+      html += `</div>`;
+    }
+    card.innerHTML = html;
+  } else {
+    document.getElementById('progress').innerHTML = "";
+    renderResult();
+  }
+  notifyResize();
+}
+
+function chooseOption(idx){
+  const key = stageKeys[step];
+  const opt = t()[key].options[idx];
+  Object.keys(opt.stats).forEach(k => score[k] += opt.stats[k]);
+  step++;
+  render();
+}
+
+function goNext(){
+  step++;
+  render();
+}
+
+function renderResult(){
+  const rKey = pickResultKey();
+  const r = t().results[rKey];
+  const card = document.getElementById('card');
+
+  const maxScore = Math.max(1, ...Object.values(score));
+  const statOrder = ["tabib","pejuang","setia","bijak"];
+
+  let statsHtml = `<div class="stats">`;
+  statOrder.forEach(k=>{
+    const pct = Math.round((score[k]/ (maxScore*2)) * 100);
+    statsHtml += `<div class="stat-row">
+        <div class="stat-label">${t().stats[k]}</div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100,pct)}%"></div></div>
+      </div>`;
+  });
+  statsHtml += `</div>`;
+
+  const html = `
+    <div class="result-badge">
+      <div class="icon">${r.icon}</div>
+      <div class="subtitle">${t().resultSubtitle}</div>
+      <h2>${r.title}</h2>
+      <div class="scene-text" style="text-align:left">${r.desc}</div>
+      <div style="text-align:left; font-size:0.75rem; color:var(--muted); margin-top:10px;">${t().yourStats}</div>
+      ${statsHtml}
+      <div class="share-box" id="shareText">${r.share}</div>
+      <div class="copy-feedback" id="copyFeedback"></div>
+      <div class="actions">
+        <button class="btn-primary" onclick="copyResult()">${t().copyBtn}</button>
+        <button class="btn-ghost" onclick="restartGame()">${t().restartBtn}</button>
+      </div>
+    </div>
+  `;
+  card.innerHTML = html;
+}
+
+function copyResult(){
+  const text = document.getElementById('shareText').textContent;
+  const feedback = document.getElementById('copyFeedback');
+  const done = ()=>{ feedback.textContent = t().copied; setTimeout(()=>feedback.textContent="",2500); };
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+  cb();
+}
+
+function restartGame(){
+  step = 0;
+  score = { tabib:0, pejuang:0, setia:0, bijak:0 };
+  render();
+}
+
+/* ===================== AUTO-RESIZE UNTUK IFRAME ===================== */
+function notifyResize(){
+  requestAnimationFrame(()=>{
+    const h = document.body.scrollHeight;
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({ type: 'caritasato-resize', height: h }, '*');
+    }
+  });
+}
+window.addEventListener('load', notifyResize);
+window.addEventListener('resize', notifyResize);
+new ResizeObserver(notifyResize).observe(document.body);
+
+/* ===================== START ===================== */
+render();
+</script>
+</body>
+</html>
