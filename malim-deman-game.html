@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malim Deman & Putri Bungsu - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #mdg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #21362B;
+    background: linear-gradient(180deg, #E4F1E6 0%, #F7F3E8 100%);
+    border: 3px solid #1F5C4C;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #mdg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #16463A;
+  }
+  #mdg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #57614F;
+    margin: 0 0 10px;
+  }
+  #mdg-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  #mdg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #mdg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #1F5C4C;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #mdg-voiceBtn.off { background: #9a9a9a; }
+  #mdg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #1F5C4C;
+    background: #BEE3F8;
+  }
+  #mdg-canvas { display: block; width: 100%; height: 100%; }
+  .mdg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(20,30,24,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .mdg-overlay.show { display: flex; }
+  .mdg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .mdg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .mdg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .mdg-btn:active { transform: scale(0.97); }
+
+  #mdg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #1F5C4C;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #mdg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #mdg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #1F5C4C;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #mdg-actionBtn.hold { background: #3D7A4C; }
+  #mdg-actionBtn.qte { background: #E76F51; }
+  #mdg-actionBtn:active { transform: scale(0.97); }
+  #mdg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #mdg-progressWrap.show { display: block; }
+  #mdg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="mdg-wrap">
+  <h2>🌾 Malim Deman &amp; Putri Bungsu</h2>
+  <p id="mdg-sub">Cerita rakyat Sumatera Barat tentang Malim Deman dan bidadari kahyangan, Putri Bungsu.</p>
+
+  <div id="mdg-hud">
+    <span id="mdg-phase">Tahap 1 / 5</span>
+    <button id="mdg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
+
+  <div id="mdg-canvas-holder">
+    <canvas id="mdg-canvas"></canvas>
+
+    <div class="mdg-overlay show" id="mdg-start">
+      <h3>Malim Deman &amp; Putri Bungsu</h3>
+      <p>Malim Deman, pemuda yatim penjaga sawah, suatu malam memergoki tujuh bidadari mandi di kolam dekat rumah Mande Rubiah. Ikuti kisahnya hingga akhir yang penuh penyesalan.</p>
+      <button class="mdg-btn" id="mdg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="mdg-overlay" id="mdg-caught">
+      <h3>Terlambat! 😅</h3>
+      <p>Ketujuh bidadari keburu selesai mandi dan segera memakai selendang mereka sebelum Malim Deman sempat mengambil satu. Coba lagi dari awal kisahnya!</p>
+      <button class="mdg-btn" id="mdg-retryBtn">Coba Lagi</button>
+    </div>
+
+    <div class="mdg-overlay" id="mdg-win">
+      <h3>Penyesalan Malim Deman 😢</h3>
+      <p>Putri Bungsu terbang kembali ke kahyangan membawa Sutan Duano. Malim Deman menangis sejadi-jadinya, menyesali kemalasan dan perjudiannya yang telah menyia-nyiakan keluarganya sendiri.</p>
+      <button class="mdg-btn" id="mdg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="mdg-caption">Bersiap memulai kisah...</div>
+
+  <div id="mdg-progressWrap"><div id="mdg-progressBar"></div></div>
+  <div id="mdg-action-row">
+    <button id="mdg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Malim Deman & Putri Bungsu - Game',
+      h2: '🌾 Malim Deman & Putri Bungsu',
+      sub: 'Cerita rakyat Sumatera Barat tentang Malim Deman dan bidadari kahyangan, Putri Bungsu.',
+      startTitle: 'Malim Deman & Putri Bungsu',
+      startBody: 'Malim Deman, pemuda yatim penjaga sawah, suatu malam memergoki tujuh bidadari mandi di kolam dekat rumah Mande Rubiah. Ikuti kisahnya hingga akhir yang penuh penyesalan.',
+      startBtn: 'Mulai Kisah',
+      caughtTitle: 'Terlambat! 😅',
+      caughtBody: 'Ketujuh bidadari keburu selesai mandi dan segera memakai selendang mereka sebelum Malim Deman sempat mengambil satu. Coba lagi dari awal kisahnya!',
+      retryBtn: 'Coba Lagi',
+      winTitle: 'Penyesalan Malim Deman 😢',
+      winBody: 'Putri Bungsu terbang kembali ke kahyangan membawa Sutan Duano. Malim Deman menangis sejadi-jadinya, menyesali kemalasan dan perjudiannya yang telah menyia-nyiakan keluarganya sendiri.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Membantu',
+      sneakBtn: '🤫 ENDAP-ENDAP',
+      grabBtn: '🧣 AMBIL SELENDANG!',
+      searchBtn: '🔍 GELEDAH DIAM-DIAM',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Alkisah, Malim Deman adalah seorang pemuda yatim yang tinggal bersama ibu dan pamannya, membantu mengerjakan sawah ladang di pinggir hutan setiap hari.',
+        'Bertetangga dengan mereka tinggallah seorang janda baik hati bernama Mande Rubiah, yang biasa membawakan Malim Deman makanan saat ia menjaga sawah di malam hari.',
+        'Suatu malam saat menjaga sawah, Malim Deman merasa kehausan. Ia pun pergi ke rumah Mande Rubiah untuk meminta minum, dan mendengar suara banyak perempuan bercanda dari arah belakang rumah.',
+        'Tahan tombol untuk membantu Malim Deman mengendap-endap mendekati sumber suara tanpa ketahuan.',
+        'Alangkah terkejutnya Malim Deman: tujuh bidadari cantik jelita sedang mandi di kolam, dan tak jauh darinya tergeletak tujuh helai selendang milik mereka.',
+        'Cepat, tekan AMBIL sebelum ketujuh bidadari itu selesai mandi dan memakai kembali selendang mereka!',
+        'Menjelang pagi, keenam bidadari lain segera terbang pulang ke kahyangan. Hanya Putri Bungsu yang tertinggal, menangis sendirian karena selendangnya hilang.',
+        'Malim Deman menghampiri dan berpura-pura menanyakan sebabnya. Ia menawarkan Putri Bungsu tinggal di rumah Mande Rubiah, lalu menyerahkan selendang itu pada ibunya untuk disembunyikan.',
+        'Malim Deman dan Putri Bungsu semakin sering bertemu hingga saling jatuh hati. Mereka pun menikah dan dikaruniai seorang putra bernama Sutan Duano.',
+        'Namun setelah kelahiran putranya, Malim Deman berubah menjadi pemalas. Ia tak lagi bekerja di sawah, melainkan menghabiskan waktu berjudi dan menyabung ayam, membuat Putri Bungsu sering menangis rindu kahyangan.',
+        'Tahan tombol untuk membantu Putri Bungsu diam-diam menggeledah rumah mertuanya saat berkunjung, mencari sesuatu yang selama ini disembunyikan.',
+        'Putri Bungsu menemukan selendangnya! Ia sangat marah begitu sadar bahwa mertua dan suaminya sendiri yang menyembunyikannya selama ini, lalu segera membawanya pulang.',
+        'Putri Bungsu memanggil pengawal Bujang Selamat, mengatakan rahasia itu sudah terbongkar, lalu berpamitan pada Mande Rubiah dan terbang ke kahyangan membawa serta Sutan Duano.',
+        'Bujang Selamat bergegas mencari Malim Deman di tempat sabung ayam. Mendengar kabar itu, Malim Deman berlari pulang, namun semuanya sudah terlambat — ia menangis menyesali kemalasannya.'
+      ]
+    },
+    en: {
+      title: 'Malim Deman & Putri Bungsu - Game',
+      h2: '🌾 Malim Deman & Putri Bungsu',
+      sub: 'A West Sumatran folktale about Malim Deman and the heavenly nymph, Putri Bungsu.',
+      startTitle: 'Malim Deman & Putri Bungsu',
+      startBody: 'Malim Deman, an orphan who tends the rice fields, one night discovers seven nymphs bathing in a pond near Mande Rubiah\'s house. Follow his story to its regretful end.',
+      startBtn: 'Start the Tale',
+      caughtTitle: 'Too Slow! 😅',
+      caughtBody: 'The seven nymphs finished bathing and put their sashes back on before Malim Deman could grab one. Try the tale again from the start!',
+      retryBtn: 'Try Again',
+      winTitle: 'Malim Deman\'s Regret 😢',
+      winBody: 'Putri Bungsu flies back to heaven, taking Sutan Duano with her. Malim Deman weeps bitterly, regretting the laziness and gambling that cost him his family.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Help',
+      sneakBtn: '🤫 SNEAK CLOSER',
+      grabBtn: '🧣 GRAB A SASH!',
+      searchBtn: '🔍 SEARCH QUIETLY',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, Malim Deman was an orphaned young man who lived with his mother and uncle, helping tend the rice fields at the edge of the forest every day.',
+        'Their neighbor was a kind-hearted widow named Mande Rubiah, who used to bring Malim Deman food while he guarded the rice fields at night.',
+        'One night while on watch, Malim Deman grew thirsty. He went to Mande Rubiah\'s house for a drink and heard many women laughing from behind the house.',
+        'Hold the button to help Malim Deman creep toward the sound without being noticed.',
+        'Malim Deman was astonished: seven beautiful nymphs were bathing in a pond, and nearby lay seven sashes belonging to them.',
+        'Quick, tap GRAB before all seven nymphs finish bathing and put their sashes back on!',
+        'As dawn approached, six of the nymphs flew straight back to heaven. Only Putri Bungsu was left behind, crying alone because her sash was missing.',
+        'Malim Deman approached and pretended to ask why she was crying. He offered her a place to stay at Mande Rubiah\'s house, then gave the sash to his mother to hide.',
+        'Malim Deman and Putri Bungsu grew closer and fell in love. They married and were blessed with a son named Sutan Duano.',
+        'But after their son was born, Malim Deman became lazy. He stopped working the fields, spending his time gambling and cockfighting instead, leaving Putri Bungsu in tears, longing for heaven.',
+        'Hold the button to help Putri Bungsu quietly search her mother-in-law\'s house during a visit, looking for something long hidden from her.',
+        'Putri Bungsu found her sash! Furious to realize her own mother-in-law and husband had hidden it all along, she quickly took it and hurried home.',
+        'Putri Bungsu called for the guard Bujang Selamat, said the secret was out, bid farewell to Mande Rubiah, and flew to heaven, taking Sutan Duano with her.',
+        'Bujang Selamat rushed to find Malim Deman at the cockfighting pit. Hearing the news, Malim Deman ran home, but it was already too late — he wept, regretting his laziness.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#mdg-wrap h2').textContent = TXT.h2;
+  document.getElementById('mdg-sub').textContent = TXT.sub;
+  document.querySelector('#mdg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#mdg-start p').textContent = TXT.startBody;
+  document.getElementById('mdg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#mdg-caught h3').textContent = TXT.caughtTitle;
+  document.querySelector('#mdg-caught p').textContent = TXT.caughtBody;
+  document.getElementById('mdg-retryBtn').textContent = TXT.retryBtn;
+  document.querySelector('#mdg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#mdg-win p').textContent = TXT.winBody;
+  document.getElementById('mdg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('mdg-caption').textContent = TXT.captionInit;
+  document.getElementById('mdg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('mdg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  var canvas = document.getElementById('mdg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('mdg-phase');
+  var captionEl = document.getElementById('mdg-caption');
+  var actionBtn = document.getElementById('mdg-actionBtn');
+  var progressWrap = document.getElementById('mdg-progressWrap');
+  var progressBar = document.getElementById('mdg-progressBar');
+  var startOverlay = document.getElementById('mdg-start');
+  var caughtOverlay = document.getElementById('mdg-caught');
+  var winOverlay = document.getElementById('mdg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var qteActive = false;
+  var qteTimeLeft = 0;
+  var QTE_DURATION = 1.8;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'sawah_ladang' },
+    { type:'caption', phase:1, scene:'rumah_mande' },
+    { type:'caption', phase:2, scene:'telaga_dekat' },
+    { type:'hold', phase:2, scene:'telaga_dekat' },
+    { type:'caption', phase:2, scene:'telaga_bath' },
+    { type:'qte', phase:2, scene:'telaga_bath' },
+    { type:'caption', phase:3, scene:'telaga_fly' },
+    { type:'caption', phase:3, scene:'rumah_mande' },
+    { type:'caption', phase:4, scene:'rumah_bahagia' },
+    { type:'caption', phase:4, scene:'rumah_judi' },
+    { type:'hold', phase:4, scene:'rumah_cari' },
+    { type:'caption', phase:5, scene:'rumah_cari' },
+    { type:'caption', phase:5, scene:'kahyangan_fly' },
+    { type:'caption', phase:5, scene:'rumah_sedih' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    speak(step.text);
+    progress = 0;
+    progressBar.style.width = '0%';
+    qteActive = false;
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'rumah_cari') actionBtn.textContent = TXT.searchBtn;
+      else if(step.scene === 'telaga_dekat') actionBtn.textContent = TXT.sneakBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    } else if(step.type === 'qte'){
+      actionBtn.className = 'qte';
+      actionBtn.textContent = TXT.grabBtn;
+      progressWrap.classList.remove('show');
+      qteActive = true;
+      qteTimeLeft = QTE_DURATION;
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      speak(TXT.winBody);
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'qte'){
+      if(qteActive){
+        qteActive = false;
+        nextStep();
+      }
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('mdg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('mdg-retryBtn').addEventListener('click', function(){
+    caughtOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('mdg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawPerson(px, py, size, shirtColor, headwrapColor){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+
+    ctx.fillStyle = '#4A3A2A';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,6*s); ctx.lineTo(11*s,6*s); ctx.lineTo(9*s,20*s); ctx.lineTo(-9*s,20*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = shirtColor || '#7A9A6E';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-9*s);
+    ctx.quadraticCurveTo(-15*s,2*s,-11*s,8*s);
+    ctx.lineTo(11*s,8*s);
+    ctx.quadraticCurveTo(15*s,2*s,11*s,-9*s);
+    ctx.quadraticCurveTo(0,-13*s,-11*s,-9*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath();
+    ctx.arc(0,-15*s,7.5*s,0,Math.PI*2);
+    ctx.fill();
+
+    if(headwrapColor){
+      ctx.fillStyle = headwrapColor;
+      ctx.beginPath();
+      ctx.ellipse(0,-20*s,9*s,4*s,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(6*s,-20*s); ctx.lineTo(14*s,-15*s); ctx.lineTo(8*s,-13*s);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillStyle = '#2E2416';
+      ctx.beginPath();
+      ctx.arc(0,-19*s,7.5*s,Math.PI,Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function drawBidadari(px, py, size, glowAmt, colorMain){
+    var s = size/56;
+    var col = colorMain || '#EFDFC0';
+    ctx.save();
+    ctx.translate(px, py);
+
+    if(glowAmt > 0){
+      var g = ctx.createRadialGradient(0,-6*s,4,0,-6*s,38*s);
+      g.addColorStop(0,'rgba(255,250,225,'+(0.45*glowAmt)+')');
+      g.addColorStop(1,'rgba(255,250,225,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0,-6*s,38*s,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-6*s);
+    ctx.quadraticCurveTo(-18*s,10*s,-11*s,26*s);
+    ctx.lineTo(11*s,26*s);
+    ctx.quadraticCurveTo(18*s,10*s,13*s,-6*s);
+    ctx.quadraticCurveTo(0,-11*s,-13*s,-6*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-5*s); ctx.lineTo(-3*s,-5*s); ctx.lineTo(5*s,8*s); ctx.lineTo(0,8*s);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath();
+    ctx.ellipse(0,-16*s,7.5*s,8.5*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-23*s,4*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath();
+    ctx.arc(0,-13*s,6*s,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawSelendang(px, py, size, wave){
+    var s = size/44;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(Math.sin(wave)*0.1);
+    var g = ctx.createLinearGradient(-16*s,0,16*s,0);
+    g.addColorStop(0,'#F7CFE0');
+    g.addColorStop(1,'#D9AF3C');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-16*s,-3*s);
+    ctx.quadraticCurveTo(0,4*s,16*s,-3*s);
+    ctx.lineTo(16*s,3*s);
+    ctx.quadraticCurveTo(0,10*s,-16*s,3*s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(px, py, size){
+    var s = size/60;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(-30*s,10*s); ctx.lineTo(0,-24*s); ctx.lineTo(30*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8D9B5';
+    ctx.fillRect(-20*s,10*s,40*s,26*s);
+    ctx.fillStyle = '#5C4433';
+    ctx.fillRect(-6*s,20*s,12*s,16*s);
+    ctx.restore();
+  }
+
+  function drawSawah(baseY){
+    ctx.fillStyle = '#8FBF7A';
+    ctx.fillRect(0,baseY,W,H-baseY);
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for(var i=0;i<6;i++){
+      ctx.beginPath();
+      ctx.moveTo(0, baseY+18+i*20);
+      ctx.lineTo(W, baseY+8+i*20);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#5C8A4A';
+    for(var r=0;r<5;r++){
+      for(var c=0;c<10;c++){
+        var rx = 20+c*78 + (r%2)*20;
+        var ry = baseY+22+r*22;
+        if(ry < H-6){
+          ctx.beginPath();
+          ctx.moveTo(rx, ry+8);
+          ctx.lineTo(rx+3, ry-6);
+          ctx.lineTo(rx+6, ry+8);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  function drawChest(px, py, size, open){
+    var s = size/40;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.fillRect(-20*s,-4*s,40*s,20*s);
+    ctx.fillStyle = '#8D6E63';
+    if(open > 0.3){
+      ctx.save();
+      ctx.translate(-20*s, -4*s);
+      ctx.rotate(-0.9*open);
+      ctx.fillRect(0,-10*s,40*s,10*s);
+      ctx.restore();
+    } else {
+      ctx.fillRect(-20*s,-10*s,40*s,8*s);
+    }
+    ctx.strokeStyle = '#3A2E24';
+    ctx.lineWidth = 2*s;
+    ctx.strokeRect(-20*s,-4*s,40*s,20*s);
+    ctx.restore();
+  }
+
+  function drawTable(px, py, size){
+    var s = size/50;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.fillRect(-30*s,-4*s,60*s,8*s);
+    ctx.fillRect(-26*s,4*s,6*s,16*s);
+    ctx.fillRect(20*s,4*s,6*s,16*s);
+    ctx.fillStyle = '#D9AF3C';
+    for(var i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.arc(-16*s+i*10*s, -8*s, 4*s, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#E76F51';
+    ctx.fillRect(6*s,-14*s,16*s,10*s);
+    ctx.restore();
+  }
+
+  function drawCloudsBg(alpha){
+    ctx.fillStyle = 'rgba(255,255,255,'+alpha+')';
+    var puffs = [[120,70,26],[150,80,20],[100,85,18],[560,50,24],[590,62,18],[630,52,16]];
+    for(var i=0;i<puffs.length;i++){
+      ctx.beginPath();
+      ctx.arc(puffs[i][0], puffs[i][1], puffs[i][2], 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  var lastTime = null;
+
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      qteTimeLeft -= dt;
+      if(qteTimeLeft <= 0){
+        qteActive = false;
+        caughtOverlay.classList.add('show');
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='telaga_bath' || scene==='telaga_dekat' || scene==='telaga_fly'){
+      sky.addColorStop(0,'#3A4E78'); sky.addColorStop(1,'#6E8AAA');
+    } else if(scene==='sawah_ladang'){
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#DDEFC8');
+    } else if(scene==='rumah_mande'){
+      sky.addColorStop(0,'#5C4E78'); sky.addColorStop(1,'#9A8AAA');
+    } else if(scene==='rumah_judi'){
+      sky.addColorStop(0,'#2E2420'); sky.addColorStop(1,'#5C4433');
+    } else if(scene==='kahyangan_fly'){
+      sky.addColorStop(0,'#8FC7E8'); sky.addColorStop(1,'#EFE6C8');
+    } else if(scene==='rumah_sedih'){
+      sky.addColorStop(0,'#3A3A45'); sky.addColorStop(1,'#6b6b78');
+    } else {
+      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'sawah_ladang';
+    drawSky(scene);
+
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='sawah_ladang'){
+      drawSawah(280);
+      drawHut(640, 270, 60);
+      drawPerson(300, 320+bob, 46, '#7A9A6E');
+      drawPerson(380, 330+bob*0.7, 40, '#8A6E4A');
+    }
+
+    if(scene==='rumah_mande'){
+      ctx.fillStyle = '#3C3450';
+      ctx.fillRect(0,300,W,H-300);
+      drawHut(400, 290, 80);
+      drawPerson(340, 340+bob, 42, '#7A9A6E');
+      drawPerson(470, 336+bob*0.8, 40, '#B5842A', '#EFE6C8');
+    }
+
+    if(scene==='telaga_dekat'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#5C8AA6';
+      ctx.beginPath();
+      ctx.ellipse(560,340,180,60,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#6b4a2a';
+      ctx.beginPath();
+      ctx.arc(360,320,26,0,Math.PI*2);
+      ctx.fill();
+      drawPerson(340, 300+bob, 40, '#7A9A6E');
+    }
+
+    if(scene==='telaga_bath'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#5C8AA6';
+      ctx.beginPath();
+      ctx.ellipse(480,330,260,70,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#6b4a2a';
+      ctx.beginPath();
+      ctx.arc(220,310,28,0,Math.PI*2);
+      ctx.fill();
+      drawPerson(200, 288+bob*0.6, 34, '#7A9A6E');
+
+      var colors = ['#EFDFC0','#F2D9E6','#E3E7CF','#D8E6E3','#F0E4D0','#E6D8E8','#DCEAE0'];
+      var positions = [[360,320],[420,300],[480,330],[540,300],[600,325],[420,350],[540,352]];
+      for(var b=0;b<positions.length;b++){
+        drawBidadari(positions[b][0], positions[b][1]+Math.sin(t*2+b)*3, 36, 0, colors[b%colors.length]);
+      }
+      drawSelendang(340, 365, 26, t*1.5);
+      drawSelendang(390, 375, 26, t*1.5+1);
+      drawSelendang(440, 368, 26, t*1.5+2);
+      drawSelendang(500, 376, 26, t*1.5+3);
+    }
+
+    if(scene==='telaga_fly'){
+      ctx.fillStyle = '#2C4A3C';
+      ctx.fillRect(0,300,W,H-300);
+      ctx.fillStyle = '#5C8AA6';
+      ctx.beginPath();
+      ctx.ellipse(480,330,260,70,0,0,Math.PI*2);
+      ctx.fill();
+      for(var k=0;k<3;k++){
+        ctx.strokeStyle = 'rgba(255,250,225,0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(430+k*60, 260 - (t*40+k*30)%260);
+        ctx.lineTo(430+k*60+10, 260 - (t*40+k*30)%260 - 30);
+        ctx.stroke();
+      }
+      drawBidadari(430, 330 + Math.sin(t*3)*8, 40, 0.5, '#F2D9E6');
+      drawPerson(240, 300+bob, 36, '#7A9A6E');
+    }
+
+    if(scene==='rumah_bahagia'){
+      ctx.fillStyle = '#A7C957';
+      ctx.fillRect(0,300,W,H-300);
+      drawHut(560, 290, 74);
+      drawPerson(420, 340+bob, 42, '#7A9A6E');
+      drawBidadari(470, 330+bob*0.7, 38, 0, '#EFDFC0');
+      drawBidadari(500, 358, 18, 0, '#F2D9E6');
+    }
+
+    if(scene==='rumah_judi'){
+      ctx.fillStyle = '#3A2E24';
+      ctx.fillRect(0,300,W,H-300);
+      drawTable(430, 340, 50);
+      drawPerson(340, 320+bob, 42, '#7A9A6E');
+      drawPerson(520, 322+bob*0.8, 40, '#8A6E4A');
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      for(var sm=0;sm<3;sm++){
+        ctx.beginPath();
+        ctx.arc(430+Math.sin(t*3+sm)*10, 260 - sm*14 - (t*15)%40, 6, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    if(scene==='rumah_cari'){
+      ctx.fillStyle = '#C9BFA0';
+      ctx.fillRect(0,300,W,H-300);
+      var openAmt = Math.min(1, (t%4)/2);
+      drawChest(430, 340, 40, openAmt);
+      drawBidadari(520, 320+bob, 40, 0, '#EFDFC0');
+      if(openAmt > 0.5){
+        drawSelendang(430, 320, 24, t*2);
+      }
+    }
+
+    if(scene==='kahyangan_fly'){
+      drawCloudsBg(0.9);
+      var riseY = 300 - Math.min(1, t/3)*80;
+      drawBidadari(430, riseY, 46, 0.7, '#F2D9E6');
+      drawBidadari(430, riseY+34, 18, 0.5, '#F0E4D0');
+      for(var k2=0;k2<4;k2++){
+        ctx.strokeStyle = 'rgba(255,250,225,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(400+k2*20, riseY+40 - (t*50+k2*20)%200);
+        ctx.lineTo(400+k2*20+8, riseY+40 - (t*50+k2*20)%200 - 26);
+        ctx.stroke();
+      }
+    }
+
+    if(scene==='rumah_sedih'){
+      ctx.fillStyle = '#4A4238';
+      ctx.fillRect(0,300,W,H-300);
+      drawHut(430, 280, 70);
+      ctx.save();
+      ctx.translate(400, 350+bob*0.4);
+      ctx.fillStyle = '#7A9A6E';
+      ctx.beginPath();
+      ctx.arc(0,-10,26,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#E8B08A';
+      ctx.beginPath();
+      ctx.arc(0,-30,10,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(180,210,255,0.7)';
+      ctx.lineWidth = 2;
+      for(var tear=0;tear<2;tear++){
+        ctx.beginPath();
+        ctx.moveTo(-4+tear*8,-28);
+        ctx.lineTo(-4+tear*8, -18 + Math.sin(t*3+tear)*3);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    if(step && step.type === 'qte' && qteActive){
+      var frac = qteTimeLeft / QTE_DURATION;
+      ctx.strokeStyle = '#E76F51';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(400, 60, 30, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('mdg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'mdg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('mdg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
