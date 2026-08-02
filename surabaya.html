@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Nama Surabaya</title>
+<style>
+  :root{
+    --bg-deep: #0d2b3e;
+    --sea: #124b6b;
+    --sea-light:#1c6f95;
+    --sand:#f3e2b9;
+    --sand-dark:#e2c88e;
+    --ink:#2b1d10;
+    --gold:#d99a34;
+    --gold-light:#f0c66b;
+    --cream:#fff6e4;
+    --red:#c14b3a;
+    --green:#3a7d55;
+    --shadow: rgba(0,0,0,.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Baloo2Fallback', 'Trebuchet MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, var(--bg-deep), var(--sea) 60%, var(--sea-light));
+    color:var(--cream);
+    overflow:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @font-face{
+    font-family:'Baloo2Fallback';
+    src:local('Arial Rounded MT Bold'), local('Arial');
+  }
+  #wrap{
+    position:relative;
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    min-height:520px;
+    overflow:hidden;
+    border-radius:0 0 18px 18px;
+  }
+  #stage{
+    position:relative;
+    width:100%;
+    height:520px;
+    display:block;
+  }
+  canvas#bg{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .topbar{
+    position:absolute;
+    top:8px; left:8px; right:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index:20;
+    pointer-events:none;
+  }
+  .topbar button{
+    pointer-events:auto;
+  }
+  .pill{
+    background:rgba(13,43,62,.55);
+    border:1px solid rgba(255,255,255,.25);
+    color:var(--cream);
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:13px;
+    cursor:pointer;
+    backdrop-filter: blur(2px);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:inherit;
+  }
+  .pill:active{transform:scale(.95);}
+  #titleScreen, #endScreen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    z-index:15;
+    padding:24px;
+    background: radial-gradient(ellipse at center, rgba(18,75,107,.55), rgba(13,43,62,.92));
+  }
+  #titleScreen h1, #endScreen h1{
+    font-size:clamp(22px,6vw,32px);
+    margin:0 0 6px;
+    color:var(--gold-light);
+    text-shadow: 0 2px 0 rgba(0,0,0,.35);
+    letter-spacing:.5px;
+  }
+  #titleScreen p, #endScreen p{
+    font-size:14px;
+    max-width:420px;
+    line-height:1.5;
+    color:var(--cream);
+    opacity:.9;
+  }
+  .bigbtn{
+    margin-top:18px;
+    background:linear-gradient(180deg, var(--gold-light), var(--gold));
+    color:var(--ink);
+    border:none;
+    padding:14px 34px;
+    font-size:17px;
+    font-weight:700;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 0 #a1691c, 0 10px 16px var(--shadow);
+    font-family:inherit;
+    letter-spacing:.3px;
+  }
+  .bigbtn:active{
+    transform:translateY(4px);
+    box-shadow:0 2px 0 #a1691c, 0 4px 8px var(--shadow);
+  }
+  .smallbtn{
+    margin-top:10px;
+    background:transparent;
+    color:var(--cream);
+    border:1px solid rgba(255,255,255,.4);
+    padding:8px 18px;
+    font-size:13px;
+    border-radius:999px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  #langSwitch{
+    display:flex;
+    gap:6px;
+    margin-top:14px;
+  }
+  #langSwitch button{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.35);
+    color:var(--cream);
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:12px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  #langSwitch button.active{
+    background:var(--gold-light);
+    color:var(--ink);
+    border-color:var(--gold-light);
+    font-weight:700;
+  }
+  #dialogueBox{
+    position:absolute;
+    left:12px; right:12px; bottom:12px;
+    background:rgba(13,43,62,.85);
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:16px;
+    padding:14px 16px 16px;
+    z-index:10;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 6px 18px var(--shadow);
+  }
+  #speakerName{
+    font-size:12px;
+    font-weight:700;
+    color:var(--gold-light);
+    margin-bottom:4px;
+    letter-spacing:.5px;
+    min-height:14px;
+  }
+  #storyText{
+    font-size:15px;
+    line-height:1.5;
+    min-height:44px;
+    color:var(--cream);
+  }
+  #dialogueFooter{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin-top:10px;
+    gap:8px;
+  }
+  #nextBtn{
+    background:var(--gold-light);
+    color:var(--ink);
+    border:none;
+    padding:9px 22px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    font-family:inherit;
+    box-shadow:0 3px 0 #a1691c;
+  }
+  #nextBtn:active{transform:translateY(2px); box-shadow:0 1px 0 #a1691c;}
+  #nextBtn:disabled{opacity:.4; cursor:default;}
+  .hint{
+    font-size:12px;
+    color:var(--gold-light);
+    opacity:.9;
+    text-align:center;
+    margin-top:2px;
+  }
+  #qteArea{
+    position:absolute;
+    inset:0;
+    z-index:5;
+  }
+  #tugbar{
+    position:absolute;
+    top:56px;
+    left:50%;
+    transform:translateX(-50%);
+    width:80%;
+    max-width:420px;
+    height:20px;
+    background:rgba(0,0,0,.3);
+    border-radius:999px;
+    overflow:hidden;
+    border:2px solid rgba(255,255,255,.3);
+    z-index:8;
+  }
+  #tugfill{
+    position:absolute;
+    top:0; bottom:0;
+    left:50%;
+    width:4px;
+    background:var(--gold-light);
+    transition: left .08s linear;
+  }
+  #tugLabels{
+    position:absolute;
+    top:78px;
+    left:50%;
+    transform:translateX(-50%);
+    width:80%;
+    max-width:420px;
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    font-weight:700;
+    color:var(--cream);
+    z-index:8;
+  }
+  .tapZone{
+    position:absolute;
+    top:100px; bottom:150px;
+    width:48%;
+    z-index:6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .tapZone.left{left:0;}
+  .tapZone.right{right:0;}
+  .tapBtn{
+    width:110px;height:110px;
+    border-radius:50%;
+    border:none;
+    font-size:15px;
+    font-weight:700;
+    color:#fff;
+    cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.3), 0 10px 20px var(--shadow);
+    font-family:inherit;
+    user-select:none;
+  }
+  .tapBtn:active{transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.3);}
+  .tapBtn.sura{background:linear-gradient(180deg,#3a92c2,#1c6f95);}
+  .tapBtn.baya{background:linear-gradient(180deg,#4a9a5a,#2f6d3e);}
+  #territoryChoice{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    display:flex;
+  }
+  .terrOption{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: filter .15s ease;
+  }
+  .terrOption:hover{filter:brightness(1.15);}
+  .terrOption .label{
+    background:rgba(0,0,0,.4);
+    padding:8px 16px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:13px;
+    margin-top:10px;
+  }
+  #skipBtn{
+    position:absolute;
+    top:8px; left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+  }
+  #mergeNames{
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    align-items:baseline;
+    font-size:clamp(28px,8vw,42px);
+    font-weight:800;
+    margin:10px 0;
+  }
+  #mergeNames span.s1{color:#7ec6ec;}
+  #mergeNames span.s2{color:#8ee0a1;}
+  #mergeNames span.plus{color:var(--cream); font-size:22px;}
+  #mergeNames span.eq{color:var(--gold-light); font-size:22px;}
+  #mergeNames span.result{color:var(--gold-light);}
+  #progressDots{
+    position:absolute;
+    bottom:2px;
+    left:0; right:0;
+    display:flex;
+    justify-content:center;
+    gap:5px;
+    z-index:11;
+  }
+  #progressDots span{
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+  }
+  #progressDots span.done{background:var(--gold-light);}
+  .credit{
+    font-size:10px;
+    opacity:.5;
+    margin-top:16px;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="bg"></canvas>
+
+    <div class="topbar">
+      <button class="pill" id="muteBtn">🔊 <span id="muteLabel">Suara</span></button>
+      <button class="pill" id="langBtn">EN</button>
+    </div>
+
+    <!-- Title Screen -->
+    <div id="titleScreen">
+      <h1 id="titleText">Asal Usul Nama Surabaya</h1>
+      <p id="titleDesc">Kisah pertarungan Sura si ikan hiu dan Baya si buaya, cikal bakal nama Kota Surabaya.</p>
+      <button class="bigbtn" id="startBtn">▶ Mulai Cerita</button>
+      <div class="credit" id="creditText">Cerita Rakyat Jawa Timur • CaritaSato</div>
+    </div>
+
+    <!-- QTE: tug of war -->
+    <div id="tugbar" style="display:none;">
+      <div id="tugfill"></div>
+    </div>
+    <div id="tugLabels" style="display:none;">
+      <span>SURA</span><span>BAYA</span>
+    </div>
+    <div id="qteArea" style="display:none;">
+      <div class="tapZone left"><button class="tapBtn sura" id="btnSura"></button></div>
+      <div class="tapZone right"><button class="tapBtn baya" id="btnBaya"></button></div>
+    </div>
+
+    <!-- Territory choice -->
+    <div id="territoryChoice" style="display:none;">
+      <div class="terrOption" id="chooseSea" data-terr="sea">
+        <div class="label" id="seaLabel">🌊 Laut untuk Sura</div>
+      </div>
+      <div class="terrOption" id="chooseLand" data-terr="land">
+        <div class="label" id="landLabel">🌳 Darat untuk Baya</div>
+      </div>
+    </div>
+
+    <!-- Dialogue box -->
+    <div id="dialogueBox">
+      <div id="speakerName"></div>
+      <div id="storyText"></div>
+      <div class="hint" id="qteHint" style="display:none;"></div>
+      <div id="dialogueFooter">
+        <button id="nextBtn">Lanjut ▶</button>
+      </div>
+    </div>
+
+    <div id="progressDots"></div>
+
+    <!-- End screen -->
+    <div id="endScreen" style="display:none;">
+      <h1 id="endTitle">Selamat!</h1>
+      <div id="mergeNames">
+        <span class="s1">SURA</span><span class="plus">+</span><span class="s2">BAYA</span>
+      </div>
+      <div id="mergeNames2" style="display:none;">
+        <span class="result">SURABAYA</span>
+      </div>
+      <p id="endDesc">Begitulah asal mula nama Kota Surabaya, dari perpaduan nama Sura si ikan hiu dan Baya si buaya.</p>
+      <button class="bigbtn" id="replayBtn">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Language setup ----------
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var i18n = {
+    id: {
+      docTitle: "Asal Usul Nama Surabaya",
+      title: "Asal Usul Nama Surabaya",
+      titleDesc: "Kisah pertarungan Sura si ikan hiu dan Baya si buaya, cikal bakal nama Kota Surabaya.",
+      start: "▶ Mulai Cerita",
+      credit: "Cerita Rakyat Jawa Timur • CaritaSato",
+      mute: "Suara",
+      langBtnLabel: "EN",
+      seaLabel: "🌊 Laut untuk Sura",
+      landLabel: "🌳 Darat untuk Baya",
+      next: "Lanjut ▶",
+      finish: "Tamat ✓",
+      qteHintFight: "Ketuk tombol secara bergantian, cepat!",
+      qteHintDuel: "Ketuk cepat untuk memenangkan pertarungan!",
+      endTitle: "Selamat!",
+      endDesc: "Begitulah asal mula nama Kota Surabaya, dari perpaduan nama Sura si ikan hiu dan Baya si buaya.",
+      replay: "↺ Ulangi Cerita",
+      steps: [
+        {speaker:"", text:"Alkisah, di perairan Jawa Timur, hiduplah seekor ikan hiu besar bernama Sura dan seekor buaya besar bernama Baya."},
+        {speaker:"", text:"Keduanya adalah musuh bebuyutan. Hampir setiap hari mereka berkelahi memperebutkan wilayah dan mangsa."},
+        {speaker:"", text:"Jika keduanya berkelahi, air di sekitar mereka menjadi bergelombang besar dan keruh. Hewan-hewan lain merasa sangat terganggu.", qte:"fight"},
+        {speaker:"Sura", text:"\u201cBaya, aku mulai lelah dengan permusuhan kita. Bagaimana kalau kita membagi wilayah kekuasaan?\u201d"},
+        {speaker:"Baya", text:"\u201cBoleh saja. Bagaimana aturan pembagiannya?\u201d"},
+        {speaker:"Sura", text:"\u201cBatasnya adalah daerah yang tercapai air saat laut pasang. Aku menguasai perairan, Engkau menguasai daratan.\u201d", territory:true},
+        {speaker:"", text:"Sejak saat itu, Sura dan Baya sepakat menghentikan permusuhan mereka. Perdamaian pun tercipta untuk sementara waktu."},
+        {speaker:"", text:"Namun kedamaian itu tak berlangsung lama. Diam-diam, Sura mulai mencari mangsa di sungai, wilayah kekuasaan Baya."},
+        {speaker:"Baya", text:"\u201cHai Sura! Mengapa engkau berlaku curang mencari mangsa di daerah kekuasaanku?\u201d"},
+        {speaker:"Sura", text:"\u201cAku tidak melanggar! Aku kan menguasai wilayah perairan, sungai juga perairan bukan?\u201d"},
+        {speaker:"Baya", text:"\u201cKau hanya mencari alasan! Perjanjian kita telah berakhir. Mari kita bertarung sekali lagi!\u201d"},
+        {speaker:"", text:"Pertarungan hebat pun terjadi. Keduanya saling menggigit dengan gigi tajam mereka.", qte:"duel"},
+        {speaker:"", text:"Baya menggigit ekor Sura hingga hampir putus. Karena kesakitan, Sura akhirnya menyerah dan berenang kembali ke laut. Sejak itu, ekor ikan hiu selalu membelok ke kiri."},
+        {speaker:"", text:"Pertarungan dahsyat antara Sura dan Baya disaksikan oleh penduduk sekitar yang merasa takjub."}
+      ]
+    },
+    en: {
+      docTitle: "The Legend of Surabaya",
+      title: "The Legend of Surabaya",
+      titleDesc: "The tale of Sura the shark and Baya the crocodile, the origin of the city name Surabaya.",
+      start: "▶ Start Story",
+      credit: "East Java Folktale • CaritaSato",
+      mute: "Sound",
+      langBtnLabel: "ID",
+      seaLabel: "🌊 Sea for Sura",
+      landLabel: "🌳 Land for Baya",
+      next: "Next ▶",
+      finish: "The End ✓",
+      qteHintFight: "Tap the buttons alternately, quick!",
+      qteHintDuel: "Tap fast to win the fight!",
+      endTitle: "Congratulations!",
+      endDesc: "That is how the city of Surabaya got its name, a blend of Sura the shark and Baya the crocodile.",
+      replay: "↺ Replay Story",
+      steps: [
+        {speaker:"", text:"Long ago, in the waters of East Java, lived a great shark named Sura and a great crocodile named Baya."},
+        {speaker:"", text:"The two were bitter rivals. Almost every day they fought over territory and prey."},
+        {speaker:"", text:"Whenever they fought, the water around them churned into huge, murky waves. The other animals were greatly disturbed.", qte:"fight"},
+        {speaker:"Sura", text:"\u201cBaya, I'm growing tired of our rivalry. What if we divide our territories?\u201d"},
+        {speaker:"Baya", text:"\u201cVery well. How shall we divide it?\u201d"},
+        {speaker:"Sura", text:"\u201cThe border shall be where the tide reaches at high water. I rule the waters, you rule the land.\u201d", territory:true},
+        {speaker:"", text:"From then on, Sura and Baya agreed to end their feud. Peace settled between them, at least for a while."},
+        {speaker:"", text:"But the peace didn't last. Secretly, Sura began hunting in the river, Baya's territory."},
+        {speaker:"Baya", text:"\u201cHey Sura! Why are you cheating, hunting in my territory?\u201d"},
+        {speaker:"Sura", text:"\u201cI'm not breaking the rule! I rule the waters, and a river is water too, isn't it?\u201d"},
+        {speaker:"Baya", text:"\u201cYou're just making excuses! Our agreement is over. Let's fight once more!\u201d"},
+        {speaker:"", text:"A fierce battle broke out. Both bit each other with their sharp teeth.", qte:"duel"},
+        {speaker:"", text:"Baya bit Sura's tail until it nearly severed. In pain, Sura finally gave up and swam back to the sea. Ever since, a shark's tail always curves to the left."},
+        {speaker:"", text:"The tremendous battle between Sura and Baya was witnessed by the people nearby, who were utterly amazed."}
+      ]
+    }
+  };
+
+  var t = i18n[lang];
+  document.title = t.docTitle;
+  document.documentElement.lang = lang;
+
+  document.getElementById('titleText').textContent = t.title;
+  document.getElementById('titleDesc').textContent = t.titleDesc;
+  document.getElementById('startBtn').textContent = t.start;
+  document.getElementById('creditText').textContent = t.credit;
+  document.getElementById('muteLabel').textContent = t.mute;
+  document.getElementById('langBtn').textContent = t.langBtnLabel;
+  document.getElementById('seaLabel').textContent = t.seaLabel;
+  document.getElementById('landLabel').textContent = t.landLabel;
+  document.getElementById('nextBtn').textContent = t.next;
+  document.getElementById('endTitle').textContent = t.endTitle;
+  document.getElementById('endDesc').textContent = t.endDesc;
+  document.getElementById('replayBtn').textContent = t.replay;
+
+  document.getElementById('langBtn').addEventListener('click', function(){
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', lang === 'id' ? 'en' : 'id');
+    window.location.href = url.toString();
+  });
+
+  // ---------- Narration (Web Speech API) ----------
+  var muted = false;
+  var synth = window.speechSynthesis;
+  var voices = [];
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if (synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if(!voices || !voices.length) return null;
+    var targetLangPrefix = lang === 'id' ? 'id' : 'en';
+    var exact = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(targetLangPrefix) === 0; });
+    return exact || null;
+  }
+  function speak(text){
+    if(!synth || muted || !text) return;
+    synth.cancel();
+    var clean = text.replace(/[\u201c\u201d]/g,'"');
+    var u = new SpeechSynthesisUtterance(clean);
+    var v = pickVoice();
+    if(v) u.voice = v;
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    synth.speak(u);
+  }
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    muted = !muted;
+    if(synth) synth.cancel();
+    this.firstChild.textContent = muted ? '🔇 ' : '🔊 ';
+  });
+
+  // ---------- Canvas background ----------
+  var canvas = document.getElementById('bg');
+  var ctx = canvas.getContext('2d');
+  var W, H, DPR = window.devicePixelRatio || 1;
+  function resizeCanvas(){
+    var rect = canvas.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  var t0 = Date.now();
+  var currentScene = 'ocean'; // ocean | fight | territory | duel | end
+  var suraX = 0.3, bayaX = 0.7;
+  var shakeAmt = 0;
+
+  function drawWave(yBase, amp, speed, color, offset){
+    var time = (Date.now()-t0)/1000;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for(var x=0; x<=W; x+=10){
+      var y = yBase + Math.sin((x*0.02)+(time*speed)+offset)*amp;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W,H);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function drawShark(x, y, scale, dir){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(dir*scale, scale);
+    ctx.fillStyle = '#4fa6d1';
+    ctx.beginPath();
+    ctx.moveTo(-40,0);
+    ctx.quadraticCurveTo(-10,-18,40,0);
+    ctx.quadraticCurveTo(-10,14,-40,0);
+    ctx.fill();
+    // fin
+    ctx.beginPath();
+    ctx.moveTo(-5,-12);
+    ctx.lineTo(8,-32);
+    ctx.lineTo(15,-10);
+    ctx.closePath();
+    ctx.fill();
+    // tail
+    ctx.beginPath();
+    ctx.moveTo(-40,0);
+    ctx.lineTo(-58,-14);
+    ctx.lineTo(-52,0);
+    ctx.lineTo(-58,12);
+    ctx.closePath();
+    ctx.fill();
+    // eye
+    ctx.fillStyle = '#0d2b3e';
+    ctx.beginPath();
+    ctx.arc(22,-3,2.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCroc(x, y, scale, dir){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(dir*scale, scale);
+    ctx.fillStyle = '#4f9a5c';
+    ctx.beginPath();
+    ctx.moveTo(-46,4);
+    ctx.lineTo(30,4);
+    ctx.quadraticCurveTo(50,4,54,-2);
+    ctx.quadraticCurveTo(50,2,30,-4);
+    ctx.lineTo(-30,-10);
+    ctx.quadraticCurveTo(-50,-10,-46,4);
+    ctx.closePath();
+    ctx.fill();
+    // ridges
+    ctx.fillStyle = '#3a7d47';
+    for(var i=-20;i<20;i+=12){
+      ctx.beginPath();
+      ctx.moveTo(i,-9);
+      ctx.lineTo(i+5,-15);
+      ctx.lineTo(i+10,-9);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // tail
+    ctx.fillStyle = '#4f9a5c';
+    ctx.beginPath();
+    ctx.moveTo(-46,4);
+    ctx.lineTo(-70,-6);
+    ctx.lineTo(-46,-2);
+    ctx.closePath();
+    ctx.fill();
+    // eye
+    ctx.fillStyle = '#0d2b3e';
+    ctx.beginPath();
+    ctx.arc(38,-4,2.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    var time = (Date.now()-t0)/1000;
+
+    // sky/deep gradient already via CSS body; draw water layers
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#1c6f95');
+    g.addColorStop(1,'#0d2b3e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    drawWave(H*0.55, 10, 1.0, 'rgba(255,255,255,0.06)', 0);
+    drawWave(H*0.62, 14, 0.7, 'rgba(255,255,255,0.05)', 2);
+    drawWave(H*0.7, 18, 0.5, 'rgba(13,43,62,0.4)', 4);
+
+    var shake = shakeAmt > 0 ? (Math.random()-0.5)*shakeAmt : 0;
+
+    if(currentScene === 'territory'){
+      // split screen land/sea
+      ctx.fillStyle = 'rgba(60,140,80,0.35)';
+      ctx.fillRect(W*0.5,0,W*0.5,H);
+    }
+
+    // Sura swims
+    var sx = W*suraX + Math.sin(time*1.2)*14 + shake;
+    var sy = H*0.42 + Math.sin(time*0.8)*10;
+    drawShark(sx, sy, 1.1, suraX < bayaX ? 1 : -1);
+
+    // Baya swims/rests
+    var bx = W*bayaX + Math.sin(time*1.0+2)*10 + shake;
+    var by = H*0.6 + Math.sin(time*0.7+1)*8;
+    drawCroc(bx, by, 1.15, bayaX > suraX ? -1 : 1);
+
+    requestAnimationFrame(render);
+  }
+
+  // ---------- Story flow ----------
+  var steps = t.steps;
+  var idx = 0;
+  var dialogueBox = document.getElementById('dialogueBox');
+  var storyText = document.getElementById('storyText');
+  var speakerName = document.getElementById('speakerName');
+  var nextBtn = document.getElementById('nextBtn');
+  var qteHint = document.getElementById('qteHint');
+  var qteArea = document.getElementById('qteArea');
+  var tugbar = document.getElementById('tugbar');
+  var tugLabelsEl = document.getElementById('tugLabels');
+  var tugfill = document.getElementById('tugfill');
+  var territoryChoice = document.getElementById('territoryChoice');
+  var progressDots = document.getElementById('progressDots');
+
+  for(var i=0;i<steps.length;i++){
+    var d = document.createElement('span');
+    progressDots.appendChild(d);
+  }
+  function updateDots(){
+    var dots = progressDots.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].classList.toggle('done', i<=idx);
+    }
+  }
+
+  var tugValue = 0; // -100 (Sura wins) .. 100 (Baya wins)
+  var tugInterval = null;
+  var qteResolved = false;
+
+  function clearQte(){
+    qteArea.style.display = 'none';
+    tugbar.style.display = 'none';
+    tugLabelsEl.style.display = 'none';
+    territoryChoice.style.display = 'none';
+    qteHint.style.display = 'none';
+    if(tugInterval){ clearInterval(tugInterval); tugInterval = null; }
+    shakeAmt = 0;
+  }
+
+  function startFightQte(onDone){
+    qteResolved = false;
+    tugValue = 0;
+    tugbar.style.display = 'block';
+    tugLabelsEl.style.display = 'flex';
+    qteArea.style.display = 'block';
+    qteHint.style.display = 'block';
+    qteHint.textContent = t.qteHintFight;
+    shakeAmt = 3;
+    nextBtn.disabled = true;
+
+    var suraCount = 0, bayaCount = 0;
+    function decayTick(){
+      // natural decay towards center so it needs alternating taps
+      tugValue *= 0.9;
+      updateTugVisual();
+    }
+    tugInterval = setInterval(decayTick, 200);
+
+    var timeLimit = 4200;
+    var startTime = Date.now();
+    function checkTimeUp(){
+      if(qteResolved) return;
+      if(Date.now()-startTime > timeLimit){
+        finishFight();
+      } else {
+        requestAnimationFrame(checkTimeUp);
+      }
+    }
+    requestAnimationFrame(checkTimeUp);
+
+    function finishFight(){
+      if(qteResolved) return;
+      qteResolved = true;
+      clearQte();
+      nextBtn.disabled = false;
+      onDone();
+    }
+
+    document.getElementById('btnSura').onclick = function(){
+      if(qteResolved) return;
+      tugValue -= 8;
+      updateTugVisual();
+    };
+    document.getElementById('btnBaya').onclick = function(){
+      if(qteResolved) return;
+      tugValue += 8;
+      updateTugVisual();
+    };
+  }
+
+  function updateTugVisual(){
+    tugValue = Math.max(-100, Math.min(100, tugValue));
+    var pct = 50 + (tugValue/100)*45; // keep within bar
+    tugfill.style.left = pct + '%';
+  }
+
+  function startDuelQte(onDone){
+    qteResolved = false;
+    tugValue = 0;
+    tugbar.style.display = 'block';
+    tugLabelsEl.style.display = 'flex';
+    qteArea.style.display = 'block';
+    qteHint.style.display = 'block';
+    qteHint.textContent = t.qteHintDuel;
+    shakeAmt = 5;
+    nextBtn.disabled = true;
+
+    document.getElementById('btnSura').onclick = function(){
+      if(qteResolved) return;
+      tugValue -= 12;
+      updateTugVisual();
+      checkWin();
+    };
+    document.getElementById('btnBaya').onclick = function(){
+      if(qteResolved) return;
+      tugValue += 12;
+      updateTugVisual();
+      checkWin();
+    };
+
+    var startTime = Date.now();
+    var timeLimit = 6000;
+    function loop(){
+      if(qteResolved) return;
+      if(Date.now()-startTime > timeLimit){
+        // force Baya win per story canon regardless, nudge value
+        tugValue = 100;
+        updateTugVisual();
+        checkWin();
+        return;
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    function checkWin(){
+      if(qteResolved) return;
+      if(Math.abs(tugValue) >= 95){
+        qteResolved = true;
+        clearQte();
+        nextBtn.disabled = false;
+        onDone();
+      }
+    }
+  }
+
+  function startTerritoryChoice(onDone){
+    territoryChoice.style.display = 'flex';
+    currentScene = 'territory';
+    nextBtn.disabled = true;
+    var chosen = false;
+    function pick(terr){
+      if(chosen) return;
+      chosen = true;
+      territoryChoice.style.display = 'none';
+      currentScene = 'ocean';
+      nextBtn.disabled = false;
+      onDone();
+    }
+    document.getElementById('chooseSea').onclick = function(){ pick('sea'); };
+    document.getElementById('chooseLand').onclick = function(){ pick('land'); };
+  }
+
+  function showStep(){
+    var s = steps[idx];
+    speakerName.textContent = s.speaker || '';
+    storyText.textContent = s.text;
+    updateDots();
+    speak((s.speaker ? s.speaker + '. ' : '') + s.text);
+
+    nextBtn.style.display = 'inline-block';
+    nextBtn.disabled = false;
+    qteHint.style.display = 'none';
+
+    if(s.qte === 'fight'){
+      startFightQte(function(){});
+    } else if(s.qte === 'duel'){
+      startDuelQte(function(){});
+    } else if(s.territory){
+      startTerritoryChoice(function(){});
+    }
+  }
+
+  nextBtn.addEventListener('click', function(){
+    idx++;
+    if(idx >= steps.length){
+      showEnd();
+      return;
+    }
+    showStep();
+  });
+
+  function showEnd(){
+    dialogueBox.style.display = 'none';
+    progressDots.style.display = 'none';
+    if(synth) synth.cancel();
+    document.getElementById('endScreen').style.display = 'flex';
+    var mergeText = lang === 'id'
+      ? "Rakyat sekitar terkesan dan menamai wilayah itu Surabaya, gabungan dari Sura dan Baya."
+      : "The people nearby were so impressed they named the region Surabaya, a blend of Sura and Baya.";
+    speak(mergeText);
+    setTimeout(function(){
+      document.getElementById('mergeNames2').style.display = 'flex';
+    }, 600);
+  }
+
+  document.getElementById('replayBtn').addEventListener('click', function(){
+    idx = 0;
+    document.getElementById('endScreen').style.display = 'none';
+    document.getElementById('mergeNames2').style.display = 'none';
+    dialogueBox.style.display = 'block';
+    progressDots.style.display = 'flex';
+    var dots = progressDots.children;
+    for(var i=0;i<dots.length;i++) dots[i].classList.remove('done');
+    showStep();
+  });
+
+  document.getElementById('startBtn').addEventListener('click', function(){
+    document.getElementById('titleScreen').style.display = 'none';
+    resizeCanvas();
+    requestAnimationFrame(render);
+    showStep();
+  });
+
+  // Initial canvas paint (idle ocean) before start
+  resizeCanvas();
+  (function idlePaint(){
+    if(document.getElementById('titleScreen').style.display === 'none') return;
+    render_once();
+    requestAnimationFrame(idlePaint);
+  })();
+  function render_once(){
+    ctx.clearRect(0,0,W,H);
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#1c6f95');
+    g.addColorStop(1,'#0d2b3e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    drawWave(H*0.6, 12, 0.6, 'rgba(255,255,255,0.06)', 0);
+    var time = (Date.now()-t0)/1000;
+    drawShark(W*0.3+Math.sin(time)*10, H*0.4, 1, 1);
+    drawCroc(W*0.68+Math.sin(time+1)*8, H*0.6, 1, -1);
+  }
+
+  // ---------- Auto-resize iframe embedding ----------
+  function reportHeight(){
+    var h = document.getElementById('wrap').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ surabayaHeight: h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  setTimeout(reportHeight, 300);
+  setTimeout(reportHeight, 1000);
+
+})();
+</script>
+</body>
+</html>
