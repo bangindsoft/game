@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Kabayan - Petualangan Jawa Barat</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;600;800&display=swap');
+
+  :root{
+    --paddy:#7cb342;
+    --paddy-dark:#558b2f;
+    --earth:#6b4226;
+    --earth-dark:#4a2c18;
+    --parchment:#f6ecd2;
+    --parchment-dark:#ead9ab;
+    --batik-red:#c1440e;
+    --batik-red-dark:#8e320a;
+    --gold:#d4a017;
+    --ink:#3b2a1a;
+    --sky:#bfe3e0;
+    --river:#5a9bd6;
+    --white:#fdf8ec;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Nunito',sans-serif;
+    background:var(--parchment);
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+    border-radius:0 0 18px 18px;
+    overflow:hidden;
+    box-shadow:0 4px 18px rgba(0,0,0,0.15);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--earth);
+    color:var(--white);
+  }
+  header h1{
+    font-family:'Baloo 2',cursive;
+    font-size:20px;
+    margin:0;
+    color:var(--gold);
+    text-shadow:1px 1px 0 var(--earth-dark);
+  }
+  .btn-row{display:flex;gap:6px;}
+  .icon-btn{
+    background:var(--batik-red);
+    color:var(--white);
+    border:none;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;
+    transition:transform .1s;
+  }
+  .icon-btn:active{transform:scale(0.92);}
+  .icon-btn.off{background:#8a8a8a;}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:var(--sky);
+    touch-action:manipulation;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  #overlay{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    pointer-events:none;
+  }
+
+  #instructions{
+    pointer-events:auto;
+    background:rgba(59,42,26,0.88);
+    color:var(--white);
+    padding:8px 16px;
+    margin:8px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:600;
+    text-align:center;
+    max-width:90%;
+  }
+
+  #dialogue-box{
+    pointer-events:auto;
+    width:100%;
+    background:var(--parchment);
+    border-top:4px solid var(--batik-red);
+    padding:14px 16px 16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  #dialogue-portrait{
+    width:52px;height:52px;
+    flex:0 0 auto;
+    border-radius:50%;
+    background:var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;
+    border:3px solid var(--batik-red);
+  }
+  #dialogue-text{
+    flex:1;
+    font-size:15.5px;
+    line-height:1.4;
+    font-weight:600;
+    color:var(--ink);
+  }
+  #dialogue-footer{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:8px;
+  }
+  #next-btn{
+    background:var(--batik-red);
+    color:var(--white);
+    border:none;
+    padding:9px 20px;
+    border-radius:24px;
+    font-weight:800;
+    font-family:'Baloo 2',cursive;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--batik-red-dark);
+  }
+  #next-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--batik-red-dark);}
+
+  #dialogue-box.hidden{display:none;}
+
+  #progress-dots{
+    display:flex;
+    gap:5px;
+    padding:6px 0;
+    justify-content:center;
+    background:var(--earth);
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,0.3);
+  }
+  .dot.done{background:var(--gold);}
+  .dot.current{background:var(--white);}
+
+  #mash-btn{
+    pointer-events:auto;
+    background:var(--gold);
+    color:var(--ink);
+    border:none;
+    border-radius:50%;
+    width:88px;height:88px;
+    font-family:'Baloo 2',cursive;
+    font-size:16px;
+    font-weight:700;
+    box-shadow:0 5px 0 #a8790f;
+    margin-bottom:14px;
+    cursor:pointer;
+    user-select:none;
+  }
+  #mash-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #a8790f;}
+
+  #meter-wrap{
+    pointer-events:none;
+    width:80%;
+    max-width:340px;
+    height:16px;
+    background:rgba(59,42,26,0.35);
+    border-radius:10px;
+    margin-bottom:10px;
+    overflow:hidden;
+    border:2px solid var(--earth);
+  }
+  #meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--paddy),var(--gold));
+    transition:width .08s linear;
+  }
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7a5c;
+    padding:6px 0 10px;
+    background:var(--parchment-dark);
+  }
+  footer a{color:#8a7a5c;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="title-text">Si Kabayan</h1>
+    <div class="btn-row">
+      <button class="icon-btn" id="lang-btn">EN</button>
+      <button class="icon-btn" id="mute-btn">🔊</button>
+    </div>
+  </header>
+  <div id="progress-dots"></div>
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+    <div id="overlay">
+      <div id="instructions" style="display:none;"></div>
+      <div id="meter-wrap" style="display:none;"><div id="meter-fill"></div></div>
+      <button id="mash-btn" style="display:none;">KOCOK!</button>
+      <div id="dialogue-box" class="hidden">
+        <div id="dialogue-portrait">🧑🏽</div>
+        <div style="flex:1;">
+          <div id="dialogue-text"></div>
+          <div id="dialogue-footer">
+            <button id="next-btn">Lanjut ▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer id="footer-text">Cerita Rakyat Jawa Barat &middot; caritasato.blogspot.com</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+var params = new URLSearchParams(location.search);
+var state = {
+  lang: params.get('lang') === 'en' ? 'en' : 'id',
+  muted: false,
+  stepIndex: 0,
+  score: 0
+};
+
+var canvas = document.getElementById('stage');
+var ctx = canvas.getContext('2d');
+var W = canvas.width, H = canvas.height;
+
+var dialogueBox = document.getElementById('dialogue-box');
+var dialogueText = document.getElementById('dialogue-text');
+var dialoguePortrait = document.getElementById('dialogue-portrait');
+var nextBtn = document.getElementById('next-btn');
+var instructionsEl = document.getElementById('instructions');
+var meterWrap = document.getElementById('meter-wrap');
+var meterFill = document.getElementById('meter-fill');
+var mashBtn = document.getElementById('mash-btn');
+var progressDots = document.getElementById('progress-dots');
+var langBtn = document.getElementById('lang-btn');
+var muteBtn = document.getElementById('mute-btn');
+var footerText = document.getElementById('footer-text');
+var titleText = document.getElementById('title-text');
+
+var UI = {
+  id: { next:'Lanjut ▶', start:'Mulai Cerita ▶', replay:'Main Lagi ↺', footer:'Cerita Rakyat Jawa Barat · caritasato.blogspot.com' },
+  en: { next:'Next ▶', start:'Start Story ▶', replay:'Play Again ↺', footer:'West Java Folk Tale · caritasato.blogspot.com' }
+};
+
+/* ---------------------------------------------------------
+   NARRATION (Web Speech API)
+--------------------------------------------------------- */
+var synth = window.speechSynthesis || null;
+var voices = [];
+function loadVoices(){ if(synth) voices = synth.getVoices(); }
+if(synth){
+  loadVoices();
+  synth.onvoiceschanged = loadVoices;
+}
+function speak(text){
+  if(!synth || state.muted || !text) return;
+  synth.cancel();
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+  var match = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(state.lang) === 0; });
+  if(match) utt.voice = match;
+  utt.rate = 0.95;
+  utt.pitch = 1.05;
+  synth.speak(utt);
+}
+function stopSpeak(){ if(synth) synth.cancel(); }
+
+/* ---------------------------------------------------------
+   DRAWING HELPERS - simple flat vector folk-art characters
+--------------------------------------------------------- */
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawSky(horizonY, tint){
+  var grad = ctx.createLinearGradient(0,0,0,horizonY);
+  grad.addColorStop(0, tint || '#bfe3e0');
+  grad.addColorStop(1, '#e7f3e6');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,horizonY);
+  // sun
+  ctx.fillStyle = 'rgba(255,235,150,0.9)';
+  ctx.beginPath(); ctx.arc(W-90,70,38,0,Math.PI*2); ctx.fill();
+}
+
+function drawRicePaddy(horizonY){
+  drawSky(horizonY);
+  ctx.fillStyle = '#a7d67e';
+  ctx.fillRect(0,horizonY,W,H-horizonY);
+  for(var i=0;i<7;i++){
+    var y = horizonY + i*((H-horizonY)/7);
+    var sway = Math.sin(Date.now()/900 + i)*3;
+    ctx.strokeStyle = i%2===0 ? '#8bbf5a' : '#79ad4a';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0+sway,y); ctx.lineTo(W+sway,y+6); ctx.stroke();
+  }
+  // distant mountains
+  ctx.fillStyle = '#8fae8c';
+  ctx.beginPath();
+  ctx.moveTo(0,horizonY);
+  ctx.lineTo(120,horizonY-60);
+  ctx.lineTo(260,horizonY);
+  ctx.lineTo(420,horizonY-80);
+  ctx.lineTo(600,horizonY);
+  ctx.lineTo(760,horizonY-50);
+  ctx.lineTo(W,horizonY);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawHouseBg(horizonY){
+  drawSky(horizonY,'#cfe9e6');
+  ctx.fillStyle = '#c9b98a';
+  ctx.fillRect(0,horizonY,W,H-horizonY);
+  // simple stilt house
+  ctx.fillStyle = '#8a5a34';
+  roundRect(W/2-110,horizonY-90,220,90,6); ctx.fill();
+  ctx.fillStyle = '#5c3a20';
+  ctx.beginPath();
+  ctx.moveTo(W/2-130,horizonY-90);
+  ctx.lineTo(W/2,horizonY-160);
+  ctx.lineTo(W/2+130,horizonY-90);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3f2a17';
+  ctx.fillRect(W/2-18,horizonY-55,36,55);
+}
+
+function drawRiverBg(horizonY){
+  drawSky(horizonY,'#cdeaea');
+  ctx.fillStyle = '#8fae8c';
+  ctx.fillRect(0,horizonY,W,60);
+  ctx.fillStyle = '#5a9bd6';
+  ctx.fillRect(0,horizonY+60,W,H-horizonY-60);
+  for(var i=0;i<6;i++){
+    var y = horizonY+80+i*30;
+    ctx.strokeStyle='rgba(255,255,255,0.35)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var x=0;x<=W;x+=20){
+      ctx.lineTo(x, y+Math.sin(x/40+Date.now()/500+i)*4);
+    }
+    ctx.stroke();
+  }
+  // tree on bank
+  drawTree(90, horizonY);
+}
+
+function drawTree(x,groundY){
+  ctx.fillStyle = '#6b4226';
+  ctx.fillRect(x-10,groundY-140,20,140);
+  ctx.fillStyle = '#4c7a3a';
+  ctx.beginPath(); ctx.arc(x,groundY-160,55,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#5c8f47';
+  ctx.beginPath(); ctx.arc(x-35,groundY-135,35,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+40,groundY-130,32,0,Math.PI*2); ctx.fill();
+}
+
+function drawGardenBg(horizonY){
+  drawSky(horizonY,'#d7ecc9');
+  ctx.fillStyle = '#c7d98a';
+  ctx.fillRect(0,horizonY,W,H-horizonY);
+  drawTree(W-120,horizonY+30);
+  for(var i=0;i<5;i++){
+    ctx.fillStyle='#8fae5c';
+    ctx.beginPath();
+    ctx.ellipse(60+i*130, horizonY+40, 26,12,0,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawKabayan(x,y,scale,pose){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  var bob = pose==='jump' ? Math.sin(Date.now()/90)*8 : 0;
+  ctx.translate(0,bob);
+  // legs
+  ctx.fillStyle = '#3b2a1a';
+  ctx.fillRect(-18,20,14,34);
+  ctx.fillRect(4,20,14,34);
+  // sarong / body
+  ctx.fillStyle = '#c1440e';
+  ctx.beginPath();
+  ctx.moveTo(-24,-20);
+  ctx.lineTo(24,-20);
+  ctx.lineTo(30,26);
+  ctx.lineTo(-30,26);
+  ctx.closePath(); ctx.fill();
+  // batik stripe
+  ctx.strokeStyle='#f6ecd2'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-22,6); ctx.lineTo(22,6); ctx.stroke();
+  // arms
+  ctx.fillStyle = '#c1440e';
+  ctx.save();
+  ctx.translate(-26,-14); ctx.rotate(pose==='wave'? -0.9: -0.3);
+  ctx.fillRect(-6,0,12,30); ctx.restore();
+  ctx.save();
+  ctx.translate(26,-14); ctx.rotate(pose==='wave'? 0.9:0.3);
+  ctx.fillRect(-6,0,12,30); ctx.restore();
+  // head
+  ctx.fillStyle = '#c98a55';
+  ctx.beginPath(); ctx.arc(0,-42,22,0,Math.PI*2); ctx.fill();
+  // iket kepala (headband)
+  ctx.fillStyle = '#3b2a1a';
+  ctx.beginPath();
+  ctx.moveTo(-24,-52); ctx.lineTo(24,-52); ctx.lineTo(18,-62); ctx.lineTo(-18,-62);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(20,-50); ctx.lineTo(34,-40); ctx.lineTo(26,-36); ctx.closePath(); ctx.fill();
+  // face
+  ctx.fillStyle='#2a1c10';
+  ctx.beginPath(); ctx.arc(-7,-42,2.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(7,-42,2.4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#2a1c10'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(0,-36,7,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawAbah(x,y,scale){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#3b3b3b';
+  ctx.fillRect(-16,18,14,32); ctx.fillRect(2,18,14,32);
+  ctx.fillStyle = '#4b6b3a';
+  ctx.beginPath();
+  ctx.moveTo(-24,-18); ctx.lineTo(24,-18); ctx.lineTo(26,24); ctx.lineTo(-26,24);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#4b6b3a';
+  ctx.fillRect(-30,-14,14,28); ctx.fillRect(16,-14,14,28);
+  ctx.fillStyle = '#caa06a';
+  ctx.beginPath(); ctx.arc(0,-40,20,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1c1c1c';
+  ctx.beginPath(); ctx.arc(0,-54,16,Math.PI,0); ctx.fill();
+  ctx.fillRect(-16,-54,32,8);
+  ctx.strokeStyle='#1c1c1c'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-9,-33); ctx.lineTo(9,-33); ctx.stroke();
+  ctx.fillStyle='#1c1c1c';
+  ctx.beginPath(); ctx.arc(-6,-42,2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6,-42,2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawIteung(x,y,scale){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#3b2a1a';
+  ctx.fillRect(-14,20,12,30); ctx.fillRect(2,20,12,30);
+  ctx.fillStyle = '#7a3b6b';
+  ctx.beginPath();
+  ctx.moveTo(-22,-18); ctx.lineTo(22,-18); ctx.lineTo(28,24); ctx.lineTo(-28,24);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#d9a066';
+  ctx.beginPath(); ctx.arc(0,-38,18,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1c1c1c';
+  ctx.beginPath(); ctx.ellipse(0,-52,15,10,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-60,7,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1c1c1c';
+  ctx.beginPath(); ctx.arc(-6,-38,2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6,-38,2,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#8a4a2a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(0,-32,5,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawSnail(x,y,r){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = '#8a5a34';
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3b2a1a'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.arc(0,0,r*0.65,0,Math.PI*1.4); ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0,0,r*0.35,0,Math.PI*1.4); ctx.stroke();
+  ctx.fillStyle = '#c98a55';
+  ctx.beginPath(); ctx.ellipse(r*0.9,0,r*0.5,r*0.3,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawJackfruit(x,y,r){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = '#7a8f3a';
+  ctx.beginPath(); ctx.ellipse(0,0,r*0.8,r,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#5c7a2a';
+  for(var i=0;i<10;i++){
+    var ang = i*(Math.PI*2/10);
+    ctx.beginPath();
+    ctx.arc(Math.cos(ang)*r*0.55, Math.sin(ang)*r*0.7, r*0.14,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#4a6b1a';
+  ctx.fillRect(-4,-r-8,8,10);
+  ctx.restore();
+}
+
+function drawMachete(x,y,rot){
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(rot||0);
+  ctx.fillStyle = '#3b2a1a';
+  ctx.fillRect(-3,0,6,18);
+  ctx.fillStyle = '#c9c9c9';
+  ctx.beginPath();
+  ctx.moveTo(-4,-2); ctx.lineTo(4,-2); ctx.lineTo(6,-40); ctx.lineTo(-2,-42);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawSack(x,y,w,h){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = '#b08a4f';
+  roundRect(-w/2,-h/2,w,h,10); ctx.fill();
+  ctx.strokeStyle = '#7a5a2e'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-w/2,-h/2+10); ctx.lineTo(w/2,-h/2+10); ctx.stroke();
+  ctx.restore();
+}
+
+function drawKapukDot(x,y,r,filled){
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle = filled ? '#fdf8ec' : 'rgba(253,248,236,0.35)';
+  ctx.fill();
+  ctx.strokeStyle = '#c1440e'; ctx.lineWidth = filled?0:2;
+  ctx.stroke();
+}
+
+/* ---------------------------------------------------------
+   TEXT CONTENT (bilingual)
+--------------------------------------------------------- */
+var portrait = { kabayan:'🧑🏽', abah:'👴🏽', iteung:'👩🏽', spirit:'👻' };
+
+var STEPS = [];
+
+function T(idText, enText){ return { id: idText, en: enText }; }
+
+STEPS.push({
+  type:'title',
+  title: T('Si Kabayan','Si Kabayan'),
+  subtitle: T('Petualangan si pemalas yang banyak akal dari Jawa Barat','The lazy but clever folk hero from West Java')
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'kabayan',
+  text: T('Di sebuah kampung di tanah Pasundan, tinggallah Kabayan, seorang lelaki yang sangat pemalas namun banyak akal. Suatu hari, mertuanya, Abah, menyuruhnya mencari tutut di sawah.',
+          'In a village in West Java lived Kabayan, a very lazy but clever man. One day, his father-in-law Abah told him to gather snails in the rice field.'),
+  bg:'paddy'
+});
+
+STEPS.push({
+  type:'game-collect', bg:'paddy',
+  instructions: T('Bantu Kabayan mencari tutut sebelum Abah datang! Ketuk tutut yang muncul di sawah.',
+                  'Help Kabayan find snails before Abah arrives! Tap the snails as they appear in the field.'),
+  goal:8, time:16000
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'abah',
+  text: T('Abah lelah menunggu dan mendapati Kabayan hanya duduk-duduk santai di pematang sawah. Karena kesal, ia mendorong Kabayan hingga jatuh ke sawah. "Aduh Abah, ternyata sawahnya dangkal ya," kata Kabayan sambil tersenyum.',
+          'Tired of waiting, Abah found Kabayan just lounging by the field. Annoyed, he pushed Kabayan into the paddy. "Oh Abah, turns out the field is shallow," Kabayan said with a grin.'),
+  bg:'paddy'
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'iteung',
+  text: T('Suatu hari Kabayan jatuh sakit, pilek dan batuk. Nyi Iteung membawanya ke Puskesmas. Pak Mantri memberi obat batuk yang harus dikocok dulu sebelum diminum.',
+          'One day Kabayan caught a cold and cough. Nyi Iteung took him to the clinic, where the doctor gave him cough medicine that needed shaking before drinking.'),
+  bg:'house'
+});
+
+STEPS.push({
+  type:'game-mash', bg:'house',
+  instructions: T('Kabayan lupa membaca aturan pakai obatnya! Ketuk tombol secepat mungkin untuk mengocoknya di dalam perut!',
+                  'Kabayan forgot to read the medicine label! Tap the button as fast as you can to shake it inside his tummy!'),
+  time:6000, label:T('KOCOK!','SHAKE!'), jumpPose:true
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'iteung',
+  text: T('Nyi Iteung pulang dan kaget melihat Kabayan meloncat-loncat di rumah. "Bukan olahraga, Nyi! Akang lupa kocok dulu obatnya, jadi Akang loncat-loncat biar teraduk di perut!" kata Kabayan sambil terengah-engah.',
+          'Nyi Iteung came home and was startled to see Kabayan jumping around the house. "It\'s not exercise, Nyi! I forgot to shake the medicine, so I\'m jumping to mix it in my tummy!" Kabayan panted.'),
+  bg:'house'
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'kabayan',
+  text: T('Nyi Iteung ingin makan buah nangka. Kabayan pun memanjat pohon nangka membawa golok untuk memetiknya.',
+          'Nyi Iteung wanted to eat jackfruit. Kabayan climbed the jackfruit tree with a machete to pick one.'),
+  bg:'garden'
+});
+
+STEPS.push({
+  type:'game-sequence', bg:'garden',
+  instructions: T('Dengarkan suara merdu saat benda-benda jatuh dari pohon! Ketuk tepat saat benda menyentuh tanah.',
+                  'Listen to the lovely sounds as things fall from the tree! Tap right when each object lands.'),
+  items:[
+    {kind:'jackfruit', sound:T('Bag...big...bug...','Thud...thump...bonk...')},
+    {kind:'machete', sound:T('Tang..ting..tung..','Ting..tang..clang..')},
+    {kind:'kabayan', sound:T('Gubrak! Aduuuh!','Thud! Ouuuch!')}
+  ]
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'kabayan',
+  text: T('Kabayan begitu suka suara nangka dan golok yang jatuh, sampai ia pun ikut menjatuhkan dirinya sendiri! "Iteeeung! Tolong akang!" teriaknya kesakitan.',
+          'Kabayan loved the falling sounds so much that he threw himself down too! "Iteeeung! Help me!" he cried in pain.'),
+  bg:'garden'
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'abah',
+  text: T('Di lain hari, Abah menyuruh Kabayan memetik nangka matang di pohon dekat sungai.',
+          'Another day, Abah told Kabayan to pick a ripe jackfruit from a tree by the river.'),
+  bg:'river'
+});
+
+STEPS.push({
+  type:'game-catch', bg:'river',
+  instructions: T('Coba tangkap nangka yang jatuh ke sungai sebelum hanyut terlalu jauh!',
+                  'Try to catch the jackfruit before it drifts too far down the river!'),
+  duration:3200
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'kabayan',
+  text: T('Nangka itu terlanjur hanyut. "Biar saja ia jalan sendiri pulang," pikir Kabayan santai. Abah pun murka mendengar alasannya yang aneh: "Mana bisa nangka berjalan sendiri!"',
+          '"The jackfruit had already drifted away. \\"Let it walk home by itself,\\" Kabayan thought calmly. Abah was furious at such a silly excuse: \\"How can a jackfruit walk on its own!\\""'),
+  bg:'river'
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'kabayan',
+  text: T('Saat memetik kacang koro di kebun, Kabayan mengantuk dan malah tidur di dalam karung.',
+          'While picking bean pods in the garden, Kabayan got sleepy and hid inside a sack to nap.'),
+  bg:'garden'
+});
+
+STEPS.push({
+  type:'game-mash', bg:'garden', sack:true, carrier:'abah',
+  instructions: T('Abah memanggul karung yang ternyata berisi Kabayan! Ketuk cepat untuk membantunya berjalan pulang.',
+                  'Abah carried the sack, not knowing Kabayan was inside! Tap quickly to help him walk home.'),
+  time:6000, label:T('JALAN!','WALK!')
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'abah',
+  text: T('Betapa terkejutnya Abah saat membuka karung dan mendapati Kabayan tertidur pulas di dalamnya! "Saya bawa karung untuk kacang koro, bukan untuk manusia!" serunya kesal.',
+          'Abah was shocked to open the sack and find Kabayan fast asleep inside! "I carried this sack for beans, not for people!" he shouted, annoyed.'),
+  bg:'garden'
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'abah',
+  text: T('Esoknya, Abah membalas dendam dengan diam-diam bersembunyi di dalam karung yang sama.',
+          'The next day, Abah got his revenge by secretly hiding inside the very same sack.'),
+  bg:'garden'
+});
+
+STEPS.push({
+  type:'game-mash', bg:'garden', sack:true, carrier:'kabayan',
+  instructions: T('Kali ini Kabayan menyeret karung berisi Abah pulang tanpa menyadarinya. Ketuk cepat untuk menyeretnya!',
+                  'This time Kabayan dragged the sack with Abah inside, without realizing it. Tap quickly to drag it home!'),
+  time:6000, label:T('SERET!','DRAG!')
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'abah',
+  text: T('"Kabayan, ini Abah! Jangan diseret-seret!" teriak mertuanya. Tapi Kabayan tak menghiraukannya sampai tiba di rumah. Sejak itu Abah sangat membenci Kabayan.',
+          '"Kabayan, it\'s me, Abah! Stop dragging me!" his father-in-law shouted. But Kabayan paid no attention until they reached home. From then on, Abah despised Kabayan deeply.'),
+  bg:'garden'
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'kabayan',
+  text: T('Untuk memperbaiki hubungan, Kabayan diam-diam mencari tahu nama asli Abah, yaitu Nolednad, lalu menyamar menjadi Kakek Penunggu Lubuk menggunakan kapuk putih.',
+          'To mend things, Kabayan secretly learned Abah\'s true name, Nolednad, and disguised himself as the Spirit Guardian of the River Pool using white kapuk fluff.'),
+  bg:'river'
+});
+
+STEPS.push({
+  type:'game-collect', bg:'river', kapuk:true,
+  instructions: T('Bantu Kabayan menempelkan kapuk ke tubuhnya sebelum Abah datang untuk mandi! Ketuk titik-titik kapuk yang muncul.',
+                  'Help Kabayan stick the kapuk fluff onto his body before Abah arrives to bathe! Tap the fluff spots as they appear.'),
+  goal:9, time:14000
+});
+
+STEPS.push({
+  type:'dialogue', portrait:'spirit',
+  text: T('Menyamar sempurna, Kabayan berseru dari atas pohon, "Nolednad! Sayangi menantumu Kabayan, atau hidupmu akan penuh marabahaya!" Abah yang ketakutan pun berjanji akan menyayangi Kabayan.',
+          'Perfectly disguised, Kabayan called out from the tree, "Nolednad! Cherish your son-in-law Kabayan, or misfortune will follow you!" Terrified, Abah promised to treat Kabayan kindly.'),
+  bg:'river'
+});
+
+STEPS.push({
+  type:'ending',
+  text: T('Sejak saat itu, Abah sangat menyayangi Kabayan. Kabayan pun sadar dan mulai rajin bekerja. Ia menyayangi Nyi Iteung dan mertuanya dengan sepenuh hati. Tamat.',
+          'From then on, Abah cherished Kabayan dearly. Kabayan realized his ways and became hardworking. He loved Nyi Iteung and his father-in-law with all his heart. The End.')
+});
+
+/* ---------------------------------------------------------
+   BACKGROUND DISPATCH
+--------------------------------------------------------- */
+var horizonY = 300;
+function drawBg(name){
+  if(name==='paddy') drawRicePaddy(horizonY);
+  else if(name==='house') drawHouseBg(horizonY);
+  else if(name==='river') drawRiverBg(horizonY);
+  else if(name==='garden') drawGardenBg(horizonY);
+  else drawSky(H);
+}
+
+/* ---------------------------------------------------------
+   ENGINE
+--------------------------------------------------------- */
+var animId = null;
+var activeGame = null; // holds cleanup fn
+
+function clearOverlayUI(){
+  instructionsEl.style.display='none';
+  meterWrap.style.display='none';
+  mashBtn.style.display='none';
+  dialogueBox.classList.add('hidden');
+}
+
+function updateDots(){
+  progressDots.innerHTML='';
+  var storySteps = STEPS.filter(function(s){return s.type!=='title';});
+  var currentStoryIdx = STEPS.slice(0,state.stepIndex+1).filter(function(s){return s.type!=='title';}).length-1;
+  storySteps.forEach(function(s,i){
+    var d = document.createElement('div');
+    d.className='dot'+(i<currentStoryIdx?' done':'')+(i===currentStoryIdx?' current':'');
+    progressDots.appendChild(d);
+  });
+}
+
+function goToStep(i){
+  if(activeGame && activeGame.cleanup) activeGame.cleanup();
+  activeGame = null;
+  stopSpeak();
+  state.stepIndex = i;
+  clearOverlayUI();
+  updateDots();
+  var step = STEPS[i];
+  if(!step){ return; }
+
+  if(step.type==='title'){
+    renderTitleStep(step);
+  } else if(step.type==='dialogue'){
+    renderDialogueStep(step);
+  } else if(step.type==='ending'){
+    renderEndingStep(step);
+  } else if(step.type==='game-collect'){
+    renderCollectGame(step);
+  } else if(step.type==='game-mash'){
+    renderMashGame(step);
+  } else if(step.type==='game-sequence'){
+    renderSequenceGame(step);
+  } else if(step.type==='game-catch'){
+    renderCatchGame(step);
+  }
+}
+
+function nextStep(){ goToStep(state.stepIndex+1); }
+
+nextBtn.addEventListener('click', nextStep);
+
+/* ---- TITLE ---- */
+function renderTitleStep(step){
+  cancelAnimationFrame(animId);
+  function draw(){
+    drawRicePaddy(horizonY);
+    drawKabayan(W/2-90,H-70,1.3,'wave');
+    drawIteung(W/2+90,H-70,1.2);
+    ctx.fillStyle='rgba(59,42,26,0.55)';
+    roundRect(60,60,W-120,120,16); ctx.fill();
+    ctx.fillStyle='#d4a017';
+    ctx.font="bold 46px 'Baloo 2', cursive";
+    ctx.textAlign='center';
+    ctx.fillText(step.title[state.lang], W/2, 120);
+    ctx.fillStyle='#fdf8ec';
+    ctx.font="600 18px 'Nunito', sans-serif";
+    wrapText(step.subtitle[state.lang], W/2, 155, W-160, 24);
+    animId = requestAnimationFrame(draw);
+  }
+  draw();
+  instructionsEl.style.display='block';
+  instructionsEl.textContent='';
+  dialogueBox.classList.remove('hidden');
+  dialoguePortrait.textContent='🧑🏽';
+  dialogueText.textContent='';
+  nextBtn.textContent = UI[state.lang].start;
+}
+
+/* ---- DIALOGUE ---- */
+function renderDialogueStep(step){
+  cancelAnimationFrame(animId);
+  function draw(){
+    drawBg(step.bg);
+    drawSceneActors(step);
+    animId = requestAnimationFrame(draw);
+  }
+  draw();
+  dialogueBox.classList.remove('hidden');
+  dialoguePortrait.textContent = portrait[step.portrait] || '🧑🏽';
+  dialogueText.textContent = step.text[state.lang];
+  nextBtn.textContent = UI[state.lang].next;
+  speak(step.text[state.lang]);
+}
+
+function drawSceneActors(step){
+  if(step.portrait==='abah') drawAbah(W/2,H-90,1.5);
+  else if(step.portrait==='iteung') drawIteung(W/2,H-90,1.5);
+  else if(step.portrait==='spirit'){
+    drawTree(W/2, H-40);
+    drawKabayan(W/2, H-220, 1.3);
+  } else {
+    drawKabayan(W/2,H-90,1.5);
+  }
+}
+
+/* ---- ENDING ---- */
+function renderEndingStep(step){
+  cancelAnimationFrame(animId);
+  function draw(){
+    drawRicePaddy(horizonY);
+    drawKabayan(W/2-110,H-70,1.15);
+    drawIteung(W/2,H-70,1.1);
+    drawAbah(W/2+110,H-70,1.15);
+    ctx.fillStyle='rgba(59,42,26,0.6)';
+    roundRect(70,60,W-140,60,14); ctx.fill();
+    ctx.fillStyle='#fdf8ec';
+    ctx.font="bold 30px 'Baloo 2', cursive";
+    ctx.textAlign='center';
+    ctx.fillText(state.lang==='id' ? 'TAMAT' : 'THE END', W/2, 100);
+    animId = requestAnimationFrame(draw);
+  }
+  draw();
+  dialogueBox.classList.remove('hidden');
+  dialoguePortrait.textContent='🎉';
+  dialogueText.textContent = step.text[state.lang];
+  nextBtn.textContent = UI[state.lang].replay;
+  speak(step.text[state.lang]);
+}
+nextBtn.addEventListener('click', function(){
+  if(STEPS[state.stepIndex].type==='ending'){
+    goToStep(0);
+  }
+});
+
+function wrapText(text,x,y,maxWidth,lineHeight){
+  var words = text.split(' ');
+  var line='';
+  var yy=y;
+  ctx.textAlign='center';
+  for(var n=0;n<words.length;n++){
+    var test = line+words[n]+' ';
+    if(ctx.measureText(test).width>maxWidth && n>0){
+      ctx.fillText(line,x,yy);
+      line = words[n]+' ';
+      yy+=lineHeight;
+    } else { line=test; }
+  }
+  ctx.fillText(line,x,yy);
+}
+
+/* ---------------------------------------------------------
+   GAME: TAP-COLLECT (tutut / kapuk)
+--------------------------------------------------------- */
+function renderCollectGame(step){
+  cancelAnimationFrame(animId);
+  instructionsEl.style.display='block';
+  instructionsEl.textContent = step.instructions[state.lang];
+  dialogueBox.classList.add('hidden');
+  speak(step.instructions[state.lang]);
+
+  var targets = [];
+  var collected = 0;
+  var goal = step.goal;
+  var startTime = Date.now();
+  var duration = step.time;
+  var spawnEvery = step.kapuk ? 700 : 900;
+  var lastSpawn = 0;
+  var kapukSpots = [];
+  if(step.kapuk){
+    for(var i=0;i<12;i++){
+      kapukSpots.push({ x: W/2 + (Math.random()-0.5)*140, y: H-200 + (Math.random()-0.5)*180 });
+    }
+  }
+  var finished = false;
+
+  function spawnTarget(){
+    var x,y;
+    if(step.kapuk && kapukSpots.length){
+      var spot = kapukSpots.pop();
+      x=spot.x; y=spot.y;
+    } else {
+      x = 100 + Math.random()*(W-200);
+      y = horizonY + 40 + Math.random()*(H-horizonY-70);
+    }
+    targets.push({x:x,y:y,r: step.kapuk?16:22, born:Date.now(), life: step.kapuk?3000:2600});
+  }
+
+  function pointInTarget(px,py,t){
+    var dx=px-t.x, dy=py-t.y;
+    return Math.sqrt(dx*dx+dy*dy) < t.r+14;
+  }
+
+  function handleTap(evt){
+    if(finished) return;
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W/rect.width, scaleY = H/rect.height;
+    var clientX = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    var clientY = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+    var px = (clientX-rect.left)*scaleX;
+    var py = (clientY-rect.top)*scaleY;
+    for(var i=targets.length-1;i>=0;i--){
+      if(pointInTarget(px,py,targets[i])){
+        targets.splice(i,1);
+        collected++;
+        break;
+      }
+    }
+    if(collected>=goal) endGame(true);
+  }
+  canvas.addEventListener('pointerdown', handleTap);
+
+  function endGame(success){
+    if(finished) return;
+    finished = true;
+    canvas.removeEventListener('pointerdown', handleTap);
+    setTimeout(nextStep, 500);
+  }
+
+  function draw(){
+    drawBg(step.bg);
+    if(step.kapuk){
+      drawKabayan(W/2, H-140, 1.6);
+    } else if(step.bg==='paddy'){
+      drawKabayan(W/2, H-70, 1.2);
+    }
+    var now = Date.now();
+    if(now-lastSpawn>spawnEvery && targets.length<6 && (!step.kapuk || kapukSpots.length||targets.length)){
+      spawnTarget(); lastSpawn=now;
+    }
+    for(var i=targets.length-1;i>=0;i--){
+      var t = targets[i];
+      var age = now-t.born;
+      if(age>t.life){ targets.splice(i,1); continue; }
+      if(step.kapuk) drawKapukDot(t.x,t.y,t.r,false);
+      else drawSnail(t.x,t.y,t.r);
+    }
+    // HUD
+    ctx.fillStyle='rgba(59,42,26,0.75)';
+    roundRect(14,14,140,34,10); ctx.fill();
+    ctx.fillStyle='#fdf8ec';
+    ctx.font="700 16px 'Nunito', sans-serif";
+    ctx.textAlign='left';
+    ctx.fillText((state.lang==='id'?'Terkumpul: ':'Collected: ')+collected+'/'+goal, 24,37);
+
+    var remain = Math.max(0, duration-(now-startTime));
+    ctx.fillStyle='rgba(59,42,26,0.75)';
+    roundRect(W-110,14,96,34,10); ctx.fill();
+    ctx.fillStyle='#fdf8ec';
+    ctx.textAlign='center';
+    ctx.fillText(Math.ceil(remain/1000)+'s', W-62,37);
+
+    if(!finished){
+      if(remain<=0) endGame(false);
+      animId = requestAnimationFrame(draw);
+    }
+  }
+  draw();
+
+  activeGame = { cleanup: function(){ canvas.removeEventListener('pointerdown', handleTap); } };
+}
+
+/* ---------------------------------------------------------
+   GAME: MASH METER (kocok obat / seret karung)
+--------------------------------------------------------- */
+function renderMashGame(step){
+  cancelAnimationFrame(animId);
+  instructionsEl.style.display='block';
+  instructionsEl.textContent = step.instructions[state.lang];
+  meterWrap.style.display='block';
+  mashBtn.style.display='block';
+  mashBtn.textContent = step.label[state.lang];
+  dialogueBox.classList.add('hidden');
+  speak(step.instructions[state.lang]);
+
+  var meter = 0;
+  var finished = false;
+  var startTime = Date.now();
+
+  function onMash(){
+    if(finished) return;
+    meter = Math.min(100, meter+9);
+    meterFill.style.width = meter+'%';
+    if(meter>=100) endGame();
+  }
+  mashBtn.addEventListener('click', onMash);
+  mashBtn.addEventListener('touchstart', function(e){ e.preventDefault(); onMash(); }, {passive:false});
+
+  function endGame(){
+    if(finished) return;
+    finished = true;
+    setTimeout(nextStep, 450);
+  }
+
+  function draw(){
+    drawBg(step.bg);
+    if(step.sack){
+      var progress = meter/100;
+      var sx = 120 + progress*(W-240);
+      drawSack(sx, H-110, 90,80);
+      if(step.carrier==='abah') drawAbah(sx-70, H-90, 1.0);
+      else drawKabayan(sx-70, H-90, 1.0);
+    } else if(step.jumpPose){
+      drawKabayan(W/2, H-90, 1.4, meter>5?'jump':'idle');
+    } else {
+      drawKabayan(W/2,H-90,1.3);
+    }
+    var now = Date.now();
+    var remain = Math.max(0, step.time-(now-startTime));
+    ctx.fillStyle='rgba(59,42,26,0.75)';
+    roundRect(W-110,14,96,34,10); ctx.fill();
+    ctx.fillStyle='#fdf8ec';
+    ctx.font="700 16px 'Nunito', sans-serif";
+    ctx.textAlign='center';
+    ctx.fillText(Math.ceil(remain/1000)+'s', W-62,37);
+
+    if(!finished){
+      if(remain<=0){
+        meter = 100; meterFill.style.width='100%';
+        endGame();
+      }
+      animId = requestAnimationFrame(draw);
+    }
+  }
+  draw();
+
+  activeGame = { cleanup: function(){
+    mashBtn.removeEventListener('click', onMash);
+  }};
+}
+
+/* ---------------------------------------------------------
+   GAME: SEQUENCE (falling objects timing)
+--------------------------------------------------------- */
+function renderSequenceGame(step){
+  cancelAnimationFrame(animId);
+  instructionsEl.style.display='block';
+  instructionsEl.textContent = step.instructions[state.lang];
+  dialogueBox.classList.add('hidden');
+  speak(step.instructions[state.lang]);
+
+  var idx = 0;
+  var itemStart = Date.now();
+  var fallDuration = 1300;
+  var landed = false;
+  var caption = '';
+  var captionUntil = 0;
+  var finished = false;
+
+  function tap(){
+    if(finished) return;
+    var elapsed = Date.now()-itemStart;
+    if(Math.abs(elapsed-fallDuration) < 400){
+      caption = step.items[idx].sound[state.lang];
+      captionUntil = Date.now()+900;
+      advance();
+    }
+  }
+  canvas.addEventListener('pointerdown', tap);
+
+  function advance(){
+    idx++;
+    if(idx>=step.items.length){
+      finished = true;
+      setTimeout(nextStep, 900);
+    } else {
+      itemStart = Date.now();
+    }
+  }
+
+  function draw(){
+    drawBg(step.bg);
+    drawTree(W/2, H-40);
+    var now = Date.now();
+    if(!finished){
+      var elapsed = now-itemStart;
+      if(elapsed>fallDuration+500){ caption = step.items[idx].sound[state.lang]; captionUntil=now+700; advance(); }
+      else {
+        var t = Math.min(1, elapsed/fallDuration);
+        var y = -30 + t*(H-160);
+        var item = step.items[idx];
+        var x = W/2 + 60;
+        if(item.kind==='jackfruit') drawJackfruit(x,y,26);
+        else if(item.kind==='machete') drawMachete(x,y,0.6);
+        else drawKabayan(x,y,0.9);
+      }
+    }
+    if(caption && now<captionUntil){
+      ctx.fillStyle='rgba(59,42,26,0.8)';
+      roundRect(W/2-140,H-190,280,44,12); ctx.fill();
+      ctx.fillStyle='#d4a017';
+      ctx.font="bold 20px 'Baloo 2', cursive";
+      ctx.textAlign='center';
+      ctx.fillText(caption, W/2, H-160);
+    }
+    // progress
+    ctx.fillStyle='rgba(59,42,26,0.75)';
+    roundRect(14,14,120,34,10); ctx.fill();
+    ctx.fillStyle='#fdf8ec';
+    ctx.font="700 16px 'Nunito', sans-serif";
+    ctx.textAlign='left';
+    ctx.fillText((idx)+'/'+step.items.length, 24,37);
+
+    if(!finished) animId = requestAnimationFrame(draw);
+  }
+  draw();
+
+  activeGame = { cleanup: function(){ canvas.removeEventListener('pointerdown', tap); } };
+}
+
+/* ---------------------------------------------------------
+   GAME: CATCH (jackfruit floating in river)
+--------------------------------------------------------- */
+function renderCatchGame(step){
+  cancelAnimationFrame(animId);
+  instructionsEl.style.display='block';
+  instructionsEl.textContent = step.instructions[state.lang];
+  dialogueBox.classList.add('hidden');
+  speak(step.instructions[state.lang]);
+
+  var startTime = Date.now();
+  var duration = step.duration;
+  var caught = false;
+  var finished = false;
+  var fx=0, fy=horizonY+120;
+
+  function tap(evt){
+    if(finished) return;
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W/rect.width, scaleY = H/rect.height;
+    var clientX = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    var clientY = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+    var px=(clientX-rect.left)*scaleX, py=(clientY-rect.top)*scaleY;
+    var dx=px-fx, dy=py-fy;
+    if(Math.sqrt(dx*dx+dy*dy)<40){ caught=true; }
+  }
+  canvas.addEventListener('pointerdown', tap);
+
+  function draw(){
+    drawBg(step.bg);
+    var now = Date.now();
+    var t = Math.min(1, (now-startTime)/duration);
+    fx = -40 + t*(W+80);
+    drawJackfruit(fx,fy,28);
+    drawAbah(W/2, H-70, 1.1);
+    if(!finished && t>=1){
+      finished = true;
+      setTimeout(nextStep, 500);
+    }
+    if(!finished) animId = requestAnimationFrame(draw);
+  }
+  draw();
+
+  activeGame = { cleanup: function(){ canvas.removeEventListener('pointerdown', tap); } };
+}
+
+/* ---------------------------------------------------------
+   TOP CONTROLS: language / mute
+--------------------------------------------------------- */
+function applyLangUI(){
+  langBtn.textContent = state.lang==='id' ? 'EN' : 'ID';
+  footerText.textContent = UI[state.lang].footer;
+  titleText.textContent = 'Si Kabayan';
+  var step = STEPS[state.stepIndex];
+  if(step){
+    if(step.type==='dialogue'){ dialogueText.textContent = step.text[state.lang]; nextBtn.textContent=UI[state.lang].next; }
+    if(step.type==='ending'){ dialogueText.textContent = step.text[state.lang]; nextBtn.textContent=UI[state.lang].replay; }
+    if(step.instructions){ instructionsEl.textContent = step.instructions[state.lang]; }
+    if(step.type==='game-mash'){ mashBtn.textContent = step.label[state.lang]; }
+  }
+}
+
+langBtn.addEventListener('click', function(){
+  state.lang = state.lang==='id' ? 'en' : 'id';
+  applyLangUI();
+});
+
+muteBtn.addEventListener('click', function(){
+  state.muted = !state.muted;
+  muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('off', state.muted);
+  if(state.muted) stopSpeak();
+});
+
+/* ---------------------------------------------------------
+   AUTO-RESIZE FOR IFRAME EMBEDDING
+--------------------------------------------------------- */
+function reportHeight(){
+  var h = document.getElementById('app').getBoundingClientRect().height;
+  parent.postMessage({ type:'kabayanGameHeight', height: Math.ceil(h) }, '*');
+}
+if(window.ResizeObserver){
+  var ro = new ResizeObserver(reportHeight);
+  ro.observe(document.getElementById('app'));
+} else {
+  window.addEventListener('resize', reportHeight);
+}
+window.addEventListener('load', reportHeight);
+setTimeout(reportHeight, 300);
+setTimeout(reportHeight, 1000);
+
+/* ---------------------------------------------------------
+   INIT
+--------------------------------------------------------- */
+applyLangUI();
+goToStep(0);
+
+})();
+</script>
+</body>
+</html>
