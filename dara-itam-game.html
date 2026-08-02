@@ -79,6 +79,21 @@
     border-color:var(--gold-soft);
     font-weight:700;
   }
+  .voicebtn{
+    background:transparent;
+    border:1px solid var(--panel-border);
+    color:var(--muted);
+    font-size:0.85rem;
+    padding:4px 9px;
+    border-radius:6px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .voicebtn.active{
+    border-color:var(--gold);
+    color:var(--gold-soft);
+    box-shadow:0 0 6px rgba(212,175,55,0.25);
+  }
 
   .progress{
     display:flex;
@@ -268,6 +283,7 @@
 <div id="app">
   <div class="brand">
     <div class="langbar">
+      <button class="voicebtn" id="btn-voice" onclick="toggleVoice()" title="Suara narasi / Voice narration">🔊</button>
       <button class="langbtn" id="btn-id" onclick="setLang('id')">ID</button>
       <button class="langbtn" id="btn-en" onclick="setLang('en')">EN</button>
     </div>
@@ -296,6 +312,8 @@ id: {
   restartBtn: "Mainkan Lagi",
   copyBtn: "Salin Hasil",
   copied: "Tersalin! Siap dibagikan ✨",
+  voiceOn: "Narasi suara: aktif",
+  voiceOff: "Narasi suara: nonaktif",
   yourStats: "Jejak Batinmu",
   resultSubtitle: "Karaktermu dalam kisah Dara Itam adalah:",
   stats: {
@@ -371,6 +389,8 @@ en: {
   restartBtn: "Play Again",
   copyBtn: "Copy Result",
   copied: "Copied! Ready to share ✨",
+  voiceOn: "Voice narration: on",
+  voiceOff: "Voice narration: off",
   yourStats: "Your Inner Trail",
   resultSubtitle: "Your character in the tale of Dara Itam is:",
   stats: {
@@ -445,6 +465,75 @@ let step = 0; // 0=intro,1=stage1,2=stage2,3=stage3,4=result
 const stageKeys = ["intro","stage1","stage2","stage3"];
 let score = { tabib:0, pejuang:0, setia:0, bijak:0 };
 
+/* ===================== VOICE NARRATION ===================== */
+let voiceEnabled = true;
+let voicesList = [];
+const hasSpeech = ('speechSynthesis' in window);
+
+function loadVoices(){
+  if(hasSpeech) voicesList = window.speechSynthesis.getVoices();
+}
+if(hasSpeech){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+} else {
+  // Browser tidak mendukung narasi suara, sembunyikan tombolnya
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const b = document.getElementById('btn-voice');
+    if(b) b.style.display = 'none';
+  });
+}
+
+function pickVoice(){
+  const wanted = lang === 'id' ? 'id-ID' : 'en-US';
+  let v = voicesList.find(v => v.lang === wanted);
+  if(!v) v = voicesList.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
+  return v || null;
+}
+
+function speak(text){
+  if(!hasSpeech || !voiceEnabled || !text) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const v = pickVoice();
+  if(v) utter.voice = v;
+  utter.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  utter.rate = 0.92;
+  utter.pitch = 0.95;
+  window.speechSynthesis.speak(utter);
+}
+
+function stopSpeak(){
+  if(hasSpeech) window.speechSynthesis.cancel();
+}
+
+function toggleVoice(){
+  voiceEnabled = !voiceEnabled;
+  if(!voiceEnabled) stopSpeak();
+  else if(step <= stageKeys.length) speakCurrentScene();
+  updateVoiceBtn();
+}
+
+function updateVoiceBtn(){
+  const btn = document.getElementById('btn-voice');
+  if(!btn) return;
+  btn.textContent = voiceEnabled ? '🔊' : '🔇';
+  btn.classList.toggle('active', voiceEnabled);
+  btn.title = voiceEnabled ? t().voiceOn : t().voiceOff;
+}
+
+function speakCurrentScene(){
+  if(step < stageKeys.length){
+    const key = stageKeys[step];
+    const data = t()[key];
+    speak(data.title + '. ' + data.text);
+  } else {
+    const rKey = pickResultKey();
+    const r = t().results[rKey];
+    speak(r.title + '. ' + r.desc);
+  }
+}
+
 /* ===================== INIT ===================== */
 (function initLang(){
   const params = new URLSearchParams(window.location.search);
@@ -465,6 +554,7 @@ function updateChrome(){
   document.getElementById('credit').textContent = t().credit;
   document.getElementById('btn-id').classList.toggle('active', lang==='id');
   document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  updateVoiceBtn();
 }
 
 function renderProgress(){
@@ -513,6 +603,7 @@ function render(){
     document.getElementById('progress').innerHTML = "";
     renderResult();
   }
+  speakCurrentScene();
   notifyResize();
 }
 
