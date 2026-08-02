@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timun Mas - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #tmg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FCEFD6 0%, #F7F3E8 100%);
+    border: 3px solid #B5842A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #tmg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A5A1E;
+  }
+  #tmg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #tmg-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  #tmg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #tmg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #B5842A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #tmg-voiceBtn.off { background: #9a9a9a; }
+  #tmg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5842A;
+    background: #BEE3F8;
+  }
+  #tmg-canvas { display: block; width: 100%; height: 100%; }
+  .tmg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,30,20,0.86);
+    color: #fff;
+    padding: 20px;
+  }
+  .tmg-overlay.show { display: flex; }
+  .tmg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .tmg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .tmg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .tmg-btn:active { transform: scale(0.97); }
+
+  #tmg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5842A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #tmg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #tmg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #B5842A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #tmg-actionBtn.hold { background: #3D7A4C; }
+  #tmg-actionBtn:active { transform: scale(0.97); }
+  #tmg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #tmg-progressWrap.show { display: block; }
+  #tmg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="tmg-wrap">
+  <h2>🥒 Timun Mas</h2>
+  <p id="tmg-sub">Cerita rakyat Jawa Tengah tentang Timun Mas melarikan diri dari raksasa dengan empat benda ajaib.</p>
+
+  <div id="tmg-hud">
+    <span id="tmg-phase">Tahap 1 / 5</span>
+    <button id="tmg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
+
+  <div id="tmg-canvas-holder">
+    <canvas id="tmg-canvas"></canvas>
+
+    <div class="tmg-overlay show" id="tmg-start">
+      <h3>Timun Mas</h3>
+      <p>Mbok Sirni mendapatkan seorang anak dari dalam buah mentimun emas, hasil pemberian raksasa. Namun raksasa itu kelak akan datang menagih janji. Ikuti kisah Timun Mas melarikan diri dari kejaran raksasa.</p>
+      <button class="tmg-btn" id="tmg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="tmg-overlay" id="tmg-win">
+      <h3>Timun Mas Selamat! 🎉</h3>
+      <p>Timun Mas berhasil selamat berkat empat benda ajaib pemberian pertapa sakti. Ia pun pulang dan hidup bahagia bersama Mbok Sirni, tanpa gangguan raksasa lagi.</p>
+      <button class="tmg-btn" id="tmg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="tmg-caption">Bersiap memulai kisah...</div>
+
+  <div id="tmg-progressWrap"><div id="tmg-progressBar"></div></div>
+  <div id="tmg-action-row">
+    <button id="tmg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Timun Mas - Game',
+      h2: '🥒 Timun Mas',
+      sub: 'Cerita rakyat Jawa Tengah tentang Timun Mas melarikan diri dari raksasa dengan empat benda ajaib.',
+      startTitle: 'Timun Mas',
+      startBody: 'Mbok Sirni mendapatkan seorang anak dari dalam buah mentimun emas, hasil pemberian raksasa. Namun raksasa itu kelak akan datang menagih janji. Ikuti kisah Timun Mas melarikan diri dari kejaran raksasa.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Timun Mas Selamat! 🎉',
+      winBody: 'Timun Mas berhasil selamat berkat empat benda ajaib pemberian pertapa sakti. Ia pun pulang dan hidup bahagia bersama Mbok Sirni, tanpa gangguan raksasa lagi.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Berjuang',
+      plantBtn: '🌱 TANAM & RAWAT',
+      climbBtn: '⛰️ DAKI GUNUNG',
+      throwSeedBtn: '🥒 LEMPAR BIJI MENTIMUN',
+      throwNeedleBtn: '📍 LEMPAR JARUM',
+      throwSaltBtn: '🧂 LEMPAR GARAM',
+      throwPasteBtn: '🫙 LEMPAR TERASI',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Alkisah, Mbok Sirni telah lama mendambakan seorang anak. Namun hingga suaminya meninggal dunia, ia belum juga dikaruniai seorang anak, meski usianya kini sudah tua.',
+        'Suatu hari, datanglah seorang raksasa menghampiri Mbok Sirni, membuatnya sangat ketakutan. "Tuan raksasa, jangan makan hamba," katanya gemetaran.',
+        '"Memangnya siapa mau memakanmu, hai ibu tua. Aku datang memberimu bibit mentimun. Tanamlah, dan engkau akan mendapatkan yang selama ini kau dambakan. Namun sebagai imbalannya, kau harus membagi dua hasilnya denganku," kata raksasa itu.',
+        'Tahan tombol untuk membantu Mbok Sirni menanam dan merawat bibit mentimun itu di halaman rumahnya.',
+        'Tak berapa lama, di antara buah-buah mentimun itu terdapat satu yang berukuran sangat besar dan berwarna keemasan. Betapa terkejutnya Mbok Sirni saat membelahnya — di dalamnya ada seorang bayi perempuan cantik jelita! Ia pun memberinya nama Timun Mas.',
+        'Timun Mas tumbuh menjadi gadis rajin yang menyayangi ibunya. Suatu hari, saat mencari kayu bakar di hutan, Mbok Sirni bertemu kembali dengan raksasa itu, yang menagih janjinya. Raksasa pun memberi waktu hingga Timun Mas berusia 17 tahun.',
+        'Suatu malam, Mbok Sirni bermimpi aneh: ia diperintahkan menemui seorang pertapa sakti di Gunung Gundul untuk meminta pertolongan.',
+        'Tahan tombol untuk membantu Mbok Sirni mendaki Gunung Gundul yang terjal.',
+        'Pertapa sakti itu memberinya sebutir biji mentimun, sebatang jarum, sebutir garam, dan sepotong terasi. "Jika anakmu dikejar raksasa, suruhlah ia melemparkan benda-benda ini secara berurutan," pesannya.',
+        'Tujuh belas tahun kemudian, raksasa itu datang menagih janji Mbok Sirni. "Cepat larilah, Nak! Jangan lupa lemparkan benda-benda pemberian pertapa sakti!" seru Mbok Sirni. Timun Mas pun segera berlari ke arah hutan, dikejar raksasa yang langkahnya sangat lebar.',
+        'Merasa raksasa sudah dekat, tahan tombol untuk membantu Timun Mas melemparkan biji mentimun ke arahnya.',
+        'Seketika biji itu tumbuh menjadi kebun mentimun lebat. Raksasa berhenti sejenak melahapnya, namun perutnya masih lapar dan ia kembali mengejar Timun Mas.',
+        'Tahan tombol untuk membantu Timun Mas melemparkan jarum. Jarum itu pun berubah menjadi hutan bambu yang sangat rapat dan tajam, melukai kaki raksasa — namun ia tetap memaksakan diri mengejar.',
+        'Tahan tombol untuk membantu Timun Mas melemparkan garam. Sebutir garam itu berubah menjadi lautan luas, memaksa raksasa berenang menyeberang hingga kelelahan.',
+        'Tahan tombol untuk membantu Timun Mas melemparkan terasi. Terasi itu berubah menjadi lumpur hisap yang sangat luas — raksasa yang sudah kehabisan tenaga pun tenggelam ke dalamnya dan tak mampu keluar lagi.',
+        'Timun Mas pun bergegas pulang menemui Mbok Sirni. Mereka berpelukan sambil menangis bahagia, karena kini dapat hidup tenang tanpa gangguan raksasa lagi.'
+      ]
+    },
+    en: {
+      title: 'Timun Mas - Game',
+      h2: '🥒 Timun Mas',
+      sub: 'A Central Java folktale about Timun Mas fleeing a giant with four magical items.',
+      startTitle: 'Timun Mas',
+      startBody: 'Mbok Sirni receives a child from inside a golden cucumber, a gift from a giant. But the giant will one day return to collect his due. Follow Timun Mas\'s escape from the giant\'s pursuit.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Timun Mas Is Safe! 🎉',
+      winBody: 'Timun Mas survives thanks to the four magical items given by the wise hermit. She returns home to live happily with Mbok Sirni, free from the giant\'s threat forever.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Press On',
+      plantBtn: '🌱 PLANT & TEND',
+      climbBtn: '⛰️ CLIMB THE MOUNTAIN',
+      throwSeedBtn: '🥒 THROW THE CUCUMBER SEED',
+      throwNeedleBtn: '📍 THROW THE NEEDLE',
+      throwSaltBtn: '🧂 THROW THE SALT',
+      throwPasteBtn: '🫙 THROW THE SHRIMP PASTE',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, Mbok Sirni had long dreamed of having a child. But even after her husband passed away, she still hadn\'t been blessed with one, and was now growing old.',
+        'One day, a giant approaches Mbok Sirni, terrifying her. "Please, Mr. Giant, don\'t eat me," she says, trembling.',
+        '"Who said I\'d eat you, old woman? I\'ve come to give you cucumber seeds. Plant them, and you\'ll get what you\'ve long wished for. But in return, you must share half the harvest with me," the giant says.',
+        'Hold the button to help Mbok Sirni plant and tend the cucumber seeds in her yard.',
+        'Before long, among the cucumbers is one that\'s enormous and golden in color. Mbok Sirni is astonished to find, upon cutting it open, a beautiful baby girl inside! She names her Timun Mas.',
+        'Timun Mas grows into a hard-working girl who loves her mother. One day, while gathering firewood in the forest, Mbok Sirni meets the giant again, who comes to collect on her promise. The giant grants her time until Timun Mas turns seventeen.',
+        'One night, Mbok Sirni has a strange dream: she is instructed to visit a powerful hermit on Mount Gundul to ask for help.',
+        'Hold the button to help Mbok Sirni climb the steep Mount Gundul.',
+        'The hermit gives her a cucumber seed, a needle, a pinch of salt, and a piece of shrimp paste. "If your daughter is chased by the giant, have her throw these items one by one," he instructs.',
+        'Seventeen years later, the giant arrives to collect on Mbok Sirni\'s promise. "Run, my child! Don\'t forget to throw the items from the hermit!" Mbok Sirni cries. Timun Mas dashes toward the forest, chased by the giant\'s enormous strides.',
+        'Sensing the giant closing in, hold the button to help Timun Mas throw the cucumber seed at him.',
+        'The seed instantly grows into a dense cucumber field. The giant stops to devour it, but still hungry, resumes the chase.',
+        'Hold the button to help Timun Mas throw the needle. It transforms into a dense, sharp bamboo forest, wounding the giant\'s feet — but he pushes through anyway.',
+        'Hold the button to help Timun Mas throw the salt. The pinch of salt becomes a vast ocean, forcing the giant to swim across until utterly exhausted.',
+        'Hold the button to help Timun Mas throw the shrimp paste. It transforms into a vast stretch of quicksand — the giant, already out of strength, sinks into it and can no longer escape.',
+        'Timun Mas hurries home to Mbok Sirni. They embrace, weeping with joy, finally able to live in peace, free from the giant forever.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#tmg-wrap h2').textContent = TXT.h2;
+  document.getElementById('tmg-sub').textContent = TXT.sub;
+  document.querySelector('#tmg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#tmg-start p').textContent = TXT.startBody;
+  document.getElementById('tmg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#tmg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#tmg-win p').textContent = TXT.winBody;
+  document.getElementById('tmg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('tmg-caption').textContent = TXT.captionInit;
+  document.getElementById('tmg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('tmg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  var canvas = document.getElementById('tmg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('tmg-phase');
+  var captionEl = document.getElementById('tmg-caption');
+  var actionBtn = document.getElementById('tmg-actionBtn');
+  var progressWrap = document.getElementById('tmg-progressWrap');
+  var progressBar = document.getElementById('tmg-progressBar');
+  var startOverlay = document.getElementById('tmg-start');
+  var winOverlay = document.getElementById('tmg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'mbok_sirni_dambakan_anak' },
+    { type:'caption', phase:1, scene:'raksasa_datang' },
+    { type:'caption', phase:2, scene:'raksasa_beri_bibit' },
+    { type:'hold', phase:2, scene:'tanam_mentimun' },
+    { type:'caption', phase:2, scene:'bayi_dalam_timun' },
+    { type:'caption', phase:3, scene:'timun_mas_tumbuh' },
+    { type:'caption', phase:3, scene:'mimpi_pertapa' },
+    { type:'hold', phase:3, scene:'daki_gunung_gundul' },
+    { type:'caption', phase:3, scene:'pertapa_beri_bekal' },
+    { type:'caption', phase:4, scene:'raksasa_tagih_janji' },
+    { type:'hold', phase:5, scene:'lempar_bibit' },
+    { type:'caption', phase:5, scene:'raksasa_makan_kejar_lagi' },
+    { type:'hold', phase:5, scene:'lempar_jarum' },
+    { type:'hold', phase:5, scene:'lempar_garam' },
+    { type:'hold', phase:5, scene:'lempar_terasi' },
+    { type:'caption', phase:5, scene:'timun_mas_pulang' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    speak(step.text);
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'tanam_mentimun') actionBtn.textContent = TXT.plantBtn;
+      else if(step.scene === 'daki_gunung_gundul') actionBtn.textContent = TXT.climbBtn;
+      else if(step.scene === 'lempar_bibit') actionBtn.textContent = TXT.throwSeedBtn;
+      else if(step.scene === 'lempar_jarum') actionBtn.textContent = TXT.throwNeedleBtn;
+      else if(step.scene === 'lempar_garam') actionBtn.textContent = TXT.throwSaltBtn;
+      else if(step.scene === 'lempar_terasi') actionBtn.textContent = TXT.throwPasteBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      speak(TXT.winBody);
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('tmg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('tmg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawMbokSirni(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A6A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B5A3C';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTimunMas(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#D9AF3C';
+    ctx.beginPath();
+    ctx.moveTo(-12*s,-6*s); ctx.quadraticCurveTo(-17*s,9*s,-10*s,22*s);
+    ctx.lineTo(10*s,22*s); ctx.quadraticCurveTo(17*s,9*s,12*s,-6*s);
+    ctx.quadraticCurveTo(0,-10*s,-12*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-14*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-18*s,7*s,6.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGiant(px, py, size, hurt){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = hurt ? '#7A4A3A' : '#5A6E4A';
+    ctx.beginPath();
+    ctx.moveTo(-20*s,-12*s); ctx.quadraticCurveTo(-28*s,16*s,-16*s,40*s);
+    ctx.lineTo(16*s,40*s); ctx.quadraticCurveTo(28*s,16*s,20*s,-12*s);
+    ctx.quadraticCurveTo(0,-20*s,-20*s,-12*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#C97B3D';
+    ctx.beginPath(); ctx.arc(0,-24*s,12*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.arc(-4*s,-26*s,2*s,0,Math.PI*2); ctx.arc(4*s,-26*s,2*s,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2E2A1F';
+    ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.arc(0,-18*s,6*s,0.2,Math.PI-0.2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawCucumberPatch(px, py, size, growAmt){
+    if(growAmt<=0) return;
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    for(var i=-2;i<=2;i++){
+      ctx.font = (18+growAmt*14)+'px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🥒', i*18*s, -growAmt*10*s);
+    }
+    ctx.restore();
+  }
+
+  function drawBambooForest(px, py, size, growAmt){
+    if(growAmt<=0) return;
+    ctx.save(); ctx.translate(px,py);
+    for(var i=-2;i<=2;i++){
+      ctx.fillStyle = '#4C8A4C';
+      ctx.fillRect(i*20-4, -growAmt*70, 8, growAmt*70);
+    }
+    ctx.restore();
+  }
+
+  function drawOcean(px, py, size, growAmt){
+    if(growAmt<=0) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(58,110,165,0.85)';
+    ctx.fillRect(px-140, py-growAmt*60, 280, growAmt*60+60);
+    ctx.restore();
+  }
+
+  function drawQuicksand(px, py, size, growAmt){
+    if(growAmt<=0) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(120,90,60,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(px, py, 90*growAmt, 30*growAmt, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGardenBg(){
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.moveTo(560,300); ctx.lineTo(620,220); ctx.lineTo(680,300);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function drawForestBg(){
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,190); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawMountainBg(){
+    ctx.fillStyle = '#8A7A5A';
+    ctx.beginPath();
+    ctx.moveTo(0,340); ctx.lineTo(400,140); ctx.lineTo(800,340);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#7C9E8E';
+    ctx.fillRect(0,340,W,H-340);
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='daki_gunung_gundul' || scene==='mimpi_pertapa' || scene==='pertapa_beri_bekal'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else if(scene==='raksasa_tagih_janji' || scene==='lempar_bibit' || scene==='raksasa_makan_kejar_lagi' || scene==='lempar_jarum' || scene==='lempar_garam' || scene==='lempar_terasi'){
+      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'mbok_sirni_dambakan_anak';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='mbok_sirni_dambakan_anak'){
+      drawGardenBg();
+      drawMbokSirni(400, 330+bob, 46);
+    }
+    if(scene==='raksasa_datang'){
+      drawGardenBg();
+      drawMbokSirni(300, 330+bob, 42);
+      drawGiant(540, 320+bob, 60, false);
+    }
+    if(scene==='raksasa_beri_bibit'){
+      drawGardenBg();
+      drawMbokSirni(300, 330+bob, 42);
+      drawGiant(540, 320+bob, 60, false);
+      ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🥒', 420, 300);
+    }
+    if(scene==='tanam_mentimun'){
+      drawGardenBg();
+      drawMbokSirni(300, 330+bob, 42);
+      drawCucumberPatch(460, 340, 40, progress);
+    }
+    if(scene==='bayi_dalam_timun'){
+      drawGardenBg();
+      drawMbokSirni(340, 330+bob, 44);
+      ctx.font='30px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🥒', 460, 330);
+      ctx.fillText('👶', 460, 300);
+    }
+    if(scene==='timun_mas_tumbuh'){
+      drawGardenBg();
+      drawMbokSirni(340, 330+bob, 42);
+      drawTimunMas(440, 335+bob, 40);
+    }
+    if(scene==='mimpi_pertapa'){
+      drawForestBg();
+      drawMbokSirni(400, 335+bob, 44);
+    }
+    if(scene==='daki_gunung_gundul'){
+      drawMountainBg();
+      drawMbokSirni(300+progress*300, 320-progress*60+bob, 40);
+    }
+    if(scene==='pertapa_beri_bekal'){
+      drawMountainBg();
+      drawMbokSirni(340, 300+bob, 40);
+      ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🧙', 480, 290);
+    }
+    if(scene==='raksasa_tagih_janji'){
+      drawGardenBg();
+      drawMbokSirni(300, 330+bob, 42);
+      drawGiant(560, 310+bob, 60, false);
+      drawTimunMas(240+Math.sin(t*8)*20, 335, 38);
+    }
+    if(scene==='lempar_bibit'){
+      drawForestBg();
+      var tx = 250, gx = 480 - progress*120;
+      drawTimunMas(tx, 330+bob, 42);
+      drawGiant(gx, 310+bob, 58, false);
+      if(progress>0.2) drawCucumberPatch((tx+gx)/2, 340, 30, Math.min(1,(progress-0.2)*2));
+    }
+    if(scene==='raksasa_makan_kejar_lagi'){
+      drawForestBg();
+      drawTimunMas(240, 330+bob, 40);
+      drawGiant(460, 320+bob, 58, false);
+      drawCucumberPatch(360, 340, 30, 0.7);
+    }
+    if(scene==='lempar_jarum'){
+      drawForestBg();
+      var tx2 = 250, gx2 = 460 - progress*100;
+      drawTimunMas(tx2, 330+bob, 42);
+      drawGiant(gx2, 310+bob, 58, progress>0.3);
+      if(progress>0.2) drawBambooForest((tx2+gx2)/2, 340, 30, Math.min(1,(progress-0.2)*2));
+    }
+    if(scene==='lempar_garam'){
+      drawForestBg();
+      var tx3 = 240, gx3 = 440 - progress*60;
+      drawTimunMas(tx3, 320+bob, 40);
+      if(progress>0.2) drawOcean((tx3+gx3)/2+40, 360, 40, Math.min(1,(progress-0.2)*2));
+      drawGiant(gx3, 330+bob, 56, true);
+    }
+    if(scene==='lempar_terasi'){
+      drawForestBg();
+      var tx4 = 230, gx4 = 420;
+      drawTimunMas(tx4, 320+bob, 40);
+      if(progress>0.2) drawQuicksand((tx4+gx4)/2+60, 370, 40, Math.min(1,(progress-0.2)*2));
+      var sinkY = 320 + progress*40;
+      drawGiant(gx4, sinkY+bob, 54, true);
+    }
+    if(scene==='timun_mas_pulang'){
+      drawGardenBg();
+      drawMbokSirni(360, 330+bob, 44);
+      drawTimunMas(440, 335+bob, 42);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('tmg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'tmg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('tmg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
