@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bujang Paman - Cerita Rakyat Sumatera Barat</title>
+<style>
+  * { box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; background:transparent;
+    font-family: 'Georgia', 'Segoe UI', serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow:hidden;
+  }
+  #app{
+    width:100%;
+    max-width:700px;
+    margin:0 auto;
+    background:#2b1810;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+    border:3px solid #c9a227;
+    position:relative;
+  }
+  #topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(#3a2418,#2b1810);
+    padding:8px 12px;
+    border-bottom:2px solid #c9a227;
+  }
+  #title{
+    color:#f0e6d2; font-size:15px; font-weight:bold; letter-spacing:.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .btnrow{ display:flex; gap:6px; flex-shrink:0; }
+  .iconbtn{
+    background:#3a2418; color:#f0e6d2; border:1.5px solid #c9a227;
+    border-radius:8px; padding:5px 9px; font-size:13px; cursor:pointer;
+    font-family:inherit;
+  }
+  .iconbtn:hover{ background:#4a3020; }
+  .iconbtn.active{ background:#c9a227; color:#2b1810; }
+
+  #stage-wrap{
+    position:relative; width:100%;
+    aspect-ratio: 700 / 420;
+    background:#000;
+  }
+  canvas#scene{
+    width:100%; height:100%; display:block;
+  }
+  #textbox{
+    position:absolute; left:0; right:0; bottom:0;
+    background:linear-gradient(to top, rgba(20,12,8,.96), rgba(20,12,8,.86) 70%, transparent);
+    color:#f6ecd8;
+    padding:16px 16px 14px;
+    font-size:15px;
+    line-height:1.5;
+    min-height:78px;
+    text-shadow:0 1px 2px rgba(0,0,0,.6);
+  }
+  #storytext{ margin:0 0 10px 0; }
+  #controls{
+    display:flex; justify-content:flex-end; align-items:center; gap:8px;
+  }
+  #nextbtn{
+    background:#c9a227; color:#2b1810; border:none; border-radius:8px;
+    padding:8px 18px; font-weight:bold; font-size:14px; cursor:pointer;
+    font-family:inherit;
+  }
+  #nextbtn:hover{ filter:brightness(1.08); }
+  #nextbtn:disabled{ opacity:.4; cursor:default; }
+
+  #qte-layer{
+    position:absolute; inset:0; display:none;
+    align-items:center; justify-content:center; flex-direction:column;
+    background:rgba(10,6,4,.35);
+  }
+  #qte-layer.show{ display:flex; }
+  #qte-label{
+    color:#fff; font-size:16px; font-weight:bold; margin-bottom:14px;
+    text-align:center; text-shadow:0 2px 6px rgba(0,0,0,.8); padding:0 20px;
+  }
+  #qte-tapbtn{
+    width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #e0a94a, #a8681c 70%, #7a4413);
+    border:5px solid #f0e6d2; color:#fff; font-size:15px; font-weight:bold;
+    cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.5);
+    font-family:inherit;
+    user-select:none;
+  }
+  #qte-tapbtn:active{ transform:scale(.94); }
+  #qte-bar-outer{
+    width:220px; height:16px; background:rgba(255,255,255,.2);
+    border-radius:8px; margin-top:16px; overflow:hidden;
+    border:1px solid rgba(255,255,255,.4);
+  }
+  #qte-bar-inner{
+    height:100%; width:0%; background:linear-gradient(90deg,#e0483e,#f0a83e,#7ec850);
+    transition:width .08s linear;
+  }
+  #startscreen{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:radial-gradient(ellipse at center, #4a2b18, #1a0f08 80%);
+    color:#f6ecd8; padding:20px; z-index:5;
+  }
+  #startscreen h2{ margin:0 0 6px; font-size:22px; color:#e8c96a; text-shadow:0 2px 4px rgba(0,0,0,.5);}
+  #startscreen p{ margin:0 0 18px; font-size:14px; max-width:460px; opacity:.9; }
+  #startbtn{
+    background:#c9a227; color:#2b1810; border:none; border-radius:10px;
+    padding:12px 26px; font-size:16px; font-weight:bold; cursor:pointer;
+    font-family:inherit;
+  }
+  #endscreen{
+    position:absolute; inset:0; display:none; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:radial-gradient(ellipse at center, #4a3018, #1a0f08 85%);
+    color:#f6ecd8; padding:24px; z-index:5;
+  }
+  #endscreen.show{ display:flex; }
+  #endscreen h2{ margin:0 0 10px; font-size:22px; color:#e8c96a; }
+  #endscreen p{ margin:0 0 18px; font-size:14px; max-width:460px; opacity:.9; }
+  #progress-dots{
+    display:flex; gap:4px; align-items:center;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.25); }
+  .dot.done{ background:#c9a227; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="title">Bujang Paman</div>
+    <div class="btnrow">
+      <button class="iconbtn" id="langbtn">EN</button>
+      <button class="iconbtn" id="mutebtn">🔊</button>
+    </div>
+  </div>
+  <div id="stage-wrap">
+    <canvas id="scene" width="700" height="420"></canvas>
+
+    <div id="startscreen">
+      <h2 id="s-title">Bujang Paman</h2>
+      <p id="s-desc">Cerita rakyat dari Sumatera Barat tentang seorang pemuda sakti yang dibuang sejak dalam kandungan, dibesarkan oleh hutan, dan akhirnya berhadapan dengan ayahnya sendiri, Raja Aniayo.</p>
+      <button id="startbtn">▶ Mulai Cerita</button>
+    </div>
+
+    <div id="endscreen">
+      <h2 id="e-title">Tamat</h2>
+      <p id="e-desc">Bujang Paman menjadi Rajo Mudo yang adil dan bijaksana.</p>
+      <button id="replaybtn" class="iconbtn" style="padding:10px 22px;font-size:15px;">↺ Ulangi Cerita</button>
+    </div>
+
+    <div id="qte-layer">
+      <div id="qte-label"></div>
+      <button id="qte-tapbtn"></button>
+      <div id="qte-bar-outer"><div id="qte-bar-inner"></div></div>
+    </div>
+
+    <div id="textbox">
+      <p id="storytext"></p>
+      <div id="controls">
+        <div id="progress-dots"></div>
+        <div style="flex:1"></div>
+        <button id="nextbtn">Lanjut ▸</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+/* ---------------- language & data ---------------- */
+var urlLang = new URLSearchParams(location.search).get('lang');
+var LANG = (urlLang === 'en') ? 'en' : 'id';
+var MUTED = false;
+
+var UI = {
+  id: { start:"▶ Mulai Cerita", next:"Lanjut ▸", finish:"Tamat ▸", replay:"↺ Ulangi Cerita",
+        title:"Bujang Paman",
+        desc:"Cerita rakyat dari Sumatera Barat tentang seorang pemuda sakti yang dibuang sejak dalam kandungan, dibesarkan oleh hutan, dan akhirnya berhadapan dengan ayahnya sendiri, Raja Aniayo.",
+        endTitle:"Tamat", endDesc:"Bujang Paman menjadi Rajo Mudo yang adil dan bijaksana, memerintah Koto Anau dengan damai.",
+        tapToHelp:"Ketuk cepat untuk membantu sang Harimau!",
+        tapCourage:"Ketuk cepat untuk tetap tegar menahan pukulan!",
+        tapKick:"Ketuk secepat mungkin untuk melepaskan tendangan!",
+        langLabel:"EN" },
+  en: { start:"▶ Start Story", next:"Next ▸", finish:"The End ▸", replay:"↺ Replay Story",
+        title:"Bujang Paman",
+        desc:"A folktale from West Sumatra about a magically gifted young man, exiled before birth, raised by the forest, who must finally face his own father, the cruel King Aniayo.",
+        endTitle:"The End", endDesc:"Bujang Paman becomes Rajo Mudo, ruling Koto Anau with fairness and peace.",
+        tapToHelp:"Tap quickly to help the Tiger!",
+        tapCourage:"Tap quickly to stay strong against the blows!",
+        tapKick:"Tap as fast as you can to deliver the kick!",
+        langLabel:"ID" }
+};
+
+/* Each step: id, scene (draw key), id/en text, qte (optional) */
+var STORY = [
+  { scene:"palace_dark",
+    id:"Di negeri Koto Anau, Sumatera Barat, memerintahlah seorang raja bernama Raja Aniayo. Ia terkenal berperangai buruk dan gemar berjudi, bahkan tega berlaku kejam pada keluarganya sendiri.",
+    en:"In the land of Koto Anau, West Sumatra, ruled a king named Raja Aniayo. He was known for his cruelty and love of gambling, cruel even to his own family." },
+
+  { scene:"palace_family",
+    id:"Raja Aniayo memiliki istri bernama Puti Bungsu. Puti Bungsu memiliki enam saudara yang telah lama merantau dan berhasil membangun usaha yang kaya raya.",
+    en:"Raja Aniayo had a wife named Puti Bungsu. She had six brothers who had long ago left home to seek fortune, and had become wealthy merchants." },
+
+  { scene:"poison_plot",
+    id:"Mengetahui harta keenam kakak ipar itu, Raja Aniayo diam-diam memerintahkan mereka diracuni. Tanpa sepengetahuan Puti Bungsu, seluruh harta pun jatuh ke tangannya melalui warisan.",
+    en:"Coveting his brothers-in-law's wealth, Raja Aniayo secretly had them poisoned. Without Puti Bungsu's knowledge, their fortune passed to her as inheritance." },
+
+  { scene:"gambling",
+    id:"Sejak itu Raja Aniayo terus meminta harta istrinya untuk dihabiskan di meja judi, sampai suatu hari semua harta Puti Bungsu ludes tak tersisa.",
+    en:"From then on, Raja Aniayo kept demanding his wife's wealth to gamble away, until one day everything Puti Bungsu owned was gone." },
+
+  { scene:"exile",
+    id:"Murka karena istrinya tak lagi bisa memberi harta, Raja Aniayo memerintahkan prajuritnya membuang Puti Bungsu ke tengah hutan — padahal ia tengah mengandung.",
+    en:"Furious that his wife had nothing left to give, Raja Aniayo ordered his soldiers to cast Puti Bungsu into the deep forest — even though she was pregnant." },
+
+  { scene:"forest_birth",
+    id:"Sendirian di hutan, Puti Bungsu bertahan hidup dari buah dan umbi. Ia melahirkan seorang putra tanpa bantuan siapa pun, dan menamainya Bujang Paman.",
+    en:"Alone in the forest, Puti Bungsu survived on fruits and roots. She gave birth to a son with no one to help her, and named him Bujang Paman." },
+
+  { scene:"animal_friends",
+    id:"Kehadiran mereka mengundang perhatian hewan-hewan hutan, yang mencarikan makanan dan mengajari Bujang cara memanjat serta memilih buah yang bisa dimakan.",
+    en:"The animals of the forest took notice of them, bringing food and teaching young Bujang how to climb trees and choose which fruits were safe to eat." },
+
+  { scene:"forest_path",
+    id:"Setelah remaja, ibunya menceritakan siapa ayahnya. Mendengar itu, Bujang Paman bertekad merantau untuk mencari pengalaman hidup — dan mencari ayahnya.",
+    en:"When he came of age, his mother told him who his father was. Hearing this, Bujang Paman resolved to leave home to see the world — and to find his father." },
+
+  { scene:"mande_rubiah",
+    id:"Dalam perjalanan, Bujang tiba di pondok Mande Rubiah yang bersedia menampungnya bersama sang ibu. Bujang pun bertugas menggembalakan sapi-sapi milik Mande Rubiah.",
+    en:"On his journey, Bujang arrived at the hut of Mande Rubiah, who welcomed him and his mother to stay. Bujang took on the duty of herding Mande Rubiah's cattle." },
+
+  { scene:"muaro_paneh",
+    id:"Setelah lama tinggal, Bujang pamit merantau lagi hingga tiba di Muaro Paneh. Di sana ia berkenalan dengan Puti Reno Ali, perempuan kaya yang mengagumi kejujurannya dan memberinya modal berdagang.",
+    en:"After a time, Bujang set off again and arrived in Muaro Paneh. There he met Puti Reno Ali, a wealthy woman who admired his honesty and gave him capital to start trading." },
+
+  { scene:"ambush_1",
+    id:"Di Solok, Bujang dicegat oleh Raja Aniayo — ayahnya sendiri — yang merampas semua hartanya, memukulinya, mengikat tangannya, lalu membuangnya ke hutan.",
+    en:"In Solok, Bujang was ambushed by Raja Aniayo — his own father — who seized his wealth, beat him, bound his hands, and left him in the forest." },
+
+  { scene:"tiger_rescue", qteKey:"rope",
+    id:"Dalam keadaan terikat dan terluka, Bujang berdoa. Seekor harimau datang menghampiri — bukan untuk menerkam, tapi untuk membantunya.",
+    en:"Bound and wounded, Bujang prayed. A tiger approached him — not to attack, but to help." },
+
+  { scene:"tiger_heal",
+    id:"Harimau itu menggigit putus tali pengikat lalu menjilati luka-lukanya. Ajaib, luka Bujang sembuh dan tubuhnya terasa lebih kuat dari sebelumnya.",
+    en:"The tiger bit through the ropes and licked his wounds. Miraculously, his wounds healed and his body felt stronger than before." },
+
+  { scene:"ambush_2", qteKey:"wood",
+    id:"Bujang kembali ke Solok untuk berdagang, namun Raja Aniayo kembali menghadangnya, merampas hartanya, memukulinya, bahkan menjepit kedua kakinya dengan kayu sebelum membuangnya lagi ke hutan.",
+    en:"Bujang returned to Solok to trade, but Raja Aniayo ambushed him again — robbing him, beating him, even clamping his legs with wood before casting him into the forest once more." },
+
+  { scene:"tiger_rescue2",
+    id:"Sang harimau muncul kembali, membelah kayu penjepit kakinya dan menjilati luka-lukanya hingga sembuh seperti sebelumnya.",
+    en:"The tiger appeared once again, breaking apart the wooden clamps and licking his wounds until they healed just as before." },
+
+  { scene:"confront_reveal",
+    id:"Bujang kembali ke rumah Puti Reno Ali, dan terkejut mendapati Raja Aniayo ada di sana. Ia pun berkata jujur: \"Hamba adalah putra dari Puti Bungsu, istri paduka yang telah paduka buang ke hutan.\"",
+    en:"Bujang returned to Puti Reno Ali's house and was shocked to find Raja Aniayo there. He spoke the truth: \"I am the son of Puti Bungsu, the wife you cast into the forest.\"" },
+
+  { scene:"sword_break", qteKey:"sword",
+    id:"Raja Aniayo menyangkal dan menghantamkan pedangnya ke tubuh Bujang — namun pedang itu justru patah begitu mengenai tubuhnya.",
+    en:"Raja Aniayo denied it and struck Bujang with his sword — but the blade shattered the instant it touched him." },
+
+  { scene:"staff_attack",
+    id:"Makin murka, Raja Aniayo memukulkan tongkat manau berkali-kali. Namun tubuh Bujang sama sekali tak terluka.",
+    en:"Enraged further, Raja Aniayo struck him again and again with a rattan staff. Yet Bujang's body remained completely unharmed." },
+
+  { scene:"final_kick", qteKey:"kick",
+    id:"Karena terus diserang, Bujang akhirnya membalas dengan satu tendangan. Raja Aniayo terpental dan seketika itu juga tewas.",
+    en:"Attacked without end, Bujang finally struck back with a single kick. Raja Aniayo was thrown back and died instantly." },
+
+  { scene:"coronation",
+    id:"Rakyat Koto Anau menyambut gembira berakhirnya kekejaman sang raja. Setelah pemakaman, mereka mengangkat Bujang Paman sebagai raja baru dengan gelar Rajo Mudo.",
+    en:"The people of Koto Anau rejoiced that the tyrant's cruelty had ended. After the burial, they crowned Bujang Paman as their new king, with the title Rajo Mudo." },
+
+  { scene:"happy_ending",
+    id:"Rajo Mudo menjemput ibunya dan Mande Rubiah untuk tinggal di istana, lalu menikahi Puti Reno Ali yang selama ini membantunya. Sejak itu, Koto Anau hidup damai di bawah pemerintahannya yang adil dan bijaksana.",
+    en:"Rajo Mudo brought his mother and Mande Rubiah to live in the palace, and married Puti Reno Ali, who had helped him all along. From then on, Koto Anau lived in peace under his fair and wise rule." }
+];
+
+var QTE_DEFS = {
+  rope:  { target:12, time:4.5 },
+  wood:  { target:14, time:5 },
+  sword: { target:10, time:3.5 },
+  kick:  { target:16, time:4 }
+};
+
+/* ---------------- DOM refs ---------------- */
+var canvas = document.getElementById('scene');
+var ctx = canvas.getContext('2d');
+var storytext = document.getElementById('storytext');
+var nextbtn = document.getElementById('nextbtn');
+var langbtn = document.getElementById('langbtn');
+var mutebtn = document.getElementById('mutebtn');
+var startscreen = document.getElementById('startscreen');
+var endscreen = document.getElementById('endscreen');
+var startbtn = document.getElementById('startbtn');
+var replaybtn = document.getElementById('replaybtn');
+var qteLayer = document.getElementById('qte-layer');
+var qteLabel = document.getElementById('qte-label');
+var qteTapBtn = document.getElementById('qte-tapbtn');
+var qteBarInner = document.getElementById('qte-bar-inner');
+var progressDots = document.getElementById('progress-dots');
+var appEl = document.getElementById('app');
+
+var stepIndex = 0;
+var qteActive = false;
+var qteState = null;
+var animT = 0;
+
+/* ---------------- helpers ---------------- */
+function t(step){ return LANG === 'en' ? step.en : step.id; }
+function ui(key){ return UI[LANG][key]; }
+
+function buildDots(){
+  progressDots.innerHTML = '';
+  for (var i=0;i<STORY.length;i++){
+    var d = document.createElement('div');
+    d.className = 'dot' + (i <= stepIndex ? ' done' : '');
+    progressDots.appendChild(d);
+  }
+}
+
+function applyLangUI(){
+  document.documentElement.lang = LANG;
+  langbtn.textContent = ui('langLabel');
+  document.getElementById('s-title').textContent = ui('title');
+  document.getElementById('s-desc').textContent = ui('desc');
+  document.getElementById('e-title').textContent = ui('endTitle');
+  document.getElementById('e-desc').textContent = ui('endDesc');
+  nextbtn.textContent = (stepIndex >= STORY.length-1) ? ui('finish') : ui('next');
+}
+
+/* ---------------- speech ---------------- */
+var voices = [];
+function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if (window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(langCode){
+  for (var i=0;i<voices.length;i++){
+    if (voices[i].lang && voices[i].lang.toLowerCase().indexOf(langCode.toLowerCase())===0) return voices[i];
+  }
+  return null;
+}
+function narrate(text){
+  if (!window.speechSynthesis || MUTED) return;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  var langCode = LANG === 'en' ? 'en' : 'id';
+  var v = pickVoice(langCode === 'en' ? 'en' : 'id');
+  if (v) u.voice = v;
+  u.lang = langCode === 'en' ? 'en-US' : 'id-ID';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeech(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+/* ---------------- canvas drawing ---------------- */
+function W(){ return canvas.width; }
+function H(){ return canvas.height; }
+
+function sky(grad_top, grad_bottom){
+  var g = ctx.createLinearGradient(0,0,0,H());
+  g.addColorStop(0, grad_top);
+  g.addColorStop(1, grad_bottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W(),H());
+}
+
+function ground(color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, H()*0.72);
+  ctx.quadraticCurveTo(W()*0.5, H()*0.66, W(), H()*0.74);
+  ctx.lineTo(W(), H());
+  ctx.lineTo(0, H());
+  ctx.closePath();
+  ctx.fill();
+}
+
+function tree(x, y, scale, sway){
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.sin(sway)*0.03);
+  ctx.fillStyle = '#4a2f1a';
+  ctx.fillRect(-6*scale, -10*scale, 12*scale, 60*scale);
+  ctx.fillStyle = '#2d4a2b';
+  for (var i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.ellipse(0, -20*scale - i*22*scale, 34*scale - i*4*scale, 22*scale, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function forestBg(mood){
+  sky(mood==='dark' ? '#2a1f38':'#a9d6e0', mood==='dark' ? '#0f0a14':'#dfeec2');
+  ground(mood==='dark' ? '#1c2b18':'#3f5d2c');
+  for (var i=0;i<7;i++){
+    tree(40 + i*95, H()*0.62 - (i%2)*14, 0.9 + (i%3)*0.15, animT + i);
+  }
+}
+
+function person(x, y, scale, opts){
+  opts = opts || {};
+  var skin = opts.skin || '#e0ad7d';
+  var cloth = opts.cloth || '#8a2b2b';
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  // legs
+  ctx.fillStyle = '#3a2418';
+  ctx.fillRect(-10,40,8,28);
+  ctx.fillRect(2,40,8,28);
+  // body / clothes
+  ctx.fillStyle = cloth;
+  ctx.beginPath();
+  ctx.moveTo(-16,10);
+  ctx.lineTo(16,10);
+  ctx.lineTo(12,44);
+  ctx.lineTo(-12,44);
+  ctx.closePath();
+  ctx.fill();
+  // arms
+  ctx.strokeStyle = cloth;
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-14,16); ctx.lineTo(opts.armL ? opts.armL[0]:-22, opts.armL ? opts.armL[1]:34);
+  ctx.moveTo(14,16); ctx.lineTo(opts.armR ? opts.armR[0]:22, opts.armR ? opts.armR[1]:34);
+  ctx.stroke();
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(0,-6,15,0,Math.PI*2);
+  ctx.fill();
+  // headwear
+  if (opts.crown){
+    ctx.fillStyle = '#e8c400';
+    ctx.beginPath();
+    ctx.moveTo(-14,-16); ctx.lineTo(-14,-24); ctx.lineTo(-6,-15);
+    ctx.lineTo(0,-26); ctx.lineTo(6,-15); ctx.lineTo(14,-24); ctx.lineTo(14,-16);
+    ctx.closePath(); ctx.fill();
+  }
+  if (opts.headcloth){
+    ctx.fillStyle = opts.headclothColor || '#7a1f1f';
+    ctx.beginPath();
+    ctx.moveTo(-16,-14); ctx.lineTo(16,-14); ctx.lineTo(10,-24); ctx.lineTo(-10,-24);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function tiger(x, y, scale, flip, mouthOpen){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale * (flip?-1:1), scale);
+  ctx.fillStyle = '#d97b2b';
+  // body
+  ctx.beginPath();
+  ctx.ellipse(0,0,42,20,0,0,Math.PI*2);
+  ctx.fill();
+  // head
+  ctx.beginPath();
+  ctx.ellipse(46,-4,18,15,0,0,Math.PI*2);
+  ctx.fill();
+  // legs
+  ctx.fillRect(-30,14,8,16);
+  ctx.fillRect(20,14,8,16);
+  // tail
+  ctx.strokeStyle = '#d97b2b'; ctx.lineWidth = 7; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-40,0); ctx.quadraticCurveTo(-60,-10+Math.sin(animT*2)*6,-58,-20); ctx.stroke();
+  // stripes
+  ctx.strokeStyle = '#2b1810'; ctx.lineWidth = 3;
+  for (var i=-25;i<20;i+=10){ ctx.beginPath(); ctx.moveTo(i,-14); ctx.lineTo(i-4,14); ctx.stroke(); }
+  // face
+  ctx.fillStyle = '#f3e0c0';
+  ctx.beginPath(); ctx.ellipse(52,0,8,7,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#2b1810';
+  ctx.beginPath(); ctx.arc(60,-8,2.4,0,Math.PI*2); ctx.fill();
+  if (mouthOpen){
+    ctx.fillStyle = '#7a1f1f';
+    ctx.beginPath(); ctx.ellipse(58,4,7,5,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function hut(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#7a5230';
+  ctx.fillRect(-30,0,60,34);
+  ctx.fillStyle = '#5a3a1a';
+  ctx.beginPath();
+  ctx.moveTo(-38,0); ctx.lineTo(0,-30); ctx.lineTo(38,0);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3a2810';
+  ctx.fillRect(-8,14,16,20);
+  ctx.restore();
+}
+
+function cow(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#f0e6d2';
+  ctx.beginPath(); ctx.ellipse(0,0,26,14,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#3a2418';
+  ctx.beginPath(); ctx.ellipse(-14,-4,7,4,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(16,4,7,4,0,0,Math.PI*2); ctx.fill();
+  ctx.fillRect(-30,8,6,12); ctx.fillRect(20,8,6,12);
+  ctx.fillStyle = '#f0e6d2';
+  ctx.beginPath(); ctx.ellipse(-30,-6,10,8,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function coinPile(x,y,scale){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#e8c400';
+  for (var i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.ellipse(-15+i*6, -i*3, 14, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function throne(x,y,scale){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#5a2020';
+  ctx.fillRect(-30,-70,60,90);
+  ctx.fillStyle = '#e8c400';
+  ctx.fillRect(-30,-70,60,10);
+  ctx.beginPath();
+  ctx.moveTo(-30,-70); ctx.lineTo(0,-100); ctx.lineTo(30,-70);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+var SCENES = {
+  palace_dark: function(){
+    sky('#3a1f1f','#150a0a');
+    ground('#241414');
+    throne(W()*0.5, H()*0.72, 1.1);
+    person(W()*0.5, H()*0.62, 1.5, {cloth:'#7a1f1f', crown:true});
+  },
+  palace_family: function(){
+    sky('#7a5a3a','#3a2418');
+    ground('#4a3018');
+    throne(W()*0.72, H()*0.7, 0.9);
+    person(W()*0.72, H()*0.62, 1.2, {cloth:'#7a1f1f', crown:true});
+    person(W()*0.34, H()*0.68, 1.2, {cloth:'#c98a5a', headcloth:true, headclothColor:'#e0d0a0', skin:'#e8c39a'});
+  },
+  poison_plot: function(){
+    sky('#241730','#0d0812');
+    ground('#1a1220');
+    person(W()*0.62, H()*0.65, 1.2, {cloth:'#7a1f1f', crown:true});
+    ctx.fillStyle = '#7ec850';
+    ctx.beginPath(); ctx.ellipse(W()*0.4, H()*0.68, 10,14,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f0e6d2'; ctx.font='11px Georgia'; ctx.textAlign='center';
+  },
+  gambling: function(){
+    sky('#2a1f14','#0f0a08');
+    ground('#241a10');
+    ctx.fillStyle = '#4a3018';
+    ctx.fillRect(W()*0.32, H()*0.62, W()*0.36, 12);
+    person(W()*0.4, H()*0.66, 1.1, {cloth:'#7a1f1f', crown:true});
+    coinPile(W()*0.58, H()*0.72, 0.8);
+  },
+  exile: function(){
+    forestBg('dark');
+    person(W()*0.4, H()*0.6, 1.1, {cloth:'#8a4a6a', skin:'#e8c39a'});
+    person(W()*0.62, H()*0.6, 1.0, {cloth:'#3a3a3a'});
+    person(W()*0.72, H()*0.6, 1.0, {cloth:'#3a3a3a'});
+  },
+  forest_birth: function(){
+    forestBg('day');
+    hut(W()*0.28, H()*0.62, 0.6);
+    person(W()*0.55, H()*0.63, 1.1, {cloth:'#8a4a6a', skin:'#e8c39a'});
+    ctx.fillStyle = '#f0e6d2';
+    ctx.beginPath(); ctx.arc(W()*0.55, H()*0.62, 7, 0, Math.PI*2); ctx.fill();
+  },
+  animal_friends: function(){
+    forestBg('day');
+    person(W()*0.45, H()*0.6, 0.85, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.6, H()*0.66, 1.0, {cloth:'#8a4a6a', skin:'#e8c39a'});
+    tiger(W()*0.24, H()*0.68, 0.55, false, false);
+  },
+  forest_path: function(){
+    forestBg('day');
+    person(W()*0.5, H()*0.62, 1.1, {cloth:'#c98a5a', skin:'#e8c39a'});
+  },
+  mande_rubiah: function(){
+    sky('#bcd9c0','#e8e0b0');
+    ground('#5a7a3a');
+    hut(W()*0.7, H()*0.6, 0.75);
+    cow(W()*0.3, H()*0.72, 0.7);
+    cow(W()*0.42, H()*0.76, 0.6);
+    person(W()*0.5, H()*0.62, 1.0, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.78, H()*0.66, 0.9, {cloth:'#5a5a80', headcloth:true, headclothColor:'#d0c0e0', skin:'#e8c39a'});
+  },
+  muaro_paneh: function(){
+    sky('#a9d6e0','#dfeec2');
+    ground('#3f5d2c');
+    hut(W()*0.18, H()*0.65, 0.55);
+    hut(W()*0.82, H()*0.65, 0.55);
+    person(W()*0.42, H()*0.63, 1.05, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.6, H()*0.63, 1.05, {cloth:'#b0405a', headcloth:true, headclothColor:'#e8c400', skin:'#e8c39a'});
+    coinPile(W()*0.6, H()*0.74, 0.5);
+  },
+  ambush_1: function(){
+    forestBg('dark');
+    person(W()*0.35, H()*0.63, 1.05, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.62, H()*0.6, 1.15, {cloth:'#7a1f1f', crown:true});
+    person(W()*0.78, H()*0.63, 0.9, {cloth:'#3a3a3a'});
+  },
+  tiger_rescue: function(){
+    forestBg('dark');
+    person(W()*0.4, H()*0.68, 1.0, {cloth:'#c98a5a', skin:'#e8c39a'});
+    tiger(W()*0.68, H()*0.68, 0.75, true, true);
+  },
+  tiger_heal: function(){
+    forestBg('day');
+    person(W()*0.42, H()*0.66, 1.0, {cloth:'#c98a5a', skin:'#e8c39a'});
+    tiger(W()*0.68, H()*0.68, 0.75, true, false);
+  },
+  ambush_2: function(){
+    forestBg('dark');
+    person(W()*0.35, H()*0.63, 1.05, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.62, H()*0.6, 1.15, {cloth:'#7a1f1f', crown:true});
+  },
+  tiger_rescue2: function(){
+    forestBg('day');
+    person(W()*0.4, H()*0.66, 1.0, {cloth:'#c98a5a', skin:'#e8c39a'});
+    tiger(W()*0.66, H()*0.68, 0.75, true, true);
+  },
+  confront_reveal: function(){
+    sky('#7a5a3a','#3a2418');
+    ground('#4a3018');
+    person(W()*0.32, H()*0.62, 1.05, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.6, H()*0.6, 1.15, {cloth:'#7a1f1f', crown:true});
+    person(W()*0.78, H()*0.63, 0.95, {cloth:'#b0405a', headcloth:true, headclothColor:'#e8c400', skin:'#e8c39a'});
+  },
+  sword_break: function(){
+    sky('#4a2018','#1a0a08');
+    ground('#241410');
+    person(W()*0.35, H()*0.6, 1.1, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.62, H()*0.58, 1.15, {cloth:'#7a1f1f', crown:true, armR:[40,10]});
+    ctx.strokeStyle = '#dfe6ee'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(W()*0.62+30, H()*0.58+2); ctx.lineTo(W()*0.62+58, H()*0.58-14); ctx.stroke();
+  },
+  staff_attack: function(){
+    sky('#4a2018','#1a0a08');
+    ground('#241410');
+    person(W()*0.35, H()*0.6, 1.1, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.62, H()*0.58, 1.15, {cloth:'#7a1f1f', crown:true});
+  },
+  final_kick: function(){
+    sky('#4a2018','#1a0a08');
+    ground('#241410');
+    person(W()*0.36, H()*0.6, 1.15, {cloth:'#c98a5a', skin:'#e8c39a'});
+    person(W()*0.64, H()*0.6, 1.05, {cloth:'#7a1f1f', crown:true});
+  },
+  coronation: function(){
+    sky('#e8c96a','#a9556a');
+    ground('#4a3018');
+    throne(W()*0.5, H()*0.72, 1.1);
+    person(W()*0.5, H()*0.6, 1.3, {cloth:'#e8c400', crown:true, skin:'#e8c39a'});
+  },
+  happy_ending: function(){
+    sky('#bcd9c0','#e8e0b0');
+    ground('#5a7a3a');
+    throne(W()*0.5, H()*0.76, 0.85);
+    person(W()*0.5, H()*0.66, 1.1, {cloth:'#e8c400', crown:true, skin:'#e8c39a'});
+    person(W()*0.36, H()*0.7, 0.95, {cloth:'#8a4a6a', skin:'#e8c39a'});
+    person(W()*0.64, H()*0.7, 0.95, {cloth:'#b0405a', headcloth:true, headclothColor:'#e8c400', skin:'#e8c39a'});
+  }
+};
+
+function draw(){
+  ctx.clearRect(0,0,W(),H());
+  var step = STORY[stepIndex];
+  var fn = SCENES[step.scene];
+  if (fn) fn();
+}
+
+/* ---------------- animation loop ---------------- */
+function loop(){
+  animT += 0.02;
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- QTE ---------------- */
+function startQTE(key){
+  var def = QTE_DEFS[key];
+  qteActive = true;
+  qteState = { count:0, target:def.target, timeLeft:def.time, total:def.time };
+  var labelMap = { rope: ui('tapToHelp'), wood: ui('tapCourage'), sword: ui('tapCourage'), kick: ui('tapKick') };
+  qteLabel.textContent = labelMap[key] || ui('tapToHelp');
+  qteBarInner.style.width = '0%';
+  qteLayer.classList.add('show');
+  nextbtn.disabled = true;
+
+  qteState.timer = setInterval(function(){
+    qteState.timeLeft -= 0.1;
+    if (qteState.timeLeft <= 0){
+      qteState.timeLeft = def.time; // gentle retry, no penalty screen
+    }
+  }, 100);
+}
+
+function qteTap(){
+  if (!qteActive || !qteState) return;
+  qteState.count++;
+  var pct = Math.min(100, (qteState.count / qteState.target) * 100);
+  qteBarInner.style.width = pct + '%';
+  if (qteState.count >= qteState.target){
+    finishQTE();
+  }
+}
+
+function finishQTE(){
+  qteActive = false;
+  clearInterval(qteState.timer);
+  qteLayer.classList.remove('show');
+  nextbtn.disabled = false;
+  qteState = null;
+}
+
+qteTapBtn.addEventListener('click', qteTap);
+qteTapBtn.addEventListener('touchstart', function(e){ e.preventDefault(); qteTap(); }, {passive:false});
+
+document.addEventListener('keydown', function(e){
+  if (qteActive && (e.code === 'Space' || e.key === ' ')){
+    e.preventDefault();
+    qteTap();
+  }
+});
+
+/* ---------------- step flow ---------------- */
+function showStep(idx){
+  stepIndex = idx;
+  var step = STORY[stepIndex];
+  storytext.textContent = t(step);
+  buildDots();
+  applyLangUI();
+  narrate(t(step));
+  if (step.qteKey){
+    startQTE(step.qteKey);
+  }
+  requestResize();
+}
+
+function goNext(){
+  stopSpeech();
+  if (stepIndex >= STORY.length - 1){
+    endscreen.classList.add('show');
+    requestResize();
+    return;
+  }
+  showStep(stepIndex + 1);
+}
+
+nextbtn.addEventListener('click', goNext);
+
+startbtn.addEventListener('click', function(){
+  startscreen.style.display = 'none';
+  showStep(0);
+});
+
+replaybtn.addEventListener('click', function(){
+  endscreen.classList.remove('show');
+  showStep(0);
+});
+
+langbtn.addEventListener('click', function(){
+  LANG = (LANG === 'id') ? 'en' : 'id';
+  applyLangUI();
+  if (!startscreen || startscreen.style.display === 'none'){
+    if (endscreen.classList.contains('show')){
+      // just relabel end screen, already handled by applyLangUI
+    } else {
+      storytext.textContent = t(STORY[stepIndex]);
+      narrate(t(STORY[stepIndex]));
+    }
+  }
+});
+
+mutebtn.addEventListener('click', function(){
+  MUTED = !MUTED;
+  mutebtn.textContent = MUTED ? '🔇' : '🔊';
+  mutebtn.classList.toggle('active', MUTED);
+  if (MUTED) stopSpeech();
+});
+
+/* ---------------- iframe auto-resize ---------------- */
+var lastHeight = 0;
+function requestResize(){
+  requestAnimationFrame(function(){
+    var h = appEl.getBoundingClientRect().height;
+    if (Math.abs(h - lastHeight) > 2){
+      lastHeight = h;
+      try {
+        window.parent.postMessage({ type:'bujangpamanHeight', height: h }, '*');
+      } catch(e){}
+    }
+  });
+}
+window.addEventListener('resize', requestResize);
+if (window.ResizeObserver){
+  new ResizeObserver(requestResize).observe(appEl);
+}
+
+/* ---------------- init ---------------- */
+applyLangUI();
+requestResize();
+loop();
+
+})();
+</script>
+</body>
+</html>
