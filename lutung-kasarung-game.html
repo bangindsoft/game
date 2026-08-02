@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lutung Kasarung - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #lkg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FCEFD6 0%, #F7F3E8 100%);
+    border: 3px solid #B5842A;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #lkg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8A5A1E;
+  }
+  #lkg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #lkg-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  #lkg-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    background: #FFC857;
+    color: #5c3d00;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #lkg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #B5842A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #lkg-voiceBtn.off { background: #9a9a9a; }
+  #lkg-langBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #6b4f9e;
+    color: #fff;
+    border: none;
+    padding: 3px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-left: 6px;
+  }
+  #lkg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #B5842A;
+    background: #BEE3F8;
+  }
+  #lkg-canvas { display: block; width: 100%; height: 100%; }
+  .lkg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(40,30,20,0.88);
+    color: #fff;
+    padding: 20px;
+  }
+  .lkg-overlay.show { display: flex; }
+  .lkg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .lkg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .lkg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFC857;
+    color: #5c3d00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .lkg-btn:active { transform: scale(0.97); }
+
+  #lkg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #B5842A;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #lkg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #lkg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    background: #B5842A;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 30px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #lkg-actionBtn.hold { background: #3D7A4C; }
+  #lkg-actionBtn:active { transform: scale(0.97); }
+  #lkg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #lkg-progressWrap.show { display: block; }
+  #lkg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="lkg-wrap">
+  <h2>🐒 Lutung Kasarung</h2>
+  <p id="lkg-sub">Cerita rakyat Jawa Barat tentang persahabatan Putri Purbasari dengan seekor lutung ajaib.</p>
+
+  <div id="lkg-hud">
+    <span id="lkg-phase">Tahap 1 / 5</span>
+    <span>
+      <button id="lkg-voiceBtn">🔊 Suara: Aktif</button>
+      <button id="lkg-langBtn">EN</button>
+    </span>
+  </div>
+
+  <div id="lkg-canvas-holder">
+    <canvas id="lkg-canvas"></canvas>
+
+    <div class="lkg-overlay show" id="lkg-start">
+      <h3>Lutung Kasarung</h3>
+      <p>Purbasari, putri bungsu yang baik hati, difitnah dan diasingkan ke hutan oleh kakaknya sendiri. Di sana ia bertemu seekor lutung ajaib yang menyimpan rahasia besar.</p>
+      <button class="lkg-btn" id="lkg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="lkg-overlay" id="lkg-win">
+      <h3>Pasir Batang Hidup Damai! 🎉</h3>
+      <p>Purbasari kembali menjadi ratu dan menikah dengan Pangeran Guruminda. Kebaikan hati mengalahkan kejahatan.</p>
+      <button class="lkg-btn" id="lkg-playAgainBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div id="lkg-caption">Bersiap memulai kisah...</div>
+
+  <div id="lkg-progressWrap"><div id="lkg-progressBar"></div></div>
+  <div id="lkg-action-row">
+    <button id="lkg-actionBtn">Lanjut ▶</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Lutung Kasarung - Game',
+      h2: '🐒 Lutung Kasarung',
+      sub: 'Cerita rakyat Jawa Barat tentang persahabatan Putri Purbasari dengan seekor lutung ajaib.',
+      startTitle: 'Lutung Kasarung',
+      startBody: 'Purbasari, putri bungsu yang baik hati, difitnah dan diasingkan ke hutan oleh kakaknya sendiri. Di sana ia bertemu seekor lutung ajaib yang menyimpan rahasia besar. Ikuti kisah persahabatan yang mengubah takdir Kerajaan Pasir Batang.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Pasir Batang Hidup Damai! 🎉',
+      winBody: 'Purbasari kembali menjadi ratu dan menikah dengan Pangeran Guruminda. Kebaikan hati mengalahkan kejahatan, dan Kerajaan Pasir Batang pun hidup damai sejahtera.',
+      playAgainBtn: 'Main Lagi',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Melanjutkan',
+      companionBtn: '🐒 TEMANI PURBASARI',
+      fruitBtn: '🍌 KUMPULKAN BUAH',
+      gardenBtn: '🌸 CIPTAKAN TAMAN AJAIB',
+      bathBtn: '💧 MANDI DI JAMBAN SALAKA',
+      spellBtn: '✨ UCAPKAN MANTRA SAKTI',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      langBtn: 'EN',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Alkisah, di Kerajaan Pasir Batang, Jawa Barat, Prabu Tapa Agung memiliki tujuh putri. Purbararang si sulung berhati kasar dan iri hati, sedangkan si bungsu Purbasari berhati baik, ramah, dan suka menolong.',
+        'Setelah lama memimpin, Prabu Tapa Agung memilih Purbasari untuk menggantikannya sebagai ratu, karena sifatnya yang baik dan bijaksana, lalu pergi menjadi pertapa. Purbararang murka karena tahta tidak jatuh ke tangannya.',
+        'Ditemani tunangannya, Indrajaya, Purbararang mendatangi nenek sihir jahat di hutan untuk meminta bantuan mencelakai adiknya agar tahta bisa direbut kembali.',
+        'Nenek sihir menyerahkan bubuk hitam ajaib. Diam-diam, Purbararang menyemburkannya ke seluruh tubuh Purbasari hingga muncul bercak-bercak hitam mengerikan di kulitnya.',
+        'Karena dianggap berpenyakit, Purbasari dicopot dari tahtanya. Purbararang mengambil alih kerajaan dan memerintahkan Purbasari diasingkan ke tengah hutan agar "penyakitnya" tidak menular.',
+        'Di Kahyangan, Pangeran Guruminda menolak menikahi bidadari karena ingin istri secantik ibunya, Sunan Ambu. Ibunya berkata wanita secantik itu hanya ada di dunia manusia, dan Guruminda harus turun sebagai seekor lutung buruk rupa bernama Lutung Kasarung.',
+        'Di bumi, Lutung Kasarung menjadi pemimpin bangsa lutung. Mendengar kejahatan Ratu Purbararang, ia sengaja membiarkan dirinya ditangkap, mengamuk di istana, lalu diperintahkan dibawa ke hutan tempat Purbasari diasingkan.',
+        'Uwak Batara Lengser meminta Lutung Kasarung menjaga Putri Purbasari. Tahan tombol untuk membantu Lutung Kasarung menemani dan menghibur Purbasari yang kesepian.',
+        'Lutung Kasarung memerintahkan para lutung bawahannya mencari makanan. Tahan tombol untuk membantu mengumpulkan buah-buahan segar untuk Purbasari.',
+        'Diam-diam, Lutung Kasarung memohon kepada ibunya di Kahyangan, Sunan Ambu, agar berkenan menciptakan taman indah dan tempat pemandian untuk Purbasari. Tahan tombol untuk memanggil para bidadari menciptakan taman ajaib itu.',
+        'Purbasari pun mandi di kolam indah bernama Jamban Salaka. Tahan tombol untuk membantu air suci itu menghapus bercak-bercak hitam di tubuhnya.',
+        'Kabar kesembuhan Purbasari sampai ke istana. Khawatir kehilangan tahta, Purbararang bersama Indrajaya bergegas ke hutan dan mendapati adiknya telah kembali cantik seperti semula.',
+        'Purbararang menantang adu panjang rambut — siapa yang kalah akan dipenggal. Namun rambut Purbasari ternyata jauh lebih panjang. Tak mau menyerah, Purbararang mengajukan tantangan kedua: adu ketampanan tunangan.',
+        'Purbasari tak punya tunangan, hingga ia memegang tangan Lutung Kasarung dan berkata bahwa lutung itulah tunangannya. Purbararang tertawa terbahak dan segera memerintahkan algojo untuk memenggal kepala Purbasari.',
+        'Tak tinggal diam, Lutung Kasarung duduk bersila, memejamkan mata, dan komat-kamit merapal mantra. Tahan tombol untuk membantunya mengucap mantra sakti sebelum algojo bertindak.',
+        'Asap tebal menyelimuti Lutung Kasarung. Saat asap menghilang, ia telah berubah menjadi Pangeran Guruminda yang tampan — bahkan lebih tampan dari Indrajaya. Ia mengungkap jati dirinya dan kebenaran bahwa Purbasarilah ratu sah Pasir Batang.',
+        'Purbararang mengaku kalah dan meminta maaf; Purbasari pun memaafkannya dengan tulus. Purbasari kembali naik takhta dan menikah dengan Pangeran Guruminda. Kerajaan Pasir Batang pun hidup damai di bawah pemerintahan mereka.'
+      ]
+    },
+    en: {
+      title: 'Lutung Kasarung - Game',
+      h2: '🐒 Lutung Kasarung',
+      sub: 'A West Java folktale about Princess Purbasari\'s friendship with a magical monkey.',
+      startTitle: 'Lutung Kasarung',
+      startBody: 'Purbasari, the kind-hearted youngest princess, is slandered and banished to the forest by her own sister. There she meets a magical monkey hiding a great secret. Follow the friendship that changes the fate of the Kingdom of Pasir Batang.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Pasir Batang Lives in Peace! 🎉',
+      winBody: 'Purbasari becomes queen once more and marries Prince Guruminda. Kindness triumphs over cruelty, and the Kingdom of Pasir Batang lives on in peace and prosperity.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Continue',
+      companionBtn: '🐒 KEEP PURBASARI COMPANY',
+      fruitBtn: '🍌 GATHER FRUIT',
+      gardenBtn: '🌸 CONJURE THE MAGIC GARDEN',
+      bathBtn: '💧 BATHE IN THE SACRED POOL',
+      spellBtn: '✨ CHANT THE SACRED SPELL',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
+      langBtn: 'ID',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, in the Kingdom of Pasir Batang, West Java, King Prabu Tapa Agung had seven daughters. The eldest, Purbararang, was cruel and envious, while the youngest, Purbasari, was kind, gentle, and always ready to help others.',
+        'After many years on the throne, Prabu Tapa Agung chose Purbasari to succeed him as queen for her kind and wise heart, then left to become a hermit. Purbararang was furious that the throne had not gone to her.',
+        'With her fiancé Indrajaya, Purbararang went to an evil sorceress in the forest, asking for help to harm her sister so she could seize back the throne.',
+        'The sorceress hands over an enchanted black powder. Secretly, Purbararang flings it all over Purbasari\'s body — dreadful black blotches soon cover her skin.',
+        'Believed to be diseased, Purbasari is stripped of her throne. Purbararang seizes the kingdom and orders Purbasari banished to the depths of the forest so her "illness" won\'t spread.',
+        'In the heavens, Prince Guruminda refuses to marry any celestial nymph, wishing only for a bride as beautiful as his mother, Sunan Ambu. She tells him such beauty exists only among humans — and that he must descend to earth disguised as a homely monkey named Lutung Kasarung.',
+        'On earth, Lutung Kasarung becomes leader of the monkeys. Hearing of Queen Purbararang\'s cruelty, he lets himself be captured, causes an uproar in the palace, and is then ordered taken to the forest where Purbasari lives in exile.',
+        'Uwak Batara Lengser asks Lutung Kasarung to watch over Princess Purbasari. Hold the button to help Lutung Kasarung keep the lonely princess company and comfort her.',
+        'Lutung Kasarung commands his monkey followers to search for food. Hold the button to help gather fresh fruit for Purbasari.',
+        'Secretly, Lutung Kasarung prays to his mother Sunan Ambu in the heavens, asking her to create a beautiful garden and bathing place for Purbasari. Hold the button to summon the celestial nymphs to conjure the magical garden.',
+        'Purbasari bathes in the beautiful pool called Jamban Salaka. Hold the button to help its sacred water wash away the black blotches from her skin.',
+        'News of Purbasari\'s recovery reaches the palace. Fearing for her throne, Purbararang rushes to the forest with Indrajaya and finds her sister restored to her former beauty.',
+        'Purbararang challenges her to a hair-length contest — whoever loses will be beheaded. But Purbasari\'s hair proves far longer. Refusing to give up, Purbararang issues a second challenge: whose fiancé is more handsome.',
+        'With no fiancé of her own, Purbasari takes Lutung Kasarung\'s hand and declares him her intended. Purbararang bursts into laughter and orders the royal executioner to behead Purbasari at once.',
+        'Lutung Kasarung does not stay still — he sits cross-legged, closes his eyes, and murmurs a spell. Hold the button to help him chant the sacred incantation before the executioner can strike.',
+        'Thick smoke envelops Lutung Kasarung. When it clears, he has transformed into the handsome Prince Guruminda — even more handsome than Indrajaya. He reveals his true identity and the truth that Purbasari is the rightful queen of Pasir Batang.',
+        'Purbararang admits defeat and begs forgiveness; Purbasari forgives her with a full heart. Purbasari reclaims the throne and marries Prince Guruminda, and the Kingdom of Pasir Batang lives on in peace under their rule.'
+      ]
+    }
+  };
+
+  var currentLang = LANG;
+
+  function applyLangToDom(){
+    var TXT2 = I18N[currentLang];
+    document.title = TXT2.title;
+    document.querySelector('#lkg-wrap h2').textContent = TXT2.h2;
+    document.getElementById('lkg-sub').textContent = TXT2.sub;
+    document.querySelector('#lkg-start h3').textContent = TXT2.startTitle;
+    document.querySelector('#lkg-start p').textContent = TXT2.startBody;
+    document.getElementById('lkg-startBtn').textContent = TXT2.startBtn;
+    document.querySelector('#lkg-win h3').textContent = TXT2.winTitle;
+    document.querySelector('#lkg-win p').textContent = TXT2.winBody;
+    document.getElementById('lkg-playAgainBtn').textContent = TXT2.playAgainBtn;
+    document.getElementById('lkg-langBtn').textContent = TXT2.langBtn;
+    document.documentElement.lang = currentLang;
+  }
+
+  var TXT = I18N[currentLang];
+  applyLangToDom();
+  document.getElementById('lkg-caption').textContent = TXT.captionInit;
+  document.getElementById('lkg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('lkg-voiceBtn');
+  var langBtn = document.getElementById('lkg-langBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    var t2 = I18N[currentLang];
+    voiceBtn.textContent = narrationOn ? t2.voiceOn : t2.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = currentLang === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  langBtn.addEventListener('click', function(){
+    currentLang = currentLang === 'id' ? 'en' : 'id';
+    TXT = I18N[currentLang];
+    applyLangToDom();
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    buildSteps();
+    stepIndex = Math.min(stepIndex, steps.length - 1);
+    showStep();
+  });
+
+  var canvas = document.getElementById('lkg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('lkg-phase');
+  var captionEl = document.getElementById('lkg-caption');
+  var actionBtn = document.getElementById('lkg-actionBtn');
+  var progressWrap = document.getElementById('lkg-progressWrap');
+  var progressBar = document.getElementById('lkg-progressBar');
+  var startOverlay = document.getElementById('lkg-start');
+  var winOverlay = document.getElementById('lkg-win');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var stepDefs = [
+    { type:'caption', phase:1, scene:'istana_awal' },
+    { type:'caption', phase:1, scene:'naik_tahta' },
+    { type:'caption', phase:2, scene:'nenek_sihir' },
+    { type:'caption', phase:2, scene:'sebar_kutukan' },
+    { type:'caption', phase:2, scene:'diasingkan' },
+    { type:'caption', phase:3, scene:'jadi_lutung' },
+    { type:'caption', phase:3, scene:'dibawa_hutan' },
+    { type:'hold', phase:3, scene:'jaga_purbasari', btn:'companionBtn' },
+    { type:'hold', phase:3, scene:'cari_buah', btn:'fruitBtn' },
+    { type:'hold', phase:4, scene:'taman_muncul', btn:'gardenBtn' },
+    { type:'hold', phase:4, scene:'mandi_jamban', btn:'bathBtn' },
+    { type:'caption', phase:4, scene:'curiga' },
+    { type:'caption', phase:4, scene:'adu_rambut' },
+    { type:'caption', phase:5, scene:'adu_tunangan' },
+    { type:'hold', phase:5, scene:'mantra', btn:'spellBtn' },
+    { type:'caption', phase:5, scene:'terungkap' },
+    { type:'caption', phase:5, scene:'akhir_bahagia' }
+  ];
+
+  var steps = [];
+  function buildSteps(){
+    steps = stepDefs.map(function(s, i){
+      var copy = {};
+      for(var k in s){ copy[k] = s[k]; }
+      copy.text = TXT.steps[i];
+      return copy;
+    });
+  }
+  buildSteps();
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    speak(step.text);
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = TXT[step.btn] || TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      speak(TXT.winBody);
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('lkg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('lkg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawPurbasari(px, py, size, cursed){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    // dress
+    ctx.fillStyle = cursed ? '#8B7D6B' : '#E88FB0';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-4*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,24*s);
+    ctx.lineTo(12*s,24*s); ctx.quadraticCurveTo(19*s,10*s,13*s,-4*s);
+    ctx.quadraticCurveTo(0,-8*s,-13*s,-4*s); ctx.closePath(); ctx.fill();
+    // sash
+    ctx.strokeStyle = '#C9A227'; ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.moveTo(-10*s,2*s); ctx.lineTo(10*s,8*s); ctx.stroke();
+    // face
+    ctx.fillStyle = cursed ? '#8C7A66' : '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-13*s,7*s,0,Math.PI*2); ctx.fill();
+    // hair
+    ctx.fillStyle = '#2E2418';
+    ctx.beginPath(); ctx.arc(0,-17*s,7.6*s,Math.PI,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,-24*s,3.4*s,3.4*s,0,0,Math.PI*2); ctx.fill();
+    if(cursed){
+      ctx.fillStyle = 'rgba(20,15,10,0.85)';
+      var spots = [[-3,-14],[3,-11],[-5,-9],[4,-16],[0,2],[-8,6],[7,10],[-2,14]];
+      for(var i=0;i<spots.length;i++){
+        ctx.beginPath();
+        ctx.arc(spots[i][0]*s, spots[i][1]*s, 1.6*s, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPurbararang(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7A1F2B';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-4*s); ctx.quadraticCurveTo(-20*s,10*s,-13*s,25*s);
+    ctx.lineTo(13*s,25*s); ctx.quadraticCurveTo(20*s,10*s,14*s,-4*s);
+    ctx.quadraticCurveTo(0,-8*s,-14*s,-4*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-13*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1C1712';
+    ctx.beginPath(); ctx.arc(0,-16*s,7.8*s,Math.PI*0.95,Math.PI*2.1); ctx.fill();
+    ctx.fillStyle = '#C9A227';
+    ctx.beginPath(); ctx.moveTo(-6*s,-22*s); ctx.lineTo(0,-28*s); ctx.lineTo(6*s,-22*s); ctx.closePath(); ctx.fill();
+    // stern eyebrows
+    ctx.strokeStyle = '#1C1712'; ctx.lineWidth = 1.2*s;
+    ctx.beginPath(); ctx.moveTo(-4*s,-15*s); ctx.lineTo(-1*s,-13.5*s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4*s,-15*s); ctx.lineTo(1*s,-13.5*s); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLutung(px, py, size, glowAmt){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(glowAmt && glowAmt>0){
+      var grd = ctx.createRadialGradient(0,-6*s,2*s,0,-6*s,26*s*glowAmt+10);
+      grd.addColorStop(0,'rgba(255,231,150,'+(0.55*glowAmt)+')');
+      grd.addColorStop(1,'rgba(255,231,150,0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(0,-6*s,30*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = glowAmt ? Math.max(0, 1-glowAmt) : 1;
+    // tail
+    ctx.strokeStyle = '#4A3626'; ctx.lineWidth = 3*s; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(9*s,10*s); ctx.quadraticCurveTo(20*s,6*s,16*s,-8*s); ctx.stroke();
+    // body
+    ctx.fillStyle = '#5A4130';
+    ctx.beginPath(); ctx.ellipse(0,6*s,10*s,11*s,0,0,Math.PI*2); ctx.fill();
+    // head
+    ctx.fillStyle = '#5A4130';
+    ctx.beginPath(); ctx.arc(0,-8*s,8.5*s,0,Math.PI*2); ctx.fill();
+    // face patch
+    ctx.fillStyle = '#C9A876';
+    ctx.beginPath(); ctx.ellipse(0,-6*s,5*s,5.6*s,0,0,Math.PI*2); ctx.fill();
+    // eyes
+    ctx.fillStyle = '#2A1F14';
+    ctx.beginPath(); ctx.arc(-2.4*s,-8*s,1*s,0,Math.PI*2); ctx.arc(2.4*s,-8*s,1*s,0,Math.PI*2); ctx.fill();
+    // ears
+    ctx.fillStyle = '#5A4130';
+    ctx.beginPath(); ctx.arc(-8*s,-11*s,2.6*s,0,Math.PI*2); ctx.arc(8*s,-11*s,2.6*s,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawGuruminda(px, py, size, appearAmt){
+    var a = appearAmt===undefined ? 1 : appearAmt;
+    if(a<=0) return;
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#2B5C8A';
+    ctx.beginPath();
+    ctx.moveTo(-13*s,-4*s); ctx.quadraticCurveTo(-19*s,10*s,-12*s,25*s);
+    ctx.lineTo(12*s,25*s); ctx.quadraticCurveTo(19*s,10*s,13*s,-4*s);
+    ctx.quadraticCurveTo(0,-8*s,-13*s,-4*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-13*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#241A10';
+    ctx.beginPath(); ctx.arc(0,-16.5*s,7.6*s,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D4AF37';
+    ctx.beginPath(); ctx.moveTo(-6*s,-21*s); ctx.lineTo(-3*s,-27*s); ctx.lineTo(0,-22*s); ctx.lineTo(3*s,-27*s); ctx.lineTo(6*s,-21*s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWitch(px, py, size){ drawEmoji('🧙\u200d♀️', px, py, size); }
+  function drawElder(px, py, size){ drawEmoji('👴', px, py, size); }
+  function drawSunanAmbu(px, py, size){ drawEmoji('👑', px, py, size); }
+
+  function drawFruitBasket(px, py, count){
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8B5A2B';
+    ctx.beginPath();
+    ctx.moveTo(-16,0); ctx.lineTo(16,0); ctx.lineTo(12,16); ctx.lineTo(-12,16); ctx.closePath(); ctx.fill();
+    var icons = ['🍌','🍎','🍇','🥭'];
+    for(var i=0;i<count;i++){
+      var ang = (i/6)*Math.PI - Math.PI*0.15;
+      var fx = Math.cos(ang)*12;
+      var fy = -6 - (i%3)*7;
+      drawEmoji(icons[i%icons.length], fx, fy, 16);
+    }
+    ctx.restore();
+  }
+
+  function drawGardenBlossoms(px, py, growAmt){
+    if(growAmt<=0) return;
+    ctx.save(); ctx.translate(px,py);
+    var n = Math.round(growAmt*8);
+    for(var i=0;i<n;i++){
+      var ang = (i/8)*Math.PI*2;
+      var r = 34;
+      drawEmoji('🌸', Math.cos(ang)*r, Math.sin(ang)*r*0.4, 16+growAmt*6);
+    }
+    if(growAmt>0.4) drawEmoji('✨', 0, -20*growAmt, 20*growAmt);
+    ctx.restore();
+  }
+
+  function drawSparklePool(px, py, w){
+    ctx.save();
+    ctx.fillStyle = 'rgba(140,200,230,0.85)';
+    ctx.beginPath(); ctx.ellipse(px,py,w,w*0.32,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(px,py,w*0.8,w*0.24,0,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    ctx.fillStyle = '#7A2430';
+    ctx.fillRect(0,0,W,300);
+    ctx.fillStyle = '#C9A227';
+    for(var i=0;i<5;i++){
+      ctx.fillRect(60+i*160, 40, 18, 260);
+    }
+    ctx.fillStyle = '#5C1B24';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#B5842A';
+    ctx.fillRect(0,296,W,10);
+  }
+
+  function drawForestBg(){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#4C7A4C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
+      ctx.beginPath();
+      ctx.moveTo(50+i*130,300); ctx.lineTo(50+i*130+35,180); ctx.lineTo(50+i*130+70,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawGardenBg(){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF7E0');
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#8FC96B';
+    ctx.fillRect(0,300,W,H-300);
+  }
+
+  function drawHeavenBg(){
+    var sky = ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#FBE8B8'); sky.addColorStop(1,'#F3D9F0');
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+    for(var i=0;i<4;i++){
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath();
+      ctx.ellipse(120+i*180, 80+((i%2)*30), 60, 22, 0, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'istana_awal';
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='istana_awal'){
+      drawPalaceBg();
+      drawPurbararang(300, 300+bob, 44);
+      drawPurbasari(500, 300+bob, 44, false);
+    }
+    if(scene==='naik_tahta'){
+      drawPalaceBg();
+      drawPurbasari(400, 280+bob, 50, false);
+      drawPurbararang(600, 300+bob, 40);
+    }
+    if(scene==='nenek_sihir'){
+      drawForestBg();
+      drawPurbararang(260, 300+bob, 42);
+      drawEmoji('🤴', 340, 300+bob, 40);
+      drawWitch(540, 290+bob, 50);
+    }
+    if(scene==='sebar_kutukan'){
+      drawPalaceBg();
+      drawPurbararang(300, 300+bob, 42);
+      drawPurbasari(520, 300+bob, 44, true);
+      drawEmoji('🖤', 410, 250+Math.sin(t*6)*8, 26);
+    }
+    if(scene==='diasingkan'){
+      drawForestBg();
+      drawPurbasari(400, 300+bob, 46, true);
+      drawElder(560, 290+bob, 36);
+    }
+    if(scene==='jadi_lutung'){
+      drawHeavenBg();
+      drawSunanAmbu(280, 220+bob, 40);
+      drawEmoji('🤴', 460, 240+bob, 42);
+      drawLutung(560, 300+bob, 40, 0);
+    }
+    if(scene==='dibawa_hutan'){
+      drawPalaceBg();
+      drawLutung(320, 300+bob, 42, 0);
+      drawPurbararang(520, 300+bob, 40);
+      drawElder(440, 300+bob, 32);
+    }
+    if(scene==='jaga_purbasari'){
+      drawForestBg();
+      drawPurbasari(320, 300+bob, 44, true);
+      drawLutung(460+progress*20, 300+bob, 42, 0);
+      if(progress>0.4) drawEmoji('💛', 390, 250, 18+progress*10);
+    }
+    if(scene==='cari_buah'){
+      drawForestBg();
+      drawPurbasari(260, 300+bob, 44, true);
+      drawLutung(420, 300+bob, 40, 0);
+      drawFruitBasket(340, 340, Math.round(progress*6));
+    }
+    if(scene==='taman_muncul'){
+      drawGardenBg();
+      drawPurbasari(260, 300+bob, 44, true);
+      drawLutung(400, 310+bob, 38, 0);
+      drawGardenBlossoms(560, 300, progress);
+    }
+    if(scene==='mandi_jamban'){
+      drawGardenBg();
+      drawSparklePool(460, 340, 90);
+      drawPurbasari(460, 300+bob, 46, progress<0.85);
+      drawLutung(280, 320+bob, 36, 0);
+    }
+    if(scene==='curiga'){
+      drawForestBg();
+      drawPurbasari(500, 300+bob, 46, false);
+      drawPurbararang(280, 300+bob, 42);
+      drawEmoji('🤴', 200, 300+bob, 36);
+    }
+    if(scene==='adu_rambut'){
+      drawPalaceBg();
+      drawPurbasari(520, 300+bob, 46, false);
+      drawPurbararang(280, 300+bob, 42);
+      ctx.strokeStyle = '#2E2418'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(280,260); ctx.lineTo(280,180); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(520,260); ctx.lineTo(520,140); ctx.stroke();
+    }
+    if(scene==='adu_tunangan'){
+      drawPalaceBg();
+      drawPurbasari(520, 300+bob, 46, false);
+      drawLutung(590, 320+bob, 34, 0);
+      drawPurbararang(260, 300+bob, 42);
+      drawEmoji('🗡️', 380, 300, 30);
+    }
+    if(scene==='mantra'){
+      drawPalaceBg();
+      drawPurbasari(560, 300+bob, 46, false);
+      drawLutung(320, 310, 42, progress);
+      drawGuruminda(320, 310, 46, progress);
+      drawEmoji('🗡️', 440, 300 - progress*20, 28);
+    }
+    if(scene==='terungkap'){
+      drawPalaceBg();
+      drawGuruminda(320, 300+bob, 48, 1);
+      drawPurbasari(540, 300+bob, 46, false);
+      drawPurbararang(220, 300+bob, 38);
+    }
+    if(scene==='akhir_bahagia'){
+      drawPalaceBg();
+      drawGuruminda(360, 290+bob, 50, 1);
+      drawPurbasari(460, 290+bob, 50, false);
+      drawEmoji('💐', 410, 240, 30);
+      drawPurbararang(600, 310+bob, 34);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('lkg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'lkg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('lkg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
