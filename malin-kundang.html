@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malin Kundang - Interactive Folklore Game</title>
+<style>
+  :root{
+    --sea-deep:#0b3d5c;
+    --sea:#1b6ea8;
+    --sea-light:#4ea8de;
+    --sand:#e8c988;
+    --sand-dark:#c9a463;
+    --wood:#6b4226;
+    --wood-dark:#4a2c17;
+    --cream:#fdf6e8;
+    --ink:#2c2116;
+    --gold:#e0a83e;
+    --danger:#b0413e;
+    --good:#3e8e5a;
+    --panel:#fbf1dc;
+    --shadow: rgba(0,0,0,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--sea-deep),var(--sea));
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:linear-gradient(180deg,#dff1fb 0%,var(--cream) 40%);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--wood-dark);
+    color:var(--cream);
+    box-shadow:0 2px 8px var(--shadow);
+    z-index:5;
+  }
+  header h1{
+    font-size:15px;
+    margin:0;
+    letter-spacing:0.5px;
+    font-weight:700;
+  }
+  .header-btns{display:flex;gap:6px;}
+  .icon-btn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background .15s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.25);}
+  .icon-btn.active{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4/3;
+    background:linear-gradient(180deg,#9fd8f7 0%, #cdeaf9 55%, var(--sand) 56%, var(--sand-dark) 100%);
+    overflow:hidden;
+  }
+  canvas#scene{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .overlay-ui{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .overlay-ui > *{pointer-events:auto;}
+
+  #caption-box{
+    position:relative;
+    background:var(--panel);
+    border-top:3px solid var(--wood);
+    padding:14px 16px 16px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:150px;
+  }
+  #story-text{
+    font-size:15.5px;
+    line-height:1.55;
+    color:var(--ink);
+    margin:0;
+    white-space:pre-line;
+  }
+  #choice-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:auto;
+  }
+  .choice-btn{
+    flex:1 1 45%;
+    background:var(--wood);
+    color:var(--cream);
+    border:none;
+    border-radius:10px;
+    padding:12px 10px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--wood-dark);
+    transition:transform .1s;
+  }
+  .choice-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood-dark);}
+  .choice-btn.deny{background:var(--danger);box-shadow:0 3px 0 #7a2b28;}
+  .choice-btn.accept{background:var(--good);box-shadow:0 3px 0 #285f3d;}
+
+  #next-btn{
+    align-self:flex-end;
+    background:var(--gold);
+    color:var(--ink);
+    border:none;
+    border-radius:24px;
+    padding:10px 22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #a67623;
+    margin-top:auto;
+  }
+  #next-btn:active{transform:translateY(2px);box-shadow:none;}
+  #next-btn:disabled{opacity:0.4;cursor:default;}
+
+  .qte-hint{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.55);
+    color:#fff;
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+    white-space:nowrap;
+  }
+  .qte-progress{
+    position:absolute;
+    bottom:10px;
+    left:10px;
+    right:10px;
+    height:10px;
+    background:rgba(0,0,0,0.3);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .qte-progress-fill{
+    height:100%;
+    width:0%;
+    background:var(--gold);
+    transition:width .1s linear;
+  }
+  .qte-timer{
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:rgba(0,0,0,0.55);
+    color:#fff;
+    padding:4px 10px;
+    border-radius:14px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .crate{
+    position:absolute;
+    width:19%;
+    aspect-ratio:1/1;
+    background:linear-gradient(160deg,#8a5a30,#6b4226);
+    border:3px solid #4a2c17;
+    border-radius:6px;
+    cursor:pointer;
+    box-shadow:0 4px 8px rgba(0,0,0,0.3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+  }
+  .crate.glow{
+    box-shadow:0 0 0 4px var(--gold), 0 4px 8px rgba(0,0,0,0.3);
+  }
+  .chicken{
+    position:absolute;
+    width:13%;
+    aspect-ratio:1/1;
+    cursor:pointer;
+    font-size:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    user-select:none;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,0.3));
+    transition:top .35s ease, left .35s ease;
+  }
+  .tap-target{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:radial-gradient(circle,var(--gold),#a67623);
+    border:4px solid #fff;
+    cursor:pointer;
+    box-shadow:0 0 20px rgba(255,220,120,0.8);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#3a2a0f;
+    font-weight:800;
+    font-size:13px;
+    animation:pulse 1s infinite;
+  }
+  @keyframes pulse{
+    0%{transform:translate(-50%,-50%) scale(1);}
+    50%{transform:translate(-50%,-50%) scale(1.12);}
+    100%{transform:translate(-50%,-50%) scale(1);}
+  }
+  #title-screen{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,#0b3d5c,#1b6ea8 55%,#e8c988 56%,#c9a463);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    color:var(--cream);
+    z-index:10;
+  }
+  #title-screen h2{
+    font-size:26px;
+    margin:6px 0 2px;
+    text-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  #title-screen p{
+    font-size:13.5px;
+    max-width:320px;
+    opacity:0.95;
+    margin:4px 0 18px;
+  }
+  .rock-icon{font-size:52px;filter:drop-shadow(0 4px 4px rgba(0,0,0,0.4));}
+  #start-btn{
+    background:var(--gold);
+    color:var(--ink);
+    border:none;
+    border-radius:26px;
+    padding:12px 30px;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 0 #a67623;
+  }
+  #start-btn:active{transform:translateY(3px);box-shadow:none;}
+  .lang-toggle-title{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .lang-toggle-title button{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.4);
+    color:#fff;
+    border-radius:8px;
+    padding:5px 12px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .lang-toggle-title button.active{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  footer{
+    text-align:center;
+    font-size:10.5px;
+    color:#8a7a5c;
+    padding:6px 10px 10px;
+    background:var(--panel);
+  }
+  footer a{color:#6b4226;}
+  .progress-dots{
+    display:flex;
+    justify-content:center;
+    gap:4px;
+    padding:6px 0 0;
+    background:var(--panel);
+  }
+  .progress-dots span{
+    width:6px;height:6px;border-radius:50%;
+    background:#d8c69a;
+  }
+  .progress-dots span.done{background:var(--wood);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1 id="game-title">Malin Kundang</h1>
+    <div class="header-btns">
+      <button class="icon-btn" id="lang-btn" title="Switch language">🌐 <span id="lang-label">EN</span></button>
+      <button class="icon-btn" id="mute-btn" title="Mute narration">🔊</button>
+      <button class="icon-btn" id="restart-btn" title="Restart">↺</button>
+    </div>
+  </header>
+
+  <div id="stage-wrap">
+    <canvas id="scene" width="800" height="600"></canvas>
+    <div class="overlay-ui" id="overlay"></div>
+
+    <div id="title-screen">
+      <div class="rock-icon">🗿</div>
+      <h2 id="title-h2">Malin Kundang</h2>
+      <p id="title-p">Legenda anak durhaka dari Pantai Air Manis, Sumatera Barat.</p>
+      <div class="lang-toggle-title">
+        <button data-lang="id" id="tbtn-id">Bahasa Indonesia</button>
+        <button data-lang="en" id="tbtn-en">English</button>
+      </div>
+      <button id="start-btn">▶ Mulai / Start</button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="dots"></div>
+
+  <div id="caption-box">
+    <p id="story-text">Loading...</p>
+    <div id="choice-row" style="display:none;"></div>
+    <button id="next-btn">Lanjut ▶</button>
+  </div>
+
+  <footer>
+    Cerita Rakyat Malin Kundang · Sumatera Barat &middot; Dibuat untuk <a href="https://caritasato.blogspot.com" target="_blank">caritasato.blogspot.com</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Language setup ---------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get('lang') === 'en') ? 'en' : 'id';
+
+  var UI = {
+    id:{ title:"Malin Kundang", subtitle:"Legenda anak durhaka dari Pantai Air Manis, Sumatera Barat.",
+      next:"Lanjut ▶", start:"▶ Mulai", mute:"Bisukan narasi", unmute:"Aktifkan suara",
+      langLabel:"EN", restart:"Ulangi dari awal?"},
+    en:{ title:"Malin Kundang", subtitle:"The legend of an ungrateful son from Air Manis Beach, West Sumatra.",
+      next:"Next ▶", start:"▶ Start", mute:"Mute narration", unmute:"Enable voice",
+      langLabel:"ID", restart:"Restart from the beginning?"}
+  };
+
+  /* ---------------- Story data ---------------- */
+  // Each node: id, text{id,en}, bg (scene renderer key), type ('story'|'qte-click'|'qte-tap'|'qte-hide'|'choice'), next / branches
+  var story = [
+    {id:"n0", bg:"village",
+      text:{
+        id:"Di sebuah perkampungan nelayan miskin di Pantai Air Manis, Sumatera Barat, hiduplah seorang ibu bernama Mande Rubayah bersama anaknya, Malin Kundang. Sang ayah telah lama merantau mencari kehidupan lebih baik, namun tak kunjung kembali.",
+        en:"In a poor fishing village at Air Manis Beach, West Sumatra, lived a mother named Mande Rubayah and her son, Malin Kundang. The father had long sailed away seeking a better life, but never returned."
+      }},
+    {id:"n1", bg:"village",
+      text:{
+        id:"Mande Rubayah bekerja keras menangkap ikan dan berjualan kue keliling kampung demi menghidupi Malin. Meski hidup miskin, Malin tumbuh menjadi anak yang cerdas dan mudah bergaul, walau sedikit nakal.",
+        en:"Mande Rubayah worked hard catching fish and selling cakes around the village to raise Malin. Though poor, Malin grew into a clever, friendly boy — though a little mischievous."
+      }},
+    {id:"qte1", type:"qte-click", bg:"village", target:5, timeLimit:9000,
+      hint:{id:"Ketuk ayam yang berlarian! (0/5)", en:"Tap the running chickens! (0/5)"},
+      text:{
+        id:"Malin suka mengejar-ngejar ayam sambil membawa sapu. Bantu Malin mengejar ayam-ayam ini!",
+        en:"Malin loved chasing chickens around with a broom. Help Malin chase these chickens!"
+      },
+      success:{
+        id:"Saat mengejar seekor ayam, kaki Malin tersandung batu dan ia terjatuh. Lengan kanannya terluka — sebuah bekas luka yang akan menjadi tanda pengenalnya kelak.",
+        en:"While chasing a chicken, Malin tripped on a stone and fell. His right arm was cut — a scar that would later become his defining mark."
+      }},
+    {id:"n2", bg:"village",
+      text:{
+        id:"Melihat ibunya bekerja begitu keras, Malin merasa iba. Ia bertekad untuk merantau, berharap bisa kembali dengan kehidupan yang lebih baik bagi ibunya.",
+        en:"Seeing his mother work so hard, Malin felt for her. He resolved to sail away, hoping to return one day with a better life for his mother."
+      }},
+    {id:"n3", bg:"village",
+      text:{
+        id:"\"Bundo, izinkan Malin merantau. Jika berhasil, Bundo tak perlu lagi hidup miskin,\" pinta Malin. Dengan berat hati dan penuh doa, Mande Rubayah pun mengizinkannya, dengan satu pesan: \"Berjanjilah, jangan pernah lupakan Bundo.\"",
+        en:"\"Mother, let me sail away. If I succeed, you won't have to live in poverty anymore,\" Malin pleaded. With a heavy heart and many prayers, Mande Rubayah agreed — with one request: \"Promise me you will never forget your mother.\""
+      }},
+    {id:"n4", bg:"harbor",
+      text:{
+        id:"Sebuah kapal dagang berlabuh di Pantai Air Manis. Malin berlari menuju pelabuhan, berharap sang nahkoda mengizinkannya ikut berlayar.",
+        en:"A merchant ship docked at Air Manis Beach. Malin ran to the harbor, hoping the captain would let him sail along."
+      }},
+    {id:"qte2", type:"qte-tap", bg:"harbor", target:3, timeLimit:8000,
+      hint:{id:"Ketuk tepat saat lingkaran mengecil! (0/3)", en:"Tap right as the ring shrinks! (0/3)"},
+      text:{
+        id:"Malin membantu mengangkut muatan agar sang nahkoda mengizinkannya naik kapal. Ketuk lingkaran emas tepat pada waktunya!",
+        en:"Malin helped carry cargo so the captain would let him aboard. Tap the golden ring right on time!"
+      },
+      success:{
+        id:"Sang nahkoda terkesan dengan kerja keras Malin. \"Baiklah anak muda, kau boleh ikut berlayar,\" katanya. Dengan hanya berbekal sedikit uang dan tujuh bungkus nasi, Malin memulai pengembaraannya.",
+        en:"The captain was impressed by Malin's effort. \"Very well, young man, you may sail with us,\" he said. With little money and seven packets of rice, Malin began his journey."
+      }},
+    {id:"n5", bg:"ship",
+      text:{
+        id:"Selama berlayar, Malin rajin membantu pekerjaan di kapal dan banyak belajar ilmu pelayaran dari para awak kapal. Namun, sebuah bencana besar akan segera menghadang.",
+        en:"During the voyage, Malin diligently helped with shipboard chores and learned much about seafaring from the crew. But a great disaster was about to strike."
+      }},
+    {id:"qte3", type:"qte-hide", bg:"pirates",
+      hint:{id:"Bajak laut menyerang! Sembunyi cepat!", en:"Pirates attack! Hide quickly!"},
+      text:{
+        id:"Bajak laut menyerang kapal dagang itu! Mereka membunuh nahkoda dan seluruh awak kapal serta merampas harta benda. Malin harus bersembunyi di balik tumpukan kayu — cepat, pilih tempat bersembunyi yang tepat!",
+        en:"Pirates attacked the merchant ship! They killed the captain and crew, and looted everything. Malin had to hide behind a pile of wood — quick, choose the right hiding spot!"
+      },
+      success:{
+        id:"Malin berhasil bersembunyi dan selamat dari serangan itu. Kapal yang telah rusak terombang-ambing di lautan hingga akhirnya terdampar di sebuah pantai asing. Penduduk desa setempat menolongnya dengan penuh kebaikan.",
+        en:"Malin hid successfully and survived the attack. The damaged ship drifted at sea until it washed ashore on a foreign beach. The local villagers kindly took him in."
+      }},
+    {id:"n6", bg:"village2",
+      text:{
+        id:"Malin bekerja serabutan dengan sangat keras dan hemat di desa itu. Ia selalu ingat nasihat ibunya untuk jujur dan bekerja keras. Sedikit demi sedikit, tabungannya bertambah hingga ia mulai berdagang.",
+        en:"Malin worked odd jobs, hard and thrifty, in that village. He always remembered his mother's advice to be honest and diligent. Little by little, his savings grew until he began trading."
+      }},
+    {id:"n7", bg:"richmerchant",
+      text:{
+        id:"Bertahun-tahun kemudian, Malin Kundang telah menjadi saudagar kaya raya. Ia memiliki banyak kapal dagang dan lebih dari seratus orang bekerja untuknya. Ia pun menikahi seorang gadis dari keluarga kaya.",
+        en:"Years later, Malin Kundang had become a wealthy merchant. He owned many trading ships and employed over a hundred people. He married a young woman from a rich family."
+      }},
+    {id:"n8", bg:"harbor",
+      text:{
+        id:"Suatu hari, kapal dagang mewah milik Malin berlabuh kembali di Pantai Air Manis. Mande Rubayah yang telah lama menunggu, berlari ke pelabuhan begitu mendengar kabar itu.",
+        en:"One day, Malin's grand trading ship docked once again at Air Manis Beach. Mande Rubayah, who had waited so long, rushed to the harbor upon hearing the news."
+      }},
+    {id:"n9", bg:"harbor",
+      text:{
+        id:"Dari kejauhan, Mande Rubayah melihat bekas luka di lengan kanan pria itu — ia yakin sepenuhnya bahwa itu adalah anaknya, Malin Kundang. Dengan gembira, ia berlari memeluknya erat-erat.",
+        en:"From a distance, Mande Rubayah saw the scar on the man's right arm — she was certain it was her son, Malin Kundang. Overjoyed, she ran and embraced him tightly."
+      }},
+    {id:"choice1", type:"choice", bg:"confront",
+      text:{
+        id:"\"Malin anakku, kenapa lama sekali tak ada kabar? Bundo sangat merindukanmu,\" kata Mande Rubayah sambil memeluk Malin. Namun Malin merasa malu di depan istri dan anak buahnya karena ibunya tampak begitu miskin dan lusuh. Apa yang akan Malin lakukan?",
+        en:"\"Malin, my child, why has there been no news for so long? Mother missed you dearly,\" said Mande Rubayah, embracing him. But Malin felt ashamed before his wife and crew, seeing his mother look so poor and shabby. What will Malin do?"
+      },
+      options:[
+        {id:"accept", label:{id:"Peluk & akui ibunya", en:"Embrace & acknowledge her"}, cls:"accept"},
+        {id:"deny", label:{id:"Dorong & mengingkarinya", en:"Push her away & deny her"}, cls:"deny"}
+      ]},
+    // GOOD ending branch (moral reflection - not the canonical ending)
+    {id:"goodEnd", bg:"goodending", onlyFrom:"accept",
+      text:{
+        id:"Jika Malin memilih mengakui ibunya, ia akan memeluknya di depan semua orang tanpa rasa malu, lalu memboyongnya untuk hidup berkecukupan bersama. Baktinya pada sang ibu akan menjadi teladan bagi banyak orang. Sayangnya, dalam kisah aslinya, Malin memilih jalan yang berbeda...",
+        en:"Had Malin chosen to acknowledge his mother, he would have embraced her before everyone without shame, and brought her to live comfortably with him. His devotion would have become an example for many. Sadly, in the original legend, Malin chose a different path..."
+      },
+      forceNext:"n10"},
+    {id:"n10", bg:"confront",
+      text:{
+        id:"\"Hai perempuan tua, siapa kau berani memelukku?\" bentak Malin sambil mendorong ibunya hingga jatuh. \"Ibu kandungku telah lama meninggal. Pergi kau dari kapalku!\"",
+        en:"\"Old woman, who are you to embrace me?\" Malin shouted, shoving his mother to the ground. \"My real mother died long ago. Get away from my ship!\""
+      }},
+    {id:"n11", bg:"confront",
+      text:{
+        id:"Hati Mande Rubayah hancur. Dengan air mata berlinang, ia mengangkat kedua tangannya ke langit, \"Ya Tuhan, jika benar ia anak kandungku yang mengingkariku, maka kutuklah ia menjadi batu.\"",
+        en:"Mande Rubayah's heart shattered. With tears streaming, she raised her hands to the sky: \"Oh God, if he truly is my son who denies me, then let him turn to stone.\""
+      }},
+    {id:"n12", bg:"storm",
+      text:{
+        id:"Tak lama setelah kapal Malin berlayar meninggalkan pantai, badai dahsyat datang tiba-tiba. Ombak besar menghantam dan menghancurkan kapal mewahnya menjadi berkeping-keping.",
+        en:"Soon after Malin's ship sailed away from the shore, a fierce storm struck without warning. Massive waves battered and shattered his magnificent ship into pieces."
+      }},
+    {id:"n13", bg:"stone",
+      text:{
+        id:"Tubuh Malin Kundang terdampar kembali di Pantai Air Manis. Perlahan tubuhnya berubah menjadi batu, dalam posisi bersujud memohon ampun kepada ibunya — sebuah azab bagi anak durhaka yang mengingkari ibu kandungnya sendiri.",
+        en:"Malin Kundang's body washed back onto Air Manis Beach. Slowly, it turned to stone, frozen in a kneeling position begging forgiveness from his mother — the punishment for an ungrateful son who denied his own mother."
+      }},
+    {id:"n14", bg:"stone",
+      text:{
+        id:"Hingga kini, batu yang menyerupai sesosok pria bersujud itu masih dapat dilihat di Pantai Air Manis, Kota Padang, Sumatera Barat — mengingatkan kita untuk selalu menghormati dan berbakti kepada orang tua.",
+        en:"To this day, the stone resembling a kneeling man can still be seen at Air Manis Beach, Padang, West Sumatra — a lasting reminder to always honor and cherish our parents."
+      }, end:true}
+  ];
+
+  var idx=0;
+  var currentBranch = null; // 'accept' or 'deny'
+  var muted = false;
+  var voices = [];
+  var canvas = document.getElementById('scene');
+  var ctx = canvas.getContext('2d');
+  var overlay = document.getElementById('overlay');
+  var storyText = document.getElementById('story-text');
+  var nextBtn = document.getElementById('next-btn');
+  var choiceRow = document.getElementById('choice-row');
+  var dotsEl = document.getElementById('dots');
+
+  /* ---------------- Speech ---------------- */
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(l){
+    var want = l==='en' ? 'en' : 'id';
+    var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want)===0; });
+    return v || null;
+  }
+  function speak(text){
+    if(muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice(lang);
+    if(v) u.voice = v;
+    u.lang = lang==='en' ? 'en-US' : 'id-ID';
+    u.rate = 0.92;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------------- Scene rendering (canvas backgrounds) ---------------- */
+  function sky(g1,g2){
+    var grd = ctx.createLinearGradient(0,0,0,600);
+    grd.addColorStop(0,g1); grd.addColorStop(1,g2);
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,800,340);
+  }
+  function sun(x,y){
+    ctx.fillStyle='rgba(255,240,200,0.9)';
+    ctx.beginPath(); ctx.arc(x,y,50,0,Math.PI*2); ctx.fill();
+  }
+  function sandBase(){
+    var grd = ctx.createLinearGradient(0,340,0,600);
+    grd.addColorStop(0,'#e8c988'); grd.addColorStop(1,'#c9a463');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,340,800,260);
+  }
+  function seaBase(){
+    var grd = ctx.createLinearGradient(0,260,0,400);
+    grd.addColorStop(0,'#4ea8de'); grd.addColorStop(1,'#0b3d5c');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,260,800,140);
+  }
+  function palmTree(x,y,scale){
+    scale = scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle='#6b4226'; ctx.lineWidth=10; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(10,-60,-4,-120); ctx.stroke();
+    ctx.fillStyle='#3e8e5a';
+    for(var i=0;i<5;i++){
+      var ang = (i/5)*Math.PI*2;
+      ctx.save(); ctx.translate(-4,-120); ctx.rotate(ang);
+      ctx.beginPath(); ctx.ellipse(30,0,35,12,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function hut(x,y,scale){
+    scale=scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#8a5a30'; ctx.fillRect(-40,-40,80,50);
+    ctx.fillStyle='#4a2c17';
+    ctx.beginPath(); ctx.moveTo(-50,-40); ctx.lineTo(0,-85); ctx.lineTo(50,-40); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#3a2413'; ctx.fillRect(-10,-20,20,30);
+    ctx.restore();
+  }
+  function person(x,y,color,scale,pose){
+    scale=scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#8a5a30';
+    ctx.beginPath(); ctx.ellipse(0,0,18,32,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#e8b88a';
+    ctx.beginPath(); ctx.arc(0,-42,16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2c2116';
+    ctx.beginPath(); ctx.arc(0,-48,16,Math.PI,0); ctx.fill();
+    ctx.restore();
+  }
+  function ship(x,y,scale,grand){
+    scale=scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle= grand ? '#7a3b2e' : '#6b4226';
+    ctx.beginPath();
+    ctx.moveTo(-140,0); ctx.lineTo(140,0); ctx.lineTo(110,40); ctx.lineTo(-110,40); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#3a2413'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-140); ctx.stroke();
+    ctx.fillStyle= grand ? '#e0483e' : '#d8c69a';
+    ctx.beginPath(); ctx.moveTo(0,-135); ctx.lineTo(90,-20); ctx.lineTo(0,-20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fdf6e8';
+    ctx.beginPath(); ctx.moveTo(0,-135); ctx.lineTo(-70,-20); ctx.lineTo(0,-20); ctx.closePath(); ctx.fill();
+    if(grand){
+      ctx.fillStyle='#e0a83e';
+      ctx.fillRect(-100,10,200,14);
+    }
+    ctx.restore();
+  }
+  function waves(yBase){
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=3;
+    for(var i=0;i<5;i++){
+      ctx.beginPath();
+      var yy = yBase + i*22;
+      for(var x=0;x<=800;x+=20){
+        var yOff = Math.sin((x/40)+i)*4;
+        if(x===0) ctx.moveTo(x,yy+yOff); else ctx.lineTo(x,yy+yOff);
+      }
+      ctx.stroke();
+    }
+  }
+  function rockStatue(x,y,scale){
+    scale=scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#6b6355';
+    ctx.beginPath();
+    ctx.moveTo(-40,20); ctx.quadraticCurveTo(-50,-20,-10,-40);
+    ctx.quadraticCurveTo(20,-55,35,-20); ctx.quadraticCurveTo(45,10,20,25);
+    ctx.quadraticCurveTo(-10,35,-40,20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#5a5346';
+    ctx.beginPath(); ctx.ellipse(0,-30,14,10,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function birds(){
+    ctx.strokeStyle='rgba(60,60,60,0.5)'; ctx.lineWidth=2;
+    [[120,60],[180,90],[600,50],[660,80]].forEach(function(p){
+      ctx.beginPath();
+      ctx.moveTo(p[0]-10,p[1]); ctx.quadraticCurveTo(p[0],p[1]-8,p[0]+10,p[1]);
+      ctx.moveTo(p[0]+10,p[1]); ctx.quadraticCurveTo(p[0]+20,p[1]-8,p[0]+30,p[1]);
+      ctx.stroke();
+    });
+  }
+
+  var scenes = {
+    village: function(){
+      sky('#9fd8f7','#cdeaf9'); sun(680,80); birds();
+      sandBase(); seaBase(); waves(300);
+      palmTree(680,400,1.1); palmTree(60,420,0.9);
+      hut(180,430,1.2);
+      person(300,440,'#c9705a',1.1); // mother
+      person(360,460,'#4ea8de',0.85); // malin child
+    },
+    harbor: function(){
+      sky('#a9dcf5','#dff1fb'); sun(120,70); birds();
+      sandBase(); seaBase(); waves(300);
+      ship(560,300,0.9,false);
+      person(200,440,'#4ea8de',1.0);
+      person(260,455,'#c9705a',0.9);
+    },
+    ship: function(){
+      sky('#7fc4e8','#bfe4f5'); waves(200);
+      ctx.fillStyle='#1b6ea8'; ctx.fillRect(0,200,800,400);
+      waves(220); waves(280); waves(340);
+      ship(400,430,1.5,false);
+      person(400,370,'#4ea8de',1.0);
+    },
+    pirates: function(){
+      sky('#3a4a5c','#5c6b70'); 
+      ctx.fillStyle='#0b3d5c'; ctx.fillRect(0,220,800,380);
+      waves(240); waves(300); waves(360);
+      ship(300,420,1.3,false);
+      ship(560,400,0.9,false);
+      ctx.fillStyle='#e0483e';
+      ctx.beginPath(); ctx.moveTo(700,340); ctx.lineTo(760,300); ctx.lineTo(770,340); ctx.closePath(); ctx.fill();
+    },
+    village2: function(){
+      sky('#a9dcf5','#dff1fb'); sun(120,70);
+      sandBase(); seaBase(); waves(300);
+      hut(200,430,1.0); hut(340,440,0.8);
+      person(400,440,'#4ea8de',1.0);
+      palmTree(600,400,1.0);
+    },
+    richmerchant: function(){
+      sky('#a9dcf5','#dff1fb'); sun(650,70);
+      sandBase(); seaBase(); waves(300);
+      ship(280,340,1.2,true);
+      person(500,440,'#e0a83e',1.1);
+      person(560,455,'#c9705a',0.95);
+    },
+    confront: function(){
+      sky('#a9dcf5','#e9f6fc'); sun(650,70);
+      sandBase(); seaBase(); waves(300);
+      ship(560,320,1.1,true);
+      person(280,450,'#c9705a',1.05); // mother
+      person(340,440,'#e0a83e',1.1); // malin rich
+      person(400,445,'#7a3b2e',0.95); // wife
+    },
+    storm: function(){
+      sky('#2c3a44','#4a5a63');
+      ctx.fillStyle='#0b3d5c'; ctx.fillRect(0,180,800,420);
+      waves(200); waves(260); waves(320); waves(380);
+      ctx.save(); ctx.globalAlpha=0.5;
+      for(var i=0;i<3;i++){
+        ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+        ctx.beginPath();
+        var sx = 150+i*250;
+        ctx.moveTo(sx,60); ctx.lineTo(sx-20,140); ctx.lineTo(sx+10,150); ctx.lineTo(sx-15,230);
+        ctx.stroke();
+      }
+      ctx.restore();
+      ship(400,340,0.7,true);
+    },
+    stone: function(){
+      sky('#9fd8f7','#dff1fb'); sun(660,80); birds();
+      sandBase(); seaBase(); waves(300);
+      rockStatue(400,440,2.2);
+      palmTree(120,410,1.0); palmTree(680,420,0.9);
+    },
+    goodending: function(){
+      sky('#bfe8c8','#eafaf0'); sun(650,70); birds();
+      sandBase(); seaBase(); waves(300);
+      ship(560,320,1.1,true);
+      person(300,440,'#c9705a',1.05);
+      person(360,435,'#e0a83e',1.1);
+    }
+  };
+
+  function renderScene(bg){
+    ctx.clearRect(0,0,800,600);
+    (scenes[bg]||scenes.village)();
+  }
+
+  /* ---------------- Progress dots ---------------- */
+  function buildDots(){
+    dotsEl.innerHTML='';
+    var total = story.filter(function(s){return s.id!=='goodEnd';}).length;
+    for(var i=0;i<total;i++){
+      var s=document.createElement('span');
+      dotsEl.appendChild(s);
+    }
+  }
+  function updateDots(currentIndex){
+    var dots = dotsEl.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].classList.toggle('done', i<=currentIndex);
+    }
+  }
+
+  /* ---------------- QTE: click chickens ---------------- */
+  var qteTimer = null;
+  function clearOverlay(){ overlay.innerHTML=''; }
+
+  function runQteClick(node){
+    var count=0;
+    clearOverlay();
+    var hint = document.createElement('div');
+    hint.className='qte-hint';
+    hint.textContent = node.hint[lang].replace('0', count);
+    overlay.appendChild(hint);
+    var timerEl = document.createElement('div');
+    timerEl.className='qte-timer';
+    overlay.appendChild(timerEl);
+    var progress = document.createElement('div'); progress.className='qte-progress';
+    var fill = document.createElement('div'); fill.className='qte-progress-fill';
+    progress.appendChild(fill); overlay.appendChild(progress);
+
+    var startTime = Date.now();
+    var chickens = [];
+    function spawnChicken(){
+      var c = document.createElement('div');
+      c.className='chicken'; c.textContent='🐔';
+      c.style.left = (10+Math.random()*70)+'%';
+      c.style.top = (10+Math.random()*70)+'%';
+      overlay.appendChild(c);
+      c.addEventListener('click', function(){
+        count++;
+        c.remove();
+        hint.textContent = node.hint[lang].replace('0', count);
+        fill.style.width = Math.min(100,(count/node.target)*100)+'%';
+        if(count>=node.target){
+          finish(true);
+        } else {
+          spawnChicken();
+        }
+      });
+      // random movement
+      var mv = setInterval(function(){
+        if(!c.parentNode){ clearInterval(mv); return; }
+        c.style.left = (10+Math.random()*70)+'%';
+        c.style.top = (10+Math.random()*70)+'%';
+      }, 750);
+      chickens.push({el:c, mv:mv});
+    }
+    spawnChicken();
+
+    function tick(){
+      var elapsed = Date.now()-startTime;
+      var remain = Math.max(0, node.timeLimit-elapsed);
+      timerEl.textContent = Math.ceil(remain/1000)+'s';
+      if(remain<=0){ finish(false); return; }
+      qteTimer = requestAnimationFrame(tick);
+    }
+    tick();
+
+    function finish(success){
+      cancelAnimationFrame(qteTimer);
+      chickens.forEach(function(c){ clearInterval(c.mv); if(c.el.parentNode) c.el.remove(); });
+      clearOverlay();
+      if(success){
+        showText(node.success[lang]);
+      } else {
+        // allow retry
+        var retryMsg = document.createElement('div');
+        retryMsg.className='qte-hint';
+        retryMsg.style.top='45%';
+        retryMsg.textContent = lang==='en' ? 'Time up! Tap to try again' : 'Waktu habis! Ketuk untuk coba lagi';
+        overlay.appendChild(retryMsg);
+        retryMsg.style.cursor='pointer';
+        retryMsg.addEventListener('click', function(){ runQteClick(node); });
+      }
+    }
+  }
+
+  /* ---------------- QTE: tap timing ---------------- */
+  function runQteTap(node){
+    var count=0;
+    clearOverlay();
+    var hint = document.createElement('div');
+    hint.className='qte-hint';
+    hint.textContent = node.hint[lang].replace('0', count);
+    overlay.appendChild(hint);
+
+    var ring;
+    function spawnRing(){
+      ring = document.createElement('div');
+      ring.className='tap-target';
+      ring.textContent = lang==='en' ? 'TAP!' : 'KETUK!';
+      overlay.appendChild(ring);
+      var scale = 1.6;
+      var shrinking = true;
+      var interval = setInterval(function(){
+        scale -= 0.03;
+        ring.style.transform = 'translate(-50%,-50%) scale('+scale+')';
+        if(scale<=0.4){
+          clearInterval(interval);
+          if(ring.parentNode){ ring.remove(); missTap(); }
+        }
+      }, 30);
+      ring.addEventListener('click', function(){
+        clearInterval(interval);
+        var goodHit = scale < 1.1 && scale > 0.6;
+        ring.remove();
+        if(goodHit){
+          count++;
+          hint.textContent = node.hint[lang].replace('0', count);
+          if(count>=node.target){ finish(true); }
+          else { setTimeout(spawnRing, 400); }
+        } else {
+          missTap();
+        }
+      });
+    }
+    function missTap(){
+      var missEl = document.createElement('div');
+      missEl.className='qte-hint';
+      missEl.style.top='45%';
+      missEl.style.background='rgba(176,65,62,0.85)';
+      missEl.textContent = lang==='en' ? 'Missed! Try again' : 'Meleset! Coba lagi';
+      overlay.appendChild(missEl);
+      setTimeout(function(){
+        if(missEl.parentNode) missEl.remove();
+        spawnRing();
+      }, 700);
+    }
+    function finish(success){
+      clearOverlay();
+      if(success){ showText(node.success[lang]); }
+    }
+    spawnRing();
+  }
+
+  /* ---------------- QTE: hide ---------------- */
+  function runQteHide(node){
+    clearOverlay();
+    var hint = document.createElement('div');
+    hint.className='qte-hint';
+    hint.textContent = node.hint[lang];
+    overlay.appendChild(hint);
+    var timerEl = document.createElement('div');
+    timerEl.className='qte-timer';
+    overlay.appendChild(timerEl);
+
+    var positions = [
+      {left:'10%', top:'55%'}, {left:'40%', top:'62%'}, {left:'68%', top:'55%'}
+    ];
+    var correctIndex = Math.floor(Math.random()*3);
+    var crates = [];
+    positions.forEach(function(pos, i){
+      var c = document.createElement('div');
+      c.className='crate';
+      c.textContent='📦';
+      c.style.left = pos.left; c.style.top = pos.top;
+      overlay.appendChild(c);
+      crates.push(c);
+      c.addEventListener('click', function(){
+        if(i===correctIndex){
+          finish(true);
+        } else {
+          c.style.background = 'linear-gradient(160deg,#b0413e,#7a2b28)';
+          setTimeout(function(){ finish(false); }, 500);
+        }
+      });
+    });
+
+    var remain = 6;
+    timerEl.textContent = remain+'s';
+    var iv = setInterval(function(){
+      remain--;
+      timerEl.textContent = Math.max(0,remain)+'s';
+      if(remain<=0){
+        clearInterval(iv);
+        finish(false);
+      }
+    },1000);
+
+    function finish(success){
+      clearInterval(iv);
+      clearOverlay();
+      if(success){ showText(node.success[lang]); }
+      else {
+        var retryMsg = document.createElement('div');
+        retryMsg.className='qte-hint';
+        retryMsg.style.top='45%';
+        retryMsg.textContent = lang==='en' ? 'Spotted! Tap to try again' : 'Ketahuan! Ketuk untuk coba lagi';
+        overlay.appendChild(retryMsg);
+        retryMsg.style.cursor='pointer';
+        retryMsg.addEventListener('click', function(){ runQteHide(node); });
+      }
+    }
+  }
+
+  /* ---------------- Flow control ---------------- */
+  function findIndexById(id){
+    for(var i=0;i<story.length;i++) if(story[i].id===id) return i;
+    return -1;
+  }
+
+  function showText(txt){
+    storyText.textContent = txt;
+    speak(txt);
+  }
+
+  function renderNode(node){
+    renderScene(node.bg);
+    nextBtn.style.display='inline-block';
+    choiceRow.style.display='none';
+    nextBtn.disabled=false;
+
+    if(node.type==='choice'){
+      showText(node.text[lang]);
+      nextBtn.style.display='none';
+      choiceRow.style.display='flex';
+      choiceRow.innerHTML='';
+      node.options.forEach(function(opt){
+        var b = document.createElement('button');
+        b.className='choice-btn '+opt.cls;
+        b.textContent = opt.label[lang];
+        b.addEventListener('click', function(){
+          currentBranch = opt.id;
+          if(opt.id==='accept'){
+            idx = findIndexById('goodEnd');
+          } else {
+            idx = findIndexById('n10');
+          }
+          renderNode(story[idx]);
+          updateDots(idx);
+        });
+        choiceRow.appendChild(b);
+      });
+      return;
+    }
+
+    if(node.type==='qte-click'){
+      showText(node.text[lang]);
+      nextBtn.disabled = true;
+      setTimeout(function(){ runQteClick(node); nextBtn.disabled=false; }, 300);
+      return;
+    }
+    if(node.type==='qte-tap'){
+      showText(node.text[lang]);
+      nextBtn.disabled = true;
+      setTimeout(function(){ runQteTap(node); nextBtn.disabled=false; }, 300);
+      return;
+    }
+    if(node.type==='qte-hide'){
+      showText(node.text[lang]);
+      nextBtn.disabled = true;
+      setTimeout(function(){ runQteHide(node); nextBtn.disabled=false; }, 300);
+      return;
+    }
+
+    // plain story node
+    showText(node.text[lang]);
+    if(node.end){
+      nextBtn.textContent = lang==='en' ? '↺ Play Again' : '↺ Main Lagi';
+    } else {
+      nextBtn.textContent = UI[lang].next;
+    }
+  }
+
+  function goNext(){
+    var node = story[idx];
+    if(node.end){
+      restartGame();
+      return;
+    }
+    if(node.forceNext){
+      idx = findIndexById(node.forceNext);
+    } else {
+      idx++;
+    }
+    if(idx>=story.length) idx = story.length-1;
+    updateDots(idx);
+    renderNode(story[idx]);
+  }
+
+  nextBtn.addEventListener('click', goNext);
+
+  /* ---------------- Restart ---------------- */
+  function restartGame(){
+    stopSpeak();
+    idx=0; currentBranch=null;
+    buildDots();
+    updateDots(0);
+    renderNode(story[0]);
+  }
+  document.getElementById('restart-btn').addEventListener('click', function(){
+    if(confirm(UI[lang].restart)) restartGame();
+  });
+
+  /* ---------------- Mute ---------------- */
+  var muteBtn = document.getElementById('mute-btn');
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+    if(muted) stopSpeak();
+  });
+
+  /* ---------------- Language toggle ---------------- */
+  function applyLangUI(){
+    document.getElementById('lang-label').textContent = lang==='id' ? 'EN' : 'ID';
+    document.getElementById('title-h2').textContent = UI[lang].title;
+    document.getElementById('title-p').textContent = UI[lang].subtitle;
+    document.getElementById('tbtn-id').classList.toggle('active', lang==='id');
+    document.getElementById('tbtn-en').classList.toggle('active', lang==='en');
+    document.title = UI[lang].title + ' - Interactive Folklore Game';
+  }
+  document.getElementById('lang-btn').addEventListener('click', function(){
+    lang = lang==='id' ? 'en' : 'id';
+    applyLangUI();
+    stopSpeak();
+    renderNode(story[idx]);
+  });
+  document.getElementById('tbtn-id').addEventListener('click', function(){ lang='id'; applyLangUI(); });
+  document.getElementById('tbtn-en').addEventListener('click', function(){ lang='en'; applyLangUI(); });
+
+  /* ---------------- Start ---------------- */
+  document.getElementById('start-btn').addEventListener('click', function(){
+    document.getElementById('title-screen').style.display='none';
+    buildDots();
+    updateDots(0);
+    renderNode(story[0]);
+  });
+
+  applyLangUI();
+  renderScene('village'); // preview behind title screen
+
+  /* ---------------- Auto-resize for iframe embedding ---------------- */
+  function postHeight(){
+    var h = document.getElementById('app').scrollHeight;
+    try{
+      window.parent.postMessage({ type:'malinKundangHeight', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  if(window.ResizeObserver){
+    new ResizeObserver(postHeight).observe(document.getElementById('app'));
+  } else {
+    setInterval(postHeight, 800);
+  }
+
+})();
+</script>
+</body>
+</html>
