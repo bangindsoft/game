@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Nama Kota Salatiga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage-dark:#181009;
+    --stage-dark-2:#0f0a06;
+    --lamp-gold:#cf9d3f;
+    --lamp-gold-soft:#e7c887;
+    --ember:#a8402a;
+    --parchment:#f1e4c6;
+    --parchment-dim:#cdbb96;
+    --shadow-fill:#120c08;
+    --shadow-rim:#f0d69a;
+    --panel:#221709;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Lora', serif;
+    color:var(--parchment);
+    display:flex;
+    justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #wrap{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding:14px;
+  }
+  #frame{
+    position:relative;
+    background:var(--stage-dark);
+    border-radius:6px;
+    padding:10px;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(207,157,63,0.10) 0px, rgba(207,157,63,0.10) 2px, transparent 2px, transparent 14px);
+    border:1px solid #3a2a14;
+    box-shadow: inset 0 0 0 6px var(--stage-dark-2), inset 0 0 40px rgba(0,0,0,0.6);
+  }
+  #inner{
+    position:relative;
+    border:2px solid var(--lamp-gold);
+    border-radius:3px;
+    overflow:hidden;
+    background:radial-gradient(ellipse at 50% 30%, #2a1c0d 0%, var(--stage-dark-2) 75%);
+  }
+  #titlebar{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 14px 6px 14px;
+  }
+  #titlebar h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-style:italic;
+    letter-spacing:0.5px;
+    font-size:clamp(18px,4vw,26px);
+    margin:0;
+    color:var(--lamp-gold-soft);
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .iconbtn{
+    background:var(--panel);
+    border:1px solid #4a3418;
+    color:var(--parchment);
+    width:34px;height:34px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:background .15s, transform .15s;
+  }
+  .iconbtn:hover{background:#33220e;}
+  .iconbtn:active{transform:scale(0.92);}
+  .iconbtn:focus-visible, .btn:focus-visible, .pill button:focus-visible{
+    outline:2px solid var(--lamp-gold-soft);
+    outline-offset:2px;
+  }
+  .pill{
+    display:flex;
+    background:var(--panel);
+    border:1px solid #4a3418;
+    border-radius:20px;
+    overflow:hidden;
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.06em;
+  }
+  .pill button{
+    border:none;
+    background:transparent;
+    color:var(--parchment-dim);
+    padding:8px 11px;
+    cursor:pointer;
+  }
+  .pill button.active{
+    background:var(--lamp-gold);
+    color:#241705;
+  }
+  #stageArea{
+    position:relative;
+    width:100%;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  #qteLayer{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    pointer-events:none;
+  }
+  #qteLayer.show{pointer-events:auto;}
+  .qte-panel{
+    margin-bottom:6%;
+    background:rgba(15,10,6,0.82);
+    border:1px solid var(--lamp-gold);
+    border-radius:10px;
+    padding:14px 18px;
+    text-align:center;
+    max-width:88%;
+    display:none;
+    backdrop-filter: blur(1px);
+  }
+  .qte-panel.active{display:block;}
+  .qte-title{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--lamp-gold-soft);
+    margin-bottom:8px;
+  }
+  .qte-track{
+    position:relative;
+    width:min(320px,70vw);
+    height:14px;
+    background:#0d0906;
+    border:1px solid #4a3418;
+    border-radius:7px;
+    margin:0 auto 12px auto;
+    overflow:hidden;
+  }
+  .qte-zone{
+    position:absolute;
+    top:0;bottom:0;
+    background:rgba(150,190,120,0.55);
+  }
+  .qte-marker{
+    position:absolute;
+    top:-3px;
+    width:4px;height:20px;
+    background:var(--ember);
+    border-radius:2px;
+  }
+  .qte-progress{
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    margin-bottom:10px;
+  }
+  .qte-dot{
+    width:11px;height:11px;
+    border-radius:50%;
+    border:1px solid var(--lamp-gold);
+    background:transparent;
+  }
+  .qte-dot.filled{background:var(--lamp-gold);}
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.03em;
+    background:linear-gradient(180deg, var(--ember), #7c2e1c);
+    color:var(--parchment);
+    border:1px solid #5c2013;
+    padding:10px 20px;
+    border-radius:22px;
+    cursor:pointer;
+    transition:transform .1s, filter .15s;
+  }
+  .btn:hover{filter:brightness(1.12);}
+  .btn:active{transform:scale(0.95);}
+  .btn.secondary{
+    background:transparent;
+    border:1px solid var(--lamp-gold);
+    color:var(--lamp-gold-soft);
+  }
+  #textPanel{
+    padding:16px 20px 10px 20px;
+    min-height:92px;
+  }
+  #speaker{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ember);
+    margin-bottom:5px;
+    min-height:14px;
+  }
+  #narrLine{
+    font-size:16px;
+    line-height:1.55;
+    color:var(--parchment);
+    font-style:italic;
+  }
+  #bottomBar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 20px 16px 20px;
+    gap:10px;
+  }
+  #progressWrap{
+    flex:1;
+    height:3px;
+    background:#3a2a14;
+    border-radius:2px;
+    overflow:hidden;
+  }
+  #progressBar{
+    height:100%;
+    width:0%;
+    background:var(--lamp-gold);
+    transition:width .35s ease;
+  }
+  #nextBtn{white-space:nowrap;}
+  .credit{
+    font-family:'Inter',sans-serif;
+    font-size:10px;
+    color:var(--parchment-dim);
+    text-align:center;
+    padding:0 14px 12px 14px;
+    opacity:0.7;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .btn, .iconbtn{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="frame">
+    <div id="inner">
+      <div id="titlebar">
+        <h1 id="gameTitle">Asal Mula Nama Kota Salatiga</h1>
+        <div id="controls">
+          <div class="pill" id="langPill">
+            <button id="langID" class="active" aria-pressed="true">ID</button>
+            <button id="langEN" aria-pressed="false">EN</button>
+          </div>
+          <button id="muteBtn" class="iconbtn" title="Mute narration" aria-label="Mute narration">🔊</button>
+        </div>
+      </div>
+      <div id="stageArea">
+        <canvas id="stage" width="1400" height="820"></canvas>
+        <div id="qteLayer">
+          <div class="qte-panel" id="qteDig">
+            <div class="qte-title" id="qteDigTitle">MENCANGKUL</div>
+            <div class="qte-progress" id="digDots"></div>
+            <div class="qte-track">
+              <div class="qte-zone" id="digZone"></div>
+              <div class="qte-marker" id="digMarker"></div>
+            </div>
+            <button class="btn" id="digBtn">CANGKUL!</button>
+          </div>
+          <div class="qte-panel" id="qteRob">
+            <div class="qte-title" id="qteRobTitle">DIRAMPOK</div>
+            <div class="qte-progress" id="robDots"></div>
+            <div id="robText" style="font-family:'Inter',sans-serif;font-size:13px;margin-bottom:10px;color:var(--parchment-dim);"></div>
+            <button class="btn" id="robBtn">SERAHKAN</button>
+          </div>
+        </div>
+      </div>
+      <div id="textPanel">
+        <div id="speaker"></div>
+        <div id="narrLine">Memuat cerita...</div>
+      </div>
+      <div id="bottomBar">
+        <div id="progressWrap"><div id="progressBar"></div></div>
+        <button class="btn" id="nextBtn">Lanjut ▸</button>
+      </div>
+      <div class="credit">Dongeng Rakyat Jawa Tengah — caritasato.blogspot.com</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- language ---------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var UI = {
+    id:{ title:"Asal Mula Nama Kota Salatiga", next:"Lanjut ▸", replay:"Ulangi ↻", loading:"Memuat cerita...",
+         digTitle:"MENCANGKUL TANAH", digBtn:"CANGKUL!", digHint:"Ketuk saat penanda berada di area hijau.",
+         robTitle:"DIRAMPOK DI TENGAH JALAN", robBtn:"SERAHKAN", credit:"Dongeng Rakyat Jawa Tengah — caritasato.blogspot.com" },
+    en:{ title:"The Origin of the Name Salatiga", next:"Continue ▸", replay:"Replay ↻", loading:"Loading the story...",
+         digTitle:"DIGGING THE GROUND", digBtn:"DIG!", digHint:"Tap when the marker is in the green zone.",
+         robTitle:"AMBUSHED ON THE ROAD", robBtn:"HAND IT OVER", credit:"Folklore from Central Java — caritasato.blogspot.com" }
+  };
+
+  var robberLines = {
+    id:["Perampok pertama merampas kalung emasnya.","Perampok kedua merampas gelang di tangannya.","Perampok ketiga merampas sisa perhiasan dalam tongkat bambu."],
+    en:["The first robber snatches her gold necklace.","The second robber grabs the bracelet on her wrist.","The third robber takes the last jewelry hidden in the bamboo staff."]
+  };
+
+  /* ---------- story data ---------- */
+  // speaker: '' none, 'narator', 'kali' (Sunan Kalijaga), 'ki' (Ki Ageng Pandanaran), 'nyai' (Nyai Ageng)
+  var steps = [
+    { bg:'palace-day', chars:['ki'], speaker:'narator',
+      id:"Dahulu, pada masa Kesultanan Demak, Kabupaten Semarang dipimpin oleh Ki Ageng Pandanaran, seorang saudagar kaya raya.",
+      en:"Long ago, during the Demak Sultanate, the regency of Semarang was led by Ki Ageng Pandanaran, a very wealthy nobleman." },
+    { bg:'palace-day', chars:['ki'], speaker:'narator',
+      id:"Namun seiring waktu, ia sibuk memperkaya diri sendiri hingga melupakan kesejahteraan rakyatnya.",
+      en:"But over time, he became consumed with enriching himself and forgot the welfare of his people." },
+    { bg:'palace-day', chars:['ki','kali'], speaker:'narator',
+      id:"Sunan Kalijaga, penasehat Sultan Demak, ingin mengingatkannya. Ia menyamar menjadi penjual rumput.",
+      en:"Sunan Kalijaga, an advisor to the Sultan of Demak, wanted to warn him — so he disguised himself as a humble grass seller." },
+    { bg:'palace-day', chars:['ki','kali'], speaker:'kali',
+      id:"“Rumput segar, Tuan! Silakan dibeli.”",
+      en:"“Fresh grass, sir! Please, buy some.”" },
+    { bg:'palace-day', chars:['ki','kali'], speaker:'ki',
+      id:"Ki Ageng setuju membeli, tetapi menawar dengan harga yang sangat murah.",
+      en:"Ki Ageng agreed to buy it, but offered an unfairly low price." },
+    { bg:'palace-tense', chars:['ki','kali'], speaker:'kali',
+      id:"“Maaf, Tuan, harga itu terlalu murah untuk rumput sebaik ini,” tolak si penjual rumput dengan sopan.",
+      en:"“Forgive me, sir, that price is far too low for grass this good,” the seller politely refused." },
+    { bg:'palace-tense', chars:['ki','kali'], speaker:'ki',
+      id:"Ki Ageng Pandanaran tersinggung. Ia marah dan mengusir penjual rumput itu pergi.",
+      en:"Ki Ageng Pandanaran felt insulted. In anger, he ordered the grass seller to leave." },
+    { bg:'palace-tense', chars:['ki','kali'], speaker:'kali',
+      id:"Sebelum pergi, Sunan Kalijaga berkata, “Wahai Pak Bupati, ada cara lebih terhormat mencari harta daripada menimbun milik rakyat.”",
+      en:"Before leaving, Sunan Kalijaga said, “Noble Regent, there is a more honorable way to seek wealth than hoarding what belongs to the people.”" },
+    { bg:'palace-tense', chars:['ki','kali'], speaker:'ki',
+      id:"“Memangnya siapa kamu, berani menceramahiku?” bentak Ki Ageng dengan sombong.",
+      en:"“And who are you, to lecture me?” Ki Ageng snapped proudly." },
+    { bg:'palace-tense', chars:['ki','kali'], speaker:'kali',
+      id:"“Pinjami saya cangkul, akan saya tunjukkan caranya,” jawab Sunan Kalijaga tenang.",
+      en:"“Lend me a hoe, and I will show you how,” Sunan Kalijaga answered calmly." },
+    { bg:'palace-tense', chars:['ki','kali'], speaker:'narator',
+      id:"Ki Ageng pun memberikan cangkulnya. Sunan Kalijaga mulai mencangkul tanah di depannya.",
+      en:"Ki Ageng handed over his hoe. Sunan Kalijaga began digging into the ground before him." },
+    { type:'qte-dig' },
+    { bg:'palace-gold', chars:['ki','kali','gold'], speaker:'narator',
+      id:"“Prak!” Cangkul itu mengenai benda keras. Ketika diangkat, ternyata sebongkah emas berkilauan.",
+      en:"“Clank!” The hoe struck something hard. When lifted, it turned out to be a gleaming lump of gold." },
+    { bg:'palace-gold', chars:['ki','kali','gold'], speaker:'narator',
+      id:"Ki Ageng terkejut. Ia menatap wajah si penjual rumput lekat-lekat, lalu tersentak mengenali Sunan Kalijaga.",
+      en:"Ki Ageng was stunned. He looked closely at the grass seller's face — and suddenly recognized Sunan Kalijaga." },
+    { bg:'palace-gold', chars:['ki-kneel','kali'], speaker:'ki',
+      id:"Ia segera bersimpuh, “Ampunilah kelancangan hamba, Sunan.”",
+      en:"He fell to his knees at once. “Forgive my arrogance, Sunan,” he pleaded." },
+    { bg:'palace-gold', chars:['ki-kneel','kali'], speaker:'kali',
+      id:"Sunan Kalijaga memaafkannya dengan bijaksana dan memintanya memimpin Semarang dengan benar, lalu pergi.",
+      en:"Sunan Kalijaga graciously forgave him, asked him to lead Semarang justly from then on, and departed." },
+    { bg:'palace-dusk', chars:['ki'], speaker:'narator',
+      id:"Sepeninggal kejadian itu, Ki Ageng dilanda rasa bersalah karena telah menumpuk kekayaan dengan cara yang salah.",
+      en:"After that encounter, Ki Ageng was overcome with guilt for having hoarded wealth the wrong way." },
+    { bg:'palace-dusk', chars:['ki'], speaker:'ki',
+      id:"Ia memutuskan melepas jabatannya, hendak mendirikan pondok pesantren di Gunung Jabalkat untuk menebus kesalahannya.",
+      en:"He decided to resign his position, intending to build an Islamic boarding school on Mount Jabalkat to atone for his mistake." },
+    { bg:'palace-dusk', chars:['ki','nyai'], speaker:'nyai',
+      id:"Nyai Ageng, istrinya, ingin ikut serta. Ki Ageng mengizinkan — dengan syarat tidak membawa harta benda.",
+      en:"Nyai Ageng, his wife, wished to join him. Ki Ageng agreed — on one condition: she must bring no wealth at all." },
+    { bg:'palace-dusk', chars:['nyai-staff'], speaker:'narator',
+      id:"Namun diam-diam, Nyai Ageng menyembunyikan perhiasannya di dalam sebatang tongkat bambu.",
+      en:"But secretly, Nyai Ageng hid her jewelry inside a bamboo walking staff." },
+    { bg:'mountain-day', chars:['ki-walk'], speaker:'narator',
+      id:"Karena menunggu terlalu lama, Ki Ageng Pandanaran berangkat lebih dulu menuju Gunung Jabalkat.",
+      en:"Since she took so long, Ki Ageng Pandanaran set off first toward Mount Jabalkat." },
+    { bg:'forest-dusk', chars:['nyai-staff'], speaker:'narator',
+      id:"Tak lama kemudian, Nyai Ageng menyusul membawa tongkat bambu berisi perhiasan.",
+      en:"Soon after, Nyai Ageng followed, carrying the bamboo staff filled with her jewelry." },
+    { bg:'forest-dusk', chars:['nyai-staff','robbers'], speaker:'narator',
+      id:"Di tengah jalan, tiga orang perampok tiba-tiba muncul dan memaksanya menyerahkan semua perhiasannya.",
+      en:"Along the way, three robbers suddenly appeared and forced her to hand over all her jewelry." },
+    { type:'qte-rob' },
+    { bg:'forest-dusk', chars:['nyai-staff'], speaker:'narator',
+      id:"Karena tak punya pilihan, Nyai Ageng menyerahkan semuanya, lalu bergegas menyusul suaminya.",
+      en:"With no other choice, Nyai Ageng gave up everything, then hurried onward to catch up with her husband." },
+    { bg:'mountain-top', chars:['ki-walk','nyai-staff'], speaker:'nyai',
+      id:"Sesampainya di Gunung Jabalkat, Nyai Ageng menceritakan perampokan yang baru saja dialaminya.",
+      en:"Upon arriving at Mount Jabalkat, Nyai Ageng told her husband about the robbery she had just endured." },
+    { bg:'mountain-top', chars:['ki-walk','nyai-staff'], speaker:'ki',
+      id:"Ki Ageng menasehatinya agar tidak lagi serakah akan harta, dan menjadikan kejadian ini sebagai pelajaran.",
+      en:"Ki Ageng advised her never to be greedy for wealth again, and to take the incident as a lesson." },
+    { bg:'title', chars:[], speaker:'ki',
+      id:"“Kelak, tempat kau dihadang oleh tiga perampok itu akan dinamai Salatiga — tiga orang yang bersalah.”",
+      en:"“One day, the place where you were ambushed by those three robbers shall be called Salatiga — meaning three who did wrong.”" },
+    { bg:'title', chars:[], speaker:'narator',
+      id:"Begitulah asal mula nama Kota Salatiga, Jawa Tengah — kisah tentang keserakahan, penyesalan, dan pengampunan.",
+      en:"And so began the story behind the name Salatiga, Central Java — a tale of greed, remorse, and forgiveness." }
+  ];
+
+  var speakerNames = {
+    id:{ki:"KI AGENG PANDANARAN", kali:"SUNAN KALIJAGA (PENJUAL RUMPUT)", nyai:"NYAI AGENG", narator:"NARATOR"},
+    en:{ki:"KI AGENG PANDANARAN", kali:"SUNAN KALIJAGA (DISGUISED)", nyai:"NYAI AGENG", narator:"NARRATOR"}
+  };
+
+  /* ---------- canvas drawing ---------- */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  function sky(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function lampGlow(x,y,r,alpha){
+    var g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,'rgba(231,200,135,'+alpha+')');
+    g.addColorStop(1,'rgba(231,200,135,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function silhouette(draw){
+    ctx.save();
+    ctx.fillStyle = '#120c08';
+    ctx.strokeStyle = 'rgba(240,214,154,0.55)';
+    ctx.lineWidth = 3;
+    draw();
+    ctx.restore();
+  }
+
+  function drawGround(y, color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.quadraticCurveTo(W*0.5, y-30, W, y);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawPendopo(){
+    silhouette(function(){
+      // roof
+      ctx.beginPath();
+      ctx.moveTo(W*0.2, H*0.42);
+      ctx.lineTo(W*0.5, H*0.20);
+      ctx.lineTo(W*0.8, H*0.42);
+      ctx.lineTo(W*0.74, H*0.44);
+      ctx.lineTo(W*0.5, H*0.28);
+      ctx.lineTo(W*0.26, H*0.44);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      // pillars
+      for(var i=0;i<5;i++){
+        var x = W*0.24 + i*(W*0.52/4);
+        ctx.fillRect(x, H*0.44, 8, H*0.28);
+      }
+      // base platform
+      ctx.beginPath();
+      ctx.moveTo(W*0.16,H*0.72);
+      ctx.lineTo(W*0.84,H*0.72);
+      ctx.lineTo(W*0.90,H*0.80);
+      ctx.lineTo(W*0.10,H*0.80);
+      ctx.closePath();
+      ctx.fill();ctx.stroke();
+    });
+  }
+
+  function drawMountain(){
+    silhouette(function(){
+      ctx.beginPath();
+      ctx.moveTo(0,H*0.55);
+      ctx.lineTo(W*0.28,H*0.18);
+      ctx.lineTo(W*0.5,H*0.42);
+      ctx.lineTo(W*0.68,H*0.12);
+      ctx.lineTo(W,H*0.5);
+      ctx.lineTo(W,H*0.8);
+      ctx.lineTo(0,H*0.8);
+      ctx.closePath();
+      ctx.fill();
+    });
+  }
+
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    silhouette(function(){
+      ctx.beginPath();
+      ctx.moveTo(-70,20); ctx.lineTo(0,-60); ctx.lineTo(70,20);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillRect(-50,20,100,55);
+    });
+    ctx.restore();
+  }
+
+  function drawTrees(dusk){
+    silhouette(function(){
+      var positions = [0.06,0.16,0.88,0.95];
+      positions.forEach(function(p,i){
+        var x = W*p, baseY = H*0.78, hh = 130+ (i%2)*40;
+        ctx.beginPath();
+        ctx.moveTo(x-6, baseY);
+        ctx.lineTo(x-4, baseY-hh*0.6);
+        ctx.lineTo(x+4, baseY-hh*0.6);
+        ctx.lineTo(x+6, baseY);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, baseY-hh*0.65, 46, 0, Math.PI*2);
+        ctx.fill();
+      });
+    });
+  }
+
+  function drawFigure(x, y, scale, opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    silhouette(function(){
+      // legs / robe
+      ctx.beginPath();
+      ctx.moveTo(-34, 150);
+      ctx.quadraticCurveTo(-40, 40, 0, 20);
+      ctx.quadraticCurveTo(40, 40, 34, 150);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      // arm
+      if(opts.armOut){
+        ctx.beginPath();
+        ctx.moveTo(24,40);
+        ctx.quadraticCurveTo(70,50,86,20);
+        ctx.lineTo(78,10);
+        ctx.quadraticCurveTo(60,40,20,55);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(opts.kneeling){
+        // already handled via translate offset by caller
+      }
+      // headdress (blangkon) or head
+      ctx.beginPath();
+      ctx.arc(0,-10,26,0,Math.PI*2);
+      ctx.fill(); ctx.stroke();
+      if(opts.crown){
+        ctx.beginPath();
+        ctx.moveTo(-26,-24);
+        ctx.quadraticCurveTo(0,-58,26,-24);
+        ctx.quadraticCurveTo(0,-34,-26,-24);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(opts.headwrap){
+        ctx.beginPath();
+        ctx.ellipse(0,-24,28,14,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(20,-20); ctx.lineTo(40,-4); ctx.lineTo(28,2); ctx.closePath();
+        ctx.fill();
+      }
+      if(opts.veil){
+        ctx.beginPath();
+        ctx.moveTo(-26,-30);
+        ctx.quadraticCurveTo(0,-52,26,-30);
+        ctx.quadraticCurveTo(20,10,10,50);
+        ctx.quadraticCurveTo(0,10,-10,50);
+        ctx.quadraticCurveTo(-20,10,-26,-30);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+  }
+
+  function drawStaff(x,y,scale,glint){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle = '#3a2a14';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(0,-60); ctx.lineTo(0,60);
+    ctx.stroke();
+    if(glint){
+      ctx.fillStyle = 'rgba(231,200,135,0.9)';
+      ctx.beginPath(); ctx.arc(0,-10,5,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawRobbers(x){
+    for(var i=0;i<3;i++){
+      var rx = x + i*90 - 90;
+      ctx.save();
+      ctx.translate(rx, H*0.60);
+      ctx.scale(0.85,0.85);
+      silhouette(function(){
+        ctx.beginPath();
+        ctx.moveTo(-30,140); ctx.quadraticCurveTo(-36,30,0,10);
+        ctx.quadraticCurveTo(36,30,30,140);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0,-14,24,0,Math.PI*2); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-24,-24); ctx.lineTo(24,-24); ctx.lineTo(14,-2); ctx.lineTo(-14,-2);
+        ctx.closePath(); ctx.fill();
+      });
+      ctx.restore();
+    }
+  }
+
+  function drawGoldChunk(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#e2b64a';
+    ctx.strokeStyle = '#8a611a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-20,10); ctx.lineTo(-6,-16); ctx.lineTo(16,-12); ctx.lineTo(20,8); ctx.lineTo(2,18);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawTitleCard(){
+    ctx.save();
+    ctx.fillStyle = 'rgba(231,200,135,0.95)';
+    ctx.textAlign = 'center';
+    ctx.font = "italic 600 64px 'Cormorant Garamond', serif";
+    ctx.fillText('S A L A T I G A', W/2, H*0.52);
+    ctx.font = "italic 400 24px 'Cormorant Garamond', serif";
+    ctx.fillStyle = 'rgba(231,200,135,0.6)';
+    ctx.fillText(lang==='id' ? 'tiga orang bersalah' : 'three who did wrong', W/2, H*0.60);
+    ctx.restore();
+  }
+
+  var bgFns = {
+    'palace-day': function(){ sky('#4a3218','#1c130a'); lampGlow(W*0.5,H*0.35,W*0.7,0.35); drawPendopo(); drawGround(H*0.78,'#241608'); },
+    'palace-tense': function(){ sky('#3a1712','#150a06'); lampGlow(W*0.5,H*0.35,W*0.6,0.25); drawPendopo(); drawGround(H*0.78,'#20130a'); },
+    'palace-gold': function(){ sky('#5c421a','#1c130a'); lampGlow(W*0.5,H*0.5,W*0.8,0.5); drawPendopo(); drawGround(H*0.78,'#241608'); },
+    'palace-dusk': function(){ sky('#2a1a2e','#100a10'); lampGlow(W*0.5,H*0.3,W*0.5,0.2); drawPendopo(); drawGround(H*0.78,'#1a1010'); },
+    'mountain-day': function(){ sky('#3d5a4a','#152018'); lampGlow(W*0.6,H*0.25,W*0.6,0.25); drawMountain(); drawGround(H*0.8,'#152018'); },
+    'forest-dusk': function(){ sky('#241028','#0c060c'); lampGlow(W*0.5,H*0.5,W*0.65,0.28); drawTrees(true); drawGround(H*0.8,'#150a12'); },
+    'mountain-top': function(){ sky('#2c3d52','#0e141c'); lampGlow(W*0.5,H*0.3,W*0.6,0.3); drawMountain(); drawHut(W*0.72,H*0.55,0.9); drawGround(H*0.8,'#101820'); },
+    'title': function(){ sky('#3a2410','#120a05'); lampGlow(W*0.5,H*0.45,W*0.9,0.4); }
+  };
+
+  function renderScene(step){
+    ctx.clearRect(0,0,W,H);
+    (bgFns[step.bg] || bgFns['palace-day'])();
+    var chars = step.chars || [];
+    chars.forEach(function(c){
+      if(c==='ki') drawFigure(W*0.38,H*0.72,1.05,{crown:true});
+      else if(c==='ki-walk') drawFigure(W*0.30,H*0.74,1.0,{crown:true});
+      else if(c==='ki-kneel') drawFigure(W*0.36,H*0.86,0.85,{crown:true});
+      else if(c==='kali') drawFigure(W*0.62,H*0.72,1.05,{headwrap:true,armOut:true});
+      else if(c==='nyai') drawFigure(W*0.60,H*0.72,1.0,{veil:true});
+      else if(c==='nyai-staff'){ drawFigure(W*0.55,H*0.72,1.0,{veil:true}); drawStaff(W*0.55+34,H*0.72+10,1.0,step.bg==='forest-dusk'); }
+      else if(c==='robbers') drawRobbers(W*0.55);
+      else if(c==='gold') drawGoldChunk(W*0.5,H*0.80);
+    });
+    if(step.bg==='title') drawTitleCard();
+  }
+
+  /* ---------- speech ---------- */
+  var muted = false;
+  var synth = window.speechSynthesis;
+  var voicesReady = false;
+  var voices = [];
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(targetLang){
+    if(!voices || !voices.length) return null;
+    var prefix = targetLang === 'id' ? 'id' : 'en';
+    var match = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(prefix) === 0; });
+    return match || null;
+  }
+  function speak(text){
+    if(!synth || muted || !text) return;
+    synth.cancel();
+    var utt = new SpeechSynthesisUtterance(text);
+    utt.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    var v = pickVoice(lang);
+    if(v) utt.voice = v;
+    utt.rate = 0.95;
+    utt.pitch = 1.0;
+    try{ synth.speak(utt); }catch(e){}
+  }
+  function stopSpeech(){ if(synth) synth.cancel(); }
+
+  /* ---------- flow control ---------- */
+  var idx = 0;
+  var narrLine = document.getElementById('narrLine');
+  var speakerEl = document.getElementById('speaker');
+  var nextBtn = document.getElementById('nextBtn');
+  var progressBar = document.getElementById('progressBar');
+  var qteLayer = document.getElementById('qteLayer');
+  var qteDig = document.getElementById('qteDig');
+  var qteRob = document.getElementById('qteRob');
+
+  function setUIStrings(){
+    document.getElementById('gameTitle').textContent = UI[lang].title;
+    nextBtn.textContent = (idx >= steps.length-1) ? UI[lang].replay : UI[lang].next;
+    document.getElementById('qteDigTitle').textContent = UI[lang].digTitle;
+    document.getElementById('digBtn').textContent = UI[lang].digBtn;
+    document.getElementById('qteRobTitle').textContent = UI[lang].robTitle;
+    document.getElementById('robBtn').textContent = UI[lang].robBtn;
+  }
+
+  function showStep(){
+    var step = steps[idx];
+    progressBar.style.width = Math.round(((idx+1)/steps.length)*100) + '%';
+
+    if(step.type === 'qte-dig'){
+      renderScene({bg:'palace-tense', chars:['ki','kali']});
+      speakerEl.textContent = '';
+      narrLine.textContent = lang==='id' ? UI.id.digHint : UI.en.digHint;
+      nextBtn.style.visibility = 'hidden';
+      startDigQTE();
+      return;
+    }
+    if(step.type === 'qte-rob'){
+      renderScene({bg:'forest-dusk', chars:['nyai-staff','robbers']});
+      speakerEl.textContent = '';
+      narrLine.textContent = '';
+      nextBtn.style.visibility = 'hidden';
+      startRobQTE();
+      return;
+    }
+
+    nextBtn.style.visibility = 'visible';
+    renderScene(step);
+    var text = step[lang] || step.id;
+    speakerEl.textContent = step.speaker ? (speakerNames[lang][step.speaker] || '') : '';
+    narrLine.textContent = text;
+    speak(text);
+    setUIStrings();
+  }
+
+  function advance(){
+    stopSpeech();
+    if(idx >= steps.length-1){
+      idx = 0;
+      showStep();
+      return;
+    }
+    idx++;
+    showStep();
+  }
+  nextBtn.addEventListener('click', advance);
+
+  /* ---------- QTE 1: digging ---------- */
+  var digState = { needed:3, hits:0, misses:0, pos:0, dir:1, running:false, zoneStart:0.38, zoneEnd:0.62, raf:null };
+  var digMarker = document.getElementById('digMarker');
+  var digZone = document.getElementById('digZone');
+  var digDots = document.getElementById('digDots');
+  var digBtn = document.getElementById('digBtn');
+
+  function buildDots(container, n){
+    container.innerHTML = '';
+    for(var i=0;i<n;i++){
+      var d = document.createElement('div');
+      d.className = 'qte-dot';
+      container.appendChild(d);
+    }
+  }
+  function fillDot(container, i){
+    var dots = container.querySelectorAll('.qte-dot');
+    if(dots[i]) dots[i].classList.add('filled');
+  }
+
+  function startDigQTE(){
+    qteLayer.classList.add('show');
+    qteDig.classList.add('active');
+    qteRob.classList.remove('active');
+    digState.hits = 0; digState.misses = 0; digState.pos = 0; digState.dir = 1; digState.running = true;
+    buildDots(digDots, digState.needed);
+    digZone.style.left = (digState.zoneStart*100) + '%';
+    digZone.style.width = ((digState.zoneEnd-digState.zoneStart)*100) + '%';
+    animateDig();
+  }
+  function animateDig(){
+    if(!digState.running) return;
+    digState.pos += digState.dir * 0.016;
+    if(digState.pos >= 1){ digState.pos = 1; digState.dir = -1; }
+    if(digState.pos <= 0){ digState.pos = 0; digState.dir = 1; }
+    digMarker.style.left = (digState.pos*100) + '%';
+    digState.raf = requestAnimationFrame(animateDig);
+  }
+  digBtn.addEventListener('click', function(){
+    if(!digState.running) return;
+    var inZone = digState.pos >= digState.zoneStart && digState.pos <= digState.zoneEnd;
+    if(inZone){
+      fillDot(digDots, digState.hits);
+      digState.hits++;
+      if(digState.hits >= digState.needed){
+        digState.running = false;
+        cancelAnimationFrame(digState.raf);
+        qteDig.classList.remove('active');
+        qteLayer.classList.remove('show');
+        idx++;
+        showStep();
+      }
+    }
+  });
+
+  /* ---------- QTE 2: robbery ---------- */
+  var robState = { step:0, total:3, running:false };
+  var robDots = document.getElementById('robDots');
+  var robBtn = document.getElementById('robBtn');
+  var robText = document.getElementById('robText');
+
+  function startRobQTE(){
+    qteLayer.classList.add('show');
+    qteRob.classList.add('active');
+    qteDig.classList.remove('active');
+    robState.step = 0; robState.running = true;
+    buildDots(robDots, robState.total);
+    robText.textContent = robberLines[lang][0];
+  }
+  robBtn.addEventListener('click', function(){
+    if(!robState.running) return;
+    fillDot(robDots, robState.step);
+    robState.step++;
+    if(robState.step >= robState.total){
+      robState.running = false;
+      qteRob.classList.remove('active');
+      qteLayer.classList.remove('show');
+      idx++;
+      showStep();
+    } else {
+      robText.textContent = robberLines[lang][robState.step];
+    }
+  });
+
+  /* ---------- language toggle ---------- */
+  var langID = document.getElementById('langID');
+  var langEN = document.getElementById('langEN');
+  function setLang(newLang){
+    if(lang === newLang) return;
+    lang = newLang;
+    langID.classList.toggle('active', lang==='id');
+    langID.setAttribute('aria-pressed', lang==='id');
+    langEN.classList.toggle('active', lang==='en');
+    langEN.setAttribute('aria-pressed', lang==='en');
+    document.documentElement.lang = lang;
+    showStep();
+  }
+  langID.addEventListener('click', function(){ setLang('id'); });
+  langEN.addEventListener('click', function(){ setLang('en'); });
+  if(lang==='en'){ langEN.classList.add('active'); langEN.setAttribute('aria-pressed','true'); langID.classList.remove('active'); langID.setAttribute('aria-pressed','false'); }
+
+  /* ---------- mute toggle ---------- */
+  var muteBtn = document.getElementById('muteBtn');
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-label', muted ? 'Unmute narration' : 'Mute narration');
+    if(muted) stopSpeech();
+  });
+
+  /* ---------- auto-resize for iframe embedding ---------- */
+  function sendHeight(){
+    var h = document.documentElement.scrollHeight;
+    try{
+      window.parent.postMessage({ type:'salatigaGameHeight', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  if(window.ResizeObserver){
+    new ResizeObserver(sendHeight).observe(document.body);
+  } else {
+    setInterval(sendHeight, 800);
+  }
+
+  /* ---------- init ---------- */
+  setUIStrings();
+  showStep();
+  setTimeout(sendHeight, 300);
+
+})();
+</script>
+</body>
+</html>
