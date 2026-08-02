@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sangkuriang - Interactive Folklore Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-1:#0c1230;
+    --night-2:#050712;
+    --gold:#e8b84b;
+    --gold-soft:#caa768;
+    --cream:#f4ead1;
+    --panel:#12173a;
+    --panel-edge:#2a2f5c;
+    --danger:#c65a4a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:linear-gradient(180deg,var(--night-1),var(--night-2));
+    font-family:'Merriweather',serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 20px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+  }
+  .frame{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:14px;
+    padding:14px 14px 16px;
+    box-shadow:0 0 0 1px rgba(232,184,75,0.08), 0 18px 40px rgba(0,0,0,0.45);
+    position:relative;
+    overflow:hidden;
+  }
+  .batik-border{
+    position:absolute; inset:0; pointer-events:none;
+    background-image:
+      radial-gradient(circle at 6px 6px, rgba(232,184,75,0.12) 1.4px, transparent 1.6px);
+    background-size:16px 16px;
+    opacity:0.5;
+    mask-image:linear-gradient(180deg, black 0%, transparent 12%, transparent 88%, black 100%);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+    position:relative;
+    z-index:1;
+  }
+  h1{
+    font-family:'Playfair Display',serif;
+    font-size:22px;
+    margin:0;
+    color:var(--gold);
+    letter-spacing:0.5px;
+  }
+  .subtitle{
+    font-size:11px;
+    color:var(--gold-soft);
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+  .top-controls{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .icon-btn{
+    background:#1b2050;
+    border:1px solid var(--panel-edge);
+    color:var(--cream);
+    width:38px;height:38px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .icon-btn:hover{background:#242a63;}
+  .icon-btn:active{transform:scale(0.92);}
+  .icon-btn.active{background:var(--gold);color:#141731;border-color:var(--gold);}
+
+  .stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:radial-gradient(ellipse at 50% 30%, #171d47 0%, #090b1e 70%);
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid var(--panel-edge);
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .badge{
+    position:absolute;
+    top:8px; right:8px;
+    background:rgba(5,7,18,0.55);
+    border:1px solid rgba(232,184,75,0.35);
+    color:var(--gold);
+    font-family:'Merriweather',serif;
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    letter-spacing:0.5px;
+  }
+
+  .textbox{
+    margin-top:12px;
+    background:#0e1330;
+    border:1px solid var(--panel-edge);
+    border-left:3px solid var(--gold);
+    border-radius:8px;
+    padding:14px 16px;
+    min-height:92px;
+    position:relative;
+  }
+  .step-title{
+    font-family:'Playfair Display',serif;
+    color:var(--gold);
+    font-size:15px;
+    margin:0 0 6px;
+  }
+  .step-text{
+    font-size:14.5px;
+    line-height:1.55;
+    color:#e9e2d0;
+    margin:0;
+  }
+
+  .qte-zone{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .qte-bar-wrap{
+    width:100%;
+    height:14px;
+    background:#0a0d24;
+    border:1px solid var(--panel-edge);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .qte-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold-soft),var(--gold));
+    transition:width .08s ease;
+  }
+  .qte-btn{
+    background:var(--gold);
+    color:#171a3d;
+    border:none;
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:15px;
+    padding:12px 26px;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(232,184,75,0.25);
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .qte-btn:active{transform:scale(0.95);}
+  .qte-timer{
+    font-size:12px;
+    color:var(--gold-soft);
+    letter-spacing:0.5px;
+  }
+
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:14px;
+    gap:8px;
+  }
+  .nav-btn{
+    background:#1b2050;
+    border:1px solid var(--panel-edge);
+    color:var(--cream);
+    font-family:'Merriweather',serif;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .nav-btn:hover{background:#242a63;}
+  .nav-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .nav-btn.primary{
+    background:var(--gold);
+    color:#171a3d;
+    font-weight:700;
+    border-color:var(--gold);
+  }
+  .dots{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+    justify-content:center;
+    flex:1;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:#33396e;
+  }
+  .dot.done{background:var(--gold-soft);}
+  .dot.current{background:var(--gold);transform:scale(1.4);}
+
+  footer.credit{
+    text-align:center;
+    font-size:10.5px;
+    color:#5b608f;
+    margin-top:10px;
+    letter-spacing:0.3px;
+  }
+  footer.credit a{color:#7d83b8;}
+
+  @media (max-width:420px){
+    h1{font-size:18px;}
+    .step-text{font-size:13.5px;}
+    .nav-btn{padding:8px 12px;font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="frame">
+    <div class="batik-border"></div>
+    <header>
+      <div>
+        <h1 id="titleText">Sangkuriang</h1>
+        <div class="subtitle" id="subtitleText">Legenda Jawa Barat</div>
+      </div>
+      <div class="top-controls">
+        <button class="icon-btn" id="langBtn" title="Ganti Bahasa / Switch Language">ID</button>
+        <button class="icon-btn" id="muteBtn" title="Mute/Unmute narasi">🔊</button>
+      </div>
+    </header>
+
+    <div class="stage">
+      <canvas id="scene" width="800" height="450"></canvas>
+      <div class="badge" id="progressBadge">1 / 16</div>
+    </div>
+
+    <div class="textbox">
+      <p class="step-title" id="stepTitle"></p>
+      <p class="step-text" id="stepText"></p>
+
+      <div class="qte-zone" id="qteZone" style="display:none;">
+        <div class="qte-bar-wrap"><div class="qte-bar-fill" id="qteFill"></div></div>
+        <button class="qte-btn" id="qteBtn"></button>
+        <div class="qte-timer" id="qteTimer"></div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-btn" id="prevBtn">‹ <span id="prevLabel">Kembali</span></button>
+      <div class="dots" id="dots"></div>
+      <button class="nav-btn primary" id="nextBtn"><span id="nextLabel">Lanjut</span> ›</button>
+    </div>
+
+    <footer class="credit" id="creditLine">Dongeng interaktif · caritasato.blogspot.com</footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------------- language setup ---------------- */
+  var params = new URLSearchParams(location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+  var current = 0;
+
+  var UI = {
+    id: {title:"Sangkuriang", subtitle:"Legenda Jawa Barat", prev:"Kembali", next:"Lanjut", start:"Mulai", replay:"Ulangi Cerita",
+         credit:"Dongeng interaktif · caritasato.blogspot.com", finished:"Selesai", effort:"Skor Usaha"},
+    en: {title:"Sangkuriang", subtitle:"A Folktale from West Java", prev:"Back", next:"Next", start:"Start", replay:"Replay Story",
+         credit:"Interactive folktale · caritasato.blogspot.com", finished:"Finished", effort:"Effort Score"}
+  };
+
+  /* ---------------- story data ---------------- */
+  // scene: name of drawing function
+  // qte: null or {key, goal, duration, label:{id,en}}
+  var STEPS = [
+    { scene:'sceneBoar',
+      id:{t:"Air Ajaib di Hutan", x:"Konon di dalam hutan, seekor babi hutan betina kehausan. Ia menemukan air jernih tertampung di sebuah daun keladi, lalu meminumnya tanpa sadar bahwa itu adalah air seni Raja Sungging Perbangkara yang sakti."},
+      en:{t:"The Magic Water", x:"Deep in the forest, a thirsty wild boar found clear water pooled in a taro leaf. She drank it without knowing it was the urine of the mighty King Sungging Perbangkara."} },
+
+    { scene:'sceneKingBaby',
+      id:{t:"Kelahiran Dayang Sumbi", x:"Sembilan bulan kemudian, babi itu melahirkan seorang bayi perempuan. Sang Raja mendengar keajaiban ini, menjemput bayi itu dari hutan, dan menamainya Dayang Sumbi."},
+      en:{t:"The Birth of Dayang Sumbi", x:"Nine months later, the boar gave birth to a human baby girl. The king heard of this wonder, brought the child home from the forest, and named her Dayang Sumbi."} },
+
+    { scene:'scenePalace',
+      id:{t:"Gadis yang Menolak Pinangan", x:"Dayang Sumbi tumbuh menjadi wanita yang sangat cantik. Banyak raja dan bangsawan melamarnya, namun ia menolak semua, hingga para pelamar itu saling berperang. Bersedih, ia meminta izin mengasingkan diri ke sebuah bukit sunyi, ditemani seekor anjing jantan bernama Si Tumang."},
+      en:{t:"The Girl Who Refused Every Suitor", t2:"", x:"Dayang Sumbi grew into a woman of great beauty. Many kings and nobles proposed, but she refused them all, sparking wars among her suitors. Saddened, she asked to retreat to a quiet hill, accompanied only by a loyal dog named Si Tumang."} },
+
+    { scene:'sceneWeaving', qte:{key:'catch', duration:5000, threshold:1,
+        label:{id:"Ketuk Si Tumang saat alat tenun jatuh!", en:"Tap Si Tumang as the shuttle falls!"}},
+      id:{t:"Alat Tenun Terjatuh", x:"Saat menenun di bukit, alat tenun Dayang Sumbi terjatuh. Malas untuk mengambilnya sendiri, ia berucap tanpa pikir panjang: \"Siapa pun yang mengambilkan alat ini, jika laki-laki akan kujadikan suami, jika perempuan akan kujadikan saudara.\""},
+      en:{t:"The Fallen Shuttle", x:"While weaving on the hill, Dayang Sumbi's shuttle fell. Too weary to fetch it herself, she said without thinking: \"Whoever retrieves this — if a man, I shall marry him; if a woman, I shall call her sister.\""} },
+
+    { scene:'sceneMarriage',
+      id:{t:"Menikah dengan Si Tumang", x:"Si Tumang, anjing itu, mengambilkan alat tenun tersebut. Dayang Sumbi menyesal, namun tetap menepati janjinya. Ternyata Si Tumang bukan anjing biasa — ia adalah seorang dewa yang dikutuk turun ke bumi."},
+      en:{t:"Marrying Si Tumang", x:"Si Tumang the dog fetched the fallen tool. Dayang Sumbi regretted her words but kept her promise. Si Tumang, it turned out, was no ordinary dog — he was a god cursed to live as one on earth."} },
+
+    { scene:'sceneHunting',
+      id:{t:"Sangkuriang Berburu", x:"Dari pernikahan itu lahirlah Sangkuriang, tumbuh menjadi pemuda tampan dan sakti. Ia gemar berburu, selalu ditemani Si Tumang — tanpa pernah tahu bahwa anjing itu adalah ayah kandungnya sendiri."},
+      en:{t:"Sangkuriang the Hunter", x:"From that marriage came Sangkuriang, who grew into a handsome and powerful young man. He loved to hunt, always with Si Tumang by his side — never knowing the dog was his own father."} },
+
+    { scene:'sceneCommand', qte:{key:'mash', duration:4500, goal:14,
+        label:{id:"Ketuk cepat untuk memerintahkan Si Tumang mengejar kijang!", en:"Tap fast to command Si Tumang to chase the deer!"}},
+      id:{t:"Si Tumang Menolak Perintah", x:"Suatu hari, ibunya ingin makan hati kijang. Sangkuriang memerintahkan Si Tumang mengejar seekor kijang di hutan — tetapi anehnya, Si Tumang yang biasanya penurut kali ini menolak sama sekali."},
+      en:{t:"Si Tumang Refuses", x:"One day, his mother craved deer's liver. Sangkuriang commanded Si Tumang to chase a deer through the forest — but strangely, the ever-obedient dog refused to move at all."} },
+
+    { scene:'sceneTragedy',
+      id:{t:"Kemarahan Sangkuriang", x:"Kesal karena diabaikan, Sangkuriang kehilangan kesabaran. Dalam amarahnya ia membunuh Si Tumang, lalu membawa pulang hatinya untuk dimasak ibunya — tanpa tahu siapa sesungguhnya anjing itu."},
+      en:{t:"Sangkuriang's Anger", x:"Furious at being ignored, Sangkuriang lost his temper and killed Si Tumang, bringing the heart home for his mother to cook — never knowing who the dog truly was."} },
+
+    { scene:'sceneReveal',
+      id:{t:"Kebenaran Terungkap", x:"Setelah makan, Dayang Sumbi bertanya tentang Si Tumang. Sangkuriang menjawab jujur — hati yang dimakannya adalah hati Si Tumang. Murka dan berduka, Dayang Sumbi memukul kepala Sangkuriang dengan gayung tempurung kelapa, meninggalkan bekas luka."},
+      en:{t:"The Truth Revealed", x:"After the meal, Dayang Sumbi asked after Si Tumang. Sangkuriang answered honestly — she had just eaten his heart. Grief-stricken and furious, she struck his head with a coconut ladle, leaving a scar he would carry forever."} },
+
+    { scene:'sceneWander',
+      id:{t:"Sangkuriang Mengembara", x:"Terluka dan marah, Sangkuriang pergi mengembara jauh ke timur bertahun-tahun lamanya, tanpa arah dan tujuan yang pasti, sementara Dayang Sumbi dikaruniai kecantikan abadi oleh para dewa."},
+      en:{t:"Sangkuriang Wanders", x:"Wounded and angry, Sangkuriang wandered eastward for years without direction, while Dayang Sumbi, atoning through prayer, was granted eternal beauty by the gods."} },
+
+    { scene:'sceneMeetAgain',
+      id:{t:"Pertemuan Tak Terduga", x:"Tanpa disadari, langkah kaki Sangkuriang membawanya kembali ke tempat Dayang Sumbi tinggal. Keduanya tak lagi saling mengenali. Terpesona satu sama lain, mereka berencana untuk menikah."},
+      en:{t:"An Unexpected Reunion", x:"Unknowingly, Sangkuriang's wandering led him back to where Dayang Sumbi lived. Neither recognized the other. Captivated by one another, they planned to marry."} },
+
+    { scene:'sceneScarFound',
+      id:{t:"Bekas Luka di Kepala", x:"Sebelum berburu, Dayang Sumbi mengikatkan kain kepala untuk Sangkuriang dan melihat bekas luka lama di sana. Ia tersadar — pria ini adalah anaknya sendiri. Ia memohon agar pernikahan dibatalkan, namun Sangkuriang bersikeras."},
+      en:{t:"The Old Scar", x:"While tying a headband for him before a hunt, Dayang Sumbi noticed the old scar on his head — and realized he was her own son. She begged to call off the wedding, but Sangkuriang refused to listen."} },
+
+    { scene:'sceneCondition',
+      id:{t:"Syarat yang Mustahil", x:"Karena Sangkuriang tetap ingin menikahinya, Dayang Sumbi memberi syarat berat: bendung Sungai Citarum dan buatkan perahu besar — semua harus selesai dalam satu malam saja."},
+      en:{t:"An Impossible Condition", x:"Since Sangkuriang refused to give up, Dayang Sumbi set an impossible condition: dam the Citarum River and build a great boat — all before the sun rose the very same night."} },
+
+    { scene:'sceneBuild', qte:{key:'build', duration:9000, goal:26,
+        label:{id:"Ketuk untuk membantu membendung sungai & membangun perahu!", en:"Tap to help dam the river & build the boat!"}},
+      id:{t:"Membendung Sungai, Membangun Perahu", x:"Dibantu para makhluk halus yang pernah ia kalahkan, Sangkuriang bekerja luar biasa cepat menebang pohon menjadi perahu dan membendung Sungai Citarum menjadi danau besar."},
+      en:{t:"Damming the River, Building the Boat", x:"Aided by spirits he once defeated, Sangkuriang worked with incredible speed — felling a great tree into a boat, and damming the Citarum River into a wide lake."} },
+
+    { scene:'sceneWeaveTrick', qte:{key:'weave', duration:6000, goal:18,
+        label:{id:"Ketuk cepat untuk menenun kain putih dan memanggil fajar!", en:"Tap fast to weave the white cloth and summon the dawn!"}},
+      id:{t:"Menipu Datangnya Fajar", x:"Cemas pekerjaan Sangkuriang akan selesai, Dayang Sumbi memohon petunjuk dewa. Ia lalu menggelar kain putih tenunannya di ufuk timur, membuat langit tampak seperti fajar telah tiba — jauh lebih awal dari seharusnya."},
+      en:{t:"Tricking the Dawn", x:"Fearing Sangkuriang would finish in time, Dayang Sumbi prayed for guidance, then spread her woven white cloth across the eastern horizon — making the sky glow as if dawn had already come, far too early."} },
+
+    { scene:'sceneMountain',
+      id:{t:"Lahirnya Gunung Tangkuban Perahu", x:"Melihat \"fajar\" tiba, para makhluk halus lari ketakutan, pekerjaan pun terhenti. Sangkuriang murka besar. Ia menjebol bendungan hingga menjelma Gunung Manglayang, lalu menendang perahu besar itu hingga terbalik — menjelma menjadi Gunung Tangkuban Perahu yang berdiri hingga kini."},
+      en:{t:"The Birth of Mount Tangkuban Perahu", x:"Seeing the false dawn, the spirits fled in terror and the work stopped. Enraged, Sangkuriang tore open the dam, which became Mount Manglayang, then kicked the great boat until it flipped over — becoming Mount Tangkuban Perahu, which still stands today."} }
+  ];
+
+  var TOTAL = STEPS.length;
+
+  /* ---------------- DOM refs ---------------- */
+  var canvas = document.getElementById('scene');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var stepTitleEl = document.getElementById('stepTitle');
+  var stepTextEl = document.getElementById('stepText');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var nextLabel = document.getElementById('nextLabel');
+  var prevLabel = document.getElementById('prevLabel');
+  var dotsEl = document.getElementById('dots');
+  var progressBadge = document.getElementById('progressBadge');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var qteZone = document.getElementById('qteZone');
+  var qteBtn = document.getElementById('qteBtn');
+  var qteFill = document.getElementById('qteFill');
+  var qteTimer = document.getElementById('qteTimer');
+  var creditLine = document.getElementById('creditLine');
+  var titleText = document.getElementById('titleText');
+  var subtitleText = document.getElementById('subtitleText');
+
+  var effortScore = 0;
+  var qteState = null; // active qte runtime state
+
+  /* ---------------- drawing helpers (wayang / shadow-puppet style) ---------------- */
+  function grad(x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+    return g;
+  }
+  function sky(topColor,bottomColor,glowY){
+    ctx.fillStyle = grad(0,0,0,H,[[0,topColor],[1,bottomColor]]);
+    ctx.fillRect(0,0,W,H);
+    // dalang lamp glow
+    var g = ctx.createRadialGradient(W/2, glowY||H*0.55, 10, W/2, glowY||H*0.55, W*0.55);
+    g.addColorStop(0,'rgba(232,184,75,0.20)');
+    g.addColorStop(1,'rgba(232,184,75,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+  function stars(n,seed){
+    ctx.fillStyle = 'rgba(244,234,209,0.55)';
+    var r = seed||1;
+    function rnd(){ r = (r*9301+49297)%233280; return r/233280; }
+    for(var i=0;i<n;i++){
+      var x = rnd()*W, y = rnd()*H*0.55;
+      var s = rnd()*1.6+0.4;
+      ctx.beginPath(); ctx.arc(x,y,s,0,7); ctx.fill();
+    }
+  }
+  function moon(x,y,r){
+    ctx.fillStyle = '#f6ecd0';
+    ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+  }
+  function ground(y, color){
+    ctx.fillStyle = color || '#04050e';
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    ctx.lineTo(0,y);
+    ctx.lineTo(W,y-8);
+    ctx.lineTo(W,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function mountains(y, jag, color){
+    ctx.fillStyle = color || '#0a0d24';
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    ctx.lineTo(0,y);
+    var x=0, step=W/jag.length;
+    jag.forEach(function(h,i){ ctx.lineTo(x+step*(i+0.5), y-h); x+=0; });
+    for(var i=0;i<jag.length;i++){ ctx.lineTo(step*(i+1), y - (jag[(i+1)%jag.length]||jag[i]*0.5)); }
+    ctx.lineTo(W,y);
+    ctx.lineTo(W,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function river(y, w){
+    ctx.strokeStyle = 'rgba(120,150,200,0.35)';
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    for(var x=0;x<=W;x+=40){ ctx.lineTo(x, y + Math.sin(x*0.05)*8); }
+    ctx.stroke();
+  }
+  function silhouetteColor(){ return '#080a1c'; }
+
+  // human figure: x,y = feet position (ground contact), scale ~1
+  function human(x,y,scale,opt){
+    opt = opt||{};
+    var s = scale;
+    var flip = opt.flip ? -1 : 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(flip,1);
+    ctx.fillStyle = opt.color || silhouetteColor();
+    ctx.strokeStyle = opt.color || silhouetteColor();
+    ctx.lineWidth = 6*s;
+    ctx.lineCap = 'round';
+
+    var hipY = -34*s, kneeY = -17*s, headR = 8*s, neckY = -70*s;
+    var legA = opt.legA!==undefined?opt.legA:8, legB = opt.legB!==undefined?opt.legB:-8;
+    var armA = opt.armA!==undefined?opt.armA:20, armB = opt.armB!==undefined?opt.armB:-10;
+
+    function leg(angDeg){
+      var a = angDeg*Math.PI/180;
+      var kx = Math.sin(a)*17*s, ky = hipY + Math.cos(a)*17*s;
+      ctx.beginPath(); ctx.moveTo(0,hipY); ctx.lineTo(kx,ky); ctx.lineTo(kx+Math.sin(a*0.6)*15*s, 0); ctx.stroke();
+    }
+    leg(legA); leg(legB);
+
+    // torso
+    ctx.beginPath();
+    ctx.moveTo(-9*s,hipY); ctx.quadraticCurveTo(-11*s, neckY+10*s, 0, neckY);
+    ctx.quadraticCurveTo(11*s, neckY+10*s, 9*s, hipY);
+    ctx.closePath(); ctx.fill();
+
+    function arm(angDeg, shoulderY){
+      var a = angDeg*Math.PI/180;
+      var ex = Math.sin(a)*20*s, ey = shoulderY + Math.cos(a)*20*s;
+      ctx.beginPath(); ctx.moveTo(0,shoulderY); ctx.lineTo(ex,ey); ctx.stroke();
+    }
+    arm(armA, neckY+16*s); arm(armB, neckY+16*s);
+
+    // head
+    ctx.beginPath(); ctx.arc(0, neckY-headR, headR, 0, 7); ctx.fill();
+
+    if(opt.accessory==='crown'){
+      ctx.beginPath();
+      ctx.moveTo(-headR, neckY-headR*1.7);
+      ctx.lineTo(-headR*0.4, neckY-headR*2.5);
+      ctx.lineTo(0, neckY-headR*1.9);
+      ctx.lineTo(headR*0.4, neckY-headR*2.5);
+      ctx.lineTo(headR, neckY-headR*1.7);
+      ctx.closePath(); ctx.fill();
+    }
+    if(opt.accessory==='headband'){
+      ctx.beginPath();
+      ctx.moveTo(-headR, neckY-headR*1.3);
+      ctx.lineTo(headR, neckY-headR*1.3);
+      ctx.lineTo(headR*0.5, neckY-headR*0.4);
+      ctx.closePath(); ctx.fill();
+    }
+    if(opt.hairLong){
+      ctx.beginPath();
+      ctx.moveTo(-headR*0.9, neckY-headR*1.1);
+      ctx.quadraticCurveTo(-headR*1.6, neckY+10*s, -headR*0.8, neckY+30*s);
+      ctx.lineTo(-headR*0.3, neckY+26*s);
+      ctx.quadraticCurveTo(-headR*1.1, neckY+6*s, -headR*0.5, neckY-headR*0.9);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function dog(x,y,scale,opt){
+    opt=opt||{};
+    var s=scale, flip = opt.flip?-1:1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(flip,1);
+    ctx.fillStyle = silhouetteColor();
+    ctx.strokeStyle = silhouetteColor();
+    ctx.lineWidth = 4*s; ctx.lineCap='round';
+    var bodyY = -14*s;
+    ctx.beginPath(); ctx.ellipse(0,bodyY,20*s,9*s,0,0,7); ctx.fill();
+    // legs
+    [-13,-4,7,15].forEach(function(lx){
+      ctx.beginPath(); ctx.moveTo(lx*s,bodyY+7*s); ctx.lineTo(lx*s, opt.sit? bodyY+7*s : 0); ctx.stroke();
+    });
+    // head
+    ctx.beginPath(); ctx.ellipse(24*s, bodyY-2*s, 8*s,7*s,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(30*s,bodyY-6*s); ctx.lineTo(36*s,bodyY-10*s); ctx.lineTo(31*s,bodyY-3*s); ctx.closePath(); ctx.fill();
+    // tail
+    ctx.beginPath(); ctx.moveTo(-20*s,bodyY-2*s); ctx.quadraticCurveTo(-30*s, bodyY-14*s, -24*s, bodyY-18*s); ctx.stroke();
+    ctx.restore();
+  }
+
+  function boar(x,y,scale){
+    var s=scale;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = silhouetteColor();
+    ctx.beginPath(); ctx.ellipse(0,-12*s,22*s,11*s,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(24*s,-16*s,9*s,8*s,0,0,7); ctx.fill();
+    [-14,-2,10,20].forEach(function(lx){
+      ctx.strokeStyle=silhouetteColor(); ctx.lineWidth=4*s;
+      ctx.beginPath(); ctx.moveTo(lx*s,-4*s); ctx.lineTo(lx*s,8*s); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function boat(x,y,scale,opt){
+    opt=opt||{};
+    var s=scale;
+    ctx.save(); ctx.translate(x,y);
+    if(opt.tilt) ctx.rotate(opt.tilt);
+    ctx.fillStyle = silhouetteColor();
+    ctx.beginPath();
+    ctx.moveTo(-60*s,0);
+    ctx.quadraticCurveTo(0,26*s,60*s,0);
+    ctx.quadraticCurveTo(0,10*s,-60*s,0);
+    ctx.closePath(); ctx.fill();
+    if(!opt.hideMast){
+      ctx.strokeStyle = silhouetteColor(); ctx.lineWidth=3*s;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-40*s); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function tree(x,y,scale){
+    var s=scale;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = silhouetteColor();
+    ctx.fillRect(-3*s,-20*s,6*s,20*s);
+    ctx.beginPath(); ctx.arc(0,-30*s,16*s,0,7); ctx.fill();
+    ctx.restore();
+  }
+
+  function loom(x,y,scale){
+    var s=scale;
+    ctx.save(); ctx.translate(x,y);
+    ctx.strokeStyle = silhouetteColor(); ctx.lineWidth=3*s; ctx.fillStyle=silhouetteColor();
+    ctx.strokeRect(-16*s,-30*s,32*s,30*s);
+    ctx.fillRect(-16*s,-16*s,32*s,3*s);
+    ctx.restore();
+  }
+
+  function cloth(y, wave, color){
+    ctx.fillStyle = color || 'rgba(244,234,209,0.75)';
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    for(var x=0;x<=W;x+=30){ ctx.lineTo(x, y + Math.sin((x+wave)*0.03)*10); }
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+  }
+
+  function sunGlow(t){ // t 0..1 rising
+    var cy = H - t*H*0.7;
+    var g = ctx.createRadialGradient(W*0.8, cy, 4, W*0.8, cy, 90+ t*40);
+    g.addColorStop(0,'rgba(255,214,140,0.9)');
+    g.addColorStop(1,'rgba(255,214,140,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ffe3ad';
+    ctx.beginPath(); ctx.arc(W*0.8,cy,26,0,7); ctx.fill();
+  }
+
+  function flower(x,y,scale){
+    var s=scale;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = 'rgba(232,184,75,0.85)';
+    for(var i=0;i<6;i++){
+      ctx.save(); ctx.rotate(i*Math.PI/3);
+      ctx.beginPath(); ctx.ellipse(0,-10*s,5*s,10*s,0,0,7); ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle='#7a5a1a';
+    ctx.beginPath(); ctx.arc(0,0,4*s,0,7); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------- scenes ---------------- */
+  var Scenes = {
+    sceneBoar: function(){
+      sky('#1b2350','#050712', H*0.45);
+      stars(50,7);
+      moon(650,70,26);
+      mountains(H*0.72,[40,70,50,90,60],'#0a0d24');
+      ground(H*0.86,'#04050e');
+      tree(120,H*0.85,1.3); tree(690,H*0.87,1.1);
+      // taro leaf
+      ctx.fillStyle=silhouetteColor();
+      ctx.beginPath(); ctx.ellipse(400,H*0.8,22,14,0.4,0,7); ctx.fill();
+      boar(400,H*0.86,1.4);
+    },
+    sceneKingBaby: function(){
+      sky('#1c2452','#060814',H*0.4);
+      stars(40,3); moon(120,70,22);
+      mountains(H*0.7,[50,80,55],'#0a0d24');
+      ground(H*0.86,'#04050e');
+      human(430,H*0.9,1.7,{accessory:'crown', armA:-30, armB:40});
+      human(390,H*0.92,1.0,{flip:true, legA:0, legB:0, armA:5, armB:-5}); // small baby-ish figure (nurse-scale placeholder)
+    },
+    scenePalace: function(){
+      sky('#241c46','#060814',H*0.4);
+      stars(30,9); moon(700,60,20);
+      mountains(H*0.75,[30,60,40,70],'#0a0d24');
+      ground(H*0.88,'#04050e');
+      human(400,H*0.92,1.9,{hairLong:true, armA:15,armB:-15,legA:6,legB:-6});
+      human(220,H*0.9,1.3,{accessory:'crown', armA:-20, armB:10});
+      human(580,H*0.9,1.3,{accessory:'crown', flip:true, armA:-20, armB:10});
+    },
+    sceneWeaving: function(){
+      sky('#20264e','#05060f',H*0.4);
+      stars(35,11); moon(660,60,20);
+      mountains(H*0.78,[25,45,30],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      loom(300,H*0.9,1.4);
+      human(300,H*0.92,1.5,{hairLong:true, armA:-40,armB:10, legA:0,legB:0});
+      dog(520,H*0.9,1.5,{sit:true});
+      // falling shuttle marker drawn by qte overlay
+    },
+    sceneMarriage: function(){
+      sky('#2a2050','#070510',H*0.4);
+      stars(25,13); moon(400,55,24);
+      mountains(H*0.78,[30,55,35],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      human(330,H*0.92,1.6,{hairLong:true, armA:-15, armB:20});
+      dog(470,H*0.9,1.6,{});
+      // divine glow around dog
+      var g=ctx.createRadialGradient(470,H*0.86,5,470,H*0.86,70);
+      g.addColorStop(0,'rgba(232,184,75,0.35)'); g.addColorStop(1,'rgba(232,184,75,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    },
+    sceneHunting: function(){
+      sky('#233052','#06070f',H*0.4);
+      stars(20,17); moon(120,50,18);
+      mountains(H*0.72,[45,70,50],'#0a0d24');
+      ground(H*0.88,'#04050e');
+      tree(650,H*0.88,1.2); tree(600,H*0.9,0.9);
+      human(300,H*0.92,1.6,{headband:true, armA:-50, armB:10, legA:14, legB:-6});
+      dog(430,H*0.9,1.5,{});
+    },
+    sceneCommand: function(){
+      Scenes.sceneHunting();
+    },
+    sceneTragedy: function(){
+      sky('#241a3a','#050510',H*0.4);
+      stars(20,19); moon(700,60,18);
+      mountains(H*0.75,[40,60,45],'#0a0d24');
+      ground(H*0.89,'#04050e');
+      human(330,H*0.92,1.6,{accessory:'headband', armA:-70, armB:15, legA:10, legB:-15});
+      dog(460,H*0.9,1.4,{sit:true});
+    },
+    sceneReveal: function(){
+      sky('#2a1a2e','#050510',H*0.4);
+      stars(20,23); moon(120,60,18);
+      mountains(H*0.78,[30,50,35],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      human(300,H*0.92,1.5,{hairLong:true, armA:-60, armB:20});
+      human(470,H*0.92,1.6,{accessory:'headband', armA:20, armB:-10});
+    },
+    sceneWander: function(){
+      sky('#161c3c','#04050e',H*0.4);
+      stars(60,29); moon(400,60,22);
+      mountains(H*0.75,[60,90,50,80,60],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      human(400,H*0.92,1.4,{accessory:'headband', armA:10, armB:-8, legA:16, legB:-12});
+    },
+    sceneMeetAgain: function(){
+      sky('#2a2450','#060814',H*0.42);
+      stars(35,31); moon(400,50,26);
+      mountains(H*0.76,[30,55,35],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      human(330,H*0.92,1.6,{accessory:'headband', armA:-20, armB:15});
+      human(470,H*0.92,1.6,{hairLong:true, flip:true, armA:-20, armB:15});
+    },
+    sceneScarFound: function(){
+      Scenes.sceneMeetAgain();
+    },
+    sceneCondition: function(){
+      sky('#202850','#05060f',H*0.4);
+      stars(30,37); moon(700,55,20);
+      river(H*0.82,10);
+      mountains(H*0.7,[35,60,40],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      human(320,H*0.92,1.6,{hairLong:true, armA:-25, armB:20});
+      human(480,H*0.92,1.6,{accessory:'headband', armA:20, armB:-15});
+    },
+    sceneBuild: function(){
+      sky('#171c3c','#04050e',H*0.4);
+      stars(30,41);
+      river(H*0.8,14);
+      mountains(H*0.68,[40,65,45],'#0a0d24');
+      ground(H*0.92,'#04050e');
+      tree(120,H*0.9,1.2);
+      boat(400,H*0.86,1.1,{});
+      human(230,H*0.92,1.4,{accessory:'headband', armA:-70,armB:20,legA:10,legB:-6});
+    },
+    sceneWeaveTrick: function(){
+      sky('#191d40','#04050e',H*0.4);
+      stars(30,43);
+      mountains(H*0.7,[35,55,40],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      loom(550,H*0.9,1.3);
+      human(550,H*0.92,1.4,{hairLong:true, armA:-40, armB:10});
+    },
+    sceneMountain: function(){
+      sky('#3a2a2a','#0a0710',H*0.35);
+      // partial sunrise
+      sunGlow(0.7);
+      mountains(H*0.78,[40,60,45],'#0a0d24');
+      ground(H*0.9,'#04050e');
+      boat(450,H*0.84,1.4,{tilt:Math.PI, hideMast:true});
+      human(230,H*0.92,1.5,{accessory:'headband', armA:-60, armB:30, legA:-10, legB:20});
+    }
+  };
+
+  /* ---------------- narration (Web Speech API) ---------------- */
+  var synth = window.speechSynthesis;
+  var voices = [];
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(l){
+    if(!voices || !voices.length) return null;
+    var pref = l==='en' ? ['en-US','en-GB','en'] : ['id-ID','id'];
+    for(var p=0;p<pref.length;p++){
+      for(var i=0;i<voices.length;i++){
+        if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(pref[p].toLowerCase())===0) return voices[i];
+      }
+    }
+    return voices[0];
+  }
+  function speak(text){
+    if(!synth || muted) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice(lang);
+    if(v) u.voice = v;
+    u.lang = lang==='en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    synth.speak(u);
+  }
+
+  /* ---------------- render ---------------- */
+  function renderDots(){
+    dotsEl.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i<current?' done':'') + (i===current?' current':'');
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function renderStep(){
+    var step = STEPS[current];
+    var t = step[lang];
+    stepTitleEl.textContent = t.t;
+    stepTextEl.textContent = t.x;
+    progressBadge.textContent = (current+1) + ' / ' + TOTAL;
+    prevBtn.disabled = current===0;
+    nextLabel.textContent = current===TOTAL-1 ? UI[lang].finished : UI[lang].next;
+    nextBtn.querySelector('#nextLabel') && (nextBtn.querySelector('#nextLabel').textContent = nextLabel.textContent);
+
+    ctx.clearRect(0,0,W,H);
+    (Scenes[step.scene]||function(){})();
+
+    renderDots();
+    setupQte(step);
+    speak(t.t + '. ' + t.x);
+  }
+
+  /* ---------------- QTE logic ---------------- */
+  function clearQte(){
+    if(qteState && qteState.timer) clearInterval(qteState.timer);
+    qteState = null;
+    qteZone.style.display='none';
+    qteBtn.onclick = null;
+  }
+
+  function setupQte(step){
+    clearQte();
+    if(!step.qte) return;
+    qteZone.style.display='flex';
+    var cfg = step.qte;
+    var goal = cfg.goal || cfg.threshold || 1;
+    var duration = cfg.duration;
+    var progress = 0;
+    var remaining = duration;
+    qteBtn.textContent = lang==='en' ? '👉 Tap!' : '👉 Ketuk!';
+    qteFill.style.width = '0%';
+    qteTimer.textContent = cfg.label[lang];
+
+    qteState = {goal:goal, progress:0, done:false};
+
+    qteBtn.onclick = function(){
+      if(qteState.done) return;
+      qteState.progress++;
+      var pct = Math.min(100, (qteState.progress/goal)*100);
+      qteFill.style.width = pct+'%';
+      if(qteState.progress>=goal){
+        finishQte(true);
+      }
+    };
+
+    qteState.timer = setInterval(function(){
+      remaining -= 100;
+      if(remaining<=0){
+        finishQte(qteState.progress>=goal);
+      }
+    },100);
+
+    function finishQte(success){
+      if(qteState.done) return;
+      qteState.done = true;
+      clearInterval(qteState.timer);
+      qteBtn.onclick = null;
+      if(success) effortScore++;
+      qteTimer.textContent = success
+        ? (lang==='en' ? '✨ Nicely done!' : '✨ Kerja bagus!')
+        : (lang==='en' ? 'The story continues...' : 'Cerita tetap berlanjut...');
+      qteBtn.textContent = lang==='en' ? 'Continue below ↓' : 'Lanjutkan di bawah ↓';
+    }
+  }
+
+  /* ---------------- language / mute controls ---------------- */
+  function applyLangUI(){
+    langBtn.textContent = lang.toUpperCase();
+    document.documentElement.lang = lang;
+    titleText.textContent = UI[lang].title;
+    subtitleText.textContent = UI[lang].subtitle;
+    prevLabel.textContent = UI[lang].prev;
+    creditLine.textContent = UI[lang].credit;
+    renderStep();
+  }
+
+  langBtn.addEventListener('click', function(){
+    lang = lang==='id' ? 'en' : 'id';
+    applyLangUI();
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+    if(muted && synth) synth.cancel();
+    else { var t=STEPS[current][lang]; speak(t.t+'. '+t.x); }
+  });
+
+  prevBtn.addEventListener('click', function(){
+    if(current>0){ current--; renderStep(); }
+  });
+  nextBtn.addEventListener('click', function(){
+    if(current<TOTAL-1){ current++; renderStep(); }
+    else {
+      current = 0; effortScore = 0; renderStep();
+    }
+  });
+
+  /* ---------------- auto-resize for iframe embedding ---------------- */
+  function reportHeight(){
+    var h = document.getElementById('app').getBoundingClientRect().height + 24;
+    try{
+      window.parent.postMessage({ type:'sangkuriangHeight', height: Math.ceil(h) }, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(reportHeight);
+    ro.observe(document.getElementById('app'));
+  } else {
+    window.addEventListener('resize', reportHeight);
+  }
+  window.addEventListener('load', function(){ setTimeout(reportHeight, 150); });
+
+  /* ---------------- init ---------------- */
+  applyLangUI();
+  setTimeout(reportHeight, 300);
+
+})();
+</script>
+</body>
+</html>
