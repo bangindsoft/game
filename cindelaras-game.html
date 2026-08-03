@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #cdg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #cdg-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #cdg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #cdg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #B5842A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #cdg-voiceBtn.off { background: #9a9a9a; }
   #cdg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +138,7 @@
   <h2>🐓 Cindelaras</h2>
   <p id="cdg-sub">Ikuti kisah Cindelaras, putra Raja Jenggala yang dibesarkan di hutan bersama ayam jago ajaibnya.</p>
 
-  <div id="cdg-hud"><span id="cdg-phase">Tahap 1 / 5</span></div>
+  <div id="cdg-hud"><span id="cdg-phase">Tahap 1 / 5</span><button id="cdg-voiceBtn">🔊 Suara: Aktif</button></div>
 
   <div id="cdg-canvas-holder">
     <canvas id="cdg-canvas"></canvas>
@@ -175,6 +187,8 @@
       captionInit: 'Bersiap memulai kisah...',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Raden Putra, Raja Jenggala, memiliki Permaisuri yang baik hati dan Selir yang iri hati. Selir bersekongkol dengan tabib istana memfitnah Permaisuri telah meracuninya.',
@@ -206,6 +220,8 @@
       captionInit: 'Getting the tale ready...',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Rally',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'Raden Putra, King of Jenggala, has a kind-hearted Queen and a jealous Concubine. The Concubine conspires with the palace physician to falsely accuse the Queen of poisoning him.',
@@ -237,6 +253,28 @@
   document.getElementById('cdg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('cdg-caption').textContent = TXT.captionInit;
   document.getElementById('cdg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('cdg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
 
   var canvas = document.getElementById('cdg-canvas');
   var ctx = canvas.getContext('2d');
@@ -290,6 +328,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -309,6 +348,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
