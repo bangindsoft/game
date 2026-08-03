@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joko Dolog — Dongeng Interaktif Jawa Timur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#150f0a;
+    --night:#131b2e;
+    --night-deep:#0b1220;
+    --brass:#c99a3f;
+    --brass-bright:#e9c877;
+    --maroon:#8c2f39;
+    --parchment:#f1e6c8;
+    --parchment-dim:#d8c9a0;
+    --panel:#1c1b18;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse at 50% -10%, #24314f 0%, var(--night) 45%, var(--night-deep) 100%);
+    font-family:'Noto Sans', sans-serif;
+    color:var(--parchment);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 20px;
+  }
+  .wrap{
+    width:100%;
+    max-width:720px;
+  }
+  .frame{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+    background: linear-gradient(180deg,#1a2338,#0e1524);
+    box-shadow: 0 0 0 1px rgba(201,154,63,0.35), 0 18px 40px rgba(0,0,0,0.45);
+  }
+  .lamp-glow{
+    position:absolute;
+    top:-40%; left:50%;
+    width:140%; height:120%;
+    transform:translateX(-50%);
+    background: radial-gradient(circle at 50% 30%, rgba(233,200,119,0.20), rgba(233,200,119,0) 55%);
+    pointer-events:none;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 14px 8px;
+    gap:8px;
+  }
+  .title-block{
+    font-family:'Cormorant Garamond', serif;
+    line-height:1.05;
+  }
+  .title-block .kicker{
+    font-family:'Noto Sans', sans-serif;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--brass);
+    display:block;
+    margin-bottom:2px;
+  }
+  .title-block h1{
+    margin:0;
+    font-size:22px;
+    font-weight:700;
+    color:var(--parchment);
+    letter-spacing:.01em;
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+  }
+  .ctrl-btn{
+    background:rgba(241,230,200,0.08);
+    border:1px solid rgba(201,154,63,0.4);
+    color:var(--parchment);
+    width:34px; height:34px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:14px;
+    transition:background .15s ease, transform .1s ease;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ctrl-btn:hover{background:rgba(201,154,63,0.22);}
+  .ctrl-btn:active{transform:scale(0.92);}
+  .ctrl-btn.lang{font-size:11px; font-weight:700; letter-spacing:.03em;}
+
+  .stage-wrap{
+    position:relative;
+    padding:0 14px;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    border-radius:8px;
+    background:#0b1220;
+  }
+  .progress-row{
+    display:flex;
+    gap:4px;
+    padding:8px 14px 0;
+  }
+  .progress-dot{
+    flex:1;
+    height:3px;
+    border-radius:2px;
+    background:rgba(241,230,200,0.15);
+    overflow:hidden;
+  }
+  .progress-dot.done{background:var(--brass);}
+  .progress-dot.current{background:rgba(201,154,63,0.55);}
+
+  .narrative-box{
+    margin:12px 14px 0;
+    background:linear-gradient(180deg, rgba(241,230,200,0.06), rgba(241,230,200,0.02));
+    border:1px solid rgba(201,154,63,0.3);
+    border-radius:10px;
+    padding:14px 16px;
+    min-height:64px;
+  }
+  .scene-label{
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin:0 0 6px;
+  }
+  .narrative-text{
+    font-family:'Cormorant Garamond', serif;
+    font-size:19px;
+    line-height:1.45;
+    color:var(--parchment);
+    margin:0;
+  }
+
+  .action-row{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    padding:12px 14px 16px;
+  }
+  .btn{
+    font-family:'Noto Sans', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.02em;
+    padding:11px 22px;
+    border-radius:9px;
+    border:none;
+    cursor:pointer;
+    transition:transform .1s ease, filter .15s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:scale(0.96);}
+  .btn-primary{
+    background:linear-gradient(180deg, var(--brass-bright), var(--brass));
+    color:#241a08;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid rgba(201,154,63,0.45);
+    color:var(--parchment);
+  }
+  .btn-ghost:hover{background:rgba(201,154,63,0.12);}
+
+  .qte-panel{
+    margin:0 14px 16px;
+  }
+  .qte-meter-track{
+    height:14px;
+    border-radius:7px;
+    background:rgba(0,0,0,0.35);
+    border:1px solid rgba(201,154,63,0.35);
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .qte-meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--maroon), var(--brass-bright));
+    transition:width .08s linear;
+  }
+  .qte-timer{
+    font-size:11px;
+    color:var(--parchment-dim);
+    text-align:center;
+    margin-bottom:10px;
+    letter-spacing:.05em;
+  }
+  .tap-btn{
+    width:100%;
+    padding:20px;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:700;
+    font-size:24px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    border-radius:12px;
+    border:2px solid var(--brass);
+    background:linear-gradient(180deg, rgba(140,47,57,0.55), rgba(140,47,57,0.35));
+    color:var(--parchment);
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  .tap-btn:active{
+    background:linear-gradient(180deg, rgba(201,154,63,0.55), rgba(201,154,63,0.35));
+    transform:scale(0.985);
+  }
+  .footer-credit{
+    text-align:center;
+    font-size:10px;
+    color:rgba(241,230,200,0.35);
+    padding:0 14px 14px;
+    letter-spacing:.04em;
+  }
+  @media (max-width:420px){
+    .title-block h1{font-size:18px;}
+    .narrative-text{font-size:17px;}
+    .tap-btn{font-size:19px; padding:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <div class="lamp-glow"></div>
+    <div class="topbar">
+      <div class="title-block">
+        <span class="kicker" id="kicker">Cerita Rakyat Jawa Timur</span>
+        <h1 id="mainTitle">Joko Dolog</h1>
+      </div>
+      <div class="controls">
+        <button class="ctrl-btn lang" id="langBtn" title="Ganti bahasa / Switch language">EN</button>
+        <button class="ctrl-btn" id="muteBtn" title="Mute/unmute narration">🔊</button>
+        <button class="ctrl-btn" id="restartBtn" title="Ulangi / Restart">↺</button>
+      </div>
+    </div>
+
+    <div class="progress-row" id="progressRow"></div>
+
+    <div class="stage-wrap">
+      <canvas id="stage" width="900" height="500"></canvas>
+    </div>
+
+    <div class="narrative-box">
+      <p class="scene-label" id="sceneLabel">BABAK</p>
+      <p class="narrative-text" id="narrativeText">Memuat cerita...</p>
+    </div>
+
+    <div class="qte-panel" id="qtePanel" style="display:none;">
+      <div class="qte-timer" id="qteTimer">5.0s</div>
+      <div class="qte-meter-track"><div class="qte-meter-fill" id="qteFill"></div></div>
+      <button class="tap-btn" id="tapBtn">KETUK!</button>
+    </div>
+
+    <div class="action-row" id="actionRow">
+      <button class="btn btn-primary" id="nextBtn">Mulai</button>
+    </div>
+
+    <p class="footer-credit">bangindsoft.github.io — dongeng interaktif</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- language & config ---------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get('lang') === 'en') ? 'en' : 'id';
+  var muted = false;
+  var voices = [];
+
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice(langCode){
+    if(!voices || !voices.length) return null;
+    var exact = voices.filter(function(v){ return v.lang && v.lang.toLowerCase() === langCode.toLowerCase(); });
+    if(exact.length) return exact[0];
+    var prefix = langCode.split('-')[0];
+    var loose = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(prefix) === 0; });
+    if(loose.length) return loose[0];
+    return null;
+  }
+
+  function speak(text){
+    if(!window.speechSynthesis || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var langCode = (lang === 'id') ? 'id-ID' : 'en-US';
+    var v = pickVoice(langCode);
+    if(v) u.voice = v;
+    u.lang = langCode;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+
+  /* ---------------- UI text dictionary ---------------- */
+  var UI = {
+    id:{
+      kicker:"Cerita Rakyat Jawa Timur",
+      title:"Joko Dolog",
+      start:"Mulai Cerita",
+      next:"Lanjut",
+      restart:"Main Lagi",
+      chapter:"BABAK",
+      tap:"KETUK!",
+      timerSuffix:"detik",
+      muteOn:"Suara narasi dimatikan",
+      muteOff:"Suara narasi dinyalakan"
+    },
+    en:{
+      kicker:"Folklore of East Java",
+      title:"Joko Dolog",
+      start:"Begin the Tale",
+      next:"Continue",
+      restart:"Play Again",
+      chapter:"CHAPTER",
+      tap:"TAP!",
+      timerSuffix:"s",
+      muteOn:"Narration muted",
+      muteOff:"Narration unmuted"
+    }
+  };
+
+  /* ---------------- story data ---------------- */
+  // colors per character (used for crown/sash accent on silhouettes)
+  var COL = {
+    purbawati:  "#e0a8c4",
+    situbondo:  "#a83e3e",
+    jakataruna: "#5f8fc4",
+    jakajumput: "#7fae63",
+    adipati:    "#c99a3f",
+    statue:     "#7d7b74"
+  };
+
+  var STEPS = [
+    { id:"s00", type:"title", bg:"palace",
+      chars:[{name:"purbawati", x:0.5, y:0.62, scale:1.15}] },
+
+    { id:"s01", type:"narrative", bg:"palace",
+      chars:[{name:"purbawati", x:0.36, y:0.62, scale:1.0},{name:"adipati", x:0.68, y:0.6, scale:1.05}],
+      label:{id:"Babak 1 · Kegelisahan Sang Putri", en:"Chapter 1 · The Princess's Dilemma"},
+      text:{
+        id:"Di Kadipaten Surabaya, Putri Purbawati gelisah. Pangeran Situbondo dari Madura datang melamarnya — namun hatinya telah lama tertambat pada Pangeran Jaka Taruna dari Kediri.",
+        en:"In the duchy of Surabaya, Princess Purbawati is troubled. Prince Situbondo of Madura has come to propose — yet her heart has long belonged to Prince Jaka Taruna of Kediri."
+      }
+    },
+    { id:"s02", type:"narrative", bg:"palace",
+      chars:[{name:"purbawati", x:0.5, y:0.6, scale:1.05},{name:"situbondo", x:0.82, y:0.58, scale:1.05}],
+      label:{id:"Babak 2 · Syarat Berat", en:"Chapter 2 · The Impossible Condition"},
+      text:{
+        id:"Tak ingin melukai persahabatan kedua ayah mereka, Purbawati pun mengambil jalan lain: siapa pun yang sanggup membuka hutan angker di Surabaya, dialah yang berhak mempersuntingnya.",
+        en:"Unwilling to break the friendship between their fathers, Purbawati sets a condition instead: whoever can clear Surabaya's haunted forest shall earn the right to marry her."
+      }
+    },
+    { id:"s03", type:"narrative", bg:"forest",
+      chars:[{name:"situbondo", x:0.5, y:0.62, scale:1.1, weapon:true}],
+      label:{id:"Babak 3 · Situbondo Membuka Hutan", en:"Chapter 3 · Situbondo Clears the Forest"},
+      text:{
+        id:"Pangeran Situbondo melangkah masuk ke hutan angker itu dengan penuh keyakinan. Dengan kesaktiannya, pohon demi pohon ia tumbangkan tanpa rasa gentar.",
+        en:"Prince Situbondo strides into the haunted forest with total confidence. Tree after tree falls before his formidable power, without a hint of fear."
+      }
+    },
+    { id:"s04", type:"narrative", bg:"forest",
+      chars:[{name:"jakataruna", x:0.5, y:0.62, scale:1.1}],
+      label:{id:"Babak 4 · Jaka Taruna Tiba", en:"Chapter 4 · Jaka Taruna Arrives"},
+      text:{
+        id:"Pangeran Jaka Taruna tiba di Surabaya dan terkejut mendengar syarat sayembara itu. Demi cintanya pada Purbawati, ia bertekad ikut masuk ke hutan angker dan membuktikan diri.",
+        en:"Prince Jaka Taruna arrives in Surabaya and is stunned to hear of the challenge. For the love of Purbawati, he resolves to enter the haunted forest and prove himself as well."
+      }
+    },
+    { id:"d01", type:"qte", bg:"forest",
+      left:{name:"jakataruna"}, right:{name:"situbondo"},
+      duration:5000, winner:"right",
+      label:{id:"Babak 5 · Duel Pertama", en:"Chapter 5 · The First Duel"},
+      instruction:{
+        id:"Di dalam hutan, Jaka Taruna dan Situbondo bertemu dan segera bertarung sengit! Ketuk secepat mungkin untuk membantu Jaka Taruna bertahan!",
+        en:"Deep in the forest, Jaka Taruna and Situbondo clash in a fierce duel! Tap as fast as you can to help Jaka Taruna hold his ground!"
+      },
+      result:{
+        id:"Namun kesaktian Situbondo jauh lebih tinggi. Satu pukulan telak membuat tubuh Jaka Taruna terpental jauh dan tersangkut di atas pohon tinggi.",
+        en:"But Situbondo's power proves far greater. A single crushing blow sends Jaka Taruna flying, his body caught high in the branches of a tree."
+      }
+    },
+    { id:"s05", type:"narrative", bg:"forest",
+      chars:[{name:"jakataruna", x:0.5, y:0.4, scale:0.85},{name:"jakajumput", x:0.3, y:0.68, scale:1.0}],
+      label:{id:"Babak 6 · Pertolongan Jaka Jumput", en:"Chapter 6 · Jaka Jumput's Rescue"},
+      text:{
+        id:"Teriakan minta tolong Jaka Taruna nyaris tak terdengar di hutan sepi itu. Untunglah seorang pemuda baik hati, Jaka Jumput, mendengarnya dan segera menolongnya turun.",
+        en:"Jaka Taruna's cries for help nearly go unheard in the empty forest. Luckily, a kind young man named Jaka Jumput hears him and rushes to help him down."
+      }
+    },
+    { id:"s06", type:"narrative", bg:"forest",
+      chars:[{name:"jakataruna", x:0.32, y:0.62, scale:1.0},{name:"jakajumput", x:0.66, y:0.62, scale:1.0}],
+      label:{id:"Babak 7 · Sebuah Janji", en:"Chapter 7 · A Promise"},
+      text:{
+        id:"Jaka Taruna meminta bantuan Jaka Jumput untuk mengalahkan Situbondo. Ia berjanji akan mengabulkan permintaan apa pun jika Jaka Jumput berhasil.",
+        en:"Jaka Taruna begs Jaka Jumput to defeat Situbondo on his behalf, promising to grant him any request in return if he succeeds."
+      }
+    },
+    { id:"d02", type:"qte", bg:"forest",
+      left:{name:"jakajumput"}, right:{name:"situbondo"},
+      duration:5000, winner:"left",
+      label:{id:"Babak 8 · Duel Kedua", en:"Chapter 8 · The Second Duel"},
+      instruction:{
+        id:"Jaka Jumput menantang Situbondo berduel! Ketuk secepat mungkin untuk mengerahkan kesaktiannya!",
+        en:"Jaka Jumput challenges Situbondo to a duel! Tap as fast as you can to unleash his hidden strength!"
+      },
+      result:{
+        id:"Di luar dugaan, Jaka Jumput ternyata pemuda sakti mandraguna. Situbondo kewalahan dan akhirnya melarikan diri ke wilayah timur — kelak wilayah itu dinamai Situbondo.",
+        en:"To everyone's surprise, Jaka Jumput is a young man of extraordinary power. Overwhelmed, Situbondo flees east — a region later named Situbondo in his memory."
+      }
+    },
+    { id:"s07", type:"narrative", bg:"palace",
+      chars:[{name:"jakataruna", x:0.36, y:0.6, scale:1.0},{name:"adipati", x:0.66, y:0.58, scale:1.0}],
+      label:{id:"Babak 9 · Kebohongan Jaka Taruna", en:"Chapter 9 · Jaka Taruna's Lie"},
+      text:{
+        id:"Melihat Situbondo kalah, Jaka Taruna bergegas menemui Adipati Jayengrana. Ia mengaku sendiri yang telah mengalahkan Situbondo, demi bisa mempersunting Purbawati.",
+        en:"Seeing Situbondo defeated, Jaka Taruna hurries to Duke Jayengrana and falsely claims that he himself defeated Situbondo, hoping to win Purbawati's hand."
+      }
+    },
+    { id:"s08", type:"narrative", bg:"palace",
+      chars:[{name:"jakajumput", x:0.3, y:0.6, scale:1.0},{name:"jakataruna", x:0.58, y:0.6, scale:1.0},{name:"adipati", x:0.84, y:0.58, scale:1.0}],
+      label:{id:"Babak 10 · Bukti Sebilah Keris", en:"Chapter 10 · The Keris as Proof"},
+      text:{
+        id:"Jaka Jumput datang dan membantah klaim itu di hadapan Adipati Jayengrana. Sebagai bukti, ia menyerahkan sebilah keris pusaka milik Situbondo. Jaka Taruna hanya terdiam, tak punya bukti apa pun.",
+        en:"Jaka Jumput arrives and denies the claim before Duke Jayengrana. As proof, he presents Situbondo's own keris dagger. Jaka Taruna falls silent, unable to offer any proof of his own."
+      }
+    },
+    { id:"d03", type:"qte", bg:"palace",
+      left:{name:"jakataruna"}, right:{name:"jakajumput"},
+      duration:5000, winner:"right",
+      label:{id:"Babak 11 · Duel Terakhir", en:"Chapter 11 · The Final Duel"},
+      instruction:{
+        id:"Malu dan tak terima, Jaka Taruna menantang Jaka Jumput berduel untuk membuktikan siapa yang lebih layak. Ketuk secepat mungkin!",
+        en:"Ashamed and unwilling to accept defeat, Jaka Taruna challenges Jaka Jumput to a duel to settle the matter. Tap as fast as you can!"
+      },
+      result:{
+        id:"Namun kesaktian Jaka Jumput tak tertandingi. Cambuk saktinya, Kyai Gembolo Geni, menghantam Jaka Taruna hingga ia terjatuh lemah tak berdaya di tanah.",
+        en:"But Jaka Jumput's power is unmatched. His enchanted whip, Kyai Gembolo Geni, strikes Jaka Taruna down, leaving him fallen and helpless on the ground."
+      }
+    },
+    { id:"s09", type:"narrative", bg:"palace",
+      chars:[{name:"jakataruna", x:0.5, y:0.72, scale:0.9, fallen:true},{name:"adipati", x:0.78, y:0.55, scale:1.0}],
+      label:{id:"Babak 12 · Kutukan Sang Adipati", en:"Chapter 12 · The Duke's Curse"},
+      text:{
+        id:"“Mengapa kau berani membohongiku? Mengapa kini kau hanya diam seperti patung?” seru Adipati Jayengrana dengan kecewa. Tiba-tiba, ucapan itu menjelma menjadi kutukan yang nyata.",
+        en:"“Why did you dare deceive me? Why do you now stand silent like a statue?” Duke Jayengrana cries in disappointment. Suddenly, his words become an eerie, true curse."
+      }
+    },
+    { id:"end", type:"ending", bg:"statue",
+      chars:[{name:"statue", x:0.5, y:0.62, scale:1.15}],
+      label:{id:"Penutup · Joko Dolog", en:"Epilogue · Joko Dolog"},
+      text:{
+        id:"Perlahan, tubuh Pangeran Jaka Taruna membatu menjadi arca. Di kemudian hari, arca peninggalan Majapahit itu dikenal warga Surabaya dengan nama Joko Dolog — kisah yang mengingatkan kita bahwa kebohongan, cepat atau lambat, akan terbongkar.",
+        en:"Slowly, Prince Jaka Taruna's body turns to stone. In time, this Majapahit-era statue becomes known to the people of Surabaya as Joko Dolog — a tale reminding us that a lie, sooner or later, always comes undone."
+      }
+    }
+  ];
+
+  var stepIndex = 0;
+  var qteActive = false;
+  var qteTaps = 0;
+  var qteStartTime = 0;
+  var qteDuration = 5000;
+  var qteHitFx = []; // spark particles {x,y,life}
+  var shakeAmt = 0;
+
+  /* ---------------- canvas setup ---------------- */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var CW = 900, CH = 500;
+
+  function resizeCanvasCSS(){
+    // internal resolution stays fixed; CSS handles responsive scale
+  }
+  resizeCanvasCSS();
+
+  /* audio: tiny clang blip via WebAudio, respects mute */
+  var actx = null;
+  function ensureAudio(){
+    if(!actx){
+      try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ actx = null; }
+    }
+  }
+  function playClang(){
+    if(muted || !actx) return;
+    var t0 = actx.currentTime;
+    var osc = actx.createOscillator();
+    var gain = actx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(520 + Math.random()*180, t0);
+    osc.frequency.exponentialRampToValueAtTime(180, t0+0.12);
+    gain.gain.setValueAtTime(0.16, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0+0.14);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(t0); osc.stop(t0+0.15);
+  }
+
+  /* ---------------- drawing helpers ---------------- */
+  function grd(x0,y0,x1,y1, stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+    return g;
+  }
+
+  function drawBackground(bg){
+    ctx.clearRect(0,0,CW,CH);
+    if(bg === 'palace'){
+      ctx.fillStyle = grd(0,0,0,CH,[[0,'#1b2540'],[0.55,'#141d33'],[1,'#0c1220']]);
+      ctx.fillRect(0,0,CW,CH);
+      // moon
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#e9c877';
+      ctx.beginPath(); ctx.arc(760,90,46,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      // pillars
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      for(var i=0;i<2;i++){
+        var px = i===0? 60 : CW-60-70;
+        ctx.fillRect(px, 60, 70, CH-60);
+      }
+      // floor
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(0, CH-70, CW, 70);
+      drawRoofSilhouette();
+    } else if(bg === 'forest'){
+      ctx.fillStyle = grd(0,0,0,CH,[[0,'#0f1a1f'],[0.5,'#0c1616'],[1,'#080e0f']]);
+      ctx.fillRect(0,0,CW,CH);
+      // moon glow
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = '#cfe0c0';
+      ctx.beginPath(); ctx.arc(140,80,34,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      drawTrees();
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(0, CH-60, CW, 60);
+    } else if(bg === 'statue'){
+      ctx.fillStyle = grd(0,0,0,CH,[[0,'#20283a'],[0.6,'#171d2c'],[1,'#0d1119']]);
+      ctx.fillRect(0,0,CW,CH);
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = '#e9c877';
+      ctx.beginPath(); ctx.arc(450,80,50,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(0, CH-70, CW, 70);
+    }
+  }
+
+  function drawRoofSilhouette(){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.beginPath();
+    ctx.moveTo(0,60);
+    ctx.lineTo(CW*0.5, 4);
+    ctx.lineTo(CW, 60);
+    ctx.lineTo(CW, 90);
+    ctx.lineTo(0,90);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTrees(){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    var positions = [40,150,780,860,660,120,900-40];
+    positions.forEach(function(x, idx){
+      var h = 220 + (idx%3)*40;
+      var w = 26 + (idx%2)*8;
+      ctx.beginPath();
+      ctx.moveTo(x-w/2, CH-60);
+      ctx.lineTo(x-w/4, CH-60-h*0.6);
+      ctx.lineTo(x-w*0.9, CH-60-h*0.55);
+      ctx.lineTo(x, CH-60-h);
+      ctx.lineTo(x+w*0.9, CH-60-h*0.55);
+      ctx.lineTo(x+w/4, CH-60-h*0.6);
+      ctx.lineTo(x+w/2, CH-60);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  // stylized wayang-esque silhouette figure
+  function drawFigure(opts){
+    var x = opts.x, y = opts.y, s = opts.scale || 1;
+    var flip = opts.flip ? -1 : 1;
+    var accent = opts.accent || '#c99a3f';
+    var bob = opts.bob || 0;
+    var fallen = opts.fallen || false;
+    var hit = opts.hit || 0; // 0..1 flash amount
+
+    ctx.save();
+    ctx.translate(x, y + bob);
+    if(fallen){
+      ctx.rotate(flip * -1.35);
+      ctx.translate(-20*flip, 30);
+    }
+    ctx.scale(s*flip, s);
+
+    ctx.fillStyle = '#140d08';
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2.4;
+
+    // robe / body
+    ctx.beginPath();
+    ctx.moveTo(-34, 40);
+    ctx.quadraticCurveTo(-46, -30, -14, -58);
+    ctx.quadraticCurveTo(0, -66, 14, -58);
+    ctx.quadraticCurveTo(46, -30, 34, 40);
+    ctx.quadraticCurveTo(0, 54, -34, 40);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // sash accent
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-24, -10); ctx.lineTo(20, 30);
+    ctx.stroke();
+    ctx.restore();
+
+    // head
+    ctx.beginPath();
+    ctx.arc(0, -82, 20, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    // crown / headdress
+    ctx.beginPath();
+    ctx.moveTo(-18, -96);
+    ctx.lineTo(-6, -122);
+    ctx.lineTo(4, -100);
+    ctx.lineTo(14, -124);
+    ctx.lineTo(20, -98);
+    ctx.closePath();
+    ctx.fillStyle = accent;
+    ctx.fill();
+
+    // arm forward (weapon holder)
+    ctx.fillStyle = '#140d08';
+    ctx.beginPath();
+    ctx.moveTo(20, -30);
+    ctx.quadraticCurveTo(52, -20, 60, 6);
+    ctx.quadraticCurveTo(50, 14, 40, 4);
+    ctx.quadraticCurveTo(28, -10, 14, -18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    if(opts.weapon){
+      ctx.save();
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(58, 8);
+      ctx.lineTo(92, -34);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if(hit > 0){
+      ctx.save();
+      ctx.globalAlpha = hit*0.55;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0,-40,70,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function drawStatueFigure(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    var stoneGrad = ctx.createLinearGradient(0,-120,0,50);
+    stoneGrad.addColorStop(0,'#8f8d84');
+    stoneGrad.addColorStop(1,'#55534c');
+    ctx.fillStyle = stoneGrad;
+    ctx.strokeStyle = '#3a3934';
+    ctx.lineWidth = 2;
+
+    // pedestal
+    ctx.fillRect(-60, 40, 120, 22);
+    ctx.strokeRect(-60, 40, 120, 22);
+
+    // seated statue body (cross-legged, like the real Joko Dolog statue)
+    ctx.beginPath();
+    ctx.moveTo(-50, 40);
+    ctx.quadraticCurveTo(-58, 10, -30, -6);
+    ctx.quadraticCurveTo(-40, -50, 0, -66);
+    ctx.quadraticCurveTo(40, -50, 30, -6);
+    ctx.quadraticCurveTo(58, 10, 50, 40);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // head
+    ctx.beginPath();
+    ctx.arc(0, -86, 20, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    // crown
+    ctx.beginPath();
+    ctx.moveTo(-16,-100); ctx.lineTo(-4,-124); ctx.lineTo(6,-102); ctx.lineTo(16,-126); ctx.lineTo(20,-100);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // moss/weathering flecks
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#4a6b4a';
+    for(var i=0;i<10;i++){
+      var mx = -40 + Math.random()*80;
+      var my = -50 + Math.random()*80;
+      ctx.beginPath(); ctx.arc(mx,my, 3+Math.random()*3, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function drawScene(step, tAnim){
+    drawBackground(step.bg);
+    var bobBase = Math.sin(tAnim/500)*3;
+
+    if(step.type === 'ending'){
+      drawStatueFigure(CW*0.5, CH*0.72, 1.25);
+      return;
+    }
+
+    if(step.type === 'title'){
+      var c = step.chars[0];
+      drawFigure({x:CW*c.x, y:CH*c.y, scale:c.scale, accent:COL[c.name], bob:bobBase});
+      return;
+    }
+
+    if(step.type === 'narrative'){
+      step.chars.forEach(function(c, i){
+        drawFigure({
+          x: CW*c.x, y: CH*c.y, scale: c.scale || 1,
+          accent: COL[c.name],
+          flip: c.x > 0.5,
+          weapon: c.weapon,
+          fallen: c.fallen,
+          bob: bobBase * (i%2===0?1:-1)
+        });
+      });
+      return;
+    }
+
+    if(step.type === 'qte'){
+      var shake = shakeAmt * (Math.random()-0.5) * 2;
+      ctx.save();
+      ctx.translate(shake, shake*0.4);
+
+      var leftHit = 0, rightHit = 0;
+      var now = performance.now();
+      qteHitFx.forEach(function(fx){
+        var age = now - fx.t;
+        if(age < 220){
+          if(fx.side === 'left') leftHit = Math.max(leftHit, 1 - age/220);
+          else rightHit = Math.max(rightHit, 1 - age/220);
+        }
+      });
+
+      drawFigure({x:CW*0.30, y:CH*0.62, scale:1.05, accent:COL[step.left.name], weapon:true, bob:bobBase, hit:leftHit});
+      drawFigure({x:CW*0.70, y:CH*0.62, scale:1.05, accent:COL[step.right.name], flip:true, weapon:true, bob:-bobBase, hit:rightHit});
+
+      // spark particles
+      qteHitFx.forEach(function(fx){
+        var age = now - fx.t;
+        if(age < 300){
+          var alpha = 1 - age/300;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = '#e9c877';
+          for(var i=0;i<4;i++){
+            var ang = (i/4)*Math.PI*2 + fx.seed;
+            var r = age*0.3;
+            ctx.beginPath();
+            ctx.arc(fx.x + Math.cos(ang)*r, fx.y + Math.sin(ang)*r, 3, 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      });
+      qteHitFx = qteHitFx.filter(function(fx){ return now - fx.t < 320; });
+
+      ctx.restore();
+      return;
+    }
+  }
+
+  /* ---------------- animation loop ---------------- */
+  function loop(t){
+    var step = STEPS[stepIndex];
+    if(shakeAmt > 0) shakeAmt *= 0.9;
+    drawScene(step, t);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ---------------- UI wiring ---------------- */
+  var kickerEl = document.getElementById('kicker');
+  var titleEl = document.getElementById('mainTitle');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var restartBtn = document.getElementById('restartBtn');
+  var narrativeText = document.getElementById('narrativeText');
+  var sceneLabel = document.getElementById('sceneLabel');
+  var nextBtn = document.getElementById('nextBtn');
+  var actionRow = document.getElementById('actionRow');
+  var qtePanel = document.getElementById('qtePanel');
+  var qteFill = document.getElementById('qteFill');
+  var qteTimer = document.getElementById('qteTimer');
+  var tapBtn = document.getElementById('tapBtn');
+  var progressRow = document.getElementById('progressRow');
+
+  function buildProgressDots(){
+    progressRow.innerHTML = '';
+    STEPS.forEach(function(){
+      var d = document.createElement('div');
+      d.className = 'progress-dot';
+      progressRow.appendChild(d);
+    });
+  }
+  buildProgressDots();
+
+  function updateProgressDots(){
+    var dots = progressRow.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].className = 'progress-dot' + (i < stepIndex ? ' done' : (i === stepIndex ? ' current' : ''));
+    }
+  }
+
+  function updateChrome(){
+    kickerEl.textContent = UI[lang].kicker;
+    titleEl.textContent = UI[lang].title;
+    langBtn.textContent = (lang === 'id') ? 'EN' : 'ID';
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+
+  function renderStep(){
+    var step = STEPS[stepIndex];
+    updateProgressDots();
+
+    if(step.label){
+      sceneLabel.textContent = step.label[lang];
+    } else {
+      sceneLabel.textContent = UI[lang].chapter;
+    }
+
+    if(step.type === 'title'){
+      narrativeText.textContent = (lang === 'id')
+        ? "Sebuah patung kuno di Surabaya menyimpan kisah tentang cinta, kesaktian, dan sebuah kebohongan yang berubah menjadi kutukan. Ketuk tombol di bawah untuk memulai."
+        : "An ancient statue in Surabaya holds a story of love, hidden power, and a lie that became a curse. Tap the button below to begin.";
+      nextBtn.textContent = UI[lang].start;
+      qtePanel.style.display = 'none';
+      actionRow.style.display = 'flex';
+      speak(narrativeText.textContent);
+    } else if(step.type === 'narrative' || step.type === 'ending'){
+      narrativeText.textContent = step.text[lang];
+      nextBtn.textContent = (step.type === 'ending') ? UI[lang].restart : UI[lang].next;
+      qtePanel.style.display = 'none';
+      actionRow.style.display = 'flex';
+      speak(narrativeText.textContent);
+    } else if(step.type === 'qte'){
+      narrativeText.textContent = step.instruction[lang];
+      actionRow.style.display = 'none';
+      qtePanel.style.display = 'block';
+      speak(narrativeText.textContent);
+      startQTE(step);
+    }
+  }
+
+  function startQTE(step){
+    qteActive = true;
+    qteTaps = 0;
+    qteStartTime = performance.now();
+    qteDuration = step.duration || 5000;
+    qteFill.style.width = '0%';
+    tickQTE(step);
+  }
+
+  function tickQTE(step){
+    if(!qteActive) return;
+    var elapsed = performance.now() - qteStartTime;
+    var remaining = Math.max(0, qteDuration - elapsed);
+    qteTimer.textContent = (remaining/1000).toFixed(1) + UI[lang].timerSuffix;
+
+    // meter reflects tap intensity, gently decaying, purely for feel/engagement
+    var target = Math.min(100, qteTaps * 9);
+    var current = parseFloat(qteFill.style.width) || 0;
+    qteFill.style.width = (current + (target-current)*0.25) + '%';
+
+    if(remaining <= 0){
+      qteActive = false;
+      finishQTE(step);
+      return;
+    }
+    requestAnimationFrame(function(){ tickQTE(step); });
+  }
+
+  function finishQTE(step){
+    qtePanel.style.display = 'none';
+    actionRow.style.display = 'flex';
+    narrativeText.textContent = step.result[lang];
+    nextBtn.textContent = UI[lang].next;
+    speak(step.result[lang]);
+  }
+
+  tapBtn.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    if(!qteActive) return;
+    qteTaps++;
+    shakeAmt = 6;
+    ensureAudio();
+    playClang();
+    var step = STEPS[stepIndex];
+    var side = Math.random() < 0.5 ? 'left' : 'right';
+    qteHitFx.push({
+      x: side === 'left' ? CW*0.30 : CW*0.70,
+      y: CH*0.5,
+      t: performance.now(),
+      side: side,
+      seed: Math.random()*Math.PI
+    });
+  });
+
+  nextBtn.addEventListener('click', function(){
+    var step = STEPS[stepIndex];
+    if(step.type === 'ending'){
+      stepIndex = 0;
+    } else {
+      stepIndex = Math.min(stepIndex+1, STEPS.length-1);
+    }
+    renderStep();
+    postHeight();
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    updateChrome();
+    renderStep();
+    postHeight();
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    updateChrome();
+    if(muted && window.speechSynthesis){ window.speechSynthesis.cancel(); }
+  });
+
+  restartBtn.addEventListener('click', function(){
+    qteActive = false;
+    stepIndex = 0;
+    renderStep();
+    postHeight();
+  });
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function postHeight(){
+    var h = document.body.scrollHeight;
+    try{
+      window.parent.postMessage({ type: 'jokodologHeight', height: h }, '*');
+      window.parent.postMessage({ jokodologHeight: h }, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    new ResizeObserver(function(){ postHeight(); }).observe(document.body);
+  }
+  window.addEventListener('load', function(){ postHeight(); setTimeout(postHeight, 300); });
+  window.addEventListener('resize', postHeight);
+
+  /* ---------------- init ---------------- */
+  updateChrome();
+  renderStep();
+  postHeight();
+
+})();
+</script>
+</body>
+</html>
