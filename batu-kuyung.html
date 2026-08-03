@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batu Kuyung - Cerita Rakyat Bengkulu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#2b3a67;
+    --sky-bottom:#f2b880;
+    --panel:#2e2417;
+    --panel-light:#3d3122;
+    --cream:#f5ecd7;
+    --gold:#e0a13e;
+    --red:#c1443a;
+    --green:#4c6e4a;
+    --shadow: rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Nunito',sans-serif;
+    background:transparent;
+    color:var(--cream);
+    overflow:hidden;
+  }
+  #bk-root{
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--panel) 0%,var(--panel-light) 100%);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 8px 30px var(--shadow);
+    position:relative;
+  }
+  #bk-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--panel);
+    border-bottom:2px solid var(--gold);
+  }
+  #bk-title{
+    font-family:'Merriweather',serif;
+    font-weight:900;
+    font-size:16px;
+    letter-spacing:.5px;
+    color:var(--gold);
+  }
+  .bk-btnrow{display:flex;gap:8px;align-items:center;}
+  .bk-icon-btn{
+    background:var(--panel-light);
+    border:1px solid rgba(224,161,62,.4);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:transform .12s ease, background .2s ease;
+    font-family:'Nunito',sans-serif;
+  }
+  .bk-icon-btn:hover{background:var(--gold);color:var(--panel);transform:translateY(-1px);}
+  .bk-icon-btn.active{background:var(--gold);color:var(--panel);}
+
+  #bk-stage-wrap{position:relative;width:100%;background:#000;}
+  canvas#bk-canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));
+  }
+
+  #bk-overlay{
+    position:absolute;inset:0;
+    display:flex;
+    align-items:flex-end;
+    pointer-events:none;
+  }
+  #bk-narration{
+    pointer-events:auto;
+    margin:0 12px 12px 12px;
+    background:rgba(20,16,10,.82);
+    border:1px solid rgba(224,161,62,.5);
+    border-radius:12px;
+    padding:14px 16px;
+    width:calc(100% - 24px);
+    backdrop-filter:blur(2px);
+  }
+  #bk-narr-text{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--cream);
+    min-height:2.4em;
+  }
+  #bk-controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+  .bk-action{
+    flex:1 1 auto;
+    background:var(--red);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:10px 14px;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;
+    transition:transform .1s ease, filter .15s ease;
+    box-shadow:0 3px 0 rgba(0,0,0,.25);
+  }
+  .bk-action:active{transform:translateY(2px);box-shadow:none;}
+  .bk-action:hover{filter:brightness(1.08);}
+  .bk-action.secondary{background:var(--panel-light);border:1px solid var(--gold);}
+  .bk-action.gold{background:var(--gold);color:var(--panel);}
+
+  #bk-progress{
+    padding:8px 14px 12px 14px;
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    background:var(--panel);
+  }
+  .bk-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(224,161,62,.25);
+    transition:background .25s ease, transform .25s ease;
+  }
+  .bk-dot.done{background:var(--gold);}
+  .bk-dot.current{background:var(--red);transform:scale(1.4);}
+
+  #bk-meter-wrap{
+    margin-top:8px;
+    background:rgba(0,0,0,.35);
+    border-radius:20px;
+    height:14px;
+    overflow:hidden;
+    border:1px solid rgba(224,161,62,.4);
+  }
+  #bk-meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--red));
+    transition:width .18s ease;
+  }
+  .bk-meter-label{font-size:11.5px;opacity:.85;margin-top:4px;}
+
+  #bk-title-screen{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(20,16,10,.55),rgba(20,16,10,.9));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    z-index:20;
+  }
+  #bk-title-screen h1{
+    font-family:'Merriweather',serif;
+    font-size:clamp(24px,5vw,34px);
+    color:var(--gold);
+    margin:0 0 6px 0;
+    text-shadow:0 2px 6px rgba(0,0,0,.6);
+  }
+  #bk-title-screen p{
+    font-size:14px;
+    max-width:440px;
+    line-height:1.6;
+    margin:0 0 20px 0;
+    color:var(--cream);
+  }
+  #bk-play-btn{
+    background:var(--red);
+    color:#fff;
+    border:none;
+    padding:14px 34px;
+    border-radius:30px;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.3);
+    font-family:'Nunito',sans-serif;
+  }
+  #bk-play-btn:active{transform:translateY(3px);box-shadow:none;}
+
+  @media (max-width:480px){
+    #bk-title{font-size:13px;}
+    .bk-icon-btn{padding:5px 8px;font-size:11.5px;}
+    .bk-action{font-size:13px;padding:9px 10px;}
+    #bk-narr-text{font-size:13.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="bk-root">
+  <div id="bk-topbar">
+    <div id="bk-title">🪨 Batu Kuyung</div>
+    <div class="bk-btnrow">
+      <button class="bk-icon-btn" id="bk-lang-btn" title="Ganti bahasa / Change language">🌐 <span id="bk-lang-label">ID</span></button>
+      <button class="bk-icon-btn" id="bk-mute-btn" title="Bisukan narasi / Mute narration">🔊</button>
+    </div>
+  </div>
+
+  <div id="bk-stage-wrap">
+    <canvas id="bk-canvas" width="720" height="450"></canvas>
+    <div id="bk-title-screen">
+      <h1 id="bk-tt-title">Batu Kuyung</h1>
+      <p id="bk-tt-desc">Cerita rakyat dari Bengkulu tentang dua anak yang tidak sabar dan sebuah batu ajaib.</p>
+      <button id="bk-play-btn">▶ Mulai Cerita</button>
+    </div>
+    <div id="bk-overlay">
+      <div id="bk-narration">
+        <div id="bk-narr-text"></div>
+        <div id="bk-meter-wrap" style="display:none;">
+          <div id="bk-meter-fill"></div>
+        </div>
+        <div class="bk-meter-label" id="bk-meter-label" style="display:none;"></div>
+        <div id="bk-controls"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bk-progress"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- language setup ---------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+
+  var STEP_COUNT = 9;
+
+  /* ---------------- text content ---------------- */
+  var T = {
+    id: {
+      titleScreenTitle: "Batu Kuyung",
+      titleScreenDesc: "Cerita rakyat dari Bengkulu tentang dua anak yang tidak sabar, sebuah nyanyian sedih, dan batu ajaib yang menjulang hingga ke langit.",
+      play: "▶ Mulai Cerita",
+      next: "Lanjutkan ▸",
+      steps: [
+        "Di dusun Tanjung Meranti, Bengkulu, hiduplah sepasang suami istri dengan dua anak: Dimun si sulung, dan Meterei si bungsu. Karena orang tua mereka sibuk bertani, mencari ikan, dan membuat kerajinan untuk dijual, kedua anak itu jarang dididik. Dimun dan Meterei pun tumbuh menjadi anak yang nakal dan suka berkata kasar.",
+        "Suatu hari, ayah dan ibu sangat sibuk membuat bubu dan bakul untuk dijual ke pasar. Mereka lupa memasak. Dimun dan Meterei mulai lapar dan merengek minta makan, tapi tak ada yang menghiraukan mereka. Bantu mereka merengek dengan menekan tombol berulang kali!",
+        "Karena kesal tak dihiraukan, Dimun dan Meterei mengamuk—menendang dan membanting bubu serta baronang buatan orang tua mereka sambil berteriak kelaparan.",
+        "“Ibu, beri kami makanan!” pinta mereka. “Mintalah pada ayahmu!” jawab ibu ketus. Mereka pun berlari ke ayah. “Ayah sedang sibuk, pergi ke ibu kalian!” bentak sang ayah. Ditolak berkali-kali, kedua anak itu pergi dengan hati yang marah dan kecewa.",
+        "Dengan hati kesal, Dimun dan Meterei pergi ke kebun di belakang rumah lalu duduk di atas sebuah batu besar—batu yang mereka beri nama Batu Kuyung. Untuk melupakan rasa lapar, mereka mulai mendendangkan lagu sedih, meminta batu itu membawa mereka terbang tinggi menjauh dari orang tua mereka.",
+        "Ajaib! Setiap kali mereka berhenti bernyanyi, Batu Kuyung tumbuh semakin tinggi. Bantu Dimun dan Meterei bernyanyi lalu berhenti agar batu itu terus menjulang ke langit!",
+        "Kedua orang tua selesai bekerja dan tersadar anak-anak mereka tak ada di rumah. Mereka mencari ke kebun dan terkejut—Batu Kuyung telah menjulang setinggi pepohonan! Samar terdengar suara Dimun dan Meterei di puncaknya. “Turunlah! Ayo pulang makan bersama!” teriak mereka penuh cemas dan penyesalan.",
+        "Sang ayah bergegas mengambil kapak dan berusaha menebang Batu Kuyung agar anak-anaknya bisa turun dengan selamat. Ia mengayunkan kapak sekuat tenaga—tekan tombol secepat mungkin untuk membantunya!",
+        "Namun kapak itu tak mempan sedikit pun. Dimun dan Meterei tak mempedulikan panggilan orang tua mereka. Mereka terus bernyanyi tanpa henti hingga Batu Kuyung menyentuh langit. Seketika itu juga, keduanya lenyap tanpa bekas. Batu Kuyung lalu roboh dengan suara menggelegar, menimpa rumah serta kedua orang tua yang menyesal—hingga tak seorang pun selamat."
+      ],
+      moral: "Pesan moral: kasih sayang dan waktu bersama keluarga tak tergantikan oleh kesibukan apa pun. Kata-kata kasar dan amarah yang dibiarkan tumbuh bisa membawa penyesalan yang tak terperbaikan.",
+      replay: "🔁 Ulangi Cerita",
+      sing: "🎵 Bernyanyi",
+      stopSing: "⏹ Berhenti Bernyanyi",
+      rengekBtn: "😤 Merengek!",
+      chopBtn: "🪓 Tebang!",
+      rengekLabel: "Rasa lapar & amarah",
+      heightLabel: "Tinggi Batu Kuyung",
+      chopLabel: "Usaha menebang batu",
+      chopFail: "Kapak itu sama sekali tak mempan pada Batu Kuyung...",
+      end: "— Tamat —",
+      muteOn: "Bisu",
+      muteOff: "Suara",
+    },
+    en: {
+      titleScreenTitle: "Batu Kuyung",
+      titleScreenDesc: "A folktale from Bengkulu, Indonesia, about two impatient children, a sorrowful song, and a magic stone that grew all the way to the sky.",
+      play: "▶ Start the Story",
+      next: "Continue ▸",
+      steps: [
+        "In the hamlet of Tanjung Meranti, Bengkulu, there lived a husband and wife with two children: Dimun, the elder, and Meterei, the younger. Because their parents were always busy farming, fishing, and making crafts to sell, the children were rarely taught right from wrong. Dimun and Meterei grew up rude, mocking others, and badly behaved.",
+        "One day, the parents were very busy making fish traps and baskets to sell at the market. They forgot to cook. Dimun and Meterei grew hungry and began whining for food, but no one paid attention. Help them whine by tapping the button again and again!",
+        "Frustrated at being ignored, Dimun and Meterei threw a tantrum—kicking and smashing the traps and baskets their parents had made, screaming that they were starving.",
+        "\"Mother, feed us!\" they begged. \"Go ask your father!\" she snapped. They ran to their father instead. \"I'm busy, go back to your mother!\" he barked. Rejected again and again, the two children walked away with hearts full of anger and disappointment.",
+        "Bitter and upset, Dimun and Meterei went to the garden behind the house and sat on a great big rock—one they named Batu Kuyung. To forget their hunger, they began singing a sorrowful song, asking the stone to carry them high into the sky, far away from their parents.",
+        "Magically, every time they stopped singing, Batu Kuyung grew taller. Help Dimun and Meterei sing, then stop, so the stone keeps rising toward the sky!",
+        "The parents finished their work and realized the children were missing. They searched the garden and were shocked—Batu Kuyung now towered above the trees! Faintly, they could hear Dimun and Meterei's voices from the top. \"Come down! Let's go home and eat together!\" they shouted, filled with worry and regret.",
+        "The father grabbed an axe and tried desperately to chop the stone down so his children could climb safely to the ground. He swung with all his strength—tap the button as fast as you can to help him!",
+        "But the axe made no mark at all. Dimun and Meterei ignored their parents' cries and kept singing without pause until Batu Kuyung touched the sky. In an instant, the two children vanished without a trace. Batu Kuyung then came crashing down with a deafening roar, crushing the house and the grieving parents beneath it—leaving no one behind."
+      ],
+      moral: "Moral of the story: love and time spent with family cannot be replaced by any amount of busyness. Harsh words and anger left to grow can lead to a regret that can never be undone.",
+      replay: "🔁 Replay Story",
+      sing: "🎵 Sing",
+      stopSing: "⏹ Stop Singing",
+      rengekBtn: "😤 Whine!",
+      chopBtn: "🪓 Chop!",
+      rengekLabel: "Hunger & frustration",
+      heightLabel: "Height of Batu Kuyung",
+      chopLabel: "Chopping effort",
+      chopFail: "The axe makes no mark on Batu Kuyung at all...",
+      end: "— The End —",
+      muteOn: "Muted",
+      muteOff: "Sound",
+    }
+  };
+
+  function tr(key){ return T[lang][key]; }
+
+  /* ---------------- speech synthesis ---------------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(l){
+    var want = l === 'en' ? 'en' : 'id';
+    for (var i=0;i<voices.length;i++){
+      if (voices[i].lang && voices[i].lang.toLowerCase().indexOf(want) === 0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if (muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice(lang);
+    if (v) u.voice = v;
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeaking(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------------- DOM refs ---------------- */
+  var canvas = document.getElementById('bk-canvas');
+  var ctx = canvas.getContext('2d');
+  var narrText = document.getElementById('bk-narr-text');
+  var controls = document.getElementById('bk-controls');
+  var progressWrap = document.getElementById('bk-progress');
+  var titleScreen = document.getElementById('bk-title-screen');
+  var playBtn = document.getElementById('bk-play-btn');
+  var muteBtn = document.getElementById('bk-mute-btn');
+  var langBtn = document.getElementById('bk-lang-btn');
+  var langLabel = document.getElementById('bk-lang-label');
+  var meterWrap = document.getElementById('bk-meter-wrap');
+  var meterFill = document.getElementById('bk-meter-fill');
+  var meterLabel = document.getElementById('bk-meter-label');
+
+  /* ---------------- state ---------------- */
+  var step = 0;
+  var rockHeight = 0;       // 0..5 growth stages
+  var rengekMeter = 0;      // 0..100
+  var chopMeter = 0;        // 0..100
+  var singing = false;
+  var animTime = 0;
+  var collapseT = 0;
+  var childrenVisible = true;
+  var rafId = null;
+
+  function setupProgressDots(){
+    progressWrap.innerHTML = '';
+    for (var i=0;i<STEP_COUNT;i++){
+      var d = document.createElement('div');
+      d.className = 'bk-dot';
+      progressWrap.appendChild(d);
+    }
+  }
+  function updateProgressDots(){
+    var dots = progressWrap.children;
+    for (var i=0;i<dots.length;i++){
+      dots[i].className = 'bk-dot' + (i < step ? ' done' : (i === step ? ' current' : ''));
+    }
+  }
+
+  /* ---------------- drawing helpers ---------------- */
+  function W(){ return canvas.width; }
+  function H(){ return canvas.height; }
+
+  function drawSky(t){
+    var grad = ctx.createLinearGradient(0,0,0,H());
+    grad.addColorStop(0,'#2b3a67');
+    grad.addColorStop(1,'#f2b880');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W(),H());
+    // sun
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,235,180,.9)';
+    ctx.arc(W()-90,90,44,0,Math.PI*2);
+    ctx.fill();
+    // clouds
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    for (var i=0;i<3;i++){
+      var cx = 80 + i*220 + Math.sin(t/2000+i)*10;
+      var cy = 60 + i*20;
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,40,16,0,0,Math.PI*2);
+      ctx.ellipse(cx+30,cy+6,28,13,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawGround(){
+    ctx.fillStyle = '#4c6e4a';
+    ctx.fillRect(0,H()-110,W(),110);
+    ctx.fillStyle = '#3d5b3b';
+    ctx.fillRect(0,H()-115,W(),12);
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2f';
+    ctx.fillRect(-6,-40,12,45);
+    ctx.fillStyle = '#375c34';
+    ctx.beginPath();
+    ctx.arc(0,-55,32,0,Math.PI*2);
+    ctx.arc(-22,-40,22,0,Math.PI*2);
+    ctx.arc(22,-40,22,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHouse(x,y,destroyed){
+    ctx.save();
+    ctx.translate(x,y);
+    if (destroyed){
+      ctx.fillStyle = '#5a4633';
+      ctx.fillRect(-50,-10,40,20);
+      ctx.fillRect(10,-4,45,14);
+      ctx.fillStyle = '#7a2f28';
+      ctx.fillRect(-20,-24,30,16);
+      ctx.restore();
+      return;
+    }
+    // stilts
+    ctx.fillStyle = '#6b4a2f';
+    ctx.fillRect(-45,10,10,35);
+    ctx.fillRect(35,10,10,35);
+    // body
+    ctx.fillStyle = '#a97a4b';
+    ctx.fillRect(-55,-30,110,45);
+    // roof
+    ctx.fillStyle = '#7a2f28';
+    ctx.beginPath();
+    ctx.moveTo(-68,-30);
+    ctx.lineTo(0,-72);
+    ctx.lineTo(68,-30);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = '#3d2b1a';
+    ctx.fillRect(-10,-8,20,23);
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    var color = opts.color || '#c1443a';
+    var flip = opts.flip ? -1 : 1;
+    var bob = opts.bob || 0;
+    ctx.save();
+    ctx.translate(x, y+bob);
+    ctx.scale(scale*flip, scale);
+    // legs
+    ctx.strokeStyle = '#2e2417';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(-6,20); ctx.lineTo(-9,38);
+    ctx.moveTo(6,20); ctx.lineTo(9,38);
+    ctx.stroke();
+    // body
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-14,20);
+    ctx.quadraticCurveTo(0,-6,14,20);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    var armAngle = opts.armUp ? -0.9 : 0.35;
+    ctx.beginPath();
+    ctx.moveTo(-12,0);
+    ctx.lineTo(-12 + Math.cos(Math.PI+armAngle)*18, 0 + Math.sin(Math.PI+armAngle)*18*-1 + 10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(12,0);
+    ctx.lineTo(12 - Math.cos(Math.PI+armAngle)*18, 0 + Math.sin(Math.PI+armAngle)*18*-1 + 10);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = '#e8b98a';
+    ctx.beginPath();
+    ctx.arc(0,-16,13,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = '#2e2417';
+    ctx.beginPath();
+    ctx.arc(0,-22,13,Math.PI,Math.PI*2);
+    ctx.fill();
+    // face
+    ctx.fillStyle = '#2e2417';
+    ctx.beginPath();
+    ctx.arc(-4,-16,1.6,0,Math.PI*2);
+    ctx.arc(4,-16,1.6,0,Math.PI*2);
+    ctx.fill();
+    if (opts.mouthOpen){
+      ctx.beginPath();
+      ctx.ellipse(0,-10,3,4,0,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0,-11,3,0,Math.PI,false);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawRock(x,y,heightLevel,t){
+    // heightLevel: 0..5
+    var baseW = 60;
+    var h = 40 + heightLevel*70;
+    var sway = Math.sin(t/600) * (heightLevel*1.2);
+    ctx.save();
+    ctx.translate(x + sway*0, y);
+    ctx.fillStyle = '#7d7669';
+    ctx.beginPath();
+    ctx.moveTo(-baseW/2, 0);
+    ctx.quadraticCurveTo(-baseW/2 - 8 + sway*0.3, -h*0.5, -baseW/2 + 10 + sway, -h);
+    ctx.quadraticCurveTo(0 + sway, -h-14, baseW/2 - 10 + sway, -h);
+    ctx.quadraticCurveTo(baseW/2 + 8, -h*0.5, baseW/2, 0);
+    ctx.closePath();
+    ctx.fill();
+    // texture lines
+    ctx.strokeStyle = 'rgba(0,0,0,.15)';
+    ctx.lineWidth = 2;
+    for (var i=1;i<=4;i++){
+      var yy = -h*(i/5);
+      ctx.beginPath();
+      ctx.moveTo(-baseW/2+6, yy);
+      ctx.lineTo(baseW/2-6, yy+6);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return h;
+  }
+
+  function drawSpeechBubble(x,y,text,flip){
+    ctx.save();
+    ctx.font = '12px Nunito, sans-serif';
+    var padding = 8;
+    var w = Math.min(180, ctx.measureText(text).width + padding*2);
+    var h = 30;
+    var bx = flip ? x - w - 10 : x + 10;
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(bx, y-h-10, w, h, 8) : ctx.rect(bx,y-h-10,w,h);
+    ctx.fill();
+    ctx.fillStyle = '#2e2417';
+    ctx.fillText(text, bx+padding, y-h/2-10+4, w-padding*2);
+    ctx.restore();
+  }
+
+  /* ---------------- scene renderer per step ---------------- */
+  function render(t){
+    animTime = t;
+    ctx.clearRect(0,0,W(),H());
+    drawSky(t);
+
+    if (step === 0 || step === 1 || step === 2 || step === 3){
+      // village scene
+      drawTree(60, H()-105, 1.1);
+      drawTree(W()-60, H()-100, 0.9);
+      drawGround();
+      drawHouse(W()/2, H()-95, false);
+      var bob1 = Math.sin(t/300)*3;
+      // kids
+      drawPerson(W()/2 - 70, H()-70, {color:'#3d7fbd', bob: step>=1? bob1:0, mouthOpen: step>=1});
+      drawPerson(W()/2 - 40, H()-65, {color:'#d98fbd', scale:0.85, bob: step>=1? -bob1:0, mouthOpen: step>=1});
+      // parents inside/around house working
+      drawPerson(W()/2 + 60, H()-70, {color:'#8a6a3a', armUp:true});
+      drawPerson(W()/2 + 95, H()-68, {color:'#c1443a', scale:0.95, armUp:true, flip:true});
+      if (step===2){
+        // scattered baskets
+        ctx.fillStyle = '#8a6a3a';
+        ctx.beginPath(); ctx.ellipse(W()/2-90, H()-40, 14,8,0.4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(W()/2-15, H()-35, 12,7,-0.3,0,Math.PI*2); ctx.fill();
+      }
+    }
+    else if (step === 4 || step === 5){
+      drawGround();
+      drawTree(70, H()-100, 1);
+      drawTree(W()-90, H()-95, 1.1);
+      var h = drawRock(W()/2, H()-100, rockHeight, t);
+      var bob = Math.sin(t/250)*2;
+      drawPerson(W()/2 - 16, H()-100-h*0.55, {color:'#3d7fbd', scale:0.8, bob:bob, mouthOpen:singing});
+      drawPerson(W()/2 + 16, H()-100-h*0.55, {color:'#d98fbd', scale:0.72, bob:-bob, mouthOpen:singing});
+    }
+    else if (step === 6 || step === 7){
+      drawGround();
+      drawTree(60, H()-100, 0.9);
+      var h2 = drawRock(W()/2 + 40, H()-100, 5, t);
+      var bob2 = Math.sin(t/250)*2;
+      drawPerson(W()/2 + 26, H()-100-h2*0.55, {color:'#3d7fbd', scale:0.55, bob:bob2, mouthOpen:true});
+      drawPerson(W()/2 + 54, H()-100-h2*0.55, {color:'#d98fbd', scale:0.5, bob:-bob2, mouthOpen:true});
+      // parents at the base, calling / chopping
+      var chopSwing = step===7 ? Math.sin(t/60)*0.5 : 0;
+      drawPerson(W()/2 - 90, H()-70, {color:'#8a6a3a', armUp: step===7, mouthOpen:true});
+      drawPerson(W()/2 - 55, H()-68, {color:'#c1443a', scale:0.95, mouthOpen:true});
+      if (step===7){
+        ctx.save();
+        ctx.translate(W()/2-90, H()-95);
+        ctx.rotate(chopSwing);
+        ctx.fillStyle = '#8a6a3a';
+        ctx.fillRect(-2,-30,4,30);
+        ctx.fillStyle = '#999';
+        ctx.beginPath();
+        ctx.moveTo(-2,-30); ctx.lineTo(14,-38); ctx.lineTo(-2,-42); ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    else if (step === 8){
+      drawGround();
+      drawTree(60, H()-100, 0.9);
+      if (collapseT < 1){
+        var h3 = drawRock(W()/2 + 40, H()-100, 5, t);
+        if (childrenVisible){
+          var fade = Math.max(0, 1 - collapseT*2);
+          ctx.save();
+          ctx.globalAlpha = fade;
+          drawPerson(W()/2 + 26, H()-100-h3*0.55, {color:'#3d7fbd', scale:0.55});
+          drawPerson(W()/2 + 54, H()-100-h3*0.55, {color:'#d98fbd', scale:0.5});
+          ctx.restore();
+        }
+        drawHouse(W()/2 - 110, H()-95, false);
+      } else {
+        // collapsed
+        var shake = Math.sin(t/20)*4*(1-Math.min(1,(collapseT-1)));
+        ctx.save();
+        ctx.translate(shake,0);
+        ctx.fillStyle = '#7d7669';
+        ctx.beginPath();
+        ctx.ellipse(W()/2, H()-70, 160, 34, 0,0,Math.PI*2);
+        ctx.fill();
+        drawHouse(W()/2 - 110, H()-95, true);
+        ctx.restore();
+      }
+    }
+
+    controlsRAF();
+  }
+
+  function controlsRAF(){
+    rafId = requestAnimationFrame(render);
+  }
+
+  /* ---------------- narration + step setup ---------------- */
+  function setNarration(text){
+    narrText.textContent = text;
+    speak(text);
+  }
+
+  function clearControls(){
+    controls.innerHTML = '';
+    meterWrap.style.display = 'none';
+    meterLabel.style.display = 'none';
+  }
+
+  function makeBtn(label, cls, handler){
+    var b = document.createElement('button');
+    b.className = 'bk-action ' + (cls||'');
+    b.textContent = label;
+    b.addEventListener('click', handler);
+    controls.appendChild(b);
+    return b;
+  }
+
+  function goToStep(n){
+    step = n;
+    updateProgressDots();
+    postResize();
+    setupStep();
+  }
+
+  function setupStep(){
+    clearControls();
+    if (step <= 8 && step >=0 && step !== 9){
+      // narration text index maps step->steps array (0-based, steps has 9 entries for step 0..8)
+    }
+    if (step < STEP_COUNT){
+      setNarration(tr('steps')[step]);
+    }
+
+    if (step === 1){
+      // rengek QTE
+      meterWrap.style.display = 'block';
+      meterLabel.style.display = 'block';
+      meterLabel.textContent = tr('rengekLabel') + ': 0%';
+      rengekMeter = 0;
+      meterFill.style.width = '0%';
+      var btn = makeBtn(tr('rengekBtn'), 'gold', function(){
+        rengekMeter = Math.min(100, rengekMeter + 9);
+        meterFill.style.width = rengekMeter + '%';
+        meterLabel.textContent = tr('rengekLabel') + ': ' + rengekMeter + '%';
+        if (rengekMeter >= 100){
+          btn.disabled = true;
+          setTimeout(function(){ goToStep(2); }, 600);
+        }
+      });
+    }
+    else if (step === 5){
+      // singing / rock growth QTE
+      rockHeight = 0;
+      meterWrap.style.display = 'block';
+      meterLabel.style.display = 'block';
+      meterLabel.textContent = tr('heightLabel') + ': 0/5';
+      meterFill.style.width = '0%';
+      singing = false;
+      var singBtn = makeBtn(tr('sing'), 'gold', function(){
+        if (!singing){
+          singing = true;
+          singBtn.textContent = tr('stopSing');
+        } else {
+          singing = false;
+          singBtn.textContent = tr('sing');
+          rockHeight = Math.min(5, rockHeight + 1);
+          meterFill.style.width = (rockHeight/5*100) + '%';
+          meterLabel.textContent = tr('heightLabel') + ': ' + rockHeight + '/5';
+          if (rockHeight >= 5){
+            singBtn.disabled = true;
+            setTimeout(function(){ goToStep(6); }, 900);
+          }
+        }
+      });
+    }
+    else if (step === 7){
+      chopMeter = 0;
+      meterWrap.style.display = 'block';
+      meterLabel.style.display = 'block';
+      meterLabel.textContent = tr('chopLabel') + ': 0%';
+      meterFill.style.width = '0%';
+      var chopBtn = makeBtn(tr('chopBtn'), 'gold', function(){
+        chopMeter = Math.min(100, chopMeter + 7);
+        meterFill.style.width = chopMeter + '%';
+        meterLabel.textContent = tr('chopLabel') + ': ' + chopMeter + '%';
+        if (chopMeter >= 100){
+          chopBtn.disabled = true;
+          setNarration(tr('chopFail'));
+          speak(tr('chopFail'));
+          setTimeout(function(){ goToStep(8); }, 1600);
+        }
+      });
+    }
+    else if (step === 8){
+      collapseT = 0;
+      childrenVisible = true;
+      setTimeout(function(){
+        collapseT = 1.5;
+        childrenVisible = false;
+      }, 2200);
+      setTimeout(function(){
+        goToStep(9);
+      }, 5200);
+    }
+    else if (step === 9){
+      // ending
+      showEnding();
+      return;
+    }
+    else {
+      // plain narration steps: 0,2,3,4,6
+      makeBtn(tr('next'), '', function(){ goToStep(step+1); });
+    }
+  }
+
+  function showEnding(){
+    clearControls();
+    narrText.textContent = tr('moral') + '  ' + tr('end');
+    speak(tr('moral'));
+    makeBtn(tr('replay'), 'gold', function(){
+      restartGame();
+    });
+    postResize();
+  }
+
+  function restartGame(){
+    stopSpeaking();
+    goToStep(0);
+    titleScreen.style.display = 'flex';
+  }
+
+  /* ---------------- title screen ---------------- */
+  function applyStaticTexts(){
+    document.getElementById('bk-tt-title').textContent = tr('titleScreenTitle');
+    document.getElementById('bk-tt-desc').textContent = tr('titleScreenDesc');
+    playBtn.textContent = tr('play');
+    langLabel.textContent = lang.toUpperCase();
+  }
+
+  playBtn.addEventListener('click', function(){
+    titleScreen.style.display = 'none';
+    goToStep(0);
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+    if (muted) stopSpeaking();
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    applyStaticTexts();
+    stopSpeaking();
+    if (titleScreen.style.display !== 'none'){
+      // still on title screen, nothing else to refresh
+    } else {
+      setupStep();
+    }
+  });
+
+  /* ---------------- resize messaging for iframe embed ---------------- */
+  function postResize(){
+    try {
+      var height = document.getElementById('bk-root').offsetHeight;
+      window.parent.postMessage({ type: 'batuKuyungResize', height: height }, '*');
+    } catch(e){}
+  }
+  window.addEventListener('load', postResize);
+  window.addEventListener('resize', postResize);
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ postResize(); });
+    ro.observe(document.getElementById('bk-root'));
+  }
+  setInterval(postResize, 1000);
+
+  /* ---------------- canvas responsive scaling ---------------- */
+  function fitCanvas(){
+    var wrap = document.getElementById('bk-stage-wrap');
+    var targetW = wrap.clientWidth;
+    canvas.style.width = targetW + 'px';
+    canvas.style.height = (targetW * (450/720)) + 'px';
+  }
+  window.addEventListener('resize', fitCanvas);
+
+  /* ---------------- init ---------------- */
+  setupProgressDots();
+  applyStaticTexts();
+  fitCanvas();
+  updateProgressDots();
+  setNarration('');
+  requestAnimationFrame(render);
+  postResize();
+
+})();
+</script>
+</body>
+</html>
