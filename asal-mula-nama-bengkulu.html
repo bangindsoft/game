@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Nama Bengkulu</title>
+<style>
+  :root{
+    --cream:#fbf1d8;
+    --paper:#fff8ea;
+    --ink:#3b2a1a;
+    --gold:#c9922f;
+    --gold-dark:#a5741f;
+    --river:#3f7cac;
+    --green:#4c7a4a;
+    --red:#a83c32;
+    --shadow: 0 6px 18px rgba(59,42,26,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--cream);
+    display:flex; justify-content:center;
+    padding: 10px 0;
+  }
+  #wrap{
+    width:100%;
+    max-width:720px;
+    background: var(--paper);
+    border-radius:16px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    border: 1px solid #e9d9b3;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color:#fff9ec;
+  }
+  header h1{
+    font-size:15px; margin:0; font-weight:700; letter-spacing:.3px;
+    text-shadow: 0 1px 2px rgba(0,0,0,.25);
+  }
+  .btn-group{display:flex; gap:6px;}
+  .icon-btn{
+    background: rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.5);
+    color:#fff9ec;
+    border-radius:8px;
+    padding:5px 9px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:4px;
+    transition: background .15s ease;
+  }
+  .icon-btn:hover{ background: rgba(255,255,255,.32); }
+  .icon-btn:active{ transform: translateY(1px); }
+
+  #stage{
+    position:relative;
+    width:100%;
+    aspect-ratio: 16/9;
+    background: #eadfc0;
+    overflow:hidden;
+  }
+  #gameCanvas{
+    width:100%; height:100%; display:block;
+  }
+  #overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:18px;
+  }
+  #overlay.hidden{display:none;}
+  #startTitle{
+    font-size:26px; color:#fff9ec; font-weight:800; margin:0 0 6px;
+    text-shadow: 0 2px 6px rgba(0,0,0,.5);
+  }
+  #startSub{
+    font-size:13px; color:#fff2d6; margin:0 0 18px; max-width:420px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+  .big-btn{
+    background: var(--red);
+    color:#fff9ec;
+    border:none;
+    padding:12px 26px;
+    border-radius:30px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow: 0 4px 0 #7a281f, 0 6px 14px rgba(0,0,0,.3);
+    transition: transform .1s ease;
+  }
+  .big-btn:hover{ filter:brightness(1.08); }
+  .big-btn:active{ transform: translateY(3px); box-shadow: 0 1px 0 #7a281f; }
+
+  #qteHUD{
+    position:absolute; top:10px; left:10px; right:10px;
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:#fff9ec; text-shadow:0 1px 3px rgba(0,0,0,.6);
+    pointer-events:none;
+  }
+  #timerBarWrap{
+    position:absolute; top:34px; left:10px; right:10px;
+    height:8px; background:rgba(0,0,0,.25); border-radius:5px; overflow:hidden;
+  }
+  #timerBar{
+    height:100%; width:100%; background:linear-gradient(90deg,#ffd35c,#e0483e);
+    transition: width .1s linear;
+  }
+  #promptBox{
+    position:absolute; bottom:0; left:0; right:0;
+    background: rgba(59,42,26,.78);
+    color:#fff9ec;
+    padding:8px 12px;
+    font-size:12.5px;
+    text-align:center;
+  }
+
+  #narrativePanel{
+    padding:14px 16px 6px;
+  }
+  #storyText{
+    font-size:14.5px; line-height:1.55; color: var(--ink); margin:0 0 10px;
+    min-height: 66px;
+  }
+  #controls{
+    display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+    padding: 0 16px 16px;
+  }
+  .ctrl-btn{
+    background: var(--green);
+    color:#fff9ec;
+    border:none;
+    padding:9px 18px;
+    border-radius:22px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow: 0 3px 0 #325133;
+  }
+  .ctrl-btn.secondary{
+    background:#e9dcbc; color:var(--ink); box-shadow:0 3px 0 #cbb987;
+  }
+  .ctrl-btn:active{ transform:translateY(2px); box-shadow:none; }
+  .ctrl-btn:disabled{ opacity:.5; cursor:default; }
+
+  #dots{
+    display:flex; justify-content:center; gap:5px; padding: 0 0 10px;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:#dcc890; }
+  .dot.active{ background: var(--gold-dark); }
+
+  footer{
+    text-align:center; font-size:10.5px; color:#8a7550; padding:4px 0 10px;
+  }
+  footer a{ color: var(--gold-dark); }
+
+  @media (max-width:420px){
+    #startTitle{font-size:20px;}
+    #storyText{font-size:13.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <h1 id="gameTitle">Asal Mula Nama Bengkulu</h1>
+    <div class="btn-group">
+      <button class="icon-btn" id="langBtn" title="Switch language">🌐 EN</button>
+      <button class="icon-btn" id="muteBtn" title="Mute narration">🔊</button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+    <div id="overlay">
+      <div id="startTitle">Asal Mula Nama Bengkulu</div>
+      <div id="startSub">Sebuah dongeng dari Bengkulu tentang perang, kecerdikan, dan asal mula sebuah nama.</div>
+      <button class="big-btn" id="startBtn">▶ Mulai</button>
+    </div>
+
+    <div id="qteHUD" style="display:none;">
+      <span id="qteScoreLabel">Kayu: 0</span>
+      <span id="qteTimeLabel">10s</span>
+    </div>
+    <div id="timerBarWrap" style="display:none;"><div id="timerBar"></div></div>
+    <div id="promptBox" style="display:none;"></div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="narrativePanel" style="display:none;">
+    <p id="storyText"></p>
+  </div>
+
+  <div id="controls">
+    <button class="ctrl-btn secondary" id="narrateBtn">🔈 Putar Narasi</button>
+    <button class="ctrl-btn" id="nextBtn">Lanjut ▶</button>
+    <button class="ctrl-btn secondary" id="replayBtn" style="display:none;">↺ Ulangi Cerita</button>
+  </div>
+
+  <footer>Dongeng Rakyat Bengkulu • <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a></footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Language & text data ---------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get('lang') === 'en') ? 'en' : 'id';
+
+  var UI = {
+    id:{
+      title:"Asal Mula Nama Bengkulu",
+      subtitle:"Sebuah dongeng dari Bengkulu tentang perang, kecerdikan, dan asal mula sebuah nama.",
+      start:"▶ Mulai",
+      next:"Lanjut ▶",
+      narrate:"🔈 Putar Narasi",
+      replay:"↺ Ulangi Cerita",
+      langSwitch:"🌐 EN",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      wood:"Kayu",
+      shield:"Halau",
+      timeUp:"Waktu habis!",
+      qte1Prompt:"Tap / klik pohon untuk menebangnya sebelum waktu habis!",
+      qte2Prompt:"Tap / klik prajurit Aceh untuk menghalau serangan mereka!",
+      qte1Result:function(n){
+        var msg = n>=18 ? "Luar biasa! Sungai penuh sesak oleh kayu." : (n>=10 ? "Kerja bagus, cukup banyak kayu menghalangi sungai." : "Sedikit kayu berhasil dihanyutkan, tapi tetap membantu.");
+        return "Kamu berhasil menebang " + n + " batang pohon! " + msg;
+      },
+      qte2Result:function(n){
+        var msg = n>=18 ? "Pasukan Serut bertahan dengan gagah berani!" : (n>=10 ? "Pertahanan cukup kuat, pasukan tetap seimbang." : "Perlawanan keras, meski musuh terus menekan.");
+        return "Kamu berhasil menghalau " + n + " prajurit! " + msg;
+      }
+    },
+    en:{
+      title:"The Origin of the Name Bengkulu",
+      subtitle:"A folktale from Bengkulu about war, cleverness, and how a name was born.",
+      start:"▶ Start",
+      next:"Next ▶",
+      narrate:"🔈 Play Narration",
+      replay:"↺ Replay Story",
+      langSwitch:"🌐 ID",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      wood:"Logs",
+      shield:"Repelled",
+      timeUp:"Time's up!",
+      qte1Prompt:"Tap / click the trees to chop them before time runs out!",
+      qte2Prompt:"Tap / click the Aceh soldiers to repel their attack!",
+      qte1Result:function(n){
+        var msg = n>=18 ? "Amazing! The river is packed with logs." : (n>=10 ? "Nice work, plenty of logs now block the river." : "Only a few logs made it, but every bit helps.");
+        return "You chopped down " + n + " trees! " + msg;
+      },
+      qte2Result:function(n){
+        var msg = n>=18 ? "The Serut army held the line bravely!" : (n>=10 ? "A solid defense, both sides remain balanced." : "A tough fight, though the enemy kept pressing.");
+        return "You repelled " + n + " soldiers! " + msg;
+      }
+    }
+  };
+
+  var STORY = [
+    { id:"Dahulu kala, di tanah Bengkulu berdiri Kerajaan Serut yang dipimpin oleh Ratu Agung. Sang Ratu memiliki tujuh orang anak. Setelah Ratu Agung wafat, putra sulungnya, Pangeran Anak Dalam Muara Bengkulu, naik takhta dan memerintah dengan adil dan bijaksana.",
+      en:"Long ago, in the land of Bengkulu stood the Kingdom of Serut, ruled by Queen Ratu Agung. She had seven children. After she passed away, her eldest son, Prince Anak Dalam Muara Bengkulu, took the throne and ruled with fairness and wisdom.",
+      scene:"kingdom" },
+    { id:"Di bawah kepemimpinannya, perdagangan Kerajaan Serut berkembang pesat. Adik bungsu sang raja, Putri Gading Cempaka, tumbuh menjadi gadis yang sangat cantik jelita, hingga dilamar banyak pangeran dan saudagar kaya.",
+      en:"Under his rule, trade in the Kingdom of Serut flourished. The king's youngest sister, Princess Gading Cempaka, grew into a strikingly beautiful young woman, courted by many princes and wealthy merchants.",
+      scene:"princess" },
+    { id:"Kecantikan Putri Gading Cempaka terdengar hingga ke Kerajaan Aceh. Seorang Pangeran Aceh mengirim utusan untuk melamarnya — namun lamaran itu ditolak secara halus oleh sang Raja.",
+      en:"Word of Princess Gading Cempaka's beauty reached the Kingdom of Aceh. A prince of Aceh sent envoys to propose marriage — but the king gently declined the proposal.",
+      scene:"proposal" },
+    { id:"Pangeran Aceh merasa sangat tersinggung. Dengan amarah membara, ia memerintahkan pasukannya menyerang Kerajaan Serut. Kapal-kapal perang Aceh pun berlayar menuju Bengkulu.",
+      en:"The Acehnese prince felt deeply insulted. Burning with anger, he ordered his army to attack the Kingdom of Serut. Aceh's warships set sail toward Bengkulu.",
+      scene:"ships_sail" },
+    { id:"Mengetahui rencana penyerangan itu, Raja Anak Dalam menyiapkan siasat. Ia memerintahkan rakyatnya menebang pohon dan menghanyutkan batangnya ke sungai untuk menghalangi kapal musuh.",
+      en:"Learning of the attack, King Anak Dalam devised a plan. He ordered his people to chop down trees and float the logs into the river to block the enemy ships.",
+      scene:"forest", qte:"qte1" },
+    { id:"Sungai kini dipenuhi batang-batang kayu. Ketika kapal-kapal Aceh tiba, mereka terkejut mendapati jalan mereka terhalang. Para prajurit berteriak, \u201cEmpang ka hulu! Empang ka hulu!\u201d sambil berusaha menerobos hingga akhirnya mendarat di kaki bukit.",
+      en:"The river was now filled with logs. When the Aceh ships arrived, they were shocked to find their path blocked. The soldiers shouted, \u201cEmpang ka hulu! Empang ka hulu!\u201d as they struggled through, until finally landing at the foot of a hill.",
+      scene:"river_logs" },
+    { id:"Begitu mendarat, pasukan Aceh disambut oleh pasukan Kerajaan Serut yang telah menanti. Bantu pasukan Serut menghalau gempuran mereka!",
+      en:"Once they landed, the Aceh troops were met by the waiting Serut army. Help the Serut army repel their assault!",
+      scene:"battle", qte:"qte2" },
+    { id:"Pertempuran berlangsung sengit dan cukup lama, namun kedua pasukan sama kuat — tak ada yang menang, tak ada yang kalah.",
+      en:"The battle raged fiercely for a long time, yet both armies were equally strong — neither side could win.",
+      scene:"battle_calm" },
+    { id:"Sedih melihat banyak korban berjatuhan, Raja Anak Dalam bersama keenam adiknya dan para pengikut setia pergi ke Gunung Bungkuk hingga peperangan itu berakhir dengan damai.",
+      en:"Saddened by the many casualties, King Anak Dalam and his six siblings, along with loyal followers, retreated to Mount Bungkuk until the war ended peacefully.",
+      scene:"mountain" },
+    { id:"Sejak perang itu, teriakan \u201cEmpang ka Hulu\u201d perlahan berubah sebutan: menjadi Pangkahulu, lalu Bangkahulu, dan akhirnya menjadi nama yang kita kenal sekarang.",
+      en:"Since that war, the cry \u201cEmpang ka Hulu\u201d slowly changed: to Pangkahulu, then Bangkahulu, and finally became the name we know today.",
+      scene:"nametransform" }
+  ];
+
+  /* ---------------- Elements ---------------- */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var overlay = document.getElementById('overlay');
+  var startTitle = document.getElementById('startTitle');
+  var startSub = document.getElementById('startSub');
+  var startBtn = document.getElementById('startBtn');
+  var gameTitle = document.getElementById('gameTitle');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var narrativePanel = document.getElementById('narrativePanel');
+  var storyText = document.getElementById('storyText');
+  var controls = document.getElementById('controls');
+  var nextBtn = document.getElementById('nextBtn');
+  var narrateBtn = document.getElementById('narrateBtn');
+  var replayBtn = document.getElementById('replayBtn');
+  var dotsWrap = document.getElementById('dots');
+  var qteHUD = document.getElementById('qteHUD');
+  var qteScoreLabel = document.getElementById('qteScoreLabel');
+  var qteTimeLabel = document.getElementById('qteTimeLabel');
+  var timerBarWrap = document.getElementById('timerBarWrap');
+  var timerBar = document.getElementById('timerBar');
+  var promptBox = document.getElementById('promptBox');
+
+  var muted = false;
+  try{ muted = localStorage.getItem('bengkuluGameMuted') === '1'; }catch(e){}
+
+  /* ---------------- Speech synthesis ---------------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(l){
+    var pref = l === 'en' ? 'en' : 'id';
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(pref) === 0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice(lang);
+    if(v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------------- UI text refresh ---------------- */
+  function t(key){ return UI[lang][key]; }
+  function refreshUIText(){
+    document.documentElement.lang = lang;
+    gameTitle.textContent = t('title');
+    startTitle.textContent = t('title');
+    startSub.textContent = t('subtitle');
+    startBtn.textContent = t('start');
+    nextBtn.textContent = t('next');
+    narrateBtn.textContent = t('narrate');
+    replayBtn.textContent = t('replay');
+    langBtn.textContent = t('langSwitch');
+    muteBtn.textContent = muted ? t('muteOff') : t('muteOn');
+  }
+  refreshUIText();
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    refreshUIText();
+    if(state.mode === 'story'){
+      renderStory(state.index, true);
+    } else if(state.mode === 'qte'){
+      promptBox.textContent = state.qteType === 'qte1' ? t('qte1Prompt') : t('qte2Prompt');
+      updateQteHUD();
+    }
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try{ localStorage.setItem('bengkuluGameMuted', muted ? '1':'0'); }catch(e){}
+    muteBtn.textContent = muted ? t('muteOff') : t('muteOn');
+    if(muted) stopSpeak();
+  });
+
+  narrateBtn.addEventListener('click', function(){
+    if(state.mode === 'story'){
+      var s = STORY[state.index];
+      speak(lang === 'en' ? s.en : s.id);
+    }
+  });
+
+  /* ---------------- Drawing helpers ---------------- */
+  function skyGradient(){
+    var g = ctx.createLinearGradient(0,0,0,320);
+    g.addColorStop(0,'#fbe4a5');
+    g.addColorStop(1,'#f4c56b');
+    return g;
+  }
+  function clearStage(){
+    ctx.clearRect(0,0,800,450);
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,800,450);
+  }
+  function drawSun(){
+    ctx.fillStyle='rgba(255,244,214,.9)';
+    ctx.beginPath(); ctx.arc(680,80,46,0,Math.PI*2); ctx.fill();
+  }
+  function drawGround(color){
+    color = color || '#4c7a4a';
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,330);
+    ctx.quadraticCurveTo(400,300,800,330);
+    ctx.lineTo(800,450); ctx.lineTo(0,450);
+    ctx.closePath(); ctx.fill();
+  }
+  function drawRiver(){
+    ctx.fillStyle = '#3f7cac';
+    ctx.beginPath();
+    ctx.moveTo(0,360);
+    ctx.quadraticCurveTo(400,335,800,365);
+    ctx.lineTo(800,450); ctx.lineTo(0,450);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2;
+    for(var i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.moveTo(60+i*220, 395+i*8);
+      ctx.quadraticCurveTo(300+i*100, 385+i*8, 700, 405+i*8);
+      ctx.stroke();
+    }
+  }
+  function drawPalace(cx, baseY, scale){
+    scale = scale || 1;
+    ctx.save(); ctx.translate(cx, baseY);
+    ctx.fillStyle = '#caa15a';
+    ctx.fillRect(-70*scale,-90*scale,140*scale,90*scale);
+    ctx.fillStyle = '#a5741f';
+    ctx.beginPath();
+    ctx.moveTo(-85*scale,-90*scale); ctx.lineTo(0,-150*scale); ctx.lineTo(85*scale,-90*scale);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e8b64c';
+    for(var i=-1;i<=1;i++){
+      ctx.fillRect(-8*scale + i*45*scale, -70*scale, 16*scale, 70*scale);
+    }
+    ctx.fillStyle = '#7a4b18';
+    ctx.beginPath(); ctx.arc(0,-150*scale,6*scale,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawFigure(x,y,scale,color,crown){
+    scale = scale || 1;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = color || '#7a4b18';
+    ctx.beginPath(); ctx.moveTo(-14*scale,0); ctx.lineTo(14*scale,0); ctx.lineTo(9*scale,-42*scale); ctx.lineTo(-9*scale,-42*scale); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e8c39a';
+    ctx.beginPath(); ctx.arc(0,-52*scale,11*scale,0,Math.PI*2); ctx.fill();
+    if(crown){
+      ctx.fillStyle='#e8b64c';
+      ctx.beginPath();
+      ctx.moveTo(-9*scale,-62*scale); ctx.lineTo(-9*scale,-70*scale); ctx.lineTo(-3*scale,-63*scale);
+      ctx.lineTo(0,-72*scale); ctx.lineTo(3*scale,-63*scale); ctx.lineTo(9*scale,-70*scale); ctx.lineTo(9*scale,-62*scale);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = '#6b4423';
+    ctx.fillRect(-5*scale,-10*scale,10*scale,30*scale);
+    ctx.fillStyle = '#3d6b3a';
+    ctx.beginPath(); ctx.moveTo(0,-70*scale); ctx.lineTo(-28*scale,-10*scale); ctx.lineTo(28*scale,-10*scale); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0,-55*scale); ctx.lineTo(-22*scale,-2*scale); ctx.lineTo(22*scale,-2*scale); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawShip(x,y,scale,flip){
+    scale = scale || 1;
+    ctx.save(); ctx.translate(x,y); if(flip) ctx.scale(-1,1);
+    ctx.fillStyle = '#5c3a21';
+    ctx.beginPath(); ctx.moveTo(-40*scale,0); ctx.lineTo(40*scale,0); ctx.lineTo(28*scale,20*scale); ctx.lineTo(-28*scale,20*scale); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#c9922f';
+    ctx.fillRect(-3*scale,-55*scale,6*scale,55*scale);
+    ctx.fillStyle = '#e0483e';
+    ctx.beginPath(); ctx.moveTo(0,-55*scale); ctx.lineTo(0,-10*scale); ctx.lineTo(-32*scale,-15*scale); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawLog(x,y,scale){
+    scale = scale || 1;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = '#7a5230';
+    ctx.beginPath(); ctx.ellipse(0,0,22*scale,7*scale,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8f6a44';
+    ctx.beginPath(); ctx.ellipse(-15*scale,0,4*scale,6*scale,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawMountain(){
+    ctx.fillStyle='#7d8f7a';
+    ctx.beginPath();
+    ctx.moveTo(0,340); ctx.lineTo(220,120); ctx.lineTo(380,340); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#647a63';
+    ctx.beginPath();
+    ctx.moveTo(320,340); ctx.lineTo(520,90); ctx.lineTo(720,340); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.moveTo(500,120); ctx.lineTo(520,90); ctx.lineTo(540,120); ctx.lineTo(520,132); ctx.closePath(); ctx.fill();
+  }
+  function drawSoldier(x,y,scale,color){
+    scale = scale || 1;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = color || '#a83c32';
+    ctx.fillRect(-8*scale,-28*scale,16*scale,28*scale);
+    ctx.fillStyle = '#e8c39a';
+    ctx.beginPath(); ctx.arc(0,-34*scale,8*scale,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#4a3018'; ctx.lineWidth=3*scale;
+    ctx.beginPath(); ctx.moveTo(8*scale,-24*scale); ctx.lineTo(20*scale,-40*scale); ctx.stroke();
+    ctx.restore();
+  }
+
+  var sceneRenderers = {
+    kingdom: function(){
+      clearStage(); drawSun(); drawGround();
+      drawPalace(400,330,1.1);
+      drawFigure(300,330,1,'#c9922f',true);
+      drawFigure(500,330,0.85,'#a83c32');
+    },
+    princess: function(){
+      clearStage(); drawSun(); drawGround();
+      drawPalace(620,330,0.7);
+      drawFigure(250,330,1.2,'#e0483e',true);
+      ctx.fillStyle='#e8b64c';
+      ctx.beginPath(); ctx.arc(250,265,6,0,Math.PI*2); ctx.fill();
+    },
+    proposal: function(){
+      clearStage(); drawSun();
+      drawRiver(); drawGround('#4c7a4a');
+      drawShip(650,300,1,true);
+      drawFigure(200,330,1,'#c9922f',true);
+      ctx.strokeStyle='#a83c32'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(260,300); ctx.lineTo(600,280); ctx.stroke();
+    },
+    ships_sail: function(){
+      clearStage(); drawSun(); drawRiver();
+      drawShip(150,300,1.2); drawShip(400,280,1); drawShip(620,310,1.15);
+    },
+    forest: function(){
+      clearStage(); drawSun(); drawGround();
+      drawTree(150,340,1); drawTree(260,335,0.8); drawTree(370,340,1.1);
+      drawFigure(220,340,0.9,'#4c7a4a');
+      drawRiver();
+    },
+    river_logs: function(){
+      clearStage(); drawSun(); drawRiver();
+      drawLog(200,395,1); drawLog(320,405,0.9); drawLog(460,392,1.1); drawLog(600,408,0.85);
+      drawShip(680,300,0.9,true);
+    },
+    battle: function(){
+      clearStage(); drawSun(); drawGround();
+      drawSoldier(250,340,1,'#4c7a4a'); drawSoldier(320,345,1,'#4c7a4a');
+      drawSoldier(500,340,1,'#a83c32'); drawSoldier(570,345,1,'#a83c32');
+    },
+    battle_calm: function(){
+      clearStage(); drawSun(); drawGround();
+      drawSoldier(220,340,0.9,'#4c7a4a'); drawSoldier(300,345,0.9,'#4c7a4a'); drawSoldier(380,342,0.9,'#4c7a4a');
+      drawSoldier(480,340,0.9,'#a83c32'); drawSoldier(560,345,0.9,'#a83c32'); drawSoldier(640,342,0.9,'#a83c32');
+    },
+    mountain: function(){
+      clearStage(); drawSun(); drawMountain();
+      drawFigure(400,320,0.9,'#c9922f',true);
+      drawFigure(440,325,0.75,'#4c7a4a');
+      drawFigure(470,322,0.75,'#a83c32');
+    },
+    nametransform: function(){
+      clearStage(); drawSun(); drawGround(); drawRiver();
+      drawMountain();
+    }
+  };
+
+  var nameFrames = ["Empang ka Hulu","Pangkahulu","Bangkahulu","BENGKULU"];
+  var nameFrameIdx = 0, nameTimer = null;
+  function runNameAnimation(){
+    if(nameTimer) clearInterval(nameTimer);
+    nameFrameIdx = 0;
+    drawNameFrame();
+    nameTimer = setInterval(function(){
+      nameFrameIdx++;
+      if(nameFrameIdx >= nameFrames.length){ clearInterval(nameTimer); nameFrameIdx = nameFrames.length-1; }
+      drawNameFrame();
+    }, 1100);
+  }
+  function drawNameFrame(){
+    sceneRenderers.nametransform();
+    var label = nameFrames[nameFrameIdx];
+    ctx.save();
+    ctx.font = (nameFrameIdx === nameFrames.length-1 ? 'bold 54px' : 'bold 38px') + ' Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(59,42,26,.75)';
+    ctx.fillRect(120,180,560,90);
+    ctx.fillStyle = nameFrameIdx === nameFrames.length-1 ? '#ffd35c' : '#fff9ec';
+    ctx.fillText(label, 400, 235);
+    ctx.restore();
+  }
+
+  /* ---------------- State machine ---------------- */
+  var state = { mode:'intro', index:0, qteType:null };
+
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<STORY.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      dotsWrap.appendChild(d);
+    }
+  }
+  buildDots();
+  function updateDots(i){
+    var kids = dotsWrap.children;
+    for(var j=0;j<kids.length;j++){
+      kids[j].className = 'dot' + (j===i ? ' active' : '');
+    }
+  }
+
+  startBtn.addEventListener('click', function(){
+    overlay.classList.add('hidden');
+    narrativePanel.style.display = 'block';
+    controls.style.display = 'flex';
+    dotsWrap.style.display = 'flex';
+    renderStory(0, true);
+  });
+
+  function renderStory(i, doSpeak){
+    state.mode = 'story'; state.index = i;
+    var s = STORY[i];
+    sceneRenderers[s.scene]();
+    if(s.scene === 'nametransform') runNameAnimation();
+    storyText.textContent = lang === 'en' ? s.en : s.id;
+    updateDots(i);
+    replayBtn.style.display = 'none';
+    narrateBtn.style.display = 'inline-block';
+    if(i === STORY.length - 1){
+      nextBtn.style.display = 'none';
+      replayBtn.style.display = 'inline-block';
+    } else {
+      nextBtn.style.display = 'inline-block';
+      nextBtn.textContent = t('next');
+    }
+    if(doSpeak) speak(lang === 'en' ? s.en : s.id);
+    requestResize();
+  }
+
+  replayBtn.addEventListener('click', function(){
+    stopSpeak();
+    renderStory(0, true);
+  });
+
+  /* ---------------- QTE mini-game ---------------- */
+  var qteTargets = [];
+  var qteRAF = null;
+  var qteScore = 0;
+  var qteDuration = 15000;
+  var qteStart = 0;
+  var qteSpawnTimer = null;
+
+  function startQte(type){
+    state.mode = 'qte'; state.qteType = type;
+    narrativePanel.style.display = 'none';
+    controls.style.display = 'none';
+    dotsWrap.style.display = 'none';
+    qteHUD.style.display = 'flex';
+    timerBarWrap.style.display = 'block';
+    promptBox.style.display = 'block';
+    promptBox.textContent = type === 'qte1' ? t('qte1Prompt') : t('qte2Prompt');
+    qteScore = 0;
+    qteTargets = [];
+    qteStart = Date.now();
+    updateQteHUD();
+
+    function spawn(){
+      if(qteTargets.length < 5){
+        qteTargets.push({
+          x: 60 + Math.random()*680,
+          y: 120 + Math.random()*260,
+          r: 32,
+          alive: true,
+          born: Date.now()
+        });
+      }
+    }
+    spawn(); spawn();
+    qteSpawnTimer = setInterval(spawn, 550);
+
+    function loop(){
+      var elapsed = Date.now() - qteStart;
+      var remain = Math.max(0, qteDuration - elapsed);
+      timerBar.style.width = (remain / qteDuration * 100) + '%';
+      qteTimeLabel.textContent = Math.ceil(remain/1000) + 's';
+
+      clearStage();
+      if(type === 'qte1'){ drawGround(); } else { drawGround(); }
+      for(var i=0;i<qteTargets.length;i++){
+        var tgt = qteTargets[i];
+        if(!tgt.alive) continue;
+        if(type === 'qte1') drawTree(tgt.x, tgt.y+35, 0.75);
+        else drawSoldier(tgt.x, tgt.y+30, 0.85, '#a83c32');
+      }
+      qteTargets = qteTargets.filter(function(o){ return o.alive; });
+
+      if(remain <= 0){
+        endQte();
+        return;
+      }
+      qteRAF = requestAnimationFrame(loop);
+    }
+    qteRAF = requestAnimationFrame(loop);
+
+    canvas.onclick = function(evt){
+      if(state.mode !== 'qte') return;
+      var rect = canvas.getBoundingClientRect();
+      var scaleX = canvas.width / rect.width;
+      var scaleY = canvas.height / rect.height;
+      var cx = (evt.clientX - rect.left) * scaleX;
+      var cy = (evt.clientY - rect.top) * scaleY;
+      for(var i=0;i<qteTargets.length;i++){
+        var tg = qteTargets[i];
+        if(!tg.alive) continue;
+        var dx = cx - tg.x, dy = cy - (tg.y+20);
+        if(Math.sqrt(dx*dx+dy*dy) < tg.r){
+          tg.alive = false;
+          qteScore++;
+          updateQteHUD();
+          break;
+        }
+      }
+    };
+  }
+
+  function updateQteHUD(){
+    qteScoreLabel.textContent = (state.qteType === 'qte1' ? t('wood') : t('shield')) + ': ' + qteScore;
+  }
+
+  var qteResultText = '';
+  function endQte(){
+    clearInterval(qteSpawnTimer);
+    cancelAnimationFrame(qteRAF);
+    canvas.onclick = null;
+    qteHUD.style.display = 'none';
+    timerBarWrap.style.display = 'none';
+    promptBox.style.display = 'none';
+
+    qteResultText = state.qteType === 'qte1' ? t('qte1Result')(qteScore) : t('qte2Result')(qteScore);
+    narrativePanel.style.display = 'block';
+    controls.style.display = 'flex';
+    dotsWrap.style.display = 'flex';
+    storyText.textContent = qteResultText;
+    nextBtn.style.display = 'inline-block';
+    nextBtn.textContent = t('next');
+    narrateBtn.style.display = 'inline-block';
+    replayBtn.style.display = 'none';
+
+    speak(qteResultText);
+    requestResize();
+    state.mode = 'qteResult';
+  }
+
+  narrateBtn.addEventListener('click', function(){
+    if(state.mode === 'qteResult'){ speak(qteResultText); }
+  });
+
+  function defaultNextHandler(){
+    stopSpeak();
+    if(state.mode === 'qteResult'){
+      renderStory(state.index + 1, true);
+      return;
+    }
+    var s = STORY[state.index];
+    if(s.qte){
+      startQte(s.qte);
+    } else if(state.index < STORY.length - 1){
+      renderStory(state.index + 1, true);
+    }
+  }
+  nextBtn.addEventListener('click', defaultNextHandler);
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function requestResize(){
+    setTimeout(function(){
+      var h = document.getElementById('wrap').offsetHeight;
+      try{
+        window.parent.postMessage({ type:'bengkuluGameHeight', height: h }, '*');
+      }catch(e){}
+    }, 60);
+  }
+  window.addEventListener('load', requestResize);
+  window.addEventListener('resize', requestResize);
+  if(window.ResizeObserver){
+    new ResizeObserver(requestResize).observe(document.getElementById('wrap'));
+  }
+
+  /* ---------------- init ---------------- */
+  sceneRenderers.kingdom();
+  requestResize();
+})();
+</script>
+</body>
+</html>
