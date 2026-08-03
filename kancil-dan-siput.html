@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Kancil dan Siput</title>
+<style>
+  :root{
+    --sky-top:#8fd3f4;
+    --sky-bottom:#fdeb9e;
+    --panel:#fffaf0;
+    --panel-border:#c9a24b;
+    --ink:#3a2a1a;
+    --accent:#e0663e;
+    --accent-dark:#b8492a;
+    --leaf:#3f7d3a;
+    --leaf-dark:#2c5c29;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:'Trebuchet MS','Segoe UI',sans-serif;overflow:hidden;}
+  #wrap{
+    position:relative;
+    width:100%;
+    max-width:800px;
+    margin:0 auto;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 6px 20px rgba(0,0,0,.18);
+    background:#dff1ff;
+    user-select:none;
+  }
+  #stage{display:block;width:100%;height:auto;background:#dff1ff;}
+  .topbar{
+    position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:20;
+  }
+  .iconbtn{
+    background:rgba(255,250,240,.92);
+    border:2px solid var(--panel-border);
+    color:var(--ink);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:13px;
+    font-weight:bold;
+    cursor:pointer;
+    line-height:1.1;
+  }
+  .iconbtn:active{transform:translateY(1px);}
+  .overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; text-align:center; z-index:15;
+    background:linear-gradient(180deg, rgba(20,30,10,.15), rgba(20,30,10,.35));
+    padding:5%;
+  }
+  .hidden{display:none !important;}
+  .card{
+    background:var(--panel);
+    border:3px solid var(--panel-border);
+    border-radius:16px;
+    padding:22px 26px;
+    max-width:88%;
+    box-shadow:0 8px 18px rgba(0,0,0,.25);
+  }
+  .card h1{margin:0 0 6px;font-size:clamp(20px,4vw,30px);color:var(--accent-dark);}
+  .card p{margin:6px 0 16px;color:var(--ink);font-size:clamp(13px,2.4vw,16px);line-height:1.5;}
+  .bigbtn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:12px 28px;
+    font-size:clamp(15px,2.6vw,18px);
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--accent-dark);
+  }
+  .bigbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent-dark);}
+  .smallrow{margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  #dialogueBox{
+    position:absolute; left:4%; right:4%; bottom:4%;
+    background:var(--panel);
+    border:3px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px 16px;
+    z-index:12;
+    box-shadow:0 6px 14px rgba(0,0,0,.25);
+  }
+  #dialogueSpeaker{font-weight:bold;color:var(--accent-dark);font-size:clamp(13px,2.4vw,16px);margin-bottom:4px;}
+  #dialogueText{color:var(--ink);font-size:clamp(13px,2.3vw,16px);line-height:1.45;min-height:2.6em;}
+  #dialogueNext{
+    margin-top:10px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:8px 18px;
+    font-weight:bold;
+    cursor:pointer;
+    float:right;
+    box-shadow:0 3px 0 var(--accent-dark);
+  }
+  #dialogueNext:active{transform:translateY(2px);box-shadow:0 1px 0 var(--accent-dark);}
+  #raceUI{
+    position:absolute; left:0; right:0; bottom:0; padding:3%;
+    display:flex; flex-direction:column; align-items:center; gap:8px; z-index:12;
+  }
+  #progressTrack{
+    width:92%; height:14px; background:rgba(255,255,255,.6);
+    border:2px solid var(--panel-border); border-radius:8px; overflow:hidden;
+  }
+  #progressFill{height:100%; width:0%; background:var(--accent); transition:width .08s linear;}
+  #runBtn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:clamp(70px,16vw,96px);
+    height:clamp(70px,16vw,96px);
+    font-size:clamp(13px,2.6vw,16px);
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 5px 0 var(--accent-dark);
+    touch-action:manipulation;
+  }
+  #runBtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--accent-dark);}
+  .hint{font-size:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);}
+  #langSwitchTop{font-size:12px;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="stage" width="800" height="450"></canvas>
+
+  <div class="topbar">
+    <button class="iconbtn" id="muteBtn" title="Mute/Unmute">🔊</button>
+    <button class="iconbtn" id="langBtn" title="Language">EN</button>
+  </div>
+
+  <!-- MENU -->
+  <div class="overlay" id="screenMenu">
+    <div class="card">
+      <h1 id="menuTitle">Si Kancil dan Siput</h1>
+      <p id="menuDesc">Sebuah dongeng tentang kancil yang sombong dan siput yang cerdik.</p>
+      <button class="bigbtn" id="playBtn">Mulai</button>
+    </div>
+  </div>
+
+  <!-- DIALOGUE (story scenes) -->
+  <div id="dialogueBox" class="hidden">
+    <div id="dialogueSpeaker"></div>
+    <div id="dialogueText"></div>
+    <button id="dialogueNext">Lanjut ▶</button>
+    <div style="clear:both;"></div>
+  </div>
+
+  <!-- RACE UI -->
+  <div id="raceUI" class="hidden">
+    <div class="hint" id="raceHint">Ketuk tombol berulang kali agar Kancil terus berlari!</div>
+    <div id="progressTrack"><div id="progressFill"></div></div>
+    <button id="runBtn">LARI!</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Language & text data ---------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get('lang') === 'en') ? 'en' : 'id';
+
+  var T = {
+    menuTitle:{id:"Si Kancil dan Siput", en:"Mouse Deer and the Snail"},
+    menuDesc:{id:"Sebuah dongeng tentang kancil yang sombong dan siput yang cerdik. Ketuk untuk mulai bermain!", en:"A folktale about a boastful mouse deer and a clever snail. Tap to start playing!"},
+    play:{id:"Mulai", en:"Start"},
+    next:{id:"Lanjut ▶", en:"Next ▶"},
+    raceHint:{id:"Ketuk tombol berulang kali agar Kancil terus berlari!", en:"Tap the button again and again to keep Kancil running!"},
+    runBtn:{id:"LARI!", en:"RUN!"},
+    continueBtn:{id:"Lanjutkan ▶", en:"Continue ▶"},
+    playAgain:{id:"Main Lagi", en:"Play Again"},
+    ready:{id:"BERSIAP...", en:"GET READY..."},
+    go:{id:"MULAI!", en:"GO!"}
+  };
+
+  function t(key){ return T[key][lang]; }
+
+  var KANCIL = {id:"Si Kancil", en:"Kancil the Mouse Deer"};
+  var SIPUT = {id:"Siput", en:"Snail"};
+  var SIPUT2 = {id:"Teman Siput", en:"Snail's Friend"};
+  var NARRATOR = {id:"Narator", en:"Narrator"};
+
+  // Story steps before the race
+  var introSteps = [
+    {speaker:NARRATOR, text:{
+      id:"Di suatu pagi yang cerah, Si Kancil berjalan-jalan naik ke atas bukit untuk memandangi seisi hutan.",
+      en:"On a bright morning, Kancil the mouse deer strolled up a hill to look over the whole forest."
+    }},
+    {speaker:KANCIL, text:{
+      id:"Wahai penghuni hutan! Akulah Si Kancil, hewan paling cerdik di seluruh hutan ini. Tak ada yang bisa menandingiku!",
+      en:"Hear me, creatures of the forest! I am Kancil, the cleverest animal in this whole forest. No one can match me!"
+    }},
+    {speaker:NARRATOR, text:{
+      id:"Para binatang di hutan hanya menggerutu mendengar teriakan sombong itu, lalu Kancil turun bukit menuju sungai.",
+      en:"The forest animals just grumbled at his boasting, then Kancil went down the hill toward the river."
+    }},
+    {speaker:NARRATOR, text:{
+      id:"Di tepi sungai, Kancil bertemu seekor siput yang sedang bersantai di atas batu.",
+      en:"By the riverbank, Kancil met a snail resting calmly on a stone."
+    }},
+    {speaker:SIPUT, text:{
+      id:"Hai Kancil, sepertinya kau sedang senang sekali tadi berteriak di atas bukit.",
+      en:"Hello Kancil, you sounded very pleased with yourself shouting up on that hill."
+    }},
+    {speaker:KANCIL, text:{
+      id:"Tentu saja! Aku hanya memberitahu semua penghuni hutan bahwa akulah yang paling cerdik di sini.",
+      en:"Of course! I was just letting every creature know that I'm the cleverest one here."
+    }},
+    {speaker:SIPUT, text:{
+      id:"Hmm, kau salah, Kancil. Akulah yang paling cerdik di hutan ini, bukan kau.",
+      en:"Hmm, you're wrong, Kancil. I am the cleverest one in this forest, not you."
+    }},
+    {speaker:KANCIL, text:{
+      id:"Ha! Tubuhmu saja kecil dan lamban begitu, mana mungkin kau lebih cerdik dariku?",
+      en:"Ha! You're so small and slow, how could you possibly be cleverer than me?"
+    }},
+    {speaker:SIPUT, text:{
+      id:"Jangan meremehkanku hanya karena tubuhku kecil. Bagaimana kalau kita lomba lari besok pagi? Akan kubuktikan.",
+      en:"Don't underestimate me just because I'm small. How about a running race tomorrow morning? I'll prove it."
+    }},
+    {speaker:KANCIL, text:{
+      id:"Ha ha ha! Baiklah, siput. Besok pagi kita lomba lari di jalur ini. Aku pasti menang dengan mudah!",
+      en:"Ha ha ha! Alright then, snail. Tomorrow morning we'll race along this trail. I'll win easily!"
+    }},
+    {speaker:NARRATOR, text:{
+      id:"Setelah Kancil pergi, siput diam-diam memanggil teman-temannya untuk mengatur siasat menghadapi lomba besok.",
+      en:"After Kancil left, the snail quietly called on its friends to plan a clever strategy for tomorrow's race."
+    }}
+  ];
+
+  var raceStartSteps = [
+    {speaker:NARRATOR, text:{
+      id:"Keesokan paginya, Kancil datang dengan percaya diri penuh menuju garis start.",
+      en:"The next morning, Kancil arrived at the starting line brimming with confidence."
+    }},
+    {speaker:SIPUT, text:{
+      id:"Aku sudah siap, Kancil. Ayo kita mulai lombanya!",
+      en:"I'm ready, Kancil. Let's begin the race!"
+    }}
+  ];
+
+  // Dialogue shown at each checkpoint during the race (a different snail friend each time)
+  var checkpointLines = [
+    {speaker:KANCIL, text:{id:"Hai siput! Kau di mana? Baru sebentar berlari kau sudah tertinggal jauh!", en:"Hey snail! Where are you? We've barely started and you're already far behind!"}},
+    {speaker:SIPUT2, text:{id:"Aku di sini, di depanmu, Kancil! Kenapa berhenti? Apa kau sudah lelah?", en:"I'm right here, ahead of you, Kancil! Why did you stop? Are you tired already?"}},
+    {speaker:KANCIL, text:{id:"Tidak mungkin! Baiklah, akan kubuktikan aku lebih cepat darimu, siput kecil!", en:"Impossible! Fine, I'll prove I'm faster than you, little snail!"}},
+    {speaker:KANCIL, text:{id:"Sekarang kau pasti tertinggal jauh di belakangku... siput, di mana kau?", en:"Now you must be far behind me... snail, where are you?"}},
+    {speaker:SIPUT2, text:{id:"Aku di depanmu lagi, Kancil! Katakan saja kalau kau ingin menyerah.", en:"I'm ahead of you again, Kancil! Just say so if you want to give up."}},
+    {speaker:KANCIL, text:{id:"Menyerah? Tidak akan! Aku hanya berhenti sebentar untuk memastikan kau masih di belakang!", en:"Give up? Never! I only stopped for a moment to make sure you're still behind me!"}}
+  ];
+
+  var finishSteps = [
+    {speaker:SIPUT, text:{
+      id:"Hai Kancil! Kenapa lama sekali? Aku sudah sampai duluan di sini!",
+      en:"Hey Kancil! What took you so long? I already got here first!"
+    }},
+    {speaker:NARRATOR, text:{
+      id:"Kancil terduduk lemas, benar-benar tidak percaya bahwa siput bisa mengalahkannya.",
+      en:"Kancil sank down, utterly unable to believe the snail had beaten him."
+    }},
+    {speaker:KANCIL, text:{
+      id:"Aku tak percaya... bagaimana mungkin kau bisa menang dariku, siput?",
+      en:"I can't believe it... how could you possibly beat me, snail?"
+    }},
+    {speaker:SIPUT, text:{
+      id:"Karena aku mengajak teman-temanku bekerja sama. Kecerdikan sejati bukan hanya soal kecepatan, Kancil, tapi juga soal kerja sama dan rendah hati.",
+      en:"Because I asked my friends to work together with me. True cleverness isn't only about speed, Kancil — it's also about teamwork and humility."
+    }},
+    {speaker:KANCIL, text:{
+      id:"Kau benar, siput. Aku terlalu sombong selama ini. Terima kasih sudah mengajariku pelajaran berharga ini.",
+      en:"You're right, snail. I've been far too boastful. Thank you for teaching me this valuable lesson."
+    }},
+    {speaker:NARRATOR, text:{
+      id:"Sejak hari itu, Si Kancil tidak lagi sombong dan selalu menghargai binatang lain di hutan, sekecil apa pun mereka.",
+      en:"From that day on, Kancil was never boastful again, and always respected every creature in the forest, however small they were."
+    }}
+  ];
+
+  /* ---------------- Speech synthesis (narration) ---------------- */
+  var muted = false;
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if (!voices || !voices.length) return null;
+    var wantLang = lang === 'id' ? 'id' : 'en';
+    var match = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wantLang) === 0; });
+    return match || null;
+  }
+  function narrate(text){
+    if (muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice();
+    if (v) u.voice = v;
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }
+  function stopNarration(){
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------- Canvas drawing ---------------- */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  function drawSky(){
+    var g = ctx.createLinearGradient(0,0,0,H*0.75);
+    g.addColorStop(0, '#8fd3f4');
+    g.addColorStop(1, '#fdeb9e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    // sun
+    ctx.fillStyle = '#ffe08a';
+    ctx.beginPath(); ctx.arc(W-90, 80, 45, 0, Math.PI*2); ctx.fill();
+    // clouds
+    drawCloud(120,70,1);
+    drawCloud(320,50,0.8);
+  }
+  function drawCloud(x,y,scale){
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.arc(x,y,20*scale,0,Math.PI*2);
+    ctx.arc(x+25*scale,y-10*scale,22*scale,0,Math.PI*2);
+    ctx.arc(x+50*scale,y,18*scale,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawGround(offset){
+    ctx.fillStyle = '#7bbf5e';
+    ctx.fillRect(0,H*0.72,W,H*0.28);
+    ctx.fillStyle = '#6aab4f';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.72);
+    for (var x=0;x<=W;x+=40){
+      var y = H*0.72 + Math.sin((x+offset)*0.02)*6;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
+    // path
+    ctx.fillStyle = '#d8b978';
+    ctx.fillRect(0, H*0.86, W, H*0.06);
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.fillStyle = '#8a5a34';
+    ctx.fillRect(x-6*scale, y-10*scale, 12*scale, 40*scale);
+    ctx.fillStyle = '#3f7d3a';
+    ctx.beginPath();
+    ctx.arc(x, y-30*scale, 26*scale, 0, Math.PI*2);
+    ctx.arc(x-20*scale, y-15*scale, 18*scale, 0, Math.PI*2);
+    ctx.arc(x+20*scale, y-15*scale, 18*scale, 0, Math.PI*2);
+    ctx.fill();
+  }
+  function drawTrees(offset){
+    var positions = [40,180,560,700];
+    positions.forEach(function(p,i){
+      var x = ((p - offset*0.4) % (W+160) + (W+160)) % (W+160) - 80;
+      drawTree(x, H*0.78, 0.9 + (i%2)*0.3);
+    });
+  }
+  function drawKancil(x,y,frame,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var legPhase = Math.sin(frame*0.4);
+    // legs
+    ctx.strokeStyle = '#a9764a'; ctx.lineWidth = 6; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(-14, 10); ctx.lineTo(-14 + legPhase*10, 32);
+    ctx.moveTo(10, 10); ctx.lineTo(10 - legPhase*10, 32);
+    ctx.stroke();
+    // body
+    ctx.fillStyle = '#c98a52';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 28, 18, 0, 0, Math.PI*2);
+    ctx.fill();
+    // head
+    ctx.beginPath();
+    ctx.ellipse(30, -8, 14, 12, 0, 0, Math.PI*2);
+    ctx.fill();
+    // ear
+    ctx.fillStyle = '#a9764a';
+    ctx.beginPath();
+    ctx.ellipse(28, -22, 6, 10, -0.3, 0, Math.PI*2);
+    ctx.fill();
+    // eye
+    ctx.fillStyle = '#2a1a10';
+    ctx.beginPath(); ctx.arc(38,-10,2,0,Math.PI*2); ctx.fill();
+    // tail
+    ctx.fillStyle = '#a9764a';
+    ctx.beginPath(); ctx.ellipse(-30,-4,6,5,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawSiput(x,y,frame,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shell
+    ctx.fillStyle = '#d9832b';
+    ctx.beginPath(); ctx.arc(0,-6,16,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#a85e1a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,-6,10,0,Math.PI*1.5); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,-6,5,0,Math.PI*1.2); ctx.stroke();
+    // body
+    ctx.fillStyle = '#8fbf6a';
+    ctx.beginPath();
+    ctx.ellipse(0,10,22,8,0,0,Math.PI*2);
+    ctx.fill();
+    // eye stalks
+    var wob = Math.sin(frame*0.2)*2;
+    ctx.strokeStyle='#8fbf6a'; ctx.lineWidth=3; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(16,6); ctx.lineTo(22+wob,-4); ctx.stroke();
+    ctx.fillStyle='#2a1a10';
+    ctx.beginPath(); ctx.arc(22+wob,-4,2,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------- Screen / state machine ---------------- */
+  var STATE = {MENU:'menu', INTRO:'intro', RACE_START:'race_start', RACE:'race', CHECKPOINT:'checkpoint', FINISH:'finish', END:'end'};
+  var state = STATE.MENU;
+
+  var dialogueBox = document.getElementById('dialogueBox');
+  var dialogueSpeaker = document.getElementById('dialogueSpeaker');
+  var dialogueText = document.getElementById('dialogueText');
+  var dialogueNext = document.getElementById('dialogueNext');
+  var raceUI = document.getElementById('raceUI');
+  var progressFill = document.getElementById('progressFill');
+  var runBtn = document.getElementById('runBtn');
+  var raceHint = document.getElementById('raceHint');
+  var screenMenu = document.getElementById('screenMenu');
+
+  var currentQueue = [];
+  var queueIndex = 0;
+  var onQueueDone = null;
+
+  function showDialogue(queue, doneCallback){
+    currentQueue = queue;
+    queueIndex = 0;
+    onQueueDone = doneCallback;
+    dialogueBox.classList.remove('hidden');
+    renderCurrentLine();
+  }
+  function renderCurrentLine(){
+    var line = currentQueue[queueIndex];
+    dialogueSpeaker.textContent = line.speaker[lang];
+    dialogueText.textContent = line.text[lang];
+    dialogueNext.textContent = t('next');
+    narrate(line.text[lang]);
+    draw(); // refresh background scene beneath dialogue
+  }
+  dialogueNext.addEventListener('click', function(){
+    stopNarration();
+    queueIndex++;
+    if (queueIndex >= currentQueue.length){
+      dialogueBox.classList.add('hidden');
+      if (onQueueDone) onQueueDone();
+    } else {
+      renderCurrentLine();
+    }
+  });
+
+  /* ---- Menu ---- */
+  document.getElementById('playBtn').addEventListener('click', function(){
+    screenMenu.classList.add('hidden');
+    startIntro();
+  });
+
+  function startIntro(){
+    state = STATE.INTRO;
+    showDialogue(introSteps, startRaceIntro);
+  }
+
+  function startRaceIntro(){
+    state = STATE.RACE_START;
+    showDialogue(raceStartSteps, beginCountdown);
+  }
+
+  /* ---- Race ---- */
+  var TRACK_LEN = 3000;
+  var kancilPos = 0;
+  var velocity = 0;
+  var frame = 0;
+  var checkpoints = [0.32, 0.62, 0.9].map(function(f){ return f*TRACK_LEN; });
+  var checkpointHit = [false,false,false];
+  var raceRunning = false;
+  var countdownVal = 3;
+  var countdownTimer = null;
+  var animHandle = null;
+
+  function beginCountdown(){
+    state = STATE.RACE;
+    raceUI.classList.remove('hidden');
+    raceHint.textContent = t('raceHint');
+    runBtn.textContent = t('runBtn');
+    kancilPos = 0; velocity = 0; frame = 0;
+    checkpointHit = [false,false,false];
+    raceRunning = false;
+    countdownVal = 3;
+    startAnimLoop();
+    countdownTimer = setInterval(function(){
+      countdownVal--;
+      if (countdownVal <= 0){
+        clearInterval(countdownTimer);
+        raceRunning = true;
+      }
+    }, 800);
+  }
+
+  function tapRun(){
+    if (state !== STATE.RACE || !raceRunning) return;
+    velocity = Math.min(velocity + 3.2, 14);
+  }
+  runBtn.addEventListener('click', tapRun);
+  runBtn.addEventListener('touchstart', function(e){ e.preventDefault(); tapRun(); }, {passive:false});
+  window.addEventListener('keydown', function(e){
+    if (e.code === 'Space'){ e.preventDefault(); tapRun(); }
+  });
+
+  function startAnimLoop(){
+    if (animHandle) cancelAnimationFrame(animHandle);
+    function loop(){
+      frame++;
+      if (state === STATE.RACE && raceRunning){
+        velocity = Math.max(0, velocity - 0.22);
+        kancilPos += velocity;
+        // checkpoint check
+        for (var i=0;i<checkpoints.length;i++){
+          if (!checkpointHit[i] && kancilPos >= checkpoints[i]){
+            checkpointHit[i] = true;
+            raceRunning = false;
+            velocity = 0;
+            triggerCheckpoint(i);
+            break;
+          }
+        }
+        if (kancilPos >= TRACK_LEN){
+          kancilPos = TRACK_LEN;
+          raceRunning = false;
+          triggerFinish();
+        }
+      }
+      draw();
+      animHandle = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  function triggerCheckpoint(i){
+    raceUI.classList.add('hidden');
+    var lines = [checkpointLines[i*2], checkpointLines[i*2+1]];
+    showDialogue(lines, function(){
+      raceUI.classList.remove('hidden');
+      raceRunning = true;
+    });
+  }
+
+  function triggerFinish(){
+    raceUI.classList.add('hidden');
+    state = STATE.FINISH;
+    showDialogue(finishSteps, showEndScreen);
+  }
+
+  function showEndScreen(){
+    state = STATE.END;
+    screenMenu.classList.remove('hidden');
+    document.getElementById('menuTitle').textContent = lang==='id' ? 'Tamat' : 'The End';
+    document.getElementById('menuDesc').textContent = lang==='id'
+      ? 'Kesombongan Kancil dikalahkan oleh kecerdikan dan kerja sama Siput. Ingin bermain lagi?'
+      : "Kancil's pride was outsmarted by the snail's cleverness and teamwork. Want to play again?";
+    document.getElementById('playBtn').textContent = t('playAgain');
+  }
+
+  /* ---------------- Main draw ---------------- */
+  function draw(){
+    var offset = 0;
+    drawSky();
+    if (state === STATE.RACE || state === STATE.CHECKPOINT){
+      offset = kancilPos;
+    }
+    drawGround(offset*0.3);
+    drawTrees(offset);
+
+    if (state === STATE.RACE || state === STATE.FINISH){
+      // camera follows kancil loosely
+      var camX = Math.min(Math.max(kancilPos - W*0.35, 0), TRACK_LEN - W*0.5);
+      var kx = 120 + (kancilPos - camX)*0 ; // keep kancil roughly fixed on screen
+      var screenX = 140;
+      drawSiputFriendsOnTrack(camX);
+      drawKancil(screenX, H*0.8, frame, 1.4);
+      // finish flag
+      var finishScreenX = TRACK_LEN - camX + 60;
+      if (finishScreenX < W+50) drawFinishFlag(finishScreenX, H*0.8);
+    } else {
+      // static story scene
+      drawKancil(W*0.25, H*0.62, frame, 1.6);
+      drawSiput(W*0.65, H*0.86, frame, 2.0);
+    }
+  }
+  function drawFinishFlag(x,y){
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x, y-70, 4, 70);
+    ctx.fillStyle = '#e0483e';
+    ctx.beginPath();
+    ctx.moveTo(x+4,y-70); ctx.lineTo(x+34,y-60); ctx.lineTo(x+4,y-50);
+    ctx.closePath(); ctx.fill();
+  }
+  function drawSiputFriendsOnTrack(camX){
+    checkpoints.forEach(function(cp, i){
+      var sx = cp - camX + 40;
+      if (sx > -40 && sx < W+40 && checkpointHit[i]){
+        drawSiput(sx, H*0.85, frame, 1.1);
+      }
+    });
+  }
+
+  /* ---------------- Top bar controls ---------------- */
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    if (muted) stopNarration();
+  });
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    langBtn.textContent = (lang === 'id') ? 'EN' : 'ID';
+    stopNarration();
+    refreshStaticText();
+    if (!dialogueBox.classList.contains('hidden')){
+      renderCurrentLine();
+    }
+  });
+  function refreshStaticText(){
+    if (state === STATE.MENU){
+      document.getElementById('menuTitle').textContent = t('menuTitle');
+      document.getElementById('menuDesc').textContent = t('menuDesc');
+      document.getElementById('playBtn').textContent = t('play');
+    } else if (state === STATE.END){
+      document.getElementById('menuTitle').textContent = lang==='id' ? 'Tamat' : 'The End';
+      document.getElementById('menuDesc').textContent = lang==='id'
+        ? 'Kesombongan Kancil dikalahkan oleh kecerdikan dan kerja sama Siput. Ingin bermain lagi?'
+        : "Kancil's pride was outsmarted by the snail's cleverness and teamwork. Want to play again?";
+      document.getElementById('playBtn').textContent = t('playAgain');
+    }
+    raceHint.textContent = t('raceHint');
+    runBtn.textContent = t('runBtn');
+  }
+  langBtn.textContent = (lang === 'id') ? 'EN' : 'ID';
+  refreshStaticText();
+  draw();
+
+  /* ---------------- Auto-resize for iframe embedding ---------------- */
+  function reportSize(){
+    var h = document.getElementById('wrap').getBoundingClientRect().height;
+    window.parent.postMessage({type:'kancilSiputResize', height: Math.ceil(h)}, '*');
+  }
+  window.addEventListener('load', reportSize);
+  window.addEventListener('resize', reportSize);
+  if (window.ResizeObserver){
+    new ResizeObserver(reportSize).observe(document.getElementById('wrap'));
+  } else {
+    setInterval(reportSize, 800);
+  }
+
+})();
+</script>
+</body>
+</html>
