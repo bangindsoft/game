@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Kancil dan Ayam Merak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#FFE7A8;
+    --sky-bot:#FFB463;
+    --forest-dark:#1F3A2E;
+    --forest-mid:#2F5233;
+    --leaf:#6B8F3F;
+    --ground:#8B5E3C;
+    --ground-dark:#6B4728;
+    --panel:#FFF8E7;
+    --panel-edge:#E8D9B0;
+    --ink:#2B2318;
+    --ink-soft:#5B4E3A;
+    --peacock-teal:#1F7A6C;
+    --peacock-blue:#2E5FA3;
+    --gold:#E8B04B;
+    --danger:#B0442E;
+    --danger-dark:#8C3320;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:transparent;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bot));
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 8px 28px rgba(43,35,24,0.25);
+    border:3px solid var(--panel-edge);
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--forest-dark);
+    color:var(--panel);
+  }
+  #topbar h1{
+    font-family:'Baloo 2',sans-serif;
+    font-size:1.05rem;
+    margin:0;
+    font-weight:700;
+    letter-spacing:0.2px;
+  }
+  .icon-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    background:rgba(255,255,255,0.12);
+    border:1.5px solid rgba(255,255,255,0.35);
+    color:var(--panel);
+    border-radius:999px;
+    padding:6px 12px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:0.8rem;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.22);}
+  .icon-btn:active{transform:scale(0.95);}
+  .icon-btn.muted{opacity:0.55;}
+  #topctrls{display:flex;gap:8px;}
+  #stageWrap{position:relative;width:100%;}
+  #stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/10;
+    overflow:hidden;
+  }
+  canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  #captionWrap{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    padding:10px;
+    display:flex;
+    justify-content:center;
+    pointer-events:none;
+  }
+  #dialogueBox{
+    pointer-events:auto;
+    max-width:94%;
+    background:var(--panel);
+    border:2.5px solid var(--panel-edge);
+    border-radius:14px;
+    padding:12px 16px;
+    box-shadow:0 4px 14px rgba(43,35,24,0.25);
+    animation:pop 0.25s ease;
+  }
+  @keyframes pop{from{transform:translateY(8px) scale(0.98);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+  #speaker{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    margin:0 0 3px 0;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  #speaker.kancil{color:var(--ground-dark);}
+  #speaker.merak{color:var(--peacock-blue);}
+  #speaker.narator{color:var(--ink-soft);}
+  #dialogueText{
+    margin:0;
+    font-size:0.95rem;
+    line-height:1.4;
+    color:var(--ink);
+  }
+  #actionRow{
+    display:flex;
+    justify-content:center;
+    padding:12px 14px 16px;
+    background:var(--panel);
+    border-top:2px solid var(--panel-edge);
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+    color:#fff;
+    background:var(--peacock-teal);
+    border:none;
+    border-radius:12px;
+    padding:10px 22px;
+    cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,0.18);
+    transition:transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,0.18);}
+  .btn.gold{background:var(--gold);color:var(--ink);}
+  .btn.danger{background:var(--danger);}
+  .btn.restart{background:var(--ink-soft);}
+  #hint{
+    text-align:center;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    padding:0 14px 12px;
+    background:var(--panel);
+    margin:0;
+  }
+  #meterWrap{
+    display:none;
+    padding:0 16px 10px;
+    background:var(--panel);
+  }
+  #meterTrack{
+    height:16px;
+    background:#E4D5A8;
+    border-radius:999px;
+    overflow:hidden;
+    border:1.5px solid var(--panel-edge);
+  }
+  #meterFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--peacock-teal));
+    border-radius:999px;
+    transition:width 0.08s linear;
+  }
+  #meterLabels{
+    display:flex;justify-content:space-between;
+    font-size:0.72rem;color:var(--ink-soft);margin-top:3px;
+  }
+  .credit{
+    text-align:center;
+    font-size:0.68rem;
+    color:var(--ink-soft);
+    padding:6px 10px 10px;
+    background:var(--panel);
+    opacity:0.75;
+  }
+  @media (max-width:420px){
+    #topbar h1{font-size:0.9rem;}
+    .icon-btn{padding:5px 9px;font-size:0.72rem;}
+    .btn{font-size:0.85rem;padding:9px 16px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1 id="gameTitle">🦌 Si Kancil &amp; Ayam Merak</h1>
+    <div id="topctrls">
+      <button class="icon-btn" id="langBtn" type="button">EN</button>
+      <button class="icon-btn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+  <div id="stageWrap">
+    <div id="stage">
+      <canvas id="canvas"></canvas>
+      <div id="captionWrap">
+        <div id="dialogueBox">
+          <p id="speaker" class="narator">Narator</p>
+          <p id="dialogueText">…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="meterWrap">
+    <div id="meterTrack"><div id="meterFill"></div></div>
+    <div id="meterLabels"><span id="meterLeftLabel"></span><span id="meterRightLabel"></span></div>
+  </div>
+  <p id="hint"></p>
+  <div id="actionRow"></div>
+  <p class="credit" id="creditLine">Dongeng Si Kancil &amp; Ayam Merak — caritasato.blogspot.com</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     I18N STRINGS
+  --------------------------------------------------------- */
+  var STR = {
+    id: {
+      title: "🦌 Si Kancil & Ayam Merak",
+      credit: "Dongeng Si Kancil & Ayam Merak — caritasato.blogspot.com",
+      continue: "Lanjut ▶",
+      start: "Mulai Cerita ▶",
+      spread: "Bentangkan Ekor 🦚",
+      restart: "Ulangi dari Awal ↺",
+      run: "LARI!",
+      hintSpot: "Ketuk semak yang menyembunyikan pemburu, sebelum waktu habis!",
+      hintRun: "Ketuk tombol LARI berkali-kali, secepat mungkin!",
+      caught: "Ups, ketahuan! Coba lagi.",
+      spotWin: "Kena! Merak jadi waspada.",
+      meterLeft: "Merak",
+      meterRight: "Hutan Aman 🌳",
+      speaker: {narator:"Narator", kancil:"Si Kancil", merak:"Si Merak"},
+      lines: [
+        {sp:"narator", t:"Di suatu siang yang terik, Si Kancil berbaring santai di bawah pohon rindang. Perutnya kekenyangan sehabis diam-diam mencicipi mentimun Pak Tani."},
+        {sp:"narator", t:"Tak lama, terdengar kepak sayap. Si Merak datang mendekat sambil membusungkan dada, ekornya yang panjang menyeret di tanah."},
+        {sp:"merak", t:"Hai Kancil! Lihatlah ekorku yang indah ini. Tidakkah kau terpesona?"},
+        {sp:"kancil", t:"Ah, biasa saja. Sama saja dengan ekor ayam-ayam lain di hutan ini."},
+        {sp:"merak", t:"Jangan sembarangan bicara! Semua penghuni hutan mengagumi ekorku. Kau saja yang tak mau mengakuinya, Kancil!"},
+        {sp:"kancil", t:"Baiklah, baiklah… ekormu memang besar dan indah, Merak. Tapi ada satu hal yang harus kuperingatkan padamu."},
+        {sp:"merak", t:"Memperingatkan apa, Kancil? Jangan buat aku cemas."},
+        {sp:"kancil", t:"Kemarin siang aku melihat beberapa pemburu berkeliaran di sekitar sini. Katanya, mereka mencari merak berekor indah untuk dijual mahal."},
+        {sp:"merak", t:"A-apa?! Jangan bercanda kau, Kancil! Mana ada pemburu mau dengan seekor merak…"},
+        {sp:"kancil", t:"Aku serius, Merak. Ekor indahmu itu justru yang membuatmu diincar. Sebaiknya kau bersembunyi jauh ke dalam hutan!"}
+      ],
+      spotIntro: "Merak jadi gelisah. Matanya menangkap sesuatu yang mencurigakan di balik semak-semak…",
+      spotOutro: "Benar saja! Ada pemburu bersembunyi. Merak semakin panik.",
+      runIntro: "Merak panik dan segera bersiap berlari secepat mungkin masuk ke dalam hutan!",
+      runOutro: "Merak berhasil menghilang jauh ke dalam rimbunnya hutan, aman dari incaran pemburu.",
+      ending: "Melihat Si Merak yang sombong lari terbirit-birit, Si Kancil tertawa terbahak-bahak sampai berguling-guling di tanah. Ia pun melanjutkan tidur siangnya dengan tenang, tanpa gangguan lagi.",
+      moral: "🌿 Pesan Moral: Jangan sombong dan suka meremehkan orang lain — kesombongan bisa mendatangkan bahaya bagi diri sendiri."
+    },
+    en: {
+      title: "🦌 Kancil & The Peacock",
+      credit: "The Mouse-Deer and the Peacock — caritasato.blogspot.com",
+      continue: "Continue ▶",
+      start: "Start Story ▶",
+      spread: "Spread Tail 🦚",
+      restart: "Restart Story ↺",
+      run: "RUN!",
+      hintSpot: "Tap the bush hiding the hunter before time runs out!",
+      hintRun: "Tap the RUN button as fast as you can!",
+      caught: "Oops, spotted! Try again.",
+      spotWin: "Found it! Merak is now on alert.",
+      meterLeft: "Merak",
+      meterRight: "Safe Forest 🌳",
+      speaker: {narator:"Narrator", kancil:"Kancil", merak:"Merak"},
+      lines: [
+        {sp:"narator", t:"One scorching afternoon, Kancil the mouse-deer lay lazily under a shady tree, belly full after secretly snacking on Farmer Tani's cucumbers."},
+        {sp:"narator", t:"Soon, the flap of wings echoed nearby. Merak the peacock strutted over, chest puffed out, his long tail trailing on the ground."},
+        {sp:"merak", t:"Hey Kancil! Look at my gorgeous tail. Aren't you dazzled?"},
+        {sp:"kancil", t:"Meh, it's ordinary. Looks just like any other bird's tail around here."},
+        {sp:"merak", t:"Don't be so rude! Everyone in the forest admires my tail. You just refuse to admit it, Kancil!"},
+        {sp:"kancil", t:"Alright, alright… your tail really is big and beautiful, Merak. But there's one thing I must warn you about."},
+        {sp:"merak", t:"Warn me about what, Kancil? Don't make me nervous."},
+        {sp:"kancil", t:"Yesterday afternoon I saw a few hunters wandering around here. Word is, they're after a peacock with a beautiful tail to sell for a high price."},
+        {sp:"merak", t:"Wh-what?! Don't joke with me, Kancil! No hunter would bother with a peacock…"},
+        {sp:"kancil", t:"I'm serious, Merak. That beautiful tail of yours is exactly why you're being hunted. You'd better hide deep in the forest!"}
+      ],
+      spotIntro: "Merak grew uneasy. His eyes caught something suspicious behind the bushes…",
+      spotOutro: "Just as feared! A hunter was hiding there. Merak panicked even more.",
+      runIntro: "Merak panicked and quickly got ready to dash as fast as he could into the forest!",
+      runOutro: "Merak vanished deep into the thick forest, safe from the hunter's grasp.",
+      ending: "Watching the arrogant peacock scurry away in a panic, Kancil laughed so hard he rolled on the ground. Then he calmly went back to his peaceful afternoon nap.",
+      moral: "🌿 Moral: Don't be arrogant or look down on others — pride can bring trouble upon yourself."
+    }
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+
+  /* ---------------------------------------------------------
+     DOM refs
+  --------------------------------------------------------- */
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  var dialogueBox = document.getElementById('dialogueBox');
+  var speakerEl = document.getElementById('speaker');
+  var dialogueTextEl = document.getElementById('dialogueText');
+  var actionRow = document.getElementById('actionRow');
+  var hintEl = document.getElementById('hint');
+  var meterWrap = document.getElementById('meterWrap');
+  var meterFill = document.getElementById('meterFill');
+  var meterLeftLabel = document.getElementById('meterLeftLabel');
+  var meterRightLabel = document.getElementById('meterRightLabel');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var gameTitle = document.getElementById('gameTitle');
+  var creditLine = document.getElementById('creditLine');
+
+  /* ---------------------------------------------------------
+     Canvas sizing (virtual coords 800x500)
+  --------------------------------------------------------- */
+  var VW = 800, VH = 500;
+  function resizeCanvas(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * (rect.width/VW), 0, 0, dpr * (rect.height/VH), 0, 0);
+  }
+
+  /* ---------------------------------------------------------
+     Auto-resize iframe (postMessage)
+  --------------------------------------------------------- */
+  function sendHeight(){
+    var h = document.getElementById('app').offsetHeight;
+    try{
+      window.parent.postMessage({type:'kancilMerakGameHeight', height:h}, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', function(){ resizeCanvas(); sendHeight(); requestAnimationFrame(loop); });
+  window.addEventListener('resize', function(){ resizeCanvas(); sendHeight(); });
+
+  /* ---------------------------------------------------------
+     Speech synthesis narration
+  --------------------------------------------------------- */
+  var voicesCache = [];
+  function loadVoices(){
+    voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    for (var i=0;i<voicesCache.length;i++){
+      if (voicesCache[i].lang && voicesCache[i].lang.toLowerCase().indexOf(langCode.toLowerCase())===0){
+        return voicesCache[i];
+      }
+    }
+    return null;
+  }
+  function speak(text, character){
+    if (muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var langCode = lang === 'en' ? 'en-US' : 'id-ID';
+    u.lang = langCode;
+    var v = pickVoice(langCode);
+    if (v) u.voice = v;
+    if (character === 'merak'){ u.pitch = 1.35; u.rate = 1.02; }
+    else if (character === 'kancil'){ u.pitch = 0.85; u.rate = 0.98; }
+    else { u.pitch = 1.0; u.rate = 0.95; }
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------------------------------------------------------
+     Game state machine
+     scenes: rest -> arrive -> fan -> dialogue(0..n) -> spotIntro -> spotGame -> runIntro -> runGame -> ending
+  --------------------------------------------------------- */
+  var scene = 'rest';
+  var dialogueIdx = 0;
+  var fanProgress = 0;   // 0..1 tail fan open amount
+  var t = 0;             // global animation clock
+  var lastTime = null;
+
+  // spot-the-hunter mini game state
+  var bushes = [];
+  var spotTimeLeft = 0;
+  var spotActive = false;
+  var spotResultTimer = 0;
+  var spotResult = null; // 'win' | 'lose'
+
+  // run QTE state
+  var runProgress = 0;   // 0..100
+  var runThreat = 0;     // 0..100 (hunters catching up)
+  var runActive = false;
+  var runDone = false;
+
+  function setDialogue(sp, text, character){
+    speakerEl.className = sp;
+    speakerEl.textContent = STR[lang].speaker[sp];
+    dialogueTextEl.textContent = text;
+    speak(text, character || sp);
+  }
+
+  function clearActions(){ actionRow.innerHTML = ''; hintEl.textContent=''; meterWrap.style.display='none'; }
+
+  function makeBtn(label, cls, onClick){
+    var b = document.createElement('button');
+    b.className = 'btn' + (cls?(' '+cls):'');
+    b.type = 'button';
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    actionRow.appendChild(b);
+    return b;
+  }
+
+  function goto(next){
+    scene = next;
+    render();
+  }
+
+  function render(){
+    clearActions();
+    var S = STR[lang];
+    if (scene === 'rest'){
+      setDialogue('narator', S.lines[0].t, 'narator');
+      makeBtn(S.start, null, function(){ goto('arrive'); });
+    } else if (scene === 'arrive'){
+      setDialogue('narator', S.lines[1].t, 'narator');
+      makeBtn(S.continue, null, function(){ goto('fan'); });
+    } else if (scene === 'fan'){
+      setDialogue('merak', S.lines[2].t, 'merak');
+      makeBtn(S.spread, 'gold', function(){
+        animateFan(function(){ dialogueIdx = 3; goto('dialogue'); });
+      });
+    } else if (scene === 'dialogue'){
+      var line = S.lines[dialogueIdx];
+      setDialogue(line.sp, line.t, line.sp);
+      if (dialogueIdx < S.lines.length - 1){
+        makeBtn(S.continue, null, function(){ dialogueIdx++; render(); });
+      } else {
+        makeBtn(S.continue, null, function(){ goto('spotIntro'); });
+      }
+    } else if (scene === 'spotIntro'){
+      setDialogue('narator', S.spotIntro, 'narator');
+      makeBtn(S.continue, null, function(){ startSpotGame(); });
+    } else if (scene === 'spotGame'){
+      speakerEl.className='narator';
+      speakerEl.textContent = S.speaker.narator;
+      dialogueTextEl.textContent = spotResult === 'lose' ? S.caught : (spotResult==='win'? S.spotWin : '…');
+      hintEl.textContent = S.hintSpot;
+    } else if (scene === 'spotOutro'){
+      setDialogue('narator', S.spotOutro, 'narator');
+      makeBtn(S.continue, null, function(){ goto('runIntro'); });
+    } else if (scene === 'runIntro'){
+      setDialogue('narator', S.runIntro, 'narator');
+      makeBtn(S.continue, null, function(){ startRunGame(); });
+    } else if (scene === 'runGame'){
+      speakerEl.className='narator';
+      speakerEl.textContent = S.speaker.narator;
+      dialogueTextEl.textContent = '…';
+      hintEl.textContent = S.hintRun;
+      meterWrap.style.display = 'block';
+      meterLeftLabel.textContent = S.meterLeft;
+      meterRightLabel.textContent = S.meterRight;
+      makeBtn(S.run, 'danger', onRunTap);
+    } else if (scene === 'ending'){
+      setDialogue('narator', S.ending, 'narator');
+      hintEl.textContent = S.moral;
+      makeBtn(S.restart, 'restart', resetGame);
+    }
+    sendHeight();
+  }
+
+  /* ----- fan animation ----- */
+  function animateFan(done){
+    var start = null;
+    var dur = 1400;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min(1, (ts-start)/dur);
+      fanProgress = easeOutCubic(p);
+      if (p < 1) requestAnimationFrame(step);
+      else { fanProgress = 1; if (done) done(); }
+    }
+    requestAnimationFrame(step);
+  }
+  function easeOutCubic(x){ return 1 - Math.pow(1-x, 3); }
+
+  /* ----- spot the hunter mini game ----- */
+  function startSpotGame(){
+    var hiddenIdx = Math.floor(Math.random()*3);
+    bushes = [0,1,2].map(function(i){ return {x: 150 + i*250, hidden: i===hiddenIdx, shake:0, found:false}; });
+    spotTimeLeft = 6.0;
+    spotActive = true;
+    spotResult = null;
+    scene = 'spotGame';
+    render();
+  }
+  function handleCanvasClick(px, py){
+    if (scene !== 'spotGame' || !spotActive) return;
+    for (var i=0;i<bushes.length;i++){
+      var b = bushes[i];
+      var dx = px - b.x, dy = py - 330;
+      if (Math.sqrt(dx*dx+dy*dy) < 70){
+        if (b.hidden){
+          b.found = true;
+          spotActive = false;
+          spotResult = 'win';
+          spotResultTimer = 1.1;
+        } else {
+          b.shake = 0.5;
+          spotResult = 'lose';
+        }
+      }
+    }
+  }
+  function updateSpotGame(dt){
+    if (scene !== 'spotGame') return;
+    if (spotActive){
+      spotTimeLeft -= dt;
+      if (spotTimeLeft <= 0){
+        spotActive = false;
+        spotResult = 'lose';
+        spotResultTimer = 1.0;
+      }
+    } else if (spotResultTimer > 0){
+      spotResultTimer -= dt;
+      if (spotResultTimer <= 0){
+        if (spotResult === 'win'){ goto('spotOutro'); }
+        else { startSpotGame(); }
+      }
+    }
+    bushes.forEach(function(b){ if (b.shake>0) b.shake -= dt; });
+  }
+
+  /* ----- run QTE ----- */
+  function startRunGame(){
+    runProgress = 0;
+    runThreat = 0;
+    runActive = true;
+    runDone = false;
+    scene = 'runGame';
+    render();
+  }
+  function onRunTap(){
+    if (!runActive) return;
+    runProgress = Math.min(100, runProgress + 6);
+    meterFill.style.width = runProgress + '%';
+    if (runProgress >= 100){
+      runActive = false;
+      runDone = true;
+      setTimeout(function(){ goto('ending'); }, 700);
+    }
+  }
+  function updateRunGame(dt){
+    if (scene !== 'runGame' || !runActive) return;
+    runThreat = Math.min(100, runThreat + dt*7.5); // hunters slowly close in, pressure to tap fast
+    if (runThreat >= 100 && runProgress < 100){
+      // gentle catch-up: don't hard fail, just slow the fill decay to add tension
+      runProgress = Math.max(0, runProgress - dt*4);
+      meterFill.style.width = runProgress + '%';
+    }
+  }
+
+  function resetGame(){
+    scene = 'rest'; dialogueIdx = 0; fanProgress = 0;
+    runProgress = 0; runThreat = 0; runActive=false; runDone=false;
+    spotResult = null; spotActive = false;
+    stopSpeak();
+    render();
+  }
+
+  /* ---------------------------------------------------------
+     Canvas click mapping
+  --------------------------------------------------------- */
+  canvas.addEventListener('click', function(e){
+    var rect = canvas.getBoundingClientRect();
+    var px = (e.clientX - rect.left) / rect.width * VW;
+    var py = (e.clientY - rect.top) / rect.height * VH;
+    handleCanvasClick(px, py);
+  });
+  canvas.addEventListener('touchstart', function(e){
+    if (!e.touches || !e.touches[0]) return;
+    var rect = canvas.getBoundingClientRect();
+    var touch = e.touches[0];
+    var px = (touch.clientX - rect.left) / rect.width * VW;
+    var py = (touch.clientY - rect.top) / rect.height * VH;
+    handleCanvasClick(px, py);
+  }, {passive:true});
+
+  /* ---------------------------------------------------------
+     DRAWING
+  --------------------------------------------------------- */
+  function bgSky(){
+    var g = ctx.createLinearGradient(0,0,0,VH);
+    g.addColorStop(0,'#FFE7A8');
+    g.addColorStop(1,'#FFB463');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,VW,VH);
+    // sun
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    var sunX = 660, sunY = 90;
+    var sg = ctx.createRadialGradient(sunX,sunY,10,sunX,sunY,90);
+    sg.addColorStop(0,'rgba(255,250,220,0.95)');
+    sg.addColorStop(1,'rgba(255,250,220,0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath(); ctx.arc(sunX,sunY,90,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFF4D6';
+    ctx.beginPath(); ctx.arc(sunX,sunY,34,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function hills(){
+    ctx.fillStyle = '#3A5A3E';
+    ctx.beginPath();
+    ctx.moveTo(0,300);
+    ctx.quadraticCurveTo(160,250,340,290);
+    ctx.quadraticCurveTo(540,330,800,270);
+    ctx.lineTo(800,500); ctx.lineTo(0,500); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = 'var(--forest-mid)';
+    ctx.fillStyle = '#2F5233';
+    ctx.beginPath();
+    ctx.moveTo(0,340);
+    ctx.quadraticCurveTo(200,300,400,335);
+    ctx.quadraticCurveTo(600,370,800,320);
+    ctx.lineTo(800,500); ctx.lineTo(0,500); ctx.closePath(); ctx.fill();
+  }
+  function ground(){
+    var g = ctx.createLinearGradient(0,360,0,500);
+    g.addColorStop(0,'#8B5E3C');
+    g.addColorStop(1,'#6B4728');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(0,380);
+    ctx.quadraticCurveTo(400,410,800,380);
+    ctx.lineTo(800,500); ctx.lineTo(0,500); ctx.closePath(); ctx.fill();
+    // grass tufts
+    ctx.strokeStyle = '#6B8F3F'; ctx.lineWidth = 3;
+    for (var i=0;i<26;i++){
+      var gx = (i*31 + 10) % 800;
+      var gy = 385 + Math.sin(i*1.7)*8;
+      ctx.beginPath();
+      ctx.moveTo(gx,gy);
+      ctx.quadraticCurveTo(gx-6,gy-14,gx-2,gy-20);
+      ctx.moveTo(gx,gy);
+      ctx.quadraticCurveTo(gx+6,gy-14,gx+3,gy-20);
+      ctx.stroke();
+    }
+  }
+  function tree(x,scale,swayPhase){
+    scale = scale || 1;
+    var sway = Math.sin(t*0.6+swayPhase)*2;
+    ctx.save();
+    ctx.translate(x,0);
+    ctx.scale(scale,scale);
+    // trunk
+    ctx.fillStyle = '#6B4728';
+    ctx.beginPath();
+    ctx.moveTo(-14,380); ctx.lineTo(-8,220); ctx.lineTo(8,220); ctx.lineTo(14,380);
+    ctx.closePath(); ctx.fill();
+    // canopy clusters
+    ctx.fillStyle = '#3E6B3F';
+    var clusters = [[0,170,80],[-55,200,58],[55,205,58],[0,130,60]];
+    clusters.forEach(function(c){
+      ctx.beginPath();
+      ctx.ellipse(c[0]+sway*0.4, c[1], c[2], c[2]*0.8, 0, 0, Math.PI*2);
+      ctx.fill();
+    });
+    ctx.fillStyle = '#568C50';
+    ctx.beginPath();
+    ctx.ellipse(sway*0.6,160,66,52,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function bush(x,y,scale,shake){
+    ctx.save();
+    ctx.translate(x + (shake? Math.sin(t*40)*shake*8 : 0), y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3E6B3F';
+    [[-30,0,32],[30,0,32],[0,-18,38],[-14,10,26],[14,10,26]].forEach(function(c){
+      ctx.beginPath(); ctx.ellipse(c[0],c[1],c[2],c[2]*0.8,0,0,Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawKancil(x,y,pose){
+    // pose: 'sleep' | 'sit' | 'laugh'
+    ctx.save();
+    ctx.translate(x,y);
+    var bob = Math.sin(t*2)*2;
+    if (pose === 'laugh'){
+      ctx.rotate(Math.sin(t*10)*0.35);
+    }
+    ctx.translate(0,pose==='sleep'?0:bob);
+    ctx.fillStyle = '#B98254';
+    // body
+    ctx.beginPath();
+    ctx.ellipse(0, pose==='sleep'? 20:0, 46, pose==='sleep'?24:30, pose==='sleep'?0.15:0, 0, Math.PI*2);
+    ctx.fill();
+    // legs (only when sitting/laughing, simplified)
+    if (pose !== 'sleep'){
+      ctx.strokeStyle = '#8C6239'; ctx.lineWidth = 7; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-24,20); ctx.lineTo(-28,42); ctx.moveTo(20,20); ctx.lineTo(26,42); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = '#C99666';
+    var hx = pose==='sleep'? -40 : -44, hy = pose==='sleep'? 26 : -14;
+    ctx.beginPath(); ctx.ellipse(hx,hy,20,16,0,0,Math.PI*2); ctx.fill();
+    // ear
+    ctx.beginPath(); ctx.ellipse(hx-6,hy-16,8,12,-0.3,0,Math.PI*2); ctx.fill();
+    // eye
+    ctx.fillStyle = '#2B2318';
+    if (pose === 'sleep'){
+      ctx.strokeStyle = '#2B2318'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(hx-6,hy-2); ctx.quadraticCurveTo(hx,hy+2,hx+6,hy-2); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(hx+2,hy-2,3.4,0,Math.PI*2); ctx.fill();
+    }
+    // little tusk nub
+    ctx.fillStyle = '#F4EBD9';
+    ctx.beginPath(); ctx.ellipse(hx-14,hy+8,3,6,0.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMerakBody(x,y,neckExtra){
+    ctx.save();
+    ctx.translate(x,y);
+    // legs
+    ctx.strokeStyle = '#4A3A2A'; ctx.lineWidth = 6; ctx.lineCap='round';
+    var legSwing = Math.sin(t*8)*10;
+    ctx.beginPath(); ctx.moveTo(-8,10); ctx.lineTo(-8+legSwing,34); ctx.moveTo(8,10); ctx.lineTo(8-legSwing,34); ctx.stroke();
+    // body
+    ctx.fillStyle = '#1F7A6C';
+    ctx.beginPath(); ctx.ellipse(0,0,26,20,0,0,Math.PI*2); ctx.fill();
+    // neck + head
+    ctx.strokeStyle = '#1F7A6C'; ctx.lineWidth = 14; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-16,-10); ctx.quadraticCurveTo(-34,-40-(neckExtra||0),-30,-58-(neckExtra||0)); ctx.stroke();
+    ctx.fillStyle = '#2E5FA3';
+    ctx.beginPath(); ctx.arc(-30,-60-(neckExtra||0),13,0,Math.PI*2); ctx.fill();
+    // crown feathers
+    ctx.strokeStyle = '#E8B04B'; ctx.lineWidth = 3;
+    for (var i=-1;i<=1;i++){
+      ctx.beginPath();
+      ctx.moveTo(-30+i*5,-72-(neckExtra||0));
+      ctx.lineTo(-30+i*5,-84-(neckExtra||0));
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(-30+i*5,-86-(neckExtra||0),2.5,0,Math.PI*2); ctx.fillStyle='#E8B04B'; ctx.fill();
+    }
+    // beak & eye
+    ctx.fillStyle = '#E8B04B';
+    ctx.beginPath(); ctx.moveTo(-42,-60-(neckExtra||0)); ctx.lineTo(-52,-58-(neckExtra||0)); ctx.lineTo(-42,-55-(neckExtra||0)); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2B2318';
+    ctx.beginPath(); ctx.arc(-34,-63-(neckExtra||0),2.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMerakTail(x,y,progress){
+    if (progress <= 0) return;
+    ctx.save();
+    ctx.translate(x,y);
+    var feathers = 11;
+    var spread = Math.PI*0.9*progress;
+    for (var i=0;i<feathers;i++){
+      var a = -spread/2 + (spread/(feathers-1))*i;
+      var len = (90 + Math.sin(i*1.3)*10) * progress;
+      ctx.save();
+      ctx.rotate(a);
+      var grad = ctx.createLinearGradient(0,0,0,-len);
+      grad.addColorStop(0, i%2? '#1F7A6C':'#2E5FA3');
+      grad.addColorStop(1, '#E8B04B');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0,10);
+      ctx.quadraticCurveTo(6,-len*0.5,0,-len);
+      ctx.stroke();
+      // eye spot
+      ctx.fillStyle = '#E8B04B';
+      ctx.beginPath(); ctx.arc(0,-len,9,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1F7A6C';
+      ctx.beginPath(); ctx.arc(0,-len,5.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#2B2318';
+      ctx.beginPath(); ctx.arc(0,-len,2,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawHunterPeek(x,y,shake){
+    ctx.save();
+    ctx.translate(x + (shake?Math.sin(t*30)*shake*6:0), y);
+    ctx.fillStyle = '#5B4E3A';
+    ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill(); // head
+    ctx.fillStyle = '#B0442E';
+    ctx.beginPath(); ctx.moveTo(-14,-6); ctx.lineTo(14,-6); ctx.lineTo(0,-22); ctx.closePath(); ctx.fill(); // hat
+    ctx.fillStyle = '#2B2318';
+    ctx.beginPath(); ctx.arc(-4,-1,1.6,0,Math.PI*2); ctx.arc(4,-1,1.6,0,Math.PI*2); ctx.fill(); // eyes
+    ctx.restore();
+  }
+
+  function scenery(withBushRow){
+    bgSky(); hills();
+    tree(120,1.15,0.3);
+    tree(700,0.95,1.4);
+    ground();
+    if (withBushRow){
+      bushes.forEach(function(b){ bush(b.x, 340, 1, b.shake); });
+    } else {
+      bush(230,360,0.7,0); bush(560,365,0.8,0);
+    }
+  }
+
+  function drawScene(){
+    ctx.save();
+    if (scene === 'rest'){
+      scenery(false);
+      drawKancil(150,300,'sleep');
+    } else if (scene === 'arrive'){
+      scenery(false);
+      drawKancil(150,330,'sit');
+      var mx = 620 - Math.min(1,(t%6))*0;
+      drawMerakBody(560,340,Math.sin(t*3)*3);
+    } else if (scene === 'fan'){
+      scenery(false);
+      drawKancil(150,330,'sit');
+      drawMerakTail(560,340 - 20,fanProgress);
+      drawMerakBody(560,340,Math.sin(t*3)*3);
+    } else if (scene === 'dialogue'){
+      scenery(false);
+      drawKancil(150,330,'sit');
+      drawMerakTail(560,340 - 20,1);
+      drawMerakBody(560,340,Math.sin(t*3)*3);
+    } else if (scene === 'spotIntro'){
+      scenery(false);
+      drawKancil(150,330,'sit');
+      drawMerakTail(560,340 - 20,1);
+      drawMerakBody(560,340,Math.sin(t*3)*3);
+    } else if (scene === 'spotGame' || scene === 'spotOutro'){
+      scenery(true);
+      bushes.forEach(function(b){
+        if (b.hidden && (b.found || scene==='spotOutro')) drawHunterPeek(b.x, 310, b.found?0.4:0);
+      });
+      drawKancil(120,330,'sit');
+      drawMerakBody(400,340, 8+Math.sin(t*6)*4);
+    } else if (scene === 'runIntro'){
+      scenery(false);
+      drawKancil(120,330,'sit');
+      drawMerakBody(400,340,10);
+    } else if (scene === 'runGame'){
+      bgSky(); hills();
+      tree(720,0.9,1.1);
+      ground();
+      // forest edge target (dark) on right
+      ctx.fillStyle = 'rgba(31,58,46,0.55)';
+      ctx.beginPath(); ctx.ellipse(760,330,90,140,0,0,Math.PI*2); ctx.fill();
+      // hunters approaching from left based on runThreat
+      var hx = -60 + (runThreat/100)*260;
+      drawHunterPeek(hx, 350, 0);
+      drawHunterPeek(hx-30, 360, 0);
+      // merak running position based on runProgress
+      var mrX = 140 + (runProgress/100)*560;
+      drawMerakBody(mrX, 340, 6+Math.sin(t*14)*10);
+      drawKancil(80,330,'laugh');
+    } else if (scene === 'ending'){
+      scenery(false);
+      drawKancil(400,330,'laugh');
+      // merak tail peeking from bush at forest edge
+      bush(700,355,0.9,0);
+      drawMerakTail(700,335,0.35);
+    }
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------
+     Spot game overlay drawing (timer bar + click targets highlight)
+  --------------------------------------------------------- */
+  function drawSpotUI(){
+    if (scene !== 'spotGame') return;
+    // timer bar
+    var w = 700, x0 = 50, y0 = 30;
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(x0,y0,w,14);
+    var pct = Math.max(0, spotTimeLeft/6);
+    ctx.fillStyle = pct > 0.3 ? '#1F7A6C' : '#B0442E';
+    ctx.fillRect(x0,y0,w*pct,14);
+    ctx.strokeStyle = '#2B2318'; ctx.lineWidth=2;
+    ctx.strokeRect(x0,y0,w,14);
+  }
+
+  /* ---------------------------------------------------------
+     Main loop
+  --------------------------------------------------------- */
+  function loop(ts){
+    if (lastTime === null) lastTime = ts;
+    var dt = Math.min(0.05,(ts-lastTime)/1000);
+    lastTime = ts;
+    t += dt;
+    updateSpotGame(dt);
+    updateRunGame(dt);
+    drawScene();
+    drawSpotUI();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------------------------------------------------------
+     Language & mute toggles
+  --------------------------------------------------------- */
+  function applyLangUI(){
+    var S = STR[lang];
+    gameTitle.textContent = S.title;
+    creditLine.textContent = S.credit;
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    document.documentElement.lang = lang;
+    render();
+  }
+  langBtn.addEventListener('click', function(){
+    stopSpeak();
+    lang = lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+  });
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    if (muted) stopSpeak();
+  });
+
+  /* ---------------------------------------------------------
+     Init
+  --------------------------------------------------------- */
+  applyLangUI();
+})();
+</script>
+</body>
+</html>
