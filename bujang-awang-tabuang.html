@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bujang Awang Tabuang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --lamp-hi:#f7e6b0;
+    --lamp-mid:#c98a3a;
+    --lamp-edge:#241205;
+    --gold:#d4a24e;
+    --gold-lt:#efd28f;
+    --maroon:#4a1712;
+    --maroon-dk:#2c0d0a;
+    --cream:#f5e8c9;
+    --ink:#160c05;
+    --danger:#8c2f2f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--maroon-dk);}
+  body{
+    font-family:'Lora',serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    overflow-x:hidden;
+  }
+  #app{
+    width:100%;
+    max-width:900px;
+    position:relative;
+  }
+  .frame{
+    position:relative;
+    margin:10px;
+    border-radius:14px;
+    padding:10px;
+    background:
+      linear-gradient(var(--maroon-dk), var(--maroon-dk)) padding-box,
+      repeating-linear-gradient(135deg, var(--gold) 0 4px, #a97a2d 4px 8px) border-box;
+    border:7px solid transparent;
+    box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 2px rgba(0,0,0,.35);
+  }
+  .frame::before{
+    content:"";
+    position:absolute;
+    inset:3px;
+    border:1px solid rgba(212,162,78,.55);
+    border-radius:9px;
+    pointer-events:none;
+  }
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:9/5.2;
+    border-radius:6px;
+    overflow:hidden;
+    background:#000;
+  }
+  canvas#stage{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .corner{
+    position:absolute;
+    width:26px;height:26px;
+    border:3px solid var(--gold);
+    opacity:.9;
+    pointer-events:none;
+  }
+  .corner.tl{top:2px;left:2px;border-right:none;border-bottom:none;border-radius:6px 0 0 0;}
+  .corner.tr{top:2px;right:2px;border-left:none;border-bottom:none;border-radius:0 6px 0 0;}
+  .corner.bl{bottom:2px;left:2px;border-right:none;border-top:none;border-radius:0 0 0 6px;}
+  .corner.br{bottom:2px;right:2px;border-left:none;border-top:none;border-radius:0 0 6px 0;}
+
+  /* HUD */
+  .hud{
+    position:absolute;
+    top:10px; right:10px;
+    display:flex;
+    gap:6px;
+    z-index:20;
+  }
+  .hud button{
+    font-family:'Lora',serif;
+    font-size:12px;
+    letter-spacing:.03em;
+    background:rgba(20,10,4,.55);
+    border:1px solid var(--gold);
+    color:var(--gold-lt);
+    padding:6px 10px;
+    border-radius:20px;
+    cursor:pointer;
+    backdrop-filter:blur(2px);
+    transition:background .15s, transform .1s;
+    white-space:nowrap;
+  }
+  .hud button:hover{background:rgba(212,162,78,.25);}
+  .hud button:active{transform:scale(.95);}
+  .hud button.active{background:var(--gold);color:var(--maroon-dk);}
+
+  /* Overlay panels */
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    pointer-events:none;
+    z-index:10;
+  }
+  .panel{
+    pointer-events:auto;
+    margin:10px;
+    padding:14px 16px 12px;
+    background:linear-gradient(180deg, rgba(74,23,18,.92), rgba(30,9,7,.95));
+    border:1.5px solid var(--gold);
+    border-radius:10px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5);
+    animation:panelIn .35s ease-out;
+  }
+  @keyframes panelIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+  .panel .eyebrow{
+    font-family:'Cinzel Decorative',serif;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--gold-lt);
+    margin:0 0 6px;
+    opacity:.85;
+  }
+  .panel p{
+    margin:0;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--cream);
+  }
+  .panel-actions{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+  }
+  .btn{
+    font-family:'Lora',serif;
+    font-weight:600;
+    font-size:14px;
+    background:var(--gold);
+    color:var(--maroon-dk);
+    border:none;
+    padding:8px 18px;
+    border-radius:22px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #8a6221;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:hover{filter:brightness(1.07);}
+  .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #8a6221;}
+  .btn.ghost{
+    background:transparent;
+    color:var(--gold-lt);
+    border:1px solid var(--gold);
+    box-shadow:none;
+  }
+  .icon-btn{
+    background:none;
+    border:none;
+    color:var(--gold-lt);
+    font-size:18px;
+    cursor:pointer;
+    opacity:.85;
+    padding:4px;
+  }
+  .icon-btn:hover{opacity:1;}
+
+  /* Start / End screens */
+  .cover{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:24px;
+    background:radial-gradient(ellipse at 50% 60%, rgba(201,138,58,.35), rgba(20,10,4,.97) 70%);
+    z-index:30;
+  }
+  .cover h1{
+    font-family:'Cinzel Decorative',serif;
+    font-size:clamp(24px,5vw,42px);
+    margin:0 0 6px;
+    color:var(--gold-lt);
+    text-shadow:0 2px 12px rgba(0,0,0,.6);
+    letter-spacing:.02em;
+  }
+  .cover .subtitle{
+    font-style:italic;
+    color:var(--gold);
+    margin:0 0 22px;
+    font-size:clamp(13px,2vw,16px);
+  }
+  .ornament{
+    width:120px; height:14px;
+    margin:0 auto 20px;
+    background:
+      radial-gradient(circle, var(--gold) 0 3px, transparent 4px) 0 50%/16px 16px repeat-x;
+    opacity:.85;
+  }
+  .cover .desc{
+    max-width:520px;
+    font-size:14px;
+    line-height:1.6;
+    color:var(--cream);
+    opacity:.9;
+    margin:0 0 26px;
+  }
+  .cover-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+
+  /* QTE elements */
+  .qte-target{
+    position:absolute;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--lamp-hi), var(--gold) 60%, #8a5a1e 100%);
+    box-shadow:0 0 18px 4px rgba(247,230,176,.6);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+    border:2px solid var(--gold-lt);
+    z-index:15;
+    touch-action:manipulation;
+    user-select:none;
+  }
+  .meter-wrap{
+    position:absolute;
+    left:10px; right:10px; top:10px;
+    z-index:20;
+    pointer-events:none;
+  }
+  .meter-label{
+    font-family:'Cinzel Decorative',serif;
+    font-size:11px;
+    letter-spacing:.08em;
+    color:var(--gold-lt);
+    text-shadow:0 1px 3px #000;
+    margin-bottom:3px;
+    text-align:center;
+  }
+  .meter-bar{
+    height:10px;
+    background:rgba(0,0,0,.45);
+    border:1px solid var(--gold);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#8c2f2f,var(--gold),var(--lamp-hi));
+    transition:width .12s;
+  }
+  .timebar-wrap{
+    position:absolute;
+    left:10px; right:10px; bottom:10px;
+    z-index:20;
+    pointer-events:none;
+  }
+  .timebar{
+    height:6px;
+    background:rgba(0,0,0,.4);
+    border-radius:4px;
+    overflow:hidden;
+    border:1px solid rgba(212,162,78,.6);
+  }
+  .timebar-fill{
+    height:100%;
+    background:var(--gold-lt);
+    width:100%;
+  }
+  .qte-hint{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-family:'Cinzel Decorative',serif;
+    font-size:clamp(16px,3.6vw,26px);
+    color:var(--gold-lt);
+    text-shadow:0 2px 10px #000;
+    opacity:.9;
+    z-index:12;
+    text-align:center;
+    pointer-events:none;
+  }
+  .credits{
+    font-size:12px;
+    opacity:.7;
+    margin-top:6px;
+  }
+  .lang-note{
+    font-size:11px;
+    opacity:.6;
+    margin-top:14px;
+  }
+  @media (max-width:480px){
+    .panel p{font-size:13.5px;}
+    .hud button{font-size:11px; padding:5px 8px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="frame">
+    <div class="stage-wrap" id="stageWrap">
+      <canvas id="stage"></canvas>
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+
+      <div class="hud">
+        <button id="btnLang" title="Ganti bahasa / Change language">EN</button>
+        <button id="btnMute" title="Bisukan / Mute">🔊</button>
+      </div>
+
+      <div class="overlay" id="overlay"></div>
+
+      <div class="cover" id="coverStart">
+        <h1>Bujang Awang Tabuang</h1>
+        <p class="subtitle" id="coverSubtitle">Kisah Rakyat dari Bengkulu</p>
+        <div class="ornament"></div>
+        <p class="desc" id="coverDesc"></p>
+        <div class="cover-actions">
+          <button class="btn" id="btnStart"></button>
+        </div>
+        <p class="lang-note" id="coverLangNote"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   I18N CONTENT
+--------------------------------------------------------- */
+var STR = {
+  id:{
+    subtitle:"Kisah Rakyat dari Bengkulu",
+    desc:"Dengarkan kisah seorang pemuda sakti yang dibesarkan di rimba oleh seekor harimau dan sepasang kera, lalu berjalan seorang diri mencari ayahandanya, seorang raja.",
+    start:"Mulai Kisah",
+    langNote:"Tersedia narasi suara. Tekan 🔊 untuk membisukan.",
+    replay:"Ulangi Narasi",
+    continue:"Lanjutkan",
+    skip:"Lewati",
+    playAgain:"Mainkan Lagi",
+    mute:"Bisukan",
+    unmute:"Nyalakan Suara",
+    theEnd:"— TAMAT —",
+    endDesc:"Bujang Awang Tabuang hidup berbahagia bersama kedua orang tuanya, namun tak pernah lupa pada harimau dan sepasang kera yang membesarkannya.",
+    credits:"Cerita rakyat Bengkulu, diceritakan ulang untuk caritasato.blogspot.com",
+    tapTarget:"Ketuk!",
+    hold:"Ketuk berulang!",
+    dodge:"Ketuk saat tanda muncul!",
+    reactHint:"Ketuk lingkaran emas secepatnya!",
+    day:"SIANG",
+    night:"MALAM",
+    qteLabels:{
+      training:"Latihan Kesaktian",
+      journey:"Perjalanan ke Istana",
+      guards:"Perkelahian dengan Penjaga",
+      patih:"Pertarungan dengan Patih",
+      king:"Duel dengan Raja"
+    },
+    scenes:[
+      {t:"narrative", eyebrow:"Kerajaan Peremban Panas", text:"Di daerah Bengkulu, berdirilah kerajaan Peremban Panas. Raja Kramo Kratu Agung memerintah dengan adil, didampingi permaisurinya, Putri Rimas Bangesu. Rakyat mencintai mereka — namun setelah enam tahun menikah, keduanya belum juga dikaruniai anak.", bg:{env:"palace", time:"day"}},
+      {t:"narrative", eyebrow:"Perundingan Istana", text:"Karena khawatir tak ada penerus tahta, para kerabat istana berembug diam-diam. Keputusan mereka mengejutkan: Sang Raja harus menikah lagi, sementara Putri Rimas Bangesu harus diasingkan ke tengah hutan rimba.", bg:{env:"throne", time:"day"}},
+      {t:"narrative", eyebrow:"Pengasingan", text:"Putri Rimas Bangesu dibawa ke sebuah gubuk kecil di tengah hutan, ditemani hanya oleh seekor harimau dan sepasang kera. Tak seorang pun tahu, saat itu ia sesungguhnya sedang mengandung.", bg:{env:"forest", time:"day"}},
+      {t:"narrative", eyebrow:"Kelahiran", text:"Di tengah rimba, lahirlah seorang bayi laki-laki yang sehat dan tampan. Sang ibu memberinya nama: Bujang Awang Tabuang.", bg:{env:"forest-hut", time:"day"}},
+      {t:"qte", key:"training", eyebrow:"Tahun demi tahun", text:"Dijaga harimau dan sepasang kera, Bujang tumbuh dengan cepat. Setiap hari ia melatih tenaga dalam dan kesaktiannya di tengah hutan.", bg:{env:"forest", time:"day"}},
+      {t:"narrative", eyebrow:"Tujuh Belas Tahun", text:"Kini Bujang telah tumbuh menjadi pemuda gagah dan sakti mandraguna. Berulang kali ia bertanya siapa ayahnya — ibunya hanya berkata bahwa ayahnya adalah seorang Dewa.", bg:{env:"forest", time:"day"}},
+      {t:"narrative", eyebrow:"Rahasia Terungkap", text:"Merasa putranya sudah cukup dewasa, Putri Rimas Bangesu akhirnya bercerita: ayah kandungnya adalah Raja Kramo Kratu Agung. Ia pun menceritakan kisah pengasingannya. Dengan berat hati, sang ibu mengizinkan Bujang pergi mencari ayahandanya.", bg:{env:"forest-hut", time:"day"}},
+      {t:"qte", key:"journey", eyebrow:"Berhari-hari Berjalan", text:"Seorang diri, Bujang menyusuri hutan dan desa demi desa, menanyakan arah ke istana Kerajaan Peremban Panas kepada siapa pun yang ia temui.", bg:{env:"journey", time:"day"}},
+      {t:"narrative", eyebrow:"Gerbang Istana", text:"Tiba di gerbang istana, Bujang melangkah masuk begitu saja. Para penjaga menghalaunya — Sang Raja tak boleh diganggu, sebab beliau hendak menikahi Putri Rambut Perak dari Kerajaan Pinang Jarang.", bg:{env:"gate", time:"day"}},
+      {t:"qte", key:"guards", eyebrow:"Kekacauan di Istana", text:"Bujang tetap memaksa masuk. Para penjaga mencoba mengusirnya, namun ternyata kekuatannya jauh melampaui mereka semua.", bg:{env:"gate", time:"day"}},
+      {t:"narrative", eyebrow:"Tidur di Alun-Alun", text:"Kelelahan setelah perjalanan panjang, Bujang tertidur di bawah pohon di alun-alun istana. Dengkurannya begitu keras hingga istana bergetar bagai dilanda gempa bumi.", bg:{env:"square", time:"day"}},
+      {t:"qte", key:"patih", eyebrow:"Raden Tumenggung Turun Tangan", text:"Sang Patih kerajaan, Raden Tumenggung, keluar mencari biang keributan. Melihat sikap Bujang yang tak acuh, ia langsung menyerang tanpa basa-basi.", bg:{env:"square", time:"day"}},
+      {t:"narrative", eyebrow:"Mengamuk di Istana", text:"Bujang melangkah masuk ke dalam istana, membuat para prajurit kocar-kacir tak mampu menghadapinya. Akhirnya, Raja Kramo Kratu Agung sendiri turun tangan menghadapi sang pemuda pengacau.", bg:{env:"gate", time:"day"}},
+      {t:"qte", key:"king", eyebrow:"Satu Hari Satu Malam", text:"Ayah dan anak yang belum saling mengenal itu bertarung sengit tanpa henti, dari siang hingga malam, tanpa ada yang mampu mengalahkan yang lain.", bg:{env:"gate", time:"day"}},
+      {t:"narrative", eyebrow:"Gencatan", text:"\"Sudahlah, hai anak muda. Pertarungan kita tak akan pernah selesai. Siapakah dirimu?\" tanya Sang Raja, terengah namun penasaran.", bg:{env:"gate", time:"night"}},
+      {t:"narrative", eyebrow:"Pertemuan", text:"Bujang tersentak menyadari lawannya adalah ayah yang dicarinya. \"Hamba Bujang Awang Tabuang, putra Putri Rimas Bangesu. Saat ibunda diasingkan, sesungguhnya ibunda sedang mengandung Hamba,\" katanya.", bg:{env:"throne", time:"night"}},
+      {t:"narrative", eyebrow:"Pelukan Ayah dan Anak", text:"Raja Kramo Kratu Agung segera memeluk putranya, menyesali pengasingan yang tak semestinya terjadi. Seketika, pernikahannya dengan Putri Rambut Perak pun dibatalkan.", bg:{env:"throne", time:"night"}},
+      {t:"narrative", eyebrow:"Menjemput Sang Permaisuri", text:"Keesokan harinya, Raja bersama Bujang dan para prajurit pergi ke hutan menjemput Putri Rimas Bangesu. Suami istri itu berpelukan sambil menangis, lalu kembali ke istana bersama-sama.", bg:{env:"forest", time:"day"}},
+      {t:"end", eyebrow:"Tamat", text:"Bujang Awang Tabuang hidup berbahagia bersama kedua orang tuanya di istana. Namun ia tak pernah lupa pada harimau dan sepasang kera yang membesarkannya — sesekali ia kembali ke hutan hanya untuk menjenguk mereka.", bg:{env:"forest", time:"day"}}
+    ]
+  },
+  en:{
+    subtitle:"A Folktale from Bengkulu, Indonesia",
+    desc:"The tale of a gifted young man raised in the jungle by a tiger and two monkeys, who sets out alone to find his father — a king.",
+    start:"Begin the Tale",
+    langNote:"Voice narration available. Tap 🔊 to mute.",
+    replay:"Replay Narration",
+    continue:"Continue",
+    skip:"Skip",
+    playAgain:"Play Again",
+    mute:"Mute",
+    unmute:"Unmute",
+    theEnd:"— THE END —",
+    endDesc:"Bujang Awang Tabuang lived happily with his parents, but he never forgot the tiger and the two monkeys who raised him.",
+    credits:"A Bengkulu folktale, retold for caritasato.blogspot.com",
+    tapTarget:"Tap!",
+    hold:"Tap repeatedly!",
+    dodge:"Tap when the mark appears!",
+    reactHint:"Tap the golden circle as fast as you can!",
+    day:"DAY",
+    night:"NIGHT",
+    qteLabels:{
+      training:"Training in the Wild",
+      journey:"Journey to the Palace",
+      guards:"Clash with the Guards",
+      patih:"Duel with the Minister",
+      king:"Duel with the King"
+    },
+    scenes:[
+      {t:"narrative", eyebrow:"The Kingdom of Peremban Panas", text:"In the land of Bengkulu stood the kingdom of Peremban Panas. King Kramo Kratu Agung ruled wisely beside his queen, Rimas Bangesu. Their people loved them dearly — yet after six years of marriage, the couple still had no child.", bg:{env:"palace", time:"day"}},
+      {t:"narrative", eyebrow:"A Secret Council", text:"Worried about who would inherit the throne, the royal court met in secret. Their decision was shocking: the King must marry again, while Queen Rimas Bangesu would be banished deep into the jungle.", bg:{env:"throne", time:"day"}},
+      {t:"narrative", eyebrow:"Banishment", text:"The queen was led to a small hut in the middle of the forest, accompanied only by a tiger and a pair of monkeys. No one knew that she was already carrying a child.", bg:{env:"forest", time:"day"}},
+      {t:"narrative", eyebrow:"A Birth in the Wild", text:"Deep in the jungle, a healthy baby boy was born. His mother named him: Bujang Awang Tabuang.", bg:{env:"forest-hut", time:"day"}},
+      {t:"qte", key:"training", eyebrow:"Years Pass", text:"Watched over by the tiger and the monkeys, Bujang grew quickly. Every day he trained his body and his inner strength deep in the forest.", bg:{env:"forest", time:"day"}},
+      {t:"narrative", eyebrow:"Seventeen Years Old", text:"Bujang had become a strong, handsome, and remarkably gifted young man. Again and again he asked his mother who his father was — and each time she said only that his father was a god.", bg:{env:"forest", time:"day"}},
+      {t:"narrative", eyebrow:"The Truth Revealed", text:"Sensing her son was finally ready, Queen Rimas Bangesu told him the truth — his father was King Kramo Kratu Agung — and recounted her banishment. Heavy-hearted, she let him go to find his father.", bg:{env:"forest-hut", time:"day"}},
+      {t:"qte", key:"journey", eyebrow:"Days of Walking", text:"Alone, Bujang crossed forests and villages, asking every traveler he met for the way to the palace of Peremban Panas.", bg:{env:"journey", time:"day"}},
+      {t:"narrative", eyebrow:"At the Palace Gate", text:"Reaching the palace gate, Bujang simply walked in. The guards tried to stop him — the King could not be disturbed, they said, for he was about to marry Princess Rambut Perak of Pinang Jarang.", bg:{env:"gate", time:"day"}},
+      {t:"qte", key:"guards", eyebrow:"Chaos at the Gate", text:"Bujang pushed his way in anyway. The guards tried to drive him off, only to discover his strength was far beyond anything they could match.", bg:{env:"gate", time:"day"}},
+      {t:"narrative", eyebrow:"Asleep in the Square", text:"Exhausted from his long journey, Bujang fell asleep beneath a tree in the palace square. His snoring was so loud the whole palace shook as if struck by an earthquake.", bg:{env:"square", time:"day"}},
+      {t:"qte", key:"patih", eyebrow:"The Minister Intervenes", text:"Raden Tumenggung, the King's chief minister, rushed out to find the source of the uproar. Seeing the stranger's indifference, he struck without another word.", bg:{env:"square", time:"day"}},
+      {t:"narrative", eyebrow:"Rampage in the Palace", text:"Bujang pressed on into the palace, scattering soldiers who could not stand against him. At last, King Kramo Kratu Agung himself came out to face the reckless young intruder.", bg:{env:"gate", time:"day"}},
+      {t:"qte", key:"king", eyebrow:"A Day and a Night", text:"Father and son, neither knowing the other, fought fiercely without pause from day into night — and neither could gain the upper hand.", bg:{env:"gate", time:"day"}},
+      {t:"narrative", eyebrow:"A Truce", text:"\"Enough, young man. It seems our fight will never end. Who are you?\" the King finally asked, breathless but curious.", bg:{env:"gate", time:"night"}},
+      {t:"narrative", eyebrow:"Recognition", text:"Bujang startled to realize his opponent was the very father he sought. \"I am Bujang Awang Tabuang, son of Queen Rimas Bangesu. When she was banished, she was already carrying me,\" he said.", bg:{env:"throne", time:"night"}},
+      {t:"narrative", eyebrow:"Father and Son", text:"King Kramo Kratu Agung embraced his son at once, grieved by the wrong he had done. On the spot, he called off his marriage to Princess Rambut Perak.", bg:{env:"throne", time:"night"}},
+      {t:"narrative", eyebrow:"Bringing the Queen Home", text:"The next day, the King, Bujang, and their soldiers rode into the forest to bring Queen Rimas Bangesu home. Husband and wife embraced in tears, then returned to the palace together.", bg:{env:"forest", time:"day"}},
+      {t:"end", eyebrow:"The End", text:"Bujang Awang Tabuang lived happily with his parents in the palace. Yet he never forgot the tiger and the two monkeys who had raised him — from time to time, he returned to the forest just to visit his old companions.", bg:{env:"forest", time:"day"}}
+    ]
+  }
+};
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+var qs = new URLSearchParams(location.search);
+var lang = (qs.get("lang")==="en") ? "en" : "id";
+var muted = false;
+var sceneIndex = -1; // -1 = cover
+var scenes = STR[lang].scenes;
+var voices = [];
+var currentUtterance = null;
+var raf = null;
+var t0 = performance.now();
+
+var canvas = document.getElementById("stage");
+var ctx = canvas.getContext("2d");
+var stageWrap = document.getElementById("stageWrap");
+var overlay = document.getElementById("overlay");
+var coverStart = document.getElementById("coverStart");
+var btnLang = document.getElementById("btnLang");
+var btnMute = document.getElementById("btnMute");
+var btnStart = document.getElementById("btnStart");
+
+var VW = 900, VH = 520; // internal virtual resolution
+
+/* ---------------------------------------------------------
+   RESIZE / CANVAS SETUP
+--------------------------------------------------------- */
+function fitCanvas(){
+  var rect = stageWrap.getBoundingClientRect();
+  var dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width = Math.round(rect.width*dpr);
+  canvas.height = Math.round(rect.height*dpr);
+  ctx.setTransform(dpr*(rect.width/VW),0,0,dpr*(rect.height/VH),0,0);
+}
+window.addEventListener("resize", fitCanvas);
+
+function reportHeight(){
+  try{
+    var h = document.getElementById("app").getBoundingClientRect().height;
+    parent.postMessage({type:"bujangAwangTabuangHeight", height:Math.ceil(h)}, "*");
+  }catch(e){}
+}
+new ResizeObserver(function(){ fitCanvas(); reportHeight(); }).observe(stageWrap);
+window.addEventListener("load", function(){ fitCanvas(); reportHeight(); });
+
+/* ---------------------------------------------------------
+   SPEECH
+--------------------------------------------------------- */
+function loadVoices(){ voices = (window.speechSynthesis && speechSynthesis.getVoices()) || []; }
+if (window.speechSynthesis){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(l){
+  var pref = l==="en" ? "en" : "id";
+  var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(pref)===0; });
+  if (!v && pref==="id") v = voices.find(function(v){ return /indonesia/i.test(v.name); });
+  return v || null;
+}
+function speak(text){
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  if (muted || !text) return;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang==="en" ? "en-US" : "id-ID";
+  var v = pickVoice(lang);
+  if (v) u.voice = v;
+  u.rate = 0.96;
+  u.pitch = 1.0;
+  currentUtterance = u;
+  try{ speechSynthesis.speak(u); }catch(e){}
+}
+function stopSpeak(){ if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+/* ---------------------------------------------------------
+   DRAWING HELPERS (wayang / shadow-puppet silhouette style)
+--------------------------------------------------------- */
+function lampGradient(time){
+  var g = ctx.createRadialGradient(VW*0.5, VH*1.05, VH*0.15, VW*0.5, VH*0.55, VW*0.75);
+  if (time==="night"){
+    g.addColorStop(0, "#5a4a2a");
+    g.addColorStop(0.45, "#2a2214");
+    g.addColorStop(1, "#0c0805");
+  } else {
+    g.addColorStop(0, "#f7e6b0");
+    g.addColorStop(0.45, "#c98a3a");
+    g.addColorStop(1, "#241205");
+  }
+  return g;
+}
+function drawSky(time){
+  ctx.fillStyle = lampGradient(time);
+  ctx.fillRect(0,0,VW,VH);
+  // flicker vignette
+  var flick = 0.04*Math.sin((performance.now()-t0)/220);
+  ctx.fillStyle = "rgba(255,220,150,"+(0.03+flick*0.02)+")";
+  ctx.beginPath();
+  ctx.ellipse(VW*0.5, VH*1.05, VW*0.5, VH*0.35, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+function silhouette(){ ctx.fillStyle = "#140b05"; }
+function goldRim(){ ctx.strokeStyle = "rgba(212,162,78,0.55)"; ctx.lineWidth = 1.4; }
+
+function drawMountains(){
+  silhouette();
+  ctx.beginPath();
+  ctx.moveTo(0, VH*0.62);
+  ctx.lineTo(VW*0.12, VH*0.46);
+  ctx.lineTo(VW*0.28, VH*0.60);
+  ctx.lineTo(VW*0.42, VH*0.40);
+  ctx.lineTo(VW*0.58, VH*0.58);
+  ctx.lineTo(VW*0.75, VH*0.44);
+  ctx.lineTo(VW*0.9, VH*0.60);
+  ctx.lineTo(VW, VH*0.5);
+  ctx.lineTo(VW, VH*0.75);
+  ctx.lineTo(0, VH*0.75);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawTree(x, baseY, scale){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x, baseY);
+  ctx.scale(scale, scale);
+  silhouette();
+  ctx.fillRect(-4, -90, 8, 90);
+  for (var i=0;i<5;i++){
+    var ry = -85 - i*16;
+    var rw = 70 - i*9;
+    ctx.beginPath();
+    ctx.ellipse(0, ry, rw, 26, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawForestRow(baseY, count, scaleMin, scaleMax, seedOffset){
+  for (var i=0;i<count;i++){
+    var x = (i+0.5)*(VW/count) + Math.sin(i*13+seedOffset)*20;
+    var s = scaleMin + (Math.sin(i*7.7+seedOffset)*0.5+0.5)*(scaleMax-scaleMin);
+    drawTree(x, baseY, s);
+  }
+}
+function drawHut(x, y, scale){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  silhouette();
+  ctx.beginPath();
+  ctx.moveTo(-60,0); ctx.lineTo(-60,-40); ctx.lineTo(60,-40); ctx.lineTo(60,0); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-75,-40); ctx.lineTo(0,-85); ctx.lineTo(75,-40); ctx.closePath(); ctx.fill();
+  goldRim();
+  ctx.beginPath(); ctx.moveTo(-75,-40); ctx.lineTo(0,-85); ctx.lineTo(75,-40); ctx.stroke();
+  ctx.restore();
+}
+function drawPalace(x, y, scale, grand){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  silhouette();
+  var w = grand? 340:220, h = grand? 130:90;
+  ctx.fillRect(-w/2, -h, w, h);
+  // tiered meru-style roof
+  var tiers = grand? 4:3;
+  var baseW = w*0.62, baseH = 46;
+  for (var i=0;i<tiers;i++){
+    var tw = baseW*(1-i*0.22);
+    var ty = -h - i*(baseH*0.62);
+    ctx.beginPath();
+    ctx.moveTo(-tw/2, ty);
+    ctx.lineTo(0, ty-baseH);
+    ctx.lineTo(tw/2, ty);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // spire
+  ctx.beginPath();
+  ctx.moveTo(-3, -h-tiers*(baseH*0.62)+baseH*0.4);
+  ctx.lineTo(0, -h-tiers*(baseH*0.62)-30);
+  ctx.lineTo(3, -h-tiers*(baseH*0.62)+baseH*0.4);
+  ctx.closePath(); ctx.fill();
+  // pillars
+  goldRim();
+  for (var p=-3;p<=3;p++){
+    ctx.beginPath();
+    ctx.moveTo(p*(w/8), -h+8);
+    ctx.lineTo(p*(w/8), -6);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawGateArch(x,y,scale){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  silhouette();
+  ctx.fillRect(-90,-160, 26, 160);
+  ctx.fillRect(64,-160, 26, 160);
+  ctx.beginPath();
+  ctx.moveTo(-90,-160);
+  ctx.quadraticCurveTo(0,-230, 90,-160);
+  ctx.lineTo(64,-160);
+  ctx.quadraticCurveTo(0,-200,-64,-160);
+  ctx.closePath();
+  ctx.fill();
+  goldRim();
+  ctx.beginPath();
+  ctx.moveTo(-64,-160);
+  ctx.quadraticCurveTo(0,-200,64,-160);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawPillarsRow(y, scale){
+  scale = scale||1;
+  silhouette();
+  for (var i=0;i<6;i++){
+    var x = VW*0.12 + i*(VW*0.76/5);
+    ctx.fillRect(x-8*scale, y-150*scale, 16*scale, 150*scale);
+    ctx.beginPath();
+    ctx.ellipse(x, y-150*scale, 20*scale, 8*scale, 0,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+function drawThroneShape(x,y,scale){
+  scale=scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  silhouette();
+  ctx.fillRect(-38,-90,76,90);
+  ctx.beginPath();
+  ctx.moveTo(-46,-90); ctx.lineTo(0,-150); ctx.lineTo(46,-90); ctx.closePath(); ctx.fill();
+  goldRim();
+  ctx.beginPath(); ctx.moveTo(-46,-90); ctx.lineTo(0,-150); ctx.lineTo(46,-90); ctx.stroke();
+  ctx.restore();
+}
+function drawGround(){
+  silhouette();
+  ctx.fillRect(0, VH*0.86, VW, VH*0.14);
+  goldRim();
+  ctx.beginPath();
+  ctx.moveTo(0,VH*0.86); ctx.lineTo(VW,VH*0.86); ctx.stroke();
+}
+function drawRoadDust(offset){
+  ctx.save();
+  ctx.strokeStyle = "rgba(212,162,78,0.25)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([14,18]);
+  ctx.lineDashOffset = -offset;
+  ctx.beginPath();
+  ctx.moveTo(0, VH*0.87);
+  ctx.lineTo(VW, VH*0.87);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* Character silhouettes (simple articulated shapes) */
+function person(x,y,scale,opts){
+  opts = opts||{};
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale, scale);
+  silhouette();
+  // legs
+  ctx.beginPath();
+  ctx.moveTo(-9,0); ctx.lineTo(-13,52); ctx.lineTo(-4,52); ctx.lineTo(-2,6);
+  ctx.lineTo(2,6); ctx.lineTo(4,52); ctx.lineTo(13,52); ctx.lineTo(9,0);
+  ctx.closePath(); ctx.fill();
+  // robe/body
+  ctx.beginPath();
+  ctx.moveTo(-20,4);
+  ctx.quadraticCurveTo(-24,-46,-12,-58);
+  ctx.lineTo(12,-58);
+  ctx.quadraticCurveTo(24,-46,20,4);
+  ctx.closePath(); ctx.fill();
+  // arms
+  ctx.beginPath();
+  ctx.ellipse(-22,-30,7,20,0.35,0,Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(22,-30,7,20,-0.35,0,Math.PI*2); ctx.fill();
+  // head
+  ctx.beginPath();
+  ctx.arc(0,-70,13,0,Math.PI*2); ctx.fill();
+  // headdress
+  if (opts.crown){
+    ctx.beginPath();
+    ctx.moveTo(-13,-80); ctx.lineTo(-9,-100); ctx.lineTo(-3,-84);
+    ctx.lineTo(0,-102); ctx.lineTo(3,-84); ctx.lineTo(9,-100); ctx.lineTo(13,-80);
+    ctx.closePath(); ctx.fill();
+    goldRim(); ctx.stroke();
+  } else if (opts.sanggul){
+    ctx.beginPath(); ctx.arc(0,-86,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(13,-70); ctx.quadraticCurveTo(30,-40,20,10); ctx.lineTo(14,8);
+    ctx.quadraticCurveTo(22,-40,10,-66); ctx.closePath(); ctx.fill();
+  } else if (opts.topknot){
+    ctx.beginPath(); ctx.moveTo(-6,-82); ctx.lineTo(0,-96); ctx.lineTo(6,-82); ctx.closePath(); ctx.fill();
+  } else if (opts.helm){
+    ctx.beginPath(); ctx.arc(0,-76,15,Math.PI,0); ctx.fill();
+  }
+  if (opts.weapon){
+    ctx.save();
+    ctx.rotate(opts.weaponAngle||0.6);
+    ctx.fillRect(6,-70,4,60);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function tiger(x,y,scale){
+  scale=scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  silhouette();
+  ctx.beginPath();
+  ctx.ellipse(0,-14,46,16,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-46,-18,13,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-56,-30); ctx.lineTo(-50,-42); ctx.lineTo(-44,-30); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-40,-30); ctx.lineTo(-34,-42); ctx.lineTo(-28,-30); ctx.closePath(); ctx.fill();
+  // legs
+  for (var i=-1;i<=1;i+=2){
+    ctx.fillRect(-30+i*10,-4,7,20);
+    ctx.fillRect(20+i*10,-4,7,20);
+  }
+  // tail
+  ctx.beginPath();
+  ctx.moveTo(44,-14);
+  ctx.quadraticCurveTo(70,-30,64,-4);
+  ctx.lineWidth=6; ctx.strokeStyle="#140b05"; ctx.stroke();
+  // stripes
+  ctx.strokeStyle="rgba(212,162,78,0.5)"; ctx.lineWidth=2;
+  for (var s=-30;s<30;s+=12){
+    ctx.beginPath(); ctx.moveTo(s,-26); ctx.lineTo(s-6,-4); ctx.stroke();
+  }
+  ctx.restore();
+}
+function monkey(x,y,scale){
+  scale=scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  silhouette();
+  ctx.beginPath(); ctx.ellipse(0,-6,14,16,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-30,10,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-9,-36,4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-36,4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(12,-4);
+  ctx.quadraticCurveTo(30,-10,26,10);
+  ctx.lineWidth=4; ctx.strokeStyle="#140b05"; ctx.stroke();
+  ctx.fillRect(-14,6,6,16); ctx.fillRect(8,6,6,16);
+  ctx.restore();
+}
+
+/* ---------------------------------------------------------
+   SCENE BACKGROUND COMPOSER
+--------------------------------------------------------- */
+function drawBackdrop(bg, extra){
+  extra = extra||{};
+  drawSky(bg.time);
+  drawMountains();
+  switch(bg.env){
+    case "forest":
+      drawForestRow(VH*0.80, 7, 0.9, 1.5, 3);
+      drawForestRow(VH*0.68, 9, 0.55, 0.9, 11);
+      break;
+    case "forest-hut":
+      drawForestRow(VH*0.80, 6, 0.9, 1.3, 5);
+      drawHut(VW*0.5, VH*0.82, 1.15);
+      drawForestRow(VH*0.83, 3, 0.6, 0.8, 21);
+      break;
+    case "palace":
+      drawPalace(VW*0.5, VH*0.83, 1.25, true);
+      drawForestRow(VH*0.83, 4, 0.4, 0.6, 40);
+      break;
+    case "throne":
+      drawPillarsRow(VH*0.83, 1.05);
+      drawThroneShape(VW*0.5, VH*0.83, 1.1);
+      break;
+    case "gate":
+      drawPalace(VW*0.5, VH*0.80, 0.85, true);
+      drawGateArch(VW*0.5, VH*0.9, 1.0);
+      break;
+    case "square":
+      drawPalace(VW*0.72, VH*0.78, 0.7, true);
+      drawTree(VW*0.24, VH*0.86, 1.9);
+      break;
+    case "journey":
+      drawForestRow(VH*0.80, 5, 0.7, 1.1, 8);
+      drawRoadDust(extra.dustOffset||0);
+      break;
+  }
+  drawGround();
+}
+
+/* ---------------------------------------------------------
+   SCENE ACTOR COMPOSITIONS (simple idle poses per scene)
+--------------------------------------------------------- */
+function bob(baseY, amp, speed, phase){
+  return baseY + Math.sin(((performance.now()-t0)/1000)*speed + (phase||0))*amp;
+}
+function drawSceneActors(idx){
+  var s = scenes[idx];
+  var env = s.bg.env;
+  switch(idx){
+    case 0: // king & queen, palace, longing for a child
+      person(VW*0.42, bob(VH*0.83,3,1.4,0), 1.0, {crown:true});
+      person(VW*0.58, bob(VH*0.83,3,1.4,1.2), 1.0, {sanggul:true});
+      break;
+    case 1: // council scene
+      person(VW*0.5, bob(VH*0.83,2,1.2,0), 1.0, {crown:true});
+      person(VW*0.32, bob(VH*0.83,2,1.3,0.6), 0.85, {helm:true});
+      person(VW*0.68, bob(VH*0.83,2,1.3,1.1), 0.85, {helm:true});
+      break;
+    case 2: // exile
+      person(VW*0.5, bob(VH*0.83,3,1.2,0), 1.0, {sanggul:true});
+      tiger(VW*0.28, VH*0.86, 1.0);
+      monkey(VW*0.68, VH*0.85, 1.0);
+      monkey(VW*0.75, VH*0.85, 0.9);
+      break;
+    case 3: // birth
+      person(VW*0.4, bob(VH*0.83,2,1.0,0), 1.0, {sanggul:true});
+      tiger(VW*0.68, VH*0.86, 0.9);
+      break;
+    case 5: // 17yo, asking mother
+      person(VW*0.4, bob(VH*0.83,2,1.2,0), 1.05, {topknot:true});
+      person(VW*0.6, bob(VH*0.83,2,1.1,0.8), 1.0, {sanggul:true});
+      break;
+    case 6: // truth revealed
+      person(VW*0.42, bob(VH*0.83,2,1.0,0), 1.05, {topknot:true});
+      person(VW*0.6, bob(VH*0.83,2,1.0,0.7), 1.0, {sanggul:true});
+      tiger(VW*0.2, VH*0.87, 0.75);
+      break;
+    case 8: // palace gate, guards blocking
+      person(VW*0.5, bob(VH*0.84,2,1.4,0), 1.1, {topknot:true});
+      person(VW*0.68, bob(VH*0.84,2,1.5,0.9), 0.95, {helm:true, weapon:true});
+      person(VW*0.32, bob(VH*0.84,2,1.5,0.4), 0.95, {helm:true, weapon:true, weaponAngle:-0.6});
+      break;
+    case 10: // sleeping under tree
+      ctx.save();
+      ctx.translate(VW*0.26, VH*0.84);
+      ctx.rotate(Math.PI/2);
+      person(0,0,1.05,{topknot:true});
+      ctx.restore();
+      break;
+    case 12: // rampage
+      person(VW*0.5, bob(VH*0.84,3,1.6,0), 1.1, {topknot:true});
+      person(VW*0.28, bob(VH*0.84,2,1.5,0.5), 0.9, {helm:true});
+      person(VW*0.72, bob(VH*0.84,2,1.5,1.1), 0.9, {helm:true});
+      break;
+    case 14: // truce
+      person(VW*0.4, bob(VH*0.84,1.5,1.0,0), 1.05, {topknot:true});
+      person(VW*0.6, bob(VH*0.84,1.5,1.0,0.6), 1.05, {crown:true});
+      break;
+    case 15: // recognition
+      person(VW*0.42, bob(VH*0.83,2,1.0,0), 1.0, {topknot:true});
+      person(VW*0.58, bob(VH*0.83,2,1.0,0.6), 1.0, {crown:true});
+      break;
+    case 16: // embrace
+      person(VW*0.48, bob(VH*0.83,1.5,0.9,0), 1.0, {topknot:true});
+      person(VW*0.54, bob(VH*0.83,1.5,0.9,0.4), 1.0, {crown:true});
+      break;
+    case 17: // reunited family
+      person(VW*0.38, bob(VH*0.84,1.5,0.9,0), 0.95, {crown:true});
+      person(VW*0.5, bob(VH*0.84,1.5,0.9,0.5), 0.95, {sanggul:true});
+      person(VW*0.62, bob(VH*0.84,1.5,0.9,1.0), 0.95, {topknot:true});
+      break;
+    case 18: // ending
+      person(VW*0.5, bob(VH*0.84,1.5,0.8,0), 1.0, {topknot:true});
+      tiger(VW*0.28, VH*0.87, 0.85);
+      monkey(VW*0.72, VH*0.86, 0.85);
+      monkey(VW*0.78, VH*0.86, 0.75);
+      break;
+    default: break;
+  }
+}
+
+/* ---------------------------------------------------------
+   MAIN RENDER LOOP
+--------------------------------------------------------- */
+var dustOffset = 0;
+function renderFrame(){
+  if (sceneIndex>=0 && sceneIndex<scenes.length){
+    var s = scenes[sceneIndex];
+    dustOffset += 0.4;
+    drawBackdrop(s.bg, {dustOffset:dustOffset});
+    drawSceneActors(sceneIndex);
+    if (activeQTE && activeQTE.renderExtra) activeQTE.renderExtra();
+  } else {
+    drawBackdrop({env:"forest", time:"day"});
+  }
+  raf = requestAnimationFrame(renderFrame);
+}
+
+/* ---------------------------------------------------------
+   UI RENDERING (panels, buttons)
+--------------------------------------------------------- */
+function el(tag, cls, html){
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html!==undefined) e.innerHTML = html;
+  return e;
+}
+function clearOverlay(){ overlay.innerHTML = ""; }
+
+function renderNarrativePanel(scene, onContinue, isEnd){
+  clearOverlay();
+  var panel = el("div","panel");
+  var eyebrow = el("p","eyebrow", scene.eyebrow||"");
+  var text = el("p", null, scene.text);
+  panel.appendChild(eyebrow);
+  panel.appendChild(text);
+
+  var actions = el("div","panel-actions");
+  var replay = el("button","icon-btn","🔁");
+  replay.title = STR[lang].replay;
+  replay.onclick = function(){ speak(scene.text); };
+  actions.appendChild(replay);
+
+  var cont = el("button","btn", isEnd ? STR[lang].playAgain : STR[lang].continue);
+  cont.onclick = onContinue;
+  actions.appendChild(cont);
+
+  panel.appendChild(actions);
+  overlay.appendChild(panel);
+  reportHeight();
+}
+
+/* ---------------------------------------------------------
+   QTE ENGINE
+--------------------------------------------------------- */
+var activeQTE = null;
+
+function startQTE(scene, onDone){
+  clearOverlay();
+  if (scene.key==="king"){ scene.bg = {env:"gate", time:"day"}; }
+  var label = STR[lang].qteLabels[scene.key] || "";
+
+  var eyebrowPanel = el("div","panel");
+  eyebrowPanel.style.marginBottom = "0";
+  var eyebrow = el("p","eyebrow", scene.eyebrow||"");
+  var text = el("p", null, scene.text);
+  eyebrowPanel.appendChild(eyebrow);
+  eyebrowPanel.appendChild(text);
+  overlay.appendChild(eyebrowPanel);
+
+  // meter
+  var meterWrap = el("div","meter-wrap");
+  var mLabel = el("div","meter-label", label);
+  var mBar = el("div","meter-bar");
+  var mFill = el("div","meter-fill");
+  mBar.appendChild(mFill);
+  meterWrap.appendChild(mLabel);
+  meterWrap.appendChild(mBar);
+  stageWrap.appendChild(meterWrap);
+
+  // timebar
+  var timeWrap = el("div","timebar-wrap");
+  var tBar = el("div","timebar");
+  var tFill = el("div","timebar-fill");
+  tBar.appendChild(tFill);
+  timeWrap.appendChild(tBar);
+  stageWrap.appendChild(timeWrap);
+
+  var hint = el("div","qte-hint", STR[lang].reactHint);
+  stageWrap.appendChild(hint);
+  setTimeout(function(){ if(hint.parentNode) hint.style.opacity="0"; }, 1800);
+
+  var duration = scene.key==="king" ? 13000 : 8000;
+  var startedAt = performance.now();
+  var power = 0;
+  var targetEl = null;
+  var running = true;
+  var dayNightSwitched = false;
+
+  function spawnTarget(){
+    if (!running) return;
+    if (targetEl && targetEl.parentNode) targetEl.parentNode.removeChild(targetEl);
+    var size = 46 + Math.random()*22;
+    var margin = 40;
+    var rect = stageWrap.getBoundingClientRect();
+    var maxX = Math.max(rect.width - size - margin, margin);
+    var maxY = Math.max(rect.height - size - margin, margin);
+    var x = margin + Math.random()*(maxX-margin);
+    var y = margin + Math.random()*(maxY-margin*1.6);
+    targetEl = el("div","qte-target","✦");
+    targetEl.style.width = size+"px";
+    targetEl.style.height = size+"px";
+    targetEl.style.left = x+"px";
+    targetEl.style.top = y+"px";
+    var hit = false;
+    function onHit(ev){
+      if (hit) return; hit = true;
+      ev.preventDefault();
+      power = Math.min(100, power + 9 + Math.random()*4);
+      mFill.style.width = power+"%";
+      if (targetEl.parentNode) targetEl.parentNode.removeChild(targetEl);
+      targetEl = null;
+      if (running) spawnTarget();
+    }
+    targetEl.addEventListener("pointerdown", onHit, {passive:false});
+    stageWrap.appendChild(targetEl);
+    setTimeout(function(){
+      if (!hit && targetEl && targetEl.parentNode){
+        targetEl.parentNode.removeChild(targetEl);
+        targetEl = null;
+        if (running) spawnTarget();
+      }
+    }, 1100);
+  }
+  spawnTarget();
+
+  function tick(){
+    if (!running) return;
+    var elapsed = performance.now()-startedAt;
+    var pct = Math.max(0, 1 - elapsed/duration);
+    tFill.style.width = (pct*100)+"%";
+    if (scene.key==="king" && !dayNightSwitched && pct<0.5){
+      dayNightSwitched = true;
+      scene.bg = {env:"gate", time:"night"};
+      mLabel.textContent = label + " · " + STR[lang].night;
+    }
+    if (elapsed >= duration){
+      finish();
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  function finish(){
+    running = false;
+    if (targetEl && targetEl.parentNode) targetEl.parentNode.removeChild(targetEl);
+    meterWrap.remove(); timeWrap.remove(); if(hint.parentNode) hint.remove();
+    activeQTE = null;
+    onDone();
+  }
+
+  activeQTE = { cleanup:finish };
+}
+
+/* ---------------------------------------------------------
+   SCENE FLOW
+--------------------------------------------------------- */
+function goToScene(i){
+  sceneIndex = i;
+  if (i>=scenes.length){ return showCover(true); }
+  var scene = scenes[i];
+  speak(scene.text);
+  if (scene.t==="qte"){
+    startQTE(scene, function(){
+      renderNarrativePanel(scene, function(){ goToScene(i+1); }, false);
+    });
+  } else if (scene.t==="end"){
+    renderNarrativePanel(scene, function(){ showCover(true); }, true);
+  } else {
+    renderNarrativePanel(scene, function(){ goToScene(i+1); }, false);
+  }
+  reportHeight();
+}
+
+/* ---------------------------------------------------------
+   COVER / START SCREEN
+--------------------------------------------------------- */
+function refreshCoverText(){
+  document.getElementById("coverSubtitle").textContent = STR[lang].subtitle;
+  document.getElementById("coverDesc").textContent = STR[lang].desc;
+  document.getElementById("btnStart").textContent = STR[lang].start;
+  document.getElementById("coverLangNote").textContent = STR[lang].langNote;
+  btnLang.textContent = lang==="id" ? "EN" : "ID";
+  btnMute.textContent = muted ? "🔇" : "🔊";
+  btnMute.title = muted ? STR[lang].unmute : STR[lang].mute;
+}
+function showCover(isReplay){
+  stopSpeak();
+  sceneIndex = -1;
+  clearOverlay();
+  coverStart.style.display = "flex";
+  var h1 = coverStart.querySelector("h1");
+  if (isReplay){
+    h1.textContent = STR[lang].theEnd.replace(/—/g,"").trim();
+    document.getElementById("coverDesc").textContent = STR[lang].endDesc;
+    document.getElementById("btnStart").textContent = STR[lang].playAgain;
+    var credit = coverStart.querySelector(".credits");
+    if (!credit){
+      credit = el("p","credits", STR[lang].credits);
+      coverStart.appendChild(credit);
+    } else { credit.textContent = STR[lang].credits; }
+  } else {
+    h1.textContent = "Bujang Awang Tabuang";
+    refreshCoverText();
+    var c = coverStart.querySelector(".credits");
+    if (c) c.remove();
+  }
+  reportHeight();
+}
+
+btnStart.addEventListener("click", function(){
+  coverStart.style.display = "none";
+  goToScene(0);
+});
+btnLang.addEventListener("click", function(){
+  lang = lang==="id" ? "en" : "id";
+  scenes = STR[lang].scenes;
+  refreshCoverText();
+  if (sceneIndex>=0 && sceneIndex<scenes.length){
+    var scene = scenes[sceneIndex];
+    if (activeQTE){
+      // rebuild qte label/text live
+      speak(scene.text);
+    } else {
+      renderNarrativePanel(scene, function(){ goToScene(sceneIndex+1); }, scenes[sceneIndex].t==="end");
+      speak(scene.text);
+    }
+  }
+});
+btnMute.addEventListener("click", function(){
+  muted = !muted;
+  btnMute.textContent = muted ? "🔇" : "🔊";
+  btnMute.title = muted ? STR[lang].unmute : STR[lang].mute;
+  if (muted) stopSpeak();
+});
+
+/* ---------------------------------------------------------
+   INIT
+--------------------------------------------------------- */
+refreshCoverText();
+fitCanvas();
+renderFrame();
+reportHeight();
+setTimeout(reportHeight, 400);
+window.addEventListener("load", reportHeight);
+
+})();
+</script>
+</body>
+</html>
