@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keong Mas - Cerita Rakyat Jawa Timur</title>
+<style>
+  :root{
+    --bg1:#2b1810;
+    --bg2:#3d2415;
+    --panel:#40281a;
+    --panel-light:#4d3220;
+    --gold:#d4a24c;
+    --gold-light:#e8c887;
+    --cream:#f4e8d2;
+    --red:#b3402f;
+    --green:#5a8f5c;
+    --shadow:rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(ellipse at top, var(--bg2), var(--bg1));
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:14px 8px;
+  }
+  #app{
+    width:100%;
+    max-width:680px;
+    background:linear-gradient(180deg,var(--panel),var(--bg1));
+    border-radius:18px;
+    border:3px solid var(--gold);
+    box-shadow:0 10px 30px var(--shadow), inset 0 0 0 6px rgba(212,162,76,0.08);
+    overflow:hidden;
+    position:relative;
+  }
+  .batik-border{
+    position:absolute; inset:0; pointer-events:none;
+    background-image:
+      radial-gradient(circle at 12px 12px, var(--gold) 2px, transparent 2.5px),
+      radial-gradient(circle at 12px 12px, var(--gold) 2px, transparent 2.5px);
+    background-position: 0 0, calc(100% - 0px) 0;
+    opacity:.35;
+  }
+  header{
+    padding:12px 16px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    border-bottom:1px solid rgba(212,162,76,.25);
+  }
+  header h1{
+    font-family:'Playfair Display', Georgia, serif;
+    font-size:19px;
+    margin:0;
+    color:var(--gold-light);
+    letter-spacing:.3px;
+  }
+  .header-controls{display:flex; gap:6px; align-items:center;}
+  .icon-btn{
+    background:var(--panel-light);
+    border:1.5px solid var(--gold);
+    color:var(--cream);
+    border-radius:10px;
+    width:36px;height:32px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:transform .15s, background .15s;
+  }
+  .icon-btn:hover{background:var(--gold); color:var(--bg1); transform:translateY(-1px);}
+  .icon-btn.active{background:var(--red); border-color:var(--red); color:#fff;}
+  .lang-btn{
+    font-size:11px; font-weight:800; width:auto; padding:0 10px;
+  }
+  .lang-btn.selected{background:var(--gold); color:var(--bg1);}
+  #stage-wrap{
+    position:relative;
+    background:linear-gradient(180deg,#3a2213,#1f1309);
+  }
+  #canvas{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  #progress{
+    position:absolute; top:8px; left:8px; right:8px;
+    display:flex; gap:3px;
+  }
+  #progress .dot{
+    flex:1; height:4px; border-radius:3px;
+    background:rgba(255,255,255,.18);
+  }
+  #progress .dot.done{background:var(--gold);}
+  #progress .dot.now{background:var(--gold-light); box-shadow:0 0 6px var(--gold-light);}
+
+  #interact-overlay{
+    position:absolute; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center;
+    padding:10px;
+    gap:8px;
+  }
+  .hint-chip{
+    background:rgba(20,12,6,.78);
+    border:1px solid var(--gold);
+    color:var(--gold-light);
+    font-size:12.5px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:20px;
+    text-align:center;
+  }
+  .timing-bar{
+    width:88%;
+    max-width:360px;
+    height:16px;
+    border-radius:10px;
+    background:#2a1c10;
+    border:1.5px solid var(--gold);
+    position:relative;
+    overflow:hidden;
+  }
+  .timing-zone{
+    position:absolute; top:0; bottom:0;
+    background:rgba(90,143,92,.55);
+  }
+  .timing-marker{
+    position:absolute; top:-3px; bottom:-3px;
+    width:5px; background:var(--cream);
+    border-radius:3px;
+    box-shadow:0 0 6px #fff;
+  }
+  .action-btn{
+    background:linear-gradient(180deg,var(--gold-light),var(--gold));
+    color:#2b1810;
+    border:none;
+    font-weight:800;
+    font-size:13.5px;
+    padding:9px 22px;
+    border-radius:24px;
+    cursor:pointer;
+    box-shadow:0 3px 8px var(--shadow);
+    transition:transform .12s;
+  }
+  .action-btn:active{transform:scale(.96);}
+  .action-btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  #textbox{
+    padding:14px 18px 10px;
+    min-height:64px;
+  }
+  #storytext{
+    font-size:14.5px;
+    line-height:1.55;
+    margin:0;
+    color:var(--cream);
+  }
+  footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 16px 16px;
+  }
+  #replay-btn{
+    background:transparent;
+    border:1.5px solid var(--gold);
+    color:var(--gold-light);
+    border-radius:20px;
+    padding:8px 14px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  #replay-btn:hover{background:rgba(212,162,76,.15);}
+  #nav-right{display:flex; gap:8px;}
+  #back-btn{
+    background:transparent;
+    border:1.5px solid rgba(244,232,210,.3);
+    color:rgba(244,232,210,.7);
+    border-radius:20px;
+    padding:8px 14px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .credit{
+    text-align:center;
+    font-size:10.5px;
+    color:rgba(244,232,210,.35);
+    padding:0 16px 12px;
+  }
+  #feedback-flash{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Playfair Display',serif;
+    font-size:22px; font-weight:700;
+    color:var(--gold-light);
+    background:rgba(20,12,6,.35);
+    opacity:0; pointer-events:none;
+    transition:opacity .25s;
+  }
+  #feedback-flash.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="batik-border"></div>
+  <header>
+    <h1 id="title-text">🐚 Keong Mas</h1>
+    <div class="header-controls">
+      <button class="icon-btn lang-btn" id="btn-id" title="Bahasa Indonesia">ID</button>
+      <button class="icon-btn lang-btn" id="btn-en" title="English">EN</button>
+      <button class="icon-btn" id="btn-mute" title="Mute/unmute narration">🔊</button>
+    </div>
+  </header>
+
+  <div id="stage-wrap">
+    <canvas id="canvas" width="1280" height="800"></canvas>
+    <div id="progress"></div>
+    <div id="feedback-flash"></div>
+    <div id="interact-overlay"></div>
+  </div>
+
+  <div id="textbox">
+    <p id="storytext"></p>
+  </div>
+
+  <footer>
+    <button id="replay-btn">🔁 <span id="replay-label">Ulangi narasi</span></button>
+    <div id="nav-right">
+      <button id="back-btn">‹ <span id="back-label">Kembali</span></button>
+      <button class="action-btn" id="next-btn">Lanjut ›</button>
+    </div>
+  </footer>
+  <div class="credit" id="credit-text">Dongeng Keong Mas — Jawa Timur · dibuat untuk caritasato.blogspot.com</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- Language & strings ---------------- */
+var qs = new URLSearchParams(location.search);
+var lang = (qs.get('lang')==='en') ? 'en' : 'id';
+
+var UI = {
+  id:{
+    title:"🐚 Keong Mas",
+    replay:"Ulangi narasi",
+    back:"Kembali",
+    next:"Lanjut ›",
+    start:"Mulai ▶",
+    restart:"Main Lagi ↻",
+    credit:"Dongeng Keong Mas — Jawa Timur · dibuat untuk caritasato.blogspot.com",
+    mutedTitle:"Nyalakan suara",
+    unmutedTitle:"Matikan suara"
+  },
+  en:{
+    title:"🐚 The Golden Snail",
+    replay:"Replay narration",
+    back:"Back",
+    next:"Next ›",
+    start:"Start ▶",
+    restart:"Play Again ↻",
+    credit:"Keong Mas Folktale — East Java · made for caritasato.blogspot.com",
+    mutedTitle:"Unmute narration",
+    unmutedTitle:"Mute narration"
+  }
+};
+
+/* ---------------- Scenes ---------------- */
+// Each scene: draw(ctx,w,h,t), text.id/text.en, interaction (optional)
+var S = []; // filled below
+
+function T(id,en){ return {id:id, en:en}; }
+
+S.push({ // 0 title
+  text:T(
+    "Di Kerajaan Daha, Jawa Timur, hiduplah kisah tentang seorang putri yang dikutuk menjadi keong emas... dan cinta yang mampu mematahkan kutukan itu.",
+    "In the Kingdom of Daha, East Java, there lived a princess cursed into a golden snail... and a love strong enough to break that curse."
+  ),
+  draw:drawTitle,
+  isTitle:true
+});
+
+S.push({ // 1
+  text:T(
+    "Di Kerajaan Daha, hiduplah Raja Kertamarta dengan dua putri: Candra Kirana yang baik hati, dan Dewi Galuh yang iri hati. Candra Kirana bertunangan dengan Raden Inu Kertapati, pangeran dari Kerajaan Kahuripan.",
+    "In the Kingdom of Daha lived King Kertamarta with two daughters: kind-hearted Candra Kirana and jealous Dewi Galuh. Candra Kirana was betrothed to Raden Inu Kertapati, a prince from the Kingdom of Kahuripan."
+  ),
+  draw:drawPalace
+});
+
+S.push({ // 2 - stir cauldron interaction
+  text:T(
+    "Dewi Galuh sangat cemburu pada kakaknya. Ia menemui seorang nenek sihir jahat dan meminta ramuan kutukan, agar Candra Kirana berubah rupa dan Raden Inu membatalkan pertunangan mereka.",
+    "Dewi Galuh grew bitterly jealous of her sister. She sought out a wicked witch and begged for a curse—one that would change Candra Kirana's form so Raden Inu would call off their engagement."
+  ),
+  draw:drawWitch,
+  interaction:{
+    type:"clickTarget",
+    hint:T("Klik kuali sebanyak 3 kali untuk meramu kutukan","Tap the cauldron 3 times to brew the curse"),
+    target:{x:0.5,y:0.62,r:0.13},
+    count:3
+  }
+});
+
+S.push({ // 3 - two step: click princess then river
+  text:T(
+    "Nenek sihir mengucapkan kutukan jahat. Seketika, Candra Kirana yang cantik berubah menjadi seekor keong emas! Ia dibuang jauh ke sungai, dengan kutukan hanya bisa lenyap jika ia bertemu kembali dengan tunangannya.",
+    "The witch spoke the wicked curse. In an instant, lovely Candra Kirana turned into a golden snail! She was cast far away into a river, doomed to stay a snail until she was reunited with her betrothed."
+  ),
+  draw:drawCurseRiver,
+  interaction:{
+    type:"twoStep",
+    hint:T("Klik keong emas, lalu klik sungai untuk membuangnya","Tap the golden snail, then tap the river to cast it away"),
+    steps:[
+      {x:0.5,y:0.42,r:0.12},
+      {x:0.5,y:0.78,r:0.16}
+    ]
+  }
+});
+
+S.push({ // 4
+  text:T(
+    "Keong emas terapung mengikuti arus hingga ditemukan oleh seorang nenek tua bernama Nenek Dadapan, yang tinggal sendirian di tepi hutan. Nenek Dadapan membawanya pulang dan merawatnya dengan penuh kasih sayang.",
+    "The golden snail drifted with the current until an old woman named Grandma Dadapan, who lived alone by the forest, found it. She took it home and cared for it with loving kindness."
+  ),
+  draw:drawGrandmaFindsSnail
+});
+
+S.push({ // 5 - timing interaction
+  text:T(
+    "Keajaiban terjadi! Setiap kali Nenek Dadapan pergi mencari kayu bakar, keong emas berubah menjadi seorang gadis cantik yang memasak hidangan lezat untuknya, lalu berubah kembali menjadi keong sebelum nenek pulang.",
+    "A miracle happened! Every time Grandma Dadapan went out to gather firewood, the golden snail turned into a lovely maiden who cooked delicious meals for her—then turned back into a snail before the old woman returned."
+  ),
+  draw:drawCookingMagic,
+  interaction:{
+    type:"timing",
+    hint:T("Tekan \"Intip!\" saat penanda masuk zona hijau","Press \"Peek!\" when the marker enters the green zone")
+  }
+});
+
+S.push({ // 6
+  text:T(
+    "Suatu hari, Nenek Dadapan diam-diam mengintip dan memergoki gadis misterius itu. Rahasianya terbongkar—gadis itu menceritakan kisahnya sebagai Candra Kirana yang terkutuk. Nenek Dadapan pun mengangkatnya sebagai anak.",
+    "One day, Grandma Dadapan secretly peeked and caught the mysterious maiden. Her secret revealed, the girl told her story—she was the cursed Candra Kirana. Grandma Dadapan took her in as her own daughter."
+  ),
+  draw:drawReveal
+});
+
+S.push({ // 7 - crow reveal
+  text:T(
+    "Sementara itu, Raden Inu Kertapati mencari Candra Kirana yang menghilang. Ia menyamar sebagai rakyat biasa dan mengembara dari desa ke desa. Di tengah hutan, seekor burung gagak sakti menghampirinya.",
+    "Meanwhile, Raden Inu Kertapati searched for his missing betrothed. Disguised as a commoner, he wandered from village to village. Deep in the forest, a magical crow approached him."
+  ),
+  draw:drawCrowForest,
+  interaction:{
+    type:"reveal",
+    hint:T("Klik burung gagak untuk mendengar petunjuknya","Tap the crow to hear its message"),
+    revealText:T(
+      "\"Wahai Pangeran, teruslah ke arah gubuk tua di tepi hutan. Di sanalah engkau akan menemukan jawaban yang kau cari.\"",
+      "\"O Prince, follow the path to the old hut by the forest's edge. There you will find the answer you seek.\""
+    ),
+    target:{x:0.63,y:0.42,r:0.12}
+  }
+});
+
+S.push({ // 8
+  text:T(
+    "Petunjuk sang gagak membawa Raden Inu ke gubuk Nenek Dadapan. Dalam penyamarannya, ia disuguhi hidangan yang begitu lezat—hidangan yang sama seperti yang biasa dimasak Candra Kirana di istana dahulu.",
+    "The crow's hint led Raden Inu to Grandma Dadapan's hut. Still in disguise, he was served a meal so delicious—the very same dishes Candra Kirana used to cook back in the palace."
+  ),
+  draw:drawHutMeal
+});
+
+S.push({ // 9
+  text:T(
+    "Raden Inu curiga dan bersembunyi untuk mengamati. Ia melihat sendiri keong emas berubah menjadi Candra Kirana! Kutukan pun sirna karena mereka telah bertemu kembali. Keduanya berpelukan dengan penuh syukur.",
+    "Growing suspicious, Raden Inu hid and watched closely. He saw with his own eyes the golden snail transform into Candra Kirana! The curse dissolved the moment they were reunited. The two embraced, overjoyed."
+  ),
+  draw:drawReunion
+});
+
+S.push({ // 10
+  text:T(
+    "Raden Inu membawa Candra Kirana kembali ke Kerajaan Daha. Kejahatan Dewi Galuh dan nenek sihir terbongkar, dan mereka dihukum atas perbuatannya. Candra Kirana dan Raden Inu Kertapati akhirnya menikah dan hidup berbahagia.",
+    "Raden Inu brought Candra Kirana home to the Kingdom of Daha. The wrongdoings of Dewi Galuh and the witch were exposed, and they were punished for their deeds. Candra Kirana and Raden Inu Kertapati were married and lived happily ever after."
+  ),
+  draw:drawWedding
+});
+
+S.push({ // 11 end
+  text:T(
+    "🌾 Tamat 🌾  Selesailah kisah Keong Mas, dongeng rakyat dari Jawa Timur. Kisah ini mengajarkan bahwa kebaikan hati akan selalu menang atas kejahatan dan iri hati.",
+    "🌾 The End 🌾  So ends the tale of Keong Mas, a folktale from East Java. This story teaches us that kindness always triumphs over cruelty and envy."
+  ),
+  draw:drawTheEnd,
+  isEnd:true
+});
+
+/* ---------------- State ---------------- */
+var state = {
+  scene:0,
+  muted:false,
+  interactionProgress:0,
+  timing:{running:false, pos:0, dir:1, zoneStart:0.55, zoneW:0.18, rafId:null},
+  revealed:false
+};
+
+/* ---------------- DOM refs ---------------- */
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var storytext = document.getElementById('storytext');
+var nextBtn = document.getElementById('next-btn');
+var backBtn = document.getElementById('back-btn');
+var replayBtn = document.getElementById('replay-btn');
+var interactOverlay = document.getElementById('interact-overlay');
+var progressWrap = document.getElementById('progress');
+var flashEl = document.getElementById('feedback-flash');
+var btnMute = document.getElementById('btn-mute');
+var btnId = document.getElementById('btn-id');
+var btnEn = document.getElementById('btn-en');
+
+/* ---------------- Utility ---------------- */
+function applyUIStrings(){
+  var u = UI[lang];
+  document.getElementById('title-text').textContent = u.title;
+  document.getElementById('replay-label').textContent = u.replay;
+  document.getElementById('back-label').textContent = u.back;
+  document.getElementById('credit-text').textContent = u.credit;
+  btnMute.title = state.muted ? u.mutedTitle : u.unmutedTitle;
+  btnId.classList.toggle('selected', lang==='id');
+  btnEn.classList.toggle('selected', lang==='en');
+  document.documentElement.lang = lang;
+}
+
+function buildProgress(){
+  progressWrap.innerHTML = '';
+  for(var i=0;i<S.length;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    progressWrap.appendChild(d);
+  }
+}
+function updateProgress(){
+  var dots = progressWrap.children;
+  for(var i=0;i<dots.length;i++){
+    dots[i].className = 'dot' + (i<state.scene?' done':'') + (i===state.scene?' now':'');
+  }
+}
+
+function flash(msg){
+  flashEl.textContent = msg;
+  flashEl.classList.add('show');
+  setTimeout(function(){ flashEl.classList.remove('show'); }, 700);
+}
+
+/* ---------------- Speech ---------------- */
+var voices = [];
+function loadVoices(){
+  voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+}
+if(window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(l){
+  var want = l==='en' ? 'en' : 'id';
+  for(var i=0;i<voices.length;i++){
+    if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(want)===0) return voices[i];
+  }
+  return null;
+}
+function speak(text){
+  if(state.muted || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang==='en' ? 'en-US' : 'id-ID';
+  var v = pickVoice(lang);
+  if(v) u.voice = v;
+  u.rate = 0.92;
+  u.pitch = 1.02;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeak(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+/* ---------------- Canvas responsive sizing ---------------- */
+function fitCanvas(){
+  var wrap = document.getElementById('stage-wrap');
+  var w = wrap.clientWidth;
+  var h = Math.round(w * 0.625); // 8:5 ratio
+  var dpr = window.devicePixelRatio || 1;
+  canvas.style.width = w+'px';
+  canvas.style.height = h+'px';
+  canvas.width = Math.round(w*dpr);
+  canvas.height = Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  renderScene();
+}
+window.addEventListener('resize', fitCanvas);
+
+/* ---------------- Palette ---------------- */
+var PAL = {
+  sky1:'#f4d9a0', sky2:'#e8a35c',
+  skyNight1:'#2c2050', skyNight2:'#5a3a6e',
+  ground:'#7a5a35', groundDark:'#5c4326',
+  gold:'#d4a24c', goldLight:'#f0cf8e', goldDark:'#a5732b',
+  wood:'#6b4226', woodDark:'#4a2c18',
+  red:'#b3402f', redDark:'#7d2a1f',
+  green:'#4f7a4a', greenDark:'#345331',
+  water:'#3a6e8f', waterLight:'#6fa8c4',
+  skin:'#e3b48a', skinDark:'#c08e60',
+  robeGold:'#c9932f', robePurple:'#6b4a8a', robeGreen:'#3f6b4f', robeRed:'#8a2f2f',
+  black:'#1c140c', cream:'#f4e8d2', witchGreen:'#5a7a4f'
+};
+
+function grad(x0,y0,x1,y1,c1,c2){
+  var g = ctx.createLinearGradient(x0,y0,x1,y1);
+  g.addColorStop(0,c1); g.addColorStop(1,c2);
+  return g;
+}
+
+function person(x,y,scale,robeColor,skinColor,opts){
+  opts = opts||{};
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // shadow
+  ctx.beginPath();
+  ctx.ellipse(0,86,34,8,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.fill();
+  // robe
+  ctx.beginPath();
+  ctx.moveTo(-26,80);
+  ctx.quadraticCurveTo(-34,10,-14,-10);
+  ctx.quadraticCurveTo(0,-18,14,-10);
+  ctx.quadraticCurveTo(34,10,26,80);
+  ctx.closePath();
+  ctx.fillStyle = robeColor;
+  ctx.fill();
+  // sash
+  ctx.beginPath();
+  ctx.moveTo(-14,-4); ctx.lineTo(14,-4); ctx.lineTo(10,30); ctx.lineTo(-10,30);
+  ctx.closePath();
+  ctx.fillStyle=PAL.goldLight;
+  ctx.globalAlpha=.85;
+  ctx.fill();
+  ctx.globalAlpha=1;
+  // head
+  ctx.beginPath();
+  ctx.arc(0,-28,15,0,Math.PI*2);
+  ctx.fillStyle = skinColor;
+  ctx.fill();
+  // hair / headdress
+  if(opts.crown){
+    ctx.beginPath();
+    ctx.moveTo(-15,-38);
+    ctx.lineTo(-10,-52);
+    ctx.lineTo(-3,-40);
+    ctx.lineTo(0,-54);
+    ctx.lineTo(3,-40);
+    ctx.lineTo(10,-52);
+    ctx.lineTo(15,-38);
+    ctx.closePath();
+    ctx.fillStyle = PAL.gold;
+    ctx.fill();
+  } else if(opts.headscarf){
+    ctx.beginPath();
+    ctx.arc(0,-32,17,Math.PI, Math.PI*2);
+    ctx.fillStyle = opts.headscarfColor||PAL.woodDark;
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.arc(0,-34,15,Math.PI*0.05,Math.PI*0.95);
+    ctx.fillStyle=PAL.black;
+    ctx.fill();
+  }
+  if(opts.old){
+    ctx.strokeStyle='rgba(0,0,0,.25)';
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(-6,-24);ctx.lineTo(-2,-22);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(2,-22);ctx.lineTo(6,-24);ctx.stroke();
+  }
+  // simple face
+  ctx.fillStyle=PAL.black;
+  ctx.beginPath(); ctx.arc(-5,-28,1.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,-28,1.6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawSky(w,h,night){
+  var g = ctx.createLinearGradient(0,0,0,h*0.68);
+  if(night){ g.addColorStop(0,PAL.skyNight1); g.addColorStop(1,PAL.skyNight2); }
+  else { g.addColorStop(0,PAL.sky1); g.addColorStop(1,PAL.sky2); }
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,w,h*0.68);
+  if(night){
+    for(var i=0;i<26;i++){
+      var sx = (i*97 % w), sy = (i*53 % (h*0.5));
+      ctx.beginPath(); ctx.arc(sx,sy,1.4,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(w*0.82,h*0.14,26,0,Math.PI*2);
+    ctx.fillStyle='#f4e8c8'; ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(w*0.18,h*0.15,10,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(w*0.28,h*0.16,14,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(w*0.72,h*0.1,9,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,.4)'; ctx.fill();
+  }
+}
+function drawGround(w,h,color){
+  ctx.fillStyle = color||PAL.ground;
+  ctx.fillRect(0,h*0.68,w,h*0.32);
+}
+function drawTree(x,y,scale){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = PAL.woodDark;
+  ctx.fillRect(-4,0,8,34);
+  ctx.fillStyle = PAL.greenDark;
+  for(var i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo(0,-10-i*18);
+    ctx.lineTo(-24+i*3,14-i*14);
+    ctx.lineTo(24-i*3,14-i*14);
+    ctx.closePath();
+    ctx.fillStyle = i%2? PAL.green : PAL.greenDark;
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function decorBand(w,h){
+  ctx.fillStyle='rgba(212,162,76,.10)';
+  ctx.fillRect(0,0,w,10);
+  ctx.fillRect(0,h-10,w,10);
+}
+
+/* ---- Scene drawings ---- */
+function drawTitle(ctx,w,h,t){
+  drawSky(w,h,true);
+  drawGround(w,h,PAL.groundDark);
+  // palace silhouette
+  ctx.fillStyle='rgba(20,12,8,.55)';
+  ctx.beginPath();
+  ctx.moveTo(w*0.15,h*0.68);
+  ctx.lineTo(w*0.15,h*0.5);
+  ctx.lineTo(w*0.25,h*0.36);
+  ctx.lineTo(w*0.35,h*0.5);
+  ctx.lineTo(w*0.35,h*0.68);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w*0.65,h*0.68);
+  ctx.lineTo(w*0.65,h*0.44);
+  ctx.lineTo(w*0.8,h*0.28);
+  ctx.lineTo(w*0.95,h*0.44);
+  ctx.lineTo(w*0.95,h*0.68);
+  ctx.closePath(); ctx.fill();
+  // giant golden snail center
+  drawSnail(w*0.5,h*0.6,1.6,t);
+  decorBand(w,h);
+}
+function drawSnail(x,y,scale,t){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  var glow = 0.5+0.5*Math.sin((t||0)/500);
+  ctx.beginPath();
+  ctx.ellipse(0,20,26,10,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fill();
+  // shell spiral
+  ctx.beginPath();
+  ctx.arc(0,0,26,0,Math.PI*2);
+  var g = ctx.createRadialGradient(-8,-8,4,0,0,30);
+  g.addColorStop(0,PAL.goldLight); g.addColorStop(1,PAL.goldDark);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(90,60,10,.5)'; ctx.lineWidth=2;
+  for(var r=22;r>4;r-=6){
+    ctx.beginPath(); ctx.arc(2,2,r,0.7,4.4); ctx.stroke();
+  }
+  // body
+  ctx.beginPath();
+  ctx.ellipse(20,14,16,7,0.2,0,Math.PI*2);
+  ctx.fillStyle=PAL.goldLight; ctx.fill();
+  // eyes stalks
+  ctx.strokeStyle=PAL.goldLight; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(32,8); ctx.lineTo(40,-2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(36,12); ctx.lineTo(46,4); ctx.stroke();
+  ctx.beginPath(); ctx.arc(40,-2,2.6,0,Math.PI*2); ctx.fillStyle='#fff8e8'; ctx.fill();
+  ctx.beginPath(); ctx.arc(46,4,2.6,0,Math.PI*2); ctx.fill();
+  // aura
+  ctx.globalAlpha = 0.15+0.15*glow;
+  ctx.beginPath(); ctx.arc(0,0,40,0,Math.PI*2);
+  ctx.fillStyle=PAL.goldLight; ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+function drawPalace(ctx,w,h,t){
+  drawSky(w,h,false);
+  drawGround(w,h);
+  // palace building
+  ctx.fillStyle=PAL.cream;
+  ctx.fillRect(w*0.25,h*0.4,w*0.5,h*0.3);
+  ctx.fillStyle=PAL.goldDark;
+  ctx.beginPath();
+  ctx.moveTo(w*0.22,h*0.4); ctx.lineTo(w*0.5,h*0.22); ctx.lineTo(w*0.78,h*0.4);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(w*0.5,h*0.19,8,0,Math.PI*2); ctx.fillStyle=PAL.gold; ctx.fill();
+  // pillars
+  for(var i=0;i<4;i++){
+    ctx.fillStyle=PAL.goldLight;
+    ctx.fillRect(w*0.29 + i*w*0.135, h*0.42, w*0.03, h*0.28);
+  }
+  drawTree(w*0.08,h*0.5,1.1);
+  drawTree(w*0.92,h*0.48,1.3);
+  // King + two princesses
+  person(w*0.5,h*0.66,1.05,PAL.robeGold,PAL.skin,{crown:true,old:true});
+  person(w*0.36,h*0.7,0.9,PAL.robePurple,PAL.skin,{headscarf:true,headscarfColor:'#e8c887'});
+  person(w*0.64,h*0.7,0.9,PAL.robeRed,PAL.skin,{headscarf:true,headscarfColor:'#8a2f2f'});
+  decorBand(w,h);
+}
+function drawWitch(ctx,w,h,t,prog){
+  drawSky(w,h,true);
+  drawGround(w,h,PAL.groundDark);
+  drawTree(w*0.06,h*0.5,1.4);
+  drawTree(w*0.94,h*0.46,1.2);
+  // cauldron
+  var cx=w*0.5, cy=h*0.62;
+  ctx.beginPath();
+  ctx.ellipse(cx,cy+18,46,16,0,0,Math.PI*2);
+  ctx.fillStyle=PAL.black; ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx-46,cy);
+  ctx.quadraticCurveTo(cx,cy+42,cx+46,cy);
+  ctx.closePath();
+  ctx.fillStyle='#2a2a2a'; ctx.fill();
+  var bubble = 0.5+0.5*Math.sin((t||0)/220);
+  ctx.beginPath();
+  ctx.ellipse(cx,cy-2,38,10,0,0,Math.PI*2);
+  ctx.fillStyle = 'rgba('+Math.round(80+bubble*60)+',200,90,0.9)';
+  ctx.fill();
+  // smoke
+  for(var i=0;i<3;i++){
+    var sy = cy-20-((t||0)/12 + i*30)%90;
+    ctx.beginPath();
+    ctx.arc(cx+ (i-1)*14, sy, 10+i*3, 0, Math.PI*2);
+    ctx.fillStyle='rgba(150,220,150,'+(0.25-i*0.05)+')';
+    ctx.fill();
+  }
+  // highlight if being clicked
+  if(prog>0){
+    ctx.beginPath(); ctx.ellipse(cx,cy+2,50,20,0,0,Math.PI*2);
+    ctx.strokeStyle=PAL.goldLight; ctx.lineWidth=3; ctx.globalAlpha=.7; ctx.stroke(); ctx.globalAlpha=1;
+  }
+  // witch behind cauldron
+  person(cx+70,h*0.62,0.85,PAL.witchGreen,'#8a9b7a',{headscarf:true,headscarfColor:'#2a2a2a',old:true});
+  // Dewi Galuh watching
+  person(cx-110,h*0.68,0.9,PAL.robeRed,PAL.skin,{headscarf:true,headscarfColor:'#8a2f2f'});
+  decorBand(w,h);
+}
+function drawCurseRiver(ctx,w,h,t,step){
+  drawSky(w,h,true);
+  // river
+  ctx.fillStyle=PAL.groundDark;
+  ctx.fillRect(0,h*0.68,w,h*0.32);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0,h*0.78);
+  for(var x=0;x<=w;x+=20){
+    ctx.lineTo(x, h*0.78 + Math.sin((x+ (t||0)/25)/40)*6);
+  }
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  var g = grad(0,h*0.78,0,h,PAL.waterLight,PAL.water);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.restore();
+  if(step>=1){
+    // snail already at river zone (target 2)
+    drawSnail(w*0.5,h*0.8,1.0,t);
+  } else {
+    // princess figure with curse light above head at target 1
+    person(w*0.5,h*0.5,1.0,PAL.robePurple,PAL.skin,{headscarf:true,headscarfColor:'#e8c887'});
+    var glow=0.5+0.5*Math.sin((t||0)/200);
+    ctx.beginPath(); ctx.arc(w*0.5, h*0.5-70, 26+8*glow, 0, Math.PI*2);
+    ctx.fillStyle='rgba('+Math.round(100+glow*80)+',60,150,'+(0.25+0.15*glow)+')';
+    ctx.fill();
+  }
+  // witch silhouette far side
+  person(w*0.78,h*0.6,0.7,PAL.witchGreen,'#8a9b7a',{headscarf:true,headscarfColor:'#2a2a2a',old:true});
+  decorBand(w,h);
+}
+function drawGrandmaFindsSnail(ctx,w,h,t){
+  drawSky(w,h,false);
+  drawGround(w,h);
+  // river edge
+  ctx.fillStyle=PAL.water;
+  ctx.beginPath();
+  ctx.ellipse(w*0.28,h*0.86,w*0.32,h*0.08,0,0,Math.PI*2);
+  ctx.fill();
+  drawTree(w*0.85,h*0.5,1.2);
+  drawTree(w*0.06,h*0.55,1.0);
+  drawSnail(w*0.32,h*0.8,0.9,t);
+  person(w*0.55,h*0.68,1.0,PAL.wood,PAL.skinDark,{headscarf:true,headscarfColor:'#c9932f',old:true});
+  decorBand(w,h);
+}
+function drawHutBase(ctx,w,h,night){
+  drawSky(w,h,night);
+  drawGround(w,h,night?PAL.groundDark:PAL.ground);
+  // hut
+  var hx=w*0.62, hy=h*0.42, hw=w*0.3, hh=h*0.28;
+  ctx.fillStyle=PAL.wood;
+  ctx.fillRect(hx,hy+hh*0.35,hw,hh*0.65);
+  ctx.beginPath();
+  ctx.moveTo(hx-10,hy+hh*0.35);
+  ctx.lineTo(hx+hw/2,hy);
+  ctx.lineTo(hx+hw+10,hy+hh*0.35);
+  ctx.closePath();
+  ctx.fillStyle=PAL.woodDark; ctx.fill();
+  ctx.fillStyle='#2a1c10';
+  ctx.fillRect(hx+hw*0.4,hy+hh*0.6,hw*0.2,hh*0.4);
+  if(night){
+    ctx.fillStyle='rgba(255,210,120,.85)';
+    ctx.fillRect(hx+hw*0.12,hy+hh*0.55,hw*0.18,hh*0.2);
+  }
+  drawTree(w*0.12,h*0.48,1.3);
+  drawTree(w*0.28,h*0.52,0.9);
+  return {hx:hx,hy:hy,hw:hw,hh:hh};
+}
+function drawCookingMagic(ctx,w,h,t){
+  var hut = drawHutBase(ctx,w,h,false);
+  // maiden cooking outside hut over small fire
+  var fx = hut.hx-30, fy = hut.hy+hut.hh*0.9;
+  var flick = 0.5+0.5*Math.sin((t||0)/150);
+  ctx.beginPath(); ctx.arc(fx,fy,8+flick*3,0,Math.PI*2);
+  ctx.fillStyle='rgba(230,140,50,.9)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(fx,fy-6,5+flick*2,0,Math.PI*2);
+  ctx.fillStyle='rgba(250,200,90,.9)'; ctx.fill();
+  person(fx+55, hut.hy+hut.hh*1.0, 0.85, PAL.robePurple, PAL.skin, {headscarf:true,headscarfColor:'#e8c887'});
+  // empty snail shell resting nearby with sparkle
+  ctx.save();
+  ctx.globalAlpha=.85;
+  drawSnail(w*0.18,h*0.82,0.5,t);
+  ctx.restore();
+  decorBand(w,h);
+}
+function drawReveal(ctx,w,h,t){
+  var hut = drawHutBase(ctx,w,h,false);
+  person(hut.hx-40, hut.hy+hut.hh*1.0, 0.85, PAL.robePurple, PAL.skin, {headscarf:true,headscarfColor:'#e8c887'});
+  person(hut.hx+70, hut.hy+hut.hh*0.95, 0.9, PAL.wood, PAL.skinDark, {headscarf:true,headscarfColor:'#c9932f',old:true});
+  // surprised gesture: little sparkle burst between them
+  var glow=0.5+0.5*Math.sin((t||0)/180);
+  ctx.beginPath(); ctx.arc(hut.hx+15, hut.hy+hut.hh*0.75, 10+6*glow,0,Math.PI*2);
+  ctx.fillStyle='rgba(240,207,142,'+(0.4+0.3*glow)+')'; ctx.fill();
+  decorBand(w,h);
+}
+function drawCrowForest(ctx,w,h,t){
+  drawSky(w,h,false);
+  drawGround(w,h);
+  drawTree(w*0.15,h*0.42,1.6);
+  drawTree(w*0.35,h*0.5,1.1);
+  drawTree(w*0.9,h*0.4,1.7);
+  person(w*0.35,h*0.72,1.0,'#5c4a38',PAL.skinDark,{});
+  // crow
+  ctx.save();
+  ctx.translate(w*0.63,h*0.42);
+  var bob = Math.sin((t||0)/300)*4;
+  ctx.translate(0,bob);
+  ctx.fillStyle='#1c1a1a';
+  ctx.beginPath();
+  ctx.ellipse(0,0,22,14,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(16,-8,9,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#d4a24c';
+  ctx.beginPath(); ctx.moveTo(24,-8); ctx.lineTo(34,-5); ctx.lineTo(24,-3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(19,-9,1.6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  decorBand(w,h);
+}
+function drawHutMeal(ctx,w,h,t){
+  var hut = drawHutBase(ctx,w,h,false);
+  person(hut.hx-50, hut.hy+hut.hh*1.0, 0.85, PAL.robePurple, PAL.skin, {headscarf:true,headscarfColor:'#e8c887'});
+  person(hut.hx+30, hut.hy+hut.hh*0.95, 0.85, '#5c4a38', PAL.skinDark, {});
+  person(hut.hx+95, hut.hy+hut.hh*0.98, 0.8, PAL.wood, PAL.skinDark, {headscarf:true,headscarfColor:'#c9932f',old:true});
+  // food tray
+  ctx.beginPath(); ctx.ellipse(hut.hx+60,hut.hy+hut.hh*1.28,24,8,0,0,Math.PI*2);
+  ctx.fillStyle=PAL.woodDark; ctx.fill();
+  ctx.beginPath(); ctx.arc(hut.hx+52,hut.hy+hut.hh*1.24,5,0,Math.PI*2); ctx.fillStyle=PAL.red; ctx.fill();
+  ctx.beginPath(); ctx.arc(hut.hx+65,hut.hy+hut.hh*1.25,5,0,Math.PI*2); ctx.fillStyle=PAL.green; ctx.fill();
+  decorBand(w,h);
+}
+function drawReunion(ctx,w,h,t){
+  var hut = drawHutBase(ctx,w,h,true);
+  person(hut.hx-10,hut.hy+hut.hh*0.95,1.0,PAL.robePurple,PAL.skin,{headscarf:true,headscarfColor:'#e8c887'});
+  person(hut.hx+55,hut.hy+hut.hh*0.95,1.0,PAL.robeGold,PAL.skin,{crown:true});
+  var glow=0.5+0.5*Math.sin((t||0)/220);
+  ctx.beginPath(); ctx.arc(hut.hx+22,hut.hy+hut.hh*0.72,26+10*glow,0,Math.PI*2);
+  ctx.fillStyle='rgba(240,207,142,'+(0.35+0.25*glow)+')'; ctx.fill();
+  decorBand(w,h);
+}
+function drawWedding(ctx,w,h,t){
+  drawSky(w,h,false);
+  drawGround(w,h);
+  ctx.fillStyle=PAL.cream;
+  ctx.fillRect(w*0.2,h*0.4,w*0.6,h*0.28);
+  ctx.beginPath();
+  ctx.moveTo(w*0.15,h*0.4); ctx.lineTo(w*0.5,h*0.2); ctx.lineTo(w*0.85,h*0.4);
+  ctx.closePath(); ctx.fillStyle=PAL.goldDark; ctx.fill();
+  for(var i=0;i<5;i++){
+    ctx.fillStyle=PAL.goldLight;
+    ctx.fillRect(w*0.24 + i*w*0.115, h*0.42, w*0.025, h*0.26);
+  }
+  // couple crowned
+  person(w*0.45,h*0.66,1.05,PAL.robePurple,PAL.skin,{crown:true});
+  person(w*0.57,h*0.66,1.05,PAL.robeGold,PAL.skin,{crown:true});
+  // confetti / flowers
+  for(var i=0;i<18;i++){
+    var fx = (i*67)%w, fy = (i*41 + (t||0)/8)%(h*0.5);
+    ctx.beginPath(); ctx.arc(fx,fy,3,0,Math.PI*2);
+    ctx.fillStyle = i%2? PAL.gold : '#e88a8a';
+    ctx.fill();
+  }
+  decorBand(w,h);
+}
+function drawTheEnd(ctx,w,h,t){
+  drawSky(w,h,true);
+  drawGround(w,h,PAL.groundDark);
+  drawSnail(w*0.5,h*0.55,1.3,t);
+  ctx.save();
+  ctx.font = 'italic 28px Georgia, serif';
+  ctx.fillStyle = PAL.goldLight;
+  ctx.textAlign='center';
+  ctx.fillText(lang==='en' ? 'The End' : 'Tamat', w*0.5, h*0.85);
+  ctx.restore();
+  decorBand(w,h);
+}
+
+/* ---------------- Render loop ---------------- */
+var rafHandle = null;
+var lastT = 0;
+function renderScene(){
+  var scene = S[state.scene];
+  var w = canvas.clientWidth, h = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  var stepArg;
+  if(scene.interaction && scene.interaction.type==='twoStep'){
+    stepArg = state.interactionProgress;
+  } else {
+    stepArg = state.interactionProgress;
+  }
+  scene.draw(ctx,w,h,lastT,stepArg);
+}
+function animLoop(ts){
+  lastT = ts;
+  renderScene();
+  rafHandle = requestAnimationFrame(animLoop);
+}
+requestAnimationFrame(animLoop);
+
+/* ---------------- Interaction handling ---------------- */
+function clearInteractOverlay(){
+  interactOverlay.innerHTML = '';
+  if(state.timing.rafId){ cancelAnimationFrame(state.timing.rafId); state.timing.rafId=null; }
+  state.timing.running=false;
+}
+
+function canvasClickToRel(evt){
+  var rect = canvas.getBoundingClientRect();
+  var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+  var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+  return { x: cx/rect.width, y: cy/rect.height };
+}
+
+function dist(a,b){
+  var dx=a.x-b.x, dy=a.y-b.y;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+
+function setupInteraction(scene){
+  clearInteractOverlay();
+  state.interactionProgress = 0;
+  state.revealed = false;
+  nextBtn.disabled = false;
+
+  if(!scene.interaction){
+    canvas.onclick = null;
+    return;
+  }
+
+  nextBtn.disabled = true;
+  var chip = document.createElement('div');
+  chip.className='hint-chip';
+  chip.textContent = scene.interaction.hint[lang];
+  interactOverlay.appendChild(chip);
+
+  if(scene.interaction.type==='clickTarget'){
+    canvas.onclick = function(evt){
+      var p = canvasClickToRel(evt);
+      var tgt = scene.interaction.target;
+      if(dist(p,tgt) <= tgt.r){
+        state.interactionProgress++;
+        flash(state.interactionProgress < scene.interaction.count ? '✨' : '✅');
+        if(state.interactionProgress >= scene.interaction.count){
+          nextBtn.disabled = false;
+          canvas.onclick = null;
+          chip.textContent = (lang==='en'?'Well done!':'Berhasil!');
+        }
+      }
+    };
+  } else if(scene.interaction.type==='twoStep'){
+    canvas.onclick = function(evt){
+      var p = canvasClickToRel(evt);
+      var idx = state.interactionProgress;
+      var tgt = scene.interaction.steps[idx];
+      if(tgt && dist(p,tgt) <= tgt.r){
+        state.interactionProgress++;
+        flash('✨');
+        if(state.interactionProgress >= scene.interaction.steps.length){
+          nextBtn.disabled = false;
+          canvas.onclick = null;
+          chip.textContent = (lang==='en'?'Well done!':'Berhasil!');
+        }
+      }
+    };
+  } else if(scene.interaction.type==='reveal'){
+    canvas.onclick = function(evt){
+      if(state.revealed) return;
+      var p = canvasClickToRel(evt);
+      var tgt = scene.interaction.target;
+      if(dist(p,tgt) <= tgt.r){
+        state.revealed = true;
+        chip.textContent = scene.interaction.revealText[lang];
+        speak(scene.interaction.revealText[lang]);
+        nextBtn.disabled = false;
+        canvas.onclick = null;
+      }
+    };
+  } else if(scene.interaction.type==='timing'){
+    canvas.onclick = null;
+    var bar = document.createElement('div');
+    bar.className='timing-bar';
+    var zone = document.createElement('div');
+    zone.className='timing-zone';
+    zone.style.left = (state.timing.zoneStart*100)+'%';
+    zone.style.width = (state.timing.zoneW*100)+'%';
+    var marker = document.createElement('div');
+    marker.className='timing-marker';
+    bar.appendChild(zone); bar.appendChild(marker);
+    var actBtn = document.createElement('button');
+    actBtn.className='action-btn';
+    actBtn.textContent = (lang==='en' ? 'Peek!' : 'Intip!');
+    interactOverlay.appendChild(bar);
+    interactOverlay.appendChild(actBtn);
+
+    state.timing.pos = 0; state.timing.dir = 1; state.timing.running = true;
+    function step(){
+      if(!state.timing.running) return;
+      state.timing.pos += 0.012*state.timing.dir;
+      if(state.timing.pos>=1){state.timing.pos=1; state.timing.dir=-1;}
+      if(state.timing.pos<=0){state.timing.pos=0; state.timing.dir=1;}
+      marker.style.left = (state.timing.pos*97)+'%';
+      state.timing.rafId = requestAnimationFrame(step);
+    }
+    step();
+
+    actBtn.onclick = function(){
+      var p = state.timing.pos;
+      var inZone = p >= state.timing.zoneStart && p <= (state.timing.zoneStart+state.timing.zoneW);
+      if(inZone){
+        flash('✅');
+        state.timing.running=false;
+        chip.textContent = (lang==='en'?'Perfect timing!':'Waktu yang tepat!');
+        nextBtn.disabled = false;
+        actBtn.disabled = true;
+      } else {
+        flash('❌');
+        chip.textContent = (lang==='en' ? 'Almost—try again!' : 'Hampir—coba lagi!');
+      }
+    };
+  }
+}
+
+/* ---------------- Scene navigation ---------------- */
+function goToScene(i, doSpeak){
+  state.scene = Math.max(0, Math.min(S.length-1, i));
+  var scene = S[state.scene];
+  storytext.textContent = scene.text[lang];
+  updateProgress();
+  setupInteraction(scene);
+  backBtn.style.visibility = state.scene===0 ? 'hidden' : 'visible';
+  if(scene.isTitle){
+    nextBtn.textContent = UI[lang].start;
+    nextBtn.disabled = false;
+  } else if(scene.isEnd){
+    nextBtn.textContent = UI[lang].restart;
+    nextBtn.disabled = false;
+  } else {
+    nextBtn.textContent = UI[lang].next;
+  }
+  if(doSpeak !== false) speak(scene.text[lang]);
+  requestResize();
+}
+
+nextBtn.addEventListener('click', function(){
+  var scene = S[state.scene];
+  if(scene.isEnd){
+    goToScene(0,true);
+    return;
+  }
+  goToScene(state.scene+1, true);
+});
+backBtn.addEventListener('click', function(){
+  if(state.scene>0) goToScene(state.scene-1, true);
+});
+replayBtn.addEventListener('click', function(){
+  speak(S[state.scene].text[lang]);
+});
+
+/* ---------------- Header controls ---------------- */
+btnMute.addEventListener('click', function(){
+  state.muted = !state.muted;
+  btnMute.textContent = state.muted ? '🔇' : '🔊';
+  btnMute.classList.toggle('active', state.muted);
+  if(state.muted) stopSpeak();
+  applyUIStrings();
+});
+btnId.addEventListener('click', function(){ setLang('id'); });
+btnEn.addEventListener('click', function(){ setLang('en'); });
+function setLang(l){
+  if(lang===l) return;
+  lang = l;
+  applyUIStrings();
+  goToScene(state.scene, true);
+}
+
+/* ---------------- Resize messaging for iframe embed ---------------- */
+function requestResize(){
+  setTimeout(function(){
+    var h = document.getElementById('app').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'keongmas-resize', height: Math.ceil(h) }, '*');
+    }catch(e){}
+  }, 60);
+}
+if(window.ResizeObserver){
+  var ro = new ResizeObserver(function(){ requestResize(); });
+  ro.observe(document.getElementById('app'));
+}
+window.addEventListener('load', function(){ fitCanvas(); requestResize(); });
+
+/* ---------------- Init ---------------- */
+buildProgress();
+applyUIStrings();
+fitCanvas();
+goToScene(0, false); // don't auto-speak before user gesture
+
+})();
+</script>
+</body>
+</html>
