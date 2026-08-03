@@ -22,7 +22,28 @@
     border: 3px solid #7CB342;
     border-radius: 18px;
     padding: 14px 16px 18px;
+    position: relative;
   }
+  #kkg-mute {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #7CB342;
+    background: #fff;
+    font-size: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    z-index: 5;
+  }
+  #kkg-mute:active { transform: scale(0.94); }
+  #kkg-mute.muted { opacity: 0.55; background: #f2ede0; }
   #kkg-wrap h2 {
     font-family: 'Baloo 2', sans-serif;
     font-weight: 700;
@@ -122,6 +143,7 @@
 </head>
 <body>
 <div id="kkg-wrap">
+  <button id="kkg-mute" type="button" title="Mute/unmute narration">🔊</button>
   <h2>🦌 Kancil Mencuri Timun</h2>
   <p id="kkg-sub">Bantu Si Kancil mengambil timun sambil bersembunyi di balik Kerbau &mdash; jangan sampai ketahuan Pak Tani!</p>
 
@@ -193,7 +215,9 @@
       winTitle: 'Berhasil! 🥒🎉',
       winBody: 'Kancil berhasil mengumpulkan semua timun tanpa ketahuan Pak Tani. Cerdik sekali! Tapi hati-hati, dalam dongeng aslinya, Kerbau yang baik hati justru yang akhirnya kena getahnya. Jangan ditiru ya, jujur itu lebih baik daripada licik.',
       playAgainBtn: 'Main Lagi',
-      hint: 'Gunakan tombol panah / WASD di keyboard, atau tombol arah di atas pada layar sentuh.'
+      hint: 'Gunakan tombol panah / WASD di keyboard, atau tombol arah di atas pada layar sentuh.',
+      muteTitle: 'Bisukan/aktifkan narasi',
+      speechLang: 'id-ID'
     },
     en: {
       title: 'Kancil Steals the Cucumbers - Game',
@@ -210,7 +234,9 @@
       winTitle: 'You Made It! 🥒🎉',
       winBody: 'Kancil gathered all the cucumbers without the Farmer noticing. Clever! But careful — in the original folktale, it\'s the kind-hearted Buffalo who ends up in trouble because of it. Honesty is always better than trickery.',
       playAgainBtn: 'Play Again',
-      hint: 'Use the arrow keys / WASD on your keyboard, or the direction buttons above on touchscreens.'
+      hint: 'Use the arrow keys / WASD on your keyboard, or the direction buttons above on touchscreens.',
+      muteTitle: 'Mute/unmute narration',
+      speechLang: 'en-US'
     }
   };
   var TXT = I18N[LANG];
@@ -227,6 +253,70 @@
   document.querySelector('#kkg-win p').textContent = TXT.winBody;
   document.getElementById('kkg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('kkg-hint').textContent = TXT.hint;
+  document.getElementById('kkg-mute').title = TXT.muteTitle;
+
+  /* ---- Narration (Web Speech API) ---- */
+  var MUTE_KEY = 'kkg_kancil_muted';
+  var soundOn = true;
+  try {
+    var savedMute = localStorage.getItem(MUTE_KEY);
+    if (savedMute === '1') soundOn = false;
+  } catch(e){}
+
+  var muteBtn = document.getElementById('kkg-mute');
+  function refreshMuteBtn(){
+    muteBtn.textContent = soundOn ? '🔊' : '🔇';
+    muteBtn.classList.toggle('muted', !soundOn);
+  }
+  refreshMuteBtn();
+
+  var voicesCache = [];
+  function loadVoices(){
+    if ('speechSynthesis' in window) {
+      voicesCache = window.speechSynthesis.getVoices();
+    }
+  }
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+
+  function pickVoice(langPrefix){
+    for (var i=0; i<voicesCache.length; i++){
+      if (voicesCache[i].lang && voicesCache[i].lang.toLowerCase().indexOf(langPrefix) === 0) {
+        return voicesCache[i];
+      }
+    }
+    return null;
+  }
+
+  function speak(text){
+    if (!soundOn) return;
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = TXT.speechLang;
+      utter.rate = 0.92;
+      utter.pitch = 1.05;
+      var langPrefix = LANG === 'id' ? 'id' : 'en';
+      var v = pickVoice(langPrefix);
+      if (v) utter.voice = v;
+      window.speechSynthesis.speak(utter);
+    } catch(e){}
+  }
+  function stopSpeaking(){
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e){}
+  }
+
+  muteBtn.addEventListener('click', function(){
+    soundOn = !soundOn;
+    try { localStorage.setItem(MUTE_KEY, soundOn ? '0' : '1'); } catch(e){}
+    refreshMuteBtn();
+    if (!soundOn) stopSpeaking();
+  });
 
   var canvas = document.getElementById('kkg-canvas');
   var ctx = canvas.getContext('2d');
@@ -372,10 +462,12 @@
   function triggerCaught(){
     state = 'caught';
     caughtOverlay.classList.add('show');
+    speak(TXT.caughtBody);
   }
   function triggerWin(){
     state = 'won';
     winOverlay.classList.add('show');
+    speak(TXT.winBody);
   }
 
   function drawPakTani(px, py, size){
@@ -554,16 +646,19 @@
   });
 
   document.getElementById('kkg-startBtn').addEventListener('click', function(){
+    stopSpeaking();
     startOverlay.classList.remove('show');
     resetGame();
     state = 'playing';
   });
   document.getElementById('kkg-retryBtn').addEventListener('click', function(){
+    stopSpeaking();
     caughtOverlay.classList.remove('show');
     resetGame();
     state = 'playing';
   });
   document.getElementById('kkg-playAgainBtn').addEventListener('click', function(){
+    stopSpeaking();
     winOverlay.classList.remove('show');
     resetGame();
     state = 'playing';
@@ -572,6 +667,7 @@
   resize();
   resetGame();
   requestAnimationFrame(step);
+  setTimeout(function(){ speak(TXT.startBody); }, 400);
 
   function sendHeight(){
     var wrap = document.getElementById('kkg-wrap');
