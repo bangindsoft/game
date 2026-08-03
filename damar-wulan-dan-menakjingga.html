@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Damar Wulan dan Menakjingga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#160f22;
+    --panel:#241a30;
+    --panel-2:#2f2138;
+    --gold:#cf9a3e;
+    --gold-soft:#e8c876;
+    --red:#a8322d;
+    --teal:#2d5a52;
+    --cream:#f2e6c9;
+    --cream-dim:#cdbf9e;
+    --line:rgba(207,154,62,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Lora',serif;
+    color:var(--cream);
+    overflow:hidden;
+  }
+  #stage{
+    position:relative;
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    background:
+      radial-gradient(ellipse at 50% -10%, #3a2a4a 0%, transparent 60%),
+      linear-gradient(180deg,#1c1428 0%, #160f22 100%);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.4), inset 0 0 60px rgba(0,0,0,0.35);
+  }
+  /* batik parang top/bottom border strips */
+  .parang{
+    height:9px;
+    width:100%;
+    background:
+      repeating-linear-gradient(45deg,
+        var(--gold) 0 4px,
+        transparent 4px 9px);
+    opacity:0.55;
+  }
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/10;
+    background:#0e0916;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  #topBar{
+    position:absolute;
+    top:8px; left:8px; right:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    z-index:20;
+    pointer-events:none;
+  }
+  #topBar > *{ pointer-events:auto; }
+  .iconBtn{
+    background:rgba(22,15,34,0.65);
+    border:1px solid var(--line);
+    color:var(--gold-soft);
+    width:34px;height:34px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    backdrop-filter:blur(3px);
+    transition:background .2s, transform .15s;
+    user-select:none;
+  }
+  .iconBtn:hover{ background:rgba(207,154,62,0.25); transform:scale(1.06); }
+  .iconBtn.active{ color:var(--red); }
+  #langBtn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    width:auto;
+    padding:0 10px;
+    border-radius:16px;
+    letter-spacing:.03em;
+  }
+  .btnGroup{ display:flex; gap:6px; }
+
+  #dialogueBox{
+    position:absolute;
+    left:10px; right:10px; bottom:10px;
+    z-index:20;
+    background:linear-gradient(180deg, rgba(36,26,48,0.94), rgba(22,15,34,0.97));
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px 16px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.45);
+  }
+  #speakerName{
+    font-family:'Marcellus',serif;
+    color:var(--gold-soft);
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    margin-bottom:5px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-height:16px;
+  }
+  #speakerName::before{
+    content:"";
+    width:6px;height:6px;
+    background:var(--gold);
+    border-radius:50%;
+    display:inline-block;
+  }
+  #storyText{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--cream);
+    min-height:3.1em;
+  }
+  #controlsRow{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:10px;
+  }
+  .mainBtn{
+    font-family:'Marcellus',serif;
+    background:linear-gradient(180deg, var(--gold-soft), var(--gold));
+    color:#221604;
+    border:none;
+    padding:9px 22px;
+    border-radius:6px;
+    font-size:14px;
+    letter-spacing:.03em;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a5518, 0 4px 10px rgba(0,0,0,0.4);
+    transition:transform .12s;
+  }
+  .mainBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 #7a5518; }
+  .mainBtn.secondary{
+    background:transparent;
+    color:var(--gold-soft);
+    border:1px solid var(--gold);
+    box-shadow:none;
+  }
+
+  /* Title screen */
+  #titleScreen{
+    position:absolute; inset:0; z-index:30;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    background:radial-gradient(ellipse at 50% 30%, #3a2848 0%, #160f22 75%);
+    padding:20px;
+  }
+  #titleScreen .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.25em;
+    text-transform:uppercase;
+    color:var(--gold);
+    opacity:.85;
+    margin-bottom:10px;
+  }
+  #titleScreen h1{
+    font-family:'Marcellus',serif;
+    font-size:clamp(26px,6vw,42px);
+    margin:0 0 6px;
+    color:var(--cream);
+    text-shadow:0 2px 18px rgba(207,154,62,0.35);
+  }
+  #titleScreen .sub{
+    font-family:'Lora',serif;
+    font-style:italic;
+    color:var(--cream-dim);
+    font-size:14px;
+    margin-bottom:22px;
+    max-width:440px;
+  }
+  #startBtn{
+    font-family:'Marcellus',serif;
+    font-size:16px;
+    padding:12px 34px;
+  }
+  #titleLangRow{
+    margin-top:18px;
+    display:flex;
+    gap:8px;
+  }
+  .pill{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    padding:6px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    color:var(--cream-dim);
+    background:rgba(255,255,255,0.03);
+    cursor:pointer;
+  }
+  .pill.on{ color:#221604; background:var(--gold-soft); border-color:var(--gold-soft); }
+
+  /* Battle HUD */
+  #hud{
+    position:absolute;
+    top:50px; left:10px; right:10px;
+    z-index:15;
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    pointer-events:none;
+  }
+  .hpBlock{ width:44%; }
+  .hpLabel{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:.05em;
+    color:var(--cream-dim);
+    margin-bottom:3px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .hpBarOuter{
+    height:9px;
+    border-radius:5px;
+    background:rgba(0,0,0,0.4);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .hpBarInner{
+    height:100%;
+    border-radius:5px;
+    transition:width .25s ease-out;
+  }
+  .hpBarInner.player{ background:linear-gradient(90deg,#2d5a52,#4a9a86); }
+  .hpBarInner.enemy{ background:linear-gradient(90deg,#a8322d,#e0483e); }
+
+  #qteWrap{
+    position:absolute;
+    bottom:96px; left:10px; right:10px;
+    z-index:20;
+  }
+  #qteBarOuter{
+    position:relative;
+    height:22px;
+    background:rgba(0,0,0,0.45);
+    border:1px solid var(--line);
+    border-radius:11px;
+    overflow:hidden;
+  }
+  .qteZone{
+    position:absolute; top:0; bottom:0;
+    background:rgba(207,154,62,0.25);
+  }
+  .qteZone.perfect{ background:rgba(224,72,62,0.55); }
+  #qtePointer{
+    position:absolute; top:-3px; bottom:-3px;
+    width:4px;
+    background:var(--cream);
+    box-shadow:0 0 8px var(--gold-soft);
+    border-radius:2px;
+  }
+  #qteHint{
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--cream-dim);
+    margin-top:6px;
+    letter-spacing:.03em;
+  }
+  #attackBtn{
+    display:block;
+    margin:10px auto 0;
+    font-family:'Marcellus',serif;
+    font-size:15px;
+    padding:10px 40px;
+    background:linear-gradient(180deg,#e0483e,#a8322d);
+    color:#fff2ec;
+    border:none;
+    border-radius:8px;
+    box-shadow:0 3px 0 #6e211d, 0 4px 12px rgba(0,0,0,0.4);
+    cursor:pointer;
+    letter-spacing:.04em;
+  }
+  #attackBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 #6e211d; }
+
+  #floatText{
+    position:absolute;
+    z-index:25;
+    font-family:'Marcellus',serif;
+    font-weight:400;
+    font-size:20px;
+    pointer-events:none;
+    text-shadow:0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  #captionScreen{
+    position:absolute; inset:0; z-index:22;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(10,7,16,0.55);
+    opacity:0; pointer-events:none;
+    transition:opacity .35s;
+  }
+  #captionScreen.show{ opacity:1; }
+  #captionScreen span{
+    font-family:'Marcellus',serif;
+    font-size:clamp(18px,4.4vw,28px);
+    color:var(--gold-soft);
+    letter-spacing:.05em;
+    text-align:center;
+    padding:0 20px;
+    text-shadow:0 2px 14px rgba(0,0,0,0.7);
+  }
+
+  #creditsFooter{
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    color:var(--cream-dim);
+    opacity:.55;
+    padding:6px 0 2px;
+    letter-spacing:.04em;
+  }
+  #creditsFooter a{ color:var(--cream-dim); }
+
+  @media (max-width:420px){
+    #storyText{ font-size:13.5px; }
+    .mainBtn{ padding:8px 16px; font-size:13px; }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="parang"></div>
+  <div id="canvasWrap">
+    <canvas id="scene"></canvas>
+
+    <div id="topBar">
+      <div class="btnGroup">
+        <div class="iconBtn" id="muteBtn" title="Mute">🔊</div>
+      </div>
+      <div class="btnGroup">
+        <div class="iconBtn" id="langBtn">ID</div>
+      </div>
+    </div>
+
+    <div id="hud" style="display:none;">
+      <div class="hpBlock">
+        <div class="hpLabel"><span id="playerLabel">DAMAR WULAN</span><span id="playerHpNum">100</span></div>
+        <div class="hpBarOuter"><div class="hpBarInner player" id="playerHpBar" style="width:100%"></div></div>
+      </div>
+      <div class="hpBlock" style="text-align:right;">
+        <div class="hpLabel"><span id="enemyHpNum">100</span><span id="enemyLabel">MENAKJINGGA</span></div>
+        <div class="hpBarOuter"><div class="hpBarInner enemy" id="enemyHpBar" style="width:100%"></div></div>
+      </div>
+    </div>
+
+    <div id="qteWrap" style="display:none;">
+      <div id="qteBarOuter">
+        <div class="qteZone" id="qteZoneGood"></div>
+        <div class="qteZone perfect" id="qteZonePerfect"></div>
+        <div id="qtePointer"></div>
+      </div>
+      <div id="qteHint">TEKAN SERANG SAAT PENUNJUK DI ZONA MERAH</div>
+      <button id="attackBtn">⚔ SERANG</button>
+    </div>
+
+    <div id="captionScreen"><span id="captionText"></span></div>
+
+    <div id="titleScreen">
+      <div class="eyebrow" id="eyebrowText">LEGENDA JAWA TIMUR</div>
+      <h1 id="titleMain">Damar Wulan &amp; Menakjingga</h1>
+      <div class="sub" id="titleSub">Kisah pemuda sakti mandraguna yang menumpas keangkaramurkaan Adipati Blambangan demi Kerajaan Majapahit.</div>
+      <button class="mainBtn" id="startBtn">MULAI KISAH</button>
+      <div id="titleLangRow">
+        <div class="pill on" data-lang="id">Bahasa Indonesia</div>
+        <div class="pill" data-lang="en">English</div>
+      </div>
+    </div>
+
+    <div id="dialogueBox" style="display:none;">
+      <div id="speakerName"></div>
+      <div id="storyText"></div>
+      <div id="controlsRow">
+        <button class="mainBtn" id="nextBtn">LANJUT</button>
+      </div>
+    </div>
+  </div>
+  <div class="parang"></div>
+  <div id="creditsFooter">Cerita Rakyat Jawa Timur · caritasato.blogspot.com</div>
+</div>
+
+<script>
+(function(){
+
+/* ---------------------------------------------------------
+   LANGUAGE
+--------------------------------------------------------- */
+var params = new URLSearchParams(window.location.search);
+var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+var UI = {
+  id:{
+    eyebrow:"LEGENDA JAWA TIMUR",
+    subtitle:"Kisah pemuda sakti mandraguna yang menumpas keangkaramurkaan Adipati Blambangan demi Kerajaan Majapahit.",
+    start:"MULAI KISAH",
+    next:"LANJUT",
+    retry:"COBA LAGI",
+    continueOn:"LANJUTKAN",
+    attack:"SERANG",
+    qteHint:"TEKAN SERANG SAAT PENUNJUK DI ZONA MERAH",
+    playerName:"DAMAR WULAN",
+    victory:"KEMENANGAN!",
+    defeat:"DAMAR WULAN TERDESAK...",
+    perfect:"TELAK!",
+    good:"KENA!",
+    miss:"MELESET!",
+    theEnd:"TAMAT",
+    replay:"ULANGI KISAH"
+  },
+  en:{
+    eyebrow:"FOLKTALE OF EAST JAVA",
+    subtitle:"The tale of a valiant young man who crushed the cruelty of the Duke of Blambangan for the sake of the Majapahit Kingdom.",
+    start:"BEGIN THE TALE",
+    next:"NEXT",
+    retry:"TRY AGAIN",
+    continueOn:"CONTINUE",
+    attack:"STRIKE",
+    qteHint:"HIT STRIKE WHEN THE POINTER IS IN THE RED ZONE",
+    playerName:"DAMAR WULAN",
+    victory:"VICTORY!",
+    defeat:"DAMAR WULAN FALTERS...",
+    perfect:"CRITICAL!",
+    good:"HIT!",
+    miss:"MISSED!",
+    theEnd:"THE END",
+    replay:"REPLAY THE TALE"
+  }
+};
+
+/* ---------------------------------------------------------
+   STORY DATA
+   type: 'story' | 'battle' | 'end'
+--------------------------------------------------------- */
+var STORY = [
+  { type:'story', bg:'palace', speaker:{id:'', en:''},
+    id:"Di tanah Jawa, berdirilah Kerajaan Majapahit yang agung, dipimpin seorang ratu bijaksana bernama Ratu Ayu Kencana Wungu. Namun kedamaian itu segera terusik.",
+    en:"On the island of Java stood the great Majapahit Kingdom, ruled by a wise queen named Ratu Ayu Kencana Wungu. But that peace was soon to be disturbed." },
+
+  { type:'story', bg:'blambangan', speaker:{id:'Narator', en:'Narrator'},
+    id:"Di Blambangan, hiduplah seorang adipati berhati kejam bernama Menakjingga. Bersenjatakan gada pusaka Gada Wesi Kuning, ia gemar bertindak sewenang-wenang pada siapa saja.",
+    en:"In Blambangan lived a cruel duke named Menakjingga. Wielding his sacred mace, the Gada Wesi Kuning, he loved to bully anyone who crossed his path." },
+
+  { type:'story', bg:'blambangan', speaker:{id:'Menakjingga', en:'Menakjingga'},
+    id:"“Aku, Adipati Menakjingga, akan mempersunting Ratu Ayu Kencana Wungu! Tak seorang pun dapat menghalangiku!”",
+    en:"“I, Duke Menakjingga, shall marry Ratu Ayu Kencana Wungu! No one can stand in my way!”" },
+
+  { type:'story', bg:'palace', speaker:{id:'Ratu Ayu Kencana Wungu', en:'Ratu Ayu Kencana Wungu'},
+    id:"Lamaran itu ditolak mentah-mentah oleh Sang Ratu, yang telah lama mengetahui watak buruk Adipati Blambangan itu. Penolakan ini membuat Menakjingga murka.",
+    en:"The proposal was flatly rejected by the Queen, who had long known of the Duke's cruel nature. The rejection sent Menakjingga into a fury." },
+
+  { type:'story', bg:'battlefield', speaker:{id:'Narator', en:'Narrator'},
+    id:"Menakjingga mengerahkan pasukan Blambangan menyerbu Majapahit. Perang besar pun pecah. Dengan sekali ayun Gada Wesi Kuning, puluhan prajurit Majapahit roboh seketika.",
+    en:"Menakjingga led the Blambangan army to attack Majapahit. A great war broke out. With a single swing of the Gada Wesi Kuning, dozens of Majapahit soldiers fell at once." },
+
+  { type:'story', bg:'palace', speaker:{id:'Ratu Ayu Kencana Wungu', en:'Ratu Ayu Kencana Wungu'},
+    id:"Pasukan Majapahit terdesak mundur. Dalam keputusasaan, Sang Ratu bersemedi memohon petunjuk para Dewata.",
+    en:"The Majapahit army was forced to retreat. In despair, the Queen meditated, praying for guidance from the gods." },
+
+  { type:'story', bg:'palace', speaker:{id:'Suara Gaib', en:'A Divine Voice'},
+    id:"“Hanya seorang pemuda bernama Damar Wulan yang mampu menumpas Adipati Menakjingga.”",
+    en:"“Only a young man named Damar Wulan can defeat Duke Menakjingga.”" },
+
+  { type:'story', bg:'village', speaker:{id:'Narator', en:'Narrator'},
+    id:"Patih Logender segera diutus mencari pemuda itu. Jauh dari kotaraja, Damar Wulan ditemukan dan diboyong menghadap Sang Ratu.",
+    en:"Patih Logender was sent at once to find the young man. Far from the capital, Damar Wulan was found and brought before the Queen." },
+
+  { type:'story', bg:'palace', speaker:{id:'Ratu Ayu Kencana Wungu', en:'Ratu Ayu Kencana Wungu'},
+    id:"“Wahai anak muda, hanya engkaulah yang mampu mengalahkan Menakjingga. Penggallah kepalanya, bawa kemari sebagai bukti.”",
+    en:"“Young man, only you can defeat Menakjingga. Behead him, and bring it here as proof.”" },
+
+  { type:'story', bg:'palace', speaker:{id:'Damar Wulan', en:'Damar Wulan'},
+    id:"“Baik, hamba laksanakan, Gusti Prabu.” Damar Wulan pun berangkat seorang diri menuju Blambangan.",
+    en:"“As you command, my Queen.” Damar Wulan set off alone toward Blambangan." },
+
+  { type:'story', bg:'blambangan', speaker:{id:'Damar Wulan', en:'Damar Wulan'},
+    id:"Sesampainya di Blambangan, Damar Wulan berteriak menantang duel. Menakjingga murka mendengar seorang pemuda asing berani menantangnya.",
+    en:"Upon arriving in Blambangan, Damar Wulan shouted his challenge for a duel. Menakjingga was enraged that a stranger dared to challenge him." },
+
+  { type:'battle', bg:'duel1', id:'battle1' },
+
+  { type:'story', bg:'battlefield', speaker:{id:'Narator', en:'Narrator'},
+    id:"Gada Wesi Kuning terlalu sakti. Damar Wulan terkapar pingsan dan ditawan di penjara Kadipaten Blambangan.",
+    en:"The Gada Wesi Kuning proved too powerful. Damar Wulan was struck down and thrown into the dungeon of Blambangan." },
+
+  { type:'story', bg:'prison', speaker:{id:'Dewi Wahita &amp; Dewi Puyengan', en:'Dewi Wahita &amp; Dewi Puyengan'},
+    id:"Diam-diam, dua istri Menakjingga, Dewi Wahita dan Dewi Puyengan, mendatangi Damar. Mereka membenci suami mereka yang kejam. “Kelemahan suami kami ada pada Gada Wesi Kuningnya. Biar kami curikan untukmu.”",
+    en:"Secretly, two of Menakjingga's wives, Dewi Wahita and Dewi Puyengan, came to Damar. They despised their cruel husband. “Our husband's weakness lies in his Gada Wesi Kuning. Let us steal it for you.”" },
+
+  { type:'story', bg:'prison', speaker:{id:'Narator', en:'Narrator'},
+    id:"Kedua istri itu berhasil mencuri gada pusaka tersebut dan menyerahkannya pada Damar Wulan, yang segera meloloskan diri dari penjara.",
+    en:"The two wives succeeded in stealing the sacred mace and handed it to Damar Wulan, who at once escaped the dungeon." },
+
+  { type:'story', bg:'blambangan', speaker:{id:'Menakjingga', en:'Menakjingga'},
+    id:"Menakjingga tercengang melihat Damar Wulan bebas dan menenteng Gada Wesi Kuning miliknya sendiri. Pertarungan sengit pun tak terelakkan.",
+    en:"Menakjingga was stunned to see Damar Wulan free, wielding his own Gada Wesi Kuning against him. A fierce battle became inevitable." },
+
+  { type:'battle', bg:'duel2', id:'battle2' },
+
+  { type:'story', bg:'battlefield', speaker:{id:'Narator', en:'Narrator'},
+    id:"Menakjingga tumbang untuk selamanya. Teringat pesan Sang Ratu, Damar Wulan memenggal kepala sang Adipati sebagai bukti kemenangan, lalu bertolak pulang ke Majapahit.",
+    en:"Menakjingga fell for the last time. Remembering the Queen's command, Damar Wulan beheaded the Duke as proof of victory, then set off for home to Majapahit." },
+
+  { type:'story', bg:'forest', speaker:{id:'Narator', en:'Narrator'},
+    id:"Tanpa disadari, dua putra Patih Logender, Layang Seta dan Layang Kumitir, telah mengikutinya sejak awal. Berhasrat merebut jasa dan hadiah, mereka menghadang Damar di tengah jalan.",
+    en:"Unbeknownst to him, two sons of Patih Logender, Layang Seta and Layang Kumitir, had followed him all along. Hungry for the credit and the reward, they ambushed Damar along the way." },
+
+  { type:'story', bg:'forest', speaker:{id:'Layang Seta &amp; Layang Kumitir', en:'Layang Seta &amp; Layang Kumitir'},
+    id:"Dua melawan satu, mereka berhasil merampas kepala Menakjingga dari tangan Damar Wulan, lalu kabur menuju istana Majapahit.",
+    en:"Two against one, they succeeded in seizing Menakjingga's head from Damar Wulan, then fled toward the Majapahit palace." },
+
+  { type:'story', bg:'palace', speaker:{id:'Layang Seta &amp; Layang Kumitir', en:'Layang Seta &amp; Layang Kumitir'},
+    id:"“Ampun Gusti Ratu, hamba berdua telah membunuh Adipati Menakjingga!” dusta mereka di hadapan Sang Ratu.",
+    en:"“Your Majesty, we two have slain Duke Menakjingga!” they lied before the Queen." },
+
+  { type:'story', bg:'palace', speaker:{id:'Damar Wulan', en:'Damar Wulan'},
+    id:"Tak lama, Damar Wulan tiba dan menuturkan yang sebenarnya: dialah yang menumpas Menakjingga, namun kepalanya dirampas di tengah jalan.",
+    en:"Soon after, Damar Wulan arrived and told the truth: it was he who had defeated Menakjingga, but the head had been seized from him along the way." },
+
+  { type:'story', bg:'palace', speaker:{id:'Ratu Ayu Kencana Wungu', en:'Ratu Ayu Kencana Wungu'},
+    id:"“Untuk membuktikan siapa yang benar, selesaikanlah secara jantan. Bertarunglah kalian di alun-alun istana.”",
+    en:"“To prove who speaks the truth, settle it as warriors do. Duel each other in the palace square.”" },
+
+  { type:'battle', bg:'duel3', id:'battle3' },
+
+  { type:'story', bg:'palace', speaker:{id:'Narator', en:'Narrator'},
+    id:"Layang Seta dan Layang Kumitir mengaku kalah dan mengakui kebohongan mereka. Ratu Ayu murka dan memerintahkan keduanya ditangkap serta dipenjarakan.",
+    en:"Layang Seta and Layang Kumitir admitted defeat and confessed their lie. Ratu Ayu, furious, ordered them both arrested and imprisoned." },
+
+  { type:'story', bg:'wedding', speaker:{id:'Ratu Ayu Kencana Wungu', en:'Ratu Ayu Kencana Wungu'},
+    id:"Sebagai balas jasa, Ratu Ayu Kencana Wungu mempersilakan Damar Wulan menikahinya. Pernikahan besar pun digelar, disambut gembira oleh seluruh rakyat Majapahit.",
+    en:"As a reward, Ratu Ayu Kencana Wungu allowed Damar Wulan to marry her. A grand wedding was held, joyfully welcomed by all the people of Majapahit." },
+
+  { type:'end' }
+];
+
+var BATTLES = {
+  battle1:{ enemyName:{id:'MENAKJINGGA', en:'MENAKJINGGA'}, enemyHP:60, cinematic:true, speed:2.6, zoneW:0.16, perfectW:0.07 },
+  battle2:{ enemyName:{id:'MENAKJINGGA', en:'MENAKJINGGA'}, enemyHP:100, cinematic:false, speed:2.2, zoneW:0.22, perfectW:0.09 },
+  battle3:{ enemyName:{id:'LAYANG SETA & KUMITIR', en:'LAYANG SETA & KUMITIR'}, enemyHP:130, cinematic:false, speed:3.0, zoneW:0.18, perfectW:0.075 }
+};
+
+/* ---------------------------------------------------------
+   DOM refs
+--------------------------------------------------------- */
+var titleScreen = document.getElementById('titleScreen');
+var dialogueBox = document.getElementById('dialogueBox');
+var speakerName = document.getElementById('speakerName');
+var storyText = document.getElementById('storyText');
+var nextBtn = document.getElementById('nextBtn');
+var startBtn = document.getElementById('startBtn');
+var muteBtn = document.getElementById('muteBtn');
+var langBtn = document.getElementById('langBtn');
+var hud = document.getElementById('hud');
+var qteWrap = document.getElementById('qteWrap');
+var attackBtn = document.getElementById('attackBtn');
+var qtePointer = document.getElementById('qtePointer');
+var qteZoneGood = document.getElementById('qteZoneGood');
+var qteZonePerfect = document.getElementById('qteZonePerfect');
+var qteHint = document.getElementById('qteHint');
+var playerHpBar = document.getElementById('playerHpBar');
+var enemyHpBar = document.getElementById('enemyHpBar');
+var playerHpNum = document.getElementById('playerHpNum');
+var enemyHpNum = document.getElementById('enemyHpNum');
+var enemyLabel = document.getElementById('enemyLabel');
+var playerLabel = document.getElementById('playerLabel');
+var captionScreen = document.getElementById('captionScreen');
+var captionText = document.getElementById('captionText');
+var canvasWrap = document.getElementById('canvasWrap');
+var canvas = document.getElementById('scene');
+var ctx = canvas.getContext('2d');
+
+var muted = false;
+var idx = 0;
+var currentBattle = null;
+var qteRAF = null;
+var qteT = 0;
+var qteLocked = false;
+var battle1Attempts = 0;
+
+/* ---------------------------------------------------------
+   RESIZE / IFRAME AUTO-HEIGHT
+--------------------------------------------------------- */
+function fitCanvas(){
+  var w = canvasWrap.clientWidth;
+  var h = canvasWrap.clientHeight;
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  drawScene(currentBgKey);
+}
+function sendHeight(){
+  var h = document.getElementById('stage').offsetHeight;
+  try{
+    window.parent.postMessage({ type:'damarWulanHeight', height:h }, '*');
+  }catch(e){}
+}
+window.addEventListener('resize', function(){ fitCanvas(); sendHeight(); });
+if(window.ResizeObserver){
+  new ResizeObserver(function(){ sendHeight(); }).observe(document.getElementById('stage'));
+}
+
+/* ---------------------------------------------------------
+   SPEECH (Web Speech API narration)
+--------------------------------------------------------- */
+var voicesReady = false;
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = function(){ voicesReady = true; };
+}
+function pickVoice(targetLang){
+  if(!('speechSynthesis' in window)) return null;
+  var voices = window.speechSynthesis.getVoices();
+  var wanted = targetLang === 'en' ? 'en' : 'id';
+  var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wanted) === 0; });
+  return v || null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if(muted) return;
+  var clean = text.replace(/[""“”]/g,'"').replace(/&amp;/g,'&');
+  var utter = new SpeechSynthesisUtterance(clean);
+  utter.lang = lang === 'en' ? 'en-US' : 'id-ID';
+  var v = pickVoice(lang);
+  if(v) utter.voice = v;
+  utter.rate = 0.95;
+  utter.pitch = 0.95;
+  window.speechSynthesis.speak(utter);
+}
+function stopSpeech(){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+/* ---------------------------------------------------------
+   LANGUAGE APPLY
+--------------------------------------------------------- */
+function applyLangUI(){
+  langBtn.textContent = lang.toUpperCase();
+  document.documentElement.lang = lang;
+  document.getElementById('eyebrowText').textContent = UI[lang].eyebrow;
+  document.getElementById('titleSub').textContent = UI[lang].subtitle;
+  startBtn.textContent = UI[lang].start;
+  nextBtn.textContent = UI[lang].next;
+  attackBtn.textContent = '⚔ ' + UI[lang].attack;
+  qteHint.textContent = UI[lang].qteHint;
+  document.querySelectorAll('.pill').forEach(function(p){
+    p.classList.toggle('on', p.dataset.lang === lang);
+  });
+}
+document.querySelectorAll('.pill').forEach(function(p){
+  p.addEventListener('click', function(){
+    lang = p.dataset.lang;
+    applyLangUI();
+  });
+});
+langBtn.addEventListener('click', function(){
+  lang = lang === 'id' ? 'en' : 'id';
+  applyLangUI();
+  if(dialogueBox.style.display !== 'none'){
+    renderStoryScene(idx, true);
+  }
+});
+muteBtn.addEventListener('click', function(){
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('active', muted);
+  if(muted) stopSpeech();
+});
+
+/* ---------------------------------------------------------
+   CANVAS ILLUSTRATIONS (wayang-silhouette style scenes)
+--------------------------------------------------------- */
+var currentBgKey = 'palace';
+
+function grad(x0,y0,x1,y1,stops){
+  var g = ctx.createLinearGradient(x0,y0,x1,y1);
+  stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+  return g;
+}
+
+function gunungan(cx, baseY, scale, color, alpha){
+  // stylized wayang "gunungan" mountain-leaf silhouette
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(cx, baseY - 220*scale);
+  ctx.bezierCurveTo(cx+70*scale, baseY-210*scale, cx+95*scale, baseY-120*scale, cx+60*scale, baseY-40*scale);
+  ctx.bezierCurveTo(cx+120*scale, baseY-30*scale, cx+130*scale, baseY+10*scale, cx+150*scale, baseY);
+  ctx.lineTo(cx-150*scale, baseY);
+  ctx.bezierCurveTo(cx-130*scale, baseY+10*scale, cx-120*scale, baseY-30*scale, cx-60*scale, baseY-40*scale);
+  ctx.bezierCurveTo(cx-95*scale, baseY-120*scale, cx-70*scale, baseY-210*scale, cx, baseY-220*scale);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function moonOrSun(cx, cy, r, color){
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function figure(x, y, scale, color, mirrored, poseArmUp){
+  // simple wayang-golek style silhouette: head, body cone, arm, headdress point
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(mirrored ? -scale : scale, scale);
+  ctx.fillStyle = color;
+  // headdress
+  ctx.beginPath();
+  ctx.moveTo(0,-92); ctx.lineTo(14,-70); ctx.lineTo(-6,-66); ctx.closePath(); ctx.fill();
+  // head
+  ctx.beginPath(); ctx.arc(0,-58,14,0,Math.PI*2); ctx.fill();
+  // body (cone/robe)
+  ctx.beginPath();
+  ctx.moveTo(-4,-46);
+  ctx.lineTo(-28, 40);
+  ctx.lineTo(28, 40);
+  ctx.lineTo(4,-46);
+  ctx.closePath();
+  ctx.fill();
+  // arm
+  ctx.save();
+  ctx.translate(10,-30);
+  ctx.rotate(poseArmUp ? -2.2 : -0.5);
+  ctx.fillRect(0,0,7,46);
+  ctx.restore();
+  ctx.restore();
+}
+
+var SCENES = {
+  palace: function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#241638'],[1,'#160f22']]);
+    ctx.fillRect(0,0,w,h);
+    moonOrSun(w*0.82, h*0.18, 26, 'rgba(232,200,118,0.85)');
+    gunungan(w*0.5, h*0.98, Math.min(w,h)/230, '#120a1c', 0.9);
+    gunungan(w*0.18, h*1.02, Math.min(w,h)/300, '#1d1330', 0.7);
+    gunungan(w*0.85, h*1.05, Math.min(w,h)/280, '#1d1330', 0.7);
+    // palace pillars
+    for(var i=0;i<3;i++){
+      ctx.fillStyle = 'rgba(207,154,62,0.14)';
+      ctx.fillRect(w*(0.12+i*0.32), h*0.35, w*0.03, h*0.6);
+    }
+    figure(w*0.42, h*0.72, Math.min(w,h)/380, '#e8c876', false, false);
+    figure(w*0.58, h*0.74, Math.min(w,h)/400, '#cf9a3e', true, false);
+  },
+  blambangan: function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#3a1a1c'],[1,'#1a0d10']]);
+    ctx.fillRect(0,0,w,h);
+    moonOrSun(w*0.15, h*0.2, 30, 'rgba(224,72,62,0.55)');
+    gunungan(w*0.5, h*1.0, Math.min(w,h)/220, '#150a0b', 0.95);
+    figure(w*0.5, h*0.7, Math.min(w,h)/260, '#e0483e', false, true);
+  },
+  battlefield: function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#2c1a1a'],[1,'#160d0d']]);
+    ctx.fillRect(0,0,w,h);
+    for(var i=0;i<5;i++){
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      figure(w*(0.1+i*0.2), h*0.86, Math.min(w,h)/620, '#000', i%2===0, false);
+    }
+    figure(w*0.35, h*0.68, Math.min(w,h)/300, '#e8c876', false, true);
+    figure(w*0.63, h*0.68, Math.min(w,h)/280, '#e0483e', true, true);
+  },
+  village:function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#1c2a24'],[1,'#101a16']]);
+    ctx.fillRect(0,0,w,h);
+    moonOrSun(w*0.78,h*0.2,24,'rgba(232,200,118,0.7)');
+    gunungan(w*0.5,h*1.0,Math.min(w,h)/240,'#0d1712',0.9);
+    figure(w*0.5,h*0.72,Math.min(w,h)/320,'#cdbf9e',false,false);
+  },
+  duel1: function(w,h){ this && 0; drawDuelBg(w,h,'#3a1a1c','#1a0d10'); },
+  duel2: function(w,h){ drawDuelBg(w,h,'#241638','#160f22'); },
+  duel3: function(w,h){ drawDuelBg(w,h,'#1c2a3a','#0f1622'); },
+  prison:function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#14100e'],[1,'#0b0908']]);
+    ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle='rgba(207,154,62,0.35)';
+    ctx.lineWidth = Math.max(2,w*0.006);
+    for(var i=0;i<7;i++){
+      ctx.beginPath();
+      ctx.moveTo(w*(0.1+i*0.13), h*0.15);
+      ctx.lineTo(w*(0.1+i*0.13), h*0.95);
+      ctx.stroke();
+    }
+    figure(w*0.5,h*0.72,Math.min(w,h)/320,'#cdbf9e',false,false);
+    figure(w*0.28,h*0.75,Math.min(w,h)/420,'#e8c876',false,false);
+    figure(w*0.72,h*0.75,Math.min(w,h)/420,'#e8c876',true,false);
+  },
+  forest:function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#16241c'],[1,'#0c1512']]);
+    ctx.fillRect(0,0,w,h);
+    for(var i=0;i<6;i++){
+      gunungan(w*(0.08+i*0.17), h*1.02, Math.min(w,h)/420, '#0a1310', 0.8);
+    }
+    figure(w*0.4,h*0.72,Math.min(w,h)/320,'#cdbf9e',false,true);
+    figure(w*0.6,h*0.7,Math.min(w,h)/360,'#a8322d',true,true);
+    figure(w*0.7,h*0.74,Math.min(w,h)/380,'#a8322d',true,true);
+  },
+  wedding:function(w,h){
+    ctx.fillStyle = grad(0,0,0,h,[[0,'#3a2a1a'],[1,'#221708']]);
+    ctx.fillRect(0,0,w,h);
+    moonOrSun(w*0.5,h*0.16,30,'rgba(232,200,118,0.9)');
+    gunungan(w*0.5,h*1.0,Math.min(w,h)/220,'#1a1206',0.85);
+    figure(w*0.44,h*0.7,Math.min(w,h)/280,'#e8c876',false,false);
+    figure(w*0.56,h*0.7,Math.min(w,h)/280,'#cf9a3e',true,false);
+    for(var i=0;i<10;i++){
+      ctx.fillStyle='rgba(232,200,118,0.5)';
+      ctx.beginPath();
+      ctx.arc(w*(0.05+i*0.09), h*(0.1+ (i%3)*0.08), 2.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+};
+function drawDuelBg(w,h,c1,c2){
+  ctx.fillStyle = grad(0,0,0,h,[[0,c1],[1,c2]]);
+  ctx.fillRect(0,0,w,h);
+  gunungan(w*0.5, h*1.02, Math.min(w,h)/240, 'rgba(0,0,0,0.5)', 0.8);
+  figure(w*0.32, h*0.7, Math.min(w,h)/260, '#e8c876', false, true);
+  figure(w*0.68, h*0.7, Math.min(w,h)/250, '#e0483e', true, true);
+}
+
+function drawScene(key){
+  var w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
+  if(!SCENES[key]){ key = 'palace'; }
+  currentBgKey = key;
+  SCENES[key](w,h);
+}
+
+/* ---------------------------------------------------------
+   STORY FLOW
+--------------------------------------------------------- */
+function showCaption(text){
+  captionText.textContent = text;
+  captionScreen.classList.add('show');
+  setTimeout(function(){ captionScreen.classList.remove('show'); }, 1400);
+}
+
+function renderStoryScene(i, silentReRender){
+  var scene = STORY[i];
+  drawScene(scene.bg);
+  var spk = scene.speaker && scene.speaker[lang] ? scene.speaker[lang] : '';
+  speakerName.textContent = spk;
+  var txt = scene[lang];
+  storyText.innerHTML = txt;
+  hud.style.display = 'none';
+  qteWrap.style.display = 'none';
+  dialogueBox.style.display = 'block';
+  if(!silentReRender){
+    speak(spk ? (spk + ". " + txt.replace(/<[^>]+>/g,'')) : txt.replace(/<[^>]+>/g,''));
+  } else {
+    speak(spk ? (spk + ". " + txt.replace(/<[^>]+>/g,'')) : txt.replace(/<[^>]+>/g,''));
+  }
+  sendHeight();
+}
+
+nextBtn.addEventListener('click', function(){
+  idx++;
+  goToScene(idx);
+});
+
+function goToScene(i){
+  if(i >= STORY.length){ i = STORY.length - 1; }
+  idx = i;
+  var scene = STORY[i];
+  if(scene.type === 'story'){
+    renderStoryScene(i, false);
+  } else if(scene.type === 'battle'){
+    startBattle(scene.id, scene.bg);
+  } else if(scene.type === 'end'){
+    showEnding();
+  }
+}
+
+/* ---------------------------------------------------------
+   BATTLE / QTE SYSTEM
+--------------------------------------------------------- */
+function startBattle(battleId, bgKey){
+  stopSpeech();
+  dialogueBox.style.display = 'none';
+  drawScene(bgKey);
+  var cfg = BATTLES[battleId];
+  currentBattle = Object.assign({}, cfg, {
+    id: battleId,
+    playerHP: 100,
+    enemyHPmax: cfg.enemyHP,
+    enemyHPcur: cfg.enemyHP,
+    attemptsLeft: cfg.cinematic ? 3 : 999
+  });
+  enemyLabel.textContent = cfg.enemyName[lang];
+  playerLabel.textContent = UI[lang].playerName;
+  updateHPBars();
+  hud.style.display = 'flex';
+  qteWrap.style.display = 'block';
+  qteHint.textContent = UI[lang].qteHint;
+  attackBtn.textContent = '⚔ ' + UI[lang].attack;
+  layoutQteZones();
+  sendHeight();
+  qteT = 0;
+  qteLocked = false;
+  runQteLoop();
+}
+
+function layoutQteZones(){
+  var w = currentBattle.zoneW, p = currentBattle.perfectW;
+  var goodLeft = (0.78 - w/2) * 100;
+  var perfLeft = (0.78 - p/2) * 100;
+  qteZoneGood.style.left = goodLeft + '%';
+  qteZoneGood.style.width = (w*100) + '%';
+  qteZonePerfect.style.left = perfLeft + '%';
+  qteZonePerfect.style.width = (p*100) + '%';
+}
+
+function pointerValue(t, speed){
+  return 0.5 + 0.44 * Math.sin(t * speed);
+}
+
+function runQteLoop(){
+  var last = performance.now();
+  function step(now){
+    if(!currentBattle) return;
+    var dt = (now - last) / 1000;
+    last = now;
+    qteT += dt;
+    var val = pointerValue(qteT, currentBattle.speed);
+    qtePointer.style.left = (val*100) + '%';
+    qteRAF = requestAnimationFrame(step);
+  }
+  qteRAF = requestAnimationFrame(step);
+}
+
+function updateHPBars(){
+  var pPct = Math.max(0, currentBattle.playerHP);
+  var ePct = Math.max(0, (currentBattle.enemyHPcur / currentBattle.enemyHPmax) * 100);
+  playerHpBar.style.width = pPct + '%';
+  enemyHpBar.style.width = ePct + '%';
+  playerHpNum.textContent = Math.max(0,Math.round(currentBattle.playerHP));
+  enemyHpNum.textContent = Math.max(0,Math.round(currentBattle.enemyHPcur));
+}
+
+function floatMessage(text, color){
+  var el = document.createElement('div');
+  el.id = 'floatText';
+  el.style.left = '50%';
+  el.style.top = '38%';
+  el.style.transform = 'translate(-50%,-50%)';
+  el.style.color = color;
+  el.textContent = text;
+  canvasWrap.appendChild(el);
+  el.animate([
+    { opacity:0, transform:'translate(-50%,-50%) translateY(10px) scale(0.8)' },
+    { opacity:1, transform:'translate(-50%,-50%) translateY(-10px) scale(1.1)', offset:0.3 },
+    { opacity:0, transform:'translate(-50%,-50%) translateY(-30px) scale(1)' }
+  ], { duration: 700, easing:'ease-out' });
+  setTimeout(function(){ el.remove(); }, 700);
+}
+
+attackBtn.addEventListener('click', handleAttack);
+window.addEventListener('keydown', function(e){
+  if(e.code === 'Space' && qteWrap.style.display !== 'none'){
+    e.preventDefault();
+    handleAttack();
+  }
+});
+
+function handleAttack(){
+  if(!currentBattle || qteLocked) return;
+  var val = pointerValue(qteT, currentBattle.speed);
+  var center = 0.78;
+  var distPerfect = Math.abs(val - center);
+  var isPerfect = distPerfect <= currentBattle.perfectW/2;
+  var isGood = !isPerfect && distPerfect <= currentBattle.zoneW/2;
+
+  if(isPerfect){
+    currentBattle.enemyHPcur -= 30;
+    floatMessage(UI[lang].perfect, '#e0483e');
+  } else if(isGood){
+    currentBattle.enemyHPcur -= 17;
+    floatMessage(UI[lang].good, '#e8c876');
+  } else {
+    currentBattle.enemyHPcur -= 5;
+    currentBattle.playerHP -= 14;
+    floatMessage(UI[lang].miss, '#8a95a0');
+  }
+  currentBattle.speed = Math.min(currentBattle.speed + 0.12, 5.2);
+  updateHPBars();
+
+  if(currentBattle.cinematic){
+    currentBattle.attemptsLeft--;
+    if(currentBattle.attemptsLeft <= 0 || currentBattle.enemyHPcur <= 0){
+      endBattle('cinematicDone');
+    }
+    return;
+  }
+  if(currentBattle.enemyHPcur <= 0){ endBattle('win'); }
+  else if(currentBattle.playerHP <= 0){ endBattle('lose'); }
+}
+
+function stopQteLoop(){
+  if(qteRAF){ cancelAnimationFrame(qteRAF); qteRAF = null; }
+}
+
+function endBattle(result){
+  qteLocked = true;
+  stopQteLoop();
+  qteWrap.style.display = 'none';
+  hud.style.display = 'none';
+
+  if(result === 'cinematicDone'){
+    currentBattle = null;
+    idx++;
+    goToScene(idx);
+    return;
+  }
+  if(result === 'win'){
+    showCaption(UI[lang].victory);
+    setTimeout(function(){
+      currentBattle = null;
+      idx++;
+      goToScene(idx);
+    }, 1500);
+  } else {
+    showCaption(UI[lang].defeat);
+    setTimeout(function(){
+      // retry same battle
+      var scene = STORY[idx];
+      startBattle(scene.id, scene.bg);
+    }, 1500);
+  }
+}
+
+/* ---------------------------------------------------------
+   ENDING SCREEN
+--------------------------------------------------------- */
+function showEnding(){
+  drawScene('wedding');
+  hud.style.display = 'none';
+  qteWrap.style.display = 'none';
+  speakerName.textContent = '';
+  storyText.innerHTML = lang === 'id'
+    ? "Damar Wulan dan Menakjingga merupakan cerita rakyat dari Jawa Timur, mengisahkan kejujuran, keberanian, dan keadilan yang pada akhirnya membawa kebahagiaan."
+    : "Damar Wulan and Menakjingga is a folktale from East Java about honesty, courage, and justice that ultimately brings happiness.";
+  dialogueBox.style.display = 'block';
+  nextBtn.textContent = UI[lang].replay;
+  nextBtn.onclick = function(){
+    idx = 0;
+    nextBtn.textContent = UI[lang].next;
+    nextBtn.onclick = function(){ idx++; goToScene(idx); };
+    titleScreen.style.display = 'flex';
+    dialogueBox.style.display = 'none';
+  };
+  showCaption(UI[lang].theEnd);
+  sendHeight();
+}
+
+/* ---------------------------------------------------------
+   START
+--------------------------------------------------------- */
+startBtn.addEventListener('click', function(){
+  titleScreen.style.display = 'none';
+  idx = 0;
+  goToScene(0);
+});
+
+applyLangUI();
+fitCanvas();
+drawScene('palace');
+setTimeout(sendHeight, 200);
+setTimeout(sendHeight, 800);
+
+})();
+</script>
+</body>
+</html>
