@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ahmad dan Muhammad</title>
+<style>
+  :root{
+    --parchment:#f4e8cf;
+    --parchment-dark:#e8d6ac;
+    --wood:#5c3a21;
+    --wood-dark:#3e2714;
+    --gold:#c9992e;
+    --gold-light:#e6c467;
+    --ink:#3b2a1a;
+    --accent-red:#a83232;
+    --accent-green:#3f6b3f;
+    --sky-top:#ffd98a;
+    --sky-bottom:#ffb56b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Georgia','Segoe UI',serif;
+    background:transparent;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--parchment),var(--parchment-dark));
+    border:6px solid var(--wood);
+    border-radius:14px;
+    box-shadow:0 4px 18px rgba(0,0,0,.25), inset 0 0 0 2px var(--gold);
+    position:relative;
+    overflow:hidden;
+  }
+  .ornament-border{
+    position:absolute; inset:0; pointer-events:none;
+    border:2px dashed var(--gold);
+    margin:8px;
+    border-radius:8px;
+    opacity:.6;
+  }
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px;
+    background:var(--wood);
+    color:var(--gold-light);
+    position:relative;
+    z-index:5;
+  }
+  header.topbar h1{
+    font-size:15px;
+    margin:0;
+    letter-spacing:.5px;
+    font-weight:600;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+  .controls{
+    display:flex; gap:6px;
+  }
+  .ctrl-btn{
+    background:var(--wood-dark);
+    border:1px solid var(--gold);
+    color:var(--gold-light);
+    border-radius:6px;
+    padding:6px 9px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1;
+    display:flex; align-items:center; gap:4px;
+  }
+  .ctrl-btn:active{ transform:scale(.94); }
+  .ctrl-btn.active{ background:var(--gold); color:var(--wood-dark); }
+
+  .progress-row{
+    display:flex; gap:5px; justify-content:center; padding:8px 6px 0;
+    position:relative; z-index:5;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:#c9b183; transition:.3s; }
+  .dot.done{ background:var(--accent-green); }
+  .dot.now{ background:var(--accent-red); transform:scale(1.3); }
+
+  .stage{
+    position:relative;
+    padding:14px 18px 4px;
+    z-index:5;
+  }
+
+  .scene-art{
+    position:relative;
+    height:190px;
+    border-radius:10px;
+    margin-bottom:12px;
+    overflow:hidden;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));
+    box-shadow:inset 0 0 0 3px var(--gold);
+  }
+  .scene-art .ground{
+    position:absolute; left:0; right:0; bottom:0; height:38%;
+    background:linear-gradient(180deg,#8fbf5c,#4f7a34);
+  }
+  .scene-art .sun{
+    position:absolute; top:14px; right:20px; width:46px; height:46px;
+    border-radius:50%; background:radial-gradient(circle,#fff2b0,#ffcf4d);
+    box-shadow:0 0 22px 8px rgba(255,206,77,.6);
+  }
+  .emoji-big{
+    position:absolute;
+    font-size:54px;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));
+    transition:transform .3s;
+  }
+  .cloud{
+    position:absolute; background:#fff; opacity:.85; border-radius:50px;
+  }
+
+  .story-text{
+    background:rgba(255,255,255,.35);
+    border-left:4px solid var(--accent-red);
+    padding:10px 14px;
+    border-radius:6px;
+    font-size:15.5px;
+    line-height:1.5;
+    min-height:70px;
+    margin-bottom:10px;
+  }
+
+  .action-row{
+    display:flex; gap:10px; justify-content:center; padding:6px 0 16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    background:var(--accent-green);
+    color:#fff;
+    border:none;
+    padding:11px 20px;
+    border-radius:30px;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,.25);
+    font-weight:600;
+  }
+  .btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.25); }
+  .btn.secondary{ background:var(--wood); }
+  .btn.gold{ background:var(--gold); color:var(--wood-dark); }
+
+  .qte-wrap{
+    position:relative;
+    height:190px;
+    border-radius:10px;
+    margin-bottom:10px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#bfe3ff,#e9f7c9);
+    box-shadow:inset 0 0 0 3px var(--gold);
+  }
+  .qte-target{
+    position:absolute;
+    font-size:42px;
+    cursor:pointer;
+    animation:pop .25s ease;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));
+    user-select:none;
+  }
+  @keyframes pop{ from{transform:scale(.3); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .qte-hud{
+    position:absolute; top:6px; left:8px; right:8px;
+    display:flex; justify-content:space-between;
+    font-size:13px; font-weight:700; color:var(--wood-dark);
+    background:rgba(255,255,255,.6); border-radius:20px; padding:3px 10px;
+  }
+
+  .timing-bar-wrap{
+    padding:10px 6px 4px;
+  }
+  .timing-track{
+    position:relative;
+    height:26px;
+    background:#e4d3a8;
+    border-radius:14px;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.25);
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .timing-zone{
+    position:absolute; top:0; bottom:0;
+    background:rgba(63,107,63,.55);
+  }
+  .timing-indicator{
+    position:absolute; top:-4px; bottom:-4px; width:6px;
+    background:var(--accent-red);
+    border-radius:3px;
+    box-shadow:0 0 6px rgba(0,0,0,.4);
+  }
+
+  footer.credit{
+    text-align:center;
+    font-size:11px;
+    color:var(--wood);
+    opacity:.75;
+    padding:6px 0 10px;
+    position:relative; z-index:5;
+  }
+  footer.credit a{ color:var(--wood); }
+
+  .flash-msg{
+    position:absolute; left:50%; top:40%; transform:translate(-50%,-50%);
+    background:rgba(0,0,0,.75); color:#fff; padding:8px 16px;
+    border-radius:20px; font-size:14px; font-weight:600;
+    pointer-events:none; opacity:0; transition:opacity .2s;
+    z-index:20;
+  }
+  .flash-msg.show{ opacity:1; }
+
+  .final-burst{
+    position:absolute; inset:0; pointer-events:none;
+  }
+  .confetti{
+    position:absolute; width:8px; height:14px; opacity:.9;
+  }
+
+  @media (max-width:420px){
+    .scene-art, .qte-wrap{ height:150px; }
+    .emoji-big{ font-size:42px; }
+    header.topbar h1{ font-size:13px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="ornament-border"></div>
+  <header class="topbar">
+    <h1 id="hdrTitle">🕌 Ahmad &amp; Muhammad</h1>
+    <div class="controls">
+      <button class="ctrl-btn" id="langBtn" title="Language">🌐 <span id="langLabel">ID</span></button>
+      <button class="ctrl-btn" id="muteBtn" title="Mute">🔊</button>
+      <button class="ctrl-btn" id="restartBtn" title="Restart">↺</button>
+    </div>
+  </header>
+  <div class="progress-row" id="progressRow"></div>
+  <div class="stage" id="stage"></div>
+  <footer class="credit">
+    <span id="creditText">Cerita Rakyat Sumatera Utara · caritasato.blogspot.com</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   I18N + STORY DATA
+---------------------------------------------------------- */
+const T = {
+  id:{
+    title:"🕌 Ahmad & Muhammad",
+    credit:"Cerita Rakyat Sumatera Utara · caritasato.blogspot.com",
+    start:"Mulai Cerita",
+    next:"Lanjut",
+    restart:"Ulangi",
+    tapHint:"Ketuk!",
+    pressBtn:"Tekan!",
+    scenes:[
+      {
+        id:"intro",
+        art:"village",
+        text:"Di sebuah desa di Sumatera Utara, hiduplah dua bersaudara yang baik hati: Ahmad si sulung, dan Muhammad, adiknya. Keduanya rajin membantu orang tua dan tak pernah lupa bersembahyang.",
+      },
+      {
+        id:"legend",
+        art:"bird-info",
+        text:"Konon ada seekor burung istimewa bernama burung merbuk. Siapa memakan kepalanya akan menjadi raja. Siapa memakan hatinya akan menjadi menteri.",
+      },
+      {
+        id:"catch-bird",
+        type:"qte-tap",
+        art:"forest",
+        text:"Sepulang membantu di ladang, mereka melihat seekor burung merbuk! Bantu Ahmad & Muhammad menangkapnya dengan lembut untuk dipelihara — ketuk burungnya sebelum terbang!",
+        target:"🐦", need:3, timeLimit:16000,
+        successText:"Burung merbuk berhasil ditangkap dengan lembut. Ahmad & Muhammad akan merawatnya penuh kasih sayang.",
+      },
+      {
+        id:"caring",
+        art:"caring",
+        text:"Ahmad dan Muhammad merawat burung merbuk itu setiap hari. Mereka tidak mengurungnya, membiarkannya terbang bebas. Lambat laun, burung itu menjadi jinak dan selalu hinggap dekat mereka.",
+      },
+      {
+        id:"parents-plan",
+        art:"parents",
+        text:"Diam-diam, ayah mereka sangat ingin menjadi raja atau menteri. Ia dan istrinya berencana menangkap burung merbuk itu untuk dimakan.",
+      },
+      {
+        id:"killed",
+        art:"sad-house",
+        text:"Suatu hari, ibu melarang burung itu dibawa ke ladang. Sepeninggal kedua anaknya, ia menangkap dan memanggang burung merbuk malang itu.",
+      },
+      {
+        id:"discover",
+        art:"grief",
+        text:"Sepulang dari ladang, Ahmad & Muhammad terkejut mendapati burung kesayangan mereka telah mati dipanggang. Ibu berdalih seekor kucing telah menerkamnya.",
+      },
+      {
+        id:"eat",
+        art:"eating",
+        text:"Karena lapar, tanpa curiga, Ahmad memakan kepala burung merbuk itu, sedangkan Muhammad memakan hatinya.",
+      },
+      {
+        id:"anger",
+        art:"anger",
+        text:"Ketika ayah pulang dan tahu burung itu telah dimakan, amarahnya meledak. Ia mengusir Ahmad dan Muhammad dari rumah tanpa bekal apa pun.",
+      },
+      {
+        id:"forest-walk",
+        art:"walking",
+        text:"Dengan sedih, kedua bersaudara itu berjalan tak tentu arah, mencari buah dan umbi untuk mengganjal lapar, hingga tiba di tepi hutan saat malam tiba.",
+      },
+      {
+        id:"elephant",
+        type:"qte-timing",
+        art:"elephant-approach",
+        text:"Mereka beristirahat di bawah pohon besar. Tanpa mereka sadari, seekor gajah putih kerajaan sedang mencari calon raja. Tekan tombol tepat saat gajah bersujud di depan Ahmad!",
+        successText:"Gajah putih bersujud di hadapan Ahmad! Para prajurit kerajaan pun terkejut — mereka telah menemukan calon raja.",
+      },
+      {
+        id:"taken",
+        art:"palace-carry",
+        text:"Para prajurit membawa Ahmad yang tengah tidur ke istana kerajaan. Ia terbangun dan sangat terkejut mendapati dirinya berada di istana megah, dan akan dijadikan raja menggantikan raja yang sudah tua.",
+      },
+      {
+        id:"muhammad-search",
+        art:"searching",
+        text:"Sementara itu, Muhammad sangat sedih kehilangan kakaknya. Setelah menangis semalaman, ia bertekad untuk mencarinya ke mana pun perginya.",
+      },
+      {
+        id:"catch-branch",
+        type:"qte-tap",
+        art:"eagle-fight",
+        text:"Muhammad melihat dua burung rajawali memperebutkan sebatang ranting ajaib. Tangkap ranting itu sebelum jatuh ke tanah!",
+        target:"🪵", need:3, timeLimit:16000,
+        successText:"\"Wahai ranting ajaib, antarkan aku kepada kakakku!\" — seketika tubuh Muhammad melayang ke udara.",
+      },
+      {
+        id:"palace-garden",
+        art:"garden-fall",
+        text:"Muhammad terjatuh di taman istana. Putri raja yang melihatnya berteriak ketakutan, dan para prajurit segera menangkap Muhammad karena masuk tanpa izin.",
+      },
+      {
+        id:"trial",
+        art:"trial",
+        text:"Muhammad diadili di hadapan raja dan calon raja baru — yang ternyata adalah Ahmad, kakaknya sendiri! Muhammad menceritakan kisahnya mencari sang kakak.",
+      },
+      {
+        id:"reunion",
+        art:"reunion",
+        text:"Ahmad segera mengenali adiknya. Keduanya berpelukan sambil menangis bahagia setelah lama terpisah. Raja pun membebaskan Muhammad dari segala hukuman.",
+      },
+      {
+        id:"ending",
+        art:"ending",
+        text:"Ahmad menikahi putri sulung dan menjadi raja, sedangkan Muhammad menikahi putri bungsu dan diangkat menjadi Perdana Menteri. Keduanya memerintah kerajaan dengan adil dan bijaksana, dicintai oleh seluruh rakyat.",
+        final:true
+      }
+    ]
+  },
+  en:{
+    title:"🕌 Ahmad & Muhammad",
+    credit:"Folktale from North Sumatra · caritasato.blogspot.com",
+    start:"Start the Story",
+    next:"Continue",
+    restart:"Restart",
+    tapHint:"Tap!",
+    pressBtn:"Press!",
+    scenes:[
+      {
+        id:"intro",
+        art:"village",
+        text:"In a village in North Sumatra lived two kind-hearted brothers: Ahmad, the elder, and Muhammad, his younger brother. Both helped their parents dutifully and never missed their prayers.",
+      },
+      {
+        id:"legend",
+        art:"bird-info",
+        text:"Legend told of a special bird called the merbuk dove. Whoever ate its head would become a king. Whoever ate its liver would become a minister.",
+      },
+      {
+        id:"catch-bird",
+        type:"qte-tap",
+        art:"forest",
+        text:"Coming home from the fields, the brothers spotted a merbuk dove! Help Ahmad & Muhammad catch it gently to keep as a pet — tap the bird before it flies off!",
+        target:"🐦", need:3, timeLimit:16000,
+        successText:"The merbuk dove was gently caught. Ahmad & Muhammad would care for it with love.",
+      },
+      {
+        id:"caring",
+        art:"caring",
+        text:"Every day, Ahmad and Muhammad cared for their bird. They never caged it, letting it fly free. Slowly, it grew tame and always landed near them.",
+      },
+      {
+        id:"parents-plan",
+        art:"parents",
+        text:"Secretly, their father longed to become a king or minister. He and his wife plotted to catch the bird and eat it.",
+      },
+      {
+        id:"killed",
+        art:"sad-house",
+        text:"One day, their mother forbade taking the bird to the fields. Once the boys left, she caught the poor dove and roasted it.",
+      },
+      {
+        id:"discover",
+        art:"grief",
+        text:"Returning from the fields, Ahmad & Muhammad were shocked to find their beloved bird roasted. Their mother lied, claiming a cat had caught it.",
+      },
+      {
+        id:"eat",
+        art:"eating",
+        text:"Hungry and unaware, Ahmad ate the bird's head, while Muhammad ate its liver.",
+      },
+      {
+        id:"anger",
+        art:"anger",
+        text:"When their father returned and learned the bird had been eaten, his fury erupted. He drove Ahmad and Muhammad from the house with nothing to their names.",
+      },
+      {
+        id:"forest-walk",
+        art:"walking",
+        text:"Heartbroken, the brothers wandered aimlessly, surviving on wild fruit and roots, until they reached the edge of a forest as night fell.",
+      },
+      {
+        id:"elephant",
+        type:"qte-timing",
+        art:"elephant-approach",
+        text:"They rested beneath a great tree. Unknown to them, the kingdom's white elephant was searching for a future king. Press the button exactly when the elephant kneels before Ahmad!",
+        successText:"The white elephant knelt before Ahmad! The royal soldiers were astonished — they had found their future king.",
+      },
+      {
+        id:"taken",
+        art:"palace-carry",
+        text:"The soldiers carried sleeping Ahmad to the royal palace. He woke to find himself in a magnificent palace, destined to become king in place of the aging ruler.",
+      },
+      {
+        id:"muhammad-search",
+        art:"searching",
+        text:"Meanwhile, Muhammad grieved the loss of his brother. After a night of tears, he resolved to search for him no matter where the journey led.",
+      },
+      {
+        id:"catch-branch",
+        type:"qte-tap",
+        art:"eagle-fight",
+        text:"Muhammad saw two eagles fighting over a magical branch. Catch the branch before it hits the ground!",
+        target:"🪵", need:3, timeLimit:16000,
+        successText:"\"O magic branch, carry me to my brother!\" — instantly Muhammad's body floated into the sky.",
+      },
+      {
+        id:"palace-garden",
+        art:"garden-fall",
+        text:"Muhammad landed in the palace garden. The princess who saw him screamed in fright, and the guards quickly seized Muhammad for trespassing.",
+      },
+      {
+        id:"trial",
+        art:"trial",
+        text:"Muhammad was brought to trial before the king and the kingdom's future ruler — who turned out to be Ahmad, his own brother! Muhammad told the story of his search.",
+      },
+      {
+        id:"reunion",
+        art:"reunion",
+        text:"Ahmad instantly recognized his brother. The two embraced in tears of joy after being apart so long. The king freed Muhammad from all punishment.",
+      },
+      {
+        id:"ending",
+        art:"ending",
+        text:"Ahmad married the eldest princess and became king, while Muhammad married the youngest and was made Prime Minister. Together they ruled the kingdom with justice and wisdom, beloved by all their people.",
+        final:true
+      }
+    ]
+  }
+};
+
+/* ---------------------------------------------------------
+   STATE
+---------------------------------------------------------- */
+const params = new URLSearchParams(location.search);
+let lang = (params.get('lang')==='en') ? 'en' : 'id';
+let muted = false;
+try{ muted = localStorage.getItem('am_muted')==='1'; }catch(e){}
+let sceneIndex = 0;
+let hasInteracted = false;
+let voices = [];
+
+const stage = document.getElementById('stage');
+const progressRow = document.getElementById('progressRow');
+const langBtn = document.getElementById('langBtn');
+const langLabel = document.getElementById('langLabel');
+const muteBtn = document.getElementById('muteBtn');
+const restartBtn = document.getElementById('restartBtn');
+const hdrTitle = document.getElementById('hdrTitle');
+const creditText = document.getElementById('creditText');
+
+function currentScenes(){ return T[lang].scenes; }
+
+function updateChrome(){
+  hdrTitle.textContent = T[lang].title;
+  creditText.textContent = T[lang].credit;
+  langLabel.textContent = lang.toUpperCase();
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+}
+
+function buildProgress(){
+  progressRow.innerHTML = '';
+  currentScenes().forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i<sceneIndex?' done':'') + (i===sceneIndex?' now':'');
+    progressRow.appendChild(d);
+  });
+}
+
+/* ---------------------------------------------------------
+   SPEECH
+---------------------------------------------------------- */
+function loadVoices(){
+  if('speechSynthesis' in window){
+    voices = speechSynthesis.getVoices();
+  }
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function speak(text){
+  if(muted) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang==='id' ? 'id-ID' : 'en-US';
+    u.rate = 0.93;
+    u.pitch = 1.02;
+    const wanted = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang==='id'?'id':'en'));
+    if(wanted) u.voice = wanted;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function stopSpeak(){
+  if('speechSynthesis' in window){
+    try{ speechSynthesis.cancel(); }catch(e){}
+  }
+}
+
+/* ---------------------------------------------------------
+   ART (simple CSS/emoji illustrations per scene keyword)
+---------------------------------------------------------- */
+const ART = {
+  village: `<div class="ground"></div><div class="sun"></div>
+    <div class="emoji-big" style="left:30%;bottom:22%;">🧕</div>
+    <div class="emoji-big" style="left:50%;bottom:20%;">🧑</div>
+    <div class="emoji-big" style="right:10%;bottom:24%;font-size:60px;">🏡</div>`,
+  "bird-info": `<div class="ground"></div><div class="sun"></div>
+    <div class="emoji-big" style="left:44%;top:30%;font-size:60px;">🐦</div>
+    <div class="emoji-big" style="right:14%;bottom:20%;">👑</div>`,
+  forest: `<div class="ground" style="background:linear-gradient(180deg,#79a84f,#3c6229);"></div>
+    <div class="emoji-big" style="left:12%;bottom:18%;">🌳</div>
+    <div class="emoji-big" style="right:12%;bottom:18%;">🌳</div>
+    <div class="emoji-big" style="left:38%;bottom:22%;">🧑</div>
+    <div class="emoji-big" style="left:56%;bottom:22%;">🧒</div>`,
+  caring: `<div class="ground"></div><div class="sun"></div>
+    <div class="emoji-big" style="left:34%;bottom:24%;">🧑</div>
+    <div class="emoji-big" style="left:52%;bottom:22%;font-size:36px;">🐦</div>
+    <div class="emoji-big" style="left:64%;bottom:24%;">🧒</div>`,
+  parents: `<div class="ground"></div>
+    <div class="emoji-big" style="left:30%;bottom:20%;">👨</div>
+    <div class="emoji-big" style="left:52%;bottom:20%;">👩</div>
+    <div class="emoji-big" style="right:12%;top:16%;font-size:36px;">💭👑</div>`,
+  "sad-house": `<div class="ground"></div>
+    <div class="emoji-big" style="left:38%;bottom:20%;">👩</div>
+    <div class="emoji-big" style="right:20%;bottom:24%;">🔥</div>`,
+  grief: `<div class="ground"></div>
+    <div class="emoji-big" style="left:30%;bottom:22%;">😢</div>
+    <div class="emoji-big" style="left:54%;bottom:22%;">😢</div>`,
+  eating: `<div class="ground"></div>
+    <div class="emoji-big" style="left:30%;bottom:22%;">🧑</div>
+    <div class="emoji-big" style="left:56%;bottom:22%;">🧒</div>
+    <div class="emoji-big" style="left:44%;bottom:18%;font-size:34px;">🍗</div>`,
+  anger: `<div class="ground"></div>
+    <div class="emoji-big" style="left:36%;bottom:20%;font-size:60px;">😡</div>
+    <div class="emoji-big" style="right:16%;bottom:18%;">🚪</div>`,
+  walking: `<div class="ground" style="background:linear-gradient(180deg,#79a84f,#3c6229);"></div>
+    <div class="emoji-big" style="left:30%;bottom:20%;">🚶</div>
+    <div class="emoji-big" style="left:48%;bottom:20%;">🧒</div>
+    <div class="emoji-big" style="right:10%;bottom:18%;">🌲</div>`,
+  "elephant-approach": `<div class="ground" style="background:linear-gradient(180deg,#79a84f,#3c6229);"></div>
+    <div class="emoji-big" style="left:20%;bottom:20%;font-size:36px;">😴</div>
+    <div class="emoji-big" style="right:14%;bottom:16%;font-size:60px;">🐘</div>`,
+  "palace-carry": `<div class="ground"></div>
+    <div class="emoji-big" style="left:50%;bottom:18%;font-size:60px;">🏰</div>
+    <div class="emoji-big" style="left:24%;bottom:22%;">🐘</div>`,
+  searching: `<div class="ground" style="background:linear-gradient(180deg,#79a84f,#3c6229);"></div>
+    <div class="emoji-big" style="left:40%;bottom:20%;">😭</div>`,
+  "eagle-fight": `<div class="sun"></div>
+    <div class="ground" style="background:linear-gradient(180deg,#79a84f,#3c6229);"></div>
+    <div class="emoji-big" style="left:26%;top:20%;">🦅</div>
+    <div class="emoji-big" style="right:22%;top:22%;">🦅</div>`,
+  "garden-fall": `<div class="ground"></div>
+    <div class="emoji-big" style="left:44%;bottom:22%;">🧒</div>
+    <div class="emoji-big" style="right:18%;bottom:24%;">👸</div>`,
+  trial: `<div class="ground"></div>
+    <div class="emoji-big" style="left:20%;bottom:20%;">👑</div>
+    <div class="emoji-big" style="left:48%;bottom:20%;">🧒</div>
+    <div class="emoji-big" style="right:16%;bottom:20%;">🧑</div>`,
+  reunion: `<div class="ground"></div><div class="sun"></div>
+    <div class="emoji-big" style="left:38%;bottom:20%;">🤗</div>`,
+  ending: `<div class="ground"></div><div class="sun"></div>
+    <div class="emoji-big" style="left:24%;bottom:20%;">🤴</div>
+    <div class="emoji-big" style="left:44%;bottom:20%;">👸</div>
+    <div class="emoji-big" style="right:14%;bottom:20%;">👸</div>`
+};
+
+/* ---------------------------------------------------------
+   RENDER
+---------------------------------------------------------- */
+function render(){
+  buildProgress();
+  updateChrome();
+  const scenes = currentScenes();
+  const scene = scenes[sceneIndex];
+  stage.innerHTML = '';
+
+  if(scene.type === 'qte-tap'){
+    renderQteTap(scene);
+  } else if(scene.type === 'qte-timing'){
+    renderQteTiming(scene);
+  } else {
+    renderNarrative(scene);
+  }
+
+  speak(scene.text);
+}
+
+function sceneArtHTML(art){
+  return `<div class="scene-art">${ART[art]||''}</div>`;
+}
+
+function renderNarrative(scene){
+  const isFinal = !!scene.final;
+  stage.innerHTML = `
+    ${sceneArtHTML(scene.art)}
+    <div class="story-text">${scene.text}</div>
+    <div class="action-row">
+      <button class="btn ${isFinal?'gold':''}" id="nextBtn">${isFinal ? '🎉' : (sceneIndex===0?T[lang].start:T[lang].next)}</button>
+    </div>
+  `;
+  if(isFinal){
+    launchConfetti();
+    document.getElementById('nextBtn').addEventListener('click', ()=>{ goToScene(0); });
+  } else {
+    document.getElementById('nextBtn').addEventListener('click', ()=>{
+      hasInteracted = true;
+      goToScene(sceneIndex+1);
+    });
+  }
+}
+
+function renderQteTap(scene){
+  stage.innerHTML = `
+    <div class="story-text">${scene.text}</div>
+    <div class="qte-wrap" id="qteWrap">
+      <div class="qte-hud"><span id="qteScore">0 / ${scene.need}</span><span id="qteTimer"></span></div>
+      <div class="flash-msg" id="flashMsg"></div>
+    </div>
+  `;
+  runTapMinigame(scene);
+}
+
+function runTapMinigame(scene){
+  const wrap = document.getElementById('qteWrap');
+  const scoreEl = document.getElementById('qteScore');
+  const timerEl = document.getElementById('qteTimer');
+  const flash = document.getElementById('flashMsg');
+  let hits = 0;
+  let finished = false;
+  const startTime = Date.now();
+  let targetEl = null;
+  let spawnTimeout = null;
+
+  function timeLeft(){ return Math.max(0, scene.timeLimit - (Date.now()-startTime)); }
+
+  function spawnTarget(){
+    if(finished) return;
+    if(targetEl) targetEl.remove();
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    const size = 42;
+    const x = Math.random()*(w-size-20)+10;
+    const y = Math.random()*(h-size-40)+30;
+    const el = document.createElement('div');
+    el.className = 'qte-target';
+    el.textContent = scene.target;
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    el.addEventListener('click', onHit);
+    el.addEventListener('touchstart', function(ev){ ev.preventDefault(); onHit(); }, {passive:false});
+    wrap.appendChild(el);
+    targetEl = el;
+    spawnTimeout = setTimeout(()=>{
+      if(!finished){ spawnTarget(); }
+    }, 1400);
+  }
+
+  function onHit(){
+    if(finished) return;
+    hits++;
+    scoreEl.textContent = hits+' / '+scene.need;
+    if(targetEl){ targetEl.remove(); targetEl=null; }
+    clearTimeout(spawnTimeout);
+    if(hits>=scene.need){
+      succeed();
+    } else {
+      spawnTarget();
+    }
+  }
+
+  function tick(){
+    if(finished) return;
+    const remain = timeLeft();
+    timerEl.textContent = Math.ceil(remain/1000)+'s';
+    if(remain<=0){
+      fail();
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function succeed(){
+    finished = true;
+    clearTimeout(spawnTimeout);
+    if(targetEl) targetEl.remove();
+    flash.textContent = '✅';
+    flash.classList.add('show');
+    setTimeout(()=>{
+      renderSuccessThenContinue(scene);
+    }, 500);
+  }
+
+  function fail(){
+    finished = true;
+    clearTimeout(spawnTimeout);
+    if(targetEl) targetEl.remove();
+    flash.textContent = lang==='id' ? 'Coba lagi!' : 'Try again!';
+    flash.classList.add('show');
+    setTimeout(()=>{
+      hits = 0;
+      finished = false;
+      scoreEl.textContent = '0 / '+scene.need;
+      flash.classList.remove('show');
+      runTapMinigame(scene);
+    }, 900);
+  }
+
+  spawnTarget();
+  requestAnimationFrame(tick);
+}
+
+function renderQteTiming(scene){
+  stage.innerHTML = `
+    <div class="story-text">${scene.text}</div>
+    <div class="timing-bar-wrap">
+      <div class="timing-track" id="track">
+        <div class="timing-zone" id="zone"></div>
+        <div class="timing-indicator" id="indicator"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn" id="pressBtn">${T[lang].pressBtn}</button>
+      </div>
+      <div class="flash-msg" id="flashMsg2" style="position:static;display:inline-block;opacity:1;background:none;color:var(--ink);font-size:14px;padding:0;"></div>
+    </div>
+  `;
+  runTimingMinigame(scene);
+}
+
+function runTimingMinigame(scene){
+  const track = document.getElementById('track');
+  const zone = document.getElementById('zone');
+  const indicator = document.getElementById('indicator');
+  const btn = document.getElementById('pressBtn');
+  const flash = document.getElementById('flashMsg2');
+  const trackW = () => track.clientWidth;
+  const zoneW = 46;
+  let zoneX = Math.random()*(trackW()-zoneW-10)+5;
+  zone.style.left = zoneX+'px';
+  zone.style.width = zoneW+'px';
+
+  let pos = 0, dir = 1;
+  let speed = 2.6;
+  let running = true;
+  let finished = false;
+
+  function frame(){
+    if(!running) return;
+    pos += dir*speed;
+    const max = trackW()-6;
+    if(pos>=max){ pos=max; dir=-1; }
+    if(pos<=0){ pos=0; dir=1; }
+    indicator.style.left = pos+'px';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  btn.addEventListener('click', function onPress(){
+    if(finished) return;
+    const indicatorCenter = pos+3;
+    if(indicatorCenter >= zoneX && indicatorCenter <= zoneX+zoneW){
+      finished = true; running = false;
+      flash.textContent = lang==='id' ? '✅ Tepat sekali!' : '✅ Perfect timing!';
+      indicator.style.background = 'var(--accent-green)';
+      setTimeout(()=>{ renderSuccessThenContinue(scene); }, 600);
+    } else {
+      flash.textContent = lang==='id' ? 'Belum pas, coba lagi!' : 'Not quite, try again!';
+      speed = Math.max(1.6, speed*0.92);
+    }
+  });
+}
+
+function renderSuccessThenContinue(scene){
+  stage.innerHTML = `
+    ${sceneArtHTML(scene.art)}
+    <div class="story-text">${scene.successText||''}</div>
+    <div class="action-row">
+      <button class="btn" id="nextBtn2">${T[lang].next}</button>
+    </div>
+  `;
+  speak(scene.successText||'');
+  document.getElementById('nextBtn2').addEventListener('click', ()=>{
+    goToScene(sceneIndex+1);
+  });
+}
+
+function goToScene(i){
+  stopSpeak();
+  const scenes = currentScenes();
+  if(i>=scenes.length) i = scenes.length-1;
+  sceneIndex = i;
+  render();
+  notifyResize();
+}
+
+/* ---------------------------------------------------------
+   CONFETTI (final scene)
+---------------------------------------------------------- */
+function launchConfetti(){
+  const colors = ['#c9992e','#a83232','#3f6b3f','#e6c467','#5c3a21'];
+  const wrap = document.createElement('div');
+  wrap.className = 'final-burst';
+  document.getElementById('app').appendChild(wrap);
+  for(let i=0;i<26;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.top = '-10px';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    wrap.appendChild(c);
+    const duration = 1800+Math.random()*1200;
+    c.animate([
+      { transform:`translateY(0) rotate(0deg)`, opacity:1 },
+      { transform:`translateY(260px) rotate(${360+Math.random()*360}deg)`, opacity:0 }
+    ], { duration, easing:'ease-in', fill:'forwards' });
+  }
+  setTimeout(()=>{ wrap.remove(); }, 3200);
+}
+
+/* ---------------------------------------------------------
+   RESIZE MESSAGE TO PARENT (for iframe embed auto-resize)
+---------------------------------------------------------- */
+function notifyResize(){
+  const h = document.getElementById('app').getBoundingClientRect().height + 4;
+  try{
+    window.parent.postMessage({ type:'ahmadMuhammadHeight', height: Math.ceil(h) }, '*');
+  }catch(e){}
+}
+if('ResizeObserver' in window){
+  const ro = new ResizeObserver(()=>notifyResize());
+  ro.observe(document.getElementById('app'));
+}
+window.addEventListener('load', notifyResize);
+window.addEventListener('resize', notifyResize);
+
+/* ---------------------------------------------------------
+   CONTROLS
+---------------------------------------------------------- */
+langBtn.addEventListener('click', ()=>{
+  lang = (lang==='id') ? 'en' : 'id';
+  render();
+  notifyResize();
+});
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  try{ localStorage.setItem('am_muted', muted?'1':'0'); }catch(e){}
+  updateChrome();
+  if(muted) stopSpeak();
+});
+restartBtn.addEventListener('click', ()=>{ goToScene(0); });
+
+/* ---------------------------------------------------------
+   INIT
+---------------------------------------------------------- */
+render();
+setTimeout(notifyResize, 300);
+setTimeout(notifyResize, 1000);
+
+})();
+</script>
+</body>
+</html>
