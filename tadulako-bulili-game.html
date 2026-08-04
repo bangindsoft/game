@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #tbg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #tbg-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #tbg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,22 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #tbg-muteBtn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid #8A4A2A;
+    color: #6E3A1E;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  #tbg-muteBtn:active { transform: scale(0.94); }
   #tbg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +142,10 @@
   <h2>⚔️ Tadulako Bulili</h2>
   <p id="tbg-sub">Cerita rakyat Sulawesi Tengah tentang panglima perang Makeku dan Bantaili yang menuntut keadilan.</p>
 
-  <div id="tbg-hud"><span id="tbg-phase">Tahap 1 / 5</span></div>
+  <div id="tbg-hud">
+    <span id="tbg-phase">Tahap 1 / 5</span>
+    <button id="tbg-muteBtn" type="button" aria-label="Matikan/nyalakan suara narasi">🔊</button>
+  </div>
 
   <div id="tbg-canvas-holder">
     <canvas id="tbg-canvas"></canvas>
@@ -173,6 +192,8 @@
       winBody: 'Berkat keberanian dan kesaktian Makeku dan Bantaili, anak dan istri Raja Sigi akhirnya mendapatkan nafkah yang layak. "Tadulako" dalam bahasa Sulawesi Tengah berarti panglima perang penjaga keamanan desa — kisah ini mengenang keberanian mereka membela yang lemah.',
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
+      muteOnLabel: 'Matikan suara narasi',
+      muteOffLabel: 'Nyalakan suara narasi',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       travelBtn: '🚶 TEMPUH PERJALANAN',
@@ -206,6 +227,8 @@
       winBody: 'Thanks to the courage and strength of Makeku and Bantaili, King Sigi\'s wife and daughter finally receive a proper living. "Tadulako," in the Central Sulawesi language, means a warrior chief who protects the village — this tale honors their courage in standing up for the powerless.',
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
+      muteOnLabel: 'Mute narration',
+      muteOffLabel: 'Unmute narration',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Press On',
       travelBtn: '🚶 MAKE THE JOURNEY',
@@ -241,6 +264,67 @@
   document.getElementById('tbg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('tbg-caption').textContent = TXT.captionInit;
   document.getElementById('tbg-actionBtn').textContent = TXT.nextBtn;
+
+  // ---- Narasi suara (Web Speech API) ----
+  var NARR_KEY = 'dongeng-narration-muted';
+  var narrMuted = false;
+  try { narrMuted = localStorage.getItem(NARR_KEY) === '1'; } catch(e){}
+
+  var muteBtn = document.getElementById('tbg-muteBtn');
+  var synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+  var voicesCache = [];
+
+  function loadVoices(){
+    if(synth){ voicesCache = synth.getVoices() || []; }
+  }
+  if(synth){
+    loadVoices();
+    synth.addEventListener('voiceschanged', loadVoices);
+  } else {
+    muteBtn.style.display = 'none';
+  }
+
+  function pickVoice(){
+    if(!voicesCache.length) return null;
+    var prefix = (LANG === 'en') ? 'en' : 'id';
+    var match = null;
+    for(var i=0;i<voicesCache.length;i++){
+      var v = voicesCache[i];
+      if(v.lang && v.lang.toLowerCase().indexOf(prefix) === 0){ match = v; break; }
+    }
+    return match;
+  }
+
+  function updateMuteBtn(){
+    muteBtn.textContent = narrMuted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-label', narrMuted ? TXT.muteOffLabel : TXT.muteOnLabel);
+    muteBtn.title = narrMuted ? TXT.muteOffLabel : TXT.muteOnLabel;
+  }
+  updateMuteBtn();
+
+  function speak(text){
+    if(!synth || narrMuted || !text) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = (LANG === 'en') ? 'en-US' : 'id-ID';
+    var v = pickVoice();
+    if(v) u.voice = v;
+    u.rate = 0.92;
+    u.pitch = 1.02;
+    synth.speak(u);
+  }
+
+  muteBtn.addEventListener('click', function(){
+    narrMuted = !narrMuted;
+    try { localStorage.setItem(NARR_KEY, narrMuted ? '1' : '0'); } catch(e){}
+    updateMuteBtn();
+    if(narrMuted && synth){
+      synth.cancel();
+    } else {
+      var curStep = steps[stepIndex];
+      speak(curStep ? curStep.text : '');
+    }
+  });
 
   var canvas = document.getElementById('tbg-canvas');
   var ctx = canvas.getContext('2d');
@@ -292,6 +376,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -315,6 +400,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();

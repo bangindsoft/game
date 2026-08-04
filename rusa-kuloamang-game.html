@@ -33,7 +33,7 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
-  #skg2-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #skg2-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #skg2-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #skg2-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #2E6E7A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #skg2-voiceBtn.off { background: #9a9a9a; }
   #skg2-canvas-holder {
     position: relative;
     width: 100%;
@@ -127,7 +139,10 @@
   <h2>🐌 Si Rusa dan Kuloamang</h2>
   <p id="skg2-sub">Cerita rakyat Maluku tentang siput laut cerdik yang mengalahkan Rusa yang sombong dalam lomba lari.</p>
 
-  <div id="skg2-hud"><span id="skg2-phase">Tahap 1 / 5</span></div>
+  <div id="skg2-hud">
+    <span id="skg2-phase">Tahap 1 / 5</span>
+    <button id="skg2-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
 
   <div id="skg2-canvas-holder">
     <canvas id="skg2-canvas"></canvas>
@@ -183,6 +198,8 @@
       prepareBtn: '🐌 SIAPKAN TEMAN',
       runBtn: '🦌 LARI LEBIH CEPAT!',
       staminaLabel: 'Tenaga Rusa',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       checkpointLine: function(name){ return 'Sampai di Tanjung ' + name + '! "Di mana kau, Kuloamang?" tanya Rusa. "Aku di sini, di belakangmu!" jawab teman Kuloamang.'; },
       steps: [
@@ -214,6 +231,8 @@
       prepareBtn: '🐌 STATION FRIENDS',
       runBtn: '🦌 RUN FASTER!',
       staminaLabel: 'Deer\'s Stamina',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       checkpointLine: function(name){ return 'Reaching Cape ' + name + '! "Where are you, Kuloamang?" the deer asks. "I\'m right here, behind you!" answers Kuloamang\'s friend.'; },
       steps: [
@@ -243,6 +262,28 @@
   document.getElementById('skg2-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('skg2-caption').textContent = TXT.captionInit;
   document.getElementById('skg2-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('skg2-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
 
   var canvas = document.getElementById('skg2-canvas');
   var ctx = canvas.getContext('2d');
@@ -294,6 +335,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -319,6 +361,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();

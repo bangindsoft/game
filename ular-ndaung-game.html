@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #ndg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #ndg-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   #ndg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #ndg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #3D6B4A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #ndg-voiceBtn.off { background: #9a9a9a; }
   #ndg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +138,10 @@
   <h2>🐍 Ular N'daung dan Si Bungsu</h2>
   <p id="ndg-sub">Cerita rakyat Bengkulu tentang pengorbanan si Bungsu demi ibunya, dan seekor ular sakti jelmaan pangeran.</p>
 
-  <div id="ndg-hud"><span id="ndg-phase">Tahap 1 / 5</span></div>
+  <div id="ndg-hud">
+    <span id="ndg-phase">Tahap 1 / 5</span>
+    <button id="ndg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
 
   <div id="ndg-canvas-holder">
     <canvas id="ndg-canvas"></canvas>
@@ -169,6 +184,8 @@
       startTitle: 'Ular N\'daung dan Si Bungsu',
       startBody: 'Ibu si Bungsu jatuh sakit keras, dan hanya bara ajaib dari puncak gunung yang bisa menyembuhkannya — namun gunung itu dijaga ular sakti bernama N\'daung. Ikuti kisah pengorbanan si Bungsu sampai akhir.',
       startBtn: 'Mulai Kisah',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       winTitle: 'Kutukan yang Berakhir Bahagia 🐍✨',
       winBody: 'Berkat kejadian tak terduga itu, kutukan Pangeran Abdul Rahman Alamsyah hilang untuk selamanya. Ia dan si Bungsu pun hidup bahagia bersama — buah dari ketulusan dan pengorbanan si Bungsu demi ibunya.',
       playAgainBtn: 'Main Lagi',
@@ -200,6 +217,8 @@
       startTitle: 'Ular N\'daung and Si Bungsu',
       startBody: 'Si Bungsu\'s mother falls gravely ill, and only magical embers from the mountaintop can cure her — but the mountain is guarded by a powerful snake named N\'daung. Follow Si Bungsu\'s sacrifice to the end.',
       startBtn: 'Start the Tale',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       winTitle: 'A Curse Ends Happily 🐍✨',
       winBody: 'Thanks to that unexpected turn of events, Prince Abdul Rahman Alamsyah\'s curse is broken forever. He and Si Bungsu live happily together — the fruit of Si Bungsu\'s sincerity and sacrifice for her mother.',
       playAgainBtn: 'Play Again',
@@ -237,6 +256,41 @@
   document.getElementById('ndg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('ndg-caption').textContent = TXT.captionInit;
   document.getElementById('ndg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('ndg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function pickVoice(lang){
+    var voices = speechSupported ? window.speechSynthesis.getVoices() : [];
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(lang.toLowerCase())===0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      var v = pickVoice(u.lang);
+      if(v) u.voice = v;
+      u.rate = 0.92;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  if(speechSupported && window.speechSynthesis.onvoiceschanged !== undefined){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
 
   var canvas = document.getElementById('ndg-canvas');
   var ctx = canvas.getContext('2d');
@@ -288,6 +342,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -308,6 +363,7 @@
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
+      speak(TXT.winBody);
       winOverlay.classList.add('show');
       return;
     }

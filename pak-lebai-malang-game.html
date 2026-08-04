@@ -33,6 +33,23 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
+  #plm-hud {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 6px;
+  }
+  #plm-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #2E6B78;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #plm-voiceBtn.off { background: #9a9a9a; }
   #plm-canvas-holder {
     position: relative;
     width: 100%;
@@ -112,6 +129,10 @@
   <h2>🛶 Pak Lebai Malang</h2>
   <p id="plm-sub">Bantu Pak Lebai memutuskan: kenduri di hulu, atau di hilir sungai?</p>
 
+  <div id="plm-hud">
+    <button id="plm-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
+
   <div id="plm-canvas-holder">
     <canvas id="plm-canvas"></canvas>
 
@@ -176,7 +197,9 @@
       huluOver: 'Yah, kenduri di hulu sudah usai...',
       hilirOver: 'Yah, kenduri di hilir sudah usai...',
       huluLabel: 'Kenduri Hulu',
-      hilirLabel: 'Kenduri Hilir'
+      hilirLabel: 'Kenduri Hilir',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif'
     },
     en: {
       title: 'Unlucky Pak Lebai - Game',
@@ -201,7 +224,9 @@
       huluOver: 'Oh no, the upstream feast has ended...',
       hilirOver: 'Oh no, the downstream feast has ended...',
       huluLabel: 'Upstream Feast',
-      hilirLabel: 'Downstream Feast'
+      hilirLabel: 'Downstream Feast',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off'
     }
   };
   var TXT = I18N[LANG];
@@ -220,6 +245,28 @@
   document.getElementById('plm-hilirBtn').textContent = TXT.hilirBtn;
   document.getElementById('plm-hint').textContent = TXT.hint;
 
+  var voiceBtn = document.getElementById('plm-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
   var canvas = document.getElementById('plm-canvas');
   var ctx = canvas.getContext('2d');
   var W = 800, H = 450;
@@ -235,6 +282,14 @@
   window.addEventListener('resize', resize);
 
   var captionEl = document.getElementById('plm-caption');
+  var lastCaptionText = '';
+  function setCaption(text){
+    captionEl.textContent = text;
+    if(text !== lastCaptionText){
+      lastCaptionText = text;
+      speak(text);
+    }
+  }
   var startOverlay = document.getElementById('plm-start');
   var loseOverlay = document.getElementById('plm-lose');
   var winOverlay = document.getElementById('plm-win');
@@ -267,12 +322,14 @@
     hilirExpired = false;
     huluOverShown = false;
     hilirOverShown = false;
-    captionEl.textContent = TXT.captionInit;
+    setCaption(TXT.captionInit);
     state = 'playing';
   }
 
   document.getElementById('plm-startBtn').addEventListener('click', function(){
     startOverlay.classList.remove('show');
+    lastCaptionText = TXT.captionInit;
+    speak(TXT.startBody);
     resetGame();
   });
   document.getElementById('plm-retryBtn').addEventListener('click', function(){
@@ -306,14 +363,17 @@
     if(which === 'hulu'){
       winTitleEl.textContent = TXT.winHuluTitle;
       winBodyEl.textContent = TXT.winHuluBody;
+      speak(TXT.winHuluBody);
     } else {
       winTitleEl.textContent = TXT.winHilirTitle;
       winBodyEl.textContent = TXT.winHilirBody;
+      speak(TXT.winHilirBody);
     }
     winOverlay.classList.add('show');
   }
   function triggerLose(){
     state = 'lost';
+    speak(TXT.loseBody);
     loseOverlay.classList.add('show');
   }
 
@@ -403,7 +463,7 @@
 
     if(turningTimer > 0){
       turningTimer -= dt;
-      captionEl.textContent = TXT.turning;
+      setCaption(TXT.turning);
       if(turningTimer <= 0){
         turningTimer = 0;
       }
@@ -415,7 +475,7 @@
         committedDir = desired;
         playerX += desired * SPEED * dt;
         playerX = Math.max(60, Math.min(740, playerX));
-        if(!(turningTimer>0)) captionEl.textContent = TXT.captionInit;
+        if(!(turningTimer>0)) setCaption(TXT.captionInit);
       }
     }
 
@@ -424,7 +484,7 @@
         triggerWin('hulu');
       } else if(!huluOverShown){
         huluOverShown = true;
-        captionEl.textContent = TXT.huluOver;
+        setCaption(TXT.huluOver);
       }
     }
     if(playerX >= HILIR_X - 35){
@@ -432,7 +492,7 @@
         triggerWin('hilir');
       } else if(!hilirOverShown){
         hilirOverShown = true;
-        captionEl.textContent = TXT.hilirOver;
+        setCaption(TXT.hilirOver);
       }
     }
 
@@ -477,7 +537,7 @@
   }
 
   resize();
-  captionEl.textContent = TXT.captionInit;
+  setCaption(TXT.captionInit);
   requestAnimationFrame(loop);
 
   function sendHeight(){
