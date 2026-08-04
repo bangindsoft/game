@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lubuk Emas - Cerita Rakyat Sumatera Utara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-parchment:#f3e6c8;
+    --bg-parchment-dark:#e8d6ab;
+    --ink:#3a2a1a;
+    --ink-soft:#5c4630;
+    --teal:#123f3a;
+    --teal-light:#1f6358;
+    --gold:#c8952e;
+    --gold-bright:#f0c766;
+    --gold-glow:#ffe08a;
+    --red-accent:#a3402f;
+    --panel:#fbf3df;
+    --shadow:rgba(35,22,8,0.35);
+    --font-title:'Cinzel Decorative', serif;
+    --font-body:'EB Garamond', serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,var(--bg-parchment),var(--bg-parchment-dark));
+    border:3px solid var(--gold);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 8px 30px var(--shadow);
+    position:relative;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(180deg,var(--teal),var(--teal-light));
+    color:var(--gold-bright);
+    border-bottom:3px solid var(--gold);
+  }
+  #topbar h1{
+    font-family:var(--font-title);
+    font-size:15px;
+    margin:0;
+    letter-spacing:0.5px;
+    color:var(--gold-bright);
+    text-shadow:0 1px 2px rgba(0,0,0,0.5);
+  }
+  .icon-btns{display:flex;gap:8px;}
+  .icon-btn{
+    background:rgba(255,255,255,0.08);
+    border:1.5px solid var(--gold);
+    color:var(--gold-bright);
+    border-radius:8px;
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:transform .15s ease, background .15s ease;
+    user-select:none;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.18);transform:translateY(-1px);}
+  .icon-btn.lang{font-family:var(--font-body);font-weight:600;font-size:12px;width:auto;padding:0 10px;}
+  #stageWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/10;
+    background:#0f2e2a;
+    overflow:hidden;
+  }
+  #stage{width:100%;height:100%;display:block;}
+  #skipHint{
+    position:absolute;top:8px;right:10px;
+    font-size:11px;color:var(--gold-glow);
+    background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:20px;
+    opacity:.85;
+  }
+  #dialoguePanel{
+    background:var(--panel);
+    border-top:3px solid var(--gold);
+    padding:14px 16px 10px;
+    min-height:96px;
+    position:relative;
+  }
+  #speakerName{
+    font-family:var(--font-title);
+    font-size:13px;
+    color:var(--red-accent);
+    margin-bottom:4px;
+    letter-spacing:.5px;
+  }
+  #dialogueText{
+    font-size:17px;
+    line-height:1.5;
+    color:var(--ink);
+    min-height:52px;
+  }
+  #qteArea{
+    margin-top:10px;
+    display:none;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .qte-item{
+    background:var(--panel);
+    border:2px solid var(--gold);
+    border-radius:10px;
+    padding:8px 10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    font-size:14px;
+    transition:transform .15s ease, opacity .2s ease;
+    box-shadow:0 2px 4px rgba(0,0,0,0.15);
+  }
+  .qte-item:hover{transform:translateY(-2px);}
+  .qte-item.used{opacity:0.25;pointer-events:none;transform:scale(.9);}
+  .qte-item .gem{font-size:18px;}
+  #navRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 16px 16px;
+    background:var(--panel);
+  }
+  #dots{display:flex;gap:6px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#d9c69a;}
+  .dot.active{background:var(--red-accent);}
+  .navbtn{
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:14px;
+    padding:9px 18px;
+    border-radius:8px;
+    border:2px solid var(--teal);
+    background:var(--teal);
+    color:var(--gold-bright);
+    cursor:pointer;
+    transition:filter .15s ease, transform .15s;
+  }
+  .navbtn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+  .navbtn.secondary{
+    background:transparent;
+    color:var(--teal);
+    border:2px solid var(--teal);
+  }
+  .navbtn:disabled{opacity:0.35;cursor:default;transform:none;filter:none;}
+  #startOverlay{
+    position:absolute;inset:0;z-index:20;
+    background:radial-gradient(ellipse at center, #1b5148 0%, #0a2320 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:30px 22px;color:var(--gold-bright);
+  }
+  #startOverlay h2{
+    font-family:var(--font-title);
+    font-size:26px;
+    margin:0 0 6px;
+    color:var(--gold-glow);
+    text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  }
+  #startOverlay p{
+    font-family:var(--font-body);
+    font-size:15px;
+    max-width:420px;
+    color:#e9dcbf;
+    margin:0 0 18px;
+    line-height:1.5;
+  }
+  #startBtn{
+    font-family:var(--font-title);
+    font-size:14px;
+    padding:12px 26px;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    color:#3a2a10;
+    border:none;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+    letter-spacing:.5px;
+  }
+  #startBtn:hover{filter:brightness(1.08);}
+  #startNote{margin-top:14px;font-size:12px;color:#b9c9c2;}
+  .credit{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    padding:6px 10px 12px;
+    opacity:.75;
+  }
+  .credit a{color:var(--teal);}
+  @media (max-width:420px){
+    #topbar h1{font-size:12px;}
+    #dialogueText{font-size:15.5px;}
+    .navbtn{padding:8px 14px;font-size:13px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbar">
+    <h1 id="titleText">Lubuk Emas</h1>
+    <div class="icon-btns">
+      <div class="icon-btn lang" id="langBtn" title="Switch language">EN</div>
+      <div class="icon-btn" id="muteBtn" title="Mute narration">🔊</div>
+    </div>
+  </div>
+
+  <div id="stageWrap">
+    <svg id="stage" viewBox="0 0 700 438" preserveAspectRatio="xMidYMid slice"></svg>
+    <div id="startOverlay">
+      <h2 id="startTitle">Lubuk Emas</h2>
+      <p id="startDesc">Cerita rakyat Sumatera Utara tentang Putri Sri Pandan dan cintanya pada Hobatan.</p>
+      <button id="startBtn">▶ Mulai Cerita</button>
+      <div id="startNote">🔊 Narasi suara akan diputar. Anda dapat mematikannya kapan saja.</div>
+    </div>
+  </div>
+
+  <div id="dialoguePanel">
+    <div id="speakerName"></div>
+    <div id="dialogueText">...</div>
+    <div id="qteArea"></div>
+  </div>
+
+  <div id="navRow">
+    <button class="navbtn secondary" id="prevBtn">◀ Kembali</button>
+    <div id="dots"></div>
+    <button class="navbtn" id="nextBtn">Lanjut ▶</button>
+  </div>
+
+  <div class="credit">Dongeng interaktif oleh <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">CaritaSato</a></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- LANGUAGE ---------- */
+var params = new URLSearchParams(window.location.search);
+var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+var UI = {
+  id:{ title:"Lubuk Emas", startTitle:"Lubuk Emas", startDesc:"Cerita rakyat Sumatera Utara tentang Putri Sri Pandan dan cintanya pada Hobatan.",
+       start:"▶ Mulai Cerita", note:"🔊 Narasi suara akan diputar. Anda dapat mematikannya kapan saja.",
+       prev:"◀ Kembali", next:"Lanjut ▶", finish:"Selesai ✓", replay:"↻ Ulangi Cerita",
+       qteHint:"Klik setiap barang untuk melemparkannya ke dalam lubuk sebelum Sri Pandan melompat.",
+       jump:"🌊 Lompat ke Lubuk"},
+  en:{ title:"The Golden Pool", startTitle:"The Golden Pool", startDesc:"A folktale from North Sumatra about Princess Sri Pandan and her love for Hobatan.",
+       start:"▶ Start the Story", note:"🔊 Voice narration will play. You can mute it anytime.",
+       prev:"◀ Back", next:"Next ▶", finish:"The End ✓", replay:"↻ Replay Story",
+       qteHint:"Click each item to throw it into the pool before Sri Pandan leaps.",
+       jump:"🌊 Leap Into the Pool"}
+};
+
+/* ---------- SCENES ---------- */
+// speaker: "" = narrator
+var scenes = [
+{
+  id:{ speaker:"", text:"Di Teluk Dalam, Sumatera Utara, Raja Simangolong memerintah dengan bijaksana. Putrinya, Sri Pandan, terkenal cantik jelita, baik hati, dan terampil menganyam serta menumbuk padi." },
+  en:{ speaker:"", text:"In Teluk Dalam, North Sumatra, King Simangolong ruled wisely. His daughter, Sri Pandan, was known for her beauty, kindness, and skill at weaving and pounding rice." },
+  bg:"palace_day"
+},
+{
+  id:{ speaker:"", text:"Kabar kecantikan Sri Pandan sampai ke kerajaan Aceh. Sang Pangeran Aceh berkeinginan meminangnya, dan mengirim utusan ke Teluk Dalam." },
+  en:{ speaker:"", text:"News of Sri Pandan's beauty reached the kingdom of Aceh. The Prince of Aceh wished to propose, and sent an envoy to Teluk Dalam." },
+  bg:"envoy"
+},
+{
+  id:{ speaker:"Raja Simangolong", text:"“Putriku, maukah engkau menerima lamaran Pangeran Aceh? Ayahanda berharap hubungan kedua kerajaan bisa terjalin baik.”" },
+  en:{ speaker:"King Simangolong", text:"“My daughter, will you accept the Prince of Aceh's proposal? I hope it will bring good ties between our kingdoms.”" },
+  bg:"throne_talk"
+},
+{
+  id:{ speaker:"Sri Pandan", text:"Sri Pandan hanya tertunduk dan menangis. “Maaf ayah... hamba telah lama menjalin kasih dengan pemuda lain. Hamba mencintai Hobatan, pembantu setia kita.”" },
+  en:{ speaker:"Sri Pandan", text:"Sri Pandan lowered her head and wept. “Forgive me, father... I have long loved another. I love Hobatan, our loyal servant.”" },
+  bg:"throne_talk_sad"
+},
+{
+  id:{ speaker:"Raja Simangolong", text:"Raja Simangolong terkejut dan marah. “Lupakan Hobatan! Terimalah lamaran Pangeran Aceh, atau akan ayah usir dia dari istana!”" },
+  en:{ speaker:"King Simangolong", text:"King Simangolong was shocked and angry. “Forget Hobatan! Accept the Prince's proposal, or I will banish him from the palace!”" },
+  bg:"throne_angry"
+},
+{
+  id:{ speaker:"Sri Pandan", text:"Sri Pandan menemui Hobatan. “Demi cinta kita, sebaiknya kita berdua pergi meninggalkan kerajaan ini.”" },
+  en:{ speaker:"Sri Pandan", text:"Sri Pandan went to Hobatan. “For the sake of our love, let us leave this kingdom together.”" },
+  bg:"garden_plead"
+},
+{
+  id:{ speaker:"Hobatan", text:"Di luar dugaan, Hobatan menolak. “Sebaiknya engkau menerima lamaran Pangeran Aceh. Engkau akan menjadi permaisuri — itu lebih baik bagimu.”" },
+  en:{ speaker:"Hobatan", text:"To her surprise, Hobatan refused. “You should accept the Prince's proposal. You will become a queen — it is better for you.”" },
+  bg:"garden_refuse"
+},
+{
+  id:{ speaker:"Sri Pandan", text:"Sri Pandan sangat kecewa. “Baiklah, jika begitu keinginanmu. Aku akan terjun ke lubuk daripada menikahi laki-laki yang tak kucintai. Aku akan setia menunggumu di lubuk!”" },
+  en:{ speaker:"Sri Pandan", text:"Sri Pandan was heartbroken. “Very well, if that is your wish. I would rather leap into the pool than marry a man I do not love. I will wait for you there, faithfully!”" },
+  bg:"garden_devastated"
+},
+{
+  id:{ speaker:"", text:"Sri Pandan berlari ke kamarnya, membawa pakaian dan seluruh perhiasan emasnya, lalu pergi menuju lubuk sungai Asahan." },
+  en:{ speaker:"", text:"Sri Pandan ran to her room, gathered her clothes and all her gold jewelry, and set off toward the pool of the Asahan River." },
+  bg:"river_arrive"
+},
+{
+  id:{ speaker:"Sri Pandan", text:"“Tak akan ada lagi wanita cantik di negeri ini.” Satu per satu ia melemparkan perhiasannya ke dalam lubuk yang dalam.",
+      qteHint:true },
+  en:{ speaker:"Sri Pandan", text:"“There will be no more beautiful woman in this land.” One by one, she cast her jewelry into the deep pool.",
+      qteHint:true },
+  bg:"river_qte",
+  qte:true
+},
+{
+  id:{ speaker:"", text:"Sri Pandan melompat ke dalam lubuk sungai Asahan, membawa serta cintanya pada Hobatan." },
+  en:{ speaker:"", text:"Sri Pandan leapt into the pool of the Asahan River, carrying her love for Hobatan with her." },
+  bg:"river_jump"
+},
+{
+  id:{ speaker:"", text:"Istana gempar. Hobatan mengaku kepada raja tentang ancaman Sri Pandan. Raja dan prajurit bergegas ke lubuk, menyelam mencarinya — namun sia-sia." },
+  en:{ speaker:"", text:"The palace was in uproar. Hobatan confessed to the king about Sri Pandan's threat. The king and his soldiers rushed to the pool and dove in search of her — but in vain." },
+  bg:"search"
+},
+{
+  id:{ speaker:"Raja Simangolong", text:"“Aku sangat mencintai putriku... Aku menyesal telah memaksanya.” Raja menangis tersedu-sedu di tepi lubuk." },
+  en:{ speaker:"King Simangolong", text:"“I loved my daughter so dearly... I regret forcing her.” The king wept bitterly at the edge of the pool." },
+  bg:"regret"
+},
+{
+  id:{ speaker:"", text:"Sejak saat itu, lubuk tersebut dinamakan Lubuk Emas, karena Putri Sri Pandan terjun bersama perhiasan-perhiasan emasnya. Kisah cintanya pada Hobatan pun dikenang turun-temurun di tepi Sungai Asahan." },
+  en:{ speaker:"", text:"From that day on, the pool was named the Golden Pool, for Princess Sri Pandan had leapt in together with her gold jewelry. Her love for Hobatan is remembered still, along the banks of the Asahan River." },
+  bg:"ending"
+}
+];
+
+var qteItemsData = {
+  id:["Gelang Emas","Kalung Emas","Anting Emas","Cincin Emas","Selendang Sutra"],
+  en:["Gold Bracelet","Gold Necklace","Gold Earrings","Gold Ring","Silk Shawl"]
+};
+
+/* ---------- STATE ---------- */
+var current = 0;
+var muted = false;
+var started = false;
+var qteDone = false;
+var qteUsedCount = 0;
+var voices = [];
+
+/* ---------- DOM ---------- */
+var stage = document.getElementById('stage');
+var speakerEl = document.getElementById('speakerName');
+var textEl = document.getElementById('dialogueText');
+var qteArea = document.getElementById('qteArea');
+var prevBtn = document.getElementById('prevBtn');
+var nextBtn = document.getElementById('nextBtn');
+var dotsEl = document.getElementById('dots');
+var muteBtn = document.getElementById('muteBtn');
+var langBtn = document.getElementById('langBtn');
+var startOverlay = document.getElementById('startOverlay');
+var startBtn = document.getElementById('startBtn');
+
+function applyStaticText(){
+  var t = UI[lang];
+  document.getElementById('titleText').textContent = t.title;
+  document.getElementById('startTitle').textContent = t.startTitle;
+  document.getElementById('startDesc').textContent = t.startDesc;
+  startBtn.textContent = t.start;
+  document.getElementById('startNote').textContent = t.note;
+  prevBtn.textContent = t.prev;
+  nextBtn.textContent = (current === scenes.length-1) ? t.finish : t.next;
+  langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+  document.documentElement.lang = lang;
+}
+
+/* ---------- SVG BACKGROUNDS ---------- */
+function svgWrap(inner){
+  return '<rect x="0" y="0" width="700" height="438" fill="url(#sky)"/>' + inner;
+}
+var defs = '<defs>'+
+  '<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="#8fc7c0"/><stop offset="55%" stop-color="#d9e9c9"/><stop offset="100%" stop-color="#e7d9a8"/>'+
+  '</linearGradient>'+
+  '<linearGradient id="skyNight" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="#0c2430"/><stop offset="100%" stop-color="#274c47"/>'+
+  '</linearGradient>'+
+  '<linearGradient id="water" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="#2f8f86"/><stop offset="100%" stop-color="#0c342f"/>'+
+  '</linearGradient>'+
+  '<radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">'+
+    '<stop offset="0%" stop-color="#ffe9a8" stop-opacity="0.9"/><stop offset="100%" stop-color="#ffe9a8" stop-opacity="0"/>'+
+  '</radialGradient>'+
+'</defs>';
+
+function hills(){
+  return '<path d="M0,300 Q120,250 260,290 T520,270 T700,300 L700,438 L0,438 Z" fill="#4f7a52" opacity="0.85"/>'+
+         '<path d="M0,330 Q150,300 320,325 T700,320 L700,438 L0,438 Z" fill="#3c6146" opacity="0.9"/>';
+}
+function palace(x,scale){
+  scale = scale||1; x = x||230;
+  return '<g transform="translate('+x+',150) scale('+scale+')">'+
+    '<polygon points="0,90 90,90 90,20 45,-20 0,20" fill="#7a5230" stroke="#4a3218" stroke-width="3"/>'+
+    '<polygon points="10,90 25,55 40,90" fill="#5c3d20"/>'+
+    '<polygon points="50,90 65,55 80,90" fill="#5c3d20"/>'+
+    '<rect x="36" y="60" width="18" height="30" fill="#3a2712"/>'+
+    '<polygon points="45,-20 5,15 85,15" fill="#c8952e"/>'+
+  '</g>';
+}
+function tree(x,y,scale){
+  scale=scale||1;
+  return '<g transform="translate('+x+','+y+') scale('+scale+')">'+
+    '<rect x="-4" y="0" width="8" height="35" fill="#5c3d20"/>'+
+    '<ellipse cx="0" cy="-15" rx="26" ry="30" fill="#3f6b3f"/>'+
+    '<ellipse cx="-14" cy="-5" rx="16" ry="20" fill="#4a7a48"/>'+
+    '<ellipse cx="14" cy="-5" rx="16" ry="20" fill="#4a7a48"/>'+
+  '</g>';
+}
+// simple stylized person: head + robe, params: x,y,scale,robeColor,accent,facing(1/-1),pose
+function person(o){
+  var x=o.x,y=o.y,s=o.scale||1,robe=o.robe||'#3a5f57',accent=o.accent||'#c8952e',flip=o.flip||1,armUp=o.armUp||false,bow=o.bow||false;
+  var g = '<g transform="translate('+x+','+y+') scale('+(s*flip)+','+s+')">';
+  var headY = bow ? -68 : -78;
+  var bodyRot = bow ? 'rotate(12)' : '';
+  g += '<g transform="'+bodyRot+'">';
+  // robe
+  g += '<path d="M-20,0 Q-26,-45 -14,-70 L14,-70 Q26,-45 20,0 Z" fill="'+robe+'"/>';
+  g += '<path d="M-20,0 Q0,10 20,0 L20,-14 Q0,-6 -20,-14 Z" fill="'+accent+'" opacity="0.85"/>';
+  // arms
+  if(armUp){
+    g += '<path d="M-14,-55 Q-34,-75 -30,-95" stroke="'+robe+'" stroke-width="9" fill="none" stroke-linecap="round"/>';
+    g += '<path d="M14,-55 Q30,-70 24,-88" stroke="'+robe+'" stroke-width="9" fill="none" stroke-linecap="round"/>';
+  } else {
+    g += '<path d="M-14,-55 Q-28,-40 -22,-15" stroke="'+robe+'" stroke-width="9" fill="none" stroke-linecap="round"/>';
+    g += '<path d="M14,-55 Q28,-40 22,-15" stroke="'+robe+'" stroke-width="9" fill="none" stroke-linecap="round"/>';
+  }
+  // head
+  g += '<circle cx="0" cy="'+headY+'" r="16" fill="#e8b98a"/>';
+  // simple hair/headdress
+  if(o.crown){
+    g += '<polygon points="-14,'+(headY-10)+' 14,'+(headY-10)+' 8,'+(headY-24)+' 0,'+(headY-16)+' -8,'+(headY-24)+'" fill="'+accent+'"/>';
+  } else if(o.headscarf){
+    g += '<path d="M-17,'+(headY-2)+' Q0,'+(headY-30)+' 17,'+(headY-2)+' Q17,'+(headY+10)+' 0,'+(headY+12)+' Q-17,'+(headY+10)+' -17,'+(headY-2)+' Z" fill="'+robe+'"/>';
+  } else {
+    g += '<path d="M-16,'+(headY-2)+' Q0,'+(headY-22)+' 16,'+(headY-2)+' Q16,'+(headY-6)+' 0,'+(headY-6)+' Q-16,'+(headY-6)+' -16,'+(headY-2)+' Z" fill="#2b1d10"/>';
+  }
+  g += '</g></g>';
+  return g;
+}
+function poolShape(glow){
+  return '<ellipse cx="350" cy="360" rx="260" ry="55" fill="url(#water)" stroke="#0a2622" stroke-width="3"/>'+
+         (glow? '<ellipse cx="350" cy="355" rx="230" ry="42" fill="url(#goldGlow)"/>':'')+
+         '<ellipse cx="350" cy="360" rx="260" ry="55" fill="none" stroke="#7fd9c8" stroke-width="2" opacity="0.5"/>';
+}
+function ripples(){
+  var r='';
+  for(var i=0;i<3;i++){
+    r += '<ellipse cx="350" cy="358" rx="'+(40+i*35)+'" ry="'+(9+i*7)+'" fill="none" stroke="#bfeadf" stroke-width="1.5" opacity="'+(0.5-i*0.15)+'"/>';
+  }
+  return r;
+}
+function goldGlints(){
+  var pts=[[260,350],[300,370],[400,365],[440,345],[350,378]];
+  var g='';
+  for(var i=0;i<pts.length;i++){
+    g+='<circle cx="'+pts[i][0]+'" cy="'+pts[i][1]+'" r="4" fill="#ffdd88"><animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite" begin="'+(i*0.3)+'s"/></circle>';
+  }
+  return g;
+}
+
+var envoyBoat = '<g transform="translate(560,320)">'+
+  '<path d="M-40,10 Q0,25 40,10 L34,20 L-34,20 Z" fill="#5c3d20"/>'+
+  '<rect x="-2" y="-40" width="4" height="40" fill="#3a2712"/>'+
+  '<polygon points="-2,-40 -2,-5 26,-14" fill="#c8952e"/>'+
+'</g>';
+
+function renderBg(name){
+  var out = '';
+  switch(name){
+    case 'palace_day':
+      out = svgWrap(hills()+tree(60,340,1.1)+tree(640,335,1)+palace(240,1.3)+
+        person({x:255,y:340,scale:1.1,robe:'#7a2e2e',accent:'#c8952e',crown:true})+
+        person({x:340,y:345,scale:1.0,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true}));
+      break;
+    case 'envoy':
+      out = svgWrap(hills()+palace(80,1.0)+envoyBoat+
+        '<path d="M0,330 Q350,300 700,335 L700,438 L0,438 Z" fill="#2f8f86" opacity="0.55"/>');
+      break;
+    case 'throne_talk':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="#efe0b0"/>'+
+        '<rect x="250" y="60" width="200" height="260" fill="#c8952e" opacity="0.15"/>'+
+        person({x:300,y:330,scale:1.2,robe:'#7a2e2e',accent:'#c8952e',crown:true,armUp:true})+
+        person({x:410,y:335,scale:1.05,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true,flip:-1}));
+      break;
+    case 'throne_talk_sad':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="#efe0b0"/>'+
+        person({x:300,y:330,scale:1.2,robe:'#7a2e2e',accent:'#c8952e',crown:true})+
+        person({x:410,y:335,scale:1.05,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true,flip:-1,bow:true}));
+      break;
+    case 'throne_angry':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="#e8cf9e"/>'+
+        person({x:300,y:330,scale:1.25,robe:'#8a1f1f',accent:'#c8952e',crown:true,armUp:true})+
+        person({x:420,y:335,scale:1.05,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true,flip:-1,bow:true}));
+      break;
+    case 'garden_plead':
+      out = svgWrap(hills()+tree(90,330,1.2)+tree(600,335,1.1)+
+        person({x:300,y:345,scale:1.1,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true,armUp:true})+
+        person({x:400,y:345,scale:1.1,robe:'#355b45',accent:'#e0c27a',flip:-1}));
+      break;
+    case 'garden_refuse':
+      out = svgWrap(hills()+tree(90,330,1.2)+tree(600,335,1.1)+
+        person({x:300,y:345,scale:1.1,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true})+
+        person({x:400,y:345,scale:1.1,robe:'#355b45',accent:'#e0c27a',flip:-1,armUp:true}));
+      break;
+    case 'garden_devastated':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="url(#skyNight)"/>'+hills()+
+        person({x:300,y:345,scale:1.1,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true,bow:true})+
+        person({x:400,y:345,scale:1.1,robe:'#355b45',accent:'#e0c27a',flip:-1}));
+      break;
+    case 'river_arrive':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="url(#skyNight)"/>'+hills()+
+        tree(70,320,1.3)+tree(630,325,1.2)+poolShape(false)+
+        person({x:300,y:330,scale:1.1,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true}));
+      break;
+    case 'river_qte':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="url(#skyNight)"/>'+hills()+
+        tree(70,320,1.3)+tree(630,325,1.2)+poolShape(false)+
+        person({x:260,y:325,scale:1.1,robe:'#c96b6b',accent:'#f0d9a0',headscarf:true,armUp:true}));
+      break;
+    case 'river_jump':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="url(#skyNight)"/>'+hills()+
+        tree(70,320,1.3)+tree(630,325,1.2)+poolShape(true)+ripples()+
+        '<circle cx="330" cy="300" r="12" fill="#e8b98a"/>'+
+        '<path d="M330,310 L330,340" stroke="#c96b6b" stroke-width="10" stroke-linecap="round"/>');
+      break;
+    case 'search':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="url(#skyNight)"/>'+hills()+
+        tree(70,320,1.3)+tree(630,325,1.2)+poolShape(false)+
+        person({x:250,y:320,scale:1.0,robe:'#7a2e2e',accent:'#c8952e',crown:true,armUp:true})+
+        person({x:420,y:325,scale:1.0,robe:'#355b45',accent:'#e0c27a',flip:-1,bow:true}));
+      break;
+    case 'regret':
+      out = svgWrap('<rect x="0" y="0" width="700" height="438" fill="url(#skyNight)"/>'+hills()+
+        poolShape(true)+ripples()+
+        person({x:330,y:325,scale:1.15,robe:'#7a2e2e',accent:'#c8952e',crown:true,bow:true}));
+      break;
+    case 'ending':
+      out = svgWrap(hills()+tree(80,330,1.2)+tree(600,335,1.1)+poolShape(true)+goldGlints());
+      break;
+    default:
+      out = svgWrap(hills());
+  }
+  return defs + out;
+}
+
+/* ---------- NARRATION (Web Speech API) ---------- */
+function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(l){
+  if(!voices || !voices.length) return null;
+  var want = (l === 'id') ? 'id' : 'en';
+  var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want)===0 && /female|wanita|perempuan/i.test(v.name); });
+  if(!v) v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want)===0; });
+  if(!v && want==='id') v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('en')===0; });
+  return v || null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if(muted) return;
+  var u = new SpeechSynthesisUtterance(text.replace(/[“”]/g,'"'));
+  var v = pickVoice(lang);
+  if(v) u.voice = v;
+  u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  u.rate = 0.92;
+  u.pitch = 1.02;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeak(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+
+/* ---------- RENDER SCENE ---------- */
+function buildDots(){
+  dotsEl.innerHTML = '';
+  scenes.forEach(function(_,i){
+    var d = document.createElement('div');
+    d.className = 'dot' + (i===current?' active':'');
+    dotsEl.appendChild(d);
+  });
+}
+function renderQte(scene){
+  qteArea.innerHTML = '';
+  qteArea.style.display = 'flex';
+  qteUsedCount = 0;
+  qteDone = false;
+  nextBtn.disabled = true;
+  var items = qteItemsData[lang];
+  var gems = ['💍','📿','💫','💎','🧣'];
+  items.forEach(function(label, idx){
+    var el = document.createElement('div');
+    el.className = 'qte-item';
+    el.innerHTML = '<span class="gem">'+gems[idx]+'</span><span>'+label+'</span>';
+    el.addEventListener('click', function(){
+      if(el.classList.contains('used')) return;
+      el.classList.add('used');
+      qteUsedCount++;
+      spawnGlint();
+      if(qteUsedCount >= items.length){
+        qteDone = true;
+        nextBtn.disabled = false;
+        nextBtn.textContent = UI[lang].jump;
+      }
+    });
+    qteArea.appendChild(el);
+  });
+}
+function spawnGlint(){
+  var c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  var x = 300 + Math.random()*100, y=350+Math.random()*15;
+  c.setAttribute('cx',x); c.setAttribute('cy', 260); c.setAttribute('r','6'); c.setAttribute('fill','#ffdd88');
+  stage.appendChild(c);
+  var t0 = null;
+  function step(ts){
+    if(!t0) t0 = ts;
+    var p = (ts - t0)/700;
+    if(p > 1){ stage.removeChild(c); return; }
+    c.setAttribute('cy', 260 + p*(y-260));
+    c.setAttribute('opacity', 1-p*0.3);
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function renderScene(){
+  var scene = scenes[current];
+  var t = scene[lang];
+  stage.innerHTML = renderBg(scene.bg);
+  speakerEl.textContent = t.speaker || '';
+  textEl.textContent = t.text;
+  qteArea.style.display = 'none';
+  qteArea.innerHTML = '';
+  buildDots();
+  applyStaticText();
+  prevBtn.disabled = (current === 0);
+  nextBtn.textContent = (current === scenes.length-1) ? UI[lang].finish : UI[lang].next;
+  nextBtn.disabled = false;
+
+  if(scene.qte){
+    renderQte(scene);
+  }
+  speak(t.text + (t.qteHint ? ('. ' + UI[lang].qteHint) : ''));
+}
+
+/* ---------- NAV ---------- */
+prevBtn.addEventListener('click', function(){
+  if(current === 0) return;
+  current--;
+  renderScene();
+});
+nextBtn.addEventListener('click', function(){
+  var scene = scenes[current];
+  if(scene.qte && !qteDone) return;
+  if(current === scenes.length-1){
+    // replay
+    current = 0;
+    renderScene();
+    return;
+  }
+  current++;
+  renderScene();
+});
+
+/* ---------- MUTE / LANG ---------- */
+muteBtn.addEventListener('click', function(){
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  if(muted) stopSpeak();
+  else speak(scenes[current][lang].text);
+});
+langBtn.addEventListener('click', function(){
+  lang = (lang === 'id') ? 'en' : 'id';
+  applyStaticText();
+  renderScene();
+});
+
+/* ---------- START ---------- */
+startBtn.addEventListener('click', function(){
+  started = true;
+  startOverlay.style.display = 'none';
+  renderScene();
+});
+
+/* initial static UI (before start) */
+applyStaticText();
+
+/* ---------- AUTO RESIZE FOR IFRAME EMBED ---------- */
+function sendHeight(){
+  var h = document.getElementById('app').getBoundingClientRect().height;
+  try{
+    window.parent.postMessage({ type:'lubukEmasHeight', height: Math.ceil(h) }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+if('ResizeObserver' in window){
+  new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+}
+setTimeout(sendHeight, 300);
+setTimeout(sendHeight, 1200);
+
+})();
+</script>
+</body>
+</html>
