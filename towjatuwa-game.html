@@ -33,7 +33,7 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
-  #twg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #twg-hud { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px; }
   #twg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,23 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #twg-muteBtn {
+    font-size: 15px;
+    line-height: 1;
+    background: #ffffff;
+    color: #1E6E5A;
+    border: 2px solid #1E6E5A;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #twg-muteBtn:active { transform: scale(0.92); }
   #twg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +143,10 @@
   <h2>🐊 Towjatuwa dan Buaya Sakti</h2>
   <p id="twg-sub">Ikuti kisah tolong-menolong Towjatuwa dan Watuwe, buaya sakti dari Sungai Tami, Papua.</p>
 
-  <div id="twg-hud"><span id="twg-phase">Tahap 1 / 5</span></div>
+  <div id="twg-hud">
+    <span id="twg-phase">Tahap 1 / 5</span>
+    <button id="twg-muteBtn" type="button" aria-label="Matikan suara narasi" title="Matikan suara narasi">🔊</button>
+  </div>
 
   <div id="twg-canvas-holder">
     <canvas id="twg-canvas"></canvas>
@@ -173,6 +193,8 @@
       winBody: 'Watuwe berpesan agar Towjatuwa dan keturunannya tak pernah memburu atau memakan buaya Sungai Tami. Sejak saat itu, keluarga Towjatuwa selalu menjaga buaya-buaya di sana hingga sekarang — kisah tentang tolong-menolong yang dibalas dengan kebaikan.',
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
+      muteTitle: 'Matikan suara narasi',
+      unmuteTitle: 'Nyalakan suara narasi',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       searchBtn: '🌿 CARI RUMPUT AIR',
@@ -204,6 +226,8 @@
       winBody: 'Watuwe asks Towjatuwa and his descendants to never hunt or eat the crocodiles of the Tami River. From then on, Towjatuwa\'s family has protected the crocodiles there to this day — a story of help repaid with kindness.',
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
+      muteTitle: 'Mute narration',
+      unmuteTitle: 'Unmute narration',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Press On',
       searchBtn: '🌿 SEARCH FOR WATER GRASS',
@@ -237,6 +261,71 @@
   document.getElementById('twg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('twg-caption').textContent = TXT.captionInit;
   document.getElementById('twg-actionBtn').textContent = TXT.nextBtn;
+
+  // ---- Narasi suara (Web Speech API) + tombol mute ----
+  var muteBtn = document.getElementById('twg-muteBtn');
+  var SPEECH_SUPPORTED = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+  var muted = false;
+  try { muted = localStorage.getItem('twg-muted') === '1'; } catch(e){}
+  var narrationVoice = null;
+
+  function pickNarrationVoice(){
+    if(!SPEECH_SUPPORTED) return;
+    var voices = window.speechSynthesis.getVoices();
+    if(!voices || !voices.length) return;
+    var wantLang = LANG === 'id' ? 'id' : 'en';
+    var pool = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wantLang) === 0; });
+    if(!pool.length && wantLang === 'id'){
+      // Banyak perangkat belum punya suara Indonesia; suara Inggris lebih baik daripada tanpa suara.
+      pool = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf('en') === 0; });
+    }
+    var female = pool.find(function(v){ return /female|wanita|perempuan|zira|samantha|google.*(indonesia|us english)/i.test(v.name); });
+    narrationVoice = female || pool[0] || null;
+  }
+  if(SPEECH_SUPPORTED){
+    pickNarrationVoice();
+    window.speechSynthesis.onvoiceschanged = pickNarrationVoice;
+  }
+
+  function speakStep(text){
+    if(!SPEECH_SUPPORTED || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+    if(narrationVoice) utter.voice = narrationVoice;
+    utter.rate = 0.9;
+    utter.pitch = 1.05;
+    utter.volume = 1;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function stopNarration(){
+    if(SPEECH_SUPPORTED) window.speechSynthesis.cancel();
+  }
+
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    var label = muted ? TXT.unmuteTitle : TXT.muteTitle;
+    muteBtn.setAttribute('aria-label', label);
+    muteBtn.title = label;
+  }
+
+  if(!SPEECH_SUPPORTED && muteBtn){
+    muteBtn.style.display = 'none';
+  } else if(muteBtn){
+    updateMuteBtn();
+    muteBtn.addEventListener('click', function(){
+      muted = !muted;
+      try { localStorage.setItem('twg-muted', muted ? '1' : '0'); } catch(e){}
+      if(muted){
+        stopNarration();
+      } else if(steps[stepIndex]){
+        speakStep(steps[stepIndex].text);
+      }
+      updateMuteBtn();
+    });
+  }
 
   var canvas = document.getElementById('twg-canvas');
   var ctx = canvas.getContext('2d');
@@ -287,6 +376,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speakStep(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -309,6 +399,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speakStep(TXT.winBody);
       return;
     }
     showStep();
