@@ -33,7 +33,7 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
-  #dtg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #dtg-hud { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px; }
   #dtg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #dtg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #2E5A8A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #dtg-voiceBtn.off { background: #9a9a9a; }
   #dtg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +138,10 @@
   <h2>🐟 Legenda Danau Toba</h2>
   <p id="dtg-sub">Ikuti kisah Toba dan Putri jelmaan ikan mas, hingga terbentuknya Danau Toba dan Pulau Samosir.</p>
 
-  <div id="dtg-hud"><span id="dtg-phase">Tahap 1 / 5</span></div>
+  <div id="dtg-hud">
+    <span id="dtg-phase">Tahap 1 / 5</span>
+    <button id="dtg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
 
   <div id="dtg-canvas-holder">
     <canvas id="dtg-canvas"></canvas>
@@ -178,6 +193,8 @@
       fishBtn: '🎣 MEMANCING',
       walkBtn: '🚶 TERUS BERJALAN',
       climbBtn: '🌳 PANJAT POHON',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Di Sumatera Utara, hiduplah seorang pemuda yatim piatu miskin bernama Toba. Ia tinggal sebatang kara di sebuah lembah subur, menghidupi diri dengan bertani dan memancing di sungai.',
@@ -212,6 +229,8 @@
       fishBtn: '🎣 FISHING',
       walkBtn: '🚶 KEEP WALKING',
       climbBtn: '🌳 CLIMB THE TREE',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'In North Sumatra lived a poor orphan named Toba. He lived alone in a fertile valley, making a living by farming and fishing in the river.',
@@ -243,6 +262,28 @@
   document.getElementById('dtg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('dtg-caption').textContent = TXT.captionInit;
   document.getElementById('dtg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('dtg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
 
   var canvas = document.getElementById('dtg-canvas');
   var ctx = canvas.getContext('2d');
@@ -296,6 +337,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -317,6 +359,7 @@
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
+      speak(TXT.winBody);
       winOverlay.classList.add('show');
       return;
     }
