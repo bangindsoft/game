@@ -3,667 +3,711 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Si Kancil Mencuri Timun - Game</title>
+<title>Si Kancil Mencuri Timun</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: transparent; }
-  #ktg-wrap {
-    max-width: 760px;
-    margin: 0 auto;
-    font-family: 'Nunito', sans-serif;
-    color: #3A2E1F;
-    background: linear-gradient(180deg, #EAF3E1 0%, #F7F3E8 100%);
-    border: 3px solid #6B8F47;
-    border-radius: 18px;
-    padding: 14px 16px 18px;
+  :root{
+    --bg-deep: #16210f;
+    --bg-panel: #223318;
+    --bg-panel-2: #2b3f20;
+    --gold: #d9a441;
+    --gold-dim: #8a6a2c;
+    --leaf: #7fa65a;
+    --cream: #f3ecd8;
+    --cream-dim: #cfc7ab;
+    --danger: #c1584f;
+    --success: #6fae5a;
+    --shadow: rgba(0,0,0,0.35);
   }
-  #ktg-wrap h2 {
-    font-family: 'Baloo 2', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    margin: 2px 0 4px;
-    text-align: center;
-    color: #4C7A25;
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(217,164,65,0.10), transparent 55%),
+      radial-gradient(ellipse at 90% 110%, rgba(127,166,90,0.12), transparent 55%),
+      var(--bg-deep);
+    color:var(--cream);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    overflow-x:hidden;
+    position:relative;
   }
-  #ktg-sub {
-    text-align: center;
-    font-size: 13px;
-    color: #6b5f4f;
-    margin: 0 0 10px;
-  }
-  #ktg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
-  #ktg-phase {
-    font-family: 'Baloo 2', sans-serif;
-    font-size: 14px;
-    background: #FFC857;
-    color: #5c3d00;
-    padding: 3px 14px;
-    border-radius: 20px;
-    font-weight: 700;
-  }
-  #ktg-canvas-holder {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 800 / 450;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 2px solid #6B8F47;
-    background: #BEE3F8;
-  }
-  #ktg-canvas { display: block; width: 100%; height: 100%; }
-  .ktg-overlay {
-    position: absolute; inset: 0;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    background: rgba(40,46,31,0.85);
-    color: #fff;
-    padding: 20px;
-  }
-  .ktg-overlay.show { display: flex; }
-  .ktg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
-  .ktg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
-  .ktg-btn {
-    font-family: 'Baloo 2', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    background: #FFC857;
-    color: #5c3d00;
-    border: none;
-    border-radius: 24px;
-    padding: 10px 26px;
-    cursor: pointer;
-  }
-  .ktg-btn:active { transform: scale(0.97); }
 
-  #ktg-caption {
-    margin-top: 10px;
-    background: #ffffff;
-    border: 2px solid #6B8F47;
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 14px;
-    min-height: 44px;
-    line-height: 1.4;
+  /* ambient fireflies */
+  .firefly{
+    position:fixed;
+    width:4px;height:4px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px 3px rgba(217,164,65,0.65);
+    opacity:0;
+    animation:drift 9s ease-in-out infinite, glow 2.4s ease-in-out infinite;
+    pointer-events:none;
   }
-  #ktg-action-row { display: flex; justify-content: center; margin-top: 12px; }
-  #ktg-actionBtn {
-    font-family: 'Baloo 2', sans-serif;
-    font-weight: 700;
-    font-size: 17px;
-    color: #fff;
-    background: #6B8F47;
-    border: none;
-    border-radius: 30px;
-    padding: 14px 34px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-    min-width: 220px;
+  @keyframes drift{
+    0%{transform:translate(0,0);}
+    50%{transform:translate(18px,-26px);}
+    100%{transform:translate(-6px,4px);}
   }
-  #ktg-actionBtn.hold { background: #8D6E3A; }
-  #ktg-actionBtn.qte { background: #E76F51; }
-  #ktg-actionBtn:active { transform: scale(0.97); }
-  #ktg-progressWrap {
-    width: 220px;
-    height: 8px;
-    background: rgba(0,0,0,0.15);
-    border-radius: 6px;
-    margin: 8px auto 0;
-    overflow: hidden;
-    display: none;
+  @keyframes glow{
+    0%,100%{opacity:0.15;}
+    50%{opacity:0.9;}
   }
-  #ktg-progressWrap.show { display: block; }
-  #ktg-progressBar { height: 100%; width: 0%; background: #8D6E3A; border-radius: 6px; }
+
+  .stage{
+    width:100%;
+    max-width:640px;
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border-radius:20px;
+    border:1px solid rgba(217,164,65,0.22);
+    box-shadow:0 18px 50px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+    padding:28px 26px 24px;
+    position:relative;
+    z-index:2;
+  }
+
+  /* top bar: progress + lang + lamp */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .progress{
+    font-family:'Baloo 2', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    color:var(--cream-dim);
+    background:rgba(0,0,0,0.22);
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .icon-btn{
+    width:40px;height:40px;
+    border-radius:50%;
+    border:1px solid rgba(217,164,65,0.35);
+    background:rgba(0,0,0,0.25);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, background .2s ease;
+    position:relative;
+  }
+  .icon-btn:hover{transform:translateY(-1px); background:rgba(217,164,65,0.12);}
+  .icon-btn:active{transform:translateY(0);}
+  .lang-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    color:var(--cream);
+    width:auto;
+    padding:0 12px;
+    border-radius:999px;
+  }
+  .lang-btn .alt{opacity:0.45; margin:0 3px;}
+
+  /* lamp icon (mute toggle), lit = flicker glow */
+  .lamp-svg{width:20px;height:20px;}
+  .lamp-flame{transform-origin: 12px 9px;}
+  .icon-btn.lit .lamp-flame{
+    animation:flicker 1.6s ease-in-out infinite;
+    filter:drop-shadow(0 0 4px rgba(217,164,65,0.9));
+  }
+  @keyframes flicker{
+    0%,100%{opacity:1; transform:scale(1);}
+    45%{opacity:0.85; transform:scale(0.94) translateY(0.5px);}
+    60%{opacity:1; transform:scale(1.05);}
+  }
+  .icon-btn.muted .lamp-flame{opacity:0.12;}
+
+  h2{
+    font-family:'Baloo 2', sans-serif;
+    font-size:23px;
+    font-weight:700;
+    margin:0 0 12px;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  p.story{
+    font-size:16.5px;
+    line-height:1.65;
+    color:var(--cream);
+    margin:0 0 20px;
+  }
+
+  .scene{
+    width:100%;
+    aspect-ratio:16/10;
+    border-radius:14px;
+    margin-bottom:18px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:64px;
+    background:radial-gradient(ellipse at 50% 30%, rgba(127,166,90,0.20), transparent 65%), rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.05);
+    position:relative;
+    overflow:hidden;
+    user-select:none;
+  }
+  .scene .emoji-main{
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,0.4));
+    transition:transform .15s ease;
+  }
+
+  /* QTE target */
+  .qte-target{
+    position:absolute;
+    font-size:44px;
+    cursor:pointer;
+    animation:pulse 0.9s ease-in-out infinite;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  }
+  @keyframes pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.12);}
+  }
+  .qte-bar-wrap{
+    width:100%;
+    height:10px;
+    background:rgba(0,0,0,0.3);
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:16px;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .qte-bar{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--danger));
+    width:100%;
+    transition:width .05s linear;
+  }
+  .qte-counter{
+    font-family:'Baloo 2',sans-serif;
+    font-size:13px;
+    color:var(--cream-dim);
+    text-align:center;
+    margin:-8px 0 16px;
+  }
+
+  .choices{display:flex; flex-direction:column; gap:10px; margin-bottom:6px;}
+  .choice-btn{
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    text-align:left;
+    padding:14px 16px;
+    border-radius:12px;
+    border:1px solid rgba(217,164,65,0.3);
+    background:rgba(0,0,0,0.2);
+    color:var(--cream);
+    cursor:pointer;
+    transition:background .18s ease, transform .12s ease, border-color .18s ease;
+  }
+  .choice-btn:hover{background:rgba(217,164,65,0.14); border-color:var(--gold); transform:translateX(2px);}
+  .choice-btn:active{transform:translateX(0) scale(0.99);}
+
+  .primary-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    width:100%;
+    padding:14px 16px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+    background:linear-gradient(180deg, var(--gold), #b9852f);
+    color:#26210f;
+    box-shadow:0 8px 18px rgba(217,164,65,0.28);
+    transition:transform .12s ease, box-shadow .18s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px); box-shadow:0 10px 22px rgba(217,164,65,0.38);}
+  .primary-btn:active{transform:translateY(0);}
+
+  .primary-btn.danger{
+    background:linear-gradient(180deg, var(--danger), #8f3d36);
+    color:#fdf1ee;
+    box-shadow:0 8px 18px rgba(193,88,79,0.28);
+  }
+  .primary-btn.success{
+    background:linear-gradient(180deg, var(--success), #3f7a3c);
+    color:#f2fbee;
+    box-shadow:0 8px 18px rgba(111,174,90,0.28);
+  }
+
+  .ending-tag{
+    font-family:'Baloo 2',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:999px;
+    display:inline-block;
+    margin-bottom:10px;
+  }
+  .ending-tag.bad{background:rgba(193,88,79,0.18); color:#ecb0aa; border:1px solid rgba(193,88,79,0.4);}
+  .ending-tag.good{background:rgba(111,174,90,0.18); color:#b7dea6; border:1px solid rgba(111,174,90,0.4);}
+
+  .narr-indicator{
+    display:flex; align-items:center; gap:6px;
+    font-family:'Baloo 2',sans-serif;
+    font-size:12px;
+    color:var(--gold);
+    opacity:0;
+    height:16px;
+    margin:-10px 0 14px;
+    transition:opacity .2s ease;
+  }
+  .narr-indicator.on{opacity:1;}
+  .narr-dot{width:6px;height:6px;border-radius:50%;background:var(--gold); animation:blink 1s infinite ease-in-out;}
+  .narr-dot:nth-child(2){animation-delay:.15s;}
+  .narr-dot:nth-child(3){animation-delay:.3s;}
+  @keyframes blink{0%,80%,100%{opacity:0.25;}40%{opacity:1;}}
+
+  @media (max-width:480px){
+    .stage{padding:20px 16px 18px; border-radius:16px;}
+    h2{font-size:20px;}
+    p.story{font-size:15.5px;}
+    .scene{font-size:52px;}
+  }
 </style>
 </head>
 <body>
-<div id="ktg-wrap">
-  <h2>🦌 Si Kancil Mencuri Timun</h2>
-  <p id="ktg-sub">Ikuti kenakalan Si Kancil mencuri timun, kena jebakan Pak Tani, sampai akhirnya menipu anjing untuk kabur!</p>
 
-  <div id="ktg-hud"><span id="ktg-phase">Tahap 1 / 4</span></div>
-
-  <div id="ktg-canvas-holder">
-    <canvas id="ktg-canvas"></canvas>
-
-    <div class="ktg-overlay show" id="ktg-start">
-      <h3>Si Kancil Mencuri Timun</h3>
-      <p>Si Kancil hendak mencuri timun lagi di kebun Pak Tani. Tapi kali ini Pak Tani sudah menyiapkan jebakan! Ikuti ceritanya sampai Si Kancil berhasil kabur ke hutan.</p>
-      <button class="ktg-btn" id="ktg-startBtn">Mulai Cerita</button>
-    </div>
-
-    <div class="ktg-overlay" id="ktg-caught">
-      <h3>Ketahuan Pak Tani! 😬</h3>
-      <p>Anjing tidak percaya bujukan Si Kancil, dan Pak Tani keburu datang. Coba lagi, ikuti lagi ceritanya dari awal!</p>
-      <button class="ktg-btn" id="ktg-retryBtn">Coba Lagi</button>
-    </div>
-
-    <div class="ktg-overlay" id="ktg-win">
-      <h3>Si Kancil Berhasil Kabur! 🎉</h3>
-      <p>Berkat kecerdikannya menipu anjing, Si Kancil lolos dari kurungan Pak Tani. Tapi ingat, mencuri tetap perbuatan yang tidak baik ya — kecerdikan sebaiknya dipakai untuk hal-hal yang jujur.</p>
-      <button class="ktg-btn" id="ktg-playAgainBtn">Main Lagi</button>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="progress" id="progressLabel">Tahap 1 / 4</div>
+    <div class="controls">
+      <button class="lang-btn icon-btn" id="langBtn" title="Ganti bahasa / Switch language">
+        <span class="cur">ID</span><span class="alt">/</span><span class="alt-lang">EN</span>
+      </button>
+      <button class="icon-btn lit" id="lampBtn" title="Bisukan narasi / Mute narration">
+        <svg class="lamp-svg" viewBox="0 0 24 24" fill="none">
+          <path class="lamp-flame" d="M12 4C10 7 9.2 8.6 9.2 10.2C9.2 12 10.4 13.2 12 13.2C13.6 13.2 14.8 12 14.8 10.2C14.8 8.6 14 7 12 4Z" fill="#d9a441"/>
+          <path d="M8.5 13.5H15.5L14.5 17H9.5L8.5 13.5Z" fill="#cfc7ab" opacity="0.85"/>
+          <rect x="9.7" y="17" width="4.6" height="1.4" rx="0.5" fill="#8a6a2c"/>
+          <path d="M9 20H15" stroke="#8a6a2c" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <div id="ktg-caption">Bersiap memulai cerita...</div>
-
-  <div id="ktg-progressWrap"><div id="ktg-progressBar"></div></div>
-  <div id="ktg-action-row">
-    <button id="ktg-actionBtn">Lanjut ▶</button>
+  <div class="narr-indicator" id="narrIndicator">
+    <span class="narr-dot"></span><span class="narr-dot"></span><span class="narr-dot"></span>
+    <span id="narrLabel">Bercerita...</span>
   </div>
+
+  <div id="sceneWrap"></div>
+  <h2 id="stepTitle"></h2>
+  <p class="story" id="stepText"></p>
+  <div id="interactionArea"></div>
 </div>
 
 <script>
-(function(){
-  var LANG = (function(){
-    try {
-      var p = new URLSearchParams(window.location.search).get('lang');
-      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
-    } catch(e){ return 'id'; }
-  })();
-
-  var I18N = {
-    id: {
-      title: 'Si Kancil Mencuri Timun - Game',
-      h2: '🦌 Si Kancil Mencuri Timun',
-      sub: 'Ikuti kenakalan Si Kancil mencuri timun, kena jebakan Pak Tani, sampai akhirnya menipu anjing untuk kabur!',
-      startTitle: 'Si Kancil Mencuri Timun',
-      startBody: 'Si Kancil hendak mencuri timun lagi di kebun Pak Tani. Tapi kali ini Pak Tani sudah menyiapkan jebakan! Ikuti ceritanya sampai Si Kancil berhasil kabur ke hutan.',
-      startBtn: 'Mulai Cerita',
-      caughtTitle: 'Ketahuan Pak Tani! 😬',
-      caughtBody: 'Anjing tidak percaya bujukan Si Kancil, dan Pak Tani keburu datang. Coba lagi, ikuti lagi ceritanya dari awal!',
-      retryBtn: 'Coba Lagi',
-      winTitle: 'Si Kancil Berhasil Kabur! 🎉',
-      winBody: 'Berkat kecerdikannya menipu anjing, Si Kancil lolos dari kurungan Pak Tani. Tapi ingat, mencuri tetap perbuatan yang tidak baik ya — kecerdikan sebaiknya dipakai untuk hal-hal yang jujur.',
-      playAgainBtn: 'Main Lagi',
-      captionInit: 'Bersiap memulai cerita...',
-      nextBtn: 'Lanjut ▶',
-      sneakBtn: 'Tahan untuk Mengendap',
-      kickBtn: 'Tahan untuk Menendang',
-      trickBtn: '🗣️ TIPU!',
-      phase: function(p){ return 'Tahap ' + p + ' / 4'; },
-      steps: [
-        'Pak Tani tinggal di desa yang tenang, menanam timun, tomat, dan cabai di kebunnya. Tapi Si Kancil sering mengganggu kebun itu di malam hari.',
-        'Tahan tombol untuk membantu Si Kancil mengendap-endap masuk ke kebun berpagar tinggi milik Pak Tani.',
-        'Si Kancil makan timun sepuasnya, lalu buru-buru kabur sebelum ketahuan Pak Tani.',
-        'Paginya, Pak Tani kaget melihat timunnya banyak yang hilang dan pagar rusak. Ia pun membuat orang-orangan sawah yang dilumuri perekat untuk menjebak Si Kancil.',
-        'Si Kancil menganggap itu cuma boneka biasa. Tahan tombol untuk menendang orang-orangan sawah itu...',
-        'Ternyata orang-orangan itu dilumuri perekat! Kaki Si Kancil menempel dan tak bisa lepas semalaman.',
-        'Paginya Pak Tani menangkap Si Kancil dan memasukkannya ke kurungan ayam, mengancam akan menjadikannya sate malam nanti!',
-        'Seekor anjing datang menghampiri kurungan. Cepat, tekan TIPU pada saat yang tepat untuk meyakinkannya!',
-        'Anjing yang bodoh itu percaya, lalu masuk ke kurungan menggantikan Si Kancil. Si Kancil segera berlari kabur ke hutan sambil menahan tawa.'
-      ]
+/* ============ i18n content ============ */
+const STORY = {
+  id: {
+    progress: n => `Tahap ${n} / 4`,
+    narrating: "Bercerita...",
+    steps: [
+      {
+        title: "🦌 Si Kancil Mencuri Timun",
+        text: "Si Kancil hendak mencuri timun lagi di kebun Pak Tani. Tapi kali ini Pak Tani sudah menyiapkan jebakan! Ikuti ceritanya sampai Si Kancil berhasil kabur ke hutan.",
+        emoji: "🦌🥒",
+        cta: "Mulai Cerita"
+      },
+      {
+        title: "Menyelinap ke Kebun",
+        text: "Malam itu sunyi. Si Kancil mengendap-endap masuk kebun. Ada beberapa timun ranum tergantung di antara daun-daun — cepat, petik sebanyak mungkin sebelum Pak Tani terbangun!",
+        emoji: "🌙",
+        qte: true
+      },
+      {
+        title: "Terjebak Jerat!",
+        text: "Krak! Kaki Si Kancil tersangkut jerat rotan yang disembunyikan Pak Tani. Ia meronta, tapi jerat itu makin erat. Tak lama, Pak Tani datang dan memasukkannya ke dalam kurungan bambu di dekat gubuk.",
+        emoji: "🕸️",
+        cta: "Lanjutkan"
+      },
+      {
+        title: "Anjing Penjaga Datang",
+        text: "Tengah malam, anjing penjaga Pak Tani mendekati kurungan. Si Kancil harus berkata sesuatu yang meyakinkan agar anjing itu mau membukakan kurungan — apa yang sebaiknya ia katakan?",
+        emoji: "🐕",
+        choices: [
+          { label: "\"Aku dikurung karena disuruh menikahi anak Pak Tani. Aku tidak mau — kau saja gantikan aku!\"", correct: true },
+          { label: "\"Tolong bukakan pintunya, aku janji tidak akan mencuri timun lagi.\"", correct: false },
+          { label: "\"Aku bosan di sini, ayo kita main-main saja.\"", correct: false }
+        ]
+      }
+    ],
+    endings: {
+      bad: {
+        tag: "Ketahuan Pak Tani",
+        title: "Ketahuan Pak Tani! 😬",
+        text: "Anjing tidak percaya bujukan Si Kancil, dan Pak Tani keburu datang. Coba lagi, ikuti lagi ceritanya dari awal!",
+        emoji: "😬",
+        cta: "Coba Lagi"
+      },
+      good: {
+        tag: "Si Kancil Kabur",
+        title: "Si Kancil Berhasil Kabur! 🎉",
+        text: "Berkat kecerdikannya menipu anjing, Si Kancil lolos dari kurungan Pak Tani. Tapi ingat, mencuri tetap perbuatan yang tidak baik ya — kecerdikan sebaiknya dipakai untuk hal-hal yang jujur.",
+        emoji: "🎉",
+        cta: "Main Lagi"
+      }
     },
-    en: {
-      title: 'Kancil Steals the Cucumbers - Game',
-      h2: '🦌 Kancil Steals the Cucumbers',
-      sub: 'Follow Kancil the mouse-deer\'s mischief stealing cucumbers, getting caught in the Farmer\'s trap, and finally tricking the dog to escape!',
-      startTitle: 'Kancil Steals the Cucumbers',
-      startBody: 'Kancil wants to steal cucumbers from the Farmer\'s garden again. But this time the Farmer has set a trap! Follow the story until Kancil manages to escape into the forest.',
-      startBtn: 'Start the Story',
-      caughtTitle: 'The Farmer Catches You! 😬',
-      caughtBody: 'The dog doesn\'t believe Kancil\'s trick, and the Farmer arrives too soon. Try again, and follow the story from the beginning!',
-      retryBtn: 'Try Again',
-      winTitle: 'Kancil Escapes! 🎉',
-      winBody: 'Thanks to tricking the dog, Kancil escapes the Farmer\'s cage. But remember, stealing is still wrong — cleverness is best used for honest things.',
-      playAgainBtn: 'Play Again',
-      captionInit: 'Getting the story ready...',
-      nextBtn: 'Next ▶',
-      sneakBtn: 'Hold to Sneak',
-      kickBtn: 'Hold to Kick',
-      trickBtn: '🗣️ TRICK HIM!',
-      phase: function(p){ return 'Stage ' + p + ' / 4'; },
-      steps: [
-        'The Farmer lives in a quiet village, growing cucumbers, tomatoes, and chilies in his garden. But Kancil keeps sneaking into the garden at night.',
-        'Hold the button to help Kancil sneak into the Farmer\'s tall-fenced garden.',
-        'Kancil eats cucumbers to his heart\'s content, then rushes off before the Farmer notices.',
-        'The next morning, the Farmer is shocked to find many cucumbers missing and the fence broken. He builds a glue-covered scarecrow to trap Kancil.',
-        'Kancil thinks it\'s just an ordinary doll. Hold the button to kick the scarecrow...',
-        'It turns out the scarecrow is covered in glue! Kancil\'s feet get stuck and he can\'t break free all night.',
-        'The next morning the Farmer catches Kancil and locks him in a chicken cage, threatening to turn him into satay that night!',
-        'A dog wanders up to the cage. Quick, tap TRICK at just the right moment to convince him!',
-        'The foolish dog believes him and takes Kancil\'s place in the cage. Kancil dashes off into the forest, stifling his laughter.'
-      ]
-    }
-  };
-  var TXT = I18N[LANG];
-  document.title = TXT.title;
-  document.querySelector('#ktg-wrap h2').textContent = TXT.h2;
-  document.getElementById('ktg-sub').textContent = TXT.sub;
-  document.querySelector('#ktg-start h3').textContent = TXT.startTitle;
-  document.querySelector('#ktg-start p').textContent = TXT.startBody;
-  document.getElementById('ktg-startBtn').textContent = TXT.startBtn;
-  document.querySelector('#ktg-caught h3').textContent = TXT.caughtTitle;
-  document.querySelector('#ktg-caught p').textContent = TXT.caughtBody;
-  document.getElementById('ktg-retryBtn').textContent = TXT.retryBtn;
-  document.querySelector('#ktg-win h3').textContent = TXT.winTitle;
-  document.querySelector('#ktg-win p').textContent = TXT.winBody;
-  document.getElementById('ktg-playAgainBtn').textContent = TXT.playAgainBtn;
-  document.getElementById('ktg-caption').textContent = TXT.captionInit;
-  document.getElementById('ktg-actionBtn').textContent = TXT.nextBtn;
-
-  var canvas = document.getElementById('ktg-canvas');
-  var ctx = canvas.getContext('2d');
-  var W = 800, H = 450;
-
-  function resize(){
-    var rect = canvas.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
-    var scale = rect.width / W;
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
-    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    qteHint: n => `Timun dipetik: ${n}`,
+    qteGo: "Ambil timunnya sebelum kabur!"
+  },
+  en: {
+    progress: n => `Stage ${n} / 4`,
+    narrating: "Narrating...",
+    steps: [
+      {
+        title: "🦌 Kancil Steals the Cucumbers",
+        text: "The mouse-deer Kancil wants to steal cucumbers from Farmer Tani's garden again. But this time, the farmer has set a trap! Follow the story until Kancil escapes back to the forest.",
+        emoji: "🦌🥒",
+        cta: "Start Story"
+      },
+      {
+        title: "Sneaking Into the Garden",
+        text: "The night was quiet. Kancil crept into the garden. Several ripe cucumbers hung among the leaves — quick, grab as many as you can before the farmer wakes up!",
+        emoji: "🌙",
+        qte: true
+      },
+      {
+        title: "Caught in the Snare!",
+        text: "Snap! Kancil's leg got caught in a rattan snare the farmer had hidden. He struggled, but it only tightened. Soon, the farmer arrived and locked him in a bamboo cage near the hut.",
+        emoji: "🕸️",
+        cta: "Continue"
+      },
+      {
+        title: "The Guard Dog Arrives",
+        text: "At midnight, the farmer's guard dog approached the cage. Kancil needs to say something convincing to get the dog to open it — what should he say?",
+        emoji: "🐕",
+        choices: [
+          { label: "\"I'm locked up because they want me to marry the farmer's daughter. I don't want to — you take my place instead!\"", correct: true },
+          { label: "\"Please let me out, I promise I won't steal cucumbers again.\"", correct: false },
+          { label: "\"I'm bored in here, let's just play together.\"", correct: false }
+        ]
+      }
+    ],
+    endings: {
+      bad: {
+        tag: "Caught by the Farmer",
+        title: "Caught by Farmer Tani! 😬",
+        text: "The dog didn't believe Kancil's trick, and the farmer arrived just in time. Try again — follow the story once more from the start!",
+        emoji: "😬",
+        cta: "Try Again"
+      },
+      good: {
+        tag: "Kancil Escapes",
+        title: "Kancil Escapes! 🎉",
+        text: "Thanks to his cunning trick on the dog, Kancil slipped free from the farmer's cage. But remember, stealing is still wrong — cleverness is best used for honest things.",
+        emoji: "🎉",
+        cta: "Play Again"
+      }
+    },
+    qteHint: n => `Cucumbers picked: ${n}`,
+    qteGo: "Grab the cucumbers before you run out of time!"
   }
-  window.addEventListener('resize', resize);
+};
 
-  var phaseEl = document.getElementById('ktg-phase');
-  var captionEl = document.getElementById('ktg-caption');
-  var actionBtn = document.getElementById('ktg-actionBtn');
-  var progressWrap = document.getElementById('ktg-progressWrap');
-  var progressBar = document.getElementById('ktg-progressBar');
-  var startOverlay = document.getElementById('ktg-start');
-  var caughtOverlay = document.getElementById('ktg-caught');
-  var winOverlay = document.getElementById('ktg-win');
+/* ============ state ============ */
+const params = new URLSearchParams(window.location.search);
+let lang = params.get('lang') === 'en' ? 'en' : 'id';
+let muted = localStorage.getItem('kancilMuted') === '1';
+let stepIndex = 0; // 0..3 within STORY[lang].steps
+let currentUtterance = null;
+let voicesCache = [];
 
-  var progress = 0;
-  var holding = false;
-  var t = 0;
-  var holdAdvancing = false;
+const els = {
+  progressLabel: document.getElementById('progressLabel'),
+  langBtn: document.getElementById('langBtn'),
+  lampBtn: document.getElementById('lampBtn'),
+  sceneWrap: document.getElementById('sceneWrap'),
+  stepTitle: document.getElementById('stepTitle'),
+  stepText: document.getElementById('stepText'),
+  interactionArea: document.getElementById('interactionArea'),
+  narrIndicator: document.getElementById('narrIndicator'),
+  narrLabel: document.getElementById('narrLabel')
+};
 
-  var qteActive = false;
-  var qteTimeLeft = 0;
-  var QTE_DURATION = 1.6;
-
-  var kancil = { x: 100, y: 340 };
-  var kancilTargetX = 100;
-  var stuck = 0;
-
-  var steps = [
-    { type:'caption', phase:1, scene:'day' },
-    { type:'hold', phase:1, scene:'night', kancilX: 420 },
-    { type:'caption', phase:1, scene:'night', kancilX: 100 },
-    { type:'caption', phase:2, scene:'day' },
-    { type:'hold', phase:2, scene:'trap_night', kancilX: 430 },
-    { type:'caption', phase:2, scene:'trap_stuck' },
-    { type:'caption', phase:3, scene:'cage' },
-    { type:'qte', phase:3, scene:'cage_dog' },
-    { type:'caption', phase:4, scene:'forest' }
-  ];
-  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
-  var stepIndex = 0;
-
-  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
-
-  function showStep(){
-    var step = steps[stepIndex];
-    setPhaseLabel(step.phase);
-    captionEl.textContent = step.text;
-    progress = 0;
-    progressBar.style.width = '0%';
-    qteActive = false;
-    holdAdvancing = false;
-    if(step.kancilX !== undefined) kancilTargetX = step.kancilX;
-    if(step.scene === 'trap_stuck') stuck = 1;
-    if(step.scene === 'day' && stepIndex < 3) stuck = 0;
-
-    if(step.type === 'caption'){
-      actionBtn.className = '';
-      actionBtn.textContent = TXT.nextBtn;
-      progressWrap.classList.remove('show');
-    } else if(step.type === 'hold'){
-      actionBtn.className = 'hold';
-      actionBtn.textContent = step.scene==='trap_night' ? TXT.kickBtn : TXT.sneakBtn;
-      progressWrap.classList.add('show');
-    } else if(step.type === 'qte'){
-      actionBtn.className = 'qte';
-      actionBtn.textContent = TXT.trickBtn;
-      progressWrap.classList.remove('show');
-      qteActive = true;
-      qteTimeLeft = QTE_DURATION;
-    }
+/* ============ fireflies ============ */
+function spawnFireflies(){
+  for(let i=0;i<14;i++){
+    const f = document.createElement('div');
+    f.className='firefly';
+    f.style.left = Math.random()*100+'vw';
+    f.style.top = Math.random()*100+'vh';
+    f.style.animationDelay = (Math.random()*6)+'s, '+(Math.random()*2)+'s';
+    document.body.appendChild(f);
   }
+}
+spawnFireflies();
 
-  function nextStep(){
-    stepIndex++;
-    if(stepIndex >= steps.length){
-      winOverlay.classList.add('show');
-      return;
-    }
-    showStep();
+/* ============ speech ============ */
+function loadVoices(){
+  voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(targetLang){
+  if(!voicesCache || !voicesCache.length) return null;
+  const wantId = targetLang === 'id';
+  let match = voicesCache.find(v => wantId ? v.lang.toLowerCase().startsWith('id') : v.lang.toLowerCase().startsWith('en'));
+  if(!match && wantId){
+    // fallback: some systems lack Indonesian voices; use any voice but slow it down
+    match = voicesCache.find(v => v.lang.toLowerCase().startsWith('en'));
   }
+  return match || voicesCache[0];
+}
+function stopNarration(){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  els.narrIndicator.classList.remove('on');
+}
+function narrate(text){
+  stopNarration();
+  if(muted || !('speechSynthesis' in window)) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(lang);
+  if(v) utter.voice = v;
+  utter.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  utter.rate = 0.92;
+  utter.pitch = 1.02;
+  utter.onstart = () => els.narrIndicator.classList.add('on');
+  utter.onend = () => els.narrIndicator.classList.remove('on');
+  utter.onerror = () => els.narrIndicator.classList.remove('on');
+  currentUtterance = utter;
+  window.speechSynthesis.speak(utter);
+}
 
-  function resetGame(){
+/* ============ lamp / mute toggle ============ */
+function refreshLampUI(){
+  els.lampBtn.classList.toggle('lit', !muted);
+  els.lampBtn.classList.toggle('muted', muted);
+  els.lampBtn.title = muted
+    ? (lang==='id' ? 'Nyalakan narasi' : 'Unmute narration')
+    : (lang==='id' ? 'Bisukan narasi' : 'Mute narration');
+}
+els.lampBtn.addEventListener('click', () => {
+  muted = !muted;
+  localStorage.setItem('kancilMuted', muted ? '1':'0');
+  refreshLampUI();
+  if(muted) stopNarration();
+  else {
+    // re-narrate current visible text
+    const t = STORY[lang];
+    const s = t.steps[stepIndex];
+    if(s) narrate(s.text);
+  }
+});
+
+/* ============ lang toggle ============ */
+function refreshLangUI(){
+  els.langBtn.querySelector('.cur').textContent = lang.toUpperCase();
+  els.langBtn.querySelector('.alt-lang').textContent = lang === 'id' ? 'EN' : 'ID';
+}
+els.langBtn.addEventListener('click', () => {
+  lang = lang === 'id' ? 'en' : 'id';
+  const url = new URL(window.location.href);
+  url.searchParams.set('lang', lang);
+  window.history.replaceState({}, '', url);
+  refreshLangUI();
+  render();
+});
+
+/* ============ QTE ============ */
+let qteInterval = null;
+let qteTimeout = null;
+function runQTE(t){
+  const scene = document.createElement('div');
+  scene.className = 'scene';
+  scene.innerHTML = '<div class="emoji-main">🌳🌙</div>';
+  els.sceneWrap.innerHTML = '';
+  els.sceneWrap.appendChild(scene);
+
+  const barWrap = document.createElement('div');
+  barWrap.className = 'qte-bar-wrap';
+  barWrap.innerHTML = '<div class="qte-bar" id="qteBar"></div>';
+
+  const counter = document.createElement('div');
+  counter.className = 'qte-counter';
+  counter.id = 'qteCounter';
+  counter.textContent = t.qteHint(0);
+
+  const hint = document.createElement('p');
+  hint.className = 'story';
+  hint.style.marginTop = '-4px';
+  hint.style.opacity = '0.85';
+  hint.style.fontSize = '14px';
+  hint.textContent = t.qteGo;
+
+  els.interactionArea.innerHTML = '';
+  els.interactionArea.appendChild(barWrap);
+  els.interactionArea.appendChild(counter);
+  els.interactionArea.appendChild(hint);
+
+  let picked = 0;
+  const duration = 6000;
+  const startTime = Date.now();
+  const bar = document.getElementById('qteBar');
+
+  function placeTarget(){
+    const existing = scene.querySelector('.qte-target');
+    if(existing) existing.remove();
+    const target = document.createElement('div');
+    target.className = 'qte-target';
+    target.textContent = '🥒';
+    target.style.left = (10 + Math.random()*70) + '%';
+    target.style.top = (15 + Math.random()*55) + '%';
+    target.addEventListener('click', () => {
+      picked++;
+      document.getElementById('qteCounter').textContent = t.qteHint(picked);
+      placeTarget();
+    });
+    scene.appendChild(target);
+  }
+  placeTarget();
+
+  qteInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const pct = Math.max(0, 100 - (elapsed/duration)*100);
+    bar.style.width = pct + '%';
+    if(elapsed >= duration){
+      clearInterval(qteInterval);
+      goToStep(2); // proceed to caught-in-snare narrative regardless of count (part of the tale)
+    }
+  }, 50);
+}
+
+/* ============ choices ============ */
+function renderChoices(t, step){
+  const wrap = document.createElement('div');
+  wrap.className = 'choices';
+  step.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = choice.label;
+    btn.addEventListener('click', () => {
+      stopNarration();
+      if(choice.correct) showEnding('good');
+      else showEnding('bad');
+    });
+    wrap.appendChild(btn);
+  });
+  els.interactionArea.innerHTML = '';
+  els.interactionArea.appendChild(wrap);
+}
+
+/* ============ endings ============ */
+function showEnding(kind){
+  const t = STORY[lang];
+  const e = t.endings[kind];
+  els.progressLabel.textContent = kind === 'good' ? '✓' : '↺';
+
+  const scene = document.createElement('div');
+  scene.className = 'scene';
+  scene.innerHTML = `<div class="emoji-main">${e.emoji}</div>`;
+  els.sceneWrap.innerHTML = '';
+  els.sceneWrap.appendChild(scene);
+
+  const tag = document.createElement('span');
+  tag.className = 'ending-tag ' + (kind === 'good' ? 'good' : 'bad');
+  tag.textContent = e.tag;
+
+  els.stepTitle.innerHTML = '';
+  els.stepTitle.appendChild(tag);
+  const titleLine = document.createElement('div');
+  titleLine.textContent = e.title;
+  els.stepTitle.appendChild(titleLine);
+
+  els.stepText.textContent = e.text;
+
+  const btn = document.createElement('button');
+  btn.className = 'primary-btn ' + (kind === 'good' ? 'success' : 'danger');
+  btn.textContent = e.cta;
+  btn.addEventListener('click', () => {
     stepIndex = 0;
-    kancil.x = 100; kancilTargetX = 100;
-    stuck = 0;
-    showStep();
-  }
-
-  actionBtn.addEventListener('click', function(){
-    var step = steps[stepIndex];
-    if(step.type === 'caption'){
-      nextStep();
-    } else if(step.type === 'qte'){
-      if(qteActive){
-        qteActive = false;
-        nextStep();
-      }
-    }
+    render();
   });
+  els.interactionArea.innerHTML = '';
+  els.interactionArea.appendChild(btn);
 
-  actionBtn.addEventListener('pointerdown', function(e){
-    var step = steps[stepIndex];
-    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
-  });
-  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
-    actionBtn.addEventListener(evt, function(){ holding = false; });
-  });
-  window.addEventListener('keydown', function(e){
-    if(e.code === 'Space'){
-      var step = steps[stepIndex];
-      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
-    }
-  });
-  window.addEventListener('keyup', function(e){
-    if(e.code === 'Space') holding = false;
-  });
+  narrate(e.text);
+}
 
-  document.getElementById('ktg-startBtn').addEventListener('click', function(){
-    startOverlay.classList.remove('show');
-    resetGame();
-  });
-  document.getElementById('ktg-retryBtn').addEventListener('click', function(){
-    caughtOverlay.classList.remove('show');
-    resetGame();
-  });
-  document.getElementById('ktg-playAgainBtn').addEventListener('click', function(){
-    winOverlay.classList.remove('show');
-    resetGame();
-  });
+/* ============ step rendering ============ */
+function goToStep(idx){
+  stepIndex = idx;
+  render();
+}
 
-  function lerp(a,b,f){ return a + (b-a)*f; }
+function render(){
+  clearInterval(qteInterval);
+  const t = STORY[lang];
+  const step = t.steps[stepIndex];
 
-  function drawEmoji(str, x, y, size){
-    ctx.font = size+'px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(str, x, y);
+  els.progressLabel.textContent = t.progress(stepIndex + 1);
+  els.stepTitle.textContent = step.title;
+  els.stepText.textContent = step.text;
+  refreshLangUI();
+  refreshLampUI();
+  els.narrLabel.textContent = t.narrating;
+
+  const scene = document.createElement('div');
+  scene.className = 'scene';
+  scene.innerHTML = `<div class="emoji-main">${step.emoji}</div>`;
+  els.sceneWrap.innerHTML = '';
+  els.sceneWrap.appendChild(scene);
+  els.interactionArea.innerHTML = '';
+
+  if(step.qte){
+    runQTE(t);
+  } else if(step.choices){
+    renderChoices(t, step);
+  } else {
+    const btn = document.createElement('button');
+    btn.className = 'primary-btn';
+    btn.textContent = step.cta;
+    btn.addEventListener('click', () => goToStep(stepIndex + 1));
+    els.interactionArea.appendChild(btn);
   }
 
-  function drawPakTani(px, py, size){
-    var s = size/44;
-    ctx.save();
-    ctx.translate(px, py);
+  narrate(step.text);
 
-    ctx.fillStyle = '#5C4433';
-    ctx.beginPath();
-    ctx.moveTo(-11*s, 6*s);
-    ctx.lineTo(11*s, 6*s);
-    ctx.lineTo(9*s, 20*s);
-    ctx.lineTo(-9*s, 20*s);
-    ctx.closePath();
-    ctx.fill();
+  // notify parent (Blogger) of height for auto-resize iframe embedding
+  requestAnimationFrame(reportHeight);
+}
 
-    ctx.fillStyle = '#8CA86B';
-    ctx.beginPath();
-    ctx.moveTo(-12*s, -9*s);
-    ctx.quadraticCurveTo(-16*s, 2*s, -12*s, 8*s);
-    ctx.lineTo(12*s, 8*s);
-    ctx.quadraticCurveTo(16*s, 2*s, 12*s, -9*s);
-    ctx.quadraticCurveTo(0, -14*s, -12*s, -9*s);
-    ctx.closePath();
-    ctx.fill();
+/* ============ iframe auto-resize (Blogger embedding) ============ */
+function reportHeight(){
+  try{
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ kancilHeight: height }, '*');
+  }catch(e){ /* no-op if not embedded */ }
+}
+window.addEventListener('resize', reportHeight);
+new MutationObserver(reportHeight).observe(document.body, { childList:true, subtree:true, attributes:true });
 
-    ctx.fillStyle = '#E8B08A';
-    ctx.beginPath();
-    ctx.arc(0, -15*s, 7.5*s, 0, Math.PI*2);
-    ctx.fill();
-
-    ctx.fillStyle = '#D9BF7B';
-    ctx.beginPath();
-    ctx.ellipse(0, -20*s, 15*s, 5*s, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-9*s,-21*s);
-    ctx.quadraticCurveTo(0,-32*s,9*s,-21*s);
-    ctx.quadraticCurveTo(0,-24*s,-9*s,-21*s);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function drawScarecrow(px, py, size, stuckAmt){
-    var s = size/44;
-    ctx.save();
-    ctx.translate(px, py);
-
-    ctx.strokeStyle = '#8D6E3A';
-    ctx.lineWidth = 3*s;
-    ctx.beginPath();
-    ctx.moveTo(0,-6*s); ctx.lineTo(0,16*s);
-    ctx.moveTo(-14*s,0); ctx.lineTo(14*s,0);
-    ctx.stroke();
-
-    ctx.fillStyle = '#D9C48A';
-    ctx.beginPath();
-    ctx.moveTo(-13*s,-2*s); ctx.lineTo(13*s,-2*s); ctx.lineTo(9*s,4*s); ctx.lineTo(-9*s,4*s);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = '#E8B08A';
-    ctx.beginPath();
-    ctx.arc(0,-14*s,7*s,0,Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = '#B5842A';
-    ctx.beginPath();
-    ctx.ellipse(0,-19*s,10*s,4*s,0,0,Math.PI*2);
-    ctx.fill();
-
-    if(stuckAmt > 0){
-      ctx.fillStyle = 'rgba(200,220,255,' + (0.5*stuckAmt) + ')';
-      ctx.beginPath();
-      ctx.ellipse(0, 6*s, 16*s, 12*s, 0, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    ctx.restore();
-  }
-
-  function drawCage(px, py, size){
-    var s = size/44;
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.fillStyle = 'rgba(180,150,100,0.25)';
-    ctx.fillRect(-22*s,-18*s,44*s,36*s);
-    ctx.strokeStyle = '#6b4a2a';
-    ctx.lineWidth = 2*s;
-    for(var i=-20;i<=20;i+=8){
-      ctx.beginPath();
-      ctx.moveTo(i*s,-18*s);
-      ctx.lineTo(i*s,18*s);
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.moveTo(-22*s,-18*s); ctx.lineTo(22*s,-18*s);
-    ctx.moveTo(-22*s,18*s); ctx.lineTo(22*s,18*s);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  var lastTime = null;
-  function loop(now){
-    if(lastTime===null) lastTime = now;
-    var dt = Math.min(0.05, (now-lastTime)/1000);
-    lastTime = now;
-    t += dt;
-
-    var step = steps[stepIndex];
-
-    if(step && step.type === 'hold'){
-      if(holding){
-        progress = Math.min(1, progress + dt/1.6);
-      } else {
-        progress = Math.max(0, progress - dt/2.2);
-      }
-      progressBar.style.width = Math.round(progress*100) + '%';
-      if(progress >= 1 && !holdAdvancing){
-        holdAdvancing = true;
-        progressWrap.classList.remove('show');
-        var capturedIndex = stepIndex;
-        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
-      }
-    }
-
-    if(step && step.type === 'qte' && qteActive){
-      qteTimeLeft -= dt;
-      if(qteTimeLeft <= 0){
-        qteActive = false;
-        caughtOverlay.classList.add('show');
-      }
-    }
-
-    kancil.x = lerp(kancil.x, kancilTargetX, dt*3);
-
-    draw(step);
-    requestAnimationFrame(loop);
-  }
-
-  function drawSceneBg(scene){
-    var isNight = scene==='night' || scene==='trap_night' || scene==='trap_stuck';
-    var sky = ctx.createLinearGradient(0,0,0,150);
-    if(isNight){
-      sky.addColorStop(0,'#1E2A4A'); sky.addColorStop(1,'#3E4E6A');
-    } else if(scene==='cage' || scene==='cage_dog'){
-      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
-    } else if(scene==='forest'){
-      sky.addColorStop(0,'#7C9E8E'); sky.addColorStop(1,'#B7CDB0');
-    } else {
-      sky.addColorStop(0,'#BEE3F8'); sky.addColorStop(1,'#EAF6E9');
-    }
-    ctx.fillStyle = sky;
-    ctx.fillRect(0,0,W,H);
-
-    if(scene==='forest'){
-      ctx.fillStyle = '#4C7A4C';
-      ctx.fillRect(0,300,W,H-300);
-      for(var i=0;i<7;i++){
-        ctx.fillStyle = i%2===0 ? '#2F5233' : '#3C6B40';
-        ctx.beginPath();
-        ctx.moveTo(60+i*110, 300);
-        ctx.lineTo(60+i*110+40, 180);
-        ctx.lineTo(60+i*110+80, 300);
-        ctx.closePath();
-        ctx.fill();
-      }
-      return;
-    }
-
-    if(scene==='cage' || scene==='cage_dog'){
-      ctx.fillStyle = '#E8D9B5';
-      ctx.fillRect(0,300,W,H-300);
-      return;
-    }
-
-    ctx.fillStyle = isNight ? '#2C3E2C' : '#A7C957';
-    ctx.fillRect(0,280,W,H-280);
-
-    ctx.strokeStyle = isNight ? 'rgba(255,255,255,0.15)' : 'rgba(85,139,47,0.35)';
-    ctx.lineWidth = 2;
-    for(var row=300; row<H; row+=34){
-      ctx.beginPath();
-      ctx.moveTo(0,row);
-      ctx.lineTo(W,row);
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = '#8D6E63';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(60,280); ctx.lineTo(60,220);
-    ctx.moveTo(200,280); ctx.lineTo(200,215);
-    ctx.moveTo(600,280); ctx.lineTo(600,215);
-    ctx.moveTo(740,280); ctx.lineTo(740,220);
-    ctx.stroke();
-    ctx.strokeStyle = '#A9825A';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(50,240); ctx.lineTo(750,232);
-    ctx.moveTo(50,260); ctx.lineTo(750,254);
-    ctx.stroke();
-  }
-
-  function draw(step){
-    ctx.clearRect(0,0,W,H);
-    var scene = step ? step.scene : 'day';
-    drawSceneBg(scene);
-
-    var bob = Math.sin(t*4)*2;
-
-    if(scene==='day'){
-      drawPakTani(650, 330, 44);
-    }
-
-    if(scene==='night' || scene==='trap_night' || scene==='trap_stuck'){
-      ctx.font = '26px sans-serif';
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      drawEmoji('🥒', 430, 250, 26);
-      drawEmoji('🥒', 500, 300, 26);
-      drawEmoji('🥒', 360, 310, 26);
-    }
-
-    if(scene==='trap_night' || scene==='trap_stuck'){
-      drawScarecrow(430, 330, 46, stuck);
-    }
-
-    if(scene==='cage' || scene==='cage_dog'){
-      drawCage(560, 300, 60);
-      drawEmoji('🦌', 560, 300 + bob, 30);
-      drawEmoji('👨\u200d🌾', 200, 320, 0);
-      drawPakTani(200, 330, 40);
-      if(scene==='cage_dog'){
-        drawEmoji('🐕', 380, 330 + bob, 44);
-      }
-    } else if(scene==='forest'){
-      drawEmoji('🦌', kancil.x, 320 + bob, 44);
-    } else if(scene!=='cage' && scene!=='cage_dog'){
-      drawEmoji('🦌', kancil.x, 340 + bob, 40);
-    }
-
-    if(step && step.type === 'qte' && qteActive){
-      var frac = qteTimeLeft / QTE_DURATION;
-      ctx.strokeStyle = '#E76F51';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.arc(400, 60, 30, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2);
-      ctx.stroke();
-    }
-  }
-
-  resize();
-  resetGame();
-  requestAnimationFrame(loop);
-
-  function sendHeight(){
-    var wrap = document.getElementById('ktg-wrap');
-    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
-    window.parent.postMessage({ type: 'ktg-resize', height: Math.ceil(h) }, '*');
-  }
-  window.addEventListener('load', sendHeight);
-  window.addEventListener('resize', sendHeight);
-  setTimeout(sendHeight, 300);
-  setTimeout(sendHeight, 1000);
-  if(window.ResizeObserver){
-    var wrapEl = document.getElementById('ktg-wrap');
-    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
-  }
-})();
+/* ============ init ============ */
+refreshLangUI();
+refreshLampUI();
+render();
 </script>
 </body>
 </html>
