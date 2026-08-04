@@ -33,7 +33,7 @@
     color: #6b5f6f;
     margin: 0 0 10px;
   }
-  #rik-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #rik-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #rik-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,22 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #rik-muteBtn {
+    font-size: 16px;
+    background: #fff;
+    border: 2px solid #5A3E7A;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    color: #422C5E;
+  }
+  #rik-muteBtn:active { transform: scale(0.95); }
   #rik-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +142,10 @@
   <h2>👑 Raden Inu Kertapati</h2>
   <p id="rik-sub">Kisah cinta Raden Inu Kertapati dan Dewi Candra Kirana, cerita rakyat Jawa Timur.</p>
 
-  <div id="rik-hud"><span id="rik-phase">Tahap 1 / 5</span></div>
+  <div id="rik-hud">
+    <span id="rik-phase">Tahap 1 / 5</span>
+    <button id="rik-muteBtn" type="button" aria-label="Matikan suara narasi">🔊</button>
+  </div>
 
   <div id="rik-canvas-holder">
     <canvas id="rik-canvas"></canvas>
@@ -178,6 +197,8 @@
       travelBtn: '🐎 LANJUTKAN PERJALANAN',
       searchBtn: '🔍 CARI PANJI SEMIRANG',
       fightBtn: '⚔️ TUMPAS PENJAHAT',
+      muteLabel: 'Matikan suara narasi',
+      unmuteLabel: 'Aktifkan suara narasi',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Raden Inu Kertapati, putra mahkota Kerajaan Jenggala, telah lama bertunangan dengan Dewi Candra Kirana, putri Kerajaan Kediri. Suatu hari ia sangat merindukannya, dan berangkat menuju Kediri diiringi para pengawalnya.',
@@ -211,6 +232,8 @@
       travelBtn: '🐎 CONTINUE THE JOURNEY',
       searchBtn: '🔍 SEARCH FOR PANJI SEMIRANG',
       fightBtn: '⚔️ DEFEAT THE OUTLAWS',
+      muteLabel: 'Turn off narration',
+      unmuteLabel: 'Turn on narration',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'Raden Inu Kertapati, crown prince of the Jenggala Kingdom, has long been betrothed to Dewi Candra Kirana, princess of the Kediri Kingdom. One day, missing her deeply, he sets off for Kediri with his guards.',
@@ -241,6 +264,67 @@
   document.getElementById('rik-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('rik-caption').textContent = TXT.captionInit;
   document.getElementById('rik-actionBtn').textContent = TXT.nextBtn;
+
+  /* ---------- Narration (Web Speech API) ---------- */
+  var SPEECH_KEY = 'rik-narration-muted';
+  var muted = false;
+  try { muted = localStorage.getItem(SPEECH_KEY) === '1'; } catch(e){}
+
+  var voices = [];
+  function loadVoices(){
+    voices = (window.speechSynthesis && window.speechSynthesis.getVoices()) || [];
+  }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice(lang){
+    if(!voices.length) return null;
+    var wanted = lang === 'id' ? 'id' : 'en';
+    var candidates = voices.filter(function(v){
+      return v.lang && v.lang.toLowerCase().indexOf(wanted) === 0;
+    });
+    if(!candidates.length) return null;
+    var preferred = candidates.filter(function(v){ return /female/i.test(v.name); })[0];
+    return preferred || candidates[0];
+  }
+
+  function speak(text){
+    if(!window.speechSynthesis || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+    var v = pickVoice(LANG);
+    if(v) u.voice = v;
+    u.rate = 0.92;
+    u.pitch = 1.02;
+    window.speechSynthesis.speak(u);
+  }
+
+  function stopSpeaking(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  var muteBtn = document.getElementById('rik-muteBtn');
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    var label = muted ? TXT.unmuteLabel : TXT.muteLabel;
+    muteBtn.setAttribute('aria-label', label);
+    muteBtn.title = label;
+  }
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try { localStorage.setItem(SPEECH_KEY, muted ? '1' : '0'); } catch(e){}
+    if(muted){
+      stopSpeaking();
+    } else {
+      speak(captionEl.textContent);
+    }
+    updateMuteBtn();
+  });
+  updateMuteBtn();
+  /* ------------------------------------------------- */
 
   var canvas = document.getElementById('rik-canvas');
   var ctx = canvas.getContext('2d');
@@ -309,12 +393,15 @@
       else actionBtn.textContent = TXT.holdBtn;
       progressWrap.classList.add('show');
     }
+
+    speak(step.text);
   }
 
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();

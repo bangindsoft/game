@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #dlg2-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #dlg2-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   #dlg2-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #dlg2-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #8A4A2A;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #dlg2-voiceBtn.off { background: #9a9a9a; }
   #dlg2-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +138,10 @@
   <h2>🐛 Asal Usul Danau Lipan</h2>
   <p id="dlg2-sub">Cerita rakyat Kalimantan Timur tentang Putri Aji Bedarah Putih dan sumpah lipan raksasanya.</p>
 
-  <div id="dlg2-hud"><span id="dlg2-phase">Tahap 1 / 5</span></div>
+  <div id="dlg2-hud">
+    <span id="dlg2-phase">Tahap 1 / 5</span>
+    <button id="dlg2-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
 
   <div id="dlg2-canvas-holder">
     <canvas id="dlg2-canvas"></canvas>
@@ -169,6 +184,8 @@
       startTitle: 'Asal Usul Danau Lipan',
       startBody: 'Putri Aji Bedarah Putih menolak lamaran seorang raja yang sombong, hingga kerajaannya diserang pasukan besar. Ikuti kisahnya hingga asal usul Danau Lipan di Kalimantan Timur.',
       startBtn: 'Mulai Kisah',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       winTitle: 'Asal Usul Danau Lipan 🐛',
       winBody: 'Daerah bekas medan perang itu kini dikenal dengan nama Danau Lipan, sebuah kawasan di Muara Kaman, Kutai Kartanegara, Kalimantan Timur — dinamai demikian karena dahulu pernah dipenuhi binatang lipan besar.',
       playAgainBtn: 'Main Lagi',
@@ -199,6 +216,8 @@
       startTitle: 'The Origin of Danau Lipan',
       startBody: 'Princess Aji Bedarah Putih refuses the proposal of an arrogant king, and her kingdom is attacked by a massive army in retaliation. Follow the story to the origin of Lake Lipan in East Kalimantan.',
       startBtn: 'Start the Tale',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       winTitle: 'The Origin of Danau Lipan 🐛',
       winBody: 'The former battlefield is now known as Danau Lipan (Centipede Lake), an area in Muara Kaman, Kutai Kartanegara, East Kalimantan — named for once being swarming with giant centipedes.',
       playAgainBtn: 'Play Again',
@@ -235,6 +254,28 @@
   document.getElementById('dlg2-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('dlg2-caption').textContent = TXT.captionInit;
   document.getElementById('dlg2-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('dlg2-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
 
   var canvas = document.getElementById('dlg2-canvas');
   var ctx = canvas.getContext('2d');
@@ -285,6 +326,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -305,6 +347,7 @@
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
+      speak(TXT.winBody);
       winOverlay.classList.add('show');
       return;
     }

@@ -36,6 +36,8 @@
   #ksg-hud {
     display: flex;
     justify-content: center;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 6px;
   }
   #ksg-phase {
@@ -47,6 +49,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #ksg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #4C9A96;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #ksg-voiceBtn.off { background: #9a9a9a; }
   #ksg-canvas-holder {
     position: relative;
     width: 100%;
@@ -141,7 +155,10 @@
   <h2>🐄 Kancil Menyelamatkan Anak Sapi</h2>
   <p id="ksg-sub">Bantu Anak Sapi lolos dari Pak Buaya yang licik, berkat akal cerdik Si Kancil!</p>
 
-  <div id="ksg-hud"><span id="ksg-phase">Tahap 1 / 3</span></div>
+  <div id="ksg-hud">
+    <span id="ksg-phase">Tahap 1 / 3</span>
+    <button id="ksg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
 
   <div id="ksg-canvas-holder">
     <canvas id="ksg-canvas"></canvas>
@@ -200,6 +217,8 @@
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Dorong',
       runBtn: '🏃 LARI!',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       phase: function(p){ return 'Tahap ' + p + ' / 3'; },
       steps: [
         'Anak Sapi mendengar teriakan minta tolong dari Pak Buaya yang terjepit pohon tumbang di sungai.',
@@ -229,6 +248,8 @@
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Push',
       runBtn: '🏃 RUN!',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       phase: function(p){ return 'Stage ' + p + ' / 3'; },
       steps: [
         'A Calf hears a cry for help from a Crocodile trapped under a fallen tree by the river.',
@@ -257,6 +278,28 @@
   document.getElementById('ksg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('ksg-caption').textContent = TXT.captionInit;
   document.getElementById('ksg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('ksg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
 
   var canvas = document.getElementById('ksg-canvas');
   var ctx = canvas.getContext('2d');
@@ -317,6 +360,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     qteActive = false;
@@ -347,6 +391,7 @@
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
+      speak(TXT.winBody);
       winOverlay.classList.add('show');
       return;
     }
@@ -433,6 +478,7 @@
       qteTimeLeft -= dt;
       if(qteTimeLeft <= 0){
         qteActive = false;
+        speak(TXT.caughtBody);
         caughtOverlay.classList.add('show');
       }
     }
