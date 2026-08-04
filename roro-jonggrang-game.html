@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #rjg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #rjg-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #rjg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,18 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #rjg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #8A5A1E;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #rjg-voiceBtn.off { background: #9a9a9a; }
   #rjg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +138,10 @@
   <h2>🛕 Legenda Roro Jonggrang</h2>
   <p id="rjg-sub">Ikuti kisah Bandung Bondowoso membangun seribu candi dalam semalam, asal usul Candi Prambanan.</p>
 
-  <div id="rjg-hud"><span id="rjg-phase">Tahap 1 / 5</span></div>
+  <div id="rjg-hud">
+    <span id="rjg-phase">Tahap 1 / 5</span>
+    <button id="rjg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
 
   <div id="rjg-canvas-holder">
     <canvas id="rjg-canvas"></canvas>
@@ -173,6 +188,8 @@
       winBody: 'Hingga kini, Candi Prambanan berdiri megah sebagai salah satu candi terbesar di Indonesia. Arca dewi cantik di dalamnya dipercaya masyarakat setempat sebagai penjelmaan Roro Jonggrang.',
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       buildBtn: '🛕 BANGUN CANDI',
@@ -204,6 +221,8 @@
       winBody: 'To this day, Prambanan Temple stands as one of the grandest temples in Indonesia. The statue of the beautiful goddess within is believed by local people to be Roro Jonggrang, turned to stone.',
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Press On',
       buildBtn: '🛕 BUILD THE TEMPLES',
@@ -237,6 +256,28 @@
   document.getElementById('rjg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('rjg-caption').textContent = TXT.captionInit;
   document.getElementById('rjg-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('rjg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
 
   var canvas = document.getElementById('rjg-canvas');
   var ctx = canvas.getContext('2d');
@@ -287,6 +328,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -308,6 +350,7 @@
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
+      speak(TXT.winBody);
       winOverlay.classList.add('show');
       return;
     }
