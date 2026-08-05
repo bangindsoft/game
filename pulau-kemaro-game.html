@@ -33,7 +33,13 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #pkg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #pkg-hud {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
   #pkg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +49,23 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #pkg-muteBtn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #B5302A;
+    background: #fff;
+    color: #B5302A;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  #pkg-muteBtn:active { transform: scale(0.94); }
+  #pkg-muteBtn.muted { background: #f0e9df; color: #9a8f7f; border-color: #cbbfa9; }
   #pkg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +149,10 @@
   <h2>🏮 Legenda Pulau Kemaro</h2>
   <p id="pkg-sub">Kisah cinta Putri Siti Fatimah dan saudagar Tam Bun An, cerita rakyat Sumatera Selatan.</p>
 
-  <div id="pkg-hud"><span id="pkg-phase">Tahap 1 / 5</span></div>
+  <div id="pkg-hud">
+    <span id="pkg-phase">Tahap 1 / 5</span>
+    <button id="pkg-muteBtn" type="button" aria-pressed="false" title="Bisukan narasi">🔊</button>
+  </div>
 
   <div id="pkg-canvas-holder">
     <canvas id="pkg-canvas"></canvas>
@@ -178,6 +204,9 @@
       doveBtn: '🕊️ KIRIM MERPATI',
       throwBtn: '🏺 LEMPAR GUCI',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      muteOnLabel: 'Matikan narasi suara',
+      muteOffLabel: 'Nyalakan narasi suara',
+      voiceUnavailable: 'Narasi suara tidak didukung di perangkat ini.',
       steps: [
         'Konon pada zaman Kerajaan Sriwijaya, memerintah seorang raja bijaksana yang memiliki putri cantik bernama Siti Fatimah.',
         'Suatu ketika, rombongan saudagar dari Cina dipimpin Tam Bun An datang ke Kerajaan Sriwijaya membawa arak-arakan musik dan barongsai. Siti Fatimah pun keluar melihat kehebohan itu.',
@@ -207,6 +236,9 @@
       doveBtn: '🕊️ SEND THE DOVE',
       throwBtn: '🏺 THROW THE JARS',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      muteOnLabel: 'Turn off voice narration',
+      muteOffLabel: 'Turn on voice narration',
+      voiceUnavailable: 'Voice narration is not supported on this device.',
       steps: [
         'Legend has it that during the era of the Srivijaya Kingdom, a wise king ruled, blessed with a beautiful daughter named Siti Fatimah.',
         'One day, a group of merchants from China, led by Tam Bun An, arrives at the Srivijaya Kingdom with a parade of music and a lion dance. Siti Fatimah comes out to see the commotion.',
@@ -233,6 +265,69 @@
   document.getElementById('pkg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('pkg-caption').textContent = TXT.captionInit;
   document.getElementById('pkg-actionBtn').textContent = TXT.nextBtn;
+
+  // ---- Narasi suara (Web Speech API) ----
+  var SPEECH_SUPPORTED = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+  var VOICE_LANG = LANG === 'en' ? 'en-US' : 'id-ID';
+  var muteBtn = document.getElementById('pkg-muteBtn');
+  var muted = false;
+  try { muted = localStorage.getItem('pkg-muted') === '1'; } catch(e){}
+  var chosenVoice = null;
+
+  function pickVoice(){
+    if(!SPEECH_SUPPORTED) return;
+    var voices = window.speechSynthesis.getVoices() || [];
+    var langPrefix = VOICE_LANG.slice(0,2).toLowerCase();
+    var sameLang = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(langPrefix) === 0; });
+    var exact = sameLang.filter(function(v){ return v.lang.toLowerCase() === VOICE_LANG.toLowerCase(); });
+    chosenVoice = exact[0] || sameLang[0] || null;
+  }
+
+  if(SPEECH_SUPPORTED){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+  }
+
+  function stopSpeak(){
+    if(SPEECH_SUPPORTED) window.speechSynthesis.cancel();
+  }
+
+  function speak(text){
+    if(!SPEECH_SUPPORTED || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = VOICE_LANG;
+    if(chosenVoice) u.voice = chosenVoice;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    if(!SPEECH_SUPPORTED){
+      muteBtn.textContent = '🔇';
+      muteBtn.classList.add('muted');
+      muteBtn.title = TXT.voiceUnavailable;
+      muteBtn.disabled = true;
+      return;
+    }
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    muteBtn.title = muted ? TXT.muteOffLabel : TXT.muteOnLabel;
+  }
+  updateMuteBtn();
+
+  if(muteBtn){
+    muteBtn.addEventListener('click', function(){
+      if(!SPEECH_SUPPORTED) return;
+      muted = !muted;
+      try { localStorage.setItem('pkg-muted', muted ? '1' : '0'); } catch(e){}
+      if(muted) stopSpeak();
+      updateMuteBtn();
+    });
+  }
 
   var canvas = document.getElementById('pkg-canvas');
   var ctx = canvas.getContext('2d');
@@ -282,6 +377,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -303,12 +399,14 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
   }
 
   function resetGame(){
+    stopSpeak();
     stepIndex = 0;
     showStep();
   }

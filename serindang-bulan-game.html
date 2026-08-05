@@ -10,6 +10,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: transparent; }
   #psb-wrap {
+    position: relative;
     max-width: 760px;
     margin: 0 auto;
     font-family: 'Nunito', sans-serif;
@@ -19,6 +20,28 @@
     border-radius: 18px;
     padding: 14px 16px 18px;
   }
+  #psb-muteBtn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #8A4A2A;
+    background: #FFF7EA;
+    color: #6E3A1E;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  #psb-muteBtn:active { transform: scale(0.94); }
+  #psb-muteBtn.muted { background: #EAE0D2; color: #9c8f7a; }
+  #psb-muteBtn.unsupported { display: none; }
   #psb-wrap h2 {
     font-family: 'Baloo 2', sans-serif;
     font-weight: 700;
@@ -123,6 +146,7 @@
 </head>
 <body>
 <div id="psb-wrap">
+  <button id="psb-muteBtn" type="button" title="Matikan suara narasi" aria-label="Matikan suara narasi">🔊</button>
   <h2>🌙 Putri Serindang Bulan</h2>
   <p id="psb-sub">Cerita rakyat Bengkulu tentang putri bungsu yang setia meski disingkirkan kakak-kakaknya.</p>
 
@@ -177,6 +201,8 @@
       holdBtn: 'Tahan untuk Berjuang',
       walkBtn: '🚶 MENUJU HUTAN',
       raftBtn: '🛶 ARUNGI SUNGAI',
+      muteTitle: 'Matikan suara narasi',
+      unmuteTitle: 'Nyalakan suara narasi',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Dahulu di Bengkulu, Raja Wawang memiliki tujuh putri. Yang paling bungsu, Putri Serindang Bulan, terkenal paling cantik, namun selalu menolak lamaran karena tak ingin melangkahi keenam kakaknya.',
@@ -208,6 +234,8 @@
       holdBtn: 'Hold to Press On',
       walkBtn: '🚶 HEAD TO THE FOREST',
       raftBtn: '🛶 RAFT DOWN THE RIVER',
+      muteTitle: 'Mute narration',
+      unmuteTitle: 'Unmute narration',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'Long ago in Bengkulu, King Wawang had seven daughters. The youngest, Princess Serindang Bulan, was known as the most beautiful, yet always turned down proposals, unwilling to marry before her six older sisters.',
@@ -237,6 +265,8 @@
   document.getElementById('psb-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('psb-caption').textContent = TXT.captionInit;
   document.getElementById('psb-actionBtn').textContent = TXT.nextBtn;
+  document.getElementById('psb-muteBtn').title = TXT.muteTitle;
+  document.getElementById('psb-muteBtn').setAttribute('aria-label', TXT.muteTitle);
 
   var canvas = document.getElementById('psb-canvas');
   var ctx = canvas.getContext('2d');
@@ -265,6 +295,86 @@
   var t = 0;
   var holdAdvancing = false;
 
+  // ---- Narasi suara (Web Speech API) ----
+  var muteBtn = document.getElementById('psb-muteBtn');
+  var NARRATION_KEY = 'psb-narration-muted';
+  var synth = (typeof window !== 'undefined' && 'speechSynthesis' in window) ? window.speechSynthesis : null;
+  var narrationMuted = false;
+  try { narrationMuted = localStorage.getItem(NARRATION_KEY) === '1'; } catch(e){}
+
+  var voiceList = [];
+  function loadVoices(){
+    try { voiceList = synth ? synth.getVoices() : []; } catch(e){ voiceList = []; }
+  }
+  if(synth){
+    loadVoices();
+    if(typeof synth.addEventListener === 'function'){
+      synth.addEventListener('voiceschanged', loadVoices);
+    } else {
+      synth.onvoiceschanged = loadVoices;
+    }
+  } else if(muteBtn){
+    muteBtn.classList.add('unsupported');
+  }
+
+  function pickVoice(langCode){
+    if(!voiceList || !voiceList.length) return null;
+    var lower = langCode.toLowerCase();
+    var exact = null, partial = null;
+    for(var i=0;i<voiceList.length;i++){
+      var vl = (voiceList[i].lang || '').toLowerCase();
+      if(vl === lower){ exact = voiceList[i]; break; }
+      if(!partial && vl.indexOf(lower.split('-')[0]) === 0) partial = voiceList[i];
+    }
+    return exact || partial;
+  }
+
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    muteBtn.textContent = narrationMuted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', narrationMuted);
+    var label = narrationMuted ? TXT.unmuteTitle : TXT.muteTitle;
+    muteBtn.title = label;
+    muteBtn.setAttribute('aria-label', label);
+  }
+  updateMuteBtn();
+
+  function stopSpeech(){
+    if(synth) { try { synth.cancel(); } catch(e){} }
+  }
+
+  function speakText(text){
+    if(!synth || narrationMuted || !text) return;
+    stopSpeech();
+    var langCode = LANG === 'id' ? 'id-ID' : 'en-US';
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langCode;
+    var v = pickVoice(langCode);
+    if(v) utter.voice = v;
+    utter.rate = 0.92;
+    utter.pitch = 1.03;
+    try { synth.speak(utter); } catch(e){}
+  }
+
+  if(muteBtn){
+    muteBtn.addEventListener('click', function(){
+      narrationMuted = !narrationMuted;
+      try { localStorage.setItem(NARRATION_KEY, narrationMuted ? '1' : '0'); } catch(e){}
+      if(narrationMuted){
+        stopSpeech();
+      } else {
+        var cur = steps[stepIndex];
+        if(cur) speakText(cur.text);
+      }
+      updateMuteBtn();
+    });
+  }
+
+  window.addEventListener('beforeunload', stopSpeech);
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopSpeech();
+  });
+
   var steps = [
     { type:'caption', phase:1, scene:'raja_wawang_putri' },
     { type:'caption', phase:1, scene:'kakak_minta_menikah' },
@@ -288,6 +398,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speakText(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -309,6 +420,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speakText(TXT.winBody);
       return;
     }
     showStep();

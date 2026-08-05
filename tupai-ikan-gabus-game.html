@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #tig-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #tig-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #tig-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,25 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #tig-muteBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    background: #ffffff;
+    color: #2A4E34;
+    border: 2px solid #3D6B4A;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  #tig-muteBtn:active { transform: scale(0.94); }
+  #tig-muteBtn.muted { color: #a8998a; border-color: #a8998a; }
   #tig-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +145,10 @@
   <h2>🐿️ Tupai dan Ikan Gabus</h2>
   <p id="tig-sub">Cerita rakyat Kalimantan Barat tentang persahabatan dan keberanian Tupai menolong sahabatnya.</p>
 
-  <div id="tig-hud"><span id="tig-phase">Tahap 1 / 5</span></div>
+  <div id="tig-hud">
+    <span id="tig-phase">Tahap 1 / 5</span>
+    <button id="tig-muteBtn" type="button" title="Mute narasi" aria-label="Mute narasi">🔊</button>
+  </div>
 
   <div id="tig-canvas-holder">
     <canvas id="tig-canvas"></canvas>
@@ -179,6 +201,9 @@
       floatBtn: '🌊 BERTAHAN TERAPUNG',
       liverBtn: '💪 AMBIL HATINYA',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      muteTitle: 'Matikan narasi suara',
+      unmuteTitle: 'Nyalakan narasi suara',
+      speechLang: 'id-ID',
       steps: [
         'Alkisah, bersahabatlah dua ekor binatang, Tupai dan Ikan Gabus, yang tinggal di sebuah telaga di Kalimantan Barat. Mereka telah lama berteman baik dan saling tolong-menolong.',
         'Suatu hari, Tupai tidak menemukan sahabatnya di tempat biasa mereka bertemu. Ia pun mengunjungi rumah Ikan Gabus, dan mendapati sahabatnya itu tengah sakit keras serta kehilangan nafsu makan.',
@@ -210,6 +235,9 @@
       floatBtn: '🌊 STAY AFLOAT',
       liverBtn: '💪 GRAB THE LIVER',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      muteTitle: 'Mute narration',
+      unmuteTitle: 'Unmute narration',
+      speechLang: 'en-US',
       steps: [
         'Once upon a time, two animals were the best of friends: Tupai the squirrel and Ikan Gabus the snakehead fish, living in a lake in West Kalimantan. They had long been close friends, always helping one another.',
         'One day, Tupai can\'t find his friend at their usual meeting spot. He visits Ikan Gabus\'s home, and finds his friend gravely ill, having lost his appetite entirely.',
@@ -237,6 +265,80 @@
   document.getElementById('tig-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('tig-caption').textContent = TXT.captionInit;
   document.getElementById('tig-actionBtn').textContent = TXT.nextBtn;
+
+  // --- Narasi suara (Web Speech API) ---
+  var muteBtn = document.getElementById('tig-muteBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var STORAGE_KEY = 'tig-narration-muted';
+  var muted = false;
+  try { muted = localStorage.getItem(STORAGE_KEY) === '1'; } catch(e){ muted = false; }
+
+  var voicesCache = [];
+  function loadVoices(){
+    if(!speechSupported) return;
+    voicesCache = window.speechSynthesis.getVoices() || [];
+  }
+  if(speechSupported){
+    loadVoices();
+    if('onvoiceschanged' in window.speechSynthesis){
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+
+  function pickVoice(){
+    if(!voicesCache.length) return null;
+    var wantLang = TXT.speechLang.toLowerCase();
+    var wantPrefix = wantLang.split('-')[0];
+    var exact = voicesCache.find(function(v){ return v.lang && v.lang.toLowerCase() === wantLang; });
+    if(exact) return exact;
+    var prefixMatch = voicesCache.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wantPrefix) === 0; });
+    if(prefixMatch) return prefixMatch;
+    return null;
+  }
+
+  function updateMuteBtn(){
+    if(!speechSupported){
+      muteBtn.style.display = 'none';
+      return;
+    }
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    muteBtn.title = muted ? TXT.unmuteTitle : TXT.muteTitle;
+    muteBtn.setAttribute('aria-label', muteBtn.title);
+  }
+  updateMuteBtn();
+
+  function stopSpeech(){
+    if(speechSupported) window.speechSynthesis.cancel();
+  }
+
+  function speakText(text){
+    if(!speechSupported || muted || !text) return;
+    stopSpeech();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = TXT.speechLang;
+    var v = pickVoice();
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    window.speechSynthesis.speak(utter);
+  }
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try { localStorage.setItem(STORAGE_KEY, muted ? '1' : '0'); } catch(e){}
+    if(muted) stopSpeech();
+    else {
+      var step = steps[stepIndex];
+      if(step) speakText(step.text);
+    }
+    updateMuteBtn();
+  });
+
+  window.addEventListener('beforeunload', stopSpeech);
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopSpeech();
+  });
 
   var canvas = document.getElementById('tig-canvas');
   var ctx = canvas.getContext('2d');
@@ -303,11 +405,14 @@
       else actionBtn.textContent = TXT.holdBtn;
       progressWrap.classList.add('show');
     }
+
+    speakText(step.text);
   }
 
   function nextStep(){
     stepIndex++;
     if(stepIndex >= steps.length){
+      stopSpeech();
       winOverlay.classList.add('show');
       return;
     }
@@ -315,6 +420,7 @@
   }
 
   function resetGame(){
+    stopSpeech();
     stepIndex = 0;
     showStep();
   }

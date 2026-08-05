@@ -10,6 +10,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: transparent; }
   #bkg-wrap {
+    position: relative;
     max-width: 760px;
     margin: 0 auto;
     font-family: 'Nunito', sans-serif;
@@ -19,6 +20,25 @@
     border-radius: 18px;
     padding: 14px 16px 18px;
   }
+  #bkg-muteBtn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #FFC857;
+    color: #5c3d00;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+  #bkg-muteBtn:active { transform: scale(0.94); }
   #bkg-wrap h2 {
     font-family: 'Baloo 2', sans-serif;
     font-weight: 700;
@@ -123,6 +143,7 @@
 </head>
 <body>
 <div id="bkg-wrap">
+  <button id="bkg-muteBtn" type="button" aria-label="Bisukan suara">🔊</button>
   <h2>🪨 Legenda Batu Keramat</h2>
   <p id="bkg-sub">Ikuti kisah Irimiami dan Isoray menemukan batu ajaib di Kepulauan Yapen, Papua.</p>
 
@@ -178,6 +199,8 @@
       testMeatBtn: '🥩 UJI DAGING',
       testLeafBtn: '🍂 UJI DEDAUNAN',
       extinguishBtn: '💧 PADAMKAN API',
+      muteOnLabel: 'Bisukan suara narasi',
+      muteOffLabel: 'Aktifkan suara narasi',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Di Gunung Kamboi Rama, Kepulauan Yapen, Papua, berdiri dua desa kecil: Desa Kamboi Rama yang dihuni manusia, dan Desa Aroempi yang penuh tanaman sagu milik Dewa Iriwonawani.',
@@ -210,6 +233,8 @@
       testMeatBtn: '🥩 TEST WITH MEAT',
       testLeafBtn: '🍂 TEST WITH LEAVES',
       extinguishBtn: '💧 PUT OUT THE FIRE',
+      muteOnLabel: 'Mute narration',
+      muteOffLabel: 'Unmute narration',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'On Mount Kamboi Rama, Yapen Islands, Papua, stood two small villages: Kamboi Rama, home to people, and Aroempi, filled with sago palms belonging to the god Iriwonawani.',
@@ -239,6 +264,74 @@
   document.getElementById('bkg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('bkg-caption').textContent = TXT.captionInit;
   document.getElementById('bkg-actionBtn').textContent = TXT.nextBtn;
+
+  // --- Narasi suara (Web Speech API) / Voice narration ---
+  var MUTE_KEY = 'bkg-batukeramat-muted';
+  var muteBtn = document.getElementById('bkg-muteBtn');
+  var synth = window.speechSynthesis || null;
+  var isMuted = (function(){
+    try { return localStorage.getItem(MUTE_KEY) === '1'; } catch(e){ return false; }
+  })();
+  var cachedVoice = null;
+
+  function pickVoice(){
+    if(!synth) return null;
+    var voices = synth.getVoices();
+    if(!voices || !voices.length) return null;
+    var want = LANG === 'en' ? 'en' : 'id';
+    var exact = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want) === 0; });
+    if(exact.length){
+      var local = exact.find(function(v){ return v.localService; });
+      return local || exact[0];
+    }
+    return null;
+  }
+
+  if(synth){
+    cachedVoice = pickVoice();
+    if('onvoiceschanged' in synth){
+      synth.onvoiceschanged = function(){ cachedVoice = pickVoice(); };
+    }
+  }
+
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    var label = isMuted ? TXT.muteOffLabel : TXT.muteOnLabel;
+    muteBtn.setAttribute('aria-label', label);
+    muteBtn.title = label;
+  }
+  updateMuteBtn();
+
+  if(!synth && muteBtn){
+    muteBtn.style.display = 'none';
+  }
+
+  function narrate(text){
+    if(!synth || isMuted || !text) return;
+    synth.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+    var v = cachedVoice || pickVoice();
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    synth.speak(utter);
+  }
+
+  if(muteBtn){
+    muteBtn.addEventListener('click', function(){
+      isMuted = !isMuted;
+      try { localStorage.setItem(MUTE_KEY, isMuted ? '1' : '0'); } catch(e){}
+      updateMuteBtn();
+      if(isMuted){
+        if(synth) synth.cancel();
+      } else {
+        var step = steps[stepIndex];
+        if(step) narrate(step.text);
+      }
+    });
+  }
 
   var canvas = document.getElementById('bkg-canvas');
   var ctx = canvas.getContext('2d');
@@ -290,6 +383,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    narrate(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -312,6 +406,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      narrate(TXT.winBody);
       return;
     }
     showStep();

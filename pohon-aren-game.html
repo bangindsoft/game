@@ -10,6 +10,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: transparent; }
   #pag-wrap {
+    position: relative;
     max-width: 760px;
     margin: 0 auto;
     font-family: 'Nunito', sans-serif;
@@ -19,6 +20,26 @@
     border-radius: 18px;
     padding: 14px 16px 18px;
   }
+  #pag-muteBtn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #3D6B4A;
+    background: #fff;
+    color: #2A4E34;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 5;
+  }
+  #pag-muteBtn:active { transform: scale(0.95); }
   #pag-wrap h2 {
     font-family: 'Baloo 2', sans-serif;
     font-weight: 700;
@@ -123,6 +144,7 @@
 </head>
 <body>
 <div id="pag-wrap">
+  <button id="pag-muteBtn" aria-label="Bisukan narasi" title="Bisukan narasi">🔊</button>
   <h2>🌴 Asal Mula Pohon Aren</h2>
   <p id="pag-sub">Cerita rakyat Tanah Karo, Sumatera Utara, tentang pengorbanan Beru Sibou demi kakaknya.</p>
 
@@ -178,6 +200,9 @@
       travelBtn: '🎒 MERANTAU KE KOTA',
       climbBtn: '🌳 PANJAT POHON TINGGI',
       prayBtn: '🙏 KEAJAIBAN TERJADI',
+      muteLabel: 'Bisukan narasi',
+      unmuteLabel: 'Aktifkan narasi',
+      speechLang: 'id-ID',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Di Tanah Karo, hiduplah keluarga sederhana dengan dua anak: Tare Iluh dan adiknya, Beru Sibou. Meski hidup sederhana, sang ayah bekerja keras siang malam menghidupi keluarganya.',
@@ -210,6 +235,9 @@
       travelBtn: '🎒 TRAVEL TO THE CITY',
       climbBtn: '🌳 CLIMB THE TALL TREE',
       prayBtn: '🙏 THE MIRACLE HAPPENS',
+      muteLabel: 'Mute narration',
+      unmuteLabel: 'Unmute narration',
+      speechLang: 'en-US',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'In Tanah Karo lived a simple family with two children: Tare Iluh and his younger sister, Beru Sibou. Though they lived humbly, their father worked tirelessly day and night to support the family.',
@@ -239,6 +267,67 @@
   document.getElementById('pag-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('pag-caption').textContent = TXT.captionInit;
   document.getElementById('pag-actionBtn').textContent = TXT.nextBtn;
+
+  // ---- Narration (Web Speech API) ----
+  var muteBtn = document.getElementById('pag-muteBtn');
+  var SPEECH_SUPPORTED = ('speechSynthesis' in window);
+  var muted = false;
+  try { muted = localStorage.getItem('pag-muted') === '1'; } catch(e){}
+  var narrationStarted = false;
+  var cachedVoices = [];
+
+  function loadVoices(){
+    if(!SPEECH_SUPPORTED) return;
+    cachedVoices = speechSynthesis.getVoices() || [];
+  }
+  if(SPEECH_SUPPORTED){
+    loadVoices();
+    speechSynthesis.addEventListener('voiceschanged', loadVoices);
+  }
+
+  function pickVoice(lang){
+    if(!cachedVoices.length) return null;
+    var exact = cachedVoices.find(function(v){ return v.lang === lang; });
+    if(exact) return exact;
+    var prefix = lang.slice(0,2).toLowerCase();
+    var partial = cachedVoices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(prefix) === 0; });
+    return partial || null;
+  }
+
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    var label = muted ? TXT.unmuteLabel : TXT.muteLabel;
+    muteBtn.setAttribute('aria-label', label);
+    muteBtn.title = label;
+  }
+  updateMuteBtn();
+  if(!SPEECH_SUPPORTED){
+    muteBtn.style.display = 'none';
+  }
+
+  function speak(text){
+    if(!SPEECH_SUPPORTED || muted || !narrationStarted || !text) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = TXT.speechLang;
+    var v = pickVoice(TXT.speechLang);
+    if(v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    speechSynthesis.speak(u);
+  }
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try { localStorage.setItem('pag-muted', muted ? '1' : '0'); } catch(e){}
+    updateMuteBtn();
+    if(muted){
+      if(SPEECH_SUPPORTED) speechSynthesis.cancel();
+    } else {
+      var step = steps[stepIndex];
+      if(step) speak(step.text);
+    }
+  });
 
   var canvas = document.getElementById('pag-canvas');
   var ctx = canvas.getContext('2d');
@@ -293,6 +382,7 @@
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
+    speak(step.text);
 
     if(step.type === 'caption'){
       actionBtn.className = '';
@@ -312,6 +402,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
@@ -348,10 +439,13 @@
 
   document.getElementById('pag-startBtn').addEventListener('click', function(){
     startOverlay.classList.remove('show');
+    narrationStarted = true;
     resetGame();
   });
   document.getElementById('pag-playAgainBtn').addEventListener('click', function(){
     winOverlay.classList.remove('show');
+    if(SPEECH_SUPPORTED) speechSynthesis.cancel();
+    narrationStarted = true;
     resetGame();
   });
 
