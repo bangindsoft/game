@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Selat Bali</title>
+<style>
+  :root{
+    --bg:#141311;
+    --panel:#1c1b18;
+    --cream:#eee7d8;
+    --accent:#e0483e;
+    --gold:#d9a441;
+    --teal:#2a7f7e;
+    --line:#33312b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Segoe UI',Roboto,Arial,sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:680px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .sprocket{
+    height:10px;
+    background-image:repeating-linear-gradient(90deg,var(--bg) 0 6px,transparent 6px 14px);
+    background-color:var(--line);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+  }
+  header h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:16px;
+    margin:0;
+    color:var(--gold);
+    letter-spacing:.3px;
+  }
+  .controls{display:flex;gap:6px;align-items:center;}
+  .btn{
+    background:var(--panel);
+    color:var(--cream);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn:hover{border-color:var(--gold);}
+  .btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .stage-wrap{position:relative;background:#000;}
+  canvas{display:block;width:100%;height:auto;background:#000;}
+  #overlay{
+    position:absolute;inset:0;
+    display:flex;align-items:flex-end;justify-content:center;
+    pointer-events:none;
+  }
+  #qteLayer{
+    position:absolute;inset:0;
+    pointer-events:none;
+  }
+  .qte-target{
+    position:absolute;
+    width:56px;height:56px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--gold) 60%,#8a5c12 100%);
+    border:2px solid #fff3;
+    box-shadow:0 0 18px 4px rgba(217,164,65,.7);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+    cursor:pointer;
+    pointer-events:all;
+    animation:pop .18s ease-out;
+  }
+  @keyframes pop{from{transform:scale(.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .qte-tail{
+    position:absolute;
+    padding:10px 18px;
+    background:linear-gradient(180deg,#c0392b,var(--accent));
+    border-radius:30px;
+    color:#fff;
+    font-weight:bold;
+    font-size:14px;
+    cursor:pointer;
+    pointer-events:all;
+    box-shadow:0 0 20px rgba(224,72,62,.7);
+    animation:pop .18s ease-out;
+  }
+  #dragHint{
+    position:absolute;left:0;right:0;top:8px;text-align:center;
+    font-size:12px;color:var(--cream);opacity:.85;
+    pointer-events:none;
+  }
+  .storybox{
+    padding:16px 18px 8px 18px;
+    background:var(--panel);
+  }
+  .narration{
+    font-size:15px;
+    line-height:1.55;
+    min-height:74px;
+    color:var(--cream);
+  }
+  .footer-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 18px 16px 18px;
+    gap:10px;
+  }
+  .dots{display:flex;gap:5px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--line);}
+  .dot.on{background:var(--gold);}
+  .next-btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:10px 20px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .next-btn:hover{filter:brightness(1.1);}
+  .next-btn:disabled{opacity:.35;cursor:not-allowed;}
+  .titlecard{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 30%,#2a2620,#0c0b09 75%);
+    gap:14px;text-align:center;padding:20px;
+  }
+  .titlecard h2{
+    font-family:Georgia,'Times New Roman',serif;
+    color:var(--gold);
+    font-size:24px;margin:0;
+  }
+  .titlecard p{color:var(--cream);opacity:.85;margin:0;font-size:13px;max-width:420px;}
+  .start-btn{
+    background:var(--teal);
+    color:#fff;border:none;border-radius:24px;
+    padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(42,127,126,.5);
+  }
+  .start-btn:hover{filter:brightness(1.12);}
+  .hidden{display:none !important;}
+  .muteIcon{font-size:14px;}
+  .replay-row{display:flex;justify-content:center;padding:0 0 16px 0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="sprocket"></div>
+  <header>
+    <h1 id="gameTitle">Asal Mula Selat Bali</h1>
+    <div class="controls">
+      <button class="btn" id="langId">ID</button>
+      <button class="btn" id="langEn">EN</button>
+      <button class="btn" id="muteBtn"><span class="muteIcon">🔊</span></button>
+    </div>
+  </header>
+
+  <div class="stage-wrap">
+    <canvas id="stage" width="800" height="450"></canvas>
+    <div id="qteLayer"></div>
+    <div id="titleCard" class="titlecard">
+      <h2 id="titleHeading">Asal Mula Selat Bali</h2>
+      <p id="titleSub">Sebuah dongeng rakyat dari Bali tentang Manik Angkeran, Sidi Mantra, dan Naga Besukih.</p>
+      <button class="start-btn" id="startBtn">▶ Mulai</button>
+    </div>
+  </div>
+
+  <div class="storybox">
+    <div class="narration" id="narrationText"></div>
+  </div>
+  <div class="footer-row">
+    <div class="dots" id="dots"></div>
+    <button class="next-btn" id="nextBtn">Lanjut ▸</button>
+  </div>
+  <div class="replay-row hidden" id="replayRow">
+    <button class="btn" id="replayBtn">↺ Ulangi Cerita / Replay</button>
+  </div>
+  <div class="sprocket"></div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const qteLayer = document.getElementById('qteLayer');
+  const narrationEl = document.getElementById('narrationText');
+  const nextBtn = document.getElementById('nextBtn');
+  const dotsEl = document.getElementById('dots');
+  const titleCard = document.getElementById('titleCard');
+  const startBtn = document.getElementById('startBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const langIdBtn = document.getElementById('langId');
+  const langEnBtn = document.getElementById('langEn');
+  const replayRow = document.getElementById('replayRow');
+  const replayBtn = document.getElementById('replayBtn');
+  const gameTitle = document.getElementById('gameTitle');
+  const titleHeading = document.getElementById('titleHeading');
+  const titleSub = document.getElementById('titleSub');
+
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+  let muted = false;
+  let frame = 0;
+  let rafId = null;
+
+  function t(id, en){ return lang === 'id' ? id : en; }
+
+  // ---------- Speech ----------
+  const synth = window.speechSynthesis;
+  let voicesReady = false;
+  let voices = [];
+  function loadVoices(){
+    voices = synth ? synth.getVoices() : [];
+    if(voices.length) voicesReady = true;
+  }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(targetLang){
+    if(!voices.length) return null;
+    const code = targetLang === 'id' ? 'id' : 'en';
+    let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(code));
+    if(!v && code === 'id') v = voices.find(v => /indonesia/i.test(v.name));
+    return v || null;
+  }
+  function speak(text){
+    if(!synth || muted || !text) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    const v = pickVoice(lang);
+    if(v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    synth.speak(u);
+  }
+  function stopSpeak(){ if(synth) synth.cancel(); }
+
+  // ---------- Palette / drawing helpers ----------
+  const PAL = {
+    skyDay: ['#3d6b8a','#8fb9c9','#e9dcae'],
+    skyDusk: ['#241428','#7a3b3f','#e07a3e'],
+    skyNight: ['#0a0d1a','#151b33','#2a2a4a'],
+    volcano: ['#3a2418','#5b3320'],
+    lava: '#ff7a33',
+    sea: ['#0d3b4a','#1c6b73','#3fa5a0'],
+    land: '#3a4a2c',
+    gold: '#d9a441'
+  };
+
+  function grad(x0,y0,x1,y1,stops){
+    const g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach((c,i)=>g.addColorStop(i/(stops.length-1), c));
+    return g;
+  }
+
+  function drawSky(colors){
+    ctx.fillStyle = grad(0,0,0,H,colors);
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawMountain(baseY, glow){
+    ctx.save();
+    ctx.fillStyle = PAL.volcano[0];
+    ctx.beginPath();
+    ctx.moveTo(W*0.15, baseY);
+    ctx.lineTo(W*0.5, baseY-260);
+    ctx.lineTo(W*0.62, baseY-160);
+    ctx.lineTo(W*0.85, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = PAL.volcano[1];
+    ctx.beginPath();
+    ctx.moveTo(W*0.42, baseY-190);
+    ctx.lineTo(W*0.5, baseY-260);
+    ctx.lineTo(W*0.58, baseY-190);
+    ctx.lineTo(W*0.5, baseY-140);
+    ctx.closePath();
+    ctx.fill();
+    if(glow){
+      const g = ctx.createRadialGradient(W*0.5, baseY-190, 5, W*0.5, baseY-190, 70);
+      g.addColorStop(0, 'rgba(255,140,50,.9)');
+      g.addColorStop(1, 'rgba(255,140,50,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(W*0.5, baseY-190, 70, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawGround(y, color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,y,W,H-y);
+  }
+
+  function drawFigure(x,y,scale,color,pose){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    // head
+    ctx.beginPath(); ctx.arc(0,-58,10,0,Math.PI*2); ctx.fill();
+    // body
+    ctx.beginPath();
+    ctx.moveTo(-9,-48); ctx.lineTo(9,-48); ctx.lineTo(6,0); ctx.lineTo(-6,0);
+    ctx.closePath(); ctx.fill();
+    if(pose==='pray'){
+      ctx.beginPath(); ctx.moveTo(0,-40); ctx.lineTo(0,-25); ctx.stroke();
+    } else if(pose==='kneel'){
+      ctx.fillRect(-6,-4,12,10);
+    } else if(pose==='reach'){
+      ctx.beginPath();
+      ctx.moveTo(6,-40); ctx.lineTo(26,-30); ctx.stroke();
+    }
+    // legs
+    ctx.strokeStyle = color; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(-4,0); ctx.lineTo(-8,22); ctx.moveTo(4,0); ctx.lineTo(8,22); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDragon(x,y,scale,angle,tailCut){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(angle||0);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = PAL.gold;
+    ctx.lineWidth = 14;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-90,20);
+    ctx.quadraticCurveTo(-40,-40,0,0);
+    ctx.quadraticCurveTo(40,40,tailCut?70:90,tailCut?10:-10);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = '#8a1f1f';
+    ctx.beginPath();
+    ctx.ellipse(-95,20,18,12,0.3,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-100,15,2.4,0,Math.PI*2); ctx.fill();
+    if(tailCut){
+      ctx.fillStyle = '#ff5533';
+      ctx.beginPath(); ctx.arc(70,10,7,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawTable(x,y){
+    ctx.fillStyle = '#5a3d22';
+    ctx.fillRect(x-60,y,120,10);
+    ctx.fillRect(x-50,y+10,8,26);
+    ctx.fillRect(x+42,y+10,8,26);
+    ctx.fillStyle = '#eee7d8';
+    for(let i=0;i<3;i++){
+      ctx.save();
+      ctx.translate(x-30+i*30, y-6);
+      ctx.rotate((i-1)*0.15);
+      ctx.fillRect(-8,-11,16,22);
+      ctx.restore();
+    }
+  }
+
+  function drawWater(y, colors, width){
+    width = width===undefined ? W : width;
+    ctx.fillStyle = grad(0,y,0,H,colors);
+    ctx.fillRect(0,y,width,H-y);
+    ctx.strokeStyle = 'rgba(255,255,255,.25)';
+    ctx.lineWidth = 1.5;
+    for(let i=0;i<4;i++){
+      ctx.beginPath();
+      const yy = y + 12 + i*16 + Math.sin(frame/20+i)*3;
+      ctx.moveTo(0,yy);
+      for(let xx=0; xx<=width; xx+=20){
+        ctx.lineTo(xx, yy + Math.sin(xx/40+frame/15+i)*2.5);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function clear(){ ctx.clearRect(0,0,W,H); }
+
+  // ---------- Scenes ----------
+  // Each scene: id, id_text, en_text, draw(progress), qte(optional), speakText
+  let selatWidth = 0; // grows in final scene
+  let dragActive = false;
+  let staffX = W*0.28, staffY = H*0.62;
+
+  const scenes = [
+    {
+      key:'intro',
+      id:'Konon di Kerajaan Daha, hiduplah Brahmana sakti bernama Sidi Mantra. Ia dikaruniai seorang putra bernama Manik Angkeran.',
+      en:'Long ago in the kingdom of Daha, there lived a powerful Brahmin named Sidi Mantra. He was blessed with a son named Manik Angkeran.',
+      draw(){
+        drawSky(PAL.skyDay);
+        drawGround(H*0.72, PAL.land);
+        drawFigure(W*0.42,H*0.7,1.6,'#c9b27a','pray');
+        drawFigure(W*0.58,H*0.72,1.1,'#e0483e','idle');
+        ctx.fillStyle='rgba(238,231,216,.9)';
+        ctx.font='12px Georgia';
+        ctx.fillText(t('Sidi Mantra & Manik Angkeran','Sidi Mantra & Manik Angkeran'), W*0.38, H*0.86);
+      }
+    },
+    {
+      key:'gamble',
+      id:'Namun Manik Angkeran tumbuh menjadi pemuda yang gemar berjudi. Ia terus kalah, hingga berhutang banyak dan tak sanggup membayar.',
+      en:'But Manik Angkeran grew into a young man addicted to gambling. He kept losing, sinking deep into debts he could not repay.',
+      draw(){
+        drawSky(PAL.skyDusk);
+        drawGround(H*0.78,'#2a2420');
+        drawTable(W*0.5,H*0.7);
+        drawFigure(W*0.36,H*0.7,1.2,'#e0483e','idle');
+        drawFigure(W*0.64,H*0.7,1.2,'#9a8a5a','idle');
+        ctx.fillStyle='rgba(224,72,62,.85)';
+        ctx.font='bold 14px Georgia';
+        ctx.fillText(t('Kalah lagi...','Losing again...'), W*0.44, H*0.5);
+      }
+    },
+    {
+      key:'prayer',
+      id:'Sidi Mantra berpuasa dan berdoa memohon pertolongan. Terdengarlah suara gaib: harta karun tersimpan di kawah Gunung Agung, dijaga Naga Besukih.',
+      en:'Sidi Mantra fasted and prayed for guidance. A mystical voice spoke: treasure lay hidden in the crater of Mount Agung, guarded by the great serpent Naga Besukih.',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.82,true);
+        drawGround(H*0.82,'#1c2418');
+        drawFigure(W*0.5,H*0.78,1.4,'#c9b27a','pray');
+        const g = ctx.createRadialGradient(W*0.5,H*0.5,4,W*0.5,H*0.5,90);
+        g.addColorStop(0,'rgba(255,240,180,.35)');
+        g.addColorStop(1,'rgba(255,240,180,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(W*0.5,H*0.5,90,0,Math.PI*2); ctx.fill();
+      }
+    },
+    {
+      key:'genta_qte',
+      id:'Sidi Mantra tiba di kawah Gunung Agung. Ia membunyikan gentanya, memanggil-manggil nama Naga Besukih. Ketuk lonceng yang bersinar untuk memanggil sang naga!',
+      en:'Sidi Mantra reached the crater of Mount Agung. He rang his sacred bell, calling out to Naga Besukih. Tap the glowing bells to summon the dragon!',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.85,true);
+        drawGround(H*0.85,'#1c2418');
+        drawFigure(W*0.5,H*0.8,1.3,'#c9b27a','pray');
+      },
+      qte:{type:'tap', rounds:3}
+    },
+    {
+      key:'naga_appears',
+      id:'Naga Besukih pun keluar dari kawah. Setelah mendengar maksud Sidi Mantra, ia menggeliat — dari sisiknya berjatuhan emas dan intan.',
+      en:'Naga Besukih emerged from the crater. After hearing Sidi Mantra\'s request, the dragon writhed — gold and diamonds fell from its scales.',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.85,true);
+        drawGround(H*0.85,'#1c2418');
+        drawDragon(W*0.62,H*0.62,1.0,-0.1,false);
+        drawFigure(W*0.28,H*0.8,1.2,'#c9b27a','reach');
+        for(let i=0;i<6;i++){
+          ctx.fillStyle = i%2? '#ffd76b':'#bfe6ff';
+          ctx.beginPath();
+          ctx.arc(W*0.5+i*14, H*0.68 + Math.sin(frame/10+i)*5, 4,0,Math.PI*2);
+          ctx.fill();
+        }
+      }
+    },
+    {
+      key:'wasted',
+      id:'Harta itu diberikan pada Manik Angkeran dengan harapan ia berubah. Namun harta itu kembali habis di meja judi. Kali ini, Sidi Mantra menolak membantu lagi.',
+      en:'The treasure was given to Manik Angkeran, hoping he would change. But it too vanished at the gambling table. This time, Sidi Mantra refused to help again.',
+      draw(){
+        drawSky(PAL.skyDusk);
+        drawGround(H*0.78,'#2a2420');
+        drawTable(W*0.5,H*0.7);
+        drawFigure(W*0.36,H*0.7,1.2,'#e0483e','idle');
+        drawFigure(W*0.7,H*0.68,1.1,'#c9b27a','idle');
+        ctx.strokeStyle='rgba(238,231,216,.5)';
+        ctx.beginPath(); ctx.moveTo(W*0.6,H*0.55); ctx.lineTo(W*0.66,H*0.6); ctx.stroke();
+      }
+    },
+    {
+      key:'steal',
+      id:'Manik Angkeran nekat mencuri genta ayahnya saat ia tertidur, lalu diam-diam pergi ke Gunung Agung.',
+      en:'Desperate, Manik Angkeran stole his father\'s sacred bell while he slept, and secretly journeyed to Mount Agung.',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawGround(H*0.8,'#1c2418');
+        drawFigure(W*0.5,H*0.76,1.2,'#c9b27a','idle');
+        ctx.save();
+        ctx.translate(W*0.5,H*0.76);
+        ctx.fillStyle='#d9a441';
+        ctx.beginPath(); ctx.arc(14,-40,6,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle='rgba(238,231,216,.75)';
+        ctx.font='italic 12px Georgia';
+        ctx.fillText(t('...mengendap-endap...','...sneaking away...'), W*0.36, H*0.3);
+      }
+    },
+    {
+      key:'confront',
+      id:'Di kawah gunung, Manik Angkeran membunyikan genta. Naga Besukih muncul. Dengan gemetar ketakutan, ia menyampaikan maksud kedatangannya.',
+      en:'At the crater, Manik Angkeran rang the bell. Naga Besukih appeared. Trembling with fear, he explained why he had come.',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.85,true);
+        drawGround(H*0.85,'#1c2418');
+        drawDragon(W*0.62,H*0.6,1.0,-0.1,false);
+        drawFigure(W*0.26,H*0.8,1.1,'#e0483e','idle');
+      }
+    },
+    {
+      key:'warn',
+      id:'Naga Besukih berkata, "Akan kuberikan harta yang kau minta, tapi berjanjilah mengubah kelakuanmu. Jangan berjudi lagi. Ingatlah hukum karma."',
+      en:'Naga Besukih spoke, "I will give you the treasure you seek, but promise to change your ways. Gamble no more. Remember the law of karma."',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.85,true);
+        drawGround(H*0.85,'#1c2418');
+        drawDragon(W*0.6,H*0.58,1.05,-0.15,false);
+        drawFigure(W*0.24,H*0.8,1.1,'#e0483e','idle');
+      }
+    },
+    {
+      key:'greed_qte',
+      id:'Melihat emas dan permata, niat jahat muncul di hati Manik Angkeran. Cepat sebelum naga berpaling — tekan tombol untuk memotong ekor Naga Besukih!',
+      en:'Seeing the gold and jewels, a wicked thought crossed Manik Angkeran\'s mind. Quick, before the dragon turns away — tap to cut off Naga Besukih\'s tail!',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.85,true);
+        drawGround(H*0.85,'#1c2418');
+        drawDragon(W*0.6,H*0.58,1.05,-0.15,false);
+        drawFigure(W*0.24,H*0.8,1.1,'#e0483e','idle');
+      },
+      qte:{type:'tail'}
+    },
+    {
+      key:'chase',
+      id:'Naga Besukih terkejut dan kesakitan, lalu mengejar Manik Angkeran. Meski tak terkejar, jilatan sakti sang naga membuat Manik Angkeran hangus menjadi abu.',
+      en:'Naga Besukih, shocked and in pain, gave chase. Though he could not be caught, the dragon\'s mystic breath turned Manik Angkeran to ash.',
+      draw(){
+        drawSky(PAL.skyNight);
+        drawMountain(H*0.85,true);
+        drawGround(H*0.85,'#1c2418');
+        drawDragon(W*0.45,H*0.6,1.1,0.2,true);
+        ctx.save();
+        ctx.globalAlpha = 0.5 + 0.3*Math.sin(frame/6);
+        ctx.fillStyle = '#555';
+        ctx.beginPath();
+        ctx.arc(W*0.75,H*0.75,14,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    },
+    {
+      key:'grief',
+      id:'Mendengar kabar kematian anaknya, Sidi Mantra sangat sedih. Ia menemui Naga Besukih, meminta maaf, dan memohon anaknya dihidupkan kembali.',
+      en:'Hearing of his son\'s death, Sidi Mantra was overcome with grief. He went to Naga Besukih, apologized, and pleaded for his son\'s life to be restored.',
+      draw(){
+        drawSky(PAL.skyDusk);
+        drawMountain(H*0.85,false);
+        drawGround(H*0.85,'#241c14');
+        drawDragon(W*0.62,H*0.62,1.0,-0.1,true);
+        drawFigure(W*0.26,H*0.8,1.2,'#c9b27a','kneel');
+      }
+    },
+    {
+      key:'restore_qte',
+      id:'Naga Besukih setuju, asalkan ekornya bisa pulih kembali. Dengan kesaktiannya, Sidi Mantra memulihkan ekor sang naga. Tahan tombol untuk mengalirkan kekuatan penyembuhan!',
+      en:'Naga Besukih agreed, if his tail could be healed. With his powers, Sidi Mantra restored the dragon\'s tail. Hold the button to channel healing energy!',
+      draw(){
+        drawSky(PAL.skyDusk);
+        drawMountain(H*0.85,false);
+        drawGround(H*0.85,'#241c14');
+        drawDragon(W*0.62,H*0.62,1.0,-0.1, healPower<1);
+        drawFigure(W*0.26,H*0.8,1.2,'#c9b27a','reach');
+      },
+      qte:{type:'hold'}
+    },
+    {
+      key:'revive',
+      id:'Manik Angkeran dihidupkan kembali. Ia menyesal dan berjanji menjadi orang baik. Namun Sidi Mantra tahu, mereka tak bisa lagi hidup bersama.',
+      en:'Manik Angkeran was brought back to life. Remorseful, he vowed to become a better man. But Sidi Mantra knew they could no longer live together.',
+      draw(){
+        drawSky(PAL.skyDay);
+        drawGround(H*0.8,'#3a4a2c');
+        drawFigure(W*0.4,H*0.76,1.3,'#c9b27a','pray');
+        drawFigure(W*0.6,H*0.78,1.1,'#e0483e','kneel');
+      }
+    },
+    {
+      key:'final_qte',
+      id:'"Kamu sudah menyadari kesalahanmu, tapi kau harus tinggal di tempat lain," kata Sidi Mantra. Dengan tongkatnya, ia menggambar garis pemisah. Seret tongkat dari Bali menuju Jawa untuk membentuk selat!',
+      en:'"You have realized your mistake, but you must live elsewhere now," said Sidi Mantra. With his staff, he drew a dividing line. Drag the staff from Bali toward Java to form the strait!',
+      draw(){
+        drawSky(PAL.skyDay);
+        drawGround(H*0.78,'#3a4a2c');
+        ctx.fillStyle='rgba(238,231,216,.8)';
+        ctx.font='bold 12px Georgia';
+        ctx.fillText('BALI', W*0.15, H*0.72);
+        ctx.fillText('JAWA / JAVA', W*0.72, H*0.72);
+        drawWater(H*0.78, PAL.sea, selatWidth);
+        drawFigure(staffX, staffY, 1.1, '#c9b27a', 'reach');
+      },
+      qte:{type:'drag'}
+    },
+    {
+      key:'ending',
+      id:'Di bekas tempat Manik Angkeran berdiri, muncul sumber air yang membesar menjadi lautan. Kini tempat itu dikenal sebagai Selat Bali, pemisah pulau Bali dan Jawa.',
+      en:'Where Manik Angkeran once stood, a spring of water rose and grew into a sea. Today, that place is known as the Bali Strait, dividing the islands of Bali and Java.',
+      draw(){
+        drawSky(PAL.skyDay);
+        drawGround(H*0.78,'#3a4a2c');
+        drawWater(H*0.78, PAL.sea, W);
+        ctx.fillStyle='rgba(238,231,216,.9)';
+        ctx.font='bold 14px Georgia';
+        ctx.textAlign='center';
+        ctx.fillText(t('Selat Bali','Bali Strait'), W*0.5, H*0.5);
+        ctx.textAlign='left';
+      }
+    }
+  ];
+
+  let healPower = 0; // for restore qte visual
+  let sceneIndex = 0;
+  let currentQteDone = false;
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    scenes.forEach((_,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIndex?' on':'');
+      dotsEl.appendChild(d);
+    });
+  }
+  function updateDots(){
+    [...dotsEl.children].forEach((d,i)=>d.classList.toggle('on', i===sceneIndex));
+  }
+
+  function renderStatic(){
+    clear();
+    scenes[sceneIndex].draw();
+  }
+
+  function animLoop(){
+    frame++;
+    clear();
+    scenes[sceneIndex].draw();
+    rafId = requestAnimationFrame(animLoop);
+  }
+
+  function clearQte(){
+    qteLayer.innerHTML = '';
+  }
+
+  function goScene(i){
+    stopSpeak();
+    clearQte();
+    sceneIndex = i;
+    currentQteDone = !scenes[i].qte;
+    const sc = scenes[i];
+    narrationEl.textContent = t(sc.id, sc.en);
+    speak(t(sc.id, sc.en));
+    updateDots();
+    nextBtn.disabled = !currentQteDone;
+    nextBtn.textContent = (i === scenes.length-1) ? t('Selesai ✓','Finish ✓') : t('Lanjut ▸','Next ▸');
+    if(i === scenes.length-1){
+      replayRow.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+    } else {
+      replayRow.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+    }
+    if(sc.qte){ setupQte(sc.qte); }
+  }
+
+  function completeQte(){
+    currentQteDone = true;
+    nextBtn.disabled = false;
+  }
+
+  // ---- QTE: tap bells ----
+  function setupQte(qte){
+    if(qte.type === 'tap'){
+      let round = 0;
+      function spawn(){
+        clearQte();
+        if(round >= qte.rounds){ completeQte(); return; }
+        const el = document.createElement('div');
+        el.className = 'qte-target';
+        el.textContent = '🔔';
+        const px = 15 + Math.random()*70;
+        const py = 15 + Math.random()*60;
+        el.style.left = px + '%';
+        el.style.top = py + '%';
+        el.style.transform = 'translate(-50%,-50%)';
+        el.addEventListener('click', ()=>{
+          round++;
+          spawn();
+        });
+        qteLayer.appendChild(el);
+      }
+      spawn();
+    } else if(qte.type === 'tail'){
+      clearQte();
+      const el = document.createElement('div');
+      el.className = 'qte-tail';
+      el.textContent = t('POTONG! ✂️','CUT! ✂️');
+      el.style.left = '68%';
+      el.style.top = '55%';
+      qteLayer.appendChild(el);
+      let done = false;
+      el.addEventListener('click', ()=>{
+        if(done) return;
+        done = true;
+        el.remove();
+        completeQte();
+      });
+      // safety: auto-complete after a while so kids aren't stuck
+      setTimeout(()=>{ if(!done){ done=true; el.remove(); completeQte(); } }, 6000);
+    } else if(qte.type === 'hold'){
+      clearQte();
+      healPower = 0;
+      const wrap = document.createElement('div');
+      wrap.style.position='absolute';
+      wrap.style.left='50%'; wrap.style.bottom='8%';
+      wrap.style.transform='translateX(-50%)';
+      wrap.style.pointerEvents='all';
+      wrap.innerHTML = '<button class="qte-tail" style="position:static;">'+t('TAHAN UNTUK MENYEMBUHKAN','HOLD TO HEAL')+'</button>';
+      qteLayer.appendChild(wrap);
+      const btn = wrap.querySelector('button');
+      let holding = false, timer = null;
+      function tick(){
+        if(!holding) return;
+        healPower = Math.min(1, healPower + 0.04);
+        if(healPower >= 1){
+          completeQte();
+          holding = false;
+          btn.textContent = t('Pulih! ✨','Healed! ✨');
+          return;
+        }
+        timer = requestAnimationFrame(tick);
+      }
+      btn.addEventListener('mousedown', ()=>{ holding = true; tick(); });
+      btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); holding = true; tick(); });
+      ['mouseup','mouseleave','touchend'].forEach(evt=>{
+        btn.addEventListener(evt, ()=>{ holding = false; });
+      });
+    } else if(qte.type === 'drag'){
+      clearQte();
+      selatWidth = 0;
+      staffX = W*0.22; staffY = H*0.6;
+      const hint = document.createElement('div');
+      hint.id = 'dragHint';
+      hint.textContent = t('Seret dari kiri ke kanan →','Drag from left to right →');
+      qteLayer.appendChild(hint);
+      let dragging = false;
+      function toCanvasX(clientX){
+        const rect = canvas.getBoundingClientRect();
+        return (clientX - rect.left) / rect.width * W;
+      }
+      function pointerDown(e){
+        dragging = true;
+      }
+      function pointerMove(e){
+        if(!dragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const cx = toCanvasX(clientX);
+        staffX = Math.max(W*0.15, Math.min(W*0.85, cx));
+        selatWidth = Math.max(0, staffX - W*0.15) / (W*0.7) * W;
+        if(staffX > W*0.78 && !currentQteDone){
+          completeQte();
+          dragging = false;
+        }
+      }
+      function pointerUp(){ dragging = false; }
+      canvas.addEventListener('mousedown', pointerDown);
+      canvas.addEventListener('mousemove', pointerMove);
+      window.addEventListener('mouseup', pointerUp);
+      canvas.addEventListener('touchstart', pointerDown, {passive:true});
+      canvas.addEventListener('touchmove', pointerMove, {passive:true});
+      canvas.addEventListener('touchend', pointerUp);
+      canvas._dragHandlers = {pointerDown, pointerMove, pointerUp};
+    }
+  }
+
+  nextBtn.addEventListener('click', ()=>{
+    if(sceneIndex < scenes.length - 1){
+      goScene(sceneIndex + 1);
+    }
+  });
+
+  replayBtn.addEventListener('click', ()=>{
+    goScene(0);
+    replayRow.classList.add('hidden');
+    nextBtn.classList.remove('hidden');
+  });
+
+  startBtn.addEventListener('click', ()=>{
+    titleCard.classList.add('hidden');
+    if(!rafId) animLoop();
+    buildDots();
+    goScene(0);
+  });
+
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    muteBtn.classList.toggle('active', muted);
+    muteBtn.querySelector('.muteIcon').textContent = muted ? '🔇' : '🔊';
+    if(muted) stopSpeak();
+  });
+
+  function setLang(l){
+    lang = l;
+    langIdBtn.classList.toggle('active', lang==='id');
+    langEnBtn.classList.toggle('active', lang==='en');
+    gameTitle.textContent = t('Asal Mula Selat Bali','The Origin of the Bali Strait');
+    titleHeading.textContent = gameTitle.textContent;
+    titleSub.textContent = t(
+      'Sebuah dongeng rakyat dari Bali tentang Manik Angkeran, Sidi Mantra, dan Naga Besukih.',
+      'A folktale from Bali about Manik Angkeran, Sidi Mantra, and the great serpent Naga Besukih.'
+    );
+    startBtn.textContent = t('▶ Mulai','▶ Start');
+    if(!titleCard.classList.contains('hidden')) return;
+    const sc = scenes[sceneIndex];
+    narrationEl.textContent = t(sc.id, sc.en);
+    nextBtn.textContent = (sceneIndex === scenes.length-1) ? t('Selesai ✓','Finish ✓') : t('Lanjut ▸','Next ▸');
+    replayBtn.textContent = t('↺ Ulangi Cerita','↺ Replay Story');
+    speak(t(sc.id, sc.en));
+    if(sceneIndex === scenes.length -1){
+      // redraw for label
+    }
+    if(scenes[sceneIndex].qte && scenes[sceneIndex].qte.type === 'drag'){
+      document.getElementById('dragHint') && (document.getElementById('dragHint').textContent = t('Seret dari kiri ke kanan →','Drag from left to right →'));
+    }
+  }
+  langIdBtn.addEventListener('click', ()=>setLang('id'));
+  langEnBtn.addEventListener('click', ()=>setLang('en'));
+
+  setLang(lang);
+  renderStatic();
+
+  // ---------- Auto-resize for iframe embedding ----------
+  function reportHeight(){
+    const h = document.getElementById('app').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'selat-bali-game-resize', height: Math.ceil(h) + 4 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  if(window.ResizeObserver){
+    new ResizeObserver(reportHeight).observe(document.getElementById('app'));
+  } else {
+    setInterval(reportHeight, 800);
+  }
+  setTimeout(reportHeight, 300);
+})();
+</script>
+</body>
+</html>
