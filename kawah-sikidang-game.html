@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #ksd-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #ksd-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #ksd-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,23 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #ksd-muteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #B5502A;
+    background: #ffffff;
+    color: #8A3A1E;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  #ksd-muteBtn:active { transform: scale(0.94); }
+  #ksd-muteBtn.muted { background: #efe6d8; color: #a99b86; }
   #ksd-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +143,10 @@
   <h2>♨️ Legenda Kawah Sikidang</h2>
   <p id="ksd-sub">Cerita rakyat Dieng, Jawa Tengah, tentang asal usul rambut gimbal dan Kawah Sikidang.</p>
 
-  <div id="ksd-hud"><span id="ksd-phase">Tahap 1 / 5</span></div>
+  <div id="ksd-hud">
+    <span id="ksd-phase">Tahap 1 / 5</span>
+    <button id="ksd-muteBtn" type="button" title="Matikan suara narasi">🔊</button>
+  </div>
 
   <div id="ksd-canvas-holder">
     <canvas id="ksd-canvas"></canvas>
@@ -177,6 +197,8 @@
       holdBtn: 'Tahan untuk Berjuang',
       digBtn: '⛏️ GALI SUMUR',
       buryBtn: '🪨 TIMBUN LUBANG',
+      muteOnTitle: 'Matikan suara narasi',
+      muteOffTitle: 'Nyalakan suara narasi',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Di dataran tinggi Dieng, Jawa Tengah, hiduplah seorang putri yang sangat cantik bernama Shinta Dewi. Banyak pangeran ingin melamarnya, namun tak satu pun berani karena kecantikannya yang luar biasa.',
@@ -206,6 +228,8 @@
       holdBtn: 'Hold to Press On',
       digBtn: '⛏️ DIG THE WELL',
       buryBtn: '🪨 FILL IN THE HOLE',
+      muteOnTitle: 'Turn off narration',
+      muteOffTitle: 'Turn on narration',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'On the Dieng plateau, Central Java, lived a stunningly beautiful princess named Shinta Dewi. Many princes wished to propose, yet none dared, awed by her extraordinary beauty.',
@@ -233,6 +257,7 @@
   document.getElementById('ksd-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('ksd-caption').textContent = TXT.captionInit;
   document.getElementById('ksd-actionBtn').textContent = TXT.nextBtn;
+  document.getElementById('ksd-muteBtn').title = TXT.muteOnTitle;
 
   var canvas = document.getElementById('ksd-canvas');
   var ctx = canvas.getContext('2d');
@@ -255,6 +280,51 @@
   var progressBar = document.getElementById('ksd-progressBar');
   var startOverlay = document.getElementById('ksd-start');
   var winOverlay = document.getElementById('ksd-win');
+  var muteBtn = document.getElementById('ksd-muteBtn');
+
+  var speechSupported = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+  var muted = false;
+  var voices = [];
+  var pickedVoice = null;
+
+  function refreshVoices(){
+    if(!speechSupported) return;
+    voices = window.speechSynthesis.getVoices() || [];
+    var wantLang = LANG === 'id' ? 'id' : 'en';
+    pickedVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wantLang) === 0; }) || null;
+    if(!pickedVoice && wantLang === 'id'){
+      // Indonesian voices are rare on some platforms; fall back to default voice.
+      pickedVoice = null;
+    }
+  }
+  if(speechSupported){
+    refreshVoices();
+    window.speechSynthesis.onvoiceschanged = refreshVoices;
+  }
+
+  function narrate(text){
+    if(!speechSupported || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+    if(pickedVoice) utter.voice = pickedVoice;
+    utter.rate = 0.92;
+    utter.pitch = 1;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function setMuted(val){
+    muted = val;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    muteBtn.title = muted ? TXT.muteOffTitle : TXT.muteOnTitle;
+    if(muted && speechSupported) window.speechSynthesis.cancel();
+  }
+  if(!speechSupported){
+    muteBtn.style.display = 'none';
+  } else {
+    muteBtn.addEventListener('click', function(){ setMuted(!muted); });
+  }
 
   var progress = 0;
   var holding = false;
@@ -281,6 +351,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    narrate(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -302,6 +373,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      narrate(TXT.winBody);
       return;
     }
     showStep();

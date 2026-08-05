@@ -33,7 +33,24 @@
     color: #6b5f7a;
     margin: 0 0 10px;
   }
-  #jtg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #jtg-hud { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
+  .jtg-mute-btn {
+    border: 2px solid #6E5A9A;
+    background: #fff;
+    color: #4A3B78;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .jtg-mute-btn:active { transform: scale(0.93); }
   #jtg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -127,7 +144,10 @@
   <h2>🌙 Jaka Tarub &amp; Dewi Nawang Wulan</h2>
   <p id="jtg-sub">Ikuti kisah Jaka Tarub bertemu para bidadari kahyangan hingga akhir kisahnya dengan Nawang Wulan.</p>
 
-  <div id="jtg-hud"><span id="jtg-phase">Tahap 1 / 5</span></div>
+  <div id="jtg-hud">
+    <span id="jtg-phase">Tahap 1 / 5</span>
+    <button id="jtg-muteBtn" class="jtg-mute-btn" type="button" aria-label="Bisukan narasi" title="Bisukan narasi">🔊</button>
+  </div>
 
   <div id="jtg-canvas-holder">
     <canvas id="jtg-canvas"></canvas>
@@ -186,6 +206,8 @@
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       grabBtn: '🧣 AMBIL!',
+      muteLabel: 'Bisukan narasi',
+      unmuteLabel: 'Aktifkan narasi',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Jaka Tarub, pemuda desa Tarub, gemar berburu di hutan dengan sumpitnya. Sejak ibu angkatnya, Mbok Randa, wafat, ia sering melamun sendirian.',
@@ -221,6 +243,8 @@
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Try',
       grabBtn: '🧣 GRAB IT!',
+      muteLabel: 'Mute narration',
+      unmuteLabel: 'Unmute narration',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'Jaka Tarub, a young man from Tarub village, loves hunting in the forest with his blowpipe. Since his adoptive mother, Mbok Randa, passed away, he often daydreams alone.',
@@ -278,6 +302,71 @@
   var startOverlay = document.getElementById('jtg-start');
   var caughtOverlay = document.getElementById('jtg-caught');
   var winOverlay = document.getElementById('jtg-win');
+  var muteBtn = document.getElementById('jtg-muteBtn');
+
+  // --- Narasi suara (Web Speech API) ---
+  var SPEECH_KEY = 'jtg-narration-muted';
+  var synth = window.speechSynthesis || null;
+  var voices = [];
+  var muted = false;
+  try { muted = localStorage.getItem(SPEECH_KEY) === '1'; } catch(e){}
+
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    if(typeof synth.onvoiceschanged !== 'undefined'){ synth.onvoiceschanged = loadVoices; }
+  }
+
+  function pickVoice(lang){
+    if(!voices.length) return null;
+    var want = lang === 'id' ? 'id' : 'en';
+    var exact = null, loose = null;
+    for(var i=0;i<voices.length;i++){
+      var vl = (voices[i].lang || '').toLowerCase();
+      if(vl.indexOf(want + '-') === 0 || vl === want){ exact = voices[i]; break; }
+      if(!loose && vl.indexOf(want) === 0) loose = voices[i];
+    }
+    return exact || loose || null;
+  }
+
+  function speak(text){
+    if(!synth || muted || !text) return;
+    synth.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+    var v = pickVoice(LANG);
+    if(v) utter.voice = v;
+    utter.rate = 0.92;
+    utter.pitch = 1.03;
+    synth.speak(utter);
+  }
+
+  function stopSpeak(){ if(synth) synth.cancel(); }
+
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    var lbl = muted ? TXT.unmuteLabel : TXT.muteLabel;
+    muteBtn.setAttribute('aria-label', lbl);
+    muteBtn.title = lbl;
+  }
+
+  if(!synth && muteBtn){
+    muteBtn.style.display = 'none';
+  } else if(muteBtn){
+    updateMuteBtn();
+    muteBtn.addEventListener('click', function(){
+      muted = !muted;
+      try{ localStorage.setItem(SPEECH_KEY, muted ? '1' : '0'); } catch(e){}
+      updateMuteBtn();
+      if(muted){
+        stopSpeak();
+      } else {
+        var cur = steps[stepIndex];
+        if(cur) speak(cur.text);
+      }
+    });
+  }
 
   var progress = 0;
   var holding = false;
@@ -313,6 +402,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     qteActive = false;
@@ -339,6 +429,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
@@ -578,6 +669,7 @@
       if(qteTimeLeft <= 0){
         qteActive = false;
         caughtOverlay.classList.add('show');
+        speak(TXT.caughtBody);
       }
     }
 

@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #gmk-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #gmk-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #gmk-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,22 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #gmk-muteBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    background: #fff;
+    color: #6E3E12;
+    border: 2px solid #8A5A1E;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  #gmk-muteBtn:active { transform: scale(0.94); }
   #gmk-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +142,10 @@
   <h2>🦅 Gunung Mekongga</h2>
   <p id="gmk-sub">Cerita rakyat Sulawesi Tenggara tentang perjuangan mengalahkan burung garuda raksasa.</p>
 
-  <div id="gmk-hud"><span id="gmk-phase">Tahap 1 / 5</span></div>
+  <div id="gmk-hud">
+    <span id="gmk-phase">Tahap 1 / 5</span>
+    <button id="gmk-muteBtn" type="button" title="Suara narasi">🔊</button>
+  </div>
 
   <div id="gmk-canvas-holder">
     <canvas id="gmk-canvas"></canvas>
@@ -178,6 +197,8 @@
       trapBtn: '🎋 PASANG BAMBU RUNCING',
       stabBtn: '🗡️ TUSUKKAN BAMBU',
       prayBtn: '🙏 MOHON HUJAN DERAS',
+      muteLabel: 'Matikan suara narasi',
+      unmuteLabel: 'Aktifkan suara narasi',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
       steps: [
         'Konon di Sulawesi Tenggara, negeri Sorume diteror seekor burung garuda raksasa yang terus memangsa ternak dan bahkan manusia. Penduduk hidup dalam ketakutan.',
@@ -208,6 +229,8 @@
       trapBtn: '🎋 SET UP THE SPIKES',
       stabBtn: '🗡️ STRIKE WITH THE SPIKE',
       prayBtn: '🙏 PRAY FOR HEAVY RAIN',
+      muteLabel: 'Mute narration',
+      unmuteLabel: 'Unmute narration',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
       steps: [
         'Legend has it that in Southeast Sulawesi, the land of Sorume is terrorized by a giant garuda bird that keeps preying on livestock and even people. The villagers live in constant fear.',
@@ -235,6 +258,73 @@
   document.getElementById('gmk-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('gmk-caption').textContent = TXT.captionInit;
   document.getElementById('gmk-actionBtn').textContent = TXT.nextBtn;
+
+  // --- Narasi suara (Web Speech API) ---
+  var SpeechCtl = (function(){
+    var supported = 'speechSynthesis' in window;
+    var enabled = true;
+    try {
+      var saved = localStorage.getItem('gmk-narration-muted');
+      if (saved === '1') enabled = false;
+    } catch(e){}
+    var voices = [];
+    function loadVoices(){
+      if(!supported) return;
+      voices = window.speechSynthesis.getVoices() || [];
+    }
+    if(supported){
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    function pickVoice(lang){
+      var prefix = lang === 'en' ? 'en' : 'id';
+      var exact = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(prefix) === 0; });
+      return exact.length ? exact[0] : null;
+    }
+    function stop(){
+      if(supported) window.speechSynthesis.cancel();
+    }
+    function speak(text){
+      if(!supported || !enabled || !text) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice(LANG);
+      if(v) u.voice = v;
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    }
+    function setEnabled(v){
+      enabled = v;
+      try { localStorage.setItem('gmk-narration-muted', enabled ? '0' : '1'); } catch(e){}
+      if(!enabled) stop();
+    }
+    return {
+      isSupported: function(){ return supported; },
+      isEnabled: function(){ return enabled; },
+      setEnabled: setEnabled,
+      speak: speak,
+      stop: stop
+    };
+  })();
+
+  var muteBtn = document.getElementById('gmk-muteBtn');
+  function updateMuteBtn(){
+    if(!SpeechCtl.isSupported()){
+      muteBtn.style.display = 'none';
+      return;
+    }
+    var on = SpeechCtl.isEnabled();
+    muteBtn.textContent = on ? '🔊' : '🔇';
+    muteBtn.title = on ? TXT.muteLabel : TXT.unmuteLabel;
+    muteBtn.setAttribute('aria-label', muteBtn.title);
+  }
+  muteBtn.addEventListener('click', function(){
+    SpeechCtl.setEnabled(!SpeechCtl.isEnabled());
+    updateMuteBtn();
+  });
+  updateMuteBtn();
 
   var canvas = document.getElementById('gmk-canvas');
   var ctx = canvas.getContext('2d');
@@ -284,6 +374,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    SpeechCtl.speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;

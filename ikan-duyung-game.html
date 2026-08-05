@@ -33,7 +33,7 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
-  #idg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #idg-hud { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; position: relative; }
   #idg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,27 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #idg-muteBtn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #2E6E7A;
+    background: #ffffff;
+    color: #1E4E58;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  #idg-muteBtn:active { transform: translateY(-50%) scale(0.93); }
+  #idg-muteBtn.idg-muted { background: #f0e9e0; color: #8a7a6a; }
   #idg-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +147,10 @@
   <h2>🧜‍♀️ Asal Mula Ikan Duyung</h2>
   <p id="idg-sub">Cerita rakyat Sulawesi Tengah tentang sebuah keluarga dan asal mula ikan duyung.</p>
 
-  <div id="idg-hud"><span id="idg-phase">Tahap 1 / 5</span></div>
+  <div id="idg-hud">
+    <span id="idg-phase">Tahap 1 / 5</span>
+    <button id="idg-muteBtn" type="button" aria-pressed="false" title="Suara narasi">🔊</button>
+  </div>
 
   <div id="idg-canvas-holder">
     <canvas id="idg-canvas"></canvas>
@@ -178,6 +202,8 @@
       walkBtn: '🌊 MENUJU LAUT',
       callBtn: '📣 PANGGIL IBU',
       phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      muteTitle: 'Matikan suara narasi',
+      unmuteTitle: 'Nyalakan suara narasi',
       steps: [
         'Dahulu kala di Sulawesi Tengah, hiduplah sepasang suami istri dengan tiga orang anak. Mereka mencari nafkah dengan melaut mencari ikan dan berladang sayuran, selalu sarapan bersama sebelum sang ayah pergi ke ladang.',
         'Suatu pagi, karena persediaan ikan cukup banyak, sang suami berpesan agar istrinya menyisakan sebagian untuk makan siang sepulang bekerja nanti.',
@@ -207,6 +233,8 @@
       walkBtn: '🌊 HEAD TO THE SEA',
       callBtn: '📣 CALL FOR MOTHER',
       phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      muteTitle: 'Mute narration',
+      unmuteTitle: 'Unmute narration',
       steps: [
         'Long ago in Central Sulawesi lived a married couple with three children. They made a living fishing at sea and farming vegetables, always sharing breakfast before the father headed to the field.',
         'One morning, with plenty of fish on hand, the husband asks his wife to save some for his lunch after work.',
@@ -233,6 +261,65 @@
   document.getElementById('idg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('idg-caption').textContent = TXT.captionInit;
   document.getElementById('idg-actionBtn').textContent = TXT.nextBtn;
+
+  // ---------- Narasi suara (Web Speech API) ----------
+  var muteBtn = document.getElementById('idg-muteBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var MUTE_KEY = 'idg-mermaid-muted';
+  var muted = false;
+  try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch(e){}
+
+  var narrationVoice = null;
+  function pickVoice(){
+    if(!speechSupported) return;
+    var voices = window.speechSynthesis.getVoices();
+    if(!voices || !voices.length) return;
+    var wantLang = (LANG === 'en') ? 'en' : 'id';
+    narrationVoice = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wantLang) === 0; })
+      || voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wantLang) !== -1; })
+      || null;
+  }
+  if(speechSupported){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+  }
+
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('idg-muted', muted);
+    muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    muteBtn.title = muted ? TXT.unmuteTitle : TXT.muteTitle;
+  }
+
+  function speakText(text){
+    if(!speechSupported || muted || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = (LANG === 'en') ? 'en-US' : 'id-ID';
+      if(narrationVoice) utter.voice = narrationVoice;
+      utter.rate = 0.95;
+      utter.pitch = 1.0;
+      window.speechSynthesis.speak(utter);
+    } catch(e){}
+  }
+
+  function stopSpeech(){
+    if(speechSupported){ try { window.speechSynthesis.cancel(); } catch(e){} }
+  }
+
+  if(!speechSupported){
+    muteBtn.style.display = 'none';
+  } else {
+    updateMuteBtn();
+    muteBtn.addEventListener('click', function(){
+      muted = !muted;
+      if(muted) stopSpeech();
+      try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch(e){}
+      updateMuteBtn();
+    });
+  }
+  // ---------- akhir narasi suara ----------
 
   var canvas = document.getElementById('idg-canvas');
   var ctx = canvas.getContext('2d');
@@ -282,6 +369,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speakText(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -303,6 +391,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speakText(TXT.winBody);
       return;
     }
     showStep();
@@ -343,7 +432,11 @@
   });
   document.getElementById('idg-playAgainBtn').addEventListener('click', function(){
     winOverlay.classList.remove('show');
+    stopSpeech();
     resetGame();
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopSpeech();
   });
 
   function drawEmoji(str, x, y, size){

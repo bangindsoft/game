@@ -33,7 +33,7 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #ajs-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #ajs-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
   #ajs-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,24 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #ajs-muteBtn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #8A5A1E;
+    color: #F4EFE2;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  #ajs-muteBtn:active { transform: scale(0.94); }
+  #ajs-muteBtn.muted { background: #b5842a55; color: #8A5A1E; }
   #ajs-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +144,10 @@
   <h2>📜 Legenda Aji Saka</h2>
   <p id="ajs-sub">Ikuti kisah Aji Saka mengalahkan Raja Dewata Cengkar hingga terciptanya aksara Jawa.</p>
 
-  <div id="ajs-hud"><span id="ajs-phase">Tahap 1 / 5</span></div>
+  <div id="ajs-hud">
+    <span id="ajs-phase">Tahap 1 / 5</span>
+    <button id="ajs-muteBtn" type="button" title="Suara narasi">🔊</button>
+  </div>
 
   <div id="ajs-canvas-holder">
     <canvas id="ajs-canvas"></canvas>
@@ -174,6 +195,8 @@
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
       nextBtn: 'Lanjut ▶',
+      muteOnTitle: 'Matikan suara narasi',
+      muteOffTitle: 'Nyalakan suara narasi',
       holdBtn: 'Tahan untuk Berjuang',
       unfurlBtn: '🧵 BENTANGKAN!',
       writeBtn: '✍️ TULIS AKSARA',
@@ -207,6 +230,8 @@
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
       nextBtn: 'Next ▶',
+      muteOnTitle: 'Mute narration',
+      muteOffTitle: 'Unmute narration',
       holdBtn: 'Hold to Press On',
       unfurlBtn: '🧵 UNFURL!',
       writeBtn: '✍️ WRITE THE SCRIPT',
@@ -269,6 +294,77 @@
   var t = 0;
   var holdAdvancing = false;
 
+  // ---- Narasi suara (Web Speech API) ----
+  var muteBtn = document.getElementById('ajs-muteBtn');
+  var synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+  var voicesCache = [];
+  var MUTE_KEY = 'ajs-narration-muted';
+  var muted = false;
+  var narrationStarted = false;
+  try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch(e){}
+
+  function loadVoices(){
+    if(synth) voicesCache = synth.getVoices();
+  }
+  if(synth){
+    loadVoices();
+    if('onvoiceschanged' in synth) synth.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice(langCode){
+    if(!voicesCache.length) return null;
+    var lower = langCode.toLowerCase();
+    var short = lower.split('-')[0];
+    var exact = voicesCache.filter(function(v){ return v.lang && v.lang.toLowerCase() === lower; });
+    if(exact.length) return exact[0];
+    var partial = voicesCache.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(short) === 0; });
+    if(partial.length) return partial[0];
+    return null;
+  }
+
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    muteBtn.title = muted ? TXT.muteOffTitle : TXT.muteOnTitle;
+  }
+
+  function speakStep(text){
+    if(!synth || muted || !text || !narrationStarted) return;
+    synth.cancel();
+    var langCode = LANG === 'en' ? 'en-US' : 'id-ID';
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langCode;
+    var v = pickVoice(langCode);
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    synth.speak(utter);
+  }
+
+  function stopSpeaking(){
+    if(synth) synth.cancel();
+  }
+
+  if(muteBtn){
+    muteBtn.addEventListener('click', function(){
+      muted = !muted;
+      try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch(e){}
+      updateMuteBtn();
+      if(muted){
+        stopSpeaking();
+      } else {
+        var step = steps[stepIndex];
+        if(step) speakStep(step.text);
+      }
+    });
+    updateMuteBtn();
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopSpeaking();
+  });
+
   var steps = [
     { type:'caption', phase:1, scene:'istana_kejam' },
     { type:'caption', phase:1, scene:'desa_ajisaka' },
@@ -294,6 +390,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speakStep(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -315,6 +412,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speakStep(TXT.winBody);
       return;
     }
     showStep();
@@ -350,10 +448,12 @@
   });
 
   document.getElementById('ajs-startBtn').addEventListener('click', function(){
+    narrationStarted = true;
     startOverlay.classList.remove('show');
     resetGame();
   });
   document.getElementById('ajs-playAgainBtn').addEventListener('click', function(){
+    narrationStarted = true;
     winOverlay.classList.remove('show');
     resetGame();
   });

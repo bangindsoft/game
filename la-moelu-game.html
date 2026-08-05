@@ -33,7 +33,23 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
-  #lmg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #lmg-hud { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px; }
+  #lmg-muteBtn {
+    font-size: 16px;
+    background: #fff;
+    border: 2px solid #1E6E5A;
+    color: #14503F;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+  #lmg-muteBtn:active { transform: scale(0.94); }
   #lmg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -126,7 +142,10 @@
   <h2>🐟 La Moelu Si Anak Yatim</h2>
   <p id="lmg-sub">Cerita rakyat Sulawesi Tenggara tentang anak yatim dan ikan ajaibnya, Jinnade.</p>
 
-  <div id="lmg-hud"><span id="lmg-phase">Tahap 1 / 5</span></div>
+  <div id="lmg-hud">
+    <span id="lmg-phase">Tahap 1 / 5</span>
+    <button id="lmg-muteBtn" type="button" title="Matikan/nyalakan narasi suara">🔊</button>
+  </div>
 
   <div id="lmg-canvas-holder">
     <canvas id="lmg-canvas"></canvas>
@@ -173,6 +192,8 @@
       winBody: 'Pohon ajaib itu berbuah emas, perak, dan berlian, membuat La Moelu dan ayahnya kaya raya. Namun mereka tetap rendah hati dan gemar menolong sesama, mengenang kebaikan hati Jinnade selamanya.',
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
+      muteLabel: 'Matikan narasi suara',
+      unmuteLabel: 'Nyalakan narasi suara',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       growFishBtn: '🐟 RAWAT IKANNYA',
@@ -202,6 +223,8 @@
       winBody: 'The magical tree bears fruit of gold, silver, and diamonds, making La Moelu and his father wealthy. Yet they remain humble and eager to help others, forever cherishing Jinnade\'s kindness.',
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
+      muteLabel: 'Mute narration',
+      unmuteLabel: 'Unmute narration',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Press On',
       growFishBtn: '🐟 CARE FOR THE FISH',
@@ -233,6 +256,64 @@
   document.getElementById('lmg-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('lmg-caption').textContent = TXT.captionInit;
   document.getElementById('lmg-actionBtn').textContent = TXT.nextBtn;
+
+  // ---- Narasi suara (Web Speech API) ----
+  var MUTE_KEY = 'dongeng-narration-muted';
+  var muteBtn = document.getElementById('lmg-muteBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var muted = speechSupported ? (localStorage.getItem(MUTE_KEY) === '1') : true;
+  var cachedVoices = [];
+
+  function loadVoices(){
+    if(!speechSupported) return;
+    cachedVoices = window.speechSynthesis.getVoices() || [];
+  }
+  if(speechSupported){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice(){
+    var wantLang = (LANG === 'en') ? 'en' : 'id';
+    var candidates = cachedVoices.filter(function(v){
+      return v.lang && v.lang.toLowerCase().indexOf(wantLang) === 0;
+    });
+    if(candidates.length === 0) return null;
+    var preferred = candidates.filter(function(v){ return /google/i.test(v.name); });
+    return preferred[0] || candidates[0];
+  }
+
+  function updateMuteBtn(){
+    if(!speechSupported){
+      muteBtn.style.display = 'none';
+      return;
+    }
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.title = muted ? TXT.unmuteLabel : TXT.muteLabel;
+    muteBtn.setAttribute('aria-label', muteBtn.title);
+  }
+
+  function speak(text){
+    if(!speechSupported || muted || !text) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = (LANG === 'en') ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1;
+      var v = pickVoice();
+      if(v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    } catch(e){ /* narasi suara tidak tersedia di browser ini */ }
+  }
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    if(speechSupported) localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
+    if(muted && speechSupported) window.speechSynthesis.cancel();
+    updateMuteBtn();
+  });
+  updateMuteBtn();
 
   var canvas = document.getElementById('lmg-canvas');
   var ctx = canvas.getContext('2d');
@@ -282,6 +363,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -303,6 +385,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
