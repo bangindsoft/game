@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="id" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nai Manggale - Cerita Rakyat Sumatera Utara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#231409;
+    --bg-panel:#2e1c0f;
+    --wood:#8a5a2b;
+    --wood-dark:#5c3a1a;
+    --gold:#d4a94b;
+    --gold-soft:#e8cf8a;
+    --cream:#f6ecd8;
+    --ulos-red:#8c2a3a;
+    --ulos-black:#191008;
+    --ulos-white:#efe4cd;
+    --shadow: rgba(0,0,0,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg-deep);
+    font-family:'Work Sans',sans-serif;
+    color:var(--cream);
+    overflow-x:hidden;
+  }
+  #stageWrap{
+    max-width:960px;
+    margin:0 auto;
+    position:relative;
+    background:var(--bg-panel);
+    border:2px solid var(--wood-dark);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 10px 30px var(--shadow);
+  }
+  #stage{
+    position:relative;
+    width:100%;
+    aspect-ratio: 960 / 620;
+  }
+  canvas#gameCanvas{
+    position:absolute;top:0;left:0;
+    width:100%;height:100%;
+    display:block;
+  }
+  #overlay{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    pointer-events:none;
+  }
+  #overlay .clickable{ pointer-events:auto; }
+
+  /* Top bar */
+  #topbar{
+    position:absolute;top:0;left:0;right:0;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 10px;
+    z-index:20;
+    pointer-events:none;
+  }
+  .pillbtn{
+    pointer-events:auto;
+    background:rgba(25,16,8,0.72);
+    border:1.5px solid var(--gold);
+    color:var(--gold-soft);
+    font-family:'Work Sans',sans-serif;
+    font-size:clamp(11px,1.6vw,13px);
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    transition:background .15s ease, transform .15s ease;
+    user-select:none;
+  }
+  .pillbtn:hover{ background:rgba(140,42,58,0.55); transform:translateY(-1px); }
+  .pillbtn:active{ transform:translateY(0px) scale(0.97); }
+  #topbarRight{ display:flex; gap:8px; pointer-events:none;}
+
+  /* Caption / narration panel */
+  #captionBox{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    padding:10px 14px 12px 14px;
+    background:linear-gradient(180deg, rgba(35,20,9,0) 0%, rgba(21,12,5,0.92) 32%, rgba(21,12,5,0.96) 100%);
+    z-index:15;
+    pointer-events:none;
+  }
+  #captionTitle{
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:clamp(14px,2.4vw,20px);
+    color:var(--gold-soft);
+    margin:0 0 4px 0;
+    text-shadow:0 2px 6px rgba(0,0,0,0.6);
+  }
+  #captionText{
+    margin:0;
+    font-size:clamp(12px,1.9vw,15px);
+    line-height:1.45;
+    max-width:820px;
+    text-shadow:0 1px 4px rgba(0,0,0,0.7);
+  }
+  #hintText{
+    margin-top:6px;
+    font-size:clamp(11px,1.6vw,13px);
+    color:var(--gold);
+    font-style:italic;
+    opacity:0.9;
+  }
+  #footerRow{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+    margin-top:8px;
+    pointer-events:auto;
+  }
+  #progressDots{ display:flex; gap:5px; }
+  .dot{ width:7px;height:7px;border-radius:50%;background:rgba(246,236,216,0.28); }
+  .dot.active{ background:var(--gold); }
+  .dot.done{ background:var(--ulos-red); }
+
+  button.storybtn{
+    font-family:'Work Sans',sans-serif;
+    font-weight:600;
+    font-size:clamp(12px,1.9vw,14px);
+    background:linear-gradient(180deg, var(--ulos-red), #6e1f2c);
+    color:var(--cream);
+    border:1px solid rgba(255,255,255,0.15);
+    padding:9px 20px;
+    border-radius:9px;
+    cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,0.35);
+    white-space:nowrap;
+  }
+  button.storybtn:hover{ filter:brightness(1.1); }
+  button.storybtn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.35); }
+  button.storybtn.secondary{
+    background:linear-gradient(180deg,#4a3115,#2e1c0f);
+  }
+  button.storybtn:disabled{ opacity:0.4; cursor:default; }
+
+  /* QTE glowing target dots */
+  .qte-target{
+    position:absolute;
+    width:9%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff3cf, var(--gold) 55%, #a5771f 100%);
+    box-shadow:0 0 14px 4px rgba(212,169,75,0.75), 0 0 0 2px rgba(255,255,255,0.4) inset;
+    cursor:pointer;
+    pointer-events:auto;
+    animation: pulseTarget 1.3s ease-in-out infinite;
+    transform:translate(-50%,-50%);
+    z-index:12;
+  }
+  .qte-target.collected{
+    animation:none;
+    transform:translate(-50%,-50%) scale(0);
+    opacity:0;
+  }
+  @keyframes pulseTarget{
+    0%,100%{ filter:brightness(1); }
+    50%{ filter:brightness(1.35); }
+  }
+
+  /* Drag chips */
+  .drag-chip{
+    position:absolute;
+    pointer-events:auto;
+    background:rgba(25,16,8,0.85);
+    border:2px solid var(--gold);
+    color:var(--cream);
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:clamp(11px,1.7vw,13px);
+    font-weight:600;
+    text-align:center;
+    cursor:grab;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    z-index:18;
+    touch-action:none;
+    user-select:none;
+    transition:box-shadow .15s ease;
+  }
+  .drag-chip.dragging{ cursor:grabbing; box-shadow:0 8px 22px rgba(0,0,0,0.55); z-index:30; }
+  .drop-slot{
+    position:absolute;
+    pointer-events:none;
+    border:2.5px dashed rgba(246,236,216,0.55);
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;
+    font-size:clamp(10px,1.5vw,12px);
+    color:rgba(246,236,216,0.75);
+    padding:4px;
+    z-index:10;
+  }
+  .drop-slot.filled{ border-style:solid; border-color:var(--gold); color:var(--gold-soft); }
+  .drop-slot.wobble{ animation:wobble .4s ease; }
+  @keyframes wobble{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-6px); }
+    75%{ transform:translateX(6px); }
+  }
+
+  /* Start / End screens */
+  .fullscreenPanel{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:6% 8%;
+    z-index:25;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(140,42,58,0.25), transparent 60%),
+      linear-gradient(180deg, #1c1108, #2e1c0f 60%, #1c1108);
+    pointer-events:auto;
+  }
+  .fullscreenPanel h1{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(24px,5vw,42px);
+    color:var(--gold-soft);
+    margin:0 0 6px 0;
+    text-shadow:0 3px 10px rgba(0,0,0,0.6);
+  }
+  .fullscreenPanel h2{
+    font-family:'Playfair Display',serif;
+    font-weight:600;
+    font-size:clamp(13px,2.3vw,17px);
+    color:var(--gold);
+    margin:0 0 18px 0;
+    font-style:italic;
+    opacity:0.9;
+  }
+  .fullscreenPanel p{
+    max-width:520px;
+    font-size:clamp(12px,2vw,15px);
+    line-height:1.6;
+    margin:0 0 20px 0;
+    color:var(--cream);
+  }
+  .ulos-strip{
+    width:80%;
+    max-width:420px;
+    height:14px;
+    margin:14px 0 22px 0;
+    background:repeating-linear-gradient(45deg,
+      var(--ulos-red) 0 10px,
+      var(--ulos-black) 10px 20px,
+      var(--ulos-white) 20px 30px,
+      var(--ulos-black) 30px 40px);
+    border-radius:3px;
+    opacity:0.9;
+  }
+  .startbtns{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+
+  /* small language / mute toggles inside start screen */
+  .miniToggles{ display:flex; gap:10px; margin-bottom:6px; }
+
+  #loadingNote{
+    font-size:11px;
+    color:rgba(246,236,216,0.5);
+    margin-top:14px;
+  }
+
+  @media (max-width:480px){
+    .drag-chip{ font-size:10px; padding:5px 7px; }
+  }
+</style>
+</head>
+<body>
+<div id="stageWrap">
+  <div id="stage">
+    <canvas id="gameCanvas" width="960" height="620"></canvas>
+    <div id="overlay">
+      <div id="topbar">
+        <button class="pillbtn" id="langBtn" title="Ganti bahasa / Switch language">🌐 <span id="langLabel">ID</span></button>
+        <div id="topbarRight">
+          <button class="pillbtn" id="muteBtn" title="Bisukan narasi / Mute narration">🔊</button>
+        </div>
+      </div>
+      <div id="sceneLayer"></div>
+      <div id="captionBox">
+        <p id="captionTitle"></p>
+        <p id="captionText"></p>
+        <p id="hintText"></p>
+        <div id="footerRow">
+          <div id="progressDots"></div>
+          <div id="ctrlButtons"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============== I18N ============== */
+  var STR = {
+    id:{
+      gameTitle:"Nai Manggale",
+      gameSubtitle:"Asal Mula Si Gale-Gale — Cerita Rakyat Tapanuli, Sumatera Utara",
+      startDesc:"Ikuti kisah Datu Panggana, sang pemahat ulung, dan patungnya yang menjelma menjadi manusia bernama Nai Manggale. Sentuh atau klik untuk membantu jalannya cerita.",
+      playBtn:"▶ Mulai Cerita",
+      replayBtn:"⟲ Main Lagi",
+      continueBtn:"Lanjut ▶",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      langLabel:"ID",
+      scenes:[
+        {
+          title:"Sang Pemahat Ulung",
+          text:"Di tanah Tapanuli hiduplah Datu Panggana, seorang pemahat patung yang sangat termasyhur. Suatu hari ia pergi ke hutan mencari kayu terbaik untuk karyanya yang baru.",
+          hint:"Sentuh potongan kayu yang bercahaya untuk membantu Datu Panggana memilih kayu terbaik.",
+          narration:"Di tanah Tapanuli hiduplah Datu Panggana, seorang pemahat patung yang sangat termasyhur. Suatu hari, ia pergi ke hutan untuk mencari kayu terbaik bagi karyanya yang baru."
+        },
+        {
+          title:"Mengukir Patung",
+          text:"Siang dan malam Datu Panggana mengukir tanpa henti. Ia hanya membayangkan sosok seorang perempuan yang sangat cantik, hingga akhirnya sebuah patung indah pun selesai dibuat.",
+          hint:"Sentuh titik-titik cahaya untuk membantu mengukir setiap detail patung.",
+          narration:"Siang dan malam Datu Panggana mengukir tanpa henti. Ia hanya membayangkan sosok seorang perempuan yang sangat cantik, hingga akhirnya sebuah patung indah pun selesai dibuat."
+        },
+        {
+          title:"Pakaian dari Bao Partigatiga",
+          text:"Seorang laki-laki bernama Bao Partigatiga lewat dan sangat terpesona melihat patung itu. Ia pun memakaikan kain serta perhiasan yang dibawanya pada patung tersebut.",
+          hint:"Seret kain dan perhiasan ke tubuh patung.",
+          narration:"Seorang laki-laki bernama Bao Partigatiga lewat dan sangat terpesona melihat patung itu. Ia pun memakaikan kain serta perhiasan yang dibawanya pada patung tersebut. Namun anehnya, pakaian itu tak bisa dilepas kembali."
+        },
+        {
+          title:"Doa Datu Partoar",
+          text:"Datu Partoar yang lewat di tempat itu juga takjub melihat kecantikan patung tersebut. Ia berdoa kepada Dewata agar patung itu menjelma menjadi manusia.",
+          hint:"Sentuh cahaya-cahaya doa yang melayang di langit.",
+          narration:"Datu Partoar yang lewat di tempat itu juga takjub melihat kecantikan patung tersebut. Ia pun berdoa kepada Dewata, memohon agar patung itu menjelma menjadi manusia."
+        },
+        {
+          title:"Keajaiban Terjadi",
+          text:"Doa Datu Partoar dikabulkan. Dalam sekejap, patung itu berubah menjadi seorang perempuan cantik jelita. Ia diberi nama Nai Manggale dan diangkat menjadi anak oleh keluarga Datu Partoar.",
+          hint:"Sentuh layar untuk melanjutkan.",
+          narration:"Doa Datu Partoar dikabulkan oleh Dewata. Dalam sekejap, patung itu berubah menjadi seorang perempuan cantik jelita. Ia diberi nama Nai Manggale, dan diangkat menjadi anak oleh keluarga Datu Partoar."
+        },
+        {
+          title:"Perselisihan Tiga Orang",
+          text:"Datu Panggana, Bao Partigatiga, dan Datu Partoar sama-sama merasa berhak atas Nai Manggale. Sesepuh desa, Aji Bahir, pun memberi keputusan yang bijaksana.",
+          hint:"Seret nama tiap orang ke peran yang tepat menurut keputusan Aji Bahir: Ayah, Paman, dan Kakak.",
+          narration:"Datu Panggana, Bao Partigatiga, dan Datu Partoar sama-sama merasa berhak atas Nai Manggale. Karena tak ada yang mau mengalah, mereka pun mengadukan masalah ini kepada Aji Bahir, sesepuh desa yang bijaksana."
+        },
+        {
+          title:"Keputusan Aji Bahir",
+          text:"Aji Bahir memutuskan: Datu Partoar menjadi ayah karena doanya, Datu Panggana menjadi paman karena telah membuat patungnya, dan Bao Partigatiga menjadi kakak karena usianya yang muda. Ketiganya pun berdamai dan hidup rukun sebagai satu keluarga.",
+          hint:"Sentuh layar untuk melanjutkan.",
+          narration:"Aji Bahir memutuskan, Datu Partoar menjadi ayah karena doanya. Datu Panggana menjadi paman karena telah membuat patungnya. Dan Bao Partigatiga menjadi kakak karena usianya yang muda. Ketiganya pun berdamai dan hidup rukun sebagai satu keluarga."
+        },
+        {
+          title:"Lamaran Datu Partitik",
+          text:"Kecantikan Nai Manggale terdengar hingga ke desa tetangga. Seorang pemuda bernama Datu Partitik datang melamar, namun ditolak karena rupanya yang buruk.",
+          hint:"Sentuh tombol 'Tolak Lamaran' untuk melanjutkan cerita.",
+          narration:"Kecantikan Nai Manggale terdengar hingga ke desa tetangga. Seorang pemuda bernama Datu Partitik datang melamar, namun lamarannya ditolak karena rupanya yang buruk."
+        },
+        {
+          title:"Lamaran Kedua",
+          text:"Datu Partitik tak putus asa. Dengan sedikit ilmu sihir, ia melamar untuk kedua kalinya. Kali ini, lamarannya diterima, dan mereka pun menikah dengan upacara yang meriah.",
+          hint:"Sentuh tombol 'Terima Lamaran' untuk melanjutkan cerita.",
+          narration:"Datu Partitik tak putus asa. Dengan sedikit ilmu sihir, ia melamar untuk kedua kalinya. Kali ini, lamarannya diterima, dan mereka pun menikah dengan upacara yang meriah."
+        },
+        {
+          title:"Kesedihan Nai Manggale",
+          text:"Namun kebahagiaan itu tak berlangsung lama. Nai Manggale tak kunjung memiliki keturunan, dan hatinya diliputi kesedihan hingga jatuh sakit berkepanjangan, tanpa ada tabib yang mampu menyembuhkannya.",
+          hint:"Sentuh layar untuk melanjutkan.",
+          narration:"Namun kebahagiaan itu tak berlangsung lama. Nai Manggale tak kunjung memiliki keturunan, dan hatinya diliputi kesedihan hingga jatuh sakit berkepanjangan, tanpa ada tabib yang mampu menyembuhkannya."
+        },
+        {
+          title:"Kelahiran Si Gale-Gale",
+          text:"Sebelum wafat, Nai Manggale berpesan agar dibuatkan patung yang mirip dirinya sebagai kenangan. Patung itu diberi nama Si Gale-Gale. Hingga kini, di Pulau Samosir, Danau Toba, patung Si Gale-Gale masih dipertunjukkan untuk mengenang mereka yang telah tiada.",
+          hint:"",
+          narration:"Sebelum wafat, Nai Manggale berpesan agar dibuatkan patung yang mirip dirinya sebagai kenangan. Patung itu diberi nama Si Gale-Gale. Hingga kini, di Pulau Samosir, Danau Toba, patung Si Gale-Gale masih dipertunjukkan untuk mengenang mereka yang telah tiada."
+        }
+      ],
+      roleLabels:["Ayah","Paman","Kakak"],
+      chipLabels:["Datu Partoar","Datu Panggana","Bao Partigatiga"],
+      rejectBtn:"Tolak Lamaran",
+      acceptBtn:"Terima Lamaran",
+      endTitle:"Tamat",
+      endMoral:"Pesan cerita: Si Gale-Gale mengajarkan kita untuk selalu mengenang dan menghormati orang-orang yang kita kasihi, serta menyelesaikan perselisihan dengan kepala dingin seperti Aji Bahir.",
+      langSwitchNote:"Bahasa diubah ke Indonesia"
+    },
+    en:{
+      gameTitle:"Nai Manggale",
+      gameSubtitle:"The Origin of Si Gale-Gale — A Folktale from Tapanuli, North Sumatra",
+      startDesc:"Follow the story of Datu Panggana, a master carver, and his statue that transformed into a human named Nai Manggale. Tap or click to help the story unfold.",
+      playBtn:"▶ Start Story",
+      replayBtn:"⟲ Play Again",
+      continueBtn:"Continue ▶",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      langLabel:"EN",
+      scenes:[
+        {
+          title:"The Master Carver",
+          text:"In the land of Tapanuli lived Datu Panggana, a renowned statue carver. One day he went into the forest to find the finest wood for his new creation.",
+          hint:"Touch the glowing pieces of wood to help Datu Panggana choose the best wood.",
+          narration:"In the land of Tapanuli lived Datu Panggana, a renowned statue carver. One day he went into the forest to find the finest wood for his new creation."
+        },
+        {
+          title:"Carving the Statue",
+          text:"Day and night, Datu Panggana carved without rest. He pictured only the image of a beautiful woman, until at last a stunning statue was complete.",
+          hint:"Touch the glowing points to help carve every detail of the statue.",
+          narration:"Day and night, Datu Panggana carved without rest. He pictured only the image of a beautiful woman, until at last a stunning statue was complete."
+        },
+        {
+          title:"Clothes from Bao Partigatiga",
+          text:"A man named Bao Partigatiga passed by and was captivated by the statue. He dressed it in the cloth and jewelry he was carrying.",
+          hint:"Drag the cloth and jewelry onto the statue.",
+          narration:"A man named Bao Partigatiga passed by and was captivated by the statue. He dressed it in the cloth and jewelry he was carrying. But strangely, the clothes could not be removed again."
+        },
+        {
+          title:"Datu Partoar's Prayer",
+          text:"Datu Partoar, who also passed by, was amazed by the statue's beauty. He prayed to the gods, asking that the statue be turned into a living woman.",
+          hint:"Touch the glowing lights of prayer floating in the sky.",
+          narration:"Datu Partoar, who also passed by, was amazed by the statue's beauty. He prayed to the gods, asking that the statue be turned into a living woman."
+        },
+        {
+          title:"A Miracle Happens",
+          text:"Datu Partoar's prayer was answered. In an instant, the statue transformed into a beautiful woman. She was named Nai Manggale and welcomed as a daughter by Datu Partoar's family.",
+          hint:"Tap the screen to continue.",
+          narration:"Datu Partoar's prayer was answered by the gods. In an instant, the statue transformed into a beautiful woman. She was named Nai Manggale, and welcomed as a daughter by Datu Partoar's family."
+        },
+        {
+          title:"A Dispute Among Three",
+          text:"Datu Panggana, Bao Partigatiga, and Datu Partoar each believed they had a claim over Nai Manggale. The village elder, Aji Bahir, was asked to settle the matter wisely.",
+          hint:"Drag each man's name to the role Aji Bahir assigned: Father, Uncle, and Older Brother.",
+          narration:"Datu Panggana, Bao Partigatiga, and Datu Partoar each believed they had a claim over Nai Manggale. Since none would give way, they brought the dispute to Aji Bahir, the wise village elder."
+        },
+        {
+          title:"Aji Bahir's Decision",
+          text:"Aji Bahir decided: Datu Partoar would be her father, for his prayer gave her life. Datu Panggana would be her uncle, for he carved the statue. And Bao Partigatiga would be her older brother, being the youngest. The three made peace and lived together as one family.",
+          hint:"Tap the screen to continue.",
+          narration:"Aji Bahir decided that Datu Partoar would be her father, for his prayer gave her life. Datu Panggana would be her uncle, for he carved the statue. And Bao Partigatiga would be her older brother, being the youngest. The three made peace and lived together as one family."
+        },
+        {
+          title:"Datu Partitik's Proposal",
+          text:"News of Nai Manggale's beauty reached a neighboring village. A young man named Datu Partitik came to propose, but he was refused because of his unpleasant appearance.",
+          hint:"Tap 'Reject the Proposal' to continue the story.",
+          narration:"News of Nai Manggale's beauty reached a neighboring village. A young man named Datu Partitik came to propose, but he was refused because of his unpleasant appearance."
+        },
+        {
+          title:"A Second Proposal",
+          text:"Datu Partitik did not give up. Using a little magic, he proposed a second time. This time, his proposal was accepted, and they were married in a grand ceremony.",
+          hint:"Tap 'Accept the Proposal' to continue the story.",
+          narration:"Datu Partitik did not give up. Using a little magic, he proposed a second time. This time, his proposal was accepted, and they were married in a grand ceremony."
+        },
+        {
+          title:"Nai Manggale's Sorrow",
+          text:"But their happiness did not last. Nai Manggale never had children, and her heart grew heavy with sorrow, until she fell gravely ill, a sickness no healer could cure.",
+          hint:"Tap the screen to continue.",
+          narration:"But their happiness did not last. Nai Manggale never had children, and her heart grew heavy with sorrow, until she fell gravely ill, a sickness no healer could cure."
+        },
+        {
+          title:"The Birth of Si Gale-Gale",
+          text:"Before she passed away, Nai Manggale asked that a statue resembling her be made as a keepsake. It was named Si Gale-Gale. To this day, on Samosir Island in Lake Toba, the Si Gale-Gale puppet is still performed to honor those who have passed.",
+          hint:"",
+          narration:"Before she passed away, Nai Manggale asked that a statue resembling her be made as a keepsake. It was named Si Gale-Gale. To this day, on Samosir Island in Lake Toba, the Si Gale-Gale puppet is still performed to honor those who have passed."
+        }
+      ],
+      roleLabels:["Father","Uncle","Older Brother"],
+      chipLabels:["Datu Partoar","Datu Panggana","Bao Partigatiga"],
+      rejectBtn:"Reject the Proposal",
+      acceptBtn:"Accept the Proposal",
+      endTitle:"The End",
+      endMoral:"Moral of the story: Si Gale-Gale reminds us to always honor and remember those we love, and to settle disputes with wisdom and calm, just as Aji Bahir did.",
+      langSwitchNote:"Language switched to English"
+    }
+  };
+
+  /* ============== STATE ============== */
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get('lang') === 'en') ? 'en' : 'id';
+  var muted = false;
+  var sceneIndex = -1; // -1 = start screen, 0..N-1 = story scenes, N = end
+  var TOTAL_SCENES = STR.id.scenes.length;
+  var voices = [];
+
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var sceneLayer = document.getElementById('sceneLayer');
+  var captionTitle = document.getElementById('captionTitle');
+  var captionText = document.getElementById('captionText');
+  var hintText = document.getElementById('hintText');
+  var ctrlButtons = document.getElementById('ctrlButtons');
+  var progressDots = document.getElementById('progressDots');
+  var langBtn = document.getElementById('langBtn');
+  var langLabel = document.getElementById('langLabel');
+  var muteBtn = document.getElementById('muteBtn');
+
+  function T(){ return STR[lang]; }
+
+  /* ============== SPEECH ============== */
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(targetLang){
+    var wanted = targetLang === 'id' ? 'id' : 'en';
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(wanted) === 0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(!window.speechSynthesis || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    var v = pickVoice(lang);
+    if(v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeech(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ============== CANVAS HELPERS ============== */
+  var W = 960, H = 620;
+
+  function grad(x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+    return g;
+  }
+
+  function drawUlosBorder(){
+    var stripH = 16;
+    var colors = ['#8c2a3a','#191008','#efe4cd','#191008'];
+    var segW = 24;
+    for(var y=0; y<2; y++){
+      var yy = y===0 ? 0 : H-stripH;
+      for(var x=0; x*segW < W; x++){
+        ctx.fillStyle = colors[x % colors.length];
+        ctx.fillRect(x*segW, yy, segW, stripH);
+      }
+    }
+  }
+
+  function drawSky(topColor, bottomColor){
+    ctx.fillStyle = grad(0,0,0,H,[[0,topColor],[1,bottomColor]]);
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawGround(color, y){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.quadraticCurveTo(W/2, y-18, W, y);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3b2b12';
+    ctx.fillRect(-6,-10,12,50);
+    ctx.fillStyle = '#3e6b2e';
+    ctx.beginPath();
+    ctx.ellipse(0,-40,42,50,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#4d7f39';
+    ctx.beginPath();
+    ctx.ellipse(-14,-58,28,32,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4423';
+    ctx.fillRect(-60,-10,120,70);
+    ctx.fillStyle = '#3a2412';
+    ctx.beginPath();
+    ctx.moveTo(-75,-10);
+    ctx.lineTo(0,-70);
+    ctx.lineTo(75,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#8c2a3a';
+    ctx.beginPath();
+    ctx.moveTo(-75,-10);
+    ctx.lineTo(0,-70);
+    ctx.lineTo(75,-10);
+    ctx.lineTo(60,-6);
+    ctx.lineTo(0,-58);
+    ctx.lineTo(-60,-6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#2a1a0c';
+    ctx.fillRect(-14,20,28,40);
+    ctx.restore();
+  }
+
+  // Simple person figure. color = clothing color, skin optional, headwear optional string
+  function drawPerson(x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    var cloth = opts.cloth || '#8a5a2b';
+    var skin = opts.skin || '#c98a52';
+    var hair = opts.hair || '#241708';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#2a1a0c';
+    ctx.fillRect(-10,40,8,26);
+    ctx.fillRect(2,40,8,26);
+    // body/robe
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(-18,10);
+    ctx.lineTo(18,10);
+    ctx.lineTo(14,46);
+    ctx.lineTo(-14,46);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = cloth;
+    ctx.lineWidth = 7;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(-15,16); ctx.lineTo(-24, opts.armUp ? -4 : 32);
+    ctx.moveTo(15,16); ctx.lineTo(24, opts.armUp2 ? -4 : 32);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-4,15,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = hair;
+    ctx.beginPath();
+    ctx.arc(0,-9,15.5,Math.PI, Math.PI*2);
+    ctx.fill();
+    if(opts.headwear === 'ulos'){
+      ctx.fillStyle = '#8c2a3a';
+      ctx.fillRect(-15,-16,30,7);
+    } else if(opts.headwear === 'crown'){
+      ctx.fillStyle = '#d4a94b';
+      ctx.beginPath();
+      ctx.moveTo(-13,-16); ctx.lineTo(-13,-24); ctx.lineTo(-4,-16);
+      ctx.lineTo(0,-26); ctx.lineTo(4,-16); ctx.lineTo(13,-24); ctx.lineTo(13,-16);
+      ctx.closePath(); ctx.fill();
+    }
+    // simple face
+    ctx.fillStyle = '#241708';
+    ctx.beginPath();
+    ctx.arc(-5,-5,1.6,0,Math.PI*2);
+    ctx.arc(5,-5,1.6,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStatue(x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    var human = opts.human || 0; // 0..1 morph amount to human skin tone
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var woodColor = '#a9793f';
+    var skinColor = '#e8b98a';
+    function mix(c1,c2,t){
+      function hex2rgb(c){ c=c.replace('#',''); return [parseInt(c.substr(0,2),16),parseInt(c.substr(2,2),16),parseInt(c.substr(4,2),16)]; }
+      var a = hex2rgb(c1), b = hex2rgb(c2);
+      var r = Math.round(a[0]+(b[0]-a[0])*t);
+      var g = Math.round(a[1]+(b[1]-a[1])*t);
+      var bl = Math.round(a[2]+(b[2]-a[2])*t);
+      return 'rgb('+r+','+g+','+bl+')';
+    }
+    var bodyColor = mix(woodColor, skinColor, human);
+    // pedestal (fades out as human)
+    ctx.globalAlpha = 1-human*0.6;
+    ctx.fillStyle = '#5c3a1a';
+    ctx.fillRect(-22,58,44,10);
+    ctx.globalAlpha = 1;
+    // legs
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(-11,20,9,40);
+    ctx.fillRect(2,20,9,40);
+    // dress/cloth (appears more once dressed)
+    if(opts.dressed){
+      ctx.fillStyle = opts.dressColor || '#8c2a3a';
+      ctx.beginPath();
+      ctx.moveTo(-16,-6);
+      ctx.lineTo(16,-6);
+      ctx.lineTo(13,34);
+      ctx.lineTo(-13,34);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.moveTo(-16,-6);
+      ctx.lineTo(16,-6);
+      ctx.lineTo(13,34);
+      ctx.lineTo(-13,34);
+      ctx.closePath();
+      ctx.fill();
+      // carving lines
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 1;
+      for(var i=-10;i<=10;i+=5){
+        ctx.beginPath(); ctx.moveTo(i,-6); ctx.lineTo(i*0.8, 30); ctx.stroke();
+      }
+    }
+    // jewelry
+    if(opts.jewelry){
+      ctx.strokeStyle = '#d4a94b';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0,-2,15,0.15*Math.PI,0.85*Math.PI);
+      ctx.stroke();
+    }
+    // arms
+    ctx.strokeStyle = bodyColor;
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-14,0); ctx.lineTo(-20,26);
+    ctx.moveTo(14,0); ctx.lineTo(20,26);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(0,-16,15,0,Math.PI*2);
+    ctx.fill();
+    // hair (once human)
+    if(human > 0.4){
+      ctx.fillStyle = '#241708';
+      ctx.globalAlpha = Math.min(1,(human-0.4)/0.6);
+      ctx.beginPath();
+      ctx.arc(0,-21,15.5,Math.PI,Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    // glow when transforming
+    if(opts.glow){
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      var g = ctx.createRadialGradient(0,-6,5,0,-6,70);
+      g.addColorStop(0,'rgba(255,236,180,0.55)');
+      g.addColorStop(1,'rgba(255,236,180,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-6,70,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawStars(seedCount, tOffset){
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for(var i=0;i<seedCount;i++){
+      var sx = (i*97 + 31) % W;
+      var sy = (i*53 + 17) % 200;
+      var tw = 0.5 + 0.5*Math.sin((tOffset||0)*0.002 + i);
+      ctx.globalAlpha = 0.3 + 0.5*tw;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 1.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawLakeAndSamosir(){
+    drawSky('#a9d4e0','#dff0e4');
+    ctx.fillStyle = '#2e6d8a';
+    ctx.beginPath();
+    ctx.ellipse(W/2, H-120, 470, 140, 0, 0, Math.PI*2);
+    ctx.fill();
+    // island
+    ctx.fillStyle = '#4d7f39';
+    ctx.beginPath();
+    ctx.ellipse(W/2+40, H-150, 130, 55, 0, 0, Math.PI*2);
+    ctx.fill();
+    drawTree(W/2-10,H-170,0.7);
+    drawTree(W/2+70,H-180,0.9);
+    drawTree(W/2+130,H-165,0.6);
+  }
+
+  /* ============== SCENE RENDER + INTERACTION ============== */
+
+  var raf = null;
+  function stopAnim(){ if(raf){ cancelAnimationFrame(raf); raf = null; } }
+
+  function clearOverlaySceneLayer(){
+    sceneLayer.innerHTML = '';
+  }
+
+  function pct(v, total){ return (v/total*100) + '%'; }
+
+  function setCaption(sceneObj, showHint){
+    captionTitle.textContent = sceneObj.title;
+    captionText.textContent = sceneObj.text;
+    hintText.textContent = showHint === false ? '' : (sceneObj.hint || '');
+  }
+
+  function renderProgressDots(){
+    progressDots.innerHTML = '';
+    for(var i=0;i<TOTAL_SCENES;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIndex ? ' active' : (i<sceneIndex ? ' done' : ''));
+      progressDots.appendChild(d);
+    }
+  }
+
+  function setCtrlButton(label, onClick, secondary, disabled){
+    ctrlButtons.innerHTML = '';
+    if(!label) return;
+    var b = document.createElement('button');
+    b.className = 'storybtn' + (secondary ? ' secondary' : '');
+    b.textContent = label;
+    b.disabled = !!disabled;
+    b.addEventListener('click', onClick);
+    ctrlButtons.appendChild(b);
+  }
+
+  function addQteTargets(count, onAllDone){
+    clearOverlaySceneLayer();
+    var remaining = count;
+    var positions = [];
+    var tries = 0;
+    while(positions.length < count && tries < 500){
+      tries++;
+      var px = 12 + Math.random()*76;
+      var py = 14 + Math.random()*55;
+      var ok = true;
+      for(var i=0;i<positions.length;i++){
+        var dx = positions[i][0]-px, dy = positions[i][1]-py;
+        if(Math.sqrt(dx*dx+dy*dy) < 16) ok = false;
+      }
+      if(ok) positions.push([px,py]);
+    }
+    positions.forEach(function(pos){
+      var t = document.createElement('div');
+      t.className = 'qte-target clickable';
+      t.style.left = pos[0] + '%';
+      t.style.top = pos[1] + '%';
+      t.addEventListener('click', function(){
+        if(t.classList.contains('collected')) return;
+        t.classList.add('collected');
+        remaining--;
+        if(remaining <= 0){
+          setTimeout(onAllDone, 250);
+        }
+      });
+      sceneLayer.appendChild(t);
+    });
+  }
+
+  function addDragMatch(chipLabels, roleLabels, correctMap, onAllDone){
+    // correctMap: array index i -> role index it belongs to
+    clearOverlaySceneLayer();
+    var slotPositions = [ [50,20], [50,45], [50,70] ]; // percent x,y for role slots (right side)
+    var chipStartPositions = [ [15,25],[15,48],[15,71] ];
+    var filledCount = 0;
+    var slots = [];
+
+    roleLabels.forEach(function(rl, i){
+      var s = document.createElement('div');
+      s.className = 'drop-slot';
+      s.style.left = '68%';
+      s.style.top = (18 + i*27) + '%';
+      s.style.width = '27%';
+      s.style.height = '18%';
+      s.dataset.role = i;
+      s.textContent = rl;
+      sceneLayer.appendChild(s);
+      slots.push(s);
+    });
+
+    chipLabels.forEach(function(cl, i){
+      var chip = document.createElement('div');
+      chip.className = 'drag-chip clickable';
+      chip.textContent = cl;
+      chip.style.left = '8%';
+      chip.style.top = (18 + i*27) + '%';
+      chip.style.width = '22%';
+      chip.dataset.role = correctMap[i];
+      chip.dataset.placed = '0';
+      sceneLayer.appendChild(chip);
+
+      var dragging = false, startX, startY, origLeft, origTop;
+
+      function toPercentPos(clientX, clientY){
+        var rect = sceneLayer.getBoundingClientRect();
+        return {
+          x: (clientX - rect.left) / rect.width * 100,
+          y: (clientY - rect.top) / rect.height * 100
+        };
+      }
+
+      chip.addEventListener('pointerdown', function(e){
+        if(chip.dataset.placed === '1') return;
+        dragging = true;
+        chip.classList.add('dragging');
+        chip.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+      chip.addEventListener('pointermove', function(e){
+        if(!dragging) return;
+        var p = toPercentPos(e.clientX, e.clientY);
+        chip.style.left = (p.x - 11) + '%';
+        chip.style.top = (p.y - 4) + '%';
+      });
+      function endDrag(e){
+        if(!dragging) return;
+        dragging = false;
+        chip.classList.remove('dragging');
+        // check overlap with slots
+        var chipRect = chip.getBoundingClientRect();
+        var cx = chipRect.left + chipRect.width/2;
+        var cy = chipRect.top + chipRect.height/2;
+        var matched = null;
+        slots.forEach(function(s){
+          var r = s.getBoundingClientRect();
+          if(cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom){
+            matched = s;
+          }
+        });
+        if(matched && parseInt(matched.dataset.role,10) === parseInt(chip.dataset.role,10) && !matched.classList.contains('filled')){
+          var r = matched.getBoundingClientRect();
+          var sr = toPercentPos(r.left + r.width/2, r.top + r.height/2);
+          chip.style.left = (sr.x - 11) + '%';
+          chip.style.top = (sr.y - 4) + '%';
+          chip.dataset.placed = '1';
+          chip.style.cursor = 'default';
+          matched.classList.add('filled');
+          filledCount++;
+          if(filledCount >= chipLabels.length){
+            setTimeout(onAllDone, 400);
+          }
+        } else if(matched){
+          matched.classList.add('wobble');
+          setTimeout(function(){ matched.classList.remove('wobble'); }, 400);
+          chip.style.left = chipStartPositions ? chip.dataset.origLeft || chip.style.left : chip.style.left;
+          resetChipPos();
+        } else {
+          resetChipPos();
+        }
+      }
+      function resetChipPos(){
+        chip.style.left = '8%';
+        chip.style.top = (18 + i*27) + '%';
+      }
+      chip.addEventListener('pointerup', endDrag);
+      chip.addEventListener('pointercancel', endDrag);
+    });
+  }
+
+  function addDragDress(onAllDone){
+    clearOverlaySceneLayer();
+    var itemsData = [
+      {label: lang==='id' ? 'Kain' : 'Cloth', target:{x:50,y:52}, start:{x:14,y:22}},
+      {label: lang==='id' ? 'Perhiasan' : 'Jewelry', target:{x:50,y:38}, start:{x:14,y:68}}
+    ];
+    var placed = 0;
+    itemsData.forEach(function(item, idx){
+      var chip = document.createElement('div');
+      chip.className = 'drag-chip clickable';
+      chip.textContent = item.label;
+      chip.style.left = item.start.x + '%';
+      chip.style.top = item.start.y + '%';
+      chip.style.width = '20%';
+      sceneLayer.appendChild(chip);
+      var dragging = false;
+      function toPercentPos(clientX, clientY){
+        var rect = sceneLayer.getBoundingClientRect();
+        return { x:(clientX-rect.left)/rect.width*100, y:(clientY-rect.top)/rect.height*100 };
+      }
+      chip.addEventListener('pointerdown', function(e){
+        if(chip.dataset.placed === '1') return;
+        dragging = true;
+        chip.classList.add('dragging');
+        chip.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+      chip.addEventListener('pointermove', function(e){
+        if(!dragging) return;
+        var p = toPercentPos(e.clientX, e.clientY);
+        chip.style.left = (p.x-10) + '%';
+        chip.style.top = (p.y-4) + '%';
+      });
+      function endDrag(e){
+        if(!dragging) return;
+        dragging = false;
+        chip.classList.remove('dragging');
+        var p = toPercentPos(e.clientX, e.clientY);
+        var dx = p.x - item.target.x, dy = p.y - item.target.y;
+        var dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist < 14){
+          chip.style.left = (item.target.x-10) + '%';
+          chip.style.top = (item.target.y-4) + '%';
+          chip.dataset.placed = '1';
+          chip.style.cursor = 'default';
+          placed++;
+          if(idx === 0){ dressState.dressed = true; }
+          if(idx === 1){ dressState.jewelry = true; }
+          renderCurrentSceneArt();
+          if(placed >= itemsData.length){
+            setTimeout(onAllDone, 400);
+          }
+        } else {
+          chip.style.left = item.start.x + '%';
+          chip.style.top = item.start.y + '%';
+        }
+      }
+      chip.addEventListener('pointerup', endDrag);
+      chip.addEventListener('pointercancel', endDrag);
+    });
+  }
+
+  var dressState = { dressed:false, jewelry:false };
+  var transformProgress = 0;
+
+  function renderCurrentSceneArt(){
+    ctx.clearRect(0,0,W,H);
+    switch(sceneIndex){
+      case 0: // forest
+        drawSky('#bcd9e0','#e9e2c2');
+        drawGround('#5a7d3d', 430);
+        drawTree(120,380,1.1); drawTree(220,410,0.8); drawTree(760,380,1.2); drawTree(840,420,0.7);
+        drawPerson(480,410,{cloth:'#7a4a22',headwear:'ulos'});
+        drawUlosBorder();
+        break;
+      case 1: // carving
+        drawSky('#e7cf9e','#f3e6c8');
+        drawGround('#8a6a3f', 460);
+        drawHut(180,440,1.0);
+        drawPerson(560,430,{cloth:'#7a4a22',headwear:'ulos', armUp:true});
+        drawStatue(660,440,{scale:1.05});
+        drawUlosBorder();
+        break;
+      case 2: // dressing
+        drawSky('#e7cf9e','#f3e6c8');
+        drawGround('#8a6a3f', 460);
+        drawHut(150,440,0.9);
+        drawPerson(760,420,{cloth:'#3a6b8c',headwear:'ulos', armUp2:true});
+        drawStatue(500,440,{scale:1.2, dressed:dressState.dressed, jewelry:dressState.jewelry, dressColor:'#8c2a3a'});
+        drawUlosBorder();
+        break;
+      case 3: // prayer
+        drawSky('#16213a','#3c2f52');
+        drawStars(60, performance.now());
+        drawGround('#2a2333', 470);
+        drawPerson(360,440,{cloth:'#efe4cd',headwear:'ulos', armUp:true});
+        drawStatue(600,440,{scale:1.2, dressed:true, jewelry:true, dressColor:'#8c2a3a'});
+        drawUlosBorder();
+        break;
+      case 4: // transform
+        drawSky('#16213a','#f3e6c8');
+        drawGround('#2a2333', 470);
+        drawPerson(360,440,{cloth:'#efe4cd',headwear:'ulos'});
+        drawStatue(600,440,{scale:1.2, dressed:true, jewelry:true, dressColor:'#8c2a3a', human:transformProgress, glow:transformProgress>0 && transformProgress<1});
+        drawUlosBorder();
+        break;
+      case 5: // dispute setup
+      case 6: // dispute decision
+        drawSky('#cfe3d8','#f3e6c8');
+        drawGround('#6f8f52', 470);
+        drawHut(120,440,0.8);
+        drawPerson(430,430,{cloth:'#efe4cd', skin:'#e8b98a', hair:'#241708', scale:1.1}); // Nai Manggale (human)
+        drawPerson(280,440,{cloth:'#7a4a22',headwear:'ulos'});
+        drawPerson(580,440,{cloth:'#3a6b8c',headwear:'ulos'});
+        drawPerson(700,435,{cloth:'#8c2a3a',headwear:'crown'});
+        drawUlosBorder();
+        break;
+      case 7: // proposal 1
+      case 8: // proposal 2
+        drawSky('#cfe3d8','#f3e6c8');
+        drawGround('#6f8f52', 470);
+        drawHut(760,440,0.8);
+        drawPerson(430,430,{cloth:'#efe4cd', skin:'#e8b98a', hair:'#241708', scale:1.15});
+        drawPerson(590,435,{cloth:'#3a2e12', skin:'#c98a52', headwear:'ulos'});
+        drawUlosBorder();
+        break;
+      case 9: // illness
+        drawSky('#3a3550','#5c4f6b');
+        drawGround('#332b40', 470);
+        drawHut(200,440,0.9);
+        drawPerson(480,430,{cloth:'#c8c2d0', skin:'#d9a97a', hair:'#241708', scale:1.05});
+        drawUlosBorder();
+        break;
+      case 10: // ending / si gale-gale
+        drawLakeAndSamosir();
+        drawStatue(W/2-40, H-220, {scale:1.4, dressed:true, jewelry:true, dressColor:'#8c2a3a'});
+        drawPerson(W/2+120, H-150, {cloth:'#8c2a3a', headwear:'crown', scale:0.9});
+        drawUlosBorder();
+        break;
+      default:
+        drawSky('#3a2e12','#1c1108');
+    }
+  }
+
+  function animateTransform(onDone){
+    stopAnim();
+    transformProgress = 0;
+    var start = null;
+    var duration = 2600;
+    function step(ts){
+      if(!start) start = ts;
+      var elapsed = ts - start;
+      transformProgress = Math.min(1, elapsed/duration);
+      renderCurrentSceneArt();
+      if(transformProgress < 1){
+        raf = requestAnimationFrame(step);
+      } else {
+        raf = requestAnimationFrame(function loopGlow(t2){
+          renderCurrentSceneArt();
+          raf = requestAnimationFrame(loopGlow);
+        });
+        setTimeout(onDone, 300);
+      }
+    }
+    raf = requestAnimationFrame(step);
+  }
+
+  function animatePrayerBackground(){
+    stopAnim();
+    function step(){
+      renderCurrentSceneArt();
+      raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+  }
+
+  /* ============== SCENE FLOW ============== */
+
+  function goToScene(idx){
+    stopAnim();
+    stopSpeech();
+    sceneIndex = idx;
+    renderProgressDots();
+
+    if(idx >= TOTAL_SCENES){
+      showEndScreen();
+      return;
+    }
+
+    var s = T().scenes[idx];
+    setCaption(s);
+    renderCurrentSceneArt();
+    speak(s.narration);
+
+    switch(idx){
+      case 0: // forest QTE
+        setCtrlButton(null);
+        addQteTargets(5, function(){ goToScene(idx+1); });
+        break;
+      case 1: // carving QTE
+        setCtrlButton(null);
+        addQteTargets(6, function(){ goToScene(idx+1); });
+        break;
+      case 2: // dressing drag
+        setCtrlButton(null);
+        dressState = {dressed:false, jewelry:false};
+        renderCurrentSceneArt();
+        addDragDress(function(){ goToScene(idx+1); });
+        break;
+      case 3: // prayer QTE with animated bg (stars twinkle)
+        clearOverlaySceneLayer();
+        setCtrlButton(null);
+        animatePrayerBackground();
+        addQteTargets(6, function(){ stopAnim(); goToScene(idx+1); });
+        break;
+      case 4: // transform auto animation
+        clearOverlaySceneLayer();
+        setCtrlButton(null, null, false, true);
+        animateTransform(function(){
+          setCtrlButton(T().continueBtn, function(){ goToScene(idx+1); });
+        });
+        break;
+      case 5: // dispute intro -> tap continue to matching puzzle
+        clearOverlaySceneLayer();
+        setCtrlButton(T().continueBtn, function(){ goToScene(idx+1); });
+        break;
+      case 6: // dispute matching puzzle
+        setCaption({title:s.title, text:s.text, hint:s.hint});
+        setCtrlButton(null);
+        // correctMap per chip index (Datu Partoar=0 -> Father(0), Datu Panggana=1 -> Uncle(1), Bao Partigatiga=2 -> OlderBrother(2))
+        addDragMatch(T().chipLabels, T().roleLabels, [0,1,2], function(){
+          goToScene(idx+1);
+        });
+        break;
+      case 7: // proposal 1 - reject
+        clearOverlaySceneLayer();
+        setCtrlButton(T().rejectBtn, function(){ goToScene(idx+1); });
+        break;
+      case 8: // proposal 2 - accept
+        clearOverlaySceneLayer();
+        setCtrlButton(T().acceptBtn, function(){ goToScene(idx+1); });
+        break;
+      case 9: // illness
+        clearOverlaySceneLayer();
+        setCtrlButton(T().continueBtn, function(){ goToScene(idx+1); });
+        break;
+      case 10: // ending narrative scene, then to end screen
+        clearOverlaySceneLayer();
+        setCtrlButton(T().continueBtn, function(){ goToScene(idx+1); });
+        break;
+    }
+  }
+
+  /* ============== START / END SCREENS ============== */
+
+  function showStartScreen(){
+    stopAnim();
+    stopSpeech();
+    sceneIndex = -1;
+    ctx.clearRect(0,0,W,H);
+    drawLakeAndSamosir();
+    drawUlosBorder();
+    document.getElementById('captionBox').style.display = 'none';
+    clearOverlaySceneLayer();
+
+    var panel = document.createElement('div');
+    panel.className = 'fullscreenPanel';
+    panel.innerHTML =
+      '<h1>' + T().gameTitle + '</h1>' +
+      '<h2>' + T().gameSubtitle + '</h2>' +
+      '<div class="ulos-strip"></div>' +
+      '<p>' + T().startDesc + '</p>' +
+      '<div class="startbtns"><button class="storybtn clickable" id="playBtnEl">' + T().playBtn + '</button></div>';
+    sceneLayer.appendChild(panel);
+
+    document.getElementById('playBtnEl').addEventListener('click', function(){
+      document.getElementById('captionBox').style.display = 'block';
+      goToScene(0);
+    });
+  }
+
+  function showEndScreen(){
+    ctx.clearRect(0,0,W,H);
+    drawLakeAndSamosir();
+    drawStatue(W/2-40, H-220, {scale:1.4, dressed:true, jewelry:true, dressColor:'#8c2a3a'});
+    drawUlosBorder();
+    document.getElementById('captionBox').style.display = 'none';
+    clearOverlaySceneLayer();
+
+    var panel = document.createElement('div');
+    panel.className = 'fullscreenPanel';
+    panel.innerHTML =
+      '<h1>' + T().endTitle + '</h1>' +
+      '<div class="ulos-strip"></div>' +
+      '<p>' + T().endMoral + '</p>' +
+      '<div class="startbtns"><button class="storybtn clickable" id="replayBtnEl">' + T().replayBtn + '</button></div>';
+    sceneLayer.appendChild(panel);
+    speak(T().endMoral);
+
+    document.getElementById('replayBtnEl').addEventListener('click', function(){
+      showStartScreen();
+    });
+  }
+
+  /* ============== TOP CONTROLS ============== */
+
+  function refreshLangUI(){
+    langLabel.textContent = T().langLabel;
+    document.getElementById('htmlRoot').lang = lang;
+  }
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    refreshLangUI();
+    if(sceneIndex === -1){
+      showStartScreen();
+    } else if(sceneIndex >= TOTAL_SCENES){
+      showEndScreen();
+    } else {
+      goToScene(sceneIndex);
+    }
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? T().muteOff : T().muteOn;
+    if(muted) stopSpeech();
+  });
+
+  /* ============== RESIZE REPORTING (for iframe embed) ============== */
+  function reportHeight(){
+    var h = document.getElementById('stageWrap').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'naiManggaleHeight', height: Math.ceil(h) }, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(reportHeight);
+    ro.observe(document.getElementById('stageWrap'));
+  }
+  window.addEventListener('resize', reportHeight);
+  window.addEventListener('load', function(){ reportHeight(); setTimeout(reportHeight, 400); setTimeout(reportHeight, 1200); });
+
+  /* ============== INIT ============== */
+  refreshLangUI();
+  muteBtn.textContent = T().muteOn;
+  showStartScreen();
+
+})();
+</script>
+</body>
+</html>
