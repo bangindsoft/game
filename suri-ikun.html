@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Suri Ikun dan Dua Burung</title>
+<style>
+  :root{
+    --earth:#241a12;
+    --earth-2:#3a2a1a;
+    --panel:#2f2115;
+    --gold:#d9a44c;
+    --gold-dim:#a97f3d;
+    --cream:#f4e9d3;
+    --indigo:#233246;
+    --indigo-2:#324a63;
+    --teal:#3f9d8f;
+    --teal-dark:#25675d;
+    --clay:#a8462f;
+    --clay-dark:#7c3120;
+    --ghost:#dfe7ea;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'Nunito Sans', 'Segoe UI', system-ui, sans-serif;
+  }
+  @font-face{
+    font-family:'Fraunces';
+    src: local('Georgia');
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: var(--font-body);
+    background: var(--earth);
+    color: var(--cream);
+    overflow-x:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background: radial-gradient(circle at 50% -10%, #3a2a1a 0%, var(--earth) 55%);
+    min-height: 480px;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    border-left:1px solid #000;
+    border-right:1px solid #000;
+  }
+
+  /* --- Ikat pattern border --- */
+  .ikat-strip{
+    height:10px;
+    width:100%;
+    background:
+      repeating-linear-gradient(45deg, var(--gold) 0 6px, var(--clay) 6px 12px, var(--indigo-2) 12px 18px);
+    opacity:0.85;
+    flex-shrink:0;
+  }
+
+  /* --- Top bar --- */
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background: linear-gradient(180deg, #2c2013, #241a12);
+    border-bottom:1px solid #1a120b;
+    flex-shrink:0;
+    gap:8px;
+  }
+  #titleblock{
+    display:flex;
+    flex-direction:column;
+    line-height:1.15;
+    min-width:0;
+  }
+  #gtitle{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:15px;
+    color:var(--gold);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #gsub{
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--teal);
+    opacity:0.85;
+  }
+  .iconbtns{ display:flex; gap:6px; flex-shrink:0; }
+  .iconbtn{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1px solid var(--gold-dim);
+    background: var(--panel);
+    color: var(--cream);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:14px;
+    font-family: var(--font-body);
+    font-weight:700;
+    transition: transform .15s ease, background .15s ease;
+    user-select:none;
+  }
+  .iconbtn:hover{ background:#3d2c1a; }
+  .iconbtn:active{ transform:scale(0.9); }
+  .iconbtn.muted{ color:#8a7256; border-color:#5b4a34; }
+
+  /* --- Progress dots --- */
+  #progress{
+    display:flex;
+    gap:5px;
+    padding:8px 14px 0;
+    flex-shrink:0;
+  }
+  .dot{
+    flex:1;
+    height:4px;
+    border-radius:2px;
+    background:#4a3a26;
+    overflow:hidden;
+  }
+  .dot i{
+    display:block;
+    height:100%;
+    width:0%;
+    background: var(--gold);
+    transition: width .4s ease;
+  }
+
+  /* --- Stage --- */
+  #stage{
+    position:relative;
+    flex:1;
+    min-height:260px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    overflow:hidden;
+  }
+  .scene-bg{
+    position:absolute; inset:0;
+    transition: opacity .5s ease;
+  }
+  .bg-garden{ background: linear-gradient(180deg,#5a7a3f 0%, #35502a 55%, #2a3f22 100%); }
+  .bg-garden::before, .bg-garden::after{
+    content:""; position:absolute; bottom:0; width:100%; height:40%;
+    background: radial-gradient(ellipse at 20% 100%, #4a6636 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, #3f5a2d 0%, transparent 60%);
+  }
+  .bg-house{ background: linear-gradient(180deg,#7a6a45 0%, #4d3f26 60%, #3a2f1c 100%); }
+  .bg-forest{ background: linear-gradient(180deg,#2e3a26 0%, #1c2417 55%, #10150d 100%); }
+  .bg-forest-dark{ background: linear-gradient(180deg,#1a1f2b 0%, #10131c 55%, #08090d 100%); }
+  .bg-cave{ background: radial-gradient(circle at 70% 30%, #2a2420 0%, #14100d 60%, #0a0806 100%); }
+  .bg-cave-light{ background: radial-gradient(circle at 30% 40%, #3a3020 0%, #1a1510 60%, #0a0806 100%); }
+  .bg-sky{ background: linear-gradient(180deg,#5f83a8 0%, #b7c9a9 55%, #d9c98a 100%); }
+  .bg-palace{ background: linear-gradient(180deg,#e8b866 0%, #d9924f 55%, #a85a3c 100%); }
+  .bg-title{ background: linear-gradient(160deg,#3a2a1a 0%, #241a12 60%, #1a120b 100%); }
+
+  .stars{ position:absolute; inset:0; }
+  .stars i{
+    position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; opacity:.7;
+  }
+
+  .illustration{
+    position:relative;
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1;
+  }
+  svg{ display:block; overflow:visible; }
+
+  /* --- Caption --- */
+  #captionwrap{
+    padding: 4px 16px 0;
+    flex-shrink:0;
+  }
+  #caption{
+    background: var(--panel);
+    border:1px solid #4a3a26;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:14.5px;
+    line-height:1.55;
+    color: var(--cream);
+    min-height:44px;
+  }
+  #caption b{ color:var(--gold); }
+
+  /* --- Controls --- */
+  #controls{
+    display:flex;
+    gap:10px;
+    padding:12px 16px 18px;
+    flex-shrink:0;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family: var(--font-body);
+    font-weight:800;
+    font-size:14px;
+    letter-spacing:0.02em;
+    padding:11px 22px;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+    color:var(--earth);
+    background: linear-gradient(180deg, #e6bc6d, var(--gold));
+    box-shadow: 0 3px 0 var(--gold-dim), 0 6px 10px rgba(0,0,0,.35);
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .btn:active{ transform: translateY(2px); box-shadow: 0 1px 0 var(--gold-dim), 0 3px 6px rgba(0,0,0,.3); }
+  .btn.secondary{
+    background: linear-gradient(180deg, #3a4d63, var(--indigo));
+    color: var(--cream);
+    box-shadow: 0 3px 0 #17212e, 0 6px 10px rgba(0,0,0,.35);
+  }
+  .btn.teal{
+    background: linear-gradient(180deg, #52b3a3, var(--teal));
+    color:#0d2320;
+    box-shadow: 0 3px 0 var(--teal-dark), 0 6px 10px rgba(0,0,0,.35);
+  }
+  .btn:disabled{ opacity:.4; cursor:default; }
+  .btn.big{ font-size:16px; padding:14px 30px; }
+
+  #footer-credit{
+    text-align:center;
+    font-size:10px;
+    color:#6b5a42;
+    padding-bottom:10px;
+    letter-spacing:.03em;
+  }
+  #footer-credit a{ color:#8a7452; text-decoration:none; }
+
+  /* --- Boar hunt game --- */
+  .track{
+    position:absolute; left:0; right:0; bottom:22%;
+    height:2px; background:transparent;
+  }
+  .boar{
+    position:absolute; bottom:22%; left:-80px;
+    transition: left linear;
+    cursor:pointer;
+  }
+  .arrow-cursor{ cursor: crosshair; }
+  .hit-flash{
+    position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none;
+  }
+
+  /* --- Feed birds game --- */
+  .chick{ cursor:pointer; transition: transform .25s ease; }
+  .chick:active{ transform: scale(0.92); }
+  .food-particle{
+    position:absolute; width:10px; height:10px; border-radius:50%;
+    background: var(--gold); pointer-events:none;
+  }
+  #feedcount{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    background: rgba(0,0,0,.4); padding:5px 14px; border-radius:999px;
+    font-size:12px; font-weight:800; color:var(--gold); letter-spacing:.05em;
+  }
+
+  /* --- Escape game --- */
+  .flash-target{
+    animation: pulseglow 1s ease-in-out infinite;
+  }
+  @keyframes pulseglow{
+    0%,100%{ filter:drop-shadow(0 0 0px #fff); }
+    50%{ filter:drop-shadow(0 0 14px #fff8); }
+  }
+
+  @media (max-width:400px){
+    #gtitle{ font-size:13px; }
+    #caption{ font-size:13.5px; }
+    .btn{ font-size:13px; padding:10px 18px; }
+  }
+
+  .lang-label{ font-size:11px; font-weight:800; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="ikat-strip"></div>
+  <div id="topbar">
+    <div id="titleblock">
+      <div id="gtitle">Suri Ikun dan Dua Burung</div>
+      <div id="gsub">Cerita Rakyat · NTT</div>
+    </div>
+    <div class="iconbtns">
+      <div class="iconbtn" id="langBtn" title="Ganti bahasa"><span class="lang-label" id="langLabel">EN</span></div>
+      <div class="iconbtn" id="muteBtn" title="Bisukan narasi">🔊</div>
+    </div>
+  </div>
+  <div id="progress"></div>
+  <div id="stage">
+    <div class="scene-bg" id="sceneBg"></div>
+    <div class="illustration" id="illustration"></div>
+  </div>
+  <div id="captionwrap"><div id="caption"></div></div>
+  <div id="controls"></div>
+  <div id="footer-credit">caritasato.blogspot.com · dongeng interaktif</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Language ----------
+  var params = new URLSearchParams(location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+  var currentStep = 0;
+  var voicesReady = false;
+
+  function t(idText, enText){ return lang === 'id' ? idText : enText; }
+
+  // ---------- Speech ----------
+  function stopSpeech(){
+    if('speechSynthesis' in window){ window.speechSynthesis.cancel(); }
+  }
+  function speak(text){
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    stopSpeech();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    u.pitch = 1.02;
+    var voices = window.speechSynthesis.getVoices();
+    var pick = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(u.lang.toLowerCase()) === 0; });
+    if(!pick){ pick = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(lang) === 0; }); }
+    if(pick) u.voice = pick;
+    window.speechSynthesis.speak(u);
+  }
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = function(){ voicesReady = true; };
+  }
+
+  // ---------- SVG helpers (flat folk-art style icons) ----------
+  function svgWrap(inner, vb){ return '<svg viewBox="'+(vb||'0 0 200 200')+'" width="200" height="200">'+inner+'</svg>'; }
+
+  var ICON = {
+    boy: function(scale){
+      scale = scale || 1;
+      return '<g transform="translate(100,'+(150-40*(scale-1))+') scale('+scale+')">'+
+        '<ellipse cx="0" cy="30" rx="26" ry="8" fill="#000" opacity="0.18"/>'+
+        '<rect x="-14" y="-30" width="28" height="45" rx="8" fill="#b5602f"/>'+
+        '<rect x="-16" y="-34" width="32" height="14" rx="6" fill="#7c3120"/>'+
+        '<circle cx="0" cy="-46" r="15" fill="#c9895a"/>'+
+        '<path d="M-15,-52 Q0,-66 15,-52 Q15,-58 0,-60 Q-15,-58 -15,-52 Z" fill="#241a12"/>'+
+        '<rect x="-13" y="10" width="10" height="20" rx="4" fill="#3a2a1a"/>'+
+        '<rect x="3" y="10" width="10" height="20" rx="4" fill="#3a2a1a"/>'+
+        '</g>';
+    },
+    bow: function(){
+      return '<g transform="translate(140,110) rotate(-15)">'+
+        '<path d="M0,-45 Q22,0 0,45" stroke="#7c3120" stroke-width="5" fill="none" stroke-linecap="round"/>'+
+        '<line x1="0" y1="-45" x2="0" y2="45" stroke="#d9a44c" stroke-width="2"/>'+
+        '</g>';
+    },
+    boar: function(x){
+      x = x===undefined?100:x;
+      return '<g transform="translate('+x+',150)">'+
+        '<ellipse cx="0" cy="10" rx="26" ry="7" fill="#000" opacity="0.2"/>'+
+        '<ellipse cx="0" cy="-10" rx="34" ry="20" fill="#5b4636"/>'+
+        '<ellipse cx="-30" cy="-14" rx="14" ry="12" fill="#4a3a2c"/>'+
+        '<path d="M-42,-14 L-52,-20 L-46,-8 Z" fill="#e8e2d5"/>'+
+        '<circle cx="-33" cy="-16" r="2.5" fill="#1a1410"/>'+
+        '<path d="M-15,-28 Q-10,-38 -2,-30 Z" fill="#3a2c20"/>'+
+        '<path d="M5,-28 Q10,-38 18,-30 Z" fill="#3a2c20"/>'+
+        '<rect x="-20" y="0" width="6" height="14" fill="#4a3a2c"/>'+
+        '<rect x="14" y="0" width="6" height="14" fill="#4a3a2c"/>'+
+        '</g>';
+    },
+    ghost: function(x,y,scale){
+      x=x||100; y=y||110; scale=scale||1;
+      return '<g class="flash-target" transform="translate('+x+','+y+') scale('+scale+')" opacity="0.92">'+
+        '<path d="M-24,10 Q-24,-40 0,-40 Q24,-40 24,10 L18,6 L10,14 L2,4 L-6,14 L-14,4 L-24,10 Z" fill="#dfe7ea"/>'+
+        '<circle cx="-9" cy="-14" r="3.4" fill="#1a1f2b"/>'+
+        '<circle cx="9" cy="-14" r="3.4" fill="#1a1f2b"/>'+
+        '<path d="M-6,-3 Q0,2 6,-3" stroke="#1a1f2b" stroke-width="2" fill="none" stroke-linecap="round"/>'+
+        '</g>';
+    },
+    bird: function(x,y,scale,flip){
+      x=x||100; y=y||100; scale=scale||1;
+      var f = flip? -1:1;
+      return '<g transform="translate('+x+','+y+') scale('+(f*scale)+','+scale+')">'+
+        '<ellipse cx="0" cy="0" rx="16" ry="11" fill="#3f9d8f"/>'+
+        '<path d="M-2,-2 Q-30,-14 -34,2 Q-16,4 -2,10 Z" fill="#2f7d72"/>'+
+        '<circle cx="13" cy="-6" r="7" fill="#3f9d8f"/>'+
+        '<path d="M20,-6 L28,-3 L20,-1 Z" fill="#d9a44c"/>'+
+        '<circle cx="15" cy="-8" r="1.6" fill="#0d2320"/>'+
+        '<path d="M-4,9 Q-10,20 -16,10 Q-8,14 -4,9 Z" fill="#25675d"/>'+
+        '</g>';
+    },
+    cave_mouth: function(){
+      return '<g transform="translate(100,120)">'+
+        '<path d="M-60,60 Q-70,-40 0,-55 Q70,-40 60,60 Z" fill="#0a0806"/>'+
+        '<path d="M-45,55 Q-52,-25 0,-38 Q52,-25 45,55 Z" fill="#1c140f"/>'+
+        '</g>';
+    },
+    crevice_light: function(){
+      return '<polygon points="130,50 160,180 145,180" fill="#f4e9d3" opacity="0.25"/>';
+    },
+    palace: function(){
+      return '<g transform="translate(100,140)">'+
+        '<rect x="-70" y="-30" width="140" height="55" fill="#e8b866"/>'+
+        '<rect x="-55" y="-70" width="30" height="45" fill="#d9924f"/>'+
+        '<rect x="25" y="-70" width="30" height="45" fill="#d9924f"/>'+
+        '<rect x="-15" y="-90" width="30" height="65" fill="#c97f42"/>'+
+        '<polygon points="-55,-70 -40,-92 -25,-70" fill="#7c3120"/>'+
+        '<polygon points="25,-70 40,-92 55,-70" fill="#7c3120"/>'+
+        '<polygon points="-15,-90 0,-115 15,-90" fill="#a8462f"/>'+
+        '<rect x="-8" y="-5" width="16" height="30" fill="#7c3120"/>'+
+        '<circle cx="-38" cy="-50" r="4" fill="#f4e9d3"/>'+
+        '<circle cx="38" cy="-50" r="4" fill="#f4e9d3"/>'+
+        '</g>';
+    },
+    hills: function(){
+      return '<g>'+
+        '<ellipse cx="30" cy="210" rx="120" ry="60" fill="#8faa6b"/>'+
+        '<ellipse cx="170" cy="215" rx="110" ry="55" fill="#7a9a5c"/>'+
+        '</g>';
+    },
+    house: function(){
+      return '<g transform="translate(100,150)">'+
+        '<polygon points="-60,-10 0,-60 60,-10" fill="#7c3120"/>'+
+        '<rect x="-45" y="-10" width="90" height="55" fill="#a97f3d"/>'+
+        '<rect x="-10" y="15" width="20" height="30" fill="#4d3f26"/>'+
+        '</g>';
+    },
+    lontar: function(x){
+      x = x===undefined?30:x;
+      return '<g transform="translate('+x+',150)">'+
+        '<rect x="-3" y="-10" width="6" height="70" fill="#6b5a3a"/>'+
+        '<g stroke="#8faa4a" stroke-width="6" stroke-linecap="round">'+
+        '<line x1="0" y1="-10" x2="-24" y2="-30"/>'+
+        '<line x1="0" y1="-10" x2="24" y2="-30"/>'+
+        '<line x1="0" y1="-10" x2="-16" y2="-40"/>'+
+        '<line x1="0" y1="-10" x2="16" y2="-40"/>'+
+        '<line x1="0" y1="-10" x2="0" y2="-42"/>'+
+        '</g></g>';
+    }
+  };
+
+  // ---------- Scene data ----------
+  // type: 'story' | 'hunt' | 'feed' | 'escape' | 'end'
+  var scenes = [
+    {
+      id:'title', type:'title', bg:'bg-title',
+      textId:'Sebuah dongeng dari Pulau Timor, Nusa Tenggara Timur — tentang seorang anak pemberani dan dua burung sakti yang membalas kebaikannya.',
+      textEn:'A folktale from Timor Island, East Nusa Tenggara — about a brave boy and two magical birds who repaid his kindness.'
+    },
+    {
+      id:'garden', type:'story', bg:'bg-garden',
+      illustration: function(){ return svgWrap(ICON.lontar(30)+ICON.lontar(175)+ICON.house()+ICON.boar(105)); },
+      textId:'Dahulu kala di Pulau Timor, hiduplah seorang petani bersama istri dan <b>empat belas anaknya</b>. Namun kebun mereka sering dirusak oleh seekor babi hutan yang lapar.',
+      textEn:'Long ago on Timor Island lived a farmer, his wife, and their <b>fourteen children</b>. But their garden was often ruined by a hungry wild boar.'
+    },
+    {
+      id:'hunt', type:'hunt', bg:'bg-garden',
+      textId:'Dari semua anak laki-lakinya, hanya <b>Suri Ikun</b> yang berani menghadapi babi hutan itu. Ketuk babi hutan saat ia lewat untuk membantu Suri Ikun membidik!',
+      textEn:'Of all his sons, only <b>Suri Ikun</b> was brave enough to face the wild boar. Tap the boar as it passes to help Suri Ikun take aim!',
+      textIdSuccess:'Kena! Suri Ikun berhasil mengusir babi hutan itu dan membawa pulang hasil buruannya.',
+      textEnSuccess:'A hit! Suri Ikun drove the boar away and brought his catch back home.'
+    },
+    {
+      id:'unfair', type:'story', bg:'bg-house',
+      illustration: function(){ return svgWrap(ICON.house()+ICON.boy(0.8)); },
+      textId:'Sayangnya, kakak tertua yang iri hati hanya memberi Suri Ikun <b>bagian kepala</b> babi itu. Meski begitu, Suri Ikun tetap sabar dan tidak pernah marah kepada saudara-saudaranya.',
+      textEn:'Sadly, his jealous eldest brother only gave Suri Ikun the boar\'s <b>head</b>. Even so, Suri Ikun stayed patient and never held a grudge against his siblings.'
+    },
+    {
+      id:'forest_in', type:'story', bg:'bg-forest',
+      illustration: function(){ return svgWrap(ICON.lontar(20)+ICON.lontar(175)+ICON.boy(1)); },
+      textId:'Suatu hari, gerinda ayah mereka tertinggal di hutan. Suri Ikun diajak kakaknya untuk mencarinya bersama, meski hari mulai gelap dan hutan itu terkenal angker.',
+      textEn:'One day, their father\'s grinding stone was left behind in the forest. Suri Ikun\'s brother asked him to help search for it, even as night fell over the forest known to be haunted.'
+    },
+    {
+      id:'abandoned', type:'story', bg:'bg-forest-dark',
+      illustration: function(){ return svgWrap(ICON.boy(1)); },
+      textId:'Diam-diam, sang kakak kabur lewat jalan lain. Suri Ikun tertinggal sendirian. Ia memanggil-manggil nama kakaknya, namun yang menyahut ternyata suara <b>hantu-hantu jahat</b> penghuni hutan.',
+      textEn:'Quietly, his brother slipped away down another path. Suri Ikun was left all alone. He called out his brother\'s name, but it was the <b>evil ghosts</b> of the forest who answered.'
+    },
+    {
+      id:'captured', type:'story', bg:'bg-forest-dark',
+      illustration: function(){ return svgWrap(ICON.ghost(70,120,0.9)+ICON.ghost(130,110,1.1)+ICON.boy(0.75)); },
+      textId:'Suri Ikun tersesat semakin dalam, hingga para hantu jahat berhasil menangkapnya. Untung ia belum dimakan — kata mereka, ia masih terlalu kurus.',
+      textEn:'Suri Ikun wandered deeper and deeper, until the ghosts finally caught him. Luckily, they didn\'t eat him right away — they said he was still too thin.'
+    },
+    {
+      id:'cave', type:'story', bg:'bg-cave',
+      illustration: function(){ return svgWrap(ICON.cave_mouth()+ICON.crevice_light()+ICON.boy(0.7)); },
+      textId:'Ia dikurung di dalam gua yang gelap. Untunglah ada celah kecil yang meneruskan cahaya. Dari celah itu, Suri Ikun melihat <b>dua ekor anak burung</b> yang kelaparan.',
+      textEn:'He was locked inside a dark cave. Luckily a small crack let some light through. Through that crack, Suri Ikun saw <b>two baby birds</b>, starving.'
+    },
+    {
+      id:'feed', type:'feed', bg:'bg-cave-light',
+      textId:'Suri Ikun membagi makanannya sendiri dengan kedua anak burung itu, hari demi hari. Ketuk burung-burung kecil ini untuk memberi mereka makan!',
+      textEn:'Suri Ikun shared his own food with the two baby birds, day after day. Tap the little birds to feed them!',
+      textIdSuccess:'Tahun demi tahun berlalu. Berkat kebaikan Suri Ikun, kedua burung itu tumbuh menjadi burung raksasa yang kuat dan sakti.',
+      textEnSuccess:'Years passed by. Thanks to Suri Ikun\'s kindness, the two birds grew into powerful, magical giant birds.'
+    },
+    {
+      id:'escape', type:'escape', bg:'bg-cave',
+      textId:'Suatu hari, para hantu membuka pintu gua. Inilah kesempatannya! Ketuk layar saat hantu bercahaya untuk membantu burung-burung menyerang!',
+      textEn:'One day, the ghosts opened the cave door. This was their chance! Tap the screen when a ghost glows to help the birds strike back!',
+      textIdSuccess:'Kedua burung sakti itu berhasil mengalahkan para hantu jahat dan membebaskan Suri Ikun dari gua!',
+      textEnSuccess:'The two magical birds defeated the evil ghosts and freed Suri Ikun from the cave!'
+    },
+    {
+      id:'flight', type:'story', bg:'bg-sky',
+      illustration: function(){ return svgWrap(ICON.hills()+ICON.bird(60,90,1.3)+ICON.bird(150,70,1.1,true)+ICON.boy(0.6)); },
+      textId:'Kedua burung sakti itu membawa Suri Ikun terbang tinggi menuju sebuah daerah perbukitan yang indah, jauh dari hutan angker.',
+      textEn:'The two magical birds carried Suri Ikun high into the sky, toward a beautiful highland far away from the haunted forest.'
+    },
+    {
+      id:'end', type:'end', bg:'bg-palace',
+      illustration: function(){ return svgWrap(ICON.hills()+ICON.palace()+ICON.bird(30,60,0.8)+ICON.bird(170,55,0.8,true)); },
+      textId:'Dengan kesaktiannya, burung-burung itu membangun sebuah <b>istana megah</b> lengkap dengan pengawal dan pelayan. Suri Ikun pun hidup bahagia di sana — balasan atas kebaikan hatinya. <br><br><i>Tamat.</i>',
+      textEn:'With their magic, the birds built a <b>magnificent palace</b> complete with guards and servants. Suri Ikun lived happily ever after there — a reward for his kind heart. <br><br><i>The End.</i>'
+    }
+  ];
+
+  var storyScenes = scenes.filter(function(s){ return s.type!=='title'; });
+
+  // ---------- DOM refs ----------
+  var sceneBg = document.getElementById('sceneBg');
+  var illustrationEl = document.getElementById('illustration');
+  var captionEl = document.getElementById('caption');
+  var controlsEl = document.getElementById('controls');
+  var progressEl = document.getElementById('progress');
+  var gtitle = document.getElementById('gtitle');
+  var gsub = document.getElementById('gsub');
+  var langBtn = document.getElementById('langBtn');
+  var langLabel = document.getElementById('langLabel');
+  var muteBtn = document.getElementById('muteBtn');
+
+  function buildProgress(){
+    progressEl.innerHTML='';
+    for(var i=0;i<storyScenes.length;i++){
+      var d=document.createElement('div');
+      d.className='dot';
+      d.innerHTML='<i></i>';
+      progressEl.appendChild(d);
+    }
+  }
+  function updateProgress(activeStoryIndex){
+    var dots = progressEl.querySelectorAll('.dot i');
+    dots.forEach(function(el,i){
+      el.style.width = (i<=activeStoryIndex) ? '100%':'0%';
+    });
+  }
+
+  function applyStrings(){
+    gtitle.textContent = t('Suri Ikun dan Dua Burung','Suri Ikun and the Two Birds');
+    gsub.textContent = t('Cerita Rakyat · NTT','Folktale · East Nusa Tenggara');
+    langLabel.textContent = lang==='id' ? 'EN' : 'ID';
+    langBtn.title = t('Switch to English','Ganti ke Bahasa Indonesia');
+    muteBtn.title = muted ? t('Aktifkan suara','Unmute narration') : t('Bisukan narasi','Mute narration');
+    document.title = t('Suri Ikun dan Dua Burung','Suri Ikun and the Two Birds');
+  }
+
+  function setCaption(idHtml, enHtml){
+    captionEl.innerHTML = lang==='id' ? idHtml : enHtml;
+  }
+
+  function plainText(html){
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+
+  function clearIllustration(){ illustrationEl.innerHTML=''; }
+
+  function goTo(index){
+    currentStep = index;
+    var s = scenes[index];
+    sceneBg.className = 'scene-bg ' + s.bg;
+    clearIllustration();
+    controlsEl.innerHTML='';
+
+    if(s.id==='title'){ renderTitle(s); }
+    else if(s.type==='story'){ renderStory(s); }
+    else if(s.type==='hunt'){ renderHunt(s); }
+    else if(s.type==='feed'){ renderFeed(s); }
+    else if(s.type==='escape'){ renderEscape(s); }
+    else if(s.type==='end'){ renderEnd(s); }
+
+    var storyIdx = storyScenes.indexOf(s);
+    if(storyIdx>=0) updateProgress(storyIdx);
+    if(index===0) progressEl.style.opacity='0'; else progressEl.style.opacity='1';
+  }
+
+  function nextBtn(label){
+    var b=document.createElement('button');
+    b.className='btn';
+    b.textContent = label || t('Lanjut ▸','Next ▸');
+    b.onclick=function(){ goTo(currentStep+1); };
+    return b;
+  }
+
+  // ---------- Title screen ----------
+  function renderTitle(s){
+    illustrationEl.innerHTML = svgWrap(
+      ICON.hills()+ICON.lontar(35)+ICON.lontar(170)+
+      ICON.bird(150,60,1,true)+ICON.bird(50,150,0.9)+ICON.boy(0.9)
+    );
+    setCaption(s.textId, s.textEn);
+    var playBtn=document.createElement('button');
+    playBtn.className='btn big';
+    playBtn.textContent = t('▶ Mulai Cerita','▶ Start the Story');
+    playBtn.onclick=function(){ goTo(1); };
+    controlsEl.appendChild(playBtn);
+  }
+
+  // ---------- Generic story scene ----------
+  function renderStory(s){
+    if(s.illustration) illustrationEl.innerHTML = s.illustration();
+    setCaption(s.textId, s.textEn);
+    speak(plainText(t(s.textId,s.textEn)));
+    controlsEl.appendChild(nextBtn());
+  }
+
+  // ---------- Ending ----------
+  function renderEnd(s){
+    illustrationEl.innerHTML = s.illustration();
+    setCaption(s.textId, s.textEn);
+    speak(plainText(t(s.textId,s.textEn)));
+    var replay=document.createElement('button');
+    replay.className='btn secondary';
+    replay.textContent = t('↺ Ulangi Cerita','↺ Replay Story');
+    replay.onclick=function(){ goTo(0); };
+    controlsEl.appendChild(replay);
+  }
+
+  // ---------- Boar hunt mini-game ----------
+  function renderHunt(s){
+    setCaption(s.textId, s.textEn);
+    speak(plainText(t(s.textId,s.textEn)));
+
+    illustrationEl.innerHTML =
+      '<svg viewBox="0 0 320 200" width="100%" height="100%" style="max-width:420px" id="huntSvg">'+
+      '<g id="boyG">'+ICON.boy(0.7).replace('<svg','<g').replace('</svg>','') +'</g>'+
+      '</svg>';
+    // simpler: draw boy static, boar animated div overlay
+    illustrationEl.innerHTML = svgWrap(ICON.boy(0.75)+ICON.bow(), '0 0 200 200');
+    var boarWrap = document.createElement('div');
+    boarWrap.style.position='absolute';
+    boarWrap.style.inset='0';
+    illustrationEl.appendChild(boarWrap);
+
+    var attempts = 0;
+    var hit = false;
+    var maxAttempts = 3;
+
+    var scoreLabel = document.createElement('div');
+    scoreLabel.style.position='absolute';
+    scoreLabel.style.top='10px';
+    scoreLabel.style.left='50%';
+    scoreLabel.style.transform='translateX(-50%)';
+    scoreLabel.style.background='rgba(0,0,0,.4)';
+    scoreLabel.style.padding='5px 14px';
+    scoreLabel.style.borderRadius='999px';
+    scoreLabel.style.fontSize='12px';
+    scoreLabel.style.fontWeight='800';
+    scoreLabel.style.color='#d9a44c';
+    illustrationEl.appendChild(scoreLabel);
+
+    function updateScoreLabel(){
+      scoreLabel.textContent = t('Percobaan ','Attempt ')+(attempts)+'/'+maxAttempts;
+    }
+    updateScoreLabel();
+
+    function launchBoar(){
+      if(hit) return;
+      var boar = document.createElement('div');
+      boar.className='boar';
+      boar.innerHTML = svgWrap(ICON.boar(100),'0 0 200 60');
+      boar.style.width='90px';
+      boar.style.height='auto';
+      boarWrap.appendChild(boar);
+      var stageWidth = illustrationEl.clientWidth || 320;
+      var duration = 2.2;
+      requestAnimationFrame(function(){
+        boar.style.transition='left '+duration+'s linear';
+        boar.style.left = (stageWidth+80)+'px';
+      });
+      var done=false;
+      boar.addEventListener('click', function(){
+        if(done) return; done=true;
+        succeed();
+        boar.remove();
+      });
+      var timer = setTimeout(function(){
+        if(done) return; done=true;
+        boar.remove();
+        attempts++;
+        updateScoreLabel();
+        if(attempts>=maxAttempts){
+          succeed(true);
+        } else {
+          setTimeout(launchBoar, 400);
+        }
+      }, duration*1000+80);
+    }
+
+    function succeed(byTimeout){
+      if(hit) return;
+      hit = true;
+      scoreLabel.remove();
+      setCaption(s.textIdSuccess, s.textEnSuccess);
+      speak(plainText(t(s.textIdSuccess,s.textEnSuccess)));
+      controlsEl.innerHTML='';
+      controlsEl.appendChild(nextBtn());
+    }
+
+    setTimeout(launchBoar, 900);
+  }
+
+  // ---------- Feed birds mini-game ----------
+  function renderFeed(s){
+    setCaption(s.textId, s.textEn);
+    speak(plainText(t(s.textId,s.textEn)));
+
+    var needed = 6;
+    var fed = 0;
+
+    var wrap = document.createElement('div');
+    wrap.style.position='relative';
+    wrap.style.width='100%';
+    wrap.style.height='100%';
+
+    var counter = document.createElement('div');
+    counter.id='feedcount';
+    wrap.appendChild(counter);
+
+    function updateCounter(){
+      counter.textContent = t('Diberi makan: ','Fed: ')+fed+'/'+needed;
+    }
+    updateCounter();
+
+    var chickBox = document.createElement('div');
+    chickBox.style.position='absolute';
+    chickBox.style.inset='0';
+    chickBox.style.display='flex';
+    chickBox.style.alignItems='center';
+    chickBox.style.justifyContent='center';
+    chickBox.style.gap='30px';
+
+    function makeChick(offsetFlip){
+      var holder = document.createElement('div');
+      holder.className='chick';
+      var scale = 0.6;
+      holder.innerHTML = svgWrap(ICON.bird(100,100,scale,offsetFlip),'0 0 200 200');
+      holder.style.width='90px';
+      return holder;
+    }
+    var chick1 = makeChick(false);
+    var chick2 = makeChick(true);
+    chickBox.appendChild(chick1);
+    chickBox.appendChild(chick2);
+    wrap.appendChild(chickBox);
+    illustrationEl.appendChild(wrap);
+
+    function growChick(holder){
+      var svg = holder.querySelector('svg');
+      var cur = parseFloat(holder.getAttribute('data-scale')||'0.6');
+      var next = Math.min(cur+0.12, 1.3);
+      holder.setAttribute('data-scale', next);
+      var flip = holder===chick2;
+      svg.outerHTML = svgWrap(ICON.bird(100,100,next,flip),'0 0 200 200');
+    }
+
+    function pop(holder){
+      var rect = holder.getBoundingClientRect();
+      var parentRect = illustrationEl.getBoundingClientRect();
+      for(var i=0;i<4;i++){
+        var p=document.createElement('div');
+        p.className='food-particle';
+        p.style.left=(rect.left-parentRect.left+rect.width/2)+'px';
+        p.style.top=(rect.top-parentRect.top)+'px';
+        illustrationEl.appendChild(p);
+        (function(el,i){
+          var ang = (i-1.5)*0.5;
+          var t0=0;
+          function step(){
+            t0+=1;
+            el.style.transform='translate('+(Math.sin(ang)*t0*2)+'px,'+(-t0*3)+'px)';
+            el.style.opacity = Math.max(0,1-t0/20);
+            if(t0<20) requestAnimationFrame(step); else el.remove();
+          }
+          requestAnimationFrame(step);
+        })(p,i);
+      }
+    }
+
+    [chick1,chick2].forEach(function(holder){
+      holder.addEventListener('click', function(){
+        if(fed>=needed) return;
+        fed++;
+        updateCounter();
+        growChick(holder);
+        pop(holder);
+        holder.style.transform='scale(1.15)';
+        setTimeout(function(){ holder.style.transform='scale(1)'; }, 150);
+        if(fed>=needed){
+          setTimeout(finish, 500);
+        }
+      });
+    });
+
+    function finish(){
+      setCaption(s.textIdSuccess, s.textEnSuccess);
+      speak(plainText(t(s.textIdSuccess,s.textEnSuccess)));
+      controlsEl.innerHTML='';
+      controlsEl.appendChild(nextBtn());
+    }
+  }
+
+  // ---------- Escape / attack mini-game ----------
+  function renderEscape(s){
+    setCaption(s.textId, s.textEn);
+    speak(plainText(t(s.textId,s.textEn)));
+
+    var wrap = document.createElement('div');
+    wrap.style.position='relative';
+    wrap.style.width='100%';
+    wrap.style.height='100%';
+    illustrationEl.appendChild(wrap);
+
+    var scoreLabel = document.createElement('div');
+    scoreLabel.id='feedcount';
+    wrap.appendChild(scoreLabel);
+
+    var hits=0, needed=4, roundActive=false;
+    function updateScore(){
+      scoreLabel.textContent = t('Serangan: ','Strikes: ')+hits+'/'+needed;
+    }
+    updateScore();
+
+    var ghostHolder = document.createElement('div');
+    ghostHolder.style.position='absolute';
+    ghostHolder.style.inset='0';
+    ghostHolder.style.display='flex';
+    ghostHolder.style.alignItems='center';
+    ghostHolder.style.justifyContent='center';
+    wrap.appendChild(ghostHolder);
+
+    function drawGhost(glow){
+      ghostHolder.innerHTML = svgWrap(ICON.ghost(100,110,1.1),'0 0 200 200');
+      var g = ghostHolder.querySelector('g');
+      if(!glow) g.classList.remove('flash-target');
+    }
+    drawGhost(false);
+
+    function round(){
+      if(hits>=needed) return;
+      roundActive=false;
+      var delay = 700+Math.random()*900;
+      setTimeout(function(){
+        if(hits>=needed) return;
+        roundActive=true;
+        drawGhost(true);
+        var missTimer = setTimeout(function(){
+          if(!roundActive) return;
+          roundActive=false;
+          drawGhost(false);
+          round();
+        }, 850);
+        ghostHolder.onclick = function(){
+          if(!roundActive) return;
+          roundActive=false;
+          clearTimeout(missTimer);
+          hits++;
+          updateScore();
+          drawGhost(false);
+          if(hits>=needed){ finish(); }
+          else { round(); }
+        };
+      }, delay);
+    }
+    round();
+
+    function finish(){
+      ghostHolder.onclick=null;
+      setCaption(s.textIdSuccess, s.textEnSuccess);
+      speak(plainText(t(s.textIdSuccess,s.textEnSuccess)));
+      controlsEl.innerHTML='';
+      controlsEl.appendChild(nextBtn());
+    }
+  }
+
+  // ---------- Language & mute controls ----------
+  langBtn.addEventListener('click', function(){
+    lang = lang==='id' ? 'en' : 'id';
+    stopSpeech();
+    applyStrings();
+    goTo(currentStep);
+    var url = new URL(location.href);
+    url.searchParams.set('lang', lang);
+    history.replaceState(null,'',url.toString());
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    applyStrings();
+    if(muted) stopSpeech();
+  });
+
+  // ---------- Init ----------
+  buildProgress();
+  applyStrings();
+  goTo(0);
+
+  // ---------- Auto-resize for iframe embedding ----------
+  function sendHeight(){
+    var h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    try{
+      window.parent.postMessage({ type:'caritasato-game-resize', game:'suri-ikun', height:h }, '*');
+    }catch(e){}
+  }
+  if('ResizeObserver' in window){
+    new ResizeObserver(sendHeight).observe(document.body);
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setInterval(sendHeight, 1200);
+
+})();
+</script>
+</body>
+</html>
