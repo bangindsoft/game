@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Putri Tidur / Sleeping Beauty</title>
+<style>
+  :root{
+    --bg-deep:#241028;
+    --bg-mid:#3a1a44;
+    --panel:#2c1433;
+    --gold:#e8c26a;
+    --gold-soft:#f2d999;
+    --rose:#d94f6e;
+    --rose-dark:#8c2f45;
+    --cream:#fbf3e3;
+    --thorn:#2f4a2f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Georgia','Palatino Linotype',serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+  }
+  #wrap{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,var(--bg-deep),var(--bg-mid));
+    border-radius:18px;
+    padding:14px 14px 18px;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+    position:relative;
+    overflow:hidden;
+  }
+  #wrap::before{
+    content:"";
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(232,194,106,.10), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(217,79,110,.12), transparent 45%);
+    pointer-events:none;
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    position:relative;
+    z-index:2;
+  }
+  #title{
+    font-size:15px;
+    letter-spacing:1px;
+    color:var(--gold-soft);
+    font-weight:bold;
+    text-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .iconbtn{
+    background:var(--panel);
+    border:1px solid rgba(232,194,106,.35);
+    color:var(--gold-soft);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    font-family:inherit;
+    margin-left:6px;
+    transition:background .15s, transform .1s;
+  }
+  .iconbtn:hover{background:#3d1e46;}
+  .iconbtn:active{transform:scale(0.95);}
+  .iconbtn.active{border-color:var(--rose);color:var(--rose);}
+  #stage-holder{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid rgba(232,194,106,.25);
+    background:#1a0d20;
+    z-index:1;
+  }
+  canvas{display:block;width:100%;height:auto;}
+  #panel{
+    position:relative;
+    z-index:2;
+    margin-top:12px;
+    background:var(--panel);
+    border:1px solid rgba(232,194,106,.25);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  #narrationText{
+    font-size:15.5px;
+    line-height:1.55;
+    min-height:64px;
+    color:var(--cream);
+  }
+  #progressDots{
+    display:flex;
+    gap:5px;
+    margin:10px 0 4px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(232,194,106,.25);
+  }
+  .dot.done{background:var(--gold);}
+  .dot.now{background:var(--rose);}
+  #controls{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+  }
+  .mainbtn{
+    background:linear-gradient(180deg,var(--rose),var(--rose-dark));
+    color:var(--cream);
+    border:none;
+    border-radius:10px;
+    padding:10px 20px;
+    font-size:14.5px;
+    font-family:inherit;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,.3);
+    transition:transform .1s;
+  }
+  .mainbtn:active{transform:scale(0.96);}
+  .mainbtn:disabled{opacity:.4;cursor:not-allowed;}
+  .ghostbtn{
+    background:transparent;
+    color:var(--gold-soft);
+    border:1px solid rgba(232,194,106,.35);
+    border-radius:10px;
+    padding:9px 14px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  #qteWrap{margin-top:10px;}
+  #qteBarBg{
+    width:100%;height:18px;border-radius:9px;
+    background:rgba(255,255,255,.08);
+    position:relative;overflow:hidden;
+    border:1px solid rgba(232,194,106,.3);
+  }
+  #qteBarFill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--rose));
+    transition:width .12s linear;
+  }
+  #qteHint{font-size:12.5px;color:var(--gold-soft);margin-top:6px;text-align:center;}
+  .lang-toggle{display:flex;}
+  .lang-btn{
+    background:var(--panel);
+    border:1px solid rgba(232,194,106,.3);
+    color:var(--gold-soft);
+    padding:5px 9px;
+    font-size:12px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .lang-btn:first-child{border-radius:8px 0 0 8px;}
+  .lang-btn:last-child{border-radius:0 8px 8px 0;}
+  .lang-btn.active{background:var(--rose);color:#fff;border-color:var(--rose);}
+  #creditline{
+    text-align:center;
+    font-size:10.5px;
+    color:rgba(251,243,227,.35);
+    margin-top:10px;
+    letter-spacing:.5px;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="topbar">
+    <div id="title">🌹 Putri Tidur</div>
+    <div style="display:flex;align-items:center;">
+      <div class="lang-toggle">
+        <button class="lang-btn" data-lang="id">ID</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+      <button class="iconbtn" id="muteBtn">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-holder">
+    <canvas id="stage" width="800" height="450"></canvas>
+  </div>
+
+  <div id="panel">
+    <div id="narrationText"></div>
+
+    <div id="qteWrap" style="display:none;">
+      <div id="qteBarBg"><div id="qteBarFill"></div></div>
+      <div id="qteHint"></div>
+    </div>
+
+    <div id="progressDots"></div>
+
+    <div id="controls">
+      <button class="ghostbtn" id="skipBtn"></button>
+      <button class="mainbtn" id="nextBtn"></button>
+    </div>
+    <div id="creditline">caritasato.blogspot.com — Dongeng Nusantara & Dunia</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Language ----------
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+  let muted = false;
+
+  const T = {
+    id: {
+      title:"Putri Tidur",
+      skip:"Lewati Cerita",
+      next:"Lanjut",
+      start:"Mulai Cerita",
+      restart:"Ulangi Cerita",
+      qteSpindle:"Ketuk tombol saat jarum menyentuh area merah!",
+      qteThorn:"Ketuk terus untuk menebas semak duri!",
+      tapBtn:"Ketuk!",
+      cutBtn:"Tebas!",
+    },
+    en: {
+      title:"Sleeping Beauty",
+      skip:"Skip Story",
+      next:"Next",
+      start:"Start Story",
+      restart:"Replay Story",
+      qteSpindle:"Tap the button when the needle hits the red zone!",
+      qteThorn:"Keep tapping to cut through the thorns!",
+      tapBtn:"Tap!",
+      cutBtn:"Cut!",
+    }
+  };
+
+  // ---------- Scenes ----------
+  const scenes = [
+    {
+      type:"title",
+      id:"Pada suatu masa di Prancis, seorang Raja dan Ratu telah lama menantikan kehadiran seorang putri. Ketika sang putri lahir, seluruh negeri bersukacita.",
+      en:"Once upon a time in France, a King and Queen had long awaited the birth of a princess. When she finally arrived, the whole kingdom rejoiced."
+    },
+    {
+      type:"narrative",
+      id:"Untuk merayakan kelahiran sang putri, tujuh peri baik diundang ke istana untuk memberikan hadiah ajaib: kecantikan, kebijaksanaan, dan suara yang merdu.",
+      en:"To celebrate the princess's birth, seven good fairies were invited to the castle to bestow magical gifts: beauty, wisdom, and a lovely voice."
+    },
+    {
+      type:"narrative",
+      id:"Namun seorang peri jahat yang tak diundang datang dengan murka. Ia mengutuk sang putri: pada usia enam belas tahun, ia akan tertusuk jarum pemintal dan mati.",
+      en:"But an uninvited wicked fairy arrived in fury. She cursed the princess: on her sixteenth birthday, she would prick her finger on a spindle and die."
+    },
+    {
+      type:"narrative",
+      id:"Untunglah, salah satu peri baik belum memberi hadiahnya. Ia tak bisa membatalkan kutukan sepenuhnya, namun ia mengubahnya — bukan kematian, melainkan tidur selama seratus tahun.",
+      en:"Fortunately, one good fairy had not yet given her gift. She could not undo the curse entirely, but she softened it — instead of death, a sleep of one hundred years."
+    },
+    {
+      type:"narrative",
+      id:"Sang Raja pun memerintahkan agar semua roda pemintal di kerajaan dimusnahkan. Bertahun-tahun berlalu, sang putri tumbuh menjadi gadis yang cantik dan riang.",
+      en:"The King ordered every spinning wheel in the kingdom to be destroyed. Years passed, and the princess grew into a beautiful, cheerful young woman."
+    },
+    {
+      type:"qte_spindle",
+      id:"Tepat pada hari ulang tahunnya yang keenam belas, sang putri menjelajahi menara tua istana dan menemukan seorang nenek sedang memintal benang...",
+      en:"On her sixteenth birthday, the princess explored the old castle tower and found an old woman spinning thread..."
+    },
+    {
+      type:"narrative",
+      id:"Seketika itu juga, sang putri dan seluruh isi istana — raja, ratu, para pelayan, bahkan kucing istana — tertidur lelap oleh kutukan sang peri jahat.",
+      en:"At that very moment, the princess and everyone in the castle — the king, the queen, the servants, even the palace cat — fell into a deep enchanted sleep."
+    },
+    {
+      type:"timelapse",
+      id:"Seratus tahun berlalu. Semak duri raksasa tumbuh mengelilingi istana, menyembunyikannya dari dunia luar. Legenda tentang putri yang tertidur pun tersebar luas.",
+      en:"A hundred years passed. Giant thorn bushes grew around the castle, hiding it from the outside world. Legends of the sleeping princess spread far and wide."
+    },
+    {
+      type:"qte_thorn",
+      id:"Seorang pangeran dari kerajaan tetangga mendengar kisah itu dan bertekad menyelamatkan sang putri. Ia menebas semak duri yang menghalangi jalannya.",
+      en:"A prince from a neighboring kingdom heard the tale and vowed to rescue the princess. He hacked through the thorny brambles blocking his path."
+    },
+    {
+      type:"narrative",
+      id:"Sang pangeran akhirnya sampai ke kamar sang putri. Ia begitu terpesona hingga berlutut dan mengecup kening sang putri dengan lembut.",
+      en:"At last the prince reached the princess's chamber. Enchanted by her beauty, he knelt down and gently kissed her forehead."
+    },
+    {
+      type:"ending",
+      id:"Sang putri pun terbangun! Seluruh istana ikut terbangun bersamanya — pesta pun digelar, dan mereka hidup bahagia selamanya.",
+      en:"The princess awoke! The whole castle awakened with her — a grand celebration was held, and they lived happily ever after."
+    }
+  ];
+
+  let sceneIndex = 0;
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const narrationText = document.getElementById('narrationText');
+  const nextBtn = document.getElementById('nextBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const progressDots = document.getElementById('progressDots');
+  const qteWrap = document.getElementById('qteWrap');
+  const qteBarFill = document.getElementById('qteBarFill');
+  const qteHint = document.getElementById('qteHint');
+
+  function buildDots(){
+    progressDots.innerHTML = '';
+    scenes.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot' + (i<sceneIndex?' done':'') + (i===sceneIndex?' now':'');
+      progressDots.appendChild(d);
+    });
+  }
+
+  // ---------- Drawing helpers ----------
+  function grad(x0,y0,x1,y1,stops){
+    const g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(s=>g.addColorStop(s[0],s[1]));
+    return g;
+  }
+
+  function drawSky(topColor,botColor){
+    ctx.fillStyle = grad(0,0,0,450,[[0,topColor],[1,botColor]]);
+    ctx.fillRect(0,0,800,450);
+  }
+
+  function drawStars(n,opacity){
+    ctx.fillStyle = 'rgba(255,255,255,'+opacity+')';
+    for(let i=0;i<n;i++){
+      const x = (i*97 % 800);
+      const y = (i*53 % 220);
+      const r = (i%3===0)?1.6:1;
+      ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+    }
+  }
+
+  function drawMoon(){
+    ctx.fillStyle = '#f2e9c9';
+    ctx.beginPath();ctx.arc(700,70,26,0,7);ctx.fill();
+  }
+
+  function drawCastle(baseY, glowRoses){
+    ctx.save();
+    ctx.translate(400,baseY);
+    // ground
+    ctx.fillStyle = '#241533';
+    ctx.fillRect(-400,0,800,450-baseY);
+    // towers
+    function tower(x,w,h,capColor){
+      ctx.fillStyle = '#4b2b57';
+      ctx.fillRect(x-w/2,-h,w,h);
+      ctx.fillStyle = capColor;
+      ctx.beginPath();
+      ctx.moveTo(x-w/2-6,-h);
+      ctx.lineTo(x,-h-40);
+      ctx.lineTo(x+w/2+6,-h);
+      ctx.closePath();ctx.fill();
+      ctx.fillStyle = '#f2d999';
+      ctx.fillRect(x-6,-h+18,12,16);
+    }
+    ctx.fillStyle = '#3a2044';
+    ctx.fillRect(-140,-160,280,160);
+    tower(-160,60,190,'#7a2f45');
+    tower(160,60,190,'#7a2f45');
+    tower(0,50,230,'#8c3a52');
+    // door
+    ctx.fillStyle='#1c0f22';
+    ctx.beginPath();
+    ctx.moveTo(-22,0);ctx.lineTo(-22,-45);
+    ctx.quadraticCurveTo(0,-70,22,-45);
+    ctx.lineTo(22,0);ctx.closePath();ctx.fill();
+
+    if(glowRoses){
+      for(let i=0;i<14;i++){
+        const rx = -220 + i*33 + (i%2)*10;
+        const ry = -6 - (i%3)*4;
+        ctx.fillStyle = i%2===0 ? '#d94f6e' : '#8c2f45';
+        ctx.beginPath();ctx.arc(rx,ry,5,0,7);ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawThornVines(coverage){
+    ctx.save();
+    ctx.strokeStyle = '#2f4a2f';
+    ctx.lineWidth = 6;
+    const count = 10;
+    for(let i=0;i<count;i++){
+      const startX = i*80;
+      const h = 450*coverage;
+      ctx.beginPath();
+      ctx.moveTo(startX, 450);
+      ctx.quadraticCurveTo(startX+40, 450-h*0.6, startX+10, 450-h);
+      ctx.stroke();
+      // thorn leaves
+      for(let j=0;j<4;j++){
+        const t = j/4;
+        const px = startX + 20*t;
+        const py = 450 - h*t;
+        ctx.fillStyle = '#3f6b3f';
+        ctx.beginPath();
+        ctx.ellipse(px, py, 6,3, Math.PI/4,0,7);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPrincess(x,y,scale,asleep){
+    ctx.save();
+    ctx.translate(x,y);ctx.scale(scale,scale);
+    // dress
+    ctx.fillStyle = '#e8c26a';
+    ctx.beginPath();
+    ctx.moveTo(-24,60);ctx.lineTo(24,60);ctx.lineTo(14,0);ctx.lineTo(-14,0);
+    ctx.closePath();ctx.fill();
+    // head
+    ctx.fillStyle = '#f4d9b8';
+    ctx.beginPath();ctx.arc(0,-16,16,0,7);ctx.fill();
+    // hair
+    ctx.fillStyle = '#5a3220';
+    ctx.beginPath();ctx.arc(0,-20,17,Math.PI,0);ctx.fill();
+    ctx.fillRect(-17,-20,6,28);
+    ctx.fillRect(11,-20,6,28);
+    // eyes
+    ctx.fillStyle = '#2c1433';
+    if(asleep){
+      ctx.fillRect(-8,-16,5,2);
+      ctx.fillRect(3,-16,5,2);
+    } else {
+      ctx.beginPath();ctx.arc(-6,-17,1.6,0,7);ctx.fill();
+      ctx.beginPath();ctx.arc(6,-17,1.6,0,7);ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPrince(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);ctx.scale(scale,scale);
+    ctx.fillStyle = '#3a5a9c';
+    ctx.beginPath();
+    ctx.moveTo(-20,60);ctx.lineTo(20,60);ctx.lineTo(12,0);ctx.lineTo(-12,0);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle = '#f4d9b8';
+    ctx.beginPath();ctx.arc(0,-16,15,0,7);ctx.fill();
+    ctx.fillStyle = '#2c1a10';
+    ctx.beginPath();ctx.arc(0,-22,15,Math.PI,0);ctx.fill();
+    ctx.fillStyle='#e8c26a';
+    ctx.beginPath();ctx.arc(0,-28,6,0,7);ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFairy(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);ctx.scale(scale,scale);
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = color;
+    ctx.beginPath();ctx.ellipse(0,0,18,26,0,0,7);ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.5)';
+    ctx.beginPath();ctx.ellipse(-22,-6,16,8,-0.4,0,7);ctx.fill();
+    ctx.beginPath();ctx.ellipse(22,-6,16,8,0.4,0,7);ctx.fill();
+    ctx.fillStyle = '#f4d9b8';
+    ctx.beginPath();ctx.arc(0,-26,9,0,7);ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSpindle(x,y,angle){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#3a2417';
+    ctx.fillRect(-4,-50,8,100);
+    ctx.save();
+    ctx.rotate(angle);
+    ctx.strokeStyle = '#e8c26a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();ctx.arc(0,0,40,0,7);ctx.stroke();
+    ctx.beginPath();
+    for(let i=0;i<8;i++){
+      const a = i*Math.PI/4;
+      ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(a)*40,Math.sin(a)*40);
+    }
+    ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // ---------- Scene renderers ----------
+  let animT = 0;
+  let raf = null;
+
+  function render(){
+    const sc = scenes[sceneIndex];
+    ctx.clearRect(0,0,800,450);
+    switch(sc.type){
+      case 'title':
+        drawSky('#3a1a44','#1a0d20');
+        drawStars(60,0.5);
+        drawMoon();
+        drawCastle(360,false);
+        drawPrincess(300,398,1.6,false);
+        break;
+      case 'narrative':
+        if(sceneIndex<=3){
+          drawSky('#4a2050','#241028');
+          drawStars(40,0.35);
+          drawCastle(370,false);
+          drawFairy(560,150,1.3,'#e0483e');
+          drawFairy(260,160,1.1,'#e8c26a');
+          drawFairy(420,120,1.0,'#7fb3d5');
+        } else if(sceneIndex===4){
+          drawSky('#6a3a5a','#241028');
+          drawStars(20,0.2);
+          drawCastle(370,false);
+          drawPrincess(400,398,1.7,false);
+        } else if(sceneIndex===6){
+          drawSky('#241028','#120814');
+          drawStars(70,0.6);
+          drawMoon();
+          drawCastle(370,true);
+          drawPrincess(360,390,1.3,true);
+        } else {
+          drawSky('#4a2050','#241028');
+          drawStars(40,0.3);
+          drawCastle(370,true);
+          drawPrincess(430,390,1.3,true);
+          drawPrince(340,398,1.3);
+        }
+        break;
+      case 'qte_spindle':
+        drawSky('#5a2a50','#241028');
+        drawCastle(400,false);
+        drawSpindle(400,260,animT*0.15);
+        drawPrincess(500,340,1.1,false);
+        break;
+      case 'timelapse': {
+        drawSky('#241028','#120814');
+        drawStars(50,0.5);
+        drawMoon();
+        drawCastle(370,true);
+        const cov = Math.min(1, (animT%240)/240);
+        drawThornVines(cov*0.9+0.1);
+        break;
+      }
+      case 'qte_thorn':
+        drawSky('#4a2050','#1a0d20');
+        drawCastle(370,true);
+        drawThornVines(0.9 - qteProgress*0.7);
+        drawPrince(200,398,1.3);
+        break;
+      case 'ending':
+        drawSky('#e8c26a','#d94f6e');
+        drawStars(0,0);
+        drawCastle(370,true);
+        drawPrincess(360,390,1.4,false);
+        drawPrince(440,398,1.4);
+        // confetti
+        for(let i=0;i<30;i++){
+          const cx = (i*53+animT*2)%800;
+          const cy = (i*37+animT*3)%450;
+          ctx.fillStyle = i%2===0?'#fff':'#e8c26a';
+          ctx.fillRect(cx,cy,4,4);
+        }
+        break;
+    }
+  }
+
+  function loop(){
+    animT++;
+    render();
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ---------- QTE: Spindle (timing tap) ----------
+  let qteSpindleActive = false;
+  let spindleSpeed = 0.06;
+  let spindleT = 0;
+  let spindleZone = [0.42,0.58];
+  let spindleHits = 0;
+  const SPINDLE_HITS_NEEDED = 3;
+
+  function spindleLoop(){
+    if(!qteSpindleActive) return;
+    spindleT += spindleSpeed;
+    const pos = (Math.sin(spindleT)+1)/2;
+    qteBarFill.style.width = (pos*100)+'%';
+    requestAnimationFrame(spindleLoop);
+  }
+
+  function startSpindleQTE(){
+    qteSpindleActive = true;
+    spindleHits = 0;
+    spindleT = 0;
+    qteWrap.style.display = 'block';
+    nextBtn.disabled = true;
+    qteHint.textContent = T[lang].qteSpindle + ' (0/'+SPINDLE_HITS_NEEDED+')';
+    nextBtn.textContent = T[lang].tapBtn;
+    spindleLoop();
+  }
+
+  function handleSpindleTap(){
+    if(!qteSpindleActive) return;
+    const pos = (Math.sin(spindleT)+1)/2;
+    if(pos>spindleZone[0] && pos<spindleZone[1]){
+      spindleHits++;
+      qteHint.textContent = T[lang].qteSpindle + ' ('+spindleHits+'/'+SPINDLE_HITS_NEEDED+')';
+      if(spindleHits>=SPINDLE_HITS_NEEDED){
+        qteSpindleActive = false;
+        qteWrap.style.display = 'none';
+        nextBtn.disabled = false;
+        nextBtn.textContent = T[lang].next;
+        advanceAfterDelay();
+      }
+    }
+  }
+
+  // ---------- QTE: Thorn cutting (mash) ----------
+  let qteThornActive = false;
+  let qteProgress = 0;
+
+  function startThornQTE(){
+    qteThornActive = true;
+    qteProgress = 0;
+    qteWrap.style.display = 'block';
+    nextBtn.disabled = true;
+    qteHint.textContent = T[lang].qteThorn;
+    nextBtn.textContent = T[lang].cutBtn;
+    qteBarFill.style.width = '0%';
+  }
+
+  function handleThornTap(){
+    if(!qteThornActive) return;
+    qteProgress = Math.min(1, qteProgress + 0.09);
+    qteBarFill.style.width = (qteProgress*100)+'%';
+    if(qteProgress>=1){
+      qteThornActive = false;
+      qteWrap.style.display = 'none';
+      nextBtn.disabled = false;
+      nextBtn.textContent = T[lang].next;
+      advanceAfterDelay();
+    }
+  }
+
+  function advanceAfterDelay(){
+    // small pause before allowing manual continue is skipped; user clicks Lanjut
+  }
+
+  // ---------- Narration (speech) ----------
+  let currentUtterance = null;
+  function speak(text, lg){
+    window.speechSynthesis.cancel();
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lg==='en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.05;
+    currentUtterance = u;
+    window.speechSynthesis.speak(u);
+  }
+
+  // ---------- Scene flow ----------
+  function showScene(){
+    const sc = scenes[sceneIndex];
+    narrationText.textContent = sc[lang];
+    buildDots();
+    qteWrap.style.display = 'none';
+    nextBtn.disabled = false;
+
+    skipBtn.style.display = (sceneIndex < scenes.length-1) ? 'inline-block' : 'none';
+    skipBtn.textContent = T[lang].skip;
+
+    if(sc.type==='title'){
+      nextBtn.textContent = T[lang].start;
+    } else if(sc.type==='ending'){
+      nextBtn.textContent = T[lang].restart;
+    } else {
+      nextBtn.textContent = T[lang].next;
+    }
+
+    speak(sc[lang], lang);
+
+    if(sc.type==='qte_spindle'){
+      startSpindleQTE();
+    } else if(sc.type==='qte_thorn'){
+      startThornQTE();
+    }
+
+    sendHeight();
+  }
+
+  function goNext(){
+    const sc = scenes[sceneIndex];
+    if(sc.type==='qte_spindle' && qteSpindleActive){
+      handleSpindleTap();
+      return;
+    }
+    if(sc.type==='qte_thorn' && qteThornActive){
+      handleThornTap();
+      return;
+    }
+    if(sc.type==='ending'){
+      sceneIndex = 0;
+      showScene();
+      return;
+    }
+    sceneIndex = Math.min(scenes.length-1, sceneIndex+1);
+    showScene();
+  }
+
+  function goSkip(){
+    sceneIndex = scenes.length-1;
+    showScene();
+  }
+
+  nextBtn.addEventListener('click', goNext);
+  skipBtn.addEventListener('click', goSkip);
+
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+    if(muted) window.speechSynthesis.cancel();
+    else speak(scenes[sceneIndex][lang], lang);
+  });
+
+  document.querySelectorAll('.lang-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      lang = btn.getAttribute('data-lang');
+      document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      document.documentElement.lang = lang;
+      showScene();
+    });
+  });
+
+  function setLangButtons(){
+    document.querySelectorAll('.lang-btn').forEach(b=>{
+      b.classList.toggle('active', b.getAttribute('data-lang')===lang);
+    });
+  }
+
+  // ---------- Resize / postMessage for Blogger embed ----------
+  function sendHeight(){
+    requestAnimationFrame(()=>{
+      const h = document.getElementById('wrap').scrollHeight + 20;
+      window.parent.postMessage({ type:'putritidurHeight', height:h }, '*');
+    });
+  }
+  window.addEventListener('resize', sendHeight);
+
+  // ---------- Init ----------
+  setLangButtons();
+  buildDots();
+  showScene();
+  loop();
+})();
+</script>
+</body>
+</html>
