@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Kota Banyuwangi</title>
+<style>
+  :root{
+    --bg-outer:#fbf3e3;
+    --panel:#fffaf0;
+    --ink:#3b2a1a;
+    --accent:#b5482f;
+    --accent-2:#2f6b4f;
+    --gold:#c9922a;
+    --line:#e3d2ae;
+    --font-head:'Georgia', 'Palatino Linotype', serif;
+    --font-body:'Trebuchet MS', 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:var(--font-body);}
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:var(--bg-outer);
+    border:2px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 18px rgba(80,50,20,0.15);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 14px;
+    background:linear-gradient(135deg,var(--accent),#8a3220);
+    color:#fff8ec;
+  }
+  header h1{
+    font-family:var(--font-head);
+    font-size:16px;
+    margin:0;
+    letter-spacing:.3px;
+  }
+  .ctrls{display:flex;gap:6px;flex-wrap:wrap;}
+  .ctrls button{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.4);
+    color:#fff8ec;
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .ctrls button:hover{background:rgba(255,255,255,0.3);}
+  .ctrls button.active{background:#fff8ec;color:var(--accent);font-weight:bold;}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:#0f1b16;
+  }
+  canvas{display:block;width:100%;height:auto;}
+
+  #instruction{
+    position:absolute;
+    top:10px;left:50%;
+    transform:translateX(-50%);
+    background:rgba(20,15,10,0.55);
+    color:#fff8ec;
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:13px;
+    text-align:center;
+    max-width:90%;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .3s;
+  }
+  #instruction.show{opacity:1;}
+
+  #timerbar-wrap{
+    position:absolute;
+    left:8%; right:8%; bottom:14px;
+    height:10px;
+    background:rgba(0,0,0,0.35);
+    border-radius:6px;
+    overflow:hidden;
+    display:none;
+  }
+  #timerbar{height:100%;width:100%;background:var(--gold);transition:width .05s linear;}
+
+  #jumpzone-wrap{
+    position:absolute;
+    left:10%; right:10%; bottom:16px;
+    height:16px;
+    background:rgba(0,0,0,0.35);
+    border-radius:8px;
+    display:none;
+    overflow:hidden;
+  }
+  #jumpzone-target{
+    position:absolute; top:0; bottom:0;
+    background:rgba(201,146,42,0.55);
+    border-left:2px solid var(--gold);
+    border-right:2px solid var(--gold);
+  }
+  #jumpzone-marker{
+    position:absolute; top:-3px; bottom:-3px;
+    width:6px;
+    background:#fff8ec;
+    border-radius:3px;
+  }
+
+  #dialogue{
+    padding:16px 18px 18px;
+    background:var(--panel);
+    border-top:2px solid var(--line);
+  }
+  #speaker{
+    font-family:var(--font-head);
+    font-weight:bold;
+    color:var(--accent-2);
+    font-size:14px;
+    margin-bottom:4px;
+    min-height:16px;
+  }
+  #text{
+    color:var(--ink);
+    font-size:15.5px;
+    line-height:1.5;
+    min-height:66px;
+  }
+  #choices{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+  #choices button{
+    flex:1 1 auto;
+    min-width:120px;
+    background:#fff;
+    border:2px solid var(--line);
+    color:var(--ink);
+    padding:10px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  #choices button:hover{border-color:var(--gold);}
+
+  .bottom-row{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin-top:12px;
+    gap:8px;
+  }
+  #progress{
+    margin-right:auto;
+    font-size:12px;
+    color:#8a7458;
+  }
+  #next-btn{
+    background:var(--accent-2);
+    color:#fff8ec;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    font-size:15px;
+    cursor:pointer;
+    font-weight:bold;
+  }
+  #next-btn:hover{background:#245b41;}
+  #next-btn:disabled{opacity:.4;cursor:default;}
+
+  #jump-btn{
+    background:var(--accent);
+    color:#fff8ec;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    font-size:15px;
+    cursor:pointer;
+    font-weight:bold;
+  }
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:#a2896a;
+    padding:8px 0 12px;
+    background:var(--panel);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="gameTitle">🏞️ Asal Usul Kota Banyuwangi</h1>
+    <div class="ctrls">
+      <button id="langId">ID</button>
+      <button id="langEn">EN</button>
+      <button id="muteBtn">🔊</button>
+      <button id="restartBtn">↺</button>
+    </div>
+  </header>
+
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="450"></canvas>
+    <div id="instruction"></div>
+    <div id="timerbar-wrap"><div id="timerbar"></div></div>
+    <div id="jumpzone-wrap">
+      <div id="jumpzone-target"></div>
+      <div id="jumpzone-marker"></div>
+    </div>
+  </div>
+
+  <div id="dialogue">
+    <div id="speaker"></div>
+    <div id="text"></div>
+    <div id="choices"></div>
+    <div class="bottom-row">
+      <div id="progress"></div>
+      <button id="jump-btn" style="display:none;"></button>
+      <button id="next-btn"></button>
+    </div>
+  </div>
+  <footer>Cerita Rakyat Jawa Timur • caritasato.blogspot.com</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- language & state ---------------- */
+const params = new URLSearchParams(location.search);
+let lang = params.get('lang') === 'en' ? 'en' : 'id';
+let muted = false;
+let stepIndex = 0;
+let awaitingAction = false; // for qte/choice steps blocking "next"
+
+const T = {
+  id: {
+    title:"🏞️ Asal Usul Kota Banyuwangi",
+    mute_on:"🔊", mute_off:"🔇",
+    next:"Lanjut ▶",
+    finish:"Selesai ✓",
+    restart_confirm:"Ulangi dari awal",
+    progressLabel: (i,n)=>`Bagian ${i} dari ${n}`,
+    footer:"Cerita Rakyat Jawa Timur • caritasato.blogspot.com"
+  },
+  en: {
+    title:"🏞️ The Origin of Banyuwangi",
+    mute_on:"🔊", mute_off:"🔇",
+    next:"Continue ▶",
+    finish:"Finish ✓",
+    restart_confirm:"Restart from the beginning",
+    progressLabel: (i,n)=>`Part ${i} of ${n}`,
+    footer:"Folklore of East Java • caritasato.blogspot.com"
+  }
+};
+
+/* ---------------- story data ---------------- */
+// each step: {type, bg, speaker, text:{id,en}, narration:{id,en}, ...extras}
+const STORY = [
+  {
+    type:"narrative", bg:"palace",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Alkisah, di ujung timur Jawa Timur berdiri sebuah kerajaan besar yang diperintah Raja bijaksana. Sang Raja memiliki putra gagah bernama Raden Banterang, yang gemar berburu di hutan.",
+      en:"Long ago, at the eastern tip of East Java stood a great kingdom ruled by a wise king. His son, the handsome Prince Banterang, loved to hunt in the forest."
+    }
+  },
+  {
+    type:"narrative", bg:"forest",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Suatu pagi, Raden Banterang pergi berburu ditemani para pengawalnya. Di tengah hutan, seekor kijang tiba-tiba melintas di hadapannya.",
+      en:"One morning, Prince Banterang went hunting with his guards. Deep in the forest, a deer suddenly darted across his path."
+    }
+  },
+  {
+    type:"qte-click", bg:"forest-deer",
+    speaker:{id:"Raden Banterang", en:"Prince Banterang"},
+    text:{
+      id:"“Kijang itu! Akan kukejar sampai dapat!” Raden Banterang mengejar sendirian, semakin jauh masuk ke dalam hutan hingga terpisah dari pengawalnya.",
+      en:"“That deer! I must catch it!” Banterang chased it alone, going deeper and deeper into the forest until he lost his guards."
+    },
+    instruction:{id:"Ketuk rusa untuk mengejarnya!", en:"Tap the deer to chase it!"},
+    duration:4500
+  },
+  {
+    type:"narrative", bg:"river",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Kehilangan jejak sang kijang, Raden Banterang tiba di sebuah sungai yang jernih. Ia minum airnya yang segar untuk melepas dahaga.",
+      en:"Losing the deer's trail, Banterang arrived at a clear river. He drank its refreshing water to quench his thirst."
+    }
+  },
+  {
+    type:"narrative", bg:"river",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Baru beberapa langkah meninggalkan sungai, ia terkejut oleh kehadiran seorang gadis cantik jelita seorang diri di tengah hutan.",
+      en:"Just a few steps from the river, he was startled by a beautiful young woman standing alone in the forest."
+    }
+  },
+  {
+    type:"narrative", bg:"river",
+    speaker:{id:"Surati", en:"Surati"},
+    text:{
+      id:"“Saya manusia, bukan hantu penunggu hutan. Nama saya Surati dari Kerajaan Klungkung. Ayah saya gugur dalam perang, dan saya sedang menyelamatkan diri dari serangan musuh,” kata gadis itu sambil tersenyum.",
+      en:"“I am human, not a forest spirit. My name is Surati, from the kingdom of Klungkung. My father died defending our crown, and I am fleeing the enemy's attack,” she said with a gentle smile."
+    }
+  },
+  {
+    type:"narrative", bg:"palace",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Raden Banterang menolong Surati dan membawanya pulang ke istana. Singkat cerita, keduanya berjodoh dan menikah, membangun keluarga bahagia.",
+      en:"Prince Banterang helped Surati and brought her back to the palace. In time, the two fell in love, married, and built a happy family."
+    }
+  },
+  {
+    type:"narrative", bg:"palace-garden",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Suatu hari, seorang lelaki berpakaian compang-camping mendekati Surati yang tengah berjalan sendirian. “Surati... Surati... Aku kakakmu!” serunya. Ternyata dialah Rupaksa, kakak kandung Surati.",
+      en:"One day, a man in tattered clothes approached Surati as she walked alone. “Surati... Surati... I am your brother!” he cried. It was Rupaksa, her own brother."
+    }
+  },
+  {
+    type:"narrative", bg:"palace-garden",
+    speaker:{id:"Rupaksa", en:"Rupaksa"},
+    text:{
+      id:"“Dengarkan aku baik-baik. Suamimu, Raden Banterang, adalah pembunuh ayahanda kita. Kau harus membantuku membunuhnya,” kata Rupaksa penuh dendam.",
+      en:"“Listen carefully. Your husband, Prince Banterang, is the one who killed our father. You must help me kill him,” Rupaksa said, full of vengeance."
+    }
+  },
+  {
+    type:"narrative", bg:"palace-garden",
+    speaker:{id:"Surati", en:"Surati"},
+    text:{
+      id:"“Maafkan aku, Kakak. Aku tidak bisa membunuh suamiku sendiri. Aku berhutang budi kepadanya,” jawab Surati menolak. Rupaksa marah, lalu memberinya sebuah ikat kepala untuk disimpan di bawah tempat tidurnya.",
+      en:"“Forgive me, brother. I cannot kill my own husband. I owe him my life,” Surati refused. Furious, Rupaksa handed her a headband, telling her to hide it under her bed."
+    }
+  },
+  {
+    type:"qte-choice", bg:"bedroom",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Surati menyimpan benda pemberian kakaknya itu tanpa curiga. Bantalan mana yang menyembunyikan ikat kepala itu?",
+      en:"Surati kept her brother's gift without suspicion. Which pillow hides the headband?"
+    },
+    instruction:{id:"Ketuk salah satu bantal", en:"Tap one of the pillows"}
+  },
+  {
+    type:"narrative", bg:"forest",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Sementara itu, Rupaksa pergi ke hutan menemui Raden Banterang yang sedang berburu, tanpa sepengetahuan Surati.",
+      en:"Meanwhile, without Surati's knowledge, Rupaksa went into the forest to find Prince Banterang, who was out hunting."
+    }
+  },
+  {
+    type:"narrative", bg:"forest",
+    speaker:{id:"Rupaksa", en:"Rupaksa"},
+    text:{
+      id:"“Maaf Tuanku, keselamatan Tuan terancam. Istri Tuan merencanakan pembunuhan. Periksalah di bawah bantal Surati, pasti ada ikat kepala milik lelaki yang dimintainya tolong,” kata Rupaksa, lalu menghilang.",
+      en:"“Forgive me, my lord, your life is in danger. Your wife is plotting to kill you. Check under her pillow — you will find the headband of the man she hired,” Rupaksa said, then vanished."
+    }
+  },
+  {
+    type:"narrative", bg:"bedroom-angry",
+    speaker:{id:"Raden Banterang", en:"Prince Banterang"},
+    text:{
+      id:"Raden Banterang bergegas pulang dan memeriksa peraduan istrinya. Benar saja, ikat kepala itu ditemukan. “Ternyata benar! Kau berencana membunuhku! Begitukah balasanmu?” teriaknya penuh murka.",
+      en:"Banterang rushed home and searched his wife's bed. There it was — the headband. “So it's true! You planned to kill me! Is this how you repay me?” he shouted in fury."
+    }
+  },
+  {
+    type:"narrative", bg:"bedroom-angry",
+    speaker:{id:"Surati", en:"Surati"},
+    text:{
+      id:"“Jangan asal menuduh, Kakanda. Adinda sama sekali tidak berniat membunuhmu,” jawab Surati. Namun Raden Banterang tak percaya, dan bertekad membawa istrinya ke sungai.",
+      en:"“Please don't accuse me falsely, my lord. I never intended to harm you,” Surati pleaded. But Banterang refused to believe her, and resolved to take her to the river."
+    }
+  },
+  {
+    type:"narrative", bg:"river",
+    speaker:{id:"Surati", en:"Surati"},
+    text:{
+      id:"Di tepi sungai, Surati menjelaskan bahwa lelaki compang-camping itu adalah Rupaksa, kakak kandungnya, yang telah menjebak mereka berdua. Namun Raden Banterang tetap tidak percaya.",
+      en:"At the riverbank, Surati explained that the ragged man was Rupaksa, her own brother, who had set a trap for them both. But Banterang still refused to believe her."
+    }
+  },
+  {
+    type:"narrative", bg:"river",
+    speaker:{id:"Surati", en:"Surati"},
+    text:{
+      id:"“Baiklah, Kakanda. Dengarlah — Adinda akan melompat ke sungai ini. Jika airnya berubah bening dan harum, berarti Adinda tak bersalah. Namun jika tetap keruh, berarti Adinda bersalah,” seru Surati.",
+      en:"“Very well, my lord. Listen — I will leap into this river. If the water turns clear and fragrant, I am innocent. But if it stays murky, I am guilty,” Surati declared."
+    }
+  },
+  {
+    type:"qte-timing", bg:"river-jump",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Raden Banterang tak peduli dan menghunus kerisnya. Surati pun bersiap melompat ke tengah sungai.",
+      en:"Banterang, unmoved, drew his dagger. Surati readied herself to leap into the river."
+    },
+    instruction:{id:"Ketuk LOMPAT saat penanda berada di zona emas!", en:"Tap JUMP when the marker is in the gold zone!"}
+  },
+  {
+    type:"reveal", bg:"river-fragrant",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Surati melompat dan menghilang ke dalam sungai. Tak lama kemudian, terjadi keajaiban — bau harum semerbak dari air sungai yang kini jernih berkilau.",
+      en:"Surati leapt and vanished into the river. Moments later, a miracle happened — a sweet fragrance rose from the water, which now shimmered clear and pure."
+    }
+  },
+  {
+    type:"narrative", bg:"river-fragrant",
+    speaker:{id:"Raden Banterang", en:"Prince Banterang"},
+    text:{
+      id:"“Ternyata aku salah! Istriku tidak bersalah! Aku sangat menyesal...” Raden Banterang meratapi kepergian istrinya, namun semuanya sudah terlambat, nasi telah menjadi bubur.",
+      en:"“I was wrong! My wife was innocent! I regret this so deeply...” Banterang mourned his wife's loss, but it was too late — what was done could not be undone."
+    }
+  },
+  {
+    type:"narrative", bg:"banyuwangi",
+    speaker:{id:"Narator", en:"Narrator"},
+    text:{
+      id:"Sejak kejadian itu, sungai tersebut selalu berbau harum. Dalam bahasa Jawa, banyu berarti air dan wangi berarti harum. Sungai Banyuwangi itulah yang menjadi asal usul nama Kota Banyuwangi.",
+      en:"From that day on, the river always smelled sweet. In Javanese, banyu means water and wangi means fragrant. This River of Banyuwangi became the origin of the city's name."
+    }
+  },
+  { type:"end",
+    speaker:{id:"Tamat", en:"The End"},
+    text:{
+      id:"Terima kasih telah menyimak kisah Asal Usul Kota Banyuwangi. Sampai jumpa di cerita rakyat berikutnya!",
+      en:"Thank you for following the story of the Origin of Banyuwangi. See you in the next folktale!"
+    }
+  }
+];
+
+/* ---------------- DOM refs ---------------- */
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const speakerEl = document.getElementById('speaker');
+const textEl = document.getElementById('text');
+const choicesEl = document.getElementById('choices');
+const nextBtn = document.getElementById('next-btn');
+const jumpBtn = document.getElementById('jump-btn');
+const progressEl = document.getElementById('progress');
+const instructionEl = document.getElementById('instruction');
+const timerWrap = document.getElementById('timerbar-wrap');
+const timerBar = document.getElementById('timerbar');
+const jumpWrap = document.getElementById('jumpzone-wrap');
+const jumpTarget = document.getElementById('jumpzone-target');
+const jumpMarker = document.getElementById('jumpzone-marker');
+const muteBtn = document.getElementById('muteBtn');
+const langIdBtn = document.getElementById('langId');
+const langEnBtn = document.getElementById('langEn');
+const restartBtn = document.getElementById('restartBtn');
+
+let animHandle = null;
+let deerX = -60, deerDir = 1, deerCaught = false, deerTimer = null, deerStart = 0;
+let jumpAnimId = null, jumpPos = 0, jumpDir = 1, jumping = false;
+
+/* ---------------- narration ---------------- */
+function speak(text){
+  if(muted || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeech(){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+/* ---------------- background drawing ---------------- */
+function skyGrad(c1,c2){
+  const g = ctx.createLinearGradient(0,0,0,300);
+  g.addColorStop(0,c1); g.addColorStop(1,c2);
+  return g;
+}
+function drawTree(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#5b3a22';
+  ctx.fillRect(-6,0,12,40);
+  ctx.fillStyle = '#2f6b4f';
+  ctx.beginPath(); ctx.ellipse(0,-25,32,40,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#3a7f5c';
+  ctx.beginPath(); ctx.ellipse(-14,-10,20,26,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(16,-6,18,22,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawRiverStrip(y,h){
+  ctx.fillStyle = '#3b7fa3';
+  ctx.fillRect(0,y,800,h);
+  ctx.strokeStyle='rgba(255,255,255,0.35)';
+  ctx.lineWidth=2;
+  for(let i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.moveTo(0, y+10+i*(h-20)/6);
+    for(let x=0;x<=800;x+=40){
+      ctx.lineTo(x, y+10+i*(h-20)/6 + Math.sin(x/40+i)*3);
+    }
+    ctx.stroke();
+  }
+}
+function drawPalaceSilhouette(){
+  ctx.fillStyle = '#8a6a2e';
+  ctx.fillRect(260,190,280,110);
+  ctx.fillStyle = '#c9922a';
+  ctx.beginPath();
+  ctx.moveTo(240,190); ctx.lineTo(400,120); ctx.lineTo(560,190); ctx.closePath(); ctx.fill();
+  for(let i=0;i<3;i++){
+    ctx.fillStyle = '#6b4f22';
+    ctx.fillRect(300+i*90,220,40,80);
+    ctx.fillStyle='#d9b96a';
+    ctx.fillRect(310+i*90,235,20,30);
+  }
+}
+function drawFigure(x,y,bodyColor,headColor,scale,pose){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(0,64,22,6,0,0,Math.PI*2); ctx.fill();
+  // legs
+  ctx.strokeStyle = bodyColor; ctx.lineWidth=8; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-8,40); ctx.lineTo(-10,62); ctx.moveTo(8,40); ctx.lineTo(10,62); ctx.stroke();
+  // body
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath(); ctx.moveTo(-20,40); ctx.lineTo(-16,0); ctx.lineTo(16,0); ctx.lineTo(20,40); ctx.closePath(); ctx.fill();
+  // arms
+  ctx.strokeStyle = bodyColor; ctx.lineWidth=7;
+  if(pose==='angry'){
+    ctx.beginPath(); ctx.moveTo(-16,8); ctx.lineTo(-34,-6); ctx.moveTo(16,8); ctx.lineTo(34,-8); ctx.stroke();
+  } else if(pose==='plead'){
+    ctx.beginPath(); ctx.moveTo(-16,10); ctx.lineTo(-30,24); ctx.moveTo(16,10); ctx.lineTo(30,24); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-16,10); ctx.lineTo(-26,32); ctx.moveTo(16,10); ctx.lineTo(26,32); ctx.stroke();
+  }
+  // head
+  ctx.fillStyle = headColor;
+  ctx.beginPath(); ctx.arc(0,-18,16,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawDeer(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#a9702f';
+  ctx.beginPath(); ctx.ellipse(0,0,26,14,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(24,-10,10,9,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#6b4a22'; ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-14,10); ctx.lineTo(-16,26);
+  ctx.moveTo(14,10); ctx.lineTo(16,26);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(30,-16); ctx.lineTo(34,-24);
+  ctx.moveTo(30,-16); ctx.lineTo(26,-25);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawBed(x,hasSurati){
+  ctx.fillStyle='#7a5230';
+  ctx.fillRect(x,220,220,90);
+  ctx.fillStyle='#e8d9b8';
+  ctx.fillRect(x+10,205,200,30);
+  if(hasSurati){
+    drawFigure(x+110,190,'#c14e6a','#e8b98a',0.8,'normal');
+  }
+}
+function drawPillow(x,y,highlight){
+  ctx.fillStyle = highlight ? '#f3e2b0' : '#fff8ec';
+  ctx.strokeStyle='#c9922a'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.ellipse(x,y,46,26,0,0,Math.PI*2);
+  ctx.fill(); ctx.stroke();
+}
+
+const pillowPositions = [ {x:180,y:300}, {x:400,y:300}, {x:620,y:300} ];
+let correctPillow = 1;
+let pillowRevealed = -1;
+
+function drawScene(step){
+  ctx.clearRect(0,0,800,450);
+  const bg = step.bg;
+  if(bg==='palace' || bg==='palace-garden'){
+    ctx.fillStyle = skyGrad('#fbe3a0','#f3c98a'); ctx.fillRect(0,0,800,300);
+    ctx.fillStyle='#c9a15a'; ctx.fillRect(0,300,800,150);
+    drawPalaceSilhouette();
+    if(bg==='palace-garden'){
+      drawTree(90,320,1.1); drawTree(700,330,1.2);
+    }
+    if(step.speaker.id==='Rupaksa'){
+      drawFigure(560,300,'#5c4a3a','#c9a97a',1.1,'angry');
+      drawFigure(430,300,'#c14e6a','#e8b98a',1.0,'plead');
+    } else if(step.speaker.id==='Surati' && bg==='palace-garden'){
+      drawFigure(400,300,'#c14e6a','#e8b98a',1.1,'plead');
+    } else {
+      drawFigure(340,300,'#2a4b7a','#e8c39a',1.1,'normal');
+      drawFigure(460,300,'#c14e6a','#e8b98a',1.05,'normal');
+    }
+  } else if(bg==='forest' || bg==='forest-deer'){
+    ctx.fillStyle = skyGrad('#cfe8b0','#8fbf7a'); ctx.fillRect(0,0,800,300);
+    ctx.fillStyle='#4d7a3f'; ctx.fillRect(0,290,800,160);
+    drawTree(70,300,1.3); drawTree(730,300,1.4); drawTree(160,320,1.0);
+    drawTree(640,330,1.1); drawTree(400,290,0.9);
+    if(bg==='forest-deer'){
+      drawDeer(deerX,330,1.2);
+      drawFigure(90,340,'#2a4b7a','#e8c39a',1.1,'normal');
+    } else if(step.speaker.id==='Rupaksa'){
+      drawFigure(430,330,'#5c4a3a','#c9a97a',1.1,'angry');
+      drawFigure(300,340,'#2a4b7a','#e8c39a',1.05,'normal');
+    } else {
+      drawFigure(400,340,'#2a4b7a','#e8c39a',1.15,'normal');
+    }
+  } else if(bg==='river' || bg==='river-jump' || bg==='river-fragrant'){
+    const skyTop = bg==='river-fragrant' ? '#ffe9c2' : '#bcdff0';
+    ctx.fillStyle = skyGrad(skyTop,'#9cc9de'); ctx.fillRect(0,0,800,230);
+    ctx.fillStyle = bg==='river-fragrant' ? '#7fae4a' : '#5a8f45';
+    ctx.fillRect(0,220,800,60);
+    ctx.fillRect(0,340,800,110);
+    drawRiverStrip(240,110);
+    if(bg==='river-fragrant'){
+      ctx.fillStyle='rgba(255,255,255,0.55)';
+      for(let i=0;i<10;i++){
+        ctx.beginPath();
+        ctx.arc(60+i*75, 260+Math.sin(i)*20, 6,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+    drawTree(60,250,0.9); drawTree(730,260,1.0);
+    if(bg==='river-jump'){
+      drawFigure(320,350,'#2a4b7a','#e8c39a',1.05,'angry');
+      const sy = 350 - jumpPos*40;
+      drawFigure(470,sy,'#c14e6a','#e8b98a',1.0,'normal');
+    } else if(step.speaker.id==='Surati' && bg==='river'){
+      drawFigure(330,350,'#2a4b7a','#e8c39a',1.05,'normal');
+      drawFigure(470,350,'#c14e6a','#e8b98a',1.0,'plead');
+    } else if(bg==='river-fragrant' && step.speaker.id==='Raden Banterang'){
+      drawFigure(400,350,'#2a4b7a','#e8c39a',1.1,'plead');
+    } else {
+      drawFigure(340,350,'#2a4b7a','#e8c39a',1.05,'normal');
+    }
+  } else if(bg==='bedroom' || bg==='bedroom-angry'){
+    ctx.fillStyle='#e8d3ab'; ctx.fillRect(0,0,800,450);
+    ctx.fillStyle='#d8bd8a'; ctx.fillRect(0,0,800,60);
+    drawBed(290,false);
+    pillowPositions.forEach((p,i)=>{
+      drawPillow(p.x,p.y, pillowRevealed===i);
+      if(pillowRevealed===i){
+        ctx.strokeStyle='#b5482f'; ctx.lineWidth=4;
+        ctx.beginPath();
+        ctx.moveTo(p.x-20,p.y); ctx.lineTo(p.x+20,p.y);
+        ctx.stroke();
+      }
+    });
+    if(bg==='bedroom-angry'){
+      drawFigure(400,140,'#2a4b7a','#e8c39a',1.15,'angry');
+      drawFigure(560,150,'#c14e6a','#e8b98a',1.0,'plead');
+    }
+  } else if(bg==='banyuwangi'){
+    ctx.fillStyle = skyGrad('#ffe1a8','#ffb37a'); ctx.fillRect(0,0,800,260);
+    ctx.fillStyle='#c9922a';
+    ctx.font='bold 46px Georgia'; ctx.textAlign='center';
+    ctx.fillText('BANYUWANGI', 400, 150);
+    ctx.fillStyle='#5a8f45'; ctx.fillRect(0,250,800,80);
+    drawRiverStrip(320,90);
+    drawTree(80,300,1.0); drawTree(700,300,1.1); drawTree(400,330,0.8);
+  } else {
+    ctx.fillStyle='#eee'; ctx.fillRect(0,0,800,450);
+  }
+}
+
+/* ---------------- QTE: chase deer ---------------- */
+function startDeerChase(){
+  deerX = -60; deerDir = 1; deerCaught = false;
+  deerStart = Date.now();
+  timerWrap.style.display='block';
+  canvas.style.cursor='pointer';
+  function loop(){
+    if(deerCaught) return;
+    const elapsed = Date.now() - deerStart;
+    const duration = STORY[stepIndex].duration || 4500;
+    const pct = Math.max(0, 1 - elapsed/duration);
+    timerBar.style.width = (pct*100)+'%';
+    deerX += 5.5*deerDir;
+    if(deerX > 860){ deerX = -60; }
+    drawScene(STORY[stepIndex]);
+    if(elapsed >= duration){
+      deerCaught = true;
+      finishDeerChase();
+      return;
+    }
+    animHandle = requestAnimationFrame(loop);
+  }
+  animHandle = requestAnimationFrame(loop);
+}
+function finishDeerChase(){
+  timerWrap.style.display='none';
+  canvas.style.cursor='default';
+  cancelAnimationFrame(animHandle);
+  awaitingAction = false;
+  nextBtn.disabled = false;
+  instructionEl.classList.remove('show');
+}
+canvas.addEventListener('click', function(e){
+  const step = STORY[stepIndex];
+  if(!step) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+
+  if(step.type==='qte-click' && !deerCaught){
+    const dx = mx - deerX, dy = my - 330;
+    if(Math.sqrt(dx*dx+dy*dy) < 60){
+      deerCaught = true;
+      finishDeerChase();
+    }
+  } else if(step.type==='qte-choice' && pillowRevealed===-1){
+    pillowPositions.forEach((p,i)=>{
+      const dx = mx-p.x, dy=my-p.y;
+      if(Math.sqrt(dx*dx+dy*dy) < 55){
+        pillowRevealed = i;
+        drawScene(step);
+        awaitingAction = false;
+        nextBtn.disabled = false;
+        instructionEl.classList.remove('show');
+      }
+    });
+  }
+});
+
+/* ---------------- QTE: timing jump ---------------- */
+function startJumpQte(){
+  jumping = false; jumpPos = 0; jumpDir = 1;
+  jumpWrap.style.display='block';
+  jumpBtn.style.display='inline-block';
+  const targetStart = 60, targetW = 25; // percent-based visual only
+  jumpTarget.style.left = targetStart+'%';
+  jumpTarget.style.width = targetW+'%';
+  let markerPct = 0, mdir = 1;
+  function loop(){
+    if(jumping) return;
+    markerPct += 2.2*mdir;
+    if(markerPct>=100){ markerPct=100; mdir=-1; }
+    if(markerPct<=0){ markerPct=0; mdir=1; }
+    jumpMarker.style.left = markerPct+'%';
+    drawScene(STORY[stepIndex]);
+    jumpAnimId = requestAnimationFrame(loop);
+    window._jumpMarkerPct = markerPct;
+    window._jumpTargetRange = [targetStart, targetStart+targetW];
+  }
+  jumpAnimId = requestAnimationFrame(loop);
+}
+function attemptJump(){
+  if(jumping) return;
+  jumping = true;
+  cancelAnimationFrame(jumpAnimId);
+  const pct = window._jumpMarkerPct || 0;
+  const [lo,hi] = window._jumpTargetRange || [60,85];
+  // Whether in-zone or not, story proceeds (kind, forgiving mechanic);
+  // animate the leap regardless.
+  let t = 0;
+  function anim(){
+    t += 0.06;
+    jumpPos = Math.sin(Math.min(t,1)*Math.PI) * 1.4;
+    drawScene(STORY[stepIndex]);
+    if(t<1) requestAnimationFrame(anim);
+    else {
+      jumpWrap.style.display='none';
+      jumpBtn.style.display='none';
+      awaitingAction = false;
+      nextBtn.disabled = false;
+      instructionEl.classList.remove('show');
+    }
+  }
+  requestAnimationFrame(anim);
+}
+jumpBtn.addEventListener('click', attemptJump);
+
+/* ---------------- rendering step ---------------- */
+function renderStep(){
+  const step = STORY[stepIndex];
+  const isEnd = step.type === 'end';
+
+  speakerEl.textContent = step.speaker ? step.speaker[lang] : '';
+  textEl.textContent = step.text[lang];
+  progressEl.textContent = T[lang].progressLabel(stepIndex+1, STORY.length);
+  choicesEl.innerHTML = '';
+  instructionEl.classList.remove('show');
+  timerWrap.style.display='none';
+  jumpWrap.style.display='none';
+  jumpBtn.style.display='none';
+  awaitingAction = false;
+  nextBtn.disabled = false;
+  nextBtn.textContent = isEnd ? T[lang].finish : T[lang].next;
+
+  drawScene(step);
+
+  if(step.type === 'qte-click'){
+    deerCaught = false;
+    instructionEl.textContent = step.instruction[lang];
+    instructionEl.classList.add('show');
+    awaitingAction = true;
+    nextBtn.disabled = true;
+    startDeerChase();
+  } else if(step.type === 'qte-choice'){
+    pillowRevealed = -1;
+    instructionEl.textContent = step.instruction[lang];
+    instructionEl.classList.add('show');
+    awaitingAction = true;
+    nextBtn.disabled = true;
+  } else if(step.type === 'qte-timing'){
+    instructionEl.textContent = step.instruction[lang];
+    instructionEl.classList.add('show');
+    awaitingAction = true;
+    nextBtn.disabled = true;
+    jumpBtn.textContent = lang==='id' ? 'LOMPAT!' : 'JUMP!';
+    startJumpQte();
+  }
+
+  speak(step.text[lang]);
+  sendHeight();
+}
+
+function goNext(){
+  stopSpeech();
+  if(stepIndex < STORY.length - 1){
+    stepIndex++;
+    renderStep();
+  }
+}
+nextBtn.addEventListener('click', goNext);
+
+/* ---------------- language / mute / restart ---------------- */
+function applyLangUI(){
+  document.getElementById('gameTitle').textContent = T[lang].title;
+  document.title = T[lang].title;
+  langIdBtn.classList.toggle('active', lang==='id');
+  langEnBtn.classList.toggle('active', lang==='en');
+  nextBtn.textContent = STORY[stepIndex].type==='end' ? T[lang].finish : T[lang].next;
+  renderStep();
+}
+langIdBtn.addEventListener('click', ()=>{ if(lang!=='id'){ lang='id'; applyLangUI(); }});
+langEnBtn.addEventListener('click', ()=>{ if(lang!=='en'){ lang='en'; applyLangUI(); }});
+
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  muteBtn.textContent = muted ? T[lang].mute_off : T[lang].mute_on;
+  if(muted) stopSpeech();
+});
+
+restartBtn.addEventListener('click', ()=>{
+  stopSpeech();
+  stepIndex = 0;
+  pillowRevealed = -1;
+  renderStep();
+});
+
+/* ---------------- auto-resize for iframe embed ---------------- */
+function sendHeight(){
+  const h = document.getElementById('app').getBoundingClientRect().height;
+  try{
+    parent.postMessage({ type:'banyuwangiGameHeight', height: Math.ceil(h) }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+if(window.ResizeObserver){
+  new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+}
+
+/* ---------------- init ---------------- */
+muteBtn.textContent = T[lang].mute_on;
+langIdBtn.classList.toggle('active', lang==='id');
+langEnBtn.classList.toggle('active', lang==='en');
+renderStep();
+
+})();
+</script>
+</body>
+</html>
