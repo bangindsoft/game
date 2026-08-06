@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kutukan Raja Pulau Mintin</title>
+<style>
+  :root{
+    --cream:#f4e8cc;
+    --panel:#2b1810;
+    --panel2:#3c2415;
+    --gold:#d4af37;
+    --maroon:#8a2f2f;
+    --green:#2f6b4f;
+    --deepblue:#1b3a4b;
+    --ink:#2a1c10;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Georgia','Times New Roman',serif;
+    background:var(--panel);
+    color:var(--cream);
+    overflow:hidden;
+  }
+  #game-root{
+    position:relative;
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
+    border:3px solid var(--gold);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  #stageWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4 / 3;
+    background:#000;
+  }
+  canvas#stage{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  #topbar{
+    position:absolute;
+    top:6px;left:6px;right:6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index:5;
+    pointer-events:none;
+  }
+  #topbar .grp{
+    display:flex; gap:6px; pointer-events:auto;
+  }
+  .iconbtn{
+    background:rgba(20,12,8,0.7);
+    border:1.5px solid var(--gold);
+    color:var(--gold);
+    border-radius:8px;
+    padding:5px 9px;
+    font-size:13px;
+    cursor:pointer;
+    font-family:inherit;
+    font-weight:bold;
+    line-height:1;
+    user-select:none;
+  }
+  .iconbtn:hover{ background:rgba(212,175,55,0.25); }
+  .iconbtn.active{ background:var(--gold); color:var(--ink); }
+
+  #textbox{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    padding:12px 14px 14px;
+    background:linear-gradient(180deg, rgba(20,12,8,0) 0%, rgba(20,12,8,0.94) 28%, rgba(20,12,8,0.96) 100%);
+    z-index:4;
+    min-height:34%;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+  }
+  #narrationText{
+    font-size:15px;
+    line-height:1.45;
+    color:#f7edd4;
+    text-shadow:0 1px 3px rgba(0,0,0,0.8);
+    margin-bottom:10px;
+    min-height:2.6em;
+  }
+  #controlsRow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+  }
+  #choiceRow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .storybtn{
+    background:linear-gradient(180deg,#d4af37,#a8822a);
+    color:#2a1c10;
+    border:none;
+    border-radius:7px;
+    padding:9px 16px;
+    font-weight:bold;
+    font-size:14px;
+    cursor:pointer;
+    font-family:inherit;
+    box-shadow:0 2px 0 #6e5417;
+  }
+  .storybtn:active{ transform:translateY(1px); box-shadow:0 1px 0 #6e5417; }
+  .storybtn.secondary{
+    background:linear-gradient(180deg,#5a4632,#3c2f20);
+    color:#f4e8cc;
+    box-shadow:0 2px 0 #241a10;
+  }
+  #qteBarWrap{
+    width:100%;
+    height:8px;
+    background:rgba(255,255,255,0.15);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:8px;
+    display:none;
+  }
+  #qteBar{
+    height:100%;
+    width:100%;
+    background:linear-gradient(90deg,#e0483e,#d4af37);
+    transition:width 0.05s linear;
+  }
+  #feedbackToast{
+    position:absolute;
+    top:44px; left:50%;
+    transform:translateX(-50%);
+    background:rgba(20,12,8,0.9);
+    border:1px solid var(--gold);
+    color:var(--gold);
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:bold;
+    z-index:6;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  #feedbackToast.show{ opacity:1; }
+
+  #titleScreen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 30%, #3c2415 0%, #150c07 100%);
+    z-index:10;
+    text-align:center;
+    padding:20px;
+  }
+  #titleScreen h1{
+    color:var(--gold);
+    font-size:24px;
+    margin:0 0 6px;
+    text-shadow:0 2px 6px rgba(0,0,0,0.7);
+  }
+  #titleScreen p{
+    color:#e8d8b8;
+    font-size:13px;
+    max-width:420px;
+    margin:0 0 18px;
+    line-height:1.5;
+  }
+  .target{
+    position:absolute;
+    border-radius:50%;
+    border:3px solid var(--gold);
+    background:radial-gradient(circle,#e0483e 0%,#8a2f2f 100%);
+    cursor:pointer;
+    z-index:5;
+    box-shadow:0 0 12px rgba(224,72,62,0.8);
+  }
+  #langNote{ font-size:11px; color:#c9b98c; margin-top:6px;}
+  @media (max-width:420px){
+    #narrationText{ font-size:13.5px; }
+    .storybtn{ padding:8px 12px; font-size:13px;}
+  }
+</style>
+</head>
+<body>
+<div id="game-root">
+  <div id="stageWrap">
+    <canvas id="stage"></canvas>
+    <div id="topbar">
+      <div class="grp">
+        <button class="iconbtn" id="langBtn">EN</button>
+      </div>
+      <div class="grp">
+        <button class="iconbtn" id="muteBtn">🔊</button>
+      </div>
+    </div>
+    <div id="feedbackToast"></div>
+
+    <div id="titleScreen">
+      <h1 id="titleText">Kutukan Raja Pulau Mintin</h1>
+      <p id="titleSub">Cerita rakyat dari Kahayan Hilir, Kalimantan Tengah — mainkan dan dengarkan kisahnya.</p>
+      <button class="storybtn" id="startBtn">▶ Mulai / Start</button>
+      <div id="langNote">🌏 ID / EN tersedia • Narasi suara dapat dimatikan (mute)</div>
+    </div>
+
+    <div id="textbox" style="display:none;">
+      <div id="qteBarWrap"><div id="qteBar"></div></div>
+      <div id="narrationText"></div>
+      <div id="controlsRow">
+        <div id="choiceRow"></div>
+        <button class="storybtn" id="nextBtn">Lanjut ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Language ----------
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get('lang') === 'en') ? 'en' : 'id';
+
+  var UI = {
+    id:{ start:"▶ Mulai / Start", next:"Lanjut ▶", replay:"↺ Ulangi", muteOn:"🔊", muteOff:"🔇",
+      title:"Kutukan Raja Pulau Mintin", sub:"Cerita rakyat dari Kahayan Hilir, Kalimantan Tengah — mainkan dan dengarkan kisahnya.",
+      langNote:"🌏 ID / EN tersedia • Narasi suara dapat dimatikan (mute)",
+      qteHint:"Ketuk lingkaran secepatnya!", qteWin:"Bagus sekali! 🎉", qteLose:"Coba lagi lain waktu...",
+      moral:"Pesan Moral", moralText:"Jagalah amanah yang diberikan, dan jangan biarkan perselisihan menghancurkan persaudaraan.",
+      endTitle:"~ Tamat ~"
+    },
+    en:{ start:"▶ Mulai / Start", next:"Continue ▶", replay:"↺ Replay", muteOn:"🔊", muteOff:"🔇",
+      title:"The Curse of the King of Mintin Island", sub:"A folktale from Kahayan Hilir, Central Kalimantan — play and listen to the story.",
+      langNote:"🌏 ID / EN available • Voice narration can be muted",
+      qteHint:"Tap the circle quickly!", qteWin:"Well done! 🎉", qteLose:"Better luck next time...",
+      moral:"Moral of the Story", moralText:"Honor the trust given to you, and never let quarrels destroy family bonds.",
+      endTitle:"~ The End ~"
+    }
+  };
+
+  // ---------- Story data ----------
+  var STORY = [
+    { id:'s1', scene:'kingdom',
+      id_text:"Zaman dahulu kala, di Pulau Mintin, Kahayan Hilir, Kalimantan Tengah, berdirilah sebuah kerajaan yang makmur dan damai. Sang Raja memerintah dengan adil dan bijaksana, didampingi permaisuri yang dicintai rakyatnya.",
+      en_text:"Long ago, on Mintin Island in Kahayan Hilir, Central Kalimantan, there stood a peaceful and prosperous kingdom. The King ruled with justice and wisdom, together with a queen beloved by the people." },
+    { id:'s2', scene:'kingdom_sad',
+      id_text:"Namun kebahagiaan itu tak berlangsung lama. Sang Permaisuri wafat, meninggalkan duka mendalam bagi Sang Raja.",
+      en_text:"But the happiness did not last long. The Queen passed away, leaving the King in deep sorrow." },
+    { id:'s3', scene:'throne_sad',
+      id_text:"Raja menjadi murung dan larut dalam kesedihan. Kesehatannya menurun, dan ia tak lagi mampu memerintah dengan baik.",
+      en_text:"The King grew gloomy, lost in sorrow. His health declined, and he could no longer rule well." },
+    { id:'s4', scene:'ship', type:'reaction',
+      id_text:"Para penasihat menyarankan Raja berlayar untuk menenangkan hati. Tahta pun diserahkan pada kedua putra kembarnya, Naga dan Buaya. Bantu Raja naik kapal — ketuk lingkarannya sebelum kapal berangkat!",
+      en_text:"The advisors suggested the King sail away to ease his heart. The throne was given to his twin sons, Naga and Buaya. Help the King board the ship — tap the circle before it departs!" },
+    { id:'s5', scene:'brothers', type:'choice',
+      id_text:"Buaya berhati baik, murah hati, dan suka menolong rakyatnya. Namun Naga gemar berfoya-foya, mabuk-mabukan, dan berjudi, menghambur-hamburkan harta kerajaan.",
+      en_text:"Buaya was kind-hearted, generous, and always ready to help the people. But Naga loved feasting, drinking, and gambling, squandering the kingdom's wealth.",
+      choiceA_id:"Nasihati Naga", choiceA_en:"Advise Naga",
+      choiceB_id:"Biarkan saja", choiceB_en:"Let it be",
+      fbA_id:"Buaya berulang kali menasihati saudaranya, namun sia-sia...", fbA_en:"Buaya advised his brother again and again, but in vain...",
+      fbB_id:"Naga semakin larut dalam kesenangannya sendiri...", fbB_en:"Naga sank deeper into his own pleasures..." },
+    { id:'s6', scene:'war', type:'reaction',
+      id_text:"Karena Naga tak mau mendengar, pertengkaran keduanya berkembang menjadi peperangan antar pasukan yang memakan banyak korban jiwa. Ketuk perisai untuk melerai pertikaian!",
+      en_text:"Since Naga refused to listen, their quarrel grew into a war between their armies, costing many lives. Tap the shield to try to stop the fighting!" },
+    { id:'s7', scene:'sea_return', type:'reaction',
+      id_text:"Di tengah pelayarannya, Sang Raja merasakan firasat buruk tentang kerajaannya. Ia segera memutar haluan kapal untuk kembali. Ketuk kemudi kapal secepatnya!",
+      en_text:"During his voyage, the King felt a terrible premonition about his kingdom. He turned the ship's course to return at once. Tap the ship's helm quickly!" },
+    { id:'s8', scene:'curse',
+      id_text:"Setibanya di kerajaan, Raja amat terkejut menyaksikan kedua putranya saling berperang. Dengan murka besar ia pun berseru, \u201cKalian telah menyia-nyiakan kepercayaanku dan membuat rakyat menderita! Buaya, jadilah engkau buaya sungguhan penjaga Pulau Mintin. Naga, jadilah engkau naga sungguhan penjaga Sungai Kapuas!\u201d",
+      en_text:"Upon arriving, the King was shocked to see his sons at war with one another. In great fury he cried out, \u201cYou have betrayed my trust and brought suffering to your people! Buaya, become a true crocodile, guardian of Mintin Island. Naga, become a true dragon, guardian of the Kapuas River!\u201d" },
+    { id:'s9', scene:'transform',
+      id_text:"Langit tiba-tiba gelap dan petir menggelegar hebat. Seketika itu juga, Buaya berubah wujud menjadi seekor buaya sungguhan, dan Naga berubah menjadi seekor naga.",
+      en_text:"The sky suddenly turned dark and thunder roared fiercely. At that very moment, Buaya transformed into a true crocodile, and Naga became a true dragon." },
+    { id:'s10', scene:'ending', last:true,
+      id_text:"Hingga kini, Buaya menjaga perairan Pulau Mintin, sementara Naga menjaga Sungai Kapuas agar tak ditumbuhi Cendawan Bantilung. Kutukan ini mengingatkan kita untuk menjaga amanah dan hidup rukun bersama saudara.",
+      en_text:"To this day, Buaya watches over the waters of Mintin Island, while Naga guards the Kapuas River from the Bantilung fungus. This curse reminds us to honor our duties and live in harmony with our siblings." }
+  ];
+
+  // ---------- State ----------
+  var stepIndex = -1;
+  var muted = false;
+  var currentVoice = null;
+  var qteTimer = null;
+  var qteActive = false;
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var stageWrap = document.getElementById('stageWrap');
+  var dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  function resizeCanvas(){
+    var w = stageWrap.clientWidth, h = stageWrap.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(stepIndex >= 0) drawScene(STORY[stepIndex].scene);
+    else drawScene('kingdom');
+    reportHeight();
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // ---------- Drawing helpers ----------
+  function W(){ return stageWrap.clientWidth; }
+  function H(){ return stageWrap.clientHeight; }
+
+  function skyGradient(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,H()*0.65);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W(),H()*0.65);
+  }
+  function waterGradient(y, topColor, botColor){
+    var g = ctx.createLinearGradient(0,y,0,H());
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,y,W(),H()-y);
+  }
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.shadowColor = color; ctx.shadowBlur = 25;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawIslandSilhouette(baseY, color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, baseY);
+    ctx.quadraticCurveTo(W()*0.15, baseY-30, W()*0.32, baseY-10);
+    ctx.quadraticCurveTo(W()*0.5, baseY-45, W()*0.68, baseY-8);
+    ctx.quadraticCurveTo(W()*0.85, baseY-28, W(), baseY);
+    ctx.lineTo(W(), H());
+    ctx.lineTo(0, H());
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawPalace(cx, baseY, scale, color, roofColor){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(cx, baseY);
+    ctx.fillStyle = color;
+    ctx.fillRect(-40*scale, -70*scale, 80*scale, 70*scale);
+    ctx.fillStyle = roofColor;
+    ctx.beginPath();
+    ctx.moveTo(-50*scale,-70*scale);
+    ctx.lineTo(0,-120*scale);
+    ctx.lineTo(50*scale,-70*scale);
+    ctx.closePath(); ctx.fill();
+    // side towers
+    ctx.fillStyle = color;
+    ctx.fillRect(-70*scale,-55*scale,22*scale,55*scale);
+    ctx.fillRect(48*scale,-55*scale,22*scale,55*scale);
+    ctx.fillStyle = roofColor;
+    ctx.beginPath(); ctx.moveTo(-75*scale,-55*scale); ctx.lineTo(-59*scale,-80*scale); ctx.lineTo(-43*scale,-55*scale); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(43*scale,-55*scale); ctx.lineTo(59*scale,-80*scale); ctx.lineTo(75*scale,-55*scale); ctx.closePath(); ctx.fill();
+    // door
+    ctx.fillStyle = "#1b120a";
+    ctx.beginPath();
+    ctx.moveTo(-13*scale,0); ctx.lineTo(-13*scale,-30*scale);
+    ctx.quadraticCurveTo(0,-45*scale,13*scale,-30*scale);
+    ctx.lineTo(13*scale,0); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawCrownFigure(x,y,scale,robeColor,sad){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    // robe
+    ctx.fillStyle = robeColor;
+    ctx.beginPath();
+    ctx.moveTo(-22*scale, 40*scale);
+    ctx.lineTo(-16*scale, -10*scale);
+    ctx.lineTo(16*scale, -10*scale);
+    ctx.lineTo(22*scale, 40*scale);
+    ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = "#c68b5c";
+    ctx.beginPath(); ctx.arc(0,-24*scale,12*scale,0,Math.PI*2); ctx.fill();
+    // crown
+    ctx.fillStyle = "#d4af37";
+    ctx.beginPath();
+    ctx.moveTo(-11*scale,-33*scale);
+    ctx.lineTo(-11*scale,-42*scale);
+    ctx.lineTo(-4*scale,-34*scale);
+    ctx.lineTo(0,-44*scale);
+    ctx.lineTo(4*scale,-34*scale);
+    ctx.lineTo(11*scale,-42*scale);
+    ctx.lineTo(11*scale,-33*scale);
+    ctx.closePath(); ctx.fill();
+    if(sad){
+      ctx.strokeStyle="#3a2416"; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(-4*scale,-22*scale,2*scale,0,Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(4*scale,-22*scale,2*scale,0,Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawTwin(x,y,scale,color,label){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-18*scale, 40*scale);
+    ctx.lineTo(-13*scale, -8*scale);
+    ctx.lineTo(13*scale, -8*scale);
+    ctx.lineTo(18*scale, 40*scale);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#c68b5c";
+    ctx.beginPath(); ctx.arc(0,-20*scale,10*scale,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#3a2416";
+    ctx.font = (11*scale)+"px Georgia";
+    ctx.textAlign = "center";
+    ctx.fillText(label, 0, 58*scale);
+    ctx.restore();
+  }
+  function drawShip(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = "#6b4226";
+    ctx.beginPath();
+    ctx.moveTo(-45*scale,0); ctx.lineTo(45*scale,0); ctx.lineTo(32*scale,18*scale); ctx.lineTo(-32*scale,18*scale);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#3c2415"; ctx.lineWidth=2*scale;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-55*scale); ctx.stroke();
+    ctx.fillStyle = "#e8d8b8";
+    ctx.beginPath();
+    ctx.moveTo(2*scale,-52*scale); ctx.lineTo(38*scale,-8*scale); ctx.lineTo(2*scale,-8*scale);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawWaves(y,color){
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    for(var i=0;i<4;i++){
+      var yy = y + i*14;
+      ctx.beginPath();
+      for(var x=-10;x<=W()+10;x+=20){
+        ctx.moveTo(x,yy);
+        ctx.quadraticCurveTo(x+10, yy-6, x+20, yy);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawCrocodile(x,y,scale,color){
+    scale = scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0,0,55*scale,16*scale,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(45*scale,-6*scale); ctx.lineTo(85*scale,0); ctx.lineTo(45*scale,6*scale); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#1b3a2b";
+    for(var i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.moveTo(-30*scale + i*18*scale, -14*scale);
+      ctx.lineTo(-22*scale + i*18*scale, -24*scale);
+      ctx.lineTo(-14*scale + i*18*scale, -14*scale);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawDragon(x,y,scale,color){
+    scale = scale||1;
+    ctx.save(); ctx.translate(x,y); ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-60*scale,20*scale);
+    ctx.quadraticCurveTo(-20*scale,-40*scale, 30*scale,-10*scale);
+    ctx.quadraticCurveTo(60*scale,0,70*scale,-20*scale);
+    ctx.quadraticCurveTo(50*scale,10*scale,20*scale,10*scale);
+    ctx.quadraticCurveTo(-10*scale,30*scale,-60*scale,20*scale);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#e0483e";
+    for(var i=0;i<5;i++){
+      ctx.beginPath();
+      var px = -35*scale + i*16*scale, py=-10*scale - i*3*scale;
+      ctx.moveTo(px,py); ctx.lineTo(px+8*scale,py-14*scale); ctx.lineTo(px+16*scale,py); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawLightning(){
+    ctx.save();
+    ctx.strokeStyle = "#fff8d0";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "#fff8d0"; ctx.shadowBlur = 20;
+    ctx.beginPath();
+    var x = W()*0.5, y=0;
+    ctx.moveTo(x,y);
+    for(var i=0;i<6;i++){
+      x += (Math.random()-0.5)*40;
+      y += H()*0.12;
+      ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawScene(scene){
+    ctx.clearRect(0,0,W(),H());
+    switch(scene){
+      case 'kingdom':
+        skyGradient('#8fc7e0','#f4d98a');
+        drawSun(W()*0.82, H()*0.15, 26, '#ffe08a');
+        drawIslandSilhouette(H()*0.62, '#2f6b4f');
+        drawPalace(W()*0.5, H()*0.62, Math.min(1,W()/700), '#c9a15a', '#8a2f2f');
+        waterGradient(H()*0.65, '#3f7ea3', '#0f2c3a');
+        drawWaves(H()*0.72, 'rgba(255,255,255,0.25)');
+        drawCrownFigure(W()*0.5, H()*0.9, Math.min(1.1,W()/650), '#8a2f2f', false);
+        break;
+      case 'kingdom_sad':
+        skyGradient('#5c6b7a','#8a7a63');
+        drawIslandSilhouette(H()*0.62, '#274a3a');
+        drawPalace(W()*0.5, H()*0.62, Math.min(1,W()/700), '#7a6a4e', '#5c2020');
+        waterGradient(H()*0.65, '#2c4a5c', '#0a1c26');
+        drawCrownFigure(W()*0.5, H()*0.9, Math.min(1.1,W()/650), '#4a2020', true);
+        break;
+      case 'throne_sad':
+        ctx.fillStyle = '#241609'; ctx.fillRect(0,0,W(),H());
+        var g = ctx.createRadialGradient(W()*0.5,H()*0.35,10,W()*0.5,H()*0.4,W()*0.5);
+        g.addColorStop(0,'#4a2f1a'); g.addColorStop(1,'#150c05');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W(),H());
+        ctx.fillStyle = '#5c3d22';
+        ctx.fillRect(W()*0.36, H()*0.35, W()*0.28, H()*0.5);
+        drawCrownFigure(W()*0.5, H()*0.88, Math.min(1.2,W()/600), '#4a2020', true);
+        break;
+      case 'ship':
+        skyGradient('#f0a868','#a55b3a');
+        waterGradient(H()*0.6, '#2c5a72', '#0a1c26');
+        drawWaves(H()*0.68,'rgba(255,255,255,0.2)');
+        drawShip(W()*0.55, H()*0.68, Math.min(1.3,W()/560));
+        drawCrownFigure(W()*0.3, H()*0.86, Math.min(1,W()/650), '#8a2f2f', false);
+        break;
+      case 'brothers':
+        skyGradient('#e8c98a','#c9915a');
+        drawIslandSilhouette(H()*0.62, '#2f6b4f');
+        drawPalace(W()*0.5, H()*0.62, Math.min(0.9,W()/750), '#c9a15a', '#8a2f2f');
+        waterGradient(H()*0.65, '#3f7ea3','#0f2c3a');
+        drawTwin(W()*0.33, H()*0.9, Math.min(1,W()/650), '#2f6b4f', 'Buaya');
+        drawTwin(W()*0.67, H()*0.9, Math.min(1,W()/650), '#8a2f2f', 'Naga');
+        break;
+      case 'war':
+        skyGradient('#7a3a2a','#2a1410');
+        drawIslandSilhouette(H()*0.62, '#241a10');
+        drawPalace(W()*0.5, H()*0.62, Math.min(0.9,W()/750), '#5c3d22','#3a1414');
+        waterGradient(H()*0.65, '#3a2418','#150c07');
+        drawTwin(W()*0.3, H()*0.88, Math.min(1,W()/650), '#2f6b4f', 'Buaya');
+        drawTwin(W()*0.7, H()*0.88, Math.min(1,W()/650), '#8a2f2f', 'Naga');
+        break;
+      case 'sea_return':
+        skyGradient('#3a4a5c','#1a2430');
+        waterGradient(H()*0.6, '#1c3a4a', '#081218');
+        drawWaves(H()*0.68, 'rgba(255,255,255,0.15)');
+        drawShip(W()*0.5, H()*0.68, Math.min(1.3,W()/560));
+        break;
+      case 'curse':
+        skyGradient('#241014','#0a0508');
+        drawIslandSilhouette(H()*0.62, '#150c07');
+        waterGradient(H()*0.65, '#0f1c26','#050a0c');
+        drawCrownFigure(W()*0.2, H()*0.88, Math.min(1,W()/650), '#4a2020', false);
+        drawTwin(W()*0.55, H()*0.88, Math.min(0.9,W()/700), '#2f6b4f', 'Buaya');
+        drawTwin(W()*0.8, H()*0.88, Math.min(0.9,W()/700), '#8a2f2f', 'Naga');
+        drawLightning();
+        break;
+      case 'transform':
+        skyGradient('#150a10','#050308');
+        waterGradient(H()*0.6, '#0f1c26','#050a0c');
+        drawLightning();
+        drawCrocodile(W()*0.32, H()*0.72, Math.min(1,W()/650), '#2f6b4f');
+        drawDragon(W()*0.68, H()*0.5, Math.min(0.9,W()/650), '#4a2a5c');
+        break;
+      case 'ending':
+        skyGradient('#8fc7e0','#f4d98a');
+        drawSun(W()*0.18,H()*0.16,24,'#ffe08a');
+        drawIslandSilhouette(H()*0.6, '#2f6b4f');
+        waterGradient(H()*0.63, '#3f7ea3','#0f2c3a');
+        drawCrocodile(W()*0.28, H()*0.78, Math.min(0.9,W()/650), '#2f6b4f');
+        drawDragon(W()*0.7, H()*0.55, Math.min(0.8,W()/650), '#4a2a5c');
+        break;
+      default:
+        skyGradient('#8fc7e0','#f4d98a');
+    }
+  }
+
+  // ---------- Speech ----------
+  function pickVoice(){
+    var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    var wantLang = lang === 'id' ? 'id' : 'en';
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(wantLang) === 0) return voices[i];
+    }
+    return voices[0] || null;
+  }
+  if(window.speechSynthesis){
+    window.speechSynthesis.onvoiceschanged = function(){ currentVoice = pickVoice(); };
+  }
+  function speak(text){
+    if(muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    var v = pickVoice();
+    if(v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  // ---------- UI wiring ----------
+  var titleScreen = document.getElementById('titleScreen');
+  var textbox = document.getElementById('textbox');
+  var narrationText = document.getElementById('narrationText');
+  var nextBtn = document.getElementById('nextBtn');
+  var choiceRow = document.getElementById('choiceRow');
+  var qteBarWrap = document.getElementById('qteBarWrap');
+  var qteBar = document.getElementById('qteBar');
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  var feedbackToast = document.getElementById('feedbackToast');
+  var startBtn = document.getElementById('startBtn');
+
+  function toast(msg){
+    feedbackToast.textContent = msg;
+    feedbackToast.classList.add('show');
+    setTimeout(function(){ feedbackToast.classList.remove('show'); }, 1600);
+  }
+
+  function applyLangUI(){
+    var t = UI[lang];
+    document.getElementById('titleText').textContent = t.title;
+    document.getElementById('titleSub').textContent = t.sub;
+    document.getElementById('langNote').textContent = t.langNote;
+    startBtn.textContent = t.start;
+    nextBtn.textContent = t.next;
+    muteBtn.textContent = muted ? t.muteOff : t.muteOn;
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    document.documentElement.lang = lang;
+  }
+  applyLangUI();
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    applyLangUI();
+    if(stepIndex >= 0 && stepIndex < STORY.length){
+      renderStep(stepIndex, true);
+    }
+  });
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    applyLangUI();
+    if(muted) stopSpeak();
+  });
+
+  function clearTargets(){
+    var targets = document.querySelectorAll('.target');
+    targets.forEach(function(el){ el.remove(); });
+  }
+
+  function endQte(success){
+    if(!qteActive) return;
+    qteActive = false;
+    clearTimeout(qteTimer);
+    qteBarWrap.style.display = 'none';
+    clearTargets();
+    toast(success ? UI[lang].qteWin : UI[lang].qteLose);
+    nextBtn.disabled = false;
+  }
+
+  function startQte(){
+    qteActive = true;
+    qteBarWrap.style.display = 'block';
+    var duration = 3200;
+    var start = Date.now();
+    nextBtn.disabled = false;
+    function tick(){
+      if(!qteActive) return;
+      var elapsed = Date.now() - start;
+      var pct = Math.max(0, 100 - (elapsed/duration*100));
+      qteBar.style.width = pct + '%';
+      if(elapsed >= duration){
+        endQte(false);
+      } else {
+        qteTimer = requestAnimationFrame(tick);
+      }
+    }
+    tick();
+
+    var target = document.createElement('div');
+    target.className = 'target';
+    var size = Math.max(46, Math.min(70, W()*0.14));
+    target.style.width = size+'px';
+    target.style.height = size+'px';
+    var maxX = stageWrap.clientWidth - size - 10;
+    var maxY = stageWrap.clientHeight*0.45 - size;
+    target.style.left = (10 + Math.random()*Math.max(10,maxX)) + 'px';
+    target.style.top = (10 + Math.random()*Math.max(10,maxY)) + 'px';
+    target.addEventListener('click', function(){
+      endQte(true);
+    });
+    stageWrap.appendChild(target);
+  }
+
+  function renderStep(idx, relang){
+    var step = STORY[idx];
+    drawScene(step.scene);
+    var text = lang === 'id' ? step.id_text : step.en_text;
+    narrationText.textContent = text;
+    choiceRow.innerHTML = '';
+    clearTargets();
+    qteBarWrap.style.display = 'none';
+    qteActive = false;
+    nextBtn.style.display = 'inline-block';
+    nextBtn.textContent = step.last ? UI[lang].replay : UI[lang].next;
+
+    if(step.type === 'reaction' && !relang){
+      startQte();
+    } else if(step.type === 'reaction' && relang){
+      // just re-render text/scene on language change, don't restart timer harshly
+      startQte();
+    }
+
+    if(step.type === 'choice'){
+      var a = document.createElement('button');
+      a.className = 'storybtn secondary';
+      a.textContent = lang === 'id' ? step.choiceA_id : step.choiceA_en;
+      a.addEventListener('click', function(){
+        toast(lang === 'id' ? step.fbA_id : step.fbA_en);
+        a.disabled = true; b.disabled = true;
+      });
+      var b = document.createElement('button');
+      b.className = 'storybtn secondary';
+      b.textContent = lang === 'id' ? step.choiceB_id : step.choiceB_en;
+      b.addEventListener('click', function(){
+        toast(lang === 'id' ? step.fbB_id : step.fbB_en);
+        a.disabled = true; b.disabled = true;
+      });
+      choiceRow.appendChild(a);
+      choiceRow.appendChild(b);
+    }
+
+    if(!relang){
+      speak(text);
+    }
+    reportHeight();
+  }
+
+  nextBtn.addEventListener('click', function(){
+    stopSpeak();
+    if(qteActive) endQte(false);
+    if(stepIndex >= STORY.length - 1){
+      // replay
+      stepIndex = -1;
+      titleScreen.style.display = 'flex';
+      textbox.style.display = 'none';
+      drawScene('kingdom');
+      reportHeight();
+      return;
+    }
+    stepIndex++;
+    if(stepIndex === STORY.length - 1){
+      // last step shows moral after a beat handled in renderStep via 'last'
+    }
+    renderStep(stepIndex, false);
+  });
+
+  startBtn.addEventListener('click', function(){
+    titleScreen.style.display = 'none';
+    textbox.style.display = 'flex';
+    stepIndex = 0;
+    renderStep(0, false);
+  });
+
+  // ---------- Auto-resize for iframe embedding ----------
+  function reportHeight(){
+    try{
+      var h = document.getElementById('game-root').offsetHeight;
+      window.parent.postMessage({ type: 'kutukanMintinHeight', height: h }, '*');
+    }catch(e){}
+  }
+
+  window.addEventListener('load', function(){
+    resizeCanvas();
+    drawScene('kingdom');
+    reportHeight();
+    setTimeout(reportHeight, 300);
+    setTimeout(reportHeight, 1000);
+  });
+  if(window.ResizeObserver){
+    new ResizeObserver(reportHeight).observe(document.getElementById('game-root'));
+  }
+
+  resizeCanvas();
+})();
+</script>
+</body>
+</html>
