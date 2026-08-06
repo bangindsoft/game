@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Lancang - Cerita Rakyat Riau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#132234;
+    --night2:#1c3149;
+    --gold:#e8b04b;
+    --gold-dim:#a9803a;
+    --cream:#f6ecd7;
+    --red:#c0473a;
+    --panel:#0e1b29;
+    --ok:#5fae6e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Nunito Sans', sans-serif;
+    color:var(--cream);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg, var(--panel), var(--night));
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid #2b4a63;
+    box-shadow:0 6px 24px rgba(0,0,0,.35);
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--night2);
+    border-bottom:2px solid var(--gold-dim);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Merriweather', serif;
+    font-weight:900;
+    font-size:16px;
+    color:var(--gold);
+    letter-spacing:.3px;
+  }
+  .brand .wave{font-size:16px;}
+  .controls{display:flex; gap:6px;}
+  .ctrl-btn{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--gold-dim);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-family:'Nunito Sans', sans-serif;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .ctrl-btn:hover{background:rgba(255,255,255,.14);}
+  .ctrl-btn:active{transform:scale(.95);}
+  .ctrl-btn.active{border-color:var(--gold); color:var(--gold);}
+
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9.6;
+    background:#0a1420;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .overlay-ui{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .qte-panel{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    pointer-events:auto;
+  }
+  .qte-label{
+    font-family:'Merriweather', serif;
+    font-weight:700;
+    font-size:clamp(14px,3.4vw,20px);
+    text-shadow:0 2px 8px rgba(0,0,0,.7);
+    margin-bottom:10px;
+    color:var(--cream);
+  }
+  .qte-btn{
+    background:radial-gradient(circle at 30% 30%, var(--gold), var(--gold-dim));
+    border:none;
+    color:#241705;
+    font-weight:900;
+    font-size:clamp(16px,4vw,22px);
+    border-radius:50%;
+    width:clamp(84px,20vw,110px);
+    height:clamp(84px,20vw,110px);
+    cursor:pointer;
+    box-shadow:0 6px 0 #7a5a24, 0 10px 18px rgba(0,0,0,.4);
+    user-select:none;
+    font-family:'Nunito Sans', sans-serif;
+  }
+  .qte-btn:active{
+    transform:translateY(4px);
+    box-shadow:0 2px 0 #7a5a24, 0 6px 12px rgba(0,0,0,.4);
+  }
+  .qte-bar-track{
+    width:min(70vw,320px);
+    height:14px;
+    background:rgba(0,0,0,.45);
+    border:1px solid var(--gold-dim);
+    border-radius:8px;
+    margin:14px auto 0;
+    overflow:hidden;
+  }
+  .qte-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--gold-dim), var(--gold));
+    transition:width .08s linear;
+  }
+  .qte-timer{
+    margin-top:6px;
+    font-size:12px;
+    color:#c9b98b;
+    font-weight:700;
+  }
+  .qte-side-btns{
+    display:flex;
+    gap:40px;
+    justify-content:center;
+    margin-top:16px;
+    pointer-events:auto;
+  }
+  .qte-arrow{
+    background:rgba(0,0,0,.4);
+    border:2px solid var(--gold);
+    color:var(--gold);
+    font-size:28px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    cursor:pointer;
+    user-select:none;
+  }
+  .qte-arrow:active{background:rgba(232,176,75,.3);}
+
+  .caption-box{
+    padding:16px 18px 8px;
+    min-height:96px;
+  }
+  .scene-tag{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color:var(--gold-dim);
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .story-text{
+    font-family:'Merriweather', serif;
+    font-size:clamp(14.5px,2.4vw,17px);
+    line-height:1.65;
+    color:var(--cream);
+  }
+  .story-text .cursor{
+    display:inline-block;
+    width:2px;
+    background:var(--gold);
+    margin-left:1px;
+    animation:blink 1s step-start infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+
+  .bottombar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 16px 16px;
+    gap:10px;
+  }
+  .progress-dots{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,.18);
+  }
+  .dot.done{background:var(--gold-dim);}
+  .dot.current{background:var(--gold); box-shadow:0 0 6px var(--gold);}
+
+  .nav-btn{
+    background:var(--gold);
+    color:#241705;
+    border:none;
+    font-weight:800;
+    font-size:14px;
+    padding:11px 22px;
+    border-radius:9px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #7a5a24;
+    font-family:'Nunito Sans', sans-serif;
+  }
+  .nav-btn:active{transform:translateY(3px); box-shadow:0 1px 0 #7a5a24;}
+  .nav-btn.secondary{
+    background:transparent;
+    color:var(--cream);
+    border:1px solid var(--gold-dim);
+    box-shadow:none;
+  }
+  .nav-btn:disabled{opacity:.35; cursor:default;}
+  .nav-btn[disabled]:active{transform:none;}
+
+  .replay-row{
+    text-align:center;
+    padding:0 16px 18px;
+  }
+  .moral-badge{
+    display:inline-block;
+    margin:10px auto 0;
+    padding:8px 14px;
+    border:1px dashed var(--gold-dim);
+    border-radius:8px;
+    font-size:12.5px;
+    color:#d8c79a;
+  }
+
+  @media (max-width:420px){
+    .brand{font-size:14px;}
+    .ctrl-btn{padding:5px 8px; font-size:11px;}
+    .qte-side-btns{gap:26px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="wave">🌊</span><span id="titleText">Si Lancang</span></div>
+    <div class="controls">
+      <button class="ctrl-btn" id="langBtn" type="button">🌐 <span id="langLabel">EN</span></button>
+      <button class="ctrl-btn" id="muteBtn" type="button">🔊 <span id="muteLabel">Suara</span></button>
+    </div>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <canvas id="stage" width="800" height="480"></canvas>
+    <div class="overlay-ui" id="overlayUi"></div>
+  </div>
+
+  <div class="caption-box">
+    <div class="scene-tag" id="sceneTag">Babak 1</div>
+    <div class="story-text" id="storyText"></div>
+  </div>
+
+  <div class="bottombar">
+    <div class="progress-dots" id="dots"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="nav-btn secondary" id="backBtn" type="button">◀</button>
+      <button class="nav-btn" id="nextBtn" type="button">Lanjut ▶</button>
+    </div>
+  </div>
+
+  <div class="replay-row" id="replayRow" style="display:none;">
+    <div class="moral-badge" id="moralBadge"></div><br/>
+    <button class="nav-btn" id="replayBtn" type="button" style="margin-top:12px;">🔁 Ulangi Cerita</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   LANGUAGE
+--------------------------------------------------------- */
+var urlLang = new URLSearchParams(location.search).get('lang');
+var lang = (urlLang === 'en') ? 'en' : 'id';
+
+var UI = {
+  id:{ title:"Si Lancang", langLabel:"EN", muteOn:"Suara", muteOff:"Bisu",
+       next:"Lanjut ▶", back:"◀ Kembali", start:"Mulai ▶", finish:"Selesai ✓",
+       replay:"🔁 Ulangi Cerita", babak:"Babak", moral:"📖 Pesan Moral: Hormatilah dan sayangi orang tuamu, di mana pun kau berada."
+     },
+  en:{ title:"Si Lancang", langLabel:"ID", muteOn:"Sound", muteOff:"Muted",
+       next:"Next ▶", back:"◀ Back", start:"Start ▶", finish:"Finish ✓",
+       replay:"🔁 Replay Story", babak:"Chapter", moral:"📖 Moral: Always honor and love your parents, wherever life takes you."
+     }
+};
+
+/* ---------------------------------------------------------
+   STORY DATA
+--------------------------------------------------------- */
+// bg types: 'village' | 'harbor' | 'sea' | 'storm' | 'ending'
+var scenes = [
+  { bg:'village', mother:true, lancang:true, richLancang:false,
+    id:"Dahulu kala, di daerah Kampar, hiduplah seorang pemuda bernama Si Lancang bersama ibunya. Hidup mereka sangat miskin. Si Lancang bekerja sebagai petani untuk menyambung hidup.",
+    en:"Long ago in the Kampar region lived a young man named Si Lancang with his mother. Their life was very poor. Si Lancang worked as a farmer just to get by." },
+
+  { bg:'village', mother:true, lancang:true, richLancang:false,
+    id:"Suatu hari, Si Lancang meminta izin kepada ibunya untuk merantau, mencari penghidupan yang lebih baik di negeri seberang.",
+    en:"One day, Si Lancang asked his mother for permission to leave home and seek a better life in a faraway land." },
+
+  { bg:'village', mother:true, lancang:true, richLancang:false, emotive:true,
+    id:"\u201cPergilah, Nak. Tapi berjanjilah, jangan pernah menjadi anak durhaka. Jangan lupakan ibu dan kampung halamanmu,\u201d pesan sang ibu sambil menahan air mata.",
+    en:"\u201cGo, my child. But promise me you will never become an ungrateful son. Never forget your mother and your homeland,\u201d said his mother, holding back tears." },
+
+  { bg:'village', mother:true, lancang:true, richLancang:false, kneel:true,
+    id:"\u201cBaik, Bu. Ananda berjanji tak akan pernah melupakan Ibu,\u201d ucap Si Lancang sambil bersimpuh meminta restu. Ibunya membekalinya dengan lumping dodak, kue kesukaannya.",
+    en:"\u201cYes, Mother. I promise I will never forget you,\u201d said Si Lancang, kneeling for her blessing. She packed him lumping dodak, his favorite cake, for the journey." },
+
+  { qte:'mash', bg:'sea', target:14, duration:8000,
+    id:"Bertahun-tahun Si Lancang bekerja keras di negeri rantau...",
+    en:"For years, Si Lancang worked tirelessly in a foreign land...",
+    btnId:"Bekerja!", btnEn:"Work!" },
+
+  { bg:'harbor', richLancang:true, ships:true,
+    id:"Ketekunannya membuahkan hasil. Si Lancang menjadi saudagar kaya raya, memiliki berpuluh-puluh kapal dagang dan tujuh orang istri dari keluarga saudagar. Namun di Kampar, ibunya masih hidup dalam kemiskinan.",
+    en:"His hard work paid off. Si Lancang became a wealthy merchant with dozens of trading ships and seven wives from merchant families. Yet back in Kampar, his mother still lived in poverty." },
+
+  { qte:'balance', bg:'sea', duration:8000, ships:true,
+    id:"Si Lancang berlayar pulang ke Kampar dengan kapal mewahnya, membawa ketujuh istrinya serta musik dan perbekalan mewah.",
+    en:"Si Lancang sailed back to Kampar on his luxurious ship, bringing his seven wives along with music and lavish supplies." },
+
+  { bg:'harbor', richLancang:true, ships:true, party:true,
+    id:"Ketika kapalnya merapat di Kampar, alat musik dimainkan riuh. Kain sutra dan hiasan emas digelar untuk memamerkan kekayaannya.",
+    en:"As his ship docked in Kampar, music played loudly. Silk cloths and gold ornaments were displayed to show off his wealth." },
+
+  { bg:'harbor', richLancang:true, ships:true, mother:true, motherPoor:true,
+    id:"Kabar kedatangan Si Lancang terdengar hingga ke telinga ibunya. Dengan hati terharu, sang ibu \u2014 hanya berbalut kain lusuh \u2014 bergegas ke dermaga untuk menemui anak satu-satunya.",
+    en:"News of Si Lancang's arrival reached his mother. Overjoyed, she rushed to the dock \u2014 dressed only in worn, tattered cloth \u2014 to meet her only child." },
+
+  { bg:'harbor', richLancang:true, ships:true, mother:true, motherPoor:true, rejected:true,
+    id:"Namun para awak kapal tak percaya bahwa perempuan tua dan lusuh itu adalah ibu majikan mereka. Dengan kasar, mereka berusaha mengusirnya.",
+    en:"But the ship's crew refused to believe the poor old woman was their master's mother. They rudely tried to chase her away." },
+
+  { bg:'harbor', richLancang:true, ships:true, mother:true, motherPoor:true, angry:true,
+    id:"Mendengar keributan, Si Lancang datang bersama ketujuh istrinya. Ia terkejut \u2014 namun karena malu, ia menolak mengakui ibunya. \u201cAku tak punya ibu miskin sepertimu! Usir perempuan gila itu!\u201d teriaknya congkak.",
+    en:"Hearing the commotion, Si Lancang arrived with his seven wives. He was shocked \u2014 but too ashamed to admit she was his mother. \u201cI have no poor mother like you! Drive this madwoman away!\u201d he shouted arrogantly." },
+
+  { bg:'village', mother:true, motherPoor:true, curse:true,
+    id:"Dengan hati hancur, sang ibu pulang ke rumah. Ia mengambil lesung dan nyiru pusakanya, lalu berdoa, \u201cYa Tuhan, susah payah hamba membesarkan Si Lancang, namun kini ia durhaka. Tolong hukumlah dia.\u201d",
+    en:"Heartbroken, his mother returned home. She took her sacred rice pounder and winnowing tray, and prayed, \u201cOh God, I raised Si Lancang with such hardship, yet now he has become ungrateful. Please punish him.\u201d" },
+
+  { qte:'mash', bg:'storm', target:16, duration:8000,
+    id:"Tiba-tiba, badai topan dahsyat menerjang dari langit yang gelap!",
+    en:"Suddenly, a violent storm struck from the darkened sky!",
+    btnId:"Bertahan!", btnEn:"Hold on!" },
+
+  { bg:'storm', destroyed:true,
+    id:"Dalam sekejap, badai menghancurkan seluruh kapal dagang Si Lancang. Kain sutranya melayang menjadi Negeri Lipat Kain, gongnya menjadi Sungai Ogong, tembikarnya menjadi Pasubilah, dan tiang kapalnya jatuh membentuk Danau Si Lancang.",
+    en:"In an instant, the storm destroyed all of Si Lancang's trading ships. His silk cloths became the land of Lipat Kain, his gong became the Ogong River, his pottery became Pasubilah, and his ship's mast fell to form Lake Si Lancang." },
+
+  { bg:'ending',
+    id:"Begitulah kisah Si Lancang dari Riau \u2014 pengingat bagi kita semua untuk selalu menghormati dan menyayangi orang tua, di mana pun kita berada.",
+    en:"So goes the legend of Si Lancang from Riau \u2014 a reminder for us all to always respect and love our parents, wherever life takes us." }
+];
+
+var idx = 0;
+var isMuted = false;
+var typing = null;
+var qteState = null;
+var voices = [];
+
+/* ---------------------------------------------------------
+   DOM refs
+--------------------------------------------------------- */
+var canvas = document.getElementById('stage');
+var ctx = canvas.getContext('2d');
+var overlayUi = document.getElementById('overlayUi');
+var storyText = document.getElementById('storyText');
+var sceneTag = document.getElementById('sceneTag');
+var nextBtn = document.getElementById('nextBtn');
+var backBtn = document.getElementById('backBtn');
+var langBtn = document.getElementById('langBtn');
+var muteBtn = document.getElementById('muteBtn');
+var dotsWrap = document.getElementById('dots');
+var replayRow = document.getElementById('replayRow');
+var bottombar = document.querySelector('.bottombar');
+var moralBadge = document.getElementById('moralBadge');
+
+/* ---------------------------------------------------------
+   SPEECH
+--------------------------------------------------------- */
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return;
+  voices = speechSynthesis.getVoices();
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(targetLang){
+  var want = targetLang === 'id' ? 'id' : 'en';
+  for(var i=0;i<voices.length;i++){
+    if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(want) === 0) return voices[i];
+  }
+  return null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if(isMuted) return;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  var v = pickVoice(lang);
+  if(v) u.voice = v;
+  u.rate = 0.92;
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+function stopSpeech(){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+/* ---------------------------------------------------------
+   RESIZE -> POST TO PARENT (iframe embed auto-resize)
+--------------------------------------------------------- */
+function sendHeight(){
+  var h = document.getElementById('app').getBoundingClientRect().height;
+  try{
+    window.parent.postMessage({ type:'silancangHeight', height: Math.ceil(h) + 4 }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+if(window.ResizeObserver){
+  new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+}
+
+/* ---------------------------------------------------------
+   CANVAS DRAWING
+--------------------------------------------------------- */
+var W = canvas.width, H = canvas.height;
+var animT = 0;
+var rafId = null;
+var shakeAmt = 0;
+
+function skyGrad(topC, botC){
+  var g = ctx.createLinearGradient(0,0,0,H*0.62);
+  g.addColorStop(0, topC);
+  g.addColorStop(1, botC);
+  return g;
+}
+
+function drawPerson(x, y, opts){
+  opts = opts || {};
+  var scale = opts.scale || 1;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 20, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+  // body (robe)
+  ctx.fillStyle = opts.bodyColor || '#3a4a63';
+  ctx.beginPath();
+  ctx.moveTo(-16, 0);
+  ctx.quadraticCurveTo(-22,-46, -10,-58);
+  ctx.lineTo(10,-58);
+  ctx.quadraticCurveTo(22,-46, 16, 0);
+  ctx.closePath();
+  ctx.fill();
+  if(opts.sash){
+    ctx.fillStyle = opts.sashColor || '#e8b04b';
+    ctx.fillRect(-16, -30, 32, 7);
+  }
+  // head
+  ctx.fillStyle = opts.skin || '#c9976b';
+  ctx.beginPath();
+  ctx.arc(0, -68, 12, 0, Math.PI*2);
+  ctx.fill();
+  // hair / head cover
+  if(opts.headCover){
+    ctx.fillStyle = opts.headCoverColor || '#7a4a2e';
+    ctx.beginPath();
+    ctx.arc(0,-72,13,Math.PI, 0);
+    ctx.fill();
+  }
+  if(opts.peci){
+    ctx.fillStyle = '#221913';
+    ctx.fillRect(-11,-84,22,10);
+  }
+  ctx.restore();
+}
+
+function drawHut(x,y,s){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(s,s);
+  ctx.fillStyle = '#6b4b2c';
+  ctx.fillRect(-40,-10,80,60);
+  ctx.fillStyle = '#8a6238';
+  ctx.beginPath();
+  ctx.moveTo(-52,-10);
+  ctx.lineTo(0,-58);
+  ctx.lineTo(52,-10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2a1c10';
+  ctx.fillRect(-12, 18, 24, 32);
+  ctx.fillStyle = '#e8b04b55';
+  ctx.fillRect(-32, 4, 14, 14);
+  ctx.fillRect(18, 4, 14, 14);
+  ctx.restore();
+}
+
+function drawWaves(baseY, amp, speed, color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for(var x=0;x<=W;x+=10){
+    var y = baseY + Math.sin((x*0.02) + animT*speed) * amp;
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(W,H);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawShip(x,y,s,opts){
+  opts = opts || {};
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(s,s);
+  // hull
+  ctx.fillStyle = opts.hull || '#5c3d24';
+  ctx.beginPath();
+  ctx.moveTo(-70,0);
+  ctx.lineTo(70,0);
+  ctx.lineTo(50,26);
+  ctx.lineTo(-50,26);
+  ctx.closePath();
+  ctx.fill();
+  // mast
+  ctx.strokeStyle = '#3a2716';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(0,-80);
+  ctx.stroke();
+  // sail
+  ctx.fillStyle = opts.sail || '#f0e3c4';
+  ctx.beginPath();
+  ctx.moveTo(2,-76);
+  ctx.lineTo(58,-40);
+  ctx.lineTo(2,-8);
+  ctx.closePath();
+  ctx.fill();
+  if(opts.gold){
+    ctx.fillStyle = '#e8b04b';
+    ctx.fillRect(-70,0,140,6);
+  }
+  ctx.restore();
+}
+
+function drawStorm(intensity){
+  // dark clouds
+  ctx.fillStyle = 'rgba(15,20,28,'+(0.55+0.2*intensity)+')';
+  for(var i=0;i<5;i++){
+    var cx = (i*180 + (animT*20)%200) % (W+200) - 100;
+    ctx.beginPath();
+    ctx.ellipse(cx, 60+ (i%2)*20, 90, 34, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  // lightning
+  if(Math.floor(animT/6) % 17 === 0){
+    ctx.strokeStyle = 'rgba(255,255,220,.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    var lx = W*0.6;
+    ctx.moveTo(lx, 0);
+    ctx.lineTo(lx-20, 60);
+    ctx.lineTo(lx+10,70);
+    ctx.lineTo(lx-30,150);
+    ctx.stroke();
+  }
+  // rain
+  ctx.strokeStyle = 'rgba(190,210,230,.35)';
+  ctx.lineWidth = 1.4;
+  for(var r=0;r<60;r++){
+    var rx = (r*37 + animT*4) % W;
+    var ry = (r*53 + animT*9) % H;
+    ctx.beginPath();
+    ctx.moveTo(rx,ry);
+    ctx.lineTo(rx-6,ry+14);
+    ctx.stroke();
+  }
+}
+
+function drawScene(){
+  var s = scenes[idx];
+  ctx.clearRect(0,0,W,H);
+  var sx = (Math.random()-0.5)*shakeAmt;
+  var sy = (Math.random()-0.5)*shakeAmt;
+  ctx.save();
+  ctx.translate(sx,sy);
+
+  if(s.bg === 'village'){
+    ctx.fillStyle = skyGrad('#e8b04b','#f6d99a');
+    ctx.fillRect(0,0,W,H*0.62);
+    ctx.fillStyle = '#c98a3f';
+    ctx.beginPath(); ctx.arc(W*0.78,H*0.18,42,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#4d7a4a';
+    ctx.fillRect(0,H*0.6,W,H*0.4);
+    drawHut(W*0.72,H*0.66,1.15);
+    if(s.mother) drawPerson(W*0.34,H*0.82,{bodyColor: s.motherPoor? '#5a4a3a':'#7a3f4a', sash:true, sashColor:'#c0473a', headCover:true, headCoverColor:'#8a5a3a', scale:1.05});
+    if(s.lancang) drawPerson(W*0.5,H*0.84,{bodyColor:'#2e4a63', sash:!!s.kneel, sashColor:'#e8b04b', peci:true, scale: s.kneel?0.85:1});
+  }
+  else if(s.bg === 'harbor'){
+    ctx.fillStyle = skyGrad('#274b6b','#6f9dbb');
+    ctx.fillRect(0,0,W,H*0.55);
+    ctx.fillStyle = '#c98a3f';
+    ctx.beginPath(); ctx.arc(W*0.16,H*0.15,36,0,Math.PI*2); ctx.fill();
+    drawWaves(H*0.6, 8, 1.2, '#1c4661');
+    drawWaves(H*0.66, 10, 0.8, '#153a52');
+    // dock
+    ctx.fillStyle = '#6b4b2c';
+    ctx.fillRect(0,H*0.63,W,14);
+    for(var p=0;p<8;p++){ ctx.fillRect(p*(W/8)+10, H*0.63, 8, H*0.3); }
+    if(s.ships){
+      drawShip(W*0.68,H*0.58,1.15,{hull:'#7a5228', sail:'#f3e6c6', gold:true});
+      drawShip(W*0.88,H*0.62,0.7,{hull:'#5c3d24', sail:'#e6d6ad'});
+    }
+    if(s.party){
+      ctx.fillStyle = 'rgba(232,176,75,.5)';
+      for(var f=0;f<6;f++){
+        ctx.beginPath();
+        ctx.arc(W*0.55 + f*22, H*0.5 + Math.sin(animT*0.05+f)*6, 3, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    if(s.richLancang){
+      drawPerson(W*0.62,H*0.86,{bodyColor:'#7a1f2b', sash:true, sashColor:'#e8b04b', peci:true, scale:1.1});
+    }
+    if(s.mother){
+      var mx = s.rejected || s.angry ? W*0.4 : W*0.22;
+      drawPerson(mx,H*0.87,{bodyColor:'#5a4a3a', sash:true, sashColor:'#8a6238', headCover:true, headCoverColor:'#8a5a3a', scale:1.0});
+    }
+  }
+  else if(s.bg === 'sea'){
+    ctx.fillStyle = skyGrad('#2c5a7c','#8fc0d6');
+    ctx.fillRect(0,0,W,H*0.6);
+    drawWaves(H*0.62, 12, 1.4, '#1d4c6b');
+    drawWaves(H*0.7, 14, 1.0, '#123a54');
+    if(s.ships || s.qte === 'balance'){
+      var tilt = qteState && qteState.tilt ? qteState.tilt : 0;
+      ctx.save();
+      ctx.translate(W*0.5, H*0.55);
+      ctx.rotate(tilt*0.15);
+      ctx.translate(-W*0.5,-H*0.55);
+      drawShip(W*0.5,H*0.55,1.3,{hull:'#7a5228', sail:'#f3e6c6', gold:true});
+      ctx.restore();
+    } else {
+      // small working figure on a raft-like platform (merantau)
+      ctx.fillStyle = '#5c3d24';
+      ctx.fillRect(W*0.42, H*0.58, 120, 14);
+      drawPerson(W*0.5,H*0.58,{bodyColor:'#2e4a63', peci:true, scale:0.9});
+    }
+  }
+  else if(s.bg === 'storm'){
+    ctx.fillStyle = skyGrad('#0e1a26','#2b3f52');
+    ctx.fillRect(0,0,W,H*0.62);
+    drawStorm(shakeAmt>0?1:0.6);
+    drawWaves(H*0.66, 20, 2.4, '#0d2534');
+    drawWaves(H*0.74, 24, 1.8, '#081a26');
+    if(!s.destroyed){
+      ctx.save();
+      ctx.translate(W*0.5,H*0.55);
+      ctx.rotate(Math.sin(animT*0.08)*0.12);
+      ctx.translate(-W*0.5,-H*0.55);
+      drawShip(W*0.5,H*0.55,1.2,{hull:'#7a5228', sail:'#e0d3ad', gold:true});
+      ctx.restore();
+    } else {
+      // broken ship pieces scattered
+      drawShip(W*0.28,H*0.55,0.5,{hull:'#5a3c22', sail:'#c9bb95'});
+      drawShip(W*0.7,H*0.62,0.35,{hull:'#4a3018', sail:'#b7a67f'});
+      ctx.fillStyle = 'rgba(240,227,196,.7)';
+      for(var d=0;d<10;d++){
+        ctx.save();
+        ctx.translate(W*0.15+d*70, H*0.35 + Math.sin(animT*0.06+d)*20);
+        ctx.rotate(animT*0.02+d);
+        ctx.fillRect(-8,-3,16,6);
+        ctx.restore();
+      }
+    }
+  }
+  else if(s.bg === 'ending'){
+    ctx.fillStyle = skyGrad('#274b6b','#a9cfd8');
+    ctx.fillRect(0,0,W,H*0.6);
+    // rainbow arcs (calm after storm)
+    var colors = ['#e0473a','#e8b04b','#e8e04b','#5fae6e','#4b8fe8','#8f5fe8'];
+    for(var c=0;c<colors.length;c++){
+      ctx.strokeStyle = colors[c];
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(W*0.5, H*0.62, 200 - c*7, Math.PI, Math.PI*2);
+      ctx.stroke();
+    }
+    drawWaves(H*0.66, 6, 0.6, '#1d4c6b');
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.textAlign = 'center';
+    ctx.font = '20px Georgia, serif';
+  }
+
+  ctx.restore();
+}
+
+function loop(){
+  animT++;
+  if(shakeAmt > 0) shakeAmt = Math.max(0, shakeAmt - 0.15);
+  drawScene();
+  rafId = requestAnimationFrame(loop);
+}
+loop();
+
+/* ---------------------------------------------------------
+   TYPEWRITER TEXT
+--------------------------------------------------------- */
+function typeText(text){
+  clearInterval(typing);
+  storyText.textContent = '';
+  var i = 0;
+  var speedMs = 16;
+  typing = setInterval(function(){
+    i++;
+    storyText.textContent = text.slice(0,i);
+    if(i >= text.length){
+      clearInterval(typing);
+    }
+    sendHeight();
+  }, speedMs);
+}
+
+/* ---------------------------------------------------------
+   DOTS / PROGRESS
+--------------------------------------------------------- */
+function renderDots(){
+  dotsWrap.innerHTML = '';
+  scenes.forEach(function(s, i){
+    var d = document.createElement('div');
+    d.className = 'dot' + (i < idx ? ' done' : '') + (i === idx ? ' current' : '');
+    dotsWrap.appendChild(d);
+  });
+}
+
+/* ---------------------------------------------------------
+   QTE LOGIC
+--------------------------------------------------------- */
+function clearOverlay(){
+  overlayUi.innerHTML = '';
+}
+
+function startQte(scene){
+  clearOverlay();
+  var panel = document.createElement('div');
+  panel.className = 'qte-panel';
+
+  if(scene.qte === 'mash'){
+    var label = document.createElement('div');
+    label.className = 'qte-label';
+    label.textContent = (lang==='id' ? scene.btnId : scene.btnEn);
+    panel.appendChild(label);
+
+    var btn = document.createElement('button');
+    btn.className = 'qte-btn';
+    btn.type = 'button';
+    btn.textContent = (lang==='id' ? 'KETUK' : 'TAP');
+    panel.appendChild(btn);
+
+    var track = document.createElement('div');
+    track.className = 'qte-bar-track';
+    var fill = document.createElement('div');
+    fill.className = 'qte-bar-fill';
+    track.appendChild(fill);
+    panel.appendChild(track);
+
+    var timerEl = document.createElement('div');
+    timerEl.className = 'qte-timer';
+    panel.appendChild(timerEl);
+
+    overlayUi.appendChild(panel);
+
+    var count = 0;
+    var target = scene.target || 12;
+    var start = performance.now();
+    var duration = scene.duration || 8000;
+    var finished = false;
+
+    function tap(){
+      if(finished) return;
+      count++;
+      shakeAmt = Math.min(6, shakeAmt+1.2);
+      fill.style.width = Math.min(100, (count/target)*100) + '%';
+      if(count >= target){
+        finish();
+      }
+    }
+    btn.addEventListener('click', tap);
+    btn.addEventListener('touchstart', function(e){ e.preventDefault(); tap(); }, {passive:false});
+    function keyHandler(e){
+      if(e.code === 'Space'){ e.preventDefault(); tap(); }
+    }
+    window.addEventListener('keydown', keyHandler);
+
+    var tickId = setInterval(function(){
+      if(finished) return;
+      var elapsed = performance.now() - start;
+      var remain = Math.max(0, duration - elapsed);
+      timerEl.textContent = (lang==='id' ? 'Waktu: ' : 'Time: ') + Math.ceil(remain/1000) + 's';
+      if(remain <= 0){
+        finish();
+      }
+    }, 100);
+
+    function finish(){
+      if(finished) return;
+      finished = true;
+      clearInterval(tickId);
+      window.removeEventListener('keydown', keyHandler);
+      goNext();
+    }
+    qteState = { cleanup: function(){ clearInterval(tickId); window.removeEventListener('keydown', keyHandler); } };
+  }
+  else if(scene.qte === 'balance'){
+    var label2 = document.createElement('div');
+    label2.className = 'qte-label';
+    label2.textContent = (lang==='id' ? 'Jaga keseimbangan kapal!' : 'Keep the ship steady!');
+    panel.appendChild(label2);
+
+    var side = document.createElement('div');
+    side.className = 'qte-side-btns';
+    var leftBtn = document.createElement('button');
+    leftBtn.className = 'qte-arrow'; leftBtn.type='button'; leftBtn.textContent = '◀';
+    var rightBtn = document.createElement('button');
+    rightBtn.className = 'qte-arrow'; rightBtn.type='button'; rightBtn.textContent = '▶';
+    side.appendChild(leftBtn); side.appendChild(rightBtn);
+    panel.appendChild(side);
+
+    var track2 = document.createElement('div');
+    track2.className = 'qte-bar-track';
+    track2.style.marginTop = '14px';
+    var fill2 = document.createElement('div');
+    fill2.className = 'qte-bar-fill';
+    fill2.style.background = 'linear-gradient(90deg,#5fae6e,#8fdc9c)';
+    track2.appendChild(fill2);
+    panel.appendChild(track2);
+
+    var timerEl2 = document.createElement('div');
+    timerEl2.className = 'qte-timer';
+    panel.appendChild(timerEl2);
+
+    overlayUi.appendChild(panel);
+
+    qteState = { tilt:0 };
+    var stability = 100;
+    var pressLeft=false, pressRight=false;
+    function setPress(dir,v){ if(dir==='l') pressLeft=v; else pressRight=v; }
+    leftBtn.addEventListener('mousedown', function(){setPress('l',true);});
+    leftBtn.addEventListener('mouseup', function(){setPress('l',false);});
+    leftBtn.addEventListener('mouseleave', function(){setPress('l',false);});
+    leftBtn.addEventListener('touchstart', function(e){e.preventDefault(); setPress('l',true);},{passive:false});
+    leftBtn.addEventListener('touchend', function(e){e.preventDefault(); setPress('l',false);});
+    rightBtn.addEventListener('mousedown', function(){setPress('r',true);});
+    rightBtn.addEventListener('mouseup', function(){setPress('r',false);});
+    rightBtn.addEventListener('mouseleave', function(){setPress('r',false);});
+    rightBtn.addEventListener('touchstart', function(e){e.preventDefault(); setPress('r',true);},{passive:false});
+    rightBtn.addEventListener('touchend', function(e){e.preventDefault(); setPress('r',false);});
+
+    function keyDown(e){
+      if(e.code==='ArrowLeft') pressLeft=true;
+      if(e.code==='ArrowRight') pressRight=true;
+    }
+    function keyUp(e){
+      if(e.code==='ArrowLeft') pressLeft=false;
+      if(e.code==='ArrowRight') pressRight=false;
+    }
+    window.addEventListener('keydown', keyDown);
+    window.addEventListener('keyup', keyUp);
+
+    var start2 = performance.now();
+    var duration2 = scene.duration || 8000;
+    var finished2 = false;
+    var driftDir = 1;
+
+    var tickId2 = setInterval(function(){
+      if(finished2) return;
+      // natural drift + counter input
+      qteState.tilt += 0.02*driftDir;
+      if(Math.abs(qteState.tilt) > 1.4) driftDir *= -1;
+      if(pressLeft) qteState.tilt -= 0.08;
+      if(pressRight) qteState.tilt += 0.08;
+      qteState.tilt = Math.max(-2, Math.min(2, qteState.tilt));
+      var offCenter = Math.abs(qteState.tilt);
+      if(offCenter < 0.6){ stability = Math.min(100, stability + 0.6); }
+      else { stability = Math.max(0, stability - 0.8); }
+      fill2.style.width = stability + '%';
+
+      var elapsed = performance.now() - start2;
+      var remain = Math.max(0, duration2 - elapsed);
+      timerEl2.textContent = (lang==='id' ? 'Waktu: ' : 'Time: ') + Math.ceil(remain/1000) + 's';
+      if(remain <= 0){
+        finish2();
+      }
+    }, 60);
+
+    function finish2(){
+      if(finished2) return;
+      finished2 = true;
+      clearInterval(tickId2);
+      window.removeEventListener('keydown', keyDown);
+      window.removeEventListener('keyup', keyUp);
+      goNext();
+    }
+    qteState.cleanup = function(){
+      clearInterval(tickId2);
+      window.removeEventListener('keydown', keyDown);
+      window.removeEventListener('keyup', keyUp);
+    };
+  }
+}
+
+function endQte(){
+  if(qteState && qteState.cleanup) qteState.cleanup();
+  qteState = null;
+  clearOverlay();
+}
+
+/* ---------------------------------------------------------
+   RENDER / NAVIGATION
+--------------------------------------------------------- */
+function renderScene(){
+  var s = scenes[idx];
+  endQte();
+  shakeAmt = (s.bg === 'storm' && !s.qte) ? 2 : (s.qte==='mash' ? 0 : shakeAmt);
+
+  sceneTag.textContent = UI[lang].babak + ' ' + (idx+1) + ' / ' + scenes.length;
+
+  var text = lang === 'id' ? s.id : s.en;
+  typeText(text);
+  speak(text);
+
+  renderDots();
+
+  backBtn.disabled = (idx === 0);
+  var isLast = (idx === scenes.length - 1);
+
+  if(s.qte){
+    nextBtn.style.display = 'none';
+    bottombar.style.opacity = '0.5';
+    startQte(s);
+  } else {
+    nextBtn.style.display = 'inline-block';
+    bottombar.style.opacity = '1';
+    nextBtn.textContent = isLast ? UI[lang].finish : UI[lang].next;
+  }
+
+  if(isLast){
+    replayRow.style.display = 'block';
+    moralBadge.textContent = UI[lang].moral;
+  } else {
+    replayRow.style.display = 'none';
+  }
+
+  sendHeight();
+}
+
+function goNext(){
+  if(idx < scenes.length - 1){
+    idx++;
+    renderScene();
+  } else {
+    stopSpeech();
+  }
+}
+function goBack(){
+  if(idx > 0){
+    idx--;
+    renderScene();
+  }
+}
+
+nextBtn.addEventListener('click', goNext);
+backBtn.addEventListener('click', goBack);
+document.getElementById('replayBtn').addEventListener('click', function(){
+  idx = 0;
+  renderScene();
+});
+
+/* ---------------------------------------------------------
+   LANG / MUTE TOGGLES
+--------------------------------------------------------- */
+function applyLangUi(){
+  document.getElementById('langLabel').textContent = UI[lang].langLabel;
+  document.getElementById('titleText').textContent = UI[lang].title;
+  document.getElementById('muteLabel').textContent = isMuted ? UI[lang].muteOff : UI[lang].muteOn;
+  document.title = UI[lang].title + (lang==='id' ? ' - Cerita Rakyat Riau' : ' - Riau Folktale');
+  document.documentElement.lang = lang;
+}
+langBtn.addEventListener('click', function(){
+  lang = (lang === 'id') ? 'en' : 'id';
+  applyLangUi();
+  renderScene();
+});
+muteBtn.addEventListener('click', function(){
+  isMuted = !isMuted;
+  muteBtn.classList.toggle('active', isMuted);
+  document.getElementById('muteLabel').textContent = isMuted ? UI[lang].muteOff : UI[lang].muteOn;
+  document.getElementById('muteBtn').firstChild.textContent = isMuted ? '🔇 ' : '🔊 ';
+  if(isMuted){ stopSpeech(); } else { speak(lang==='id' ? scenes[idx].id : scenes[idx].en); }
+});
+
+/* ---------------------------------------------------------
+   INIT
+--------------------------------------------------------- */
+applyLangUi();
+renderScene();
+
+})();
+</script>
+</body>
+</html>
