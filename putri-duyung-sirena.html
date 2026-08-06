@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Putri Duyung Sirena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#082c30;
+    --bg-mid:#0f4a4d;
+    --panel:rgba(255,255,255,0.07);
+    --panel-border:rgba(255,255,255,0.16);
+    --cream:#f6f0e2;
+    --cream-dim:#cfe7e4;
+    --coral:#ff7a5c;
+    --coral-dark:#e0563c;
+    --gold:#ffce6b;
+    --seafoam:#5fd3c4;
+    --shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Nunito',sans-serif;
+    color:var(--cream);
+    -webkit-font-smoothing:antialiased;
+  }
+  #game-root{
+    position:relative;
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    border-radius:20px;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 15% 0%, #135f61 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-mid) 0%, var(--bg-deep) 100%);
+    box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  /* decorative wave strip */
+  .wave-deco{
+    position:absolute; left:0; right:0; bottom:0; height:46px;
+    background:linear-gradient(180deg, transparent 0%, rgba(6,45,48,0.85) 100%);
+    pointer-events:none;
+    z-index:1;
+  }
+  .bubble{
+    position:absolute; bottom:-30px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0.05));
+    animation:rise linear infinite;
+    pointer-events:none;
+    opacity:0.5;
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) translateX(0); opacity:0;}
+    10%{opacity:0.5;}
+    100%{transform:translateY(-420px) translateX(10px); opacity:0;}
+  }
+
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px 10px;
+    position:relative; z-index:3;
+  }
+  .brand{
+    display:flex; align-items:center; gap:8px;
+    font-family:'Baloo 2',cursive;
+    font-weight:700; font-size:15px; letter-spacing:0.3px;
+    color:var(--gold);
+  }
+  .brand .fin{font-size:18px;}
+  .controls{display:flex; gap:8px;}
+  .ctrl-btn{
+    display:flex; align-items:center; gap:6px;
+    background:var(--panel); border:1px solid var(--panel-border);
+    color:var(--cream); font-family:'Nunito',sans-serif; font-weight:700;
+    font-size:12.5px; padding:7px 11px; border-radius:999px; cursor:pointer;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .ctrl-btn:hover{background:rgba(255,255,255,0.14); transform:translateY(-1px);}
+  .ctrl-btn:active{transform:translateY(0);}
+  .ctrl-btn svg{width:14px; height:14px; flex:none;}
+
+  main{
+    position:relative; z-index:2;
+    padding:6px 18px 22px;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/10;
+    border-radius:16px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#0d5457 0%, #083436 60%, #05262a 100%);
+    border:1px solid rgba(255,255,255,0.1);
+    margin-bottom:16px;
+  }
+  .stage svg{position:absolute; inset:0; width:100%; height:100%;}
+  .stage-caption{
+    position:absolute; left:10px; bottom:8px;
+    font-family:'Baloo 2',cursive; font-size:12px; color:var(--cream-dim);
+    background:rgba(0,0,0,0.25); padding:3px 9px; border-radius:999px;
+    letter-spacing:0.3px;
+  }
+
+  .textbox{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:16px 18px;
+    min-height:96px;
+    display:flex; flex-direction:column; justify-content:center;
+    gap:10px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .story-text{
+    font-size:15.5px; line-height:1.55; color:var(--cream);
+    font-weight:600;
+  }
+  .story-text i{color:var(--gold); font-style:normal;}
+
+  .actions{
+    display:flex; justify-content:flex-end; gap:10px; margin-top:14px;
+  }
+  .btn{
+    font-family:'Baloo 2',cursive;
+    font-weight:700; font-size:15px;
+    border:none; border-radius:999px;
+    padding:11px 22px; cursor:pointer;
+    color:#08282a;
+    background:linear-gradient(180deg, var(--seafoam), #35b0a3);
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+    transition:transform .15s ease, filter .15s ease;
+  }
+  .btn:hover{filter:brightness(1.06); transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn.secondary{
+    background:transparent; color:var(--cream);
+    border:1.5px solid var(--panel-border);
+  }
+  .btn.coral{background:linear-gradient(180deg, var(--coral), var(--coral-dark)); color:#2a0d06;}
+  .btn.wide{width:100%;}
+
+  .title-screen{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:26px 22px 30px;
+  }
+  .title-screen h1{
+    font-family:'Baloo 2',cursive; font-size:30px; margin:14px 0 4px;
+    color:var(--cream);
+    text-shadow:0 3px 0 rgba(0,0,0,0.25);
+  }
+  .title-screen p.sub{
+    font-size:13.5px; color:var(--cream-dim); margin:0 0 20px;
+    letter-spacing:0.3px;
+  }
+  .badge-origin{
+    font-family:'Nunito',sans-serif; font-size:11.5px; font-weight:800;
+    color:#08282a; background:var(--gold); padding:4px 12px; border-radius:999px;
+    letter-spacing:0.4px; margin-bottom:14px;
+  }
+
+  /* progress dots */
+  .progress{
+    display:flex; gap:6px; justify-content:center; margin:0 0 14px;
+  }
+  .dot{width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.2); transition:background .2s;}
+  .dot.active{background:var(--gold);}
+  .dot.done{background:var(--seafoam);}
+
+  .choice-grid{display:flex; flex-direction:column; gap:12px; margin-top:14px;}
+  .choice-card{
+    text-align:left; cursor:pointer;
+    background:var(--panel); border:1.5px solid var(--panel-border);
+    border-radius:14px; padding:14px 16px;
+    display:flex; align-items:center; gap:12px;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .choice-card:hover{transform:translateY(-2px); border-color:var(--seafoam); background:rgba(255,255,255,0.12);}
+  .choice-emoji{font-size:24px; flex:none;}
+  .choice-label{font-family:'Baloo 2',cursive; font-size:15.5px; color:var(--cream);}
+
+  .qte-hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'Baloo 2',cursive; font-size:13px; color:var(--cream-dim);
+    margin-bottom:8px;
+  }
+  .qte-timerbar{
+    position:relative; height:8px; border-radius:999px; background:rgba(255,255,255,0.12);
+    overflow:hidden; margin-bottom:8px;
+  }
+  .qte-timerbar>div{
+    height:100%; background:linear-gradient(90deg, var(--gold), var(--coral));
+    width:100%; transform-origin:left;
+  }
+
+  .moral-box{
+    margin-top:14px; padding:14px 16px; border-radius:14px;
+    background:rgba(255,206,107,0.12); border:1px solid rgba(255,206,107,0.35);
+    font-size:13.5px; line-height:1.5; color:var(--gold); font-weight:700;
+  }
+
+  footer.credits{
+    text-align:center; font-size:10.5px; color:rgba(255,255,255,0.35);
+    padding:2px 0 14px;
+  }
+
+  .hidden{display:none !important;}
+
+  @media (max-width:420px){
+    .title-screen h1{font-size:24px;}
+    .btn{font-size:14px; padding:10px 18px;}
+    .story-text{font-size:14.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="game-root">
+  <div class="wave-deco"></div>
+
+  <header class="topbar">
+    <div class="brand"><span class="fin">🧜‍♀️</span><span id="brandLabel">Putri Duyung Sirena</span></div>
+    <div class="controls">
+      <button class="ctrl-btn" id="langBtn" type="button" title="Ganti Bahasa / Change language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span id="langBtnLabel">EN</span>
+      </button>
+      <button class="ctrl-btn" id="muteBtn" type="button" title="Bisukan narasi / Mute narration">
+        <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16 8a5 5 0 010 8"/><path d="M19 5a9 9 0 010 14"/></svg>
+        <span id="muteBtnLabel">Suara</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- TITLE SCREEN -->
+    <section id="screen-title" class="title-screen">
+      <div class="badge-origin" id="originBadge">DONGENG ANAK · GUAM</div>
+      <div class="stage" style="aspect-ratio:16/11;">
+        <svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="skyTitle" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1c6f6f"/>
+              <stop offset="100%" stop-color="#0c4547"/>
+            </linearGradient>
+            <linearGradient id="riverTitle" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2fa39a"/>
+              <stop offset="100%" stop-color="#0a4142"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#skyTitle)"/>
+          <circle cx="330" cy="55" r="26" fill="#ffe4a3" opacity="0.9"/>
+          <path d="M0 150 Q100 130 200 150 T400 150 V260 H0 Z" fill="url(#riverTitle)"/>
+          <path d="M0 165 Q100 150 200 168 T400 160" stroke="rgba(255,255,255,0.25)" stroke-width="3" fill="none"/>
+          <g opacity="0.9">
+            <path d="M190 210 q10 -22 26 -14 q6 -18 22 -8 q4 -20 22 -10 q10 6 4 18 q14 -2 12 14 q-4 12 -20 10 l-56 4 q-14 0 -10 -14z" fill="#0b3f41"/>
+          </g>
+          <!-- mermaid silhouette -->
+          <g transform="translate(200,150)">
+            <ellipse cx="0" cy="46" rx="34" ry="10" fill="rgba(0,0,0,0.18)"/>
+            <path d="M-6 -46 q10 -6 16 0 q4 20 2 40 q14 10 10 30 q-6 18 -22 20 q-16 -2 -20 -18 q-4 -20 8 -30 q-2 -22 6 -42z" fill="#ff9770"/>
+            <path d="M-10 44 q10 14 26 6 q-10 20 -34 16 q-10 -12 8 -22z" fill="#5fd3c4"/>
+            <circle cx="4" cy="-52" r="11" fill="#ffcf9e"/>
+            <path d="M-6 -58 q10 -12 22 -4 q4 8 -4 12 q-10 -8 -18 -8z" fill="#7a3b2e"/>
+          </g>
+        </svg>
+      </div>
+      <h1 id="titleText">Putri Duyung Sirena</h1>
+      <p class="sub" id="subText">Sebuah dongeng klasik dari Guam tentang mendengarkan nasihat orang tua</p>
+      <button class="btn wide" id="startBtn" type="button">Mulai Cerita</button>
+    </section>
+
+    <!-- STORY / NARRATIVE SCREEN -->
+    <section id="screen-story" class="hidden">
+      <div class="progress" id="progressDots"></div>
+      <div class="stage" id="storyStage"></div>
+      <div class="textbox">
+        <div class="story-text" id="storyText"></div>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" id="replayNarration" type="button">🔊 Ulangi</button>
+        <button class="btn" id="nextBtn" type="button">Lanjut →</button>
+      </div>
+    </section>
+
+    <!-- QTE MINI GAME -->
+    <section id="screen-qte" class="hidden">
+      <div class="qte-hud">
+        <span id="qteLabel">Tangkap gelembung sebelum waktu habis!</span>
+        <span id="qteScoreLabel">Skor: 0</span>
+      </div>
+      <div class="qte-timerbar"><div id="qteTimerFill"></div></div>
+      <div class="stage" id="qteStage" style="background:linear-gradient(180deg,#0d5457 0%, #062f31 100%);">
+        <canvas id="qteCanvas" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
+      </div>
+      <div class="textbox">
+        <div class="story-text" id="qteHint">Ketuk gelembung yang muncul secepat mungkin!</div>
+      </div>
+      <div class="actions">
+        <button class="btn hidden" id="qteContinueBtn" type="button">Lanjut →</button>
+      </div>
+    </section>
+
+    <!-- CHOICE -->
+    <section id="screen-choice" class="hidden">
+      <div class="stage" id="choiceStage"></div>
+      <div class="textbox">
+        <div class="story-text" id="choiceText"></div>
+      </div>
+      <div class="choice-grid">
+        <div class="choice-card" id="choicePlay">
+          <div class="choice-emoji">🌊</div>
+          <div class="choice-label" id="choicePlayLabel">Bermain di sungai bersama teman-teman</div>
+        </div>
+        <div class="choice-card" id="choiceMarket">
+          <div class="choice-emoji">🧺</div>
+          <div class="choice-label" id="choiceMarketLabel">Segera pergi membeli arang untuk Ibu</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENDING -->
+    <section id="screen-ending" class="hidden">
+      <div class="progress" id="endingDots"></div>
+      <div class="stage" id="endingStage"></div>
+      <div class="textbox">
+        <div class="story-text" id="endingText"></div>
+      </div>
+      <div class="moral-box" id="moralBox"></div>
+      <div class="actions">
+        <button class="btn secondary" id="endingReplayNarration" type="button">🔊 Ulangi</button>
+        <button class="btn" id="endingNextBtn" type="button">Lanjut →</button>
+        <button class="btn coral hidden" id="restartBtn" type="button">Main Lagi ↻</button>
+      </div>
+    </section>
+
+  </main>
+  <footer class="credits" id="creditsText">Dongeng Anak · caritasato.blogspot.com</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- i18n content ---------------- */
+  var STR = {
+    id:{
+      brand:"Putri Duyung Sirena",
+      origin:"DONGENG ANAK · GUAM",
+      title:"Putri Duyung Sirena",
+      subtitle:"Sebuah dongeng klasik dari Guam tentang mendengarkan nasihat orang tua",
+      start:"Mulai Cerita",
+      langBtn:"EN",
+      mute:"Suara",
+      unmute:"Bisu",
+      replay:"🔊 Ulangi",
+      next:"Lanjut →",
+      restart:"Main Lagi ↻",
+      credits:"Dongeng Anak · caritasato.blogspot.com",
+      qteLabel:"Tangkap gelembung sebelum waktu habis!",
+      qteHint:"Ketuk atau klik gelembung yang muncul secepat mungkin!",
+      qteScore:"Skor: ",
+      qteDone1:"Sirena berhasil menyeberangi sungai sambil bermain-main dengan riak airnya.",
+      choiceQ:"Teman-teman Sirena memanggil dari tepi sungai. Apa yang akan Sirena lakukan?",
+      choicePlay:"Bermain di sungai bersama teman-teman",
+      choiceMarket:"Segera pergi membeli arang untuk Ibu",
+      story:[
+        "Di sebuah kampung dekat sungai, hiduplah seorang gadis bernama <i>Sirena</i>. Ia sangat suka berenang. Hampir setiap hari, ia menghabiskan waktu berjam-jam bermain air di sungai.",
+        "Ibunya sering menegur Sirena. \u201cSirena, kau sudah besar. Sudah saatnya kau membantu Ibu bekerja di rumah,\u201d kata Ibu. Namun Sirena jarang mendengarkan nasihat itu.",
+        "Suatu hari, arang di dapur telah habis. Ibu meminta Sirena membeli arang ke pasar. \u201cTolonglah Ibu kali ini, Sirena. Tanpa arang, kita tidak bisa memasak hari ini.\u201d",
+        "Sirena pun berangkat ke pasar. Namun jalan menuju pasar melewati sungai, tempat teman-temannya biasa bermain air."
+      ],
+      goodEnding:[
+        "Sirena mengingat pesan Ibunya. Ia menahan keinginannya untuk bermain, lalu bergegas ke pasar membeli arang.",
+        "Sesampainya di rumah, Ibu tersenyum bangga. \u201cTerima kasih, Sirena. Anak yang baik selalu ingat pada tanggung jawabnya,\u201d katanya sambil memeluk Sirena.",
+        "Sejak hari itu, Sirena tumbuh menjadi anak yang rajin membantu orang tua, dan disayang oleh semua orang di kampungnya."
+      ],
+      goodMoral:"Pesan cerita: Anak yang mendengarkan nasihat orang tua dan tidak menunda tanggung jawab akan membawa kebahagiaan bagi keluarganya.",
+      badEnding:[
+        "Sirena tidak tahan melihat teman-temannya bermain air. Ia pun menceburkan diri ke sungai, dan tanpa sadar melupakan tugasnya membeli arang.",
+        "Di rumah, Ibu menunggu dengan kesal. \u201cKemana perginya anak itu? Pasti ia bermain lagi di sungai. Baiklah, kalau ia begitu senang berenang, biarlah ia selamanya berada di sungai saja!\u201d",
+        "Tanpa disadari, kata-kata Ibu menjadi kutukan. Perlahan-lahan, tubuh Sirena mulai berubah. Kakinya menyatu menjadi sirip, dan sisik-sisik indah mulai tumbuh di kulitnya.",
+        "Sirena pun berubah menjadi seorang putri duyung. Ia berenang menjauh dari sungai menuju laut lepas, dan tidak pernah kembali ke rumahnya lagi."
+      ],
+      badMoral:"Pesan cerita: Dengarkanlah nasihat orang tua, dan jangan menunda tanggung jawab hanya demi bersenang-senang."
+    },
+    en:{
+      brand:"The Mermaid Sirena",
+      origin:"CHILDREN'S FOLKLORE · GUAM",
+      title:"The Mermaid Sirena",
+      subtitle:"A classic Guam folktale about listening to a parent's advice",
+      start:"Start the Story",
+      langBtn:"ID",
+      mute:"Sound",
+      unmute:"Muted",
+      replay:"🔊 Replay",
+      next:"Next →",
+      restart:"Play Again ↻",
+      credits:"Children's Folklore · caritasato.blogspot.com",
+      qteLabel:"Catch the bubbles before time runs out!",
+      qteHint:"Tap or click the bubbles as fast as you can!",
+      qteScore:"Score: ",
+      qteDone1:"Sirena made her way across the river, playfully splashing through the ripples.",
+      choiceQ:"Sirena's friends called out to her from the riverbank. What should Sirena do?",
+      choicePlay:"Play in the river with her friends",
+      choiceMarket:"Hurry to the market to buy charcoal for Mother",
+      story:[
+        "In a village near a river lived a girl named <i>Sirena</i>. She loved swimming more than anything. Almost every day, she spent hours playing in the river's water.",
+        "Her mother often scolded her. \u201cSirena, you're grown now. It's time you helped me with the housework,\u201d Mother would say. But Sirena rarely listened.",
+        "One day, the charcoal in the kitchen ran out. Mother asked Sirena to buy some at the market. \u201cPlease help me this time, Sirena. Without charcoal, we can't cook today.\u201d",
+        "So Sirena set off for the market. But the path there passed by the river, right where her friends loved to play."
+      ],
+      goodEnding:[
+        "Sirena remembered her mother's words. She held back her urge to play and hurried straight to the market to buy charcoal.",
+        "When she got home, Mother smiled proudly. \u201cThank you, Sirena. A good child always remembers her responsibilities,\u201d she said, hugging her tight.",
+        "From that day on, Sirena grew into a hardworking girl who helped her parents, loved by everyone in her village."
+      ],
+      goodMoral:"Moral of the story: A child who listens to their parents and doesn't delay their responsibilities brings happiness to their family.",
+      badEnding:[
+        "Sirena couldn't resist watching her friends splash in the water. She dove into the river and, without noticing, forgot all about the charcoal.",
+        "At home, Mother waited, growing more upset by the minute. \u201cWhere has that girl gone? She must be playing in the river again. Fine then \u2014 if she loves swimming so much, let her stay in the river forever!\u201d",
+        "Without anyone realizing it, Mother's words became a curse. Slowly, Sirena's body began to change. Her legs merged into a fin, and beautiful scales began to grow across her skin.",
+        "Sirena turned into a mermaid. She swam away from the river out toward the open sea, and never returned home again."
+      ],
+      badMoral:"Moral of the story: Listen to your parents' advice, and never put off your responsibilities just to have fun."
+    }
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+  var storyIndex = 0;
+  var endingIndex = 0;
+  var endingPath = null; // 'good' | 'bad'
+  var currentUtterance = null;
+
+  /* ---------------- DOM refs ---------------- */
+  var el = {
+    brandLabel: document.getElementById('brandLabel'),
+    originBadge: document.getElementById('originBadge'),
+    titleText: document.getElementById('titleText'),
+    subText: document.getElementById('subText'),
+    startBtn: document.getElementById('startBtn'),
+    langBtn: document.getElementById('langBtn'),
+    langBtnLabel: document.getElementById('langBtnLabel'),
+    muteBtn: document.getElementById('muteBtn'),
+    muteBtnLabel: document.getElementById('muteBtnLabel'),
+    soundIcon: document.getElementById('soundIcon'),
+    creditsText: document.getElementById('creditsText'),
+
+    screenTitle: document.getElementById('screen-title'),
+    screenStory: document.getElementById('screen-story'),
+    screenQte: document.getElementById('screen-qte'),
+    screenChoice: document.getElementById('screen-choice'),
+    screenEnding: document.getElementById('screen-ending'),
+
+    progressDots: document.getElementById('progressDots'),
+    storyStage: document.getElementById('storyStage'),
+    storyText: document.getElementById('storyText'),
+    nextBtn: document.getElementById('nextBtn'),
+    replayNarration: document.getElementById('replayNarration'),
+
+    qteLabel: document.getElementById('qteLabel'),
+    qteScoreLabel: document.getElementById('qteScoreLabel'),
+    qteTimerFill: document.getElementById('qteTimerFill'),
+    qteCanvas: document.getElementById('qteCanvas'),
+    qteHint: document.getElementById('qteHint'),
+    qteContinueBtn: document.getElementById('qteContinueBtn'),
+
+    choiceStage: document.getElementById('choiceStage'),
+    choiceText: document.getElementById('choiceText'),
+    choicePlay: document.getElementById('choicePlay'),
+    choiceMarket: document.getElementById('choiceMarket'),
+    choicePlayLabel: document.getElementById('choicePlayLabel'),
+    choiceMarketLabel: document.getElementById('choiceMarketLabel'),
+
+    endingDots: document.getElementById('endingDots'),
+    endingStage: document.getElementById('endingStage'),
+    endingText: document.getElementById('endingText'),
+    moralBox: document.getElementById('moralBox'),
+    endingNextBtn: document.getElementById('endingNextBtn'),
+    endingReplayNarration: document.getElementById('endingReplayNarration'),
+    restartBtn: document.getElementById('restartBtn')
+  };
+
+  /* ---------------- illustrations (inline SVG scenes) ---------------- */
+  function svgWrap(inner){
+    return '<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">' + inner + '</svg>';
+  }
+  var defs = '<defs>' +
+    '<linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c6f6f"/><stop offset="100%" stop-color="#0c4547"/></linearGradient>' +
+    '<linearGradient id="river1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2fa39a"/><stop offset="100%" stop-color="#0a4142"/></linearGradient>' +
+    '<linearGradient id="dusk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2c3a63"/><stop offset="100%" stop-color="#0a1a2f"/></linearGradient>' +
+    '<linearGradient id="sea1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f6d78"/><stop offset="100%" stop-color="#03252c"/></linearGradient>' +
+    '</defs>';
+
+  function houseScene(){
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#sky1)"/>' +
+      '<circle cx="335" cy="45" r="24" fill="#ffe4a3" opacity="0.85"/>' +
+      '<path d="M0 150 Q100 130 200 150 T400 150 V250 H0 Z" fill="url(#river1)"/>' +
+      '<path d="M0 165 Q100 150 200 168 T400 158" stroke="rgba(255,255,255,0.25)" stroke-width="3" fill="none"/>' +
+      '<g transform="translate(60,110)">' +
+        '<rect x="-38" y="10" width="76" height="46" fill="#8a5a3a" rx="3"/>' +
+        '<polygon points="-46,10 0,-28 46,10" fill="#5c3a24"/>' +
+        '<rect x="-6" y="30" width="16" height="26" fill="#3c2415"/>' +
+        '<rect x="-28" y="20" width="14" height="14" fill="#dff0ea" opacity="0.85"/>' +
+      '</g>' +
+      '<g transform="translate(160,185)"><ellipse cx="0" cy="10" rx="26" ry="7" fill="rgba(0,0,0,0.15)"/>' +
+        '<circle cx="0" cy="-8" r="10" fill="#ffcf9e"/>' +
+        '<path d="M-12 4 q12 -8 24 0 v18 q-12 6 -24 0 z" fill="#c85a4a"/></g>' +
+      '<g transform="translate(210,205) scale(0.85)"><ellipse cx="0" cy="10" rx="24" ry="7" fill="rgba(0,0,0,0.15)"/>' +
+        '<circle cx="0" cy="-8" r="10" fill="#f0d4b0"/>' +
+        '<path d="M-12 4 q12 -8 24 0 v18 q-12 6 -24 0 z" fill="#4a8f8a"/></g>'
+    );
+  }
+  function marketPathScene(){
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#sky1)"/>' +
+      '<path d="M0 150 Q100 130 200 150 T400 150 V250 H0 Z" fill="url(#river1)"/>' +
+      '<path d="M0 165 Q100 150 200 168 T400 158" stroke="rgba(255,255,255,0.25)" stroke-width="3" fill="none"/>' +
+      '<path d="M0 120 q80 -14 160 -2 t240 -4" stroke="#c9a876" stroke-width="10" fill="none" opacity="0.55" stroke-dasharray="2 10" stroke-linecap="round"/>' +
+      '<g transform="translate(150,190)"><ellipse cx="0" cy="10" rx="26" ry="7" fill="rgba(0,0,0,0.15)"/>' +
+        '<circle cx="0" cy="-10" r="11" fill="#ffcf9e"/>' +
+        '<path d="M-13 4 q13 -10 26 0 v20 q-13 7 -26 0 z" fill="#c85a4a"/>' +
+        '<rect x="14" y="-2" width="16" height="14" rx="2" fill="#4a2e1a"/></g>' +
+      '<g opacity="0.9" transform="translate(300,150)"><ellipse cx="0" cy="10" rx="16" ry="14" fill="#5fd3c4"/><circle cx="0" cy="0" r="6" fill="#e9f7f2"/></g>' +
+      '<g opacity="0.7" transform="translate(330,170)"><ellipse cx="0" cy="8" rx="12" ry="10" fill="#4ecab8"/></g>'
+    );
+  }
+  function riverPlayScene(){
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#sky1)"/>' +
+      '<path d="M0 130 Q100 110 200 130 T400 130 V250 H0 Z" fill="url(#river1)"/>' +
+      '<path d="M0 150 Q100 132 200 152 T400 140" stroke="rgba(255,255,255,0.28)" stroke-width="3" fill="none"/>' +
+      '<path d="M0 175 Q120 160 200 178 T400 168" stroke="rgba(255,255,255,0.18)" stroke-width="3" fill="none"/>' +
+      '<g transform="translate(120,190)"><ellipse cx="0" cy="8" rx="20" ry="6" fill="rgba(0,0,0,0.12)"/><circle cx="0" cy="-6" r="9" fill="#ffcf9e"/><path d="M-10 3 q10 -6 20 0 v10 q-10 5 -20 0z" fill="#e0af5c"/></g>' +
+      '<g transform="translate(190,205)"><ellipse cx="0" cy="8" rx="20" ry="6" fill="rgba(0,0,0,0.12)"/><circle cx="0" cy="-6" r="9" fill="#f0d4b0"/><path d="M-10 3 q10 -6 20 0 v10 q-10 5 -20 0z" fill="#4a8f8a"/></g>' +
+      '<g transform="translate(255,190)"><ellipse cx="0" cy="8" rx="20" ry="6" fill="rgba(0,0,0,0.12)"/><circle cx="0" cy="-6" r="9" fill="#ffcf9e"/><path d="M-10 3 q10 -6 20 0 v10 q-10 5 -20 0z" fill="#c85a4a"/></g>'
+    );
+  }
+  function goodEndingScene1(){
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#sky1)"/>' +
+      '<circle cx="330" cy="50" r="24" fill="#ffe4a3"/>' +
+      '<path d="M0 150 Q100 130 200 150 T400 150 V250 H0 Z" fill="url(#river1)"/>' +
+      '<path d="M0 120 q80 -14 160 -2 t240 -4" stroke="#c9a876" stroke-width="10" fill="none" opacity="0.55" stroke-dasharray="2 10" stroke-linecap="round"/>' +
+      '<g transform="translate(200,185)"><ellipse cx="0" cy="10" rx="26" ry="7" fill="rgba(0,0,0,0.15)"/>' +
+        '<circle cx="0" cy="-10" r="11" fill="#ffcf9e"/>' +
+        '<path d="M-13 4 q13 -10 26 0 v20 q-13 7 -26 0 z" fill="#c85a4a"/>' +
+        '<rect x="16" y="-4" width="14" height="12" rx="2" fill="#2a1a10"/></g>'
+    );
+  }
+  function goodEndingScene2(){
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#sky1)"/>' +
+      '<circle cx="330" cy="50" r="24" fill="#ffe4a3"/>' +
+      '<g transform="translate(60,110)"><rect x="-38" y="10" width="76" height="46" fill="#8a5a3a" rx="3"/><polygon points="-46,10 0,-28 46,10" fill="#5c3a24"/><rect x="-6" y="30" width="16" height="26" fill="#3c2415"/></g>' +
+      '<g transform="translate(150,150)"><ellipse cx="0" cy="70" rx="70" ry="10" fill="rgba(0,0,0,0.15)"/>' +
+        '<circle cx="-14" cy="0" r="10" fill="#f0d4b0"/><path d="M-24 12 q10 -8 20 0 v20 q-10 6 -20 0z" fill="#4a8f8a"/>' +
+        '<circle cx="18" cy="4" r="11" fill="#ffcf9e"/><path d="M6 16 q12 -10 24 0 v22 q-12 7 -24 0z" fill="#c85a4a"/></g>' +
+      '<text x="200" y="40" font-family="Baloo 2, cursive" font-size="26" fill="#ffce6b" text-anchor="middle">★ ★ ★</text>'
+    );
+  }
+  function transformScene(stage){
+    // stage 0..3 progressive transformation
+    var legOpacity = Math.max(0, 1 - stage/2);
+    var finOpacity = Math.min(1, stage/2);
+    var scaleGlow = stage >= 2 ? 1 : 0;
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#dusk1)"/>' +
+      '<path d="M0 160 Q100 145 200 160 T400 160 V250 H0 Z" fill="url(#sea1)"/>' +
+      '<path d="M0 178 Q100 165 200 180 T400 172" stroke="rgba(255,255,255,0.22)" stroke-width="3" fill="none"/>' +
+      '<g transform="translate(200,150)">' +
+        '<ellipse cx="0" cy="55" rx="30" ry="8" fill="rgba(0,0,0,0.2)"/>' +
+        '<circle cx="0" cy="-30" r="12" fill="#ffcf9e"/>' +
+        '<path d="M-14 -36 q12 -12 26 -2 q2 8 -6 12 q-12 -8 -20 -10z" fill="#3c2415"/>' +
+        '<path d="M-12 -18 q12 -8 24 0 v24 q-4 8 -12 8 q-8 0 -12 -8z" fill="#c85a4a" opacity="' + legOpacity + '"/>' +
+        '<g opacity="' + legOpacity + '"><rect x="-9" y="12" width="7" height="26" rx="3" fill="#ffcf9e"/><rect x="4" y="12" width="7" height="26" rx="3" fill="#ffcf9e"/></g>' +
+        '<path d="M-14 -18 q14 -10 28 0 q6 26 -2 46 q14 12 8 34 q-8 20 -26 22 q-18 -2 -24 -20 q-6 -22 8 -34 q-8 -22 8 -48z" fill="#5fd3c4" opacity="' + finOpacity + '"/>' +
+        '<path d="M-14 78 q14 18 30 6 q-12 22 -38 18 q-12 -14 8 -24z" fill="#3fb6a8" opacity="' + finOpacity + '"/>' +
+        (scaleGlow ? '<g opacity="0.55">' +
+          '<circle cx="-4" cy="10" r="3" fill="#e9fff9"/><circle cx="8" cy="20" r="3" fill="#e9fff9"/>' +
+          '<circle cx="-8" cy="34" r="3" fill="#e9fff9"/><circle cx="6" cy="46" r="3" fill="#e9fff9"/>' +
+        '</g>' : '') +
+      '</g>'
+    );
+  }
+  function seaEndingScene(){
+    return svgWrap(defs +
+      '<rect width="400" height="250" fill="url(#sea1)"/>' +
+      '<circle cx="90" cy="45" r="30" fill="#eaf6f0" opacity="0.15"/>' +
+      '<g opacity="0.5"><circle cx="70" cy="200" r="4" fill="#dff7f0"/><circle cx="120" cy="220" r="3" fill="#dff7f0"/><circle cx="260" cy="210" r="5" fill="#dff7f0"/><circle cx="330" cy="190" r="3" fill="#dff7f0"/></g>' +
+      '<g transform="translate(210,130) rotate(-10)">' +
+        '<ellipse cx="0" cy="55" rx="34" ry="10" fill="rgba(0,0,0,0.15)"/>' +
+        '<circle cx="0" cy="-24" r="12" fill="#ffcf9e"/>' +
+        '<path d="M-14 -30 q12 -12 26 -2 q2 8 -6 12 q-12 -8 -20 -10z" fill="#3c2415"/>' +
+        '<path d="M-15 -12 q15 -10 30 0 q6 28 -2 48 q16 12 10 36 q-10 22 -28 24 q-20 -2 -26 -22 q-8 -24 8 -36 q-10 -24 8 -50z" fill="#5fd3c4"/>' +
+        '<path d="M-15 84 q15 20 32 6 q-12 24 -40 20 q-14 -16 8 -26z" fill="#3fb6a8"/>' +
+      '</g>' +
+      '<g opacity="0.8" transform="translate(90,160)"><path d="M0 0 q10 -8 20 0 q4 6 -4 8 q-8 -4 -16 -8z" fill="#8fe0d2"/></g>' +
+      '<g opacity="0.6" transform="translate(320,110)"><path d="M0 0 q14 -10 28 0 q6 8 -6 10 q-10 -6 -22 -10z" fill="#8fe0d2"/></g>'
+    );
+  }
+
+  var storyStages = [houseScene, houseScene, marketPathScene, marketPathScene];
+  var choiceStageFn = riverPlayScene;
+  var goodEndingStages = [goodEndingScene1, goodEndingScene2, goodEndingScene2];
+  var badEndingStages = [
+    riverPlayScene,
+    function(){ return transformScene(0); },
+    function(){ return transformScene(2); },
+    seaEndingScene
+  ];
+
+  /* ---------------- narration ---------------- */
+  function stripTags(s){ return s.replace(/<[^>]*>/g,''); }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if(muted) return;
+    var utter = new SpeechSynthesisUtterance(stripTags(text));
+    utter.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    utter.rate = 0.95;
+    utter.pitch = 1.05;
+    var voices = window.speechSynthesis.getVoices();
+    var match = voices.find(function(v){ return v.lang === utter.lang; }) ||
+                voices.find(function(v){ return v.lang && v.lang.indexOf(lang) === 0; });
+    if(match) utter.voice = match;
+    currentUtterance = utter;
+    window.speechSynthesis.speak(utter);
+  }
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
+
+  /* ---------------- screen switching ---------------- */
+  function showScreen(name){
+    [el.screenTitle, el.screenStory, el.screenQte, el.screenChoice, el.screenEnding].forEach(function(s){
+      s.classList.add('hidden');
+    });
+    ({title:el.screenTitle, story:el.screenStory, qte:el.screenQte, choice:el.screenChoice, ending:el.screenEnding})[name].classList.remove('hidden');
+    reportHeight();
+  }
+
+  function renderDots(container, total, index){
+    container.innerHTML = '';
+    for(var i=0;i<total;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i===index ? ' active' : (i<index ? ' done' : ''));
+      container.appendChild(d);
+    }
+  }
+
+  /* ---------------- story flow ---------------- */
+  function renderStory(){
+    var s = STR[lang];
+    el.storyStage.innerHTML = storyStages[storyIndex]();
+    el.storyText.innerHTML = s.story[storyIndex];
+    renderDots(el.progressDots, s.story.length, storyIndex);
+    el.nextBtn.textContent = s.next;
+    speak(s.story[storyIndex]);
+    showScreen('story');
+  }
+  el.nextBtn.addEventListener('click', function(){
+    storyIndex++;
+    if(storyIndex >= STR[lang].story.length){
+      startQte();
+    } else {
+      renderStory();
+    }
+  });
+  el.replayNarration.addEventListener('click', function(){ speak(STR[lang].story[storyIndex]); });
+
+  /* ---------------- QTE mini game ---------------- */
+  var qteCtx, qteBubbles = [], qteScore = 0, qteTimeLeft = 12, qteTimerId = null, qteRafId = null, qteActive=false;
+  function resizeCanvas(){
+    var canvas = el.qteCanvas;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * devicePixelRatio;
+    canvas.height = rect.height * devicePixelRatio;
+    qteCtx = canvas.getContext('2d');
+    qteCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  function spawnBubble(){
+    var w = el.qteCanvas.parentElement.clientWidth;
+    var h = el.qteCanvas.parentElement.clientHeight;
+    var r = 16 + Math.random()*14;
+    qteBubbles.push({
+      x: r + Math.random()*(w-2*r),
+      y: h + r,
+      r: r,
+      vy: 0.6 + Math.random()*0.9,
+      hue: 165 + Math.random()*40,
+      popped:false,
+      popT:0
+    });
+  }
+  function drawQte(){
+    var w = el.qteCanvas.parentElement.clientWidth;
+    var h = el.qteCanvas.parentElement.clientHeight;
+    qteCtx.clearRect(0,0,w,h);
+    for(var i=qteBubbles.length-1;i>=0;i--){
+      var b = qteBubbles[i];
+      if(!b.popped){
+        b.y -= b.vy;
+        qteCtx.beginPath();
+        qteCtx.arc(b.x,b.y,b.r,0,Math.PI*2);
+        var grad = qteCtx.createRadialGradient(b.x-b.r*0.3,b.y-b.r*0.3,1,b.x,b.y,b.r);
+        grad.addColorStop(0,'hsla(' + b.hue + ',80%,85%,0.9)');
+        grad.addColorStop(1,'hsla(' + b.hue + ',70%,55%,0.35)');
+        qteCtx.fillStyle = grad;
+        qteCtx.fill();
+        qteCtx.lineWidth = 1.5;
+        qteCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+        qteCtx.stroke();
+        if(b.y + b.r < 0) qteBubbles.splice(i,1);
+      } else {
+        b.popT += 1;
+        qteCtx.beginPath();
+        qteCtx.arc(b.x,b.y,b.r + b.popT*3,0,Math.PI*2);
+        qteCtx.strokeStyle = 'rgba(255,255,255,' + Math.max(0,0.6-b.popT*0.08) + ')';
+        qteCtx.lineWidth = 2;
+        qteCtx.stroke();
+        if(b.popT > 8) qteBubbles.splice(i,1);
+      }
+    }
+    if(qteActive) qteRafId = requestAnimationFrame(drawQte);
+  }
+  function bubbleHit(clientX, clientY){
+    var rect = el.qteCanvas.getBoundingClientRect();
+    var x = clientX - rect.left;
+    var y = clientY - rect.top;
+    for(var i=qteBubbles.length-1;i>=0;i--){
+      var b = qteBubbles[i];
+      if(b.popped) continue;
+      var dx = x-b.x, dy = y-b.y;
+      if(Math.sqrt(dx*dx+dy*dy) <= b.r+6){
+        b.popped = true; b.popT = 0;
+        qteScore++;
+        el.qteScoreLabel.textContent = STR[lang].qteScore + qteScore;
+        break;
+      }
+    }
+  }
+  function startQte(){
+    var s = STR[lang];
+    el.qteLabel.textContent = s.qteLabel;
+    el.qteHint.textContent = s.qteHint;
+    el.qteScoreLabel.textContent = s.qteScore + '0';
+    qteScore = 0; qteTimeLeft = 12; qteBubbles = [];
+    el.qteContinueBtn.classList.add('hidden');
+    el.qteContinueBtn.textContent = s.next;
+    showScreen('qte');
+    speak(s.qteLabel);
+    setTimeout(function(){
+      resizeCanvas();
+      qteActive = true;
+      drawQte();
+      var spawnId = setInterval(function(){ if(qteActive) spawnBubble(); }, 550);
+      el.qteTimerFill.style.transition = 'none';
+      el.qteTimerFill.style.width = '100%';
+      requestAnimationFrame(function(){
+        el.qteTimerFill.style.transition = 'width ' + qteTimeLeft + 's linear';
+        el.qteTimerFill.style.width = '0%';
+      });
+      qteTimerId = setInterval(function(){
+        qteTimeLeft--;
+        if(qteTimeLeft <= 0){
+          clearInterval(qteTimerId);
+          clearInterval(spawnId);
+          qteActive = false;
+          cancelAnimationFrame(qteRafId);
+          el.qteHint.textContent = STR[lang].qteDone1;
+          speak(STR[lang].qteDone1);
+          el.qteContinueBtn.classList.remove('hidden');
+          reportHeight();
+        }
+      }, 1000);
+    }, 60);
+  }
+  el.qteCanvas.addEventListener('click', function(e){ bubbleHit(e.clientX, e.clientY); });
+  el.qteCanvas.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    var t = e.changedTouches[0];
+    bubbleHit(t.clientX, t.clientY);
+  }, {passive:false});
+  el.qteContinueBtn.addEventListener('click', function(){ startChoice(); });
+
+  /* ---------------- choice ---------------- */
+  function startChoice(){
+    var s = STR[lang];
+    el.choiceStage.innerHTML = choiceStageFn();
+    el.choiceText.textContent = s.choiceQ;
+    el.choicePlayLabel.textContent = s.choicePlay;
+    el.choiceMarketLabel.textContent = s.choiceMarket;
+    showScreen('choice');
+    speak(s.choiceQ);
+  }
+  el.choicePlay.addEventListener('click', function(){ endingPath = 'bad'; endingIndex = 0; renderEnding(); });
+  el.choiceMarket.addEventListener('click', function(){ endingPath = 'good'; endingIndex = 0; renderEnding(); });
+
+  /* ---------------- ending ---------------- */
+  function renderEnding(){
+    var s = STR[lang];
+    var texts = endingPath === 'good' ? s.goodEnding : s.badEnding;
+    var stages = endingPath === 'good' ? goodEndingStages : badEndingStages;
+    el.endingStage.innerHTML = stages[Math.min(endingIndex, stages.length-1)]();
+    el.endingText.textContent = texts[endingIndex];
+    renderDots(el.endingDots, texts.length, endingIndex);
+    speak(texts[endingIndex]);
+
+    var isLast = endingIndex === texts.length - 1;
+    el.endingNextBtn.classList.toggle('hidden', isLast);
+    el.restartBtn.classList.toggle('hidden', !isLast);
+    el.moralBox.classList.toggle('hidden', !isLast);
+    if(isLast){
+      el.moralBox.textContent = endingPath === 'good' ? s.goodMoral : s.badMoral;
+    }
+    showScreen('ending');
+  }
+  el.endingNextBtn.addEventListener('click', function(){
+    endingIndex++;
+    renderEnding();
+  });
+  el.endingReplayNarration.addEventListener('click', function(){
+    var s = STR[lang];
+    var texts = endingPath === 'good' ? s.goodEnding : s.badEnding;
+    speak(texts[endingIndex]);
+  });
+  el.restartBtn.addEventListener('click', function(){
+    storyIndex = 0; endingIndex = 0; endingPath = null;
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    applyLang();
+    showScreen('title');
+  });
+
+  /* ---------------- title screen ---------------- */
+  el.startBtn.addEventListener('click', function(){
+    storyIndex = 0;
+    renderStory();
+  });
+
+  /* ---------------- language & mute controls ---------------- */
+  function applyLang(){
+    var s = STR[lang];
+    document.documentElement.lang = lang;
+    el.brandLabel.textContent = s.brand;
+    el.originBadge.textContent = s.origin;
+    el.titleText.textContent = s.title;
+    el.subText.textContent = s.subtitle;
+    el.startBtn.textContent = s.start;
+    el.langBtnLabel.textContent = s.langBtn;
+    el.muteBtnLabel.textContent = muted ? s.unmute : s.mute;
+    el.replayNarration.textContent = s.replay;
+    el.restartBtn.textContent = s.restart;
+    el.creditsText.textContent = s.credits;
+    el.nextBtn.textContent = s.next;
+    el.endingNextBtn.textContent = s.next;
+  }
+  el.langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    applyLang();
+    // refresh whichever screen is visible with new language text
+    if(!el.screenStory.classList.contains('hidden')) renderStory();
+    else if(!el.screenChoice.classList.contains('hidden')) startChoice();
+    else if(!el.screenEnding.classList.contains('hidden')) renderEnding();
+    else if(!el.screenQte.classList.contains('hidden')){
+      el.qteLabel.textContent = STR[lang].qteLabel;
+      el.qteHint.textContent = el.qteContinueBtn.classList.contains('hidden') ? STR[lang].qteHint : STR[lang].qteDone1;
+      el.qteScoreLabel.textContent = STR[lang].qteScore + qteScore;
+      el.qteContinueBtn.textContent = STR[lang].next;
+    }
+  });
+  el.muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    el.muteBtnLabel.textContent = muted ? STR[lang].unmute : STR[lang].mute;
+    el.soundIcon.style.opacity = muted ? '0.45' : '1';
+    if(muted){ window.speechSynthesis && window.speechSynthesis.cancel(); }
+  });
+
+  /* ---------------- ambient bubbles ---------------- */
+  function spawnAmbientBubble(){
+    var root = document.getElementById('game-root');
+    var b = document.createElement('div');
+    var size = 4 + Math.random()*10;
+    b.className = 'bubble';
+    b.style.width = size+'px';
+    b.style.height = size+'px';
+    b.style.left = Math.random()*100 + '%';
+    b.style.animationDuration = (6 + Math.random()*6) + 's';
+    root.appendChild(b);
+    setTimeout(function(){ b.remove(); }, 13000);
+  }
+  setInterval(spawnAmbientBubble, 1400);
+
+  /* ---------------- auto-resize for iframe embedding ---------------- */
+  function reportHeight(){
+    var h = document.getElementById('game-root').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'resize', height: Math.ceil(h), source:'putri-duyung-sirena' }, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    new ResizeObserver(function(){ reportHeight(); }).observe(document.getElementById('game-root'));
+  }
+  window.addEventListener('resize', function(){ if(qteActive) resizeCanvas(); reportHeight(); });
+  window.addEventListener('load', reportHeight);
+  setTimeout(reportHeight, 300);
+  setTimeout(reportHeight, 1200);
+
+  /* ---------------- init ---------------- */
+  applyLang();
+  showScreen('title');
+})();
+</script>
+</body>
+</html>
