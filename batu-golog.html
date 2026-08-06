@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batu Golog - Cerita Rakyat Nusa Tenggara Barat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#2b1d14;
+    --panel:#3a2a1c;
+    --panel-2:#4a3626;
+    --text:#f7ecd9;
+    --text-dim:#d8c6ac;
+    --accent:#d98e3b;
+    --accent-2:#8fae5d;
+    --accent-3:#c1543a;
+    --sky-top:#8fd0e9;
+    --sky-bottom:#eaf6ff;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Nunito',sans-serif;
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+  }
+  #bg-golog{
+    width:100%;
+    max-width:720px;
+    background:var(--bg);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 4px 24px rgba(0,0,0,0.35);
+    position:relative;
+  }
+  .woven-strip{
+    height:10px;
+    width:100%;
+    background:repeating-linear-gradient(
+      45deg,
+      var(--accent-3) 0 8px,
+      var(--accent) 8px 16px,
+      var(--accent-2) 16px 24px
+    );
+  }
+  header{
+    padding:10px 16px 6px;
+    text-align:center;
+  }
+  header h1{
+    font-family:'Baloo 2',sans-serif;
+    font-size:20px;
+    margin:2px 0 0;
+    color:var(--accent);
+    letter-spacing:0.5px;
+  }
+  header .sub{
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    padding-top:0;
+  }
+  #stage-inner{
+    position:relative;
+    width:100%;
+    aspect-ratio:800/450;
+  }
+  canvas#stage{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .top-controls{
+    position:absolute;
+    top:8px;
+    right:8px;
+    display:flex;
+    gap:6px;
+    z-index:5;
+  }
+  .pill-btn{
+    background:rgba(20,15,10,0.55);
+    border:1px solid rgba(255,255,255,0.25);
+    color:var(--text);
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    backdrop-filter:blur(2px);
+    transition:background 0.15s ease;
+  }
+  .pill-btn:hover{background:rgba(20,15,10,0.8);}
+  .pill-btn.active{background:var(--accent);color:#2b1d14;border-color:var(--accent);}
+
+  #dialogue-box{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    background:linear-gradient(to top, rgba(20,14,10,0.92), rgba(20,14,10,0.72));
+    padding:12px 16px 14px;
+    z-index:4;
+  }
+  #narration-text{
+    font-size:14px;
+    line-height:1.5;
+    color:var(--text);
+    margin:0 0 10px;
+    min-height:42px;
+  }
+  #action-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .progress-wrap{
+    flex:1;
+    min-width:120px;
+    height:10px;
+    background:rgba(255,255,255,0.15);
+    border-radius:6px;
+    overflow:hidden;
+    display:none;
+  }
+  .progress-wrap.show{display:block;}
+  #progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--accent-2),var(--accent));
+    transition:width 0.12s ease;
+  }
+  .main-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:10px 22px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+    background:var(--accent);
+    color:#2b1d14;
+    box-shadow:0 3px 0 #92601f;
+    user-select:none;
+    white-space:nowrap;
+  }
+  .main-btn:active{
+    transform:translateY(2px);
+    box-shadow:0 1px 0 #92601f;
+  }
+  .main-btn.secondary{
+    background:var(--panel-2);
+    color:var(--text);
+    box-shadow:0 3px 0 #241a10;
+  }
+  #bubble{
+    position:absolute;
+    z-index:6;
+    background:#fff;
+    color:#333;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:10px;
+    max-width:160px;
+    text-align:center;
+    box-shadow:0 3px 8px rgba(0,0,0,0.25);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  #bubble:after{
+    content:'';
+    position:absolute;
+    bottom:-8px;left:50%;
+    transform:translateX(-50%);
+    border-width:8px 6px 0 6px;
+    border-style:solid;
+    border-color:#fff transparent transparent transparent;
+  }
+  #title-overlay, #end-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:linear-gradient(180deg, rgba(30,20,12,0.55), rgba(20,14,9,0.85));
+    z-index:8;
+    padding:20px;
+  }
+  #title-overlay h2, #end-overlay h2{
+    font-family:'Baloo 2',sans-serif;
+    font-size:30px;
+    color:var(--accent);
+    margin:0 0 6px;
+    text-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  #title-overlay p, #end-overlay p{
+    font-size:13px;
+    color:var(--text-dim);
+    max-width:380px;
+    margin:0 0 18px;
+  }
+  footer{
+    text-align:center;
+    font-size:10px;
+    color:var(--text-dim);
+    padding:6px 10px 10px;
+    letter-spacing:0.3px;
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="bg-golog">
+  <div class="woven-strip"></div>
+  <header>
+    <h1 id="game-title">Batu Golog</h1>
+    <div class="sub" id="game-sub">Cerita Rakyat &middot; Nusa Tenggara Barat</div>
+  </header>
+
+  <div id="stage-wrap">
+    <div id="stage-inner">
+      <canvas id="stage" width="800" height="450"></canvas>
+
+      <div class="top-controls">
+        <button class="pill-btn" id="lang-btn">🌐 <span id="lang-label">EN</span></button>
+        <button class="pill-btn" id="mute-btn">🔊</button>
+      </div>
+
+      <div id="bubble"></div>
+
+      <div id="title-overlay">
+        <h2 id="t-title">Batu Golog</h2>
+        <p id="t-desc">Sebuah legenda dari Nusa Tenggara Barat, tentang batu ceper yang tiba-tiba tumbuh tinggi membawa serta dua orang anak.</p>
+        <button class="main-btn" id="start-btn">▶ Mulai Cerita</button>
+      </div>
+
+      <div id="end-overlay" class="hidden">
+        <h2 id="e-title">Tamat</h2>
+        <p id="e-desc"></p>
+        <button class="main-btn" id="restart-btn">↺ Main Lagi</button>
+      </div>
+
+      <div id="dialogue-box">
+        <p id="narration-text"></p>
+        <div id="action-row">
+          <div class="progress-wrap" id="progress-wrap">
+            <div id="progress-bar"></div>
+          </div>
+          <button class="main-btn secondary hidden" id="next-btn">Lanjut →</button>
+          <button class="main-btn hidden" id="action-btn">Tumbuk!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>Dongeng interaktif &middot; caritasato.blogspot.com</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- language & speech setup ---------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+  var voices = [];
+
+  function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice(targetLang){
+    if(!voices || !voices.length) return null;
+    var code = targetLang === 'en' ? 'en' : 'id';
+    var exact = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(code) === 0; });
+    if (exact) return exact;
+    if (code === 'id'){
+      return voices.find(function(v){ return /indonesia/i.test(v.name); }) || null;
+    }
+    return voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('en') === 0; }) || null;
+  }
+
+  function speak(text){
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    if (muted || !text) return;
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice(lang);
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.02;
+    speechSynthesis.speak(u);
+  }
+
+  /* ---------------- text content ---------------- */
+  var T = {
+    gameTitle: {id:"Batu Golog", en:"Batu Golog"},
+    gameSub: {id:"Cerita Rakyat &middot; Nusa Tenggara Barat", en:"Folklore &middot; West Nusa Tenggara"},
+    titleDesc: {id:"Sebuah legenda dari Nusa Tenggara Barat, tentang batu ceper yang tiba-tiba tumbuh tinggi membawa serta dua orang anak.",
+                en:"A legend from West Nusa Tenggara, about a flat rock that suddenly grew tall, carrying two children with it."},
+    startBtn: {id:"▶ Mulai Cerita", en:"▶ Start Story"},
+    nextBtn: {id:"Lanjut →", en:"Next →"},
+    restartBtn: {id:"↺ Main Lagi", en:"↺ Play Again"},
+    endTitle: {id:"Tamat", en:"The End"},
+    endDesc: {id:"Pesan cerita: jangan biarkan kesibukan membuat kita lalai mendengarkan orang-orang terkasih di sekitar kita.",
+              en:"Moral of the story: don't let busyness keep us from listening to those we love."}
+  };
+
+  var scenes = [
+    { // 0 intro
+      key:"intro",
+      narration:{
+        id:"Konon, di daerah Padamara dekat Sungai Sawing, Nusa Tenggara Barat, hiduplah sepasang suami istri, Amaq Lembain dan Inaq Lembain, beserta kedua anak mereka. Keluarga ini hidup dalam kemiskinan, bekerja sehari-hari sebagai buruh penumbuk padi.",
+        en:"Long ago, in Padamara near the Sawing River, West Nusa Tenggara, lived a poor couple, Amaq Lembain and Inaq Lembain, together with their two children. Each day they earned a meager living pounding rice for other villagers."
+      },
+      action:null
+    },
+    { // 1 QTE tumbuk
+      key:"work",
+      narration:{
+        id:"Suatu hari, Inaq Lembain bekerja menumbuk padi seperti biasa. Kedua anaknya ia dudukkan di atas sebuah batu ceper, batu golog, di dekatnya. Tekan tombol Tumbuk untuk membantunya bekerja!",
+        en:"One day, Inaq Lembain was pounding rice as usual. She sat her two children on a nearby flat rock, the batu golog. Tap the Pound button to help her work!"
+      },
+      action:{id:"Tumbuk! 🌾", en:"Pound! 🌾"}
+    },
+    { // 2 rising / vanish
+      key:"vanish",
+      narration:{
+        id:"Setiap kali batu itu terguncang oleh tumbukan, batu golog itu diam-diam bertambah tinggi. Anak-anak berteriak memanggil ibunya, namun Inaq Lembain terlalu sibuk untuk mendengar. Batu itu terus meninggi melebihi pohon kelapa, hingga suara anak-anaknya lenyap ditelan awan.",
+        en:"With every strike, the rock quietly grew taller and taller. The children cried out for their mother, but Inaq Lembain was too busy to listen. The rock kept rising past the coconut trees, until the children's voices faded away into the clouds."
+      },
+      action:null
+    },
+    { // 3 realize + pray
+      key:"pray",
+      narration:{
+        id:"Inaq Lembain akhirnya sadar kedua anaknya telah lenyap, terbawa oleh batu yang meninggi. Ia menangis menyesali kelalaiannya, lalu berdoa memohon agar anak-anaknya bisa kembali. Tekan tombol Berdoa.",
+        en:"Inaq Lembain finally realized her children were gone, carried away by the ever-rising rock. Weeping with regret, she prayed for their safe return. Tap the Pray button."
+      },
+      action:{id:"Berdoa 🙏", en:"Pray 🙏"}
+    },
+    { // 4 strike QTE
+      key:"strike",
+      narration:{
+        id:"Doanya dikabulkan. Ia merasa memiliki kekuatan gaib. Dengan sabuknya, Inaq Lembain memukul batu golog itu sekuat tenaga. Tekan tombol Pukul berulang kali!",
+        en:"Her prayer was answered, and she felt a magical strength surge through her. With her belt, Inaq Lembain struck the towering rock with all her might. Tap the Strike button again and again!"
+      },
+      action:{id:"Pukul! 💥", en:"Strike! 💥"}
+    },
+    { // 5 breaking result
+      key:"break",
+      narration:{
+        id:"Batu golog itu terbelah menjadi tiga. Bagian pertama jatuh menggetarkan tanah di tempat yang kelak disebut Desa Gembong. Bagian kedua jatuh di tempat yang disebut Dasan Batu. Dan bagian terakhir jatuh menimbulkan suara gemuruh di tempat bernama Montong Teker.",
+        en:"The rock split into three pieces. The first fell and shook the ground at a place later named Desa Gembong. The second fell at a place called Dasan Batu. And the last landed with a rumble at a place named Montong Teker."
+      },
+      action:null
+    },
+    { // 6 birds ending
+      key:"birds",
+      narration:{
+        id:"Sayangnya, kedua anak Inaq Lembain tidak ikut jatuh ke bumi. Mereka telah berubah menjadi dua ekor burung: si sulung menjadi burung Kekuwo, adiknya menjadi burung Kelik. Konon, hingga kini kedua burung itu tak mampu mengerami telurnya sendiri, karena dahulu mereka adalah manusia.",
+        en:"Sadly, Inaq Lembain's two children never fell back to earth. They had transformed into two birds: the elder became a Kekuwo bird, and the younger a Kelik bird. It is said that, to this day, these birds cannot hatch their own eggs, for they were once human children."
+      },
+      action:null,
+      isEnding:true
+    }
+  ];
+
+  /* ---------------- DOM refs ---------------- */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var narrationEl = document.getElementById('narration-text');
+  var actionBtn = document.getElementById('action-btn');
+  var nextBtn = document.getElementById('next-btn');
+  var progressWrap = document.getElementById('progress-wrap');
+  var progressBar = document.getElementById('progress-bar');
+  var bubble = document.getElementById('bubble');
+  var titleOverlay = document.getElementById('title-overlay');
+  var endOverlay = document.getElementById('end-overlay');
+  var startBtn = document.getElementById('start-btn');
+  var restartBtn = document.getElementById('restart-btn');
+  var langBtn = document.getElementById('lang-btn');
+  var langLabel = document.getElementById('lang-label');
+  var muteBtn = document.getElementById('mute-btn');
+
+  /* ---------------- game state ---------------- */
+  var sceneIdx = -1;
+  var rockProgress = 0;     // 0..1 growth during 'work'
+  var strikeProgress = 0;   // 0..1 during 'strike'
+  var animT = 0;
+  var lastTime = null;
+  var bubbleTimer = 0;
+  var kidsCalling = false;
+
+  var TUMBUK_NEEDED = 14;
+  var STRIKE_NEEDED = 10;
+  var tumbukCount = 0;
+  var strikeCount = 0;
+
+  function txt(key){ return T[key][lang]; }
+  function sceneText(scene){ return scene.narration[lang]; }
+  function actionText(scene){ return scene.action ? scene.action[lang] : ""; }
+
+  function applyStaticLabels(){
+    document.getElementById('game-title').textContent = txt('gameTitle');
+    document.getElementById('game-sub').innerHTML = txt('gameSub');
+    document.getElementById('t-desc').textContent = txt('titleDesc');
+    startBtn.textContent = txt('startBtn');
+    nextBtn.textContent = txt('nextBtn');
+    restartBtn.textContent = txt('restartBtn');
+    document.getElementById('e-title').textContent = txt('endTitle');
+    document.getElementById('e-desc').textContent = txt('endDesc');
+    langLabel.textContent = lang === 'id' ? 'EN' : 'ID';
+    document.documentElement.lang = lang;
+  }
+
+  function showBubble(text, x, y){
+    bubble.textContent = text;
+    bubble.style.left = (x - 80) + 'px';
+    bubble.style.top = y + 'px';
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'translateY(0)';
+    clearTimeout(bubble._t);
+    bubble._t = setTimeout(function(){
+      bubble.style.opacity = '0';
+      bubble.style.transform = 'translateY(-6px)';
+    }, 1600);
+  }
+
+  function renderScene(){
+    var scene = scenes[sceneIdx];
+    narrationEl.textContent = sceneText(scene);
+    speak(sceneText(scene));
+
+    tumbukCount = 0; strikeCount = 0; rockProgressTarget = (scene.key === 'work') ? rockProgress : rockProgress;
+
+    if (scene.action){
+      actionBtn.textContent = actionText(scene);
+      actionBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+      progressWrap.classList.add('show');
+      progressBar.style.width = '0%';
+    } else {
+      actionBtn.classList.add('hidden');
+      progressWrap.classList.remove('show');
+      if (scene.isEnding){
+        nextBtn.classList.add('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+      }
+    }
+
+    if (scene.isEnding){
+      setTimeout(function(){
+        endOverlay.classList.remove('hidden');
+      }, 1200);
+    }
+  }
+
+  function goToScene(i){
+    sceneIdx = i;
+    renderScene();
+  }
+
+  function nextScene(){
+    if (sceneIdx < scenes.length - 1){
+      goToScene(sceneIdx + 1);
+    }
+  }
+
+  var rockProgressTarget = 0;
+
+  function handleAction(){
+    var scene = scenes[sceneIdx];
+    if (!scene.action) return;
+
+    if (scene.key === 'work'){
+      tumbukCount++;
+      rockProgress = Math.min(1, tumbukCount / TUMBUK_NEEDED);
+      progressBar.style.width = (rockProgress*100) + '%';
+      if (tumbukCount % 4 === 0 && tumbukCount < TUMBUK_NEEDED){
+        var line = lang === 'id' ? "Ibu... batu ini semakin tinggi!" : "Mother... this rock is getting taller!";
+        showBubble(line, 560, 90);
+      }
+      if (tumbukCount >= TUMBUK_NEEDED){
+        actionBtn.classList.add('hidden');
+        progressWrap.classList.remove('show');
+        setTimeout(nextScene, 900);
+      }
+    } else if (scene.key === 'pray'){
+      strikeCount++;
+      var need = 4;
+      rockProgress = Math.min(1, strikeCount/need);
+      progressBar.style.width = (rockProgress*100) + '%';
+      if (strikeCount >= need){
+        actionBtn.classList.add('hidden');
+        progressWrap.classList.remove('show');
+        setTimeout(nextScene, 900);
+      }
+    } else if (scene.key === 'strike'){
+      strikeCount++;
+      strikeProgress = Math.min(1, strikeCount / STRIKE_NEEDED);
+      progressBar.style.width = (strikeProgress*100) + '%';
+      if (strikeCount >= STRIKE_NEEDED){
+        actionBtn.classList.add('hidden');
+        progressWrap.classList.remove('show');
+        setTimeout(nextScene, 700);
+      }
+    }
+  }
+
+  /* ---------------- drawing ---------------- */
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  function drawSky(t, cloudDrift){
+    var g = ctx.createLinearGradient(0,0,0,320);
+    g.addColorStop(0, '#7cc3e6');
+    g.addColorStop(1, '#eaf6ff');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,800,320);
+
+    // sun
+    ctx.fillStyle = 'rgba(255,236,180,0.9)';
+    ctx.beginPath(); ctx.arc(690,60,34,0,Math.PI*2); ctx.fill();
+
+    // clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    drawCloud(80 + (cloudDrift||0), 60, 1);
+    drawCloud(300 + (cloudDrift||0)*0.6, 40, 0.8);
+    drawCloud(520 + (cloudDrift||0)*0.4, 80, 0.9);
+    drawCloud(150 + (cloudDrift||0)*0.8, 130, 0.6);
+  }
+
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.beginPath();
+    ctx.arc(0,0,18,0,Math.PI*2);
+    ctx.arc(20,-8,22,0,Math.PI*2);
+    ctx.arc(42,0,16,0,Math.PI*2);
+    ctx.arc(18,10,20,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGround(){
+    var g = ctx.createLinearGradient(0,320,0,450);
+    g.addColorStop(0,'#8bc06a');
+    g.addColorStop(1,'#5f9440');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,320,800,130);
+    // path
+    ctx.fillStyle = '#c9a876';
+    ctx.beginPath();
+    ctx.moveTo(0,410);
+    ctx.quadraticCurveTo(200,380,400,400);
+    ctx.quadraticCurveTo(600,420,800,395);
+    ctx.lineTo(800,450); ctx.lineTo(0,450);
+    ctx.fill();
+  }
+
+  function drawHouse(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // walls
+    ctx.fillStyle = '#f0e6d2';
+    ctx.fillRect(-45,-10,90,55);
+    // roof
+    ctx.fillStyle = '#b5533c';
+    ctx.beginPath();
+    ctx.moveTo(-58,-10);
+    ctx.lineTo(0,-55);
+    ctx.lineTo(58,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#8c3f2c';
+    ctx.fillRect(-58,-14,116,8);
+    // door
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(-10,15,20,30);
+    // window
+    ctx.fillStyle = '#6d94ad';
+    ctx.fillRect(-35,0,16,16);
+    ctx.fillRect(19,0,16,16);
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(-4,-10,8,40);
+    ctx.fillStyle = '#4c7a34';
+    ctx.beginPath();
+    ctx.arc(0,-30,7,0,Math.PI*2);
+    ctx.moveTo(-14,-10); ctx.lineTo(0,-38); ctx.lineTo(14,-10);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,opts){
+    opts = opts||{};
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    var bodyColor = opts.bodyColor || '#c1543a';
+    var skin = '#e8b98a';
+    // body
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.moveTo(-12,20);
+    ctx.quadraticCurveTo(-14,-8,0,-12);
+    ctx.quadraticCurveTo(14,-8,12,20);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-22,10,0,Math.PI*2);
+    ctx.fill();
+    // hair / headscarf
+    ctx.fillStyle = opts.hair || '#2c1c10';
+    ctx.beginPath();
+    ctx.arc(0,-25,10,Math.PI, Math.PI*2);
+    ctx.fill();
+    if (opts.arm){
+      ctx.strokeStyle = skin;
+      ctx.lineWidth = 5;
+      ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(8,-6);
+      ctx.lineTo(opts.arm.x, opts.arm.y);
+      ctx.stroke();
+    }
+    if (opts.tool === 'pestle'){
+      ctx.strokeStyle = '#7a5230';
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      var swing = opts.swing || 0;
+      ctx.save();
+      ctx.translate(10,-6);
+      ctx.rotate(swing);
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(0,-46);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawMortar(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b3d24';
+    ctx.beginPath();
+    ctx.moveTo(-16,0);
+    ctx.lineTo(16,0);
+    ctx.lineTo(11,20);
+    ctx.lineTo(-11,20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e9dcb8';
+    ctx.beginPath();
+    ctx.ellipse(0,0,16,5,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRock(x,y,height,widthTop){
+    // height grows upward from ground y
+    var w = widthTop || 46;
+    ctx.save();
+    ctx.fillStyle = '#9c9184';
+    ctx.strokeStyle = '#79705f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - w*1.15, y);
+    ctx.quadraticCurveTo(x - w, y-height, x, y-height-8);
+    ctx.quadraticCurveTo(x + w, y-height, x + w*1.15, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // texture lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1.5;
+    for (var i=1;i<5;i++){
+      var yy = y - height*i/5;
+      ctx.beginPath();
+      ctx.moveTo(x - w*0.9*(i/5+0.3), yy);
+      ctx.lineTo(x + w*0.9*(i/5+0.3), yy);
+      ctx.stroke();
+    }
+    // flat top platform
+    ctx.fillStyle = '#a9a08f';
+    ctx.beginPath();
+    ctx.ellipse(x, y-height-8, w, 10, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBirdShape(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0,0,10,6,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-6,-2); ctx.lineTo(-16,-8); ctx.lineTo(-6,2);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(9,-2,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e8a23a';
+    ctx.beginPath();
+    ctx.moveTo(13,-2); ctx.lineTo(18,0); ctx.lineTo(13,1);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFragment(x,y,rot,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.rotate(rot); ctx.scale(scale,scale);
+    ctx.fillStyle = '#9c9184';
+    ctx.strokeStyle = '#79705f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-16,10);
+    ctx.lineTo(0,-16);
+    ctx.lineTo(16,8);
+    ctx.lineTo(6,16);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw(now){
+    if (lastTime === null) lastTime = now;
+    var dt = (now - lastTime)/1000;
+    lastTime = now;
+    animT += dt;
+
+    ctx.clearRect(0,0,800,450);
+
+    if (sceneIdx < 0){
+      requestAnimationFrame(draw);
+      return;
+    }
+
+    var scene = scenes[sceneIdx];
+    var drift = (animT*6) % 800;
+
+    if (scene.key === 'intro'){
+      drawSky(animT, drift*0.2);
+      drawGround();
+      drawTree(90,340,1);
+      drawTree(700,330,0.9);
+      drawHouse(150,330,1);
+      drawPerson(300,340,1.1,{bodyColor:'#c1543a', hair:'#2c1c10'});
+      drawPerson(340,345,0.6,{bodyColor:'#8fae5d'});
+      drawPerson(370,348,0.55,{bodyColor:'#d98e3b'});
+      drawPerson(260,335,1.15,{bodyColor:'#5b7fae', hair:'#1c130b'});
+    }
+
+    else if (scene.key === 'work'){
+      drawSky(animT, drift*0.2);
+      drawGround();
+      drawTree(80,340,1);
+      drawTree(720,335,0.9);
+      var h = lerp(0, 210, rockProgress);
+      drawRock(430, 380, h, lerp(46,30,rockProgress*0.4));
+      // kids on top of rock
+      var kidY = 380 - h - 20;
+      drawPerson(420, kidY, 0.55, {bodyColor:'#8fae5d'});
+      drawPerson(444, kidY, 0.5, {bodyColor:'#d98e3b'});
+      // mother pounding rice at left
+      drawMortar(230,392,1);
+      var swing = Math.sin(animT*8) * 0.35 - 0.1;
+      drawPerson(230, 372, 1.1, {bodyColor:'#c1543a', hair:'#2c1c10', tool:'pestle', swing:swing});
+    }
+
+    else if (scene.key === 'vanish'){
+      drawSky(animT, drift*0.15);
+      drawGround();
+      drawTree(80,340,1);
+      var hh = lerp(210, 340, Math.min(1, animT/2.2));
+      drawRock(430, 380, hh, 26);
+      var ky = 380 - hh - 20;
+      var fade = Math.max(0, 1 - (hh-260)/60);
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.15, fade);
+      drawPerson(420, ky, 0.5, {bodyColor:'#8fae5d'});
+      drawPerson(444, ky, 0.46, {bodyColor:'#d98e3b'});
+      ctx.restore();
+      drawMortar(230,392,1);
+      drawPerson(230, 372, 1.1, {bodyColor:'#c1543a', hair:'#2c1c10'});
+    }
+
+    else if (scene.key === 'pray'){
+      drawSky(animT, drift*0.1);
+      drawGround();
+      drawRock(430,380,340,26);
+      // glow
+      var glow = 0.3 + 0.2*Math.sin(animT*4);
+      ctx.save();
+      ctx.globalAlpha = glow * rockProgress;
+      var g2 = ctx.createRadialGradient(250,340,5,250,340,80);
+      g2.addColorStop(0,'rgba(255,236,150,0.9)');
+      g2.addColorStop(1,'rgba(255,236,150,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(250,340,80,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      drawPerson(250, 350, 1.2, {bodyColor:'#c1543a', hair:'#2c1c10', arm:{x:-4,y:-30}});
+    }
+
+    else if (scene.key === 'strike'){
+      drawSky(animT, drift*0.1);
+      drawGround();
+      var shake = strikeProgress > 0 ? Math.sin(animT*40)*strikeProgress*4 : 0;
+      ctx.save();
+      ctx.translate(shake,0);
+      drawRock(430,380,340,26);
+      ctx.restore();
+      var glowA = 0.35 + 0.25*Math.sin(animT*6);
+      ctx.save();
+      ctx.globalAlpha = glowA;
+      var g3 = ctx.createRadialGradient(300,350,5,300,350,90);
+      g3.addColorStop(0,'rgba(255,220,140,0.85)');
+      g3.addColorStop(1,'rgba(255,220,140,0)');
+      ctx.fillStyle = g3;
+      ctx.beginPath(); ctx.arc(300,350,90,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      var strikeSwing = Math.sin(animT*10)*0.4;
+      drawPerson(300, 355, 1.2, {bodyColor:'#c1543a', hair:'#2c1c10', arm:{x:24 + strikeSwing*20, y:-16}});
+      // cracks
+      if (strikeProgress > 0.2){
+        ctx.strokeStyle = 'rgba(40,30,20,'+Math.min(0.8,strikeProgress)+')';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(430,220); ctx.lineTo(410,260); ctx.lineTo(440,300);
+        ctx.stroke();
+      }
+    }
+
+    else if (scene.key === 'break'){
+      drawSky(animT, drift*0.08);
+      drawGround();
+      var prog = Math.min(1, animT/2.5);
+      // three fragments falling and landing at labeled spots
+      var spots = [
+        {x:170, y:400, label: lang==='id'?'Desa Gembong':'Desa Gembong', delay:0},
+        {x:400, y:410, label: lang==='id'?'Dasan Batu':'Dasan Batu', delay:0.5},
+        {x:640, y:395, label: lang==='id'?'Montong Teker':'Montong Teker', delay:1.0}
+      ];
+      spots.forEach(function(s, i){
+        var localT = Math.max(0, Math.min(1, (animT - s.delay)/1.2));
+        var fy = lerp(20, s.y, easeOutBounce(localT));
+        drawFragment(s.x, fy, i*0.6 + animT*0.3, 1.3);
+        if (localT > 0.9){
+          ctx.fillStyle = 'rgba(20,14,10,0.75)';
+          ctx.font = "bold 12px 'Nunito', sans-serif";
+          ctx.textAlign = 'center';
+          ctx.fillText(s.label, s.x, s.y + 26);
+        }
+      });
+    }
+
+    else if (scene.key === 'birds'){
+      drawSky(animT, drift*0.25);
+      drawGround();
+      drawHouse(150,330,1);
+      drawPerson(280, 350, 1.15, {bodyColor:'#c1543a', hair:'#2c1c10'});
+      var by = lerp(150, 60, Math.min(1, animT/2.5));
+      var wobble = Math.sin(animT*4)*10;
+      drawBirdShape(420 + wobble, by, 2.4, '#5b4632');
+      drawBirdShape(470 - wobble, by-20, 2.1, '#7a5a3a');
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  function easeOutBounce(t){
+    var n1 = 7.5625, d1 = 2.75;
+    if (t < 1/d1) return n1*t*t;
+    else if (t < 2/d1) return n1*(t-=1.5/d1)*t + 0.75;
+    else if (t < 2.5/d1) return n1*(t-=2.25/d1)*t + 0.9375;
+    else return n1*(t-=2.625/d1)*t + 0.984375;
+  }
+
+  /* ---------------- events ---------------- */
+  startBtn.addEventListener('click', function(){
+    titleOverlay.classList.add('hidden');
+    goToScene(0);
+  });
+
+  restartBtn.addEventListener('click', function(){
+    endOverlay.classList.add('hidden');
+    rockProgress = 0; strikeProgress = 0; tumbukCount = 0; strikeCount = 0; animT = 0;
+    goToScene(0);
+  });
+
+  nextBtn.addEventListener('click', nextScene);
+  actionBtn.addEventListener('click', handleAction);
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    applyStaticLabels();
+    if (sceneIdx >= 0){
+      renderScene();
+    }
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+    if (muted && window.speechSynthesis){
+      speechSynthesis.cancel();
+    } else if (!muted && sceneIdx >= 0){
+      speak(sceneText(scenes[sceneIdx]));
+    }
+  });
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function reportHeight(){
+    var h = document.getElementById('bg-golog').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'caritasatoGameHeight', game:'batu-golog', height: Math.ceil(h) }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  if (window.ResizeObserver){
+    new ResizeObserver(reportHeight).observe(document.getElementById('bg-golog'));
+  } else {
+    setInterval(reportHeight, 800);
+  }
+
+  /* ---------------- init ---------------- */
+  applyStaticLabels();
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
