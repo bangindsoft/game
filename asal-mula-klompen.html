@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Klompen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-sky-top:#fdf1d6;
+    --bg-sky-bottom:#f6dfae;
+    --wood:#8a5a2b;
+    --wood-dark:#6b431f;
+    --wood-light:#c98a4b;
+    --leaf:#4f7a3c;
+    --leaf-dark:#3a5c2c;
+    --panel:#fffaf0;
+    --panel-border:#e3c893;
+    --ink:#4a3520;
+    --accent:#d1512d;
+    --accent-dark:#a53d20;
+    --fairy:#8ee3d8;
+    --gold:#e8b23c;
+    --shadow: 0 6px 16px rgba(74,53,32,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Quicksand', 'Segoe UI', sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg, var(--bg-sky-top), var(--bg-sky-bottom));
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    border:1px solid #e8d3a3;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(180deg,#7a4a24,#5f3818);
+    color:#fff2dc;
+  }
+  #topbar .title{
+    font-family:'Patrick Hand', cursive;
+    font-size:1.25rem;
+    letter-spacing:0.3px;
+  }
+  #topbar .title small{
+    display:block;
+    font-family:'Quicksand',sans-serif;
+    font-size:0.62rem;
+    font-weight:600;
+    opacity:0.85;
+    letter-spacing:0.5px;
+  }
+  #topbar .controls{display:flex; gap:8px;}
+  #topbar button{
+    background:#8a5a2b;
+    border:1px solid #a9723f;
+    color:#fff2dc;
+    border-radius:10px;
+    padding:6px 10px;
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    cursor:pointer;
+    transition:transform .15s ease, background .15s ease;
+  }
+  #topbar button:hover{background:#a9723f; transform:translateY(-1px);}
+  #topbar button:active{transform:translateY(0);}
+
+  #stage{
+    position:relative;
+    padding:18px 16px 14px;
+  }
+  #scene{
+    position:relative;
+    min-height:260px;
+    border-radius:14px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#bfe3c9 0%, #a7d6b3 55%, #8fc79c 100%);
+    border:1px solid #d8c191;
+    box-shadow:inset 0 0 0 4px rgba(255,255,255,0.25);
+  }
+  .ground{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    height:34%;
+    background:linear-gradient(180deg,#7fbb8b,#5f9c6c);
+    border-top:3px solid #4d8558;
+  }
+  .sun{
+    position:absolute; top:14px; right:20px;
+    width:46px; height:46px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff2c2, var(--gold));
+    box-shadow:0 0 24px rgba(232,178,60,0.7);
+  }
+  .cloud{
+    position:absolute; background:#fff; opacity:0.85; border-radius:50px;
+  }
+
+  .tree{
+    position:absolute;
+    bottom:26%;
+  }
+  .tree .trunk{
+    width:16px; height:70px; background:var(--wood-dark);
+    margin:0 auto; border-radius:4px;
+  }
+  .tree .canopy{
+    width:86px; height:86px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #6c9c53, var(--leaf-dark));
+    margin-bottom:-18px; margin-left:-6px;
+  }
+  .tree .canopy.small{ width:64px; height:64px; margin-left:8px;}
+
+  .twig{
+    position:absolute;
+    width:34px; height:10px;
+    background:var(--wood);
+    border-radius:6px;
+    box-shadow:0 2px 3px rgba(0,0,0,0.25);
+    cursor:pointer;
+    transform:rotate(var(--rot,10deg));
+    transition:transform .12s ease, opacity .25s ease;
+  }
+  .twig:hover{ transform:rotate(var(--rot,10deg)) scale(1.12); }
+  .twig.collected{
+    opacity:0;
+    transform:translateY(-30px) rotate(360deg) scale(0.4) !important;
+    pointer-events:none;
+  }
+
+  .fairy{
+    position:absolute;
+    width:34px; height:34px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #ffffff, var(--fairy));
+    box-shadow:0 0 18px rgba(142,227,216,0.9);
+    animation:float 2.6s ease-in-out infinite;
+  }
+  .fairy::before, .fairy::after{
+    content:'';
+    position:absolute; top:6px;
+    width:20px; height:26px;
+    background:rgba(255,255,255,0.55);
+    border-radius:60% 60% 60% 60%;
+  }
+  .fairy::before{ left:-14px; transform:rotate(-18deg);}
+  .fairy::after{ right:-14px; transform:rotate(18deg);}
+  @keyframes float{
+    0%,100%{ transform:translateY(0);}
+    50%{ transform:translateY(-10px);}
+  }
+
+  .woodcutter{
+    position:absolute; bottom:26%;
+    width:44px; height:74px;
+  }
+  .woodcutter .head{
+    width:20px; height:20px; border-radius:50%;
+    background:#e8b487; margin:0 auto;
+  }
+  .woodcutter .hat{
+    width:26px; height:12px; border-radius:6px 6px 0 0;
+    background:var(--accent); margin:0 auto; margin-bottom:-4px;
+  }
+  .woodcutter .body{
+    width:30px; height:38px; border-radius:8px;
+    background:#5c7a99; margin:2px auto 0;
+  }
+  .woodcutter .legs{
+    width:26px; height:16px; background:var(--wood-dark);
+    margin:0 auto; border-radius:0 0 6px 6px;
+  }
+
+  .oak{
+    position:absolute; bottom:26%; left:50%;
+    transform:translateX(-50%);
+    transition:transform .6s ease;
+    transform-origin:bottom center;
+  }
+  .oak .trunk{ width:26px; height:110px; background:var(--wood-dark); margin:0 auto; border-radius:4px;}
+  .oak .canopy{ width:150px; height:150px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #6c9c53, #345328);
+    margin-bottom:-30px; margin-left:-12px;
+  }
+  .oak.falling{ transform:translateX(-50%) rotate(78deg) translateY(10px); }
+  .chopmark{
+    position:absolute; width:14px; height:6px; background:#3a2a15;
+    border-radius:2px;
+  }
+
+  .house{
+    position:absolute; bottom:26%; right:8%;
+    width:110px;
+  }
+  .house .roof{
+    width:0; height:0;
+    border-left:60px solid transparent;
+    border-right:60px solid transparent;
+    border-bottom:44px solid var(--accent-dark);
+  }
+  .house .wall{
+    width:100px; height:64px; background:#e9d3a3;
+    border:3px solid var(--wood-dark);
+    margin-left:5px;
+  }
+  .house .door{
+    width:26px; height:38px; background:var(--wood-dark);
+    border-radius:6px 6px 0 0; margin:16px auto 0;
+  }
+
+  .woodpile{
+    position:absolute; bottom:26%;
+    display:flex; gap:2px;
+  }
+  .log{
+    width:12px; height:22px; background:var(--wood);
+    border-radius:2px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.3);
+    transition:all .8s ease;
+  }
+  .log.morphed{
+    width:30px; height:16px;
+    background:linear-gradient(180deg, var(--wood-light), var(--wood-dark));
+    border-radius:50% 55% 25% 60% / 60% 65% 40% 40%;
+  }
+
+  .sparkle{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background:#fff8d6; box-shadow:0 0 8px 2px rgba(255,240,180,0.9);
+    animation:sparkle 1.2s ease-in-out infinite;
+  }
+  @keyframes sparkle{
+    0%,100%{ opacity:0; transform:scale(0.4);}
+    50%{ opacity:1; transform:scale(1.1);}
+  }
+
+  .stall{
+    position:absolute; bottom:26%; left:50%; transform:translateX(-50%);
+    width:180px; height:90px;
+  }
+  .stall .top{
+    width:0;height:0;
+    border-left:100px solid transparent;
+    border-right:100px solid transparent;
+    border-bottom:26px solid var(--accent);
+    margin-left:-10px;
+  }
+  .stall .table{
+    width:180px; height:14px; background:var(--wood-dark); margin-top:24px; border-radius:3px;
+  }
+  .stall .legA, .stall .legB{
+    width:8px; height:38px; background:var(--wood-dark); position:absolute; bottom:0;
+  }
+  .stall .legA{ left:16px; } .stall .legB{ right:16px; }
+
+  .clog{
+    width:34px; height:20px;
+    background:linear-gradient(180deg, var(--wood-light), var(--wood-dark));
+    border-radius:55% 55% 25% 60% / 65% 65% 40% 40%;
+    box-shadow:0 2px 3px rgba(0,0,0,0.3);
+  }
+
+  .customer{
+    position:absolute; bottom:26%;
+    width:34px; height:60px;
+    cursor:pointer;
+    transition:left 3.2s linear, opacity .3s ease;
+  }
+  .customer .head{ width:16px;height:16px;border-radius:50%; margin:0 auto; }
+  .customer .body{ width:24px;height:30px;border-radius:8px; margin:2px auto 0; }
+  .customer.sold{ opacity:0; transform:scale(0.4) translateY(-14px); }
+
+  #dialogueBox{
+    margin-top:12px;
+    background:var(--panel);
+    border:2px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px 16px;
+    box-shadow:var(--shadow);
+  }
+  #dialogueText{
+    margin:0 0 10px;
+    font-size:1.02rem;
+    line-height:1.5;
+  }
+  #dialogueSpeaker{
+    font-family:'Patrick Hand', cursive;
+    font-size:1rem;
+    color:var(--accent-dark);
+    margin:0 0 2px;
+    font-weight:700;
+  }
+  #dialogueActions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn{
+    background:var(--accent);
+    color:#fff8ea;
+    border:none;
+    border-radius:10px;
+    padding:10px 18px;
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:0.92rem;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--accent-dark);
+    transition:transform .1s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--accent-dark); }
+  .btn.secondary{
+    background:#fff; color:var(--accent-dark); border:2px solid var(--accent);
+    box-shadow:none;
+  }
+
+  .progress-wrap{
+    flex:1 1 100%;
+    background:#e8d9b8; border-radius:8px; height:12px; overflow:hidden;
+    border:1px solid #d3bd88;
+  }
+  .progress-bar{ height:100%; width:0%; background:var(--leaf); transition:width .2s ease; }
+  .hint{ font-size:0.82rem; opacity:0.75; flex:1 1 100%; margin-top:2px;}
+  .counter{ font-weight:700; color:var(--accent-dark); }
+
+  .title-screen{
+    text-align:center; padding:30px 10px;
+  }
+  .title-screen h1{
+    font-family:'Patrick Hand', cursive;
+    font-size:2rem; margin:6px 0 2px; color:var(--accent-dark);
+  }
+  .title-screen p{ margin:4px 0 18px; font-size:0.95rem; }
+  .clog-hero{
+    width:90px; height:56px; margin:6px auto 10px;
+    background:linear-gradient(180deg, var(--wood-light), var(--wood-dark));
+    border-radius:55% 55% 25% 60% / 65% 65% 40% 40%;
+    box-shadow:0 6px 8px rgba(0,0,0,0.25);
+  }
+  .factbox{
+    margin-top:10px; background:#fff3d2; border:1px dashed var(--gold);
+    border-radius:10px; padding:10px 12px; font-size:0.86rem;
+  }
+  #creditline{
+    text-align:center; font-size:0.68rem; opacity:0.55; padding:8px 0 2px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="gameTitle">Asal Mula Klompen<small id="gameSubtitle">Dongeng Anak Belanda</small></div>
+    <div class="controls">
+      <button id="muteBtn" title="Mute/Unmute">🔊</button>
+      <button id="langBtn" title="Ganti Bahasa">EN</button>
+    </div>
+  </div>
+  <div id="stage">
+    <div id="scene"></div>
+    <div id="dialogueBox">
+      <p id="dialogueSpeaker" style="display:none;"></p>
+      <p id="dialogueText"></p>
+      <div id="dialogueActions"></div>
+    </div>
+  </div>
+  <div id="creditline">caritasato.blogspot.com &middot; Dongeng Anak Belanda</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- STATE ---------------- */
+  var params = new URLSearchParams(location.search);
+  var state = {
+    lang: params.get('lang') === 'en' ? 'en' : 'id',
+    muted: localStorage.getItem('klompenMuted') === '1',
+    step: 'title',
+    twigsTotal: 7,
+    twigsCollected: 0,
+    chopsNeeded: 6,
+    chopsDone: 0,
+    customersSold: 0,
+    customersTotal: 8,
+    marketTimer: null,
+    marketSpawnTimer: null
+  };
+
+  /* ---------------- TEXT ---------------- */
+  var T = {
+    id: {
+      title: "Asal Mula Klompen",
+      subtitle: "Dongeng Anak Belanda",
+      start: "Mulai Cerita",
+      langBtnLabel: "EN",
+      introText: "Alkisah di Negeri Belanda, hiduplah seorang pencari kayu bakar baik hati bernama Van Eyck. Setiap hari ia mengumpulkan ranting-ranting kering di hutan untuk dijual di pasar. Van Eyck tak pernah menebang pohon, karena ia tahu para peri hutan tinggal di sana.",
+      forestInstruction: "Bantu Van Eyck mengumpulkan ranting-ranting kayu sebelum waktu habis!",
+      forestHint: "Ketuk atau klik setiap ranting di hutan.",
+      forestDone: "Kerja bagus! Van Eyck berhasil mengumpulkan ranting-ranting kayu hari ini.",
+      forestNext: "Lanjutkan",
+      fairySpeaker: "Peri Hutan",
+      fairyIntro: "Suatu hari, seekor peri hutan mendatangi Van Eyck dengan permintaan istimewa.",
+      fairyLine: "\u201cPohon ek tempat tinggalku sudah tua, Van Eyck. Sebaiknya kau tebang pohon ini sebelum tumbang ditiup angin. Ambillah kayu-kayu terbaik, jemur hingga kering, lalu simpan di rumahmu.\u201d",
+      fairyReply: "Van Eyck pun setuju memenuhi permintaan sang peri.",
+      chopInstruction: "Klik tombol \u201cTebang!\u201d berulang kali untuk menumbangkan pohon ek tua itu.",
+      chopBtn: "Tebang!",
+      chopDone: "Pohon ek tua akhirnya tumbang. Van Eyck memilih potongan-potongan kayu terbaik dan membawanya pulang untuk dijemur.",
+      nightIntro: "Malam itu, tanpa sepengetahuan Van Eyck, para peri hutan diam-diam masuk ke rumahnya membawa cahaya ajaib.",
+      nightMagic: "Mereka menyihir potongan-potongan kayu itu... menjadi sepatu-sepatu kayu yang cantik!",
+      nightNext: "Lihat Keajaibannya",
+      morningText: "Keesokan paginya, Van Eyck sangat terkejut. Kayu-kayunya telah berubah menjadi sepatu-sepatu indah! Ia pun membawanya ke pasar untuk dijual.",
+      marketInstruction: "Banyak orang penasaran dengan sepatu ajaib itu! Klik para pembeli yang lewat untuk menjual sepatu sebelum mereka pergi.",
+      marketGo: "Mulai Berjualan",
+      marketDone: "Semua orang menyukai sepatu kayu buatan Van Eyck!",
+      marketSold: "terjual",
+      buyerLine: "\u201cApa nama sepatu kayu ini?\u201d tanya seorang pembeli.",
+      vanEyckLine: "\u201cNamanya klompen,\u201d jawab Van Eyck sambil tersenyum.",
+      endingText: "Sejak saat itu, Van Eyck menjadi penjual sepatu klompen. Semakin lama semakin banyak orang menyukainya, hingga akhirnya klompen menjadi salah satu ciri khas Negeri Belanda.",
+      endingFact: "Tahukah kamu? Klompen asli biasanya dibuat dari kayu poplar atau willow (dedalu), dan masih dipakai petani Belanda hingga sekarang karena nyaman serta tahan air!",
+      restart: "Main Lagi",
+      continueBtn: "Lanjutkan"
+    },
+    en: {
+      title: "The Origin of Klompen",
+      subtitle: "A Dutch Children's Tale",
+      start: "Start the Story",
+      langBtnLabel: "ID",
+      introText: "Once upon a time in the Netherlands, there lived a kind woodcutter named Van Eyck. Every day he gathered fallen branches in the forest to sell at the market. Van Eyck never cut down trees, because he knew forest fairies lived in them.",
+      forestInstruction: "Help Van Eyck gather wood branches before time runs out!",
+      forestHint: "Tap or click each branch in the forest.",
+      forestDone: "Well done! Van Eyck gathered plenty of branches today.",
+      forestNext: "Continue",
+      fairySpeaker: "Forest Fairy",
+      fairyIntro: "One day, a forest fairy came to Van Eyck with a special request.",
+      fairyLine: "\u201cMy old oak tree is very old, Van Eyck. You should cut it down before the wind blows it over. Take the finest pieces of wood, let them dry, then keep them in your house.\u201d",
+      fairyReply: "Van Eyck agreed to grant the fairy's wish.",
+      chopInstruction: "Click the \u201cChop!\u201d button again and again to fell the old oak tree.",
+      chopBtn: "Chop!",
+      chopDone: "The old oak finally fell. Van Eyck chose the finest pieces of wood and carried them home to dry.",
+      nightIntro: "That night, without Van Eyck knowing, the forest fairies quietly entered his house carrying magical light.",
+      nightMagic: "They cast a spell on the wood... turning it into beautiful wooden shoes!",
+      nightNext: "See the Magic",
+      morningText: "The next morning, Van Eyck was amazed. His wood had turned into beautiful shoes! He carried them to the market to sell.",
+      marketInstruction: "Many people were curious about the magical shoes! Click the passing customers to sell a pair before they walk away.",
+      marketGo: "Start Selling",
+      marketDone: "Everyone loved the wooden shoes Van Eyck made!",
+      marketSold: "sold",
+      buyerLine: "\u201cWhat are these wooden shoes called?\u201d asked a customer.",
+      vanEyckLine: "\u201cThey're called klompen,\u201d Van Eyck answered with a smile.",
+      endingText: "From that day on, Van Eyck became a klompen shoemaker. More and more people loved them, until klompen became one of the most famous symbols of the Netherlands.",
+      endingFact: "Did you know? Traditional klompen are usually made from poplar or willow wood, and are still worn by Dutch farmers today because they're comfortable and waterproof!",
+      restart: "Play Again",
+      continueBtn: "Continue"
+    }
+  };
+
+  function t(key){ return T[state.lang][key]; }
+
+  /* ---------------- SPEECH ---------------- */
+  var synth = window.speechSynthesis;
+  function speak(text){
+    if(!synth || state.muted || !text) return;
+    try{
+      synth.cancel();
+      var clean = text.replace(/[\u201c\u201d]/g,'"');
+      var utter = new SpeechSynthesisUtterance(clean);
+      utter.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+      utter.rate = 0.95;
+      utter.pitch = 1.05;
+      synth.speak(utter);
+    }catch(e){}
+  }
+  function stopSpeak(){ if(synth){ try{ synth.cancel(); }catch(e){} } }
+
+  /* ---------------- DOM refs ---------------- */
+  var sceneEl = document.getElementById('scene');
+  var dTextEl = document.getElementById('dialogueText');
+  var dSpeakerEl = document.getElementById('dialogueSpeaker');
+  var dActionsEl = document.getElementById('dialogueActions');
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  var gameTitleEl = document.getElementById('gameTitle');
+
+  function updateChrome(){
+    document.documentElement.lang = state.lang;
+    gameTitleEl.childNodes[0].nodeValue = t('title');
+    document.getElementById('gameSubtitle').textContent = t('subtitle');
+    langBtn.textContent = t('langBtnLabel');
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  }
+
+  function setDialogue(speaker, text, narrate){
+    if(speaker){ dSpeakerEl.style.display='block'; dSpeakerEl.textContent = speaker; }
+    else { dSpeakerEl.style.display='none'; }
+    dTextEl.textContent = text;
+    dActionsEl.innerHTML = '';
+    if(narrate !== false) speak(text);
+  }
+
+  function addButton(label, onClick, secondary){
+    var b = document.createElement('button');
+    b.className = 'btn' + (secondary ? ' secondary' : '');
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    dActionsEl.appendChild(b);
+    return b;
+  }
+
+  function addProgress(){
+    var wrap = document.createElement('div');
+    wrap.className = 'progress-wrap';
+    var bar = document.createElement('div');
+    bar.className = 'progress-bar';
+    bar.id = 'progressBar';
+    wrap.appendChild(bar);
+    dActionsEl.appendChild(wrap);
+    return bar;
+  }
+
+  function addHint(text){
+    var h = document.createElement('div');
+    h.className = 'hint';
+    h.textContent = text;
+    dActionsEl.appendChild(h);
+  }
+
+  function sky(extra){
+    return '<div class="sun"></div>' +
+      '<div class="cloud" style="top:22px;left:30px;width:56px;height:18px;"></div>' +
+      '<div class="cloud" style="top:38px;left:70px;width:34px;height:14px;"></div>' +
+      (extra||'') + '<div class="ground"></div>';
+  }
+
+  function clearMarketTimers(){
+    if(state.marketTimer){ clearInterval(state.marketTimer); state.marketTimer=null; }
+    if(state.marketSpawnTimer){ clearInterval(state.marketSpawnTimer); state.marketSpawnTimer=null; }
+  }
+
+  /* ---------------- STEP RENDERERS ---------------- */
+
+  function renderTitle(){
+    clearMarketTimers();
+    sceneEl.innerHTML =
+      '<div class="title-screen">' +
+        '<div class="clog-hero"></div>' +
+        '<h1>' + t('title') + '</h1>' +
+        '<p>' + t('subtitle') + '</p>' +
+      '</div>';
+    setDialogue(null, t('introText'));
+    addButton(t('start'), function(){ goStep('forest'); });
+  }
+
+  function renderForest(){
+    state.twigsCollected = 0;
+    var html = sky();
+    html += '<div class="tree" style="left:6%;bottom:26%;"><div class="canopy"></div><div class="trunk"></div></div>';
+    html += '<div class="tree" style="left:70%;bottom:26%;"><div class="canopy small"></div><div class="trunk"></div></div>';
+    html += '<div class="woodcutter" style="left:40%;"><div class="hat"></div><div class="head"></div><div class="body"></div><div class="legs"></div></div>';
+    var positions = [
+      {l:'12%',t:'58%',r:'-8deg'},{l:'25%',t:'70%',r:'14deg'},{l:'38%',t:'62%',r:'-4deg'},
+      {l:'55%',t:'72%',r:'10deg'},{l:'66%',t:'60%',r:'-12deg'},{l:'78%',t:'68%',r:'6deg'},
+      {l:'18%',t:'78%',r:'2deg'}
+    ];
+    positions.forEach(function(p, i){
+      html += '<div class="twig" data-i="'+i+'" style="left:'+p.l+'; top:'+p.t+'; --rot:'+p.r+';"></div>';
+    });
+    sceneEl.innerHTML = html;
+
+    setDialogue(null, t('forestInstruction'));
+    var bar = addProgress();
+    var counterHint = document.createElement('div');
+    counterHint.className = 'hint';
+    counterHint.id = 'twigCounter';
+    counterHint.textContent = '0 / ' + state.twigsTotal;
+    dActionsEl.appendChild(counterHint);
+    addHint(t('forestHint'));
+
+    var twigs = sceneEl.querySelectorAll('.twig');
+    twigs.forEach(function(tw){
+      tw.addEventListener('click', function handler(){
+        if(tw.classList.contains('collected')) return;
+        tw.classList.add('collected');
+        state.twigsCollected++;
+        bar.style.width = Math.min(100, (state.twigsCollected/state.twigsTotal)*100) + '%';
+        document.getElementById('twigCounter').textContent = state.twigsCollected + ' / ' + state.twigsTotal;
+        if(state.twigsCollected >= state.twigsTotal){
+          setTimeout(function(){
+            setDialogue(null, t('forestDone'));
+            addButton(t('forestNext'), function(){ goStep('fairy'); });
+          }, 400);
+        }
+      });
+    });
+  }
+
+  function renderFairy(){
+    var html = sky();
+    html += '<div class="oak" id="oakTree"><div class="canopy"></div><div class="trunk"></div></div>';
+    html += '<div class="fairy" style="left:60%; top:38%;"></div>';
+    html += '<div class="woodcutter" style="left:30%;"><div class="hat"></div><div class="head"></div><div class="body"></div><div class="legs"></div></div>';
+    sceneEl.innerHTML = html;
+
+    setDialogue(t('fairySpeaker'), t('fairyIntro'));
+    addButton(t('continueBtn'), function(){
+      setDialogue(t('fairySpeaker'), t('fairyLine'));
+      addButton(t('continueBtn'), function(){
+        setDialogue(null, t('fairyReply'));
+        addButton(t('continueBtn'), function(){ goStep('chop'); });
+      });
+    });
+  }
+
+  function renderChop(){
+    state.chopsDone = 0;
+    var html = sky();
+    html += '<div class="oak" id="oakTree"><div class="canopy"></div><div class="trunk"></div></div>';
+    sceneEl.innerHTML = html;
+
+    setDialogue(null, t('chopInstruction'));
+    var bar = addProgress();
+    var chopBtn = addButton(t('chopBtn'), function(){
+      state.chopsDone++;
+      var oak = document.getElementById('oakTree');
+      if(oak){ oak.style.transform = 'translateX(-50%) rotate(' + (state.chopsDone*2) + 'deg)'; }
+      bar.style.width = Math.min(100,(state.chopsDone/state.chopsNeeded)*100) + '%';
+      if(state.chopsDone >= state.chopsNeeded){
+        chopBtn.disabled = true;
+        if(oak) oak.classList.add('falling');
+        stopSpeak();
+        setTimeout(function(){
+          setDialogue(null, t('chopDone'));
+          addButton(t('continueBtn'), function(){ goStep('night'); });
+        }, 700);
+      }
+    });
+  }
+
+  function renderNight(){
+    var html = '<div style="position:absolute;inset:0;background:linear-gradient(180deg,#1b1f3b,#33325a);"></div>';
+    html += '<div class="ground" style="background:linear-gradient(180deg,#2b3a2a,#1c2a1c); border-top-color:#16201a;"></div>';
+    html += '<div class="house" style="right:35%;"><div class="roof"></div><div class="wall"></div><div class="door"></div></div>';
+    html += '<div class="woodpile" id="woodpile" style="left:38%;">';
+    for(var i=0;i<5;i++){ html += '<div class="log" style="height:'+(18+ (i%2)*6)+'px;"></div>'; }
+    html += '</div>';
+    for(var s=0;s<10;s++){
+      html += '<div class="sparkle" style="left:'+(30+Math.random()*40)+'%; top:'+(45+Math.random()*20)+'%; animation-delay:'+(Math.random()*1.2)+'s;"></div>';
+    }
+    html += '<div class="fairy" style="left:30%; top:40%;"></div>';
+    html += '<div class="fairy" style="left:65%; top:34%; animation-delay:.6s;"></div>';
+    sceneEl.innerHTML = html;
+
+    setDialogue(null, t('nightIntro'));
+    addButton(t('continueBtn'), function(){
+      setDialogue(null, t('nightMagic'));
+      var logs = sceneEl.querySelectorAll('#woodpile .log');
+      setTimeout(function(){
+        logs.forEach(function(l, i){
+          setTimeout(function(){ l.classList.add('morphed'); }, i*180);
+        });
+      }, 300);
+      addButton(t('nightNext'), function(){ goStep('morning'); }, false);
+    });
+  }
+
+  function renderMorning(){
+    var html = sky();
+    html += '<div class="house" style="right:8%;"><div class="roof"></div><div class="wall"></div><div class="door"></div></div>';
+    html += '<div class="woodcutter" style="left:30%;"><div class="hat"></div><div class="head"></div><div class="body"></div><div class="legs"></div></div>';
+    html += '<div style="position:absolute; left:44%; bottom:27%; display:flex; gap:6px;">';
+    for(var i=0;i<4;i++){ html += '<div class="clog" style="transform:rotate('+(i%2? -8:8)+'deg);"></div>'; }
+    html += '</div>';
+    sceneEl.innerHTML = html;
+
+    setDialogue(null, t('morningText'));
+    addButton(t('continueBtn'), function(){ goStep('market'); });
+  }
+
+  function renderMarket(){
+    clearMarketTimers();
+    state.customersSold = 0;
+    var html = sky();
+    html += '<div class="stall"><div class="top"></div><div class="table"></div><div class="legA"></div><div class="legB"></div></div>';
+    html += '<div style="position:absolute; left:44%; bottom:38%; display:flex; gap:5px;">';
+    for(var i=0;i<3;i++){ html += '<div class="clog" style="transform:scale(0.7) rotate('+(i%2?-6:6)+'deg);"></div>'; }
+    html += '</div>';
+    html += '<div id="customerLayer"></div>';
+    sceneEl.innerHTML = html;
+
+    setDialogue(null, t('marketInstruction'));
+    addButton(t('marketGo'), function(){ startMarketGame(); });
+  }
+
+  function startMarketGame(){
+    var bar = addProgress();
+    var counter = document.createElement('div');
+    counter.className = 'hint';
+    counter.id = 'marketCounter';
+    counter.textContent = state.customersSold + ' / ' + state.customersTotal + ' ' + t('marketSold');
+    dActionsEl.appendChild(counter);
+
+    var layer = document.getElementById('customerLayer');
+    var spawned = 0;
+    var colors = ['#5c7a99','#a35d6a','#7a9a5c','#9a7a5c','#6a5c9a'];
+
+    function spawnCustomer(){
+      if(spawned >= state.customersTotal) return;
+      spawned++;
+      var c = document.createElement('div');
+      c.className = 'customer';
+      var color = colors[spawned % colors.length];
+      c.innerHTML = '<div class="head" style="background:#e8b487;"></div><div class="body" style="background:'+color+';"></div>';
+      var fromRight = spawned % 2 === 0;
+      c.style.left = fromRight ? '95%' : '-8%';
+      c.style.bottom = '26%';
+      layer.appendChild(c);
+      requestAnimationFrame(function(){
+        c.style.left = fromRight ? '-8%' : '95%';
+      });
+      c.addEventListener('click', function(){
+        if(c.classList.contains('sold')) return;
+        c.classList.add('sold');
+        state.customersSold++;
+        bar.style.width = Math.min(100,(state.customersSold/state.customersTotal)*100) + '%';
+        document.getElementById('marketCounter').textContent = state.customersSold + ' / ' + state.customersTotal + ' ' + t('marketSold');
+      });
+      setTimeout(function(){ if(c.parentNode) c.parentNode.removeChild(c); }, 3400);
+    }
+
+    state.marketSpawnTimer = setInterval(spawnCustomer, 1500);
+    spawnCustomer();
+
+    state.marketTimer = setTimeout(function(){
+      clearMarketTimers();
+      setDialogue(null, t('marketDone'));
+      addButton(t('continueBtn'), function(){ renderBuyerChat(); });
+    }, 15000);
+  }
+
+  function renderBuyerChat(){
+    setDialogue(null, t('buyerLine'));
+    addButton(t('continueBtn'), function(){
+      setDialogue(null, t('vanEyckLine'));
+      addButton(t('continueBtn'), function(){ goStep('ending'); });
+    });
+  }
+
+  function renderEnding(){
+    clearMarketTimers();
+    var html = sky();
+    html += '<div class="house" style="right:10%;"><div class="roof"></div><div class="wall"></div><div class="door"></div></div>';
+    html += '<div class="woodcutter" style="left:28%;"><div class="hat"></div><div class="head"></div><div class="body"></div><div class="legs"></div></div>';
+    html += '<div style="position:absolute; left:44%; bottom:27%; display:flex; gap:6px;">';
+    for(var i=0;i<5;i++){ html += '<div class="clog" style="transform:rotate('+(i%2? -8:8)+'deg) scale('+(0.8+ (i%2)*0.2)+');"></div>'; }
+    html += '</div>';
+    sceneEl.innerHTML = html;
+
+    setDialogue(null, t('endingText'));
+    var factBox = document.createElement('div');
+    factBox.className = 'factbox';
+    factBox.textContent = t('endingFact');
+    dActionsEl.appendChild(factBox);
+    addButton(t('restart'), function(){ goStep('title'); });
+  }
+
+  /* ---------------- ROUTER ---------------- */
+  var renderers = {
+    title: renderTitle,
+    forest: renderForest,
+    fairy: renderFairy,
+    chop: renderChop,
+    night: renderNight,
+    morning: renderMorning,
+    market: renderMarket,
+    ending: renderEnding
+  };
+
+  function goStep(step){
+    stopSpeak();
+    state.step = step;
+    renderers[step]();
+    sendHeight();
+  }
+
+  /* ---------------- CONTROLS ---------------- */
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('klompenMuted', state.muted ? '1':'0');
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    if(state.muted) stopSpeak();
+  });
+
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    updateChrome();
+    goStep(state.step);
+  });
+
+  /* ---------------- RESIZE ---------------- */
+  function sendHeight(){
+    var h = document.getElementById('app').scrollHeight + 24;
+    try{
+      window.parent.postMessage({ type:'klompenGameHeight', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendHeight);
+  if(window.ResizeObserver){
+    new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+  } else {
+    setInterval(sendHeight, 800);
+  }
+
+  /* ---------------- INIT ---------------- */
+  updateChrome();
+  renderTitle();
+  setTimeout(sendHeight, 300);
+
+})();
+</script>
+</body>
+</html>
