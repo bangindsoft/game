@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemburu dan Gorila - Dongeng Anak Kongo</title>
+<style>
+  :root{
+    --pdg-green-dark:#1b3a2b;
+    --pdg-green:#2e5d3f;
+    --pdg-green-light:#4c8a5e;
+    --pdg-earth:#6b4a30;
+    --pdg-earth-light:#a9713f;
+    --pdg-sand:#e9d9b6;
+    --pdg-cream:#fbf3df;
+    --pdg-ink:#22281f;
+    --pdg-accent:#e08c3c;
+    --pdg-accent2:#d1483a;
+    --pdg-shadow: rgba(0,0,0,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  #pdg-root{
+    font-family:'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+    background: linear-gradient(180deg,#0f2818 0%, var(--pdg-green-dark) 100%);
+    color:var(--pdg-cream);
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 6px 24px var(--pdg-shadow);
+    position:relative;
+  }
+  #pdg-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(180deg, var(--pdg-earth) 0%, #533722 100%);
+    border-bottom:3px solid var(--pdg-accent);
+  }
+  #pdg-title{
+    font-size:16px;
+    font-weight:bold;
+    letter-spacing:0.5px;
+    text-shadow:0 2px 3px rgba(0,0,0,0.4);
+  }
+  #pdg-title small{display:block;font-weight:normal;font-size:11px;opacity:0.85;}
+  .pdg-btns{display:flex;gap:6px;}
+  .pdg-icon-btn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.35);
+    color:var(--pdg-cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background .15s ease;
+    font-family:inherit;
+  }
+  .pdg-icon-btn:hover{background:rgba(255,255,255,0.25);}
+  .pdg-icon-btn:active{transform:translateY(1px);}
+
+  #pdg-stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 16/10;
+    background:#0d2416;
+    overflow:hidden;
+  }
+  #pdg-canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  #pdg-overlay{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .pdg-tap-target{
+    position:absolute;
+    pointer-events:auto;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    background:radial-gradient(circle at 35% 30%, var(--pdg-accent), #a95c1c 70%);
+    box-shadow:0 0 0 4px rgba(255,255,255,0.25), 0 4px 10px rgba(0,0,0,0.4);
+    animation:pdg-pulse 1s infinite ease-in-out;
+  }
+  @keyframes pdg-pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.12);}
+  }
+  .pdg-qte-btn{
+    position:absolute;
+    pointer-events:auto;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    background:linear-gradient(180deg,var(--pdg-accent2), #9c2c22);
+    color:#fff;
+    border:none;
+    border-radius:30px;
+    padding:10px 22px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.45);
+    font-family:inherit;
+  }
+  .pdg-qte-btn:active{transform:translateX(-50%) translateY(2px);}
+  .pdg-hint{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.45);
+    padding:5px 12px;
+    border-radius:16px;
+    font-size:12px;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  .pdg-bar-wrap{
+    position:absolute;
+    left:12%;
+    right:12%;
+    bottom:56px;
+    height:14px;
+    background:rgba(0,0,0,0.4);
+    border-radius:8px;
+    overflow:hidden;
+    pointer-events:none;
+    border:1px solid rgba(255,255,255,0.3);
+  }
+  .pdg-bar-zone{
+    position:absolute;
+    top:0;bottom:0;
+    background:rgba(76,138,94,0.85);
+  }
+  .pdg-bar-indicator{
+    position:absolute;
+    top:-3px;
+    width:5px;
+    height:20px;
+    background:#fff;
+    border-radius:3px;
+    box-shadow:0 0 6px #fff;
+  }
+
+  #pdg-dialogue{
+    min-height:64px;
+    padding:12px 16px;
+    background:var(--pdg-cream);
+    color:var(--pdg-ink);
+    font-size:14.5px;
+    line-height:1.5;
+    border-bottom:1px solid #d8c79d;
+  }
+  #pdg-dialogue b{color:var(--pdg-green);}
+
+  #pdg-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:10px 8px;
+    background:var(--pdg-green-dark);
+  }
+  .pdg-dot{
+    width:10px;height:10px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.25);
+    transition:all .25s ease;
+  }
+  .pdg-dot.active{
+    background:var(--pdg-accent);
+    transform:scale(1.3);
+  }
+  .pdg-dot.done{
+    background:var(--pdg-green-light);
+  }
+
+  #pdg-controls{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:12px;
+    background:var(--pdg-green-dark);
+  }
+  #pdg-main-btn{
+    background:linear-gradient(180deg, var(--pdg-accent), #b3691f);
+    color:#fff;
+    border:none;
+    padding:11px 26px;
+    font-size:15px;
+    font-weight:bold;
+    border-radius:26px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    font-family:inherit;
+  }
+  #pdg-main-btn:active{transform:translateY(2px);}
+  #pdg-next-btn{
+    background:rgba(255,255,255,0.15);
+    color:var(--pdg-cream);
+    border:1px solid rgba(255,255,255,0.4);
+    padding:11px 20px;
+    font-size:14px;
+    border-radius:26px;
+    cursor:pointer;
+    font-family:inherit;
+    display:none;
+  }
+
+  #pdg-footer{
+    text-align:center;
+    font-size:11px;
+    padding:8px;
+    background:#0f2818;
+    color:rgba(255,255,255,0.55);
+  }
+  #pdg-footer a{color:var(--pdg-accent);text-decoration:none;}
+
+  .pdg-hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="pdg-root">
+  <div id="pdg-header">
+    <div id="pdg-title">
+      🦍 <span id="pdg-title-text">Pemburu dan Gorila</span>
+      <small id="pdg-subtitle">Dongeng Anak Kongo</small>
+    </div>
+    <div class="pdg-btns">
+      <button class="pdg-icon-btn" id="pdg-lang-btn" title="Ganti Bahasa">🌐 <span id="pdg-lang-label">EN</span></button>
+      <button class="pdg-icon-btn" id="pdg-mute-btn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="pdg-stage-wrap">
+    <canvas id="pdg-canvas" width="800" height="500"></canvas>
+    <div id="pdg-overlay"></div>
+  </div>
+
+  <div id="pdg-dialogue">
+    <span id="pdg-dialogue-text">Memuat cerita...</span>
+  </div>
+
+  <div id="pdg-dots"></div>
+
+  <div id="pdg-controls">
+    <button id="pdg-main-btn">▶ Mulai Cerita</button>
+    <button id="pdg-next-btn">Lanjut ➜</button>
+  </div>
+
+  <div id="pdg-footer">
+    🌿 <span id="pdg-footer-text">Dongeng interaktif dari</span> <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Language handling ----------
+  var urlParams = new URLSearchParams(window.location.search);
+  var lang = urlParams.get('lang') === 'en' ? 'en' : 'id';
+
+  var STR = {
+    id: {
+      title: "Pemburu dan Gorila",
+      subtitle: "Dongeng Anak Kongo",
+      start: "▶ Mulai Cerita",
+      replay: "↻ Ulangi Cerita",
+      next: "Lanjut ➜",
+      footer: "Dongeng interaktif dari",
+      loading: "Memuat cerita...",
+      muteOn: "🔇",
+      muteOff: "🔊",
+      tapPouch: "Ketuk ramuannya!",
+      hideNow: "Sembunyi!",
+      throwStone: "Bantu lempar batu!",
+      blowMantra: "Tiup mantranya!",
+      great: "Hebat!",
+      tryAgain: "Coba lagi lain kali...",
+    },
+    en: {
+      title: "The Hunter and the Gorilla",
+      subtitle: "A Folktale from Congo",
+      start: "▶ Start Story",
+      replay: "↻ Replay Story",
+      next: "Next ➜",
+      footer: "An interactive tale from",
+      loading: "Loading story...",
+      muteOn: "🔇",
+      muteOff: "🔊",
+      tapPouch: "Tap the herb pouch!",
+      hideNow: "Hide now!",
+      throwStone: "Help throw stones!",
+      blowMantra: "Blow the spell!",
+      great: "Great job!",
+      tryAgain: "Better luck next time...",
+    }
+  };
+
+  // ---------- Story stages ----------
+  var STAGES = [
+    {
+      key: "village",
+      text: {
+        id: "Di tepi hutan negeri Kongo, ada sebuah desa kecil. Seekor gorila sering datang merusak kebun-kebun penduduk, memakan apa saja yang ada di sana.",
+        en: "At the edge of a forest in Congo, there was a small village. A gorilla often came to wreck the villagers' gardens, eating whatever it could find."
+      }
+    },
+    {
+      key: "hunter-offer",
+      text: {
+        id: "Tak ada penduduk yang berani mengusirnya. Namun seorang pemburu pemberani menawarkan diri untuk mengusir si gorila.",
+        en: "No villager dared to chase it away. But a brave hunter offered to drive the gorilla off."
+      }
+    },
+    {
+      key: "ceremony",
+      text: {
+        id: "Penduduk desa mengadakan upacara pelepasan. Kepala suku memberikan ramuan & mantra sakti untuk ditiupkan ke tubuh gorila. Ketuk ramuan yang dilempar kepala suku!",
+        en: "The villagers held a farewell ceremony. The chief gave a magic herb potion to be blown onto the gorilla. Tap the pouch as the chief tosses it!"
+      },
+      qte: "catch"
+    },
+    {
+      key: "sneak",
+      text: {
+        id: "Si pemburu pergi ke hutan dan bersembunyi di balik semak-semak untuk mengintai gorila. Sembunyilah saat gorila lengah!",
+        en: "The hunter went into the forest and hid behind the bushes to watch the gorilla. Hide when the gorilla looks away!"
+      },
+      qte: "sneak"
+    },
+    {
+      key: "chimp-fruit",
+      text: {
+        id: "Seekor simpanse meletakkan buah-buahan di bawah pohon. Gorila mendekat dan memakan buah-buahan milik simpanse itu begitu saja.",
+        en: "A chimpanzee placed some fruits under a tree. The gorilla approached and simply ate the chimpanzee's fruits."
+      }
+    },
+    {
+      key: "chimp-throws",
+      text: {
+        id: "Simpanse marah! Ia melempari gorila dengan batu-batu. Bantu simpanse melempar batu sebanyak mungkin!",
+        en: "The chimpanzee got furious! It threw stones at the gorilla. Help the chimpanzee throw as many stones as you can!"
+      },
+      qte: "stones"
+    },
+    {
+      key: "gorilla-anger",
+      text: {
+        id: "Gorila marah besar. Ia mengangkat simpanse dan melemparkannya jauh ke semak-semak, lalu kembali santai memakan buah-buahan.",
+        en: "The gorilla grew furious. It lifted the chimpanzee and hurled it far into the bushes, then calmly went back to eating the fruits."
+      }
+    },
+    {
+      key: "mantra",
+      text: {
+        id: "Melihat gorila lengah, si pemburu tak menyia-nyiakan kesempatan. Tiup mantra tepat saat penanda berada di area hijau!",
+        en: "Seeing the gorilla off guard, the hunter seized the moment. Blow the spell exactly when the marker is in the green zone!"
+      },
+      qte: "mantra"
+    },
+    {
+      key: "ending",
+      text: {
+        id: "Mantra sakti berhasil ditiupkan! Sejak saat itu, si gorila tak pernah lagi kembali ke desa mereka. Penduduk pun hidup tenteram kembali.",
+        en: "The magic spell worked! From that day on, the gorilla never returned to their village. The villagers lived peacefully once again."
+      },
+      ending: true
+    }
+  ];
+
+  // ---------- DOM refs ----------
+  var canvas = document.getElementById('pdg-canvas');
+  var ctx = canvas.getContext('2d');
+  var overlay = document.getElementById('pdg-overlay');
+  var dialogueText = document.getElementById('pdg-dialogue-text');
+  var dotsWrap = document.getElementById('pdg-dots');
+  var mainBtn = document.getElementById('pdg-main-btn');
+  var nextBtn = document.getElementById('pdg-next-btn');
+  var langBtn = document.getElementById('pdg-lang-btn');
+  var langLabel = document.getElementById('pdg-lang-label');
+  var muteBtn = document.getElementById('pdg-mute-btn');
+  var titleText = document.getElementById('pdg-title-text');
+  var subtitleText = document.getElementById('pdg-subtitle');
+  var footerText = document.getElementById('pdg-footer-text');
+
+  // ---------- State ----------
+  var state = {
+    stageIdx: -1, // -1 = title screen
+    started: false,
+    muted: (localStorage.getItem('pdg_muted') === 'true'),
+    t: 0,
+    animId: null,
+    qteActive: null,
+    qteDone: false,
+    gorillaMood: 'idle', // idle, eating, angry, banished
+    chimpVisible: false,
+    chimpThrown: false,
+    stonesCount: 0,
+    huntBlown: false,
+    hidden: false,
+    gorillaLook: 'away', // 'away' or 'at'
+    barPos: 0,
+    barDir: 1,
+  };
+
+  function T(k){ return STR[lang][k]; }
+
+  function applyLangUI(){
+    langLabel.textContent = (lang === 'id') ? 'EN' : 'ID';
+    titleText.textContent = T('title');
+    subtitleText.textContent = T('subtitle');
+    footerText.textContent = T('footer');
+    muteBtn.textContent = state.muted ? T('muteOn') : T('muteOff');
+    if(!state.started){
+      mainBtn.textContent = T('start');
+      dialogueText.textContent = T('loading');
+    } else if(state.stageIdx >= 0 && state.stageIdx < STAGES.length){
+      dialogueText.innerHTML = STAGES[state.stageIdx].text[lang];
+      mainBtn.textContent = (state.stageIdx === STAGES.length-1) ? T('replay') : mainBtn.textContent;
+    }
+  }
+
+  // ---------- Speech synthesis ----------
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    var wantLang = (lang === 'id') ? 'id-ID' : 'en-US';
+    var v = voices.find(function(v){ return v.lang === wantLang; });
+    if(!v) v = voices.find(function(v){ return v.lang && v.lang.indexOf(lang) === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if(state.muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var clean = text.replace(/<[^>]+>/g,'');
+    var utter = new SpeechSynthesisUtterance(clean);
+    var v = pickVoice();
+    if(v) utter.voice = v;
+    utter.lang = (lang === 'id') ? 'id-ID' : 'en-US';
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    window.speechSynthesis.speak(utter);
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  // ---------- Resize / postMessage ----------
+  function reportHeight(){
+    var h = document.getElementById('pdg-root').offsetHeight;
+    try{
+      window.parent.postMessage({ pdgHeight: h, type: 'pdg-resize' }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+
+  // ---------- Canvas scaling ----------
+  function fitCanvas(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = 800 * dpr;
+    canvas.height = 500 * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  fitCanvas();
+  window.addEventListener('resize', fitCanvas);
+
+  // ================= DRAWING HELPERS =================
+  function drawSky(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,320);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,800,320);
+  }
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,220,140,0.9)';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawGround(color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,300,800,200);
+  }
+  function drawTree(x,y,scale,sway){
+    sway = sway || 0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.rotate(sway*0.02);
+    // trunk
+    ctx.fillStyle = '#5b3a22';
+    ctx.fillRect(-8,0,16,70);
+    // foliage clumps
+    ctx.fillStyle = '#2c5c34';
+    [[0,-10,42],[-28,10,32],[28,8,34],[0,-45,36]].forEach(function(c){
+      ctx.beginPath(); ctx.ellipse(c[0],c[1],c[2],c[2]*0.75,0,0,Math.PI*2); ctx.fill();
+    });
+    ctx.fillStyle = '#356b3e';
+    ctx.beginPath(); ctx.ellipse(-6,-20,26,20,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawBush(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#2f5e37';
+    [[-18,0,20],[0,-8,26],[18,0,20],[0,6,18]].forEach(function(c){
+      ctx.beginPath(); ctx.ellipse(c[0],c[1],c[2],c[2]*0.8,0,0,Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+  }
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#caa06a';
+    ctx.fillRect(-30,-10,60,45);
+    ctx.fillStyle = '#8a5a2c';
+    ctx.beginPath();
+    ctx.moveTo(-40,-10); ctx.lineTo(0,-55); ctx.lineTo(40,-10); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#4a2f16';
+    ctx.fillRect(-8,15,16,20);
+    ctx.restore();
+  }
+  function drawVillageGarden(x,y,scale,damaged){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    for(var i=0;i<5;i++){
+      ctx.fillStyle = damaged ? '#7a6a45' : '#4c8a3d';
+      ctx.beginPath();
+      ctx.ellipse(i*18-36, damaged ? (Math.random()*4) : 0, 8, damaged?4:10, 0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawHunter(x,y,scale,facing,pose){
+    facing = facing || 1;
+    pose = pose || 'stand';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*facing, scale);
+    // legs
+    ctx.fillStyle = '#5a4632';
+    ctx.fillRect(-10,20,8,26);
+    ctx.fillRect(2,20,8,26);
+    // body wrap (tunic)
+    ctx.fillStyle = '#c9772f';
+    ctx.beginPath();
+    ctx.moveTo(-14,20); ctx.lineTo(14,20); ctx.lineTo(10,-16); ctx.lineTo(-10,-16); ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = '#7a5a3a';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    if(pose === 'blow'){
+      ctx.beginPath(); ctx.moveTo(10,-8); ctx.lineTo(30,-14); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-10,-8); ctx.lineTo(-18,4); ctx.stroke();
+    } else if(pose === 'sneak'){
+      ctx.beginPath(); ctx.moveTo(10,-6); ctx.lineTo(18,6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-10,-6); ctx.lineTo(-18,6); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(10,-8); ctx.lineTo(20,4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-10,-8); ctx.lineTo(-20,4); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = '#8a5a3c';
+    ctx.beginPath(); ctx.arc(0,-26,13,0,Math.PI*2); ctx.fill();
+    // hair/headband
+    ctx.fillStyle = '#3a2416';
+    ctx.beginPath(); ctx.arc(0,-32,13,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#d1483a';
+    ctx.fillRect(-13,-32,26,4);
+    // eye
+    ctx.fillStyle = '#20140c';
+    ctx.beginPath(); ctx.arc(5,-27,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawChief(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5a4632';
+    ctx.fillRect(-10,20,8,24);
+    ctx.fillRect(2,20,8,24);
+    ctx.fillStyle = '#e0483e';
+    ctx.beginPath();
+    ctx.moveTo(-16,20); ctx.lineTo(16,20); ctx.lineTo(11,-16); ctx.lineTo(-11,-16); ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#7a5a3a';
+    ctx.lineWidth = 7; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(11,-10); ctx.lineTo(26,-20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-11,-10); ctx.lineTo(-20,2); ctx.stroke();
+    ctx.fillStyle = '#8a5a3c';
+    ctx.beginPath(); ctx.arc(0,-26,13,0,Math.PI*2); ctx.fill();
+    // feather headdress
+    ctx.fillStyle = '#e9c46a';
+    for(var i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*6,-36);
+      ctx.lineTo(i*6-3, -55);
+      ctx.lineTo(i*6+3, -55);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPouch(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#9c6b34';
+    ctx.beginPath(); ctx.ellipse(0,0,16,14,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#5a3a1c';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-10,-10); ctx.lineTo(10,-10); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawGorilla(x,y,scale,facing,mood){
+    facing = facing || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*facing, scale);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(0,52,50,10,0,0,Math.PI*2); ctx.fill();
+    // legs
+    ctx.fillStyle = '#2a221d';
+    ctx.fillRect(-26,20,18,28);
+    ctx.fillRect(10,20,18,28);
+    // body
+    ctx.fillStyle = '#3a2f28';
+    ctx.beginPath(); ctx.ellipse(0,-4,46,44,0,0,Math.PI*2); ctx.fill();
+    // chest lighter patch
+    ctx.fillStyle = '#544539';
+    ctx.beginPath(); ctx.ellipse(0,4,24,26,0,0,Math.PI*2); ctx.fill();
+    // arms
+    var armSwing = (mood === 'angry') ? -18 : 6;
+    ctx.fillStyle = '#2a221d';
+    ctx.save();
+    ctx.translate(-42,-10); ctx.rotate((armSwing)*Math.PI/180);
+    ctx.fillRect(-11,0,20,54);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(42,-10); ctx.rotate((-armSwing)*Math.PI/180);
+    ctx.fillRect(-9,0,20,54);
+    ctx.restore();
+    // head
+    ctx.fillStyle = '#3a2f28';
+    ctx.beginPath(); ctx.ellipse(0,-56,32,28,0,0,Math.PI*2); ctx.fill();
+    // face
+    ctx.fillStyle = '#59493c';
+    ctx.beginPath(); ctx.ellipse(0,-50,20,18,0,0,Math.PI*2); ctx.fill();
+    // brow
+    ctx.fillStyle = '#241d18';
+    ctx.beginPath(); ctx.ellipse(0,-60,22,8,0,0,Math.PI*2); ctx.fill();
+    // eyes
+    ctx.fillStyle = mood === 'angry' ? '#d1483a' : '#1a1410';
+    ctx.beginPath(); ctx.arc(-8,-54,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8,-54,3,0,Math.PI*2); ctx.fill();
+    // nose/mouth
+    ctx.fillStyle = '#241d18';
+    ctx.beginPath(); ctx.ellipse(0,-44,9,6,0,0,Math.PI*2); ctx.fill();
+    if(mood === 'angry'){
+      ctx.strokeStyle = '#1a1410';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-10,-38); ctx.lineTo(10,-38); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawChimp(x,y,scale,facing,pose){
+    facing = facing || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*facing, scale);
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath(); ctx.ellipse(0,34,26,6,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#6b4a30';
+    ctx.beginPath(); ctx.ellipse(0,4,20,22,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8a6a44';
+    ctx.beginPath(); ctx.ellipse(0,8,10,13,0,0,Math.PI*2); ctx.fill();
+    // arms
+    ctx.strokeStyle = '#6b4a30';
+    ctx.lineWidth = 7; ctx.lineCap='round';
+    if(pose === 'throw'){
+      ctx.beginPath(); ctx.moveTo(14,-4); ctx.lineTo(30,-22); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(22,14); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(-22,14); ctx.stroke();
+    // legs
+    ctx.beginPath(); ctx.moveTo(-8,22); ctx.lineTo(-10,34); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,22); ctx.lineTo(10,34); ctx.stroke();
+    // head
+    ctx.fillStyle = '#6b4a30';
+    ctx.beginPath(); ctx.arc(0,-16,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#c9a877';
+    ctx.beginPath(); ctx.ellipse(0,-12,9,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a1410';
+    ctx.beginPath(); ctx.arc(-4,-16,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-16,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFruits(x,y,scale,count){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var colors = ['#e0483e','#e08c3c','#c9a83a'];
+    for(var i=0;i<count;i++){
+      ctx.fillStyle = colors[i%colors.length];
+      ctx.beginPath(); ctx.arc((i-count/2)*12, 0, 6,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawStone(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#888';
+    ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSparkle(x,y,scale,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#ffe38a';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-10,0); ctx.lineTo(10,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(0,10); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ================= SCENE RENDER FUNCTIONS =================
+  function clear(){ ctx.clearRect(0,0,800,500); }
+
+  function renderScene(idx, t){
+    clear();
+    var bob = Math.sin(t/500)*3;
+    switch(idx){
+      case 0: // village intro
+        drawSky('#bfe3ea','#e7f3d8');
+        drawGround('#3f6b32');
+        drawTree(80,300,1.1,Math.sin(t/900));
+        drawTree(700,290,1.3,Math.sin(t/900+1));
+        drawHut(220,330,1.1);
+        drawHut(340,340,0.9);
+        drawVillageGarden(520,360,1.2,true);
+        drawVillageGarden(600,375,1.0,true);
+        drawGorilla(560,300+bob,0.7,-1,'eating');
+        break;
+      case 1: // hunter offers
+        drawSky('#bfe3ea','#e7f3d8');
+        drawGround('#3f6b32');
+        drawHut(150,320,1.0);
+        drawHut(650,320,1.0);
+        drawHunter(400,330+bob*0.3,1.3,1,'stand');
+        drawChief(280,340,1.1);
+        drawChief(520,340,1.1);
+        break;
+      case 2: // ceremony
+        drawSky('#e7c48a','#f4e3b5');
+        drawGround('#3f6b32');
+        drawHut(690,320,0.9);
+        drawChief(280,320,1.3);
+        drawHunter(460,330,1.3,1,'stand');
+        if(!state.qteDone){
+          var pouchY = 200 + Math.sin(t/300)*40;
+          drawPouch(380, pouchY, 1.4);
+          window.__pdgPouchPos = {x:380,y:pouchY};
+        } else {
+          drawSparkle(460,260,1.5,0.8);
+        }
+        break;
+      case 3: // sneak in forest
+        drawSky('#1e3a26','#2c5030');
+        drawGround('#254a29');
+        drawTree(90,320,1.4,Math.sin(t/700));
+        drawTree(700,310,1.5,Math.sin(t/700+2));
+        drawBush(560,360,1.6);
+        var lookAway = state.gorillaLook === 'away';
+        drawGorilla(600,320+bob, 1.0, lookAway? 1 : -1, 'idle');
+        if(!state.hidden){
+          drawHunter(300,330,1.1,1,'sneak');
+        } else {
+          ctx.save(); ctx.globalAlpha=0.55;
+          drawHunter(300,330,1.1,1,'sneak');
+          ctx.restore();
+        }
+        drawBush(280,365,1.3);
+        break;
+      case 4: // chimp fruit
+        drawSky('#1e3a26','#2c5030');
+        drawGround('#254a29');
+        drawTree(120,300,1.3,Math.sin(t/800));
+        drawTree(650,300,1.2,Math.sin(t/800+1));
+        drawFruits(400,330,1.3, state.gorillaMood==='eating'?2:5);
+        drawChimp(300,330+bob*0.5,1.1,1,'idle');
+        drawGorilla(470,300+bob,1.0,-1,'eating');
+        break;
+      case 5: // chimp throws stones
+        drawSky('#1e3a26','#2c5030');
+        drawGround('#254a29');
+        drawTree(700,300,1.2,Math.sin(t/800));
+        drawFruits(430,335,1.0,2);
+        drawChimp(280,320+bob*0.4,1.15,1, state.stonesCount%2===0?'throw':'idle');
+        drawGorilla(500,300,1.0,-1,'angry');
+        (window.__pdgStones || []).forEach(function(s){
+          drawStone(s.x, s.y, 1.2);
+        });
+        break;
+      case 6: // gorilla anger, throws chimp
+        drawSky('#1e3a26','#2c5030');
+        drawGround('#254a29');
+        drawBush(120,360,1.4);
+        drawTree(700,300,1.2,Math.sin(t/800));
+        var chimpX = 300 + Math.min(t/12, 220);
+        var chimpY = 300 - Math.min(t/8,90) + Math.max(0,(t-800)/6);
+        drawChimp(chimpX, chimpY, 0.9,1,'idle');
+        drawGorilla(480,290,1.05,-1,'angry');
+        drawFruits(430,330,1.0,3);
+        break;
+      case 7: // mantra blow
+        drawSky('#e7c48a','#f4e3b5');
+        drawGround('#3f6b32');
+        drawTree(90,300,1.2,Math.sin(t/800));
+        drawFruits(560,335,1.0,3);
+        drawGorilla(560,300+bob*0.4,1.05,-1,'idle');
+        drawHunter(360,320,1.2,1, state.huntBlown ? 'blow':'sneak');
+        if(state.huntBlown){
+          for(var i=0;i<3;i++){
+            drawSparkle(460+i*20,270-i*10,1.0,0.7);
+          }
+        }
+        break;
+      case 8: // ending
+        drawSky('#bfe3ea','#e7f3d8');
+        drawGround('#3f6b32');
+        drawHut(200,320,1.1);
+        drawHut(340,335,0.9);
+        drawHut(500,320,1.0);
+        drawVillageGarden(260,370,1.1,false);
+        drawVillageGarden(440,375,1.0,false);
+        drawHunter(400,330+bob*0.3,1.3,1,'stand');
+        drawChief(300,340,1.1);
+        for(var s=0;s<5;s++){
+          drawSparkle(150+s*130, 120+Math.sin(t/400+s)*20, 0.8, 0.6);
+        }
+        break;
+    }
+  }
+
+  // ================= ANIMATION LOOP =================
+  function loop(ts){
+    if(!state.startTs) state.startTs = ts;
+    state.t = ts - state.startTs;
+    var idx = Math.max(state.stageIdx,0);
+    renderScene(idx, state.t);
+    state.animId = requestAnimationFrame(loop);
+  }
+  function startLoop(){
+    if(state.animId) cancelAnimationFrame(state.animId);
+    state.startTs = null;
+    state.animId = requestAnimationFrame(loop);
+  }
+
+  // ================= DOTS =================
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    STAGES.forEach(function(s,i){
+      var d = document.createElement('div');
+      d.className = 'pdg-dot';
+      d.dataset.i = i;
+      dotsWrap.appendChild(d);
+    });
+  }
+  function updateDots(){
+    var kids = dotsWrap.children;
+    for(var i=0;i<kids.length;i++){
+      kids[i].classList.remove('active','done');
+      if(i < state.stageIdx) kids[i].classList.add('done');
+      if(i === state.stageIdx) kids[i].classList.add('active');
+    }
+  }
+
+  // ================= OVERLAY / QTE =================
+  function clearOverlay(){ overlay.innerHTML = ''; }
+
+  function addHint(text){
+    var h = document.createElement('div');
+    h.className = 'pdg-hint';
+    h.textContent = text;
+    overlay.appendChild(h);
+  }
+
+  function setupQTE(stage){
+    state.qteActive = stage.qte;
+    state.qteDone = false;
+    clearOverlay();
+    nextBtn.style.display = 'none';
+
+    if(stage.qte === 'catch'){
+      addHint(T('tapPouch'));
+      var btn = document.createElement('button');
+      btn.className = 'pdg-tap-target';
+      btn.style.width='54px'; btn.style.height='54px';
+      btn.style.left = '46%'; btn.style.top = '30%';
+      btn.addEventListener('click', function(){
+        if(state.qteDone) return;
+        state.qteDone = true;
+        speak(lang==='id' ? 'Ramuan berhasil ditangkap!' : 'The pouch was caught!');
+        clearOverlay();
+        finishQTEAndAllowNext();
+      });
+      overlay.appendChild(btn);
+      // auto-allow next after a while even without tapping
+      setTimeout(function(){ if(!state.qteDone){ state.qteDone = true; finishQTEAndAllowNext(); } }, 6000);
+    }
+    else if(stage.qte === 'sneak'){
+      addHint(T('hideNow'));
+      state.hidden = false;
+      var tries = 0;
+      var lookTimer = setInterval(function(){
+        state.gorillaLook = (state.gorillaLook === 'away') ? 'at' : 'away';
+      }, 900);
+      var btn = document.createElement('button');
+      btn.className = 'pdg-qte-btn';
+      btn.textContent = T('hideNow');
+      btn.addEventListener('click', function(){
+        tries++;
+        if(state.gorillaLook === 'away'){
+          state.hidden = true;
+          speak(lang==='id' ? 'Bersembunyi dengan aman!' : 'Safely hidden!');
+        } else {
+          speak(lang==='id' ? 'Hampir ketahuan!' : 'Almost spotted!');
+        }
+        clearInterval(lookTimer);
+        clearOverlay();
+        state.qteDone = true;
+        finishQTEAndAllowNext();
+      });
+      overlay.appendChild(btn);
+      setTimeout(function(){
+        if(!state.qteDone){
+          clearInterval(lookTimer);
+          clearOverlay();
+          state.qteDone = true;
+          finishQTEAndAllowNext();
+        }
+      }, 7000);
+    }
+    else if(stage.qte === 'stones'){
+      addHint(T('throwStone'));
+      window.__pdgStones = [];
+      state.stonesCount = 0;
+      var btn = document.createElement('button');
+      btn.className = 'pdg-qte-btn';
+      btn.textContent = T('throwStone') + ' (0/5)';
+      btn.addEventListener('click', function(){
+        if(state.stonesCount >= 5) return;
+        state.stonesCount++;
+        window.__pdgStones.push({x: 300 + Math.random()*140, y: 300 + Math.random()*30});
+        btn.textContent = T('throwStone') + ' (' + state.stonesCount + '/5)';
+        if(state.stonesCount >= 5){
+          speak(lang==='id' ? 'Hebat, batu-batu mengenai gorila!' : 'Great, the stones hit the gorilla!');
+          clearOverlay();
+          state.qteDone = true;
+          finishQTEAndAllowNext();
+        }
+      });
+      overlay.appendChild(btn);
+      setTimeout(function(){
+        if(!state.qteDone){
+          clearOverlay();
+          state.qteDone = true;
+          finishQTEAndAllowNext();
+        }
+      }, 8000);
+    }
+    else if(stage.qte === 'mantra'){
+      addHint(T('blowMantra'));
+      var barWrap = document.createElement('div');
+      barWrap.className = 'pdg-bar-wrap';
+      var zone = document.createElement('div');
+      zone.className = 'pdg-bar-zone';
+      zone.style.left = '38%'; zone.style.width = '24%';
+      barWrap.appendChild(zone);
+      var indicator = document.createElement('div');
+      indicator.className = 'pdg-bar-indicator';
+      barWrap.appendChild(indicator);
+      overlay.appendChild(barWrap);
+
+      state.barPos = 0; state.barDir = 1;
+      var barInterval = setInterval(function(){
+        state.barPos += state.barDir * 3.2;
+        if(state.barPos >= 100){ state.barPos = 100; state.barDir = -1; }
+        if(state.barPos <= 0){ state.barPos = 0; state.barDir = 1; }
+        indicator.style.left = state.barPos + '%';
+      }, 30);
+
+      var btn = document.createElement('button');
+      btn.className = 'pdg-qte-btn';
+      btn.textContent = T('blowMantra');
+      btn.addEventListener('click', function(){
+        if(state.qteDone) return;
+        var success = state.barPos >= 38 && state.barPos <= 62;
+        state.huntBlown = true;
+        clearInterval(barInterval);
+        clearOverlay();
+        speak(success ? (lang==='id'?'Tepat sasaran! Mantra berhasil!':'Perfect timing! The spell worked!')
+                       : (lang==='id'?'Mantra tetap berhasil ditiupkan!':'The spell was still cast successfully!'));
+        state.qteDone = true;
+        finishQTEAndAllowNext();
+      });
+      overlay.appendChild(btn);
+      setTimeout(function(){
+        if(!state.qteDone){
+          clearInterval(barInterval);
+          clearOverlay();
+          state.huntBlown = true;
+          state.qteDone = true;
+          finishQTEAndAllowNext();
+        }
+      }, 8000);
+    }
+  }
+
+  function finishQTEAndAllowNext(){
+    nextBtn.style.display = 'inline-block';
+  }
+
+  // ================= STAGE FLOW =================
+  function goToStage(idx){
+    state.stageIdx = idx;
+    updateDots();
+    var stage = STAGES[idx];
+    dialogueText.innerHTML = stage.text[lang];
+    speak(stage.text[lang]);
+    clearOverlay();
+    nextBtn.style.display = stage.qte ? 'none' : 'inline-block';
+    state.gorillaLook = 'away';
+    state.hidden = false;
+    state.huntBlown = false;
+    state.qteDone = false;
+
+    if(stage.qte){
+      setTimeout(function(){ setupQTE(stage); }, 300);
+    }
+
+    if(stage.ending){
+      nextBtn.style.display = 'none';
+      mainBtn.style.display = 'inline-block';
+      mainBtn.textContent = T('replay');
+    } else {
+      mainBtn.style.display = 'none';
+    }
+    reportHeight();
+  }
+
+  function nextStage(){
+    if(state.stageIdx < STAGES.length - 1){
+      goToStage(state.stageIdx + 1);
+    }
+  }
+
+  function startStory(){
+    state.started = true;
+    state.gorillaMood = 'idle';
+    window.__pdgStones = [];
+    mainBtn.style.display = 'none';
+    nextBtn.style.display = 'inline-block';
+    goToStage(0);
+  }
+
+  function resetStory(){
+    stopSpeak();
+    state.started = false;
+    state.stageIdx = -1;
+    updateDots();
+    dialogueText.textContent = T('loading');
+    mainBtn.textContent = T('start');
+    mainBtn.style.display = 'inline-block';
+    nextBtn.style.display = 'none';
+    clearOverlay();
+    reportHeight();
+  }
+
+  // ================= EVENTS =================
+  mainBtn.addEventListener('click', function(){
+    if(!state.started){
+      startStory();
+    } else {
+      // replay
+      resetStory();
+      setTimeout(startStory, 150);
+    }
+  });
+  nextBtn.addEventListener('click', function(){
+    nextStage();
+  });
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    applyLangUI();
+    if(state.started && state.stageIdx >= 0){
+      var stage = STAGES[state.stageIdx];
+      dialogueText.innerHTML = stage.text[lang];
+      speak(stage.text[lang]);
+    }
+  });
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('pdg_muted', state.muted ? 'true' : 'false');
+    muteBtn.textContent = state.muted ? T('muteOn') : T('muteOff');
+    if(state.muted) stopSpeak();
+  });
+
+  // ================= INIT =================
+  buildDots();
+  applyLangUI();
+  startLoop();
+  reportHeight();
+  setInterval(reportHeight, 1200);
+
+})();
+</script>
+</body>
+</html>
