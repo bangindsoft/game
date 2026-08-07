@@ -373,16 +373,37 @@
   };
   const ctx = el.canvas.getContext('2d');
 
+  // small helper so a missing element never crashes the whole script
+  function on(elm, evt, fn){ if (elm) elm.addEventListener(evt, fn); }
+
+  // roundRect polyfill (ctx.roundRect is not supported on older mobile browsers)
+  function roundRectPath(c,x,y,w,h,r){
+    if (typeof r === 'number') r = {tl:r,tr:r,br:r,bl:r};
+    c.beginPath();
+    c.moveTo(x+r.tl,y);
+    c.lineTo(x+w-r.tr,y);
+    c.arcTo(x+w,y,x+w,y+r.tr,r.tr);
+    c.lineTo(x+w,y+h-r.br);
+    c.arcTo(x+w,y+h,x+w-r.br,y+h,r.br);
+    c.lineTo(x+r.bl,y+h);
+    c.arcTo(x,y+h,x,y+h-r.bl,r.bl);
+    c.lineTo(x,y+r.tl);
+    c.arcTo(x,y,x+r.tl,y,r.tl);
+    c.closePath();
+  }
+
   /* ---------------- canvas sizing ---------------- */
   const CW = 900, CH = 480;
   function resizeCanvas(){
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    el.canvas.width = CW * dpr;
-    el.canvas.height = CH * dpr;
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    try{
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      el.canvas.width = CW * dpr;
+      el.canvas.height = CH * dpr;
+      if (ctx && ctx.setTransform) ctx.setTransform(dpr,0,0,dpr,0,0);
+    }catch(e){ console.warn('resizeCanvas failed', e); }
   }
   resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+  on(window, 'resize', resizeCanvas);
 
   /* ---------------- speech ---------------- */
   let voices = [];
@@ -407,11 +428,23 @@
 
   /* ---------------- postMessage auto-resize ---------------- */
   function postHeight(){
-    const h = document.getElementById('app').offsetHeight;
-    try{ window.parent.postMessage({ type:'menimbangGajahHeight', height:h }, '*'); }catch(e){}
+    try{
+      const appEl = document.getElementById('app');
+      if (!appEl) return;
+      const h = appEl.offsetHeight;
+      window.parent.postMessage({ type:'menimbangGajahHeight', height:h }, '*');
+    }catch(e){ /* ignore */ }
   }
-  new ResizeObserver(postHeight).observe(document.getElementById('app'));
-  window.addEventListener('load', postHeight);
+  try{
+    if (typeof ResizeObserver !== 'undefined'){
+      const appEl = document.getElementById('app');
+      if (appEl) new ResizeObserver(postHeight).observe(appEl);
+    } else {
+      // fallback for older browsers without ResizeObserver
+      setInterval(postHeight, 800);
+    }
+  }catch(e){ console.warn('resize observer setup failed', e); }
+  on(window, 'load', postHeight);
 
   /* ---------------- drawing helpers ---------------- */
   function drawBackground(){
@@ -497,11 +530,11 @@
     ctx.strokeStyle = '#b98f4b';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(-70*scale,-45*scale,140*scale,90*scale,10*scale);
+    roundRectPath(ctx,-70*scale,-45*scale,140*scale,90*scale,10*scale);
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#b98f4b';
-    ctx.beginPath(); ctx.roundRect(-78*scale,-50*scale,156*scale,12*scale,6*scale); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(-78*scale,38*scale,156*scale,12*scale,6*scale); ctx.fill();
+    roundRectPath(ctx,-78*scale,-50*scale,156*scale,12*scale,6*scale); ctx.fill();
+    roundRectPath(ctx,-78*scale,38*scale,156*scale,12*scale,6*scale); ctx.fill();
     ctx.restore();
   }
 
@@ -558,7 +591,7 @@
       ctx.strokeStyle = '#7a2c22';
       ctx.lineWidth=1.5;
       ctx.beginPath();
-      ctx.roundRect(bx-11, by-8, 22, 14, 2);
+      roundRectPath(ctx,bx-11, by-8, 22, 14, 2);
       ctx.fill(); ctx.stroke();
     }
 
@@ -835,7 +868,7 @@
   }
 
   /* ---------------- interactive handlers ---------------- */
-  el.btnLoad.addEventListener('click', function(){
+  on(el.btnLoad, 'click', function(){
     elephantLoaded = true;
     targetDraft = ELEPHANT_DRAFT;
     setTimeout(function(){
@@ -845,13 +878,13 @@
     render();
   });
 
-  el.btnUnload.addEventListener('click', function(){
+  on(el.btnUnload, 'click', function(){
     elephantLoaded = false;
     targetDraft = 0;
     render();
   });
 
-  el.btnAddBrick.addEventListener('click', function(){
+  on(el.btnAddBrick, 'click', function(){
     if (solved) return;
     brickCount++;
     const inc = 0.085 + (Math.random()*0.02-0.01);
@@ -859,14 +892,14 @@
     render();
   });
 
-  el.btnRemoveBrick.addEventListener('click', function(){
+  on(el.btnRemoveBrick, 'click', function(){
     if (solved || brickCount === 0) return;
     brickCount--;
     targetDraft = Math.max(0, targetDraft - 0.085);
     render();
   });
 
-  el.btnWeigh.addEventListener('click', function(){
+  on(el.btnWeigh, 'click', function(){
     const t = currentTexts();
     const diff = targetDraft - ELEPHANT_DRAFT;
     if (Math.abs(diff) <= TARGET_TOL){
@@ -890,7 +923,7 @@
     }
   });
 
-  el.btnNext.addEventListener('click', function(){
+  on(el.btnNext, 'click', function(){
     if (stage === 'brick' && solved){
       stage = 'success';
       render();
@@ -898,9 +931,9 @@
     }
     goNext();
   });
-  el.btnBack.addEventListener('click', goBack);
+  on(el.btnBack, 'click', goBack);
 
-  el.startBtn.addEventListener('click', function(){
+  on(el.startBtn, 'click', function(){
     started = true;
     el.startOverlay.style.display = 'none';
     render();
@@ -908,7 +941,7 @@
     setTimeout(function(){ speak(stripSpeakText()); }, 150);
   });
 
-  el.langBtn.addEventListener('click', function(){
+  on(el.langBtn, 'click', function(){
     lang = (lang === 'id') ? 'en' : 'id';
     const url = new URL(location.href);
     url.searchParams.set('lang', lang);
@@ -916,7 +949,7 @@
     render();
   });
 
-  el.muteBtn.addEventListener('click', function(){
+  on(el.muteBtn, 'click', function(){
     muted = !muted;
     if (muted && window.speechSynthesis) window.speechSynthesis.cancel();
     render();
