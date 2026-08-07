@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemburu Dan Burung Snipe</title>
+<style>
+  :root{
+    --forest-dark:#16241b;
+    --forest-mid:#233a29;
+    --panel:#f3ead6;
+    --panel-edge:#c9a24b;
+    --ink:#2b2116;
+    --gold:#c9a24b;
+    --gold-bright:#e7c37a;
+    --danger:#a4402f;
+    --good:#4c7a4a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito', -apple-system, Segoe UI, Roboto, sans-serif;
+    background: linear-gradient(180deg,#0e1a12,#1b2b1f);
+    color:var(--panel);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Nunito:wght@400;600;700&display=swap');
+  #snipeGame{
+    width:100%;
+    max-width:720px;
+    background:var(--forest-dark);
+    border:3px solid var(--gold);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    position:relative;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    background:linear-gradient(180deg,#1c2e21,#182619);
+    border-bottom:2px solid var(--gold);
+  }
+  .brand{
+    font-family:'Merriweather',serif;
+    font-weight:900;
+    font-size:14px;
+    color:var(--gold-bright);
+    letter-spacing:.5px;
+  }
+  .controls{display:flex;gap:8px;}
+  .ctrlBtn{
+    background:var(--forest-mid);
+    border:1.5px solid var(--gold);
+    color:var(--panel);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;
+    transition:.15s;
+  }
+  .ctrlBtn:hover{background:var(--gold);color:#1b2b1f;}
+  .ctrlBtn.active{background:var(--gold);color:#1b2b1f;}
+  #stage{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4 / 3;
+    background:#0a140d;
+  }
+  canvas{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    pointer-events:none;
+  }
+  .dialogueBox{
+    margin:10px;
+    background:rgba(24,30,20,.92);
+    border:2px solid var(--gold);
+    border-radius:12px;
+    padding:14px 16px;
+    pointer-events:auto;
+    animation: fadeUp .35s ease;
+  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .dialogueText{
+    font-size:15px;
+    line-height:1.5;
+    color:var(--panel);
+    margin-bottom:10px;
+    min-height:24px;
+  }
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .storyBtn{
+    background:var(--gold);
+    color:#231a0e;
+    border:none;
+    border-radius:8px;
+    padding:9px 18px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;
+    transition:.15s;
+  }
+  .storyBtn:hover{background:var(--gold-bright);transform:translateY(-1px);}
+  .storyBtn.secondary{
+    background:transparent;
+    border:1.5px solid var(--gold);
+    color:var(--gold-bright);
+  }
+  .qteBar{
+    height:6px;
+    background:#0a140d;
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:10px;
+    border:1px solid var(--gold);
+  }
+  .qteFill{
+    height:100%;
+    background:linear-gradient(90deg,var(--good),var(--gold));
+    width:100%;
+    transition:width .1s linear;
+  }
+  .centerCard{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    text-align:center;
+    padding:24px;
+    background:radial-gradient(ellipse at center, rgba(22,36,27,.4), rgba(10,20,13,.85));
+  }
+  .titleWord{
+    font-family:'Merriweather',serif;
+    font-weight:900;
+    font-size:clamp(22px,6vw,34px);
+    color:var(--gold-bright);
+    text-shadow:0 3px 0 rgba(0,0,0,.4);
+    margin:0 0 6px 0;
+  }
+  .subWord{
+    font-size:13px;
+    color:var(--panel);
+    opacity:.85;
+    margin-bottom:22px;
+    max-width:420px;
+  }
+  .hint{
+    font-size:11px;
+    color:var(--gold-bright);
+    opacity:.8;
+    margin-top:14px;
+  }
+  .grid3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    width:100%;
+    max-width:360px;
+  }
+  .birdCell{
+    aspect-ratio:1;
+    background:rgba(243,234,214,.06);
+    border:2px solid var(--gold);
+    border-radius:10px;
+    cursor:pointer;
+    position:relative;
+    transition:.15s;
+  }
+  .birdCell.selected{
+    border-color:var(--gold-bright);
+    background:rgba(201,162,75,.28);
+    box-shadow:0 0 0 3px rgba(231,195,122,.4) inset;
+  }
+  .birdCell canvas{position:static;width:100%;height:100%;pointer-events:none;}
+  .badge{
+    position:absolute;
+    top:10px;left:10px;
+    background:rgba(0,0,0,.5);
+    border:1px solid var(--gold);
+    border-radius:20px;
+    padding:4px 10px;
+    font-size:11px;
+    pointer-events:none;
+  }
+  .footNote{
+    text-align:center;
+    font-size:11px;
+    color:var(--panel);
+    opacity:.6;
+    padding:8px 12px 12px;
+  }
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+</style>
+</head>
+<body>
+
+<div id="snipeGame">
+  <div class="topbar">
+    <div class="brand">🌲 Pemburu &amp; Burung Snipe</div>
+    <div class="controls">
+      <button class="ctrlBtn" id="muteBtn" title="Mute/unmute narration">🔊</button>
+      <button class="ctrlBtn" id="langBtn">EN</button>
+    </div>
+  </div>
+  <div id="stage">
+    <canvas id="artCanvas"></canvas>
+    <div class="overlay" id="overlay"></div>
+  </div>
+  <div class="footNote" id="footNote"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- language ----------
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  var muted = false;
+
+  var STR = {
+    id:{
+      brand:"Pemburu & Burung Snipe",
+      title:"Pemburu Dan Burung Snipe",
+      subtitle:"Sebuah dongeng dari Norwegia, dikisahkan ulang menjadi permainan interaktif.",
+      play:"▶ Mulai Cerita",
+      continue_:"Lanjut",
+      qteSpare:"🕊️ Jangan tembak anak-anaknya!",
+      qteGood:"Pemburu itu pun mengurungkan niatnya.",
+      minigameTitle:"Anak-Anak Burung Snipe",
+      minigameDesc:"Menurutmu, yang mana burung-burung Snipe yang \u201Ccantik\u201D? Pilih sebanyak yang kamu mau, lalu tekan \u201CTentukan Pilihan\u201D.",
+      confirm:"Tentukan Pilihan",
+      resultTitle:"Ternyata...",
+      replay:"🔁 Main Lagi",
+      creditNote:"Dongeng anak dari Norwegia",
+      scenes:[
+        "Di hutan Norwegia, hiduplah sejenis burung berparuh panjang bernama burung Snipe. Banyak pemburu datang untuk menjaring atau menembak mati burung Snipe untuk dijual ke pasar.",
+        "Suatu hari, seekor induk burung Snipe melihat seorang pemburu memasuki hutan. Ia sangat khawatir anak-anaknya akan ditembak mati.",
+        "\u201CWahai Tuan Pemburu baik hati, aku mohon padamu, jangan Engkau menembak mati anak-anakku,\u201D kata burung Snipe memelas sambil menghadang si pemburu.",
+        "\u201CApa? Aku kemari untuk berburu burung Snipe. Sebaiknya Aku menembakmu sekarang,\u201D kata si pemburu sambil mengarahkan senapannya.",
+        "Namun melihat burung Snipe memohon sepenuh hati, si pemburu pun mengurungkan niatnya. \u201CBaiklah, Aku tak akan membunuhmu,\u201D katanya.",
+        "\u201CTerima kasih, Tuan Pemburu. Jika di tengah hutan Engkau menemukan burung-burung Snipe yang cantik, mereka adalah anak-anakku. Aku harap Tuan tidak membunuh mereka,\u201D kata burung Snipe.",
+        "\u201CBaiklah, Aku tak akan menembak anak-anakmu,\u201D jawab si pemburu. Ia pun melanjutkan perjalanannya masuk ke dalam hutan.",
+        "Sementara itu, induk burung Snipe kembali ke sarangnya. Namun ia tak mendapati anak-anaknya di sana. Dengan cemas, ia menunggu hingga sore hari, tapi anak-anaknya tak kunjung pulang.",
+        "Coba bantu induk burung Snipe mengingat: dari sekian banyak burung di hutan, mana saja yang menurutmu \u201Ccantik\u201D?",
+        "Induk burung Snipe pun terbang mencari anak-anaknya. Di tengah jalan menuju desa, ia bertemu si pemburu — yang ternyata membawa beberapa ekor burung Snipe kecil.",
+        "\u201CHai Tuan Pemburu! Bukankah Engkau berjanji tak akan menangkap anak-anakku yang cantik? Kenapa Engkau melanggar janjimu?\u201D kata induk burung Snipe marah.",
+        "\u201CBagaimana Engkau ini? Kau bilang anak-anakmu adalah burung-burung Snipe yang cantik. Aku hanya menangkap yang jelek,\u201D kilah si pemburu.",
+        "\u201CSeburuk apapun mereka, bagiku mereka adalah burung-burung Snipe yang cantik,\u201D induk burung Snipe menyesali kebodohannya. Seharusnya ia menjelaskan ciri-ciri anak-anaknya, bukan hanya menyebut mereka \u201Ccantik\u201D."
+      ],
+      resultTexts:[
+        "Kamu memilih {n} dari 3 anak burung Snipe yang sesungguhnya — burung-burung yang tampak biasa saja, namun begitu istimewa di mata induknya.",
+        "Sama seperti si pemburu, sulit menebak burung mana yang dimaksud \u201Ccantik\u201D hanya dari satu kata itu. Bagi induk burung Snipe, seburuk apapun rupa anaknya, mereka tetaplah yang paling cantik baginya."
+      ],
+      moralTitle:"Pesan Dongeng",
+      moral:"Kata-kata yang tidak jelas bisa menimbulkan salah paham. Dan di mata seorang ibu, anaknya akan selalu tampak istimewa — seburuk apapun penilaian orang lain."
+    },
+    en:{
+      brand:"The Hunter & The Snipe Bird",
+      title:"The Hunter And The Snipe Bird",
+      subtitle:"A Norwegian folktale, retold as an interactive game.",
+      play:"▶ Start the Story",
+      continue_:"Continue",
+      qteSpare:"🕊️ Don't shoot her chicks!",
+      qteGood:"The hunter changed his mind.",
+      minigameTitle:"The Snipe Chicks",
+      minigameDesc:"Which of these birds do you think are the \u201Cbeautiful\u201D Snipe birds? Pick as many as you like, then press \u201CConfirm Choice.\u201D",
+      confirm:"Confirm Choice",
+      resultTitle:"As it turns out...",
+      replay:"🔁 Play Again",
+      creditNote:"A children's folktale from Norway",
+      scenes:[
+        "Deep in a Norwegian forest lived a long-beaked bird called the Snipe. Many hunters came to trap or shoot Snipe birds to sell at the market.",
+        "One day, a mother Snipe saw a hunter enter the forest. She feared for her chicks, worried they would be shot.",
+        "\u201CKind Sir Hunter, I beg you, please don't shoot my chicks,\u201D the Snipe pleaded, blocking the hunter's path.",
+        "\u201CWhat? I came here to hunt Snipe birds. Perhaps I should shoot you right now,\u201D said the hunter, raising his rifle.",
+        "But seeing how earnestly the bird pleaded, the hunter changed his mind. \u201CVery well. I won't kill you,\u201D he said.",
+        "\u201CThank you, Sir Hunter. If deep in the forest you find some beautiful Snipe birds, those are my children. I hope you won't harm them,\u201D said the mother bird.",
+        "\u201CAlright, I won't shoot your chicks,\u201D the hunter replied, and continued on his way into the forest.",
+        "Meanwhile, the mother Snipe returned to her nest — but her chicks weren't there. Worried, she waited all afternoon, yet they never came home.",
+        "Help the mother Snipe recall: among all the birds in the forest, which ones do you think look \u201Cbeautiful\u201D?",
+        "The mother Snipe flew off to search for her chicks. Along the path to the village, she met the hunter — carrying several small Snipe birds.",
+        "\u201CHunter! Didn't you promise not to catch my beautiful children? Why did you break your promise?\u201D the mother bird cried angrily.",
+        "\u201CWhat do you mean? You said your children were the beautiful Snipe birds. I only caught the ugly-looking ones,\u201D the hunter argued.",
+        "\u201CHowever plain they may look, to me they are beautiful Snipe birds,\u201D the mother bird realized her mistake — she should have described her chicks clearly, instead of simply calling them \u201Cbeautiful.\u201D"
+      ],
+      resultTexts:[
+        "You picked {n} out of 3 of her real chicks — plain-looking little birds, yet so special in their mother's eyes.",
+        "Just like the hunter, it's hard to guess which birds count as \u201Cbeautiful\u201D from that word alone. To a mother Snipe, however plain her chicks may look, they are always the most beautiful to her."
+      ],
+      moralTitle:"Moral of the Story",
+      moral:"Unclear words can lead to misunderstanding. And in a mother's eyes, her children will always be special — no matter how others may judge them."
+    }
+  };
+
+  function t(key){ return STR[lang][key]; }
+
+  // ---------- narration (Web Speech API) ----------
+  var synth = window.speechSynthesis;
+  function speak(text){
+    if(muted || !synth) return;
+    try{
+      synth.cancel();
+      var clean = text.replace(/[\u201C\u201D]/g,'"');
+      var u = new SpeechSynthesisUtterance(clean);
+      u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      synth.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){ if(synth){ try{ synth.cancel(); }catch(e){} } }
+
+  // ---------- canvas & art ----------
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('artCanvas');
+  var ctx = canvas.getContext('2d');
+  var overlay = document.getElementById('overlay');
+  var footNote = document.getElementById('footNote');
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  var brandEl = document.querySelector('.brand');
+
+  function fitCanvas(){
+    var rect = stage.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    render();
+  }
+  window.addEventListener('resize', fitCanvas);
+
+  // color palette for scenes
+  function skyGradient(w,h,warm){
+    var g = ctx.createLinearGradient(0,0,0,h);
+    if(warm){
+      g.addColorStop(0,'#e8b96a');
+      g.addColorStop(1,'#c98a4b');
+    }else{
+      g.addColorStop(0,'#8fb99a');
+      g.addColorStop(1,'#3f6b4a');
+    }
+    return g;
+  }
+
+  function drawTree(x,y,scale,dark){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = dark ? '#16281b' : '#26432c';
+    ctx.beginPath();
+    ctx.moveTo(0,-90); ctx.lineTo(-38,-20); ctx.lineTo(-18,-20);
+    ctx.lineTo(-48,40); ctx.lineTo(-14,40); ctx.lineTo(-22,90);
+    ctx.lineTo(22,90); ctx.lineTo(14,40); ctx.lineTo(48,40);
+    ctx.lineTo(18,-20); ctx.lineTo(38,-20);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4a3423';
+    ctx.fillRect(-6,90,12,26);
+    ctx.restore();
+  }
+
+  function drawForestBg(w,h,opts){
+    opts = opts || {};
+    ctx.fillStyle = skyGradient(w,h, opts.warm);
+    ctx.fillRect(0,0,w,h);
+    // sun/moon
+    ctx.fillStyle = opts.warm ? 'rgba(255,238,200,.85)' : 'rgba(255,255,255,.5)';
+    ctx.beginPath(); ctx.arc(w*0.82,h*0.18,w*0.055,0,Math.PI*2); ctx.fill();
+    // distant tree line
+    for(var i=0;i<7;i++){
+      drawTree(w*(0.05+i*0.15), h*0.62, 0.6+((i%3)*0.08), true);
+    }
+    // ground
+    ctx.fillStyle = '#243d29';
+    ctx.beginPath();
+    ctx.moveTo(0,h*0.72);
+    ctx.quadraticCurveTo(w*0.5,h*0.66,w,h*0.74);
+    ctx.lineTo(w,h); ctx.lineTo(0,h);
+    ctx.closePath(); ctx.fill();
+    // foreground trees
+    if(!opts.noFgTrees){
+      drawTree(w*0.12,h*0.78,1.15,false);
+      drawTree(w*0.9,h*0.8,1.3,false);
+    }
+  }
+
+  function drawHunter(x,y,scale,aiming){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.strokeStyle = '#3b2c1f'; ctx.lineWidth = 7; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-6,10); ctx.lineTo(-10,44); ctx.moveTo(6,10); ctx.lineTo(10,44); ctx.stroke();
+    // coat
+    ctx.fillStyle = '#5a4433';
+    ctx.beginPath();
+    ctx.moveTo(-16,-30); ctx.lineTo(16,-30); ctx.lineTo(20,14); ctx.lineTo(-20,14);
+    ctx.closePath(); ctx.fill();
+    // belt
+    ctx.fillStyle = '#2c2117'; ctx.fillRect(-18,6,36,5);
+    // arms
+    ctx.strokeStyle = '#5a4433'; ctx.lineWidth = 9;
+    if(aiming){
+      ctx.beginPath(); ctx.moveTo(14,-18); ctx.lineTo(46,-22); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-6,-16); ctx.lineTo(30,-10); ctx.stroke();
+      // rifle
+      ctx.strokeStyle = '#2b2118'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(-2,-14); ctx.lineTo(58,-24); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.moveTo(-14,-18); ctx.lineTo(-28,4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,-18); ctx.lineTo(24,6); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = '#e0b28c';
+    ctx.beginPath(); ctx.arc(0,-42,13,0,Math.PI*2); ctx.fill();
+    // hat
+    ctx.fillStyle = '#3f2f22';
+    ctx.beginPath(); ctx.ellipse(0,-52,17,6,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-10,-54); ctx.lineTo(10,-54); ctx.lineTo(6,-68); ctx.lineTo(-6,-68); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBird(x,y,scale,style){
+    // style: {body, belly, beauty(0-1), flip}
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale((style.flip?-1:1)*scale,scale);
+    // wing/tail flourish for "beautiful" birds
+    if(style.beauty>0.55){
+      ctx.fillStyle = style.accent;
+      ctx.beginPath();
+      ctx.moveTo(-6,2);
+      ctx.quadraticCurveTo(-30,-4-14*style.beauty, -34,10*style.beauty);
+      ctx.quadraticCurveTo(-16,10,-2,10);
+      ctx.closePath(); ctx.fill();
+    }
+    // body
+    ctx.fillStyle = style.body;
+    ctx.beginPath();
+    ctx.ellipse(0,4,16,11,0,0,Math.PI*2); ctx.fill();
+    // belly
+    ctx.fillStyle = style.belly;
+    ctx.beginPath();
+    ctx.ellipse(2,8,9,6,0,0,Math.PI*2); ctx.fill();
+    // wing
+    ctx.fillStyle = style.wing;
+    ctx.beginPath();
+    ctx.ellipse(-2,3,8,5,0.5,0,Math.PI*2); ctx.fill();
+    // head
+    ctx.fillStyle = style.body;
+    ctx.beginPath(); ctx.arc(11,-4,7,0,Math.PI*2); ctx.fill();
+    // eye
+    ctx.fillStyle = '#20160c';
+    ctx.beginPath(); ctx.arc(14,-6,1.4,0,Math.PI*2); ctx.fill();
+    // long beak (snipe trait)
+    ctx.strokeStyle = '#3a2a1c'; ctx.lineWidth = 2.4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(17,-3); ctx.lineTo(32,1); ctx.stroke();
+    // legs
+    ctx.strokeStyle = '#c98a4b'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(-2,14); ctx.lineTo(-4,20); ctx.moveTo(4,14); ctx.lineTo(6,20); ctx.stroke();
+    // decorative crest for beautiful ones
+    if(style.beauty>0.7){
+      ctx.strokeStyle = style.accent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(8,-10); ctx.lineTo(4,-18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,-10); ctx.lineTo(12,-19); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ---------- scenes ----------
+  var W=800, H=600; // logical drawing space, scaled by ctx transform via getBoundingClientRect ratio (4:3)
+
+  function logicalSize(){
+    var rect = stage.getBoundingClientRect();
+    return {w: rect.width, h: rect.height};
+  }
+
+  var sceneIndex = 0;
+
+  // ordering matches STR.scenes indices [0..12]; minigame is inserted logically between narration idx 7 (waiting) and idx 9 (search),
+  // we treat idx 8 as the minigame TEXT prompt itself preceding the interactive grid.
+  var artForScene = [
+    function(w,h){ drawForestBg(w,h,{warm:false}); }, // 0
+    function(w,h){ drawForestBg(w,h,{warm:false}); drawHunter(w*0.22,h*0.66,1.0,false); }, // 1
+    function(w,h){ drawForestBg(w,h,{warm:false}); drawHunter(w*0.3,h*0.66,1.0,false); drawBird(w*0.62,h*0.6,1.6,{body:'#5a4a36',belly:'#cbb98f',wing:'#3f3324',beauty:0.3,accent:'#c9a24b'}); }, // 2
+    function(w,h){ drawForestBg(w,h,{warm:false}); drawHunter(w*0.3,h*0.64,1.05,true); drawBird(w*0.62,h*0.6,1.6,{body:'#5a4a36',belly:'#cbb98f',wing:'#3f3324',beauty:0.3,accent:'#c9a24b'}); }, // 3
+    function(w,h){ drawForestBg(w,h,{warm:false}); drawHunter(w*0.3,h*0.64,1.05,false); drawBird(w*0.62,h*0.6,1.6,{body:'#5a4a36',belly:'#cbb98f',wing:'#3f3324',beauty:0.3,accent:'#c9a24b'}); }, // 4
+    function(w,h){ drawForestBg(w,h,{warm:false}); drawHunter(w*0.3,h*0.64,1.05,false); drawBird(w*0.62,h*0.6,1.6,{body:'#5a4a36',belly:'#cbb98f',wing:'#3f3324',beauty:0.3,accent:'#c9a24b'}); }, // 5
+    function(w,h){ drawForestBg(w,h,{warm:true}); drawHunter(w*0.75,h*0.66,1.0,false); }, // 6
+    function(w,h){ drawForestBg(w,h,{warm:false}); drawBird(w*0.5,h*0.55,2.0,{body:'#6b5a42',belly:'#d8c69c',wing:'#463823',beauty:0.2,accent:'#c9a24b'}); }, // 7 (waiting at nest)
+    null, // 8 -> minigame prompt uses same art as 7
+    function(w,h){ drawForestBg(w,h,{warm:true}); drawHunter(w*0.62,h*0.66,1.05,false);
+       drawBird(w*0.3,h*0.5,1.1,{body:'#6b5a42',belly:'#d8c69c',wing:'#463823',beauty:0.2,accent:'#c9a24b',flip:true}); }, // 9
+    function(w,h){ drawForestBg(w,h,{warm:true}); drawHunter(w*0.62,h*0.66,1.05,false);
+       drawBird(w*0.28,h*0.48,1.15,{body:'#6b5a42',belly:'#d8c69c',wing:'#463823',beauty:0.2,accent:'#c9a24b',flip:true}); }, // 10
+    function(w,h){ drawForestBg(w,h,{warm:true}); drawHunter(w*0.62,h*0.66,1.05,false);
+       drawBird(w*0.28,h*0.48,1.15,{body:'#6b5a42',belly:'#d8c69c',wing:'#463823',beauty:0.2,accent:'#c9a24b',flip:true}); }, // 11
+    function(w,h){ drawForestBg(w,h,{warm:true}); drawHunter(w*0.62,h*0.68,1.0,false);
+       drawBird(w*0.28,h*0.46,1.2,{body:'#6b5a42',belly:'#d8c69c',wing:'#463823',beauty:0.2,accent:'#c9a24b',flip:true}); } // 12
+  ];
+
+  var STATE = {
+    INTRO: 'intro',
+    NARRATE: 'narrate',
+    QTE: 'qte',
+    MINIGAME_PROMPT: 'minigame_prompt',
+    MINIGAME: 'minigame',
+    RESULT: 'result',
+    END: 'end'
+  };
+  var state = STATE.INTRO;
+  var narrateIdx = 0;
+  var qteTimer = null, qteInterval=null;
+  var selectedBirds = {};
+  var actualChicks = [1,4,7]; // indices into 3x3 grid considered the mother's real, plain-looking chicks
+
+  var birdGridStyles = [
+    {body:'#c96b4a',belly:'#f2d9a8',wing:'#8a3c26',beauty:0.9,accent:'#e7c37a'},
+    {body:'#6b5a42',belly:'#d8c69c',wing:'#463823',beauty:0.15,accent:'#c9a24b'},
+    {body:'#3f7a5c',belly:'#c8e6c9',wing:'#245038',beauty:0.85,accent:'#a8d5ba'},
+    {body:'#8a6a4a',belly:'#dcc9a3',wing:'#5a4230',beauty:0.2,accent:'#c9a24b'},
+    {body:'#5e5342',belly:'#cbb98f',wing:'#3a3122',beauty:0.1,accent:'#c9a24b'},
+    {body:'#c94a6b',belly:'#f2c9d9',wing:'#8a2646',beauty:0.95,accent:'#e78aa8'},
+    {body:'#4a6a8a',belly:'#c9dcf2',wing:'#264a6a',beauty:0.8,accent:'#8ab8e7'},
+    {body:'#6b5a42',belly:'#d8c69c',wing:'#3a3122',beauty:0.18,accent:'#c9a24b'},
+    {body:'#a4703f',belly:'#e6cfa0',wing:'#6b4726',beauty:0.55,accent:'#c9a24b'}
+  ];
+
+  function render(){
+    var sz = logicalSize();
+    var w = sz.w, h = sz.h;
+    ctx.clearRect(0,0,w,h);
+    var artIdx = null;
+    if(state===STATE.NARRATE || state===STATE.QTE){
+      artIdx = narrateIdx;
+    } else if(state===STATE.MINIGAME_PROMPT){
+      artIdx = 7;
+    } else if(state===STATE.MINIGAME || state===STATE.RESULT || state===STATE.END){
+      artIdx = 9;
+    } else if(state===STATE.INTRO){
+      artIdx = 0;
+    }
+    if(artIdx!==null && artForScene[artIdx]){
+      artForScene[artIdx](w,h);
+    } else {
+      drawForestBg(w,h,{warm:false});
+    }
+  }
+
+  function clearOverlay(){ overlay.innerHTML=''; }
+
+  function renderIntro(){
+    state = STATE.INTRO;
+    render();
+    clearOverlay();
+    var card = document.createElement('div');
+    card.className = 'centerCard';
+    card.style.pointerEvents = 'auto';
+    card.innerHTML =
+      '<div class="titleWord">'+t('title')+'</div>'+
+      '<div class="subWord">'+t('subtitle')+'</div>'+
+      '<button class="storyBtn" id="playBtn">'+t('play')+'</button>'+
+      '<div class="hint">🇳🇴 Norwegian Folktale</div>';
+    overlay.appendChild(card);
+    document.getElementById('playBtn').onclick = function(){
+      narrateIdx = 0;
+      goNarrate(0);
+    };
+  }
+
+  function dialogueBox(text, buttons, extraHTML){
+    clearOverlay();
+    var box = document.createElement('div');
+    box.className = 'dialogueBox';
+    var html = (extraHTML||'') + '<div class="dialogueText">'+text+'</div><div class="btnRow"></div>';
+    box.innerHTML = html;
+    overlay.appendChild(box);
+    var row = box.querySelector('.btnRow');
+    buttons.forEach(function(b){
+      var btn = document.createElement('button');
+      btn.className = 'storyBtn' + (b.secondary?' secondary':'');
+      btn.textContent = b.label;
+      btn.onclick = b.onClick;
+      row.appendChild(btn);
+    });
+    return box;
+  }
+
+  function goNarrate(i){
+    stopSpeak();
+    state = STATE.NARRATE;
+    narrateIdx = i;
+    render();
+    var text = t('scenes')[i];
+    speak(text);
+
+    if(i===2){
+      // leads into QTE next
+      dialogueBox(text, [{label:t('continue_'), onClick:function(){ startQTE(); }}]);
+      return;
+    }
+    if(i===7){
+      dialogueBox(text, [{label:t('continue_'), onClick:function(){ goMinigamePrompt(); }}]);
+      return;
+    }
+    var isLast = i === t('scenes').length - 1;
+    dialogueBox(text, [{
+      label: isLast ? t('replay') : t('continue_'),
+      onClick: function(){
+        if(isLast){ resetGame(); }
+        else {
+          var next = i+1;
+          if(next===8){ goMinigamePrompt(); }
+          else { goNarrate(next); }
+        }
+      }
+    }]);
+  }
+
+  function startQTE(){
+    state = STATE.QTE;
+    narrateIdx = 3;
+    render();
+    var duration = 5000;
+    var startT = Date.now();
+    var box = dialogueBox(
+      '<strong>'+t('qteSpare')+'</strong>',
+      [{label:t('qteSpare'), onClick:function(){ finishQTE(); }}],
+      '<div class="qteBar"><div class="qteFill" id="qteFill"></div></div>'
+    );
+    speak(STR[lang].scenes[3]);
+    var fill = document.getElementById('qteFill');
+    qteInterval = setInterval(function(){
+      var elapsed = Date.now() - startT;
+      var pct = Math.max(0, 100 - (elapsed/duration*100));
+      if(fill) fill.style.width = pct+'%';
+      if(elapsed >= duration){
+        clearInterval(qteInterval);
+        finishQTE();
+      }
+    }, 60);
+  }
+
+  function finishQTE(){
+    if(qteInterval){ clearInterval(qteInterval); qteInterval=null; }
+    stopSpeak();
+    goNarrate(4);
+  }
+
+  function goMinigamePrompt(){
+    state = STATE.MINIGAME_PROMPT;
+    narrateIdx = 8;
+    render();
+    var text = t('scenes')[8];
+    speak(text);
+    dialogueBox(text, [{label:t('continue_'), onClick:function(){ startMinigame(); }}]);
+  }
+
+  function startMinigame(){
+    stopSpeak();
+    state = STATE.MINIGAME;
+    selectedBirds = {};
+    render();
+    clearOverlay();
+    var box = document.createElement('div');
+    box.className = 'dialogueBox';
+    box.innerHTML =
+      '<div class="dialogueText"><strong>'+t('minigameTitle')+'</strong><br>'+t('minigameDesc')+'</div>'+
+      '<div class="grid3" id="birdGrid"></div>'+
+      '<div class="btnRow" style="margin-top:10px;"></div>';
+    overlay.appendChild(box);
+    var grid = box.querySelector('#birdGrid');
+    for(var idx=0; idx<9; idx++){
+      (function(idx){
+        var cell = document.createElement('div');
+        cell.className = 'birdCell';
+        var c = document.createElement('canvas');
+        c.width = 100; c.height = 100;
+        cell.appendChild(c);
+        var cctx = c.getContext('2d');
+        var st = birdGridStyles[idx];
+        drawBirdOnCtx(cctx, 50, 60, 1.6, st);
+        cell.onclick = function(){
+          if(selectedBirds[idx]){ delete selectedBirds[idx]; cell.classList.remove('selected'); }
+          else { selectedBirds[idx]=true; cell.classList.add('selected'); }
+        };
+        grid.appendChild(cell);
+      })(idx);
+    }
+    var row = box.querySelector('.btnRow');
+    var confirmBtn = document.createElement('button');
+    confirmBtn.className = 'storyBtn';
+    confirmBtn.textContent = t('confirm');
+    confirmBtn.onclick = showMinigameResult;
+    row.appendChild(confirmBtn);
+  }
+
+  function drawBirdOnCtx(targetCtx, x, y, scale, style){
+    var prevCtx = ctx;
+    ctx = targetCtx;
+    drawBird(x,y,scale,style);
+    ctx = prevCtx;
+  }
+
+  function showMinigameResult(){
+    var matched = 0;
+    actualChicks.forEach(function(i){ if(selectedBirds[i]) matched++; });
+    state = STATE.RESULT;
+    narrateIdx = 9;
+    render();
+    var text1 = t('resultTexts')[0].replace('{n}', matched);
+    var text2 = t('resultTexts')[1];
+    var full = text1 + ' ' + text2;
+    speak(full);
+    dialogueBox(full, [{label:t('continue_'), onClick:function(){ goNarrate(10); }}]);
+  }
+
+  function resetGame(){
+    stopSpeak();
+    sceneIndex = 0; narrateIdx = 0; selectedBirds = {};
+    renderIntro();
+  }
+
+  // ---------- UI: mute / language ----------
+  function applyLangUI(){
+    document.documentElement.lang = lang;
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    brandEl.textContent = '🌲 ' + t('brand');
+    footNote.textContent = t('creditNote');
+  }
+  applyLangUI();
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+    if(muted) stopSpeak();
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+    stopSpeak();
+    // re-render current state in new language
+    if(state===STATE.INTRO) renderIntro();
+    else if(state===STATE.NARRATE) goNarrate(narrateIdx);
+    else if(state===STATE.QTE) startQTE();
+    else if(state===STATE.MINIGAME_PROMPT) goMinigamePrompt();
+    else if(state===STATE.MINIGAME) startMinigame();
+    else if(state===STATE.RESULT) showMinigameResult();
+  });
+
+  // ---------- auto-resize for iframe embedding ----------
+  function reportHeight(){
+    var h = document.getElementById('snipeGame').offsetHeight + 4;
+    try{
+      window.parent.postMessage({ type:'snipe-game-resize', height:h }, '*');
+      window.parent.postMessage({ snipeGameHeight:h }, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ fitCanvas(); reportHeight(); });
+    ro.observe(document.getElementById('snipeGame'));
+  }
+  window.addEventListener('load', function(){ fitCanvas(); reportHeight(); });
+
+  // ---------- init ----------
+  fitCanvas();
+  renderIntro();
+  setTimeout(reportHeight, 200);
+
+})();
+</script>
+</body>
+</html>
