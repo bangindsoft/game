@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momotaro - Kisah Anak Persik</title>
+<style>
+  :root{
+    --mmt-cream:#fff6e6;
+    --mmt-paper:#fffaf0;
+    --mmt-brown:#6b4226;
+    --mmt-brown-dark:#4a2c17;
+    --mmt-red:#c1443c;
+    --mmt-red-dark:#9a332c;
+    --mmt-green:#5c8a4a;
+    --mmt-blue:#4a7ba6;
+    --mmt-gold:#d9a441;
+    --mmt-ink:#3a2b1f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  #mmt-app{
+    font-family: 'Trebuchet MS', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(180deg, #fff0d6 0%, var(--mmt-cream) 100%);
+    color: var(--mmt-ink);
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow: 0 4px 18px rgba(74,44,23,0.18);
+    border:1px solid #e8d3ab;
+  }
+  #mmt-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background: var(--mmt-brown-dark);
+  }
+  #mmt-progress{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .mmt-dot{
+    width:10px;height:10px;border-radius:50%;
+    background: rgba(255,255,255,0.28);
+    transition: background .25s, transform .25s;
+  }
+  .mmt-dot.mmt-dot-active{
+    background: var(--mmt-gold);
+    transform: scale(1.25);
+  }
+  .mmt-dot.mmt-dot-done{
+    background: #e8c877;
+  }
+  #mmt-controls{ display:flex; gap:8px; }
+  #mmt-controls button{
+    background: rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fff2d9;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  #mmt-controls button:hover{ background: rgba(255,255,255,0.22); }
+  #mmt-stage{ padding: 14px 16px 4px; }
+  #mmt-scene{
+    width:100%;
+    aspect-ratio: 16/10;
+    background: linear-gradient(180deg,#cfe8f7 0%, #eaf6ff 55%, #f4ecd0 55%, #e8d9ad 100%);
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid #e2cd9c;
+    position:relative;
+  }
+  #mmt-scene svg{ width:100%; height:100%; display:block; }
+  #mmt-textbox{
+    margin-top:12px;
+    background: var(--mmt-paper);
+    border:1px solid #e8d3ab;
+    border-radius:10px;
+    padding:12px 14px;
+    min-height:64px;
+    font-size:15.5px;
+    line-height:1.55;
+  }
+  #mmt-interaction{
+    margin-top:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    min-height:0;
+  }
+  .mmt-qte-btn{
+    background: var(--mmt-red);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:10px 16px;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow: 0 3px 0 var(--mmt-red-dark);
+    transition: transform .08s;
+  }
+  .mmt-qte-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 var(--mmt-red-dark); }
+  .mmt-qte-btn.mmt-secondary{
+    background: var(--mmt-green);
+    box-shadow: 0 3px 0 #3f6534;
+  }
+  #mmt-battle-wrap{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  #mmt-battle-bar-track{
+    width:90%;
+    max-width:360px;
+    height:14px;
+    background:#e5d3a8;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid #cbb27e;
+  }
+  #mmt-battle-bar-fill{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--mmt-gold), var(--mmt-red));
+    transition: width .15s;
+  }
+  #mmt-bottombar{
+    padding: 14px 16px 18px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  #mmt-bottombar button{
+    background: var(--mmt-brown);
+    color:#fff8ea;
+    border:none;
+    padding:11px 22px;
+    border-radius:24px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--mmt-brown-dark);
+  }
+  #mmt-bottombar button:active{ transform: translateY(2px); box-shadow:0 1px 0 var(--mmt-brown-dark); }
+  #mmt-footer{
+    text-align:center;
+    font-size:11.5px;
+    color:#9c8560;
+    padding:6px 0 12px;
+    letter-spacing:.2px;
+  }
+  #mmt-footer a{ color:#9c8560; text-decoration:none; }
+  .mmt-fade-in{ animation: mmtFadeIn .5s ease; }
+  @keyframes mmtFadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  #mmt-title-overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 50% 30%, #fff3d6, #f3dca3 70%);
+    text-align:center; padding:16px;
+  }
+  #mmt-title-overlay h1{
+    margin:6px 0 2px; font-size:26px; color: var(--mmt-brown-dark);
+  }
+  #mmt-title-overlay p{ margin:0; font-size:13.5px; color:#7a5c3a; max-width:80%; }
+</style>
+</head>
+<body>
+<div id="mmt-app">
+  <div id="mmt-topbar">
+    <div id="mmt-progress"></div>
+    <div id="mmt-controls">
+      <button id="mmt-lang-toggle" type="button">EN</button>
+      <button id="mmt-mute-toggle" type="button">🔊</button>
+    </div>
+  </div>
+  <div id="mmt-stage">
+    <div id="mmt-scene"></div>
+    <div id="mmt-textbox"><p id="mmt-narration">Memuat...</p></div>
+    <div id="mmt-interaction"></div>
+  </div>
+  <div id="mmt-bottombar">
+    <button id="mmt-start-btn" type="button">🍑 Mulai Cerita</button>
+    <button id="mmt-next-btn" type="button" style="display:none;">Lanjut ➜</button>
+    <button id="mmt-replay-btn" type="button" style="display:none;">↺ Ulangi Cerita</button>
+  </div>
+  <div id="mmt-footer">Dongeng Anak &mdash; <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Language ---------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var T = {
+    id: {
+      title: "Momotaro, Anak Persik",
+      subtitle: "Ketuk \"Mulai Cerita\" untuk memulai dongeng dari Jepang",
+      start: "🍑 Mulai Cerita",
+      next: "Lanjut ➜",
+      replay: "↺ Ulangi Cerita",
+      give: "Berikan Kibidango 🍡",
+      attack: "Serang! ⚔️",
+      langBtn: "EN",
+      muteOn: "🔊",
+      muteOff: "🔇"
+    },
+    en: {
+      title: "Momotaro, the Peach Boy",
+      subtitle: "Tap \"Start Story\" to begin this Japanese folktale",
+      start: "🍑 Start Story",
+      next: "Next ➜",
+      replay: "↺ Replay Story",
+      give: "Give a Kibidango 🍡",
+      attack: "Attack! ⚔️",
+      langBtn: "ID",
+      muteOn: "🔊",
+      muteOff: "🔇"
+    }
+  };
+
+  /* ---------- Story data ---------- */
+  var STAGES = [
+    {
+      key: "peach",
+      text: {
+        id: "Dahulu kala, hiduplah sepasang suami istri tua di sebuah desa di Jepang. Suatu hari, sang nenek pergi ke sungai untuk mencuci pakaian, dan ia melihat sebuah persik raksasa hanyut ke arahnya.",
+        en: "Long ago, an old couple lived in a village in Japan. One day, the old woman went to the river to wash clothes, and she saw a giant peach floating toward her."
+      },
+      scene: sceneRiverPeach
+    },
+    {
+      key: "birth",
+      text: {
+        id: "Ketika mereka membelah persik itu di rumah, keluarlah seorang bayi laki-laki mungil dari dalamnya! Mereka menamainya Momotaro, yang berarti \"anak persik\", dan membesarkannya dengan penuh kasih sayang.",
+        en: "When they cut the peach open at home, a tiny baby boy popped out from inside! They named him Momotaro, meaning 'peach boy', and raised him with loving care."
+      },
+      scene: sceneHouseBaby
+    },
+    {
+      key: "grownup",
+      text: {
+        id: "Bertahun-tahun berlalu, Momotaro tumbuh menjadi pemuda yang kuat dan pemberani. Ia mendengar bahwa segerombolan Oni (raksasa jahat) dari Pulau Onigashima sering merampok desa-desa. Momotaro pun memutuskan untuk pergi mengalahkan mereka.",
+        en: "Years passed, and Momotaro grew into a strong, brave young man. He heard that a band of Oni (evil ogres) from Onigashima Island often raided villages. Momotaro decided to set off and defeat them."
+      },
+      scene: sceneGrownUp
+    },
+    {
+      key: "dog",
+      text: {
+        id: "Dalam perjalanan, Momotaro bertemu seekor anjing yang lapar. Dengan bekal kue kibidango dari ibunya, ia menawarkan sepotong. \"Bantu aku mengalahkan para Oni,\" katanya. Sang anjing pun setuju bergabung.",
+        en: "On his journey, Momotaro met a hungry dog. With his kibidango dumplings from his mother, he offered a piece. \"Help me defeat the Oni,\" he said. The dog agreed to join him."
+      },
+      scene: sceneDog,
+      interaction: { type: "give", target: "dog" }
+    },
+    {
+      key: "monkey",
+      text: {
+        id: "Tak jauh dari sana, seekor monyet turun dari pohon karena mencium harumnya kibidango. Momotaro membagikan sepotong lagi, dan sang monyet pun ikut bergabung dalam perjalanan.",
+        en: "Not far from there, a monkey climbed down from a tree, drawn by the smell of kibidango. Momotaro shared another piece, and the monkey joined the journey too."
+      },
+      scene: sceneMonkey,
+      interaction: { type: "give", target: "monkey" }
+    },
+    {
+      key: "pheasant",
+      text: {
+        id: "Kemudian seekor burung pegar terbang mendekat. \"Aku juga ingin membantu!\" katanya. Momotaro memberikan kibidango terakhirnya, dan kini ia memiliki tiga sahabat setia: anjing, monyet, dan burung pegar.",
+        en: "Then a pheasant flew close by. \"I want to help too!\" it said. Momotaro gave away his last kibidango, and now he had three loyal friends: the dog, the monkey, and the pheasant."
+      },
+      scene: scenePheasant,
+      interaction: { type: "give", target: "pheasant" }
+    },
+    {
+      key: "sail",
+      text: {
+        id: "Momotaro dan ketiga sahabatnya berlayar menyeberangi lautan menuju Pulau Onigashima, tempat para Oni bersembunyi di balik benteng batu yang kokoh.",
+        en: "Momotaro and his three friends sailed across the sea toward Onigashima Island, where the Oni hid behind a sturdy stone fortress."
+      },
+      scene: sceneSail
+    },
+    {
+      key: "battle",
+      text: {
+        id: "Sesampainya di pulau, pertempuran pun dimulai! Burung pegar mematuk, monyet mencakar, dan anjing menggigit, sementara Momotaro menyerang dengan pedangnya. Bantu Momotaro mengalahkan Oni!",
+        en: "Once they landed, the battle began! The pheasant pecked, the monkey scratched, and the dog bit, while Momotaro struck with his sword. Help Momotaro defeat the Oni!"
+      },
+      scene: sceneBattle,
+      interaction: { type: "battle" }
+    },
+    {
+      key: "victory",
+      text: {
+        id: "Akhirnya, pemimpin para Oni menyerah dan berjanji tidak akan mengganggu desa lagi. Ia menyerahkan harta karun hasil rampasan sebagai tanda damai.",
+        en: "At last, the Oni chief surrendered and promised never to trouble the village again. He handed over the stolen treasure as a sign of peace."
+      },
+      scene: sceneVictory
+    },
+    {
+      key: "home",
+      text: {
+        id: "Momotaro dan sahabat-sahabatnya pulang membawa harta karun untuk kakek dan neneknya. Mereka hidup bahagia, dan kisah keberanian Momotaro terus diceritakan turun-temurun. Tamat.",
+        en: "Momotaro and his friends returned home, bringing the treasure for his grandparents. They lived happily, and the tale of Momotaro's courage was passed down for generations. The End."
+      },
+      scene: sceneHome
+    }
+  ];
+
+  /* ---------- State ---------- */
+  var state = {
+    stageIndex: -1, // -1 = title screen
+    muted: (localStorage.getItem('mmt_muted') === '1'),
+    lang: lang,
+    battleProgress: 0,
+    battleTarget: 8
+  };
+
+  /* ---------- DOM refs ---------- */
+  var $progress = document.getElementById('mmt-progress');
+  var $scene = document.getElementById('mmt-scene');
+  var $narration = document.getElementById('mmt-narration');
+  var $interaction = document.getElementById('mmt-interaction');
+  var $startBtn = document.getElementById('mmt-start-btn');
+  var $nextBtn = document.getElementById('mmt-next-btn');
+  var $replayBtn = document.getElementById('mmt-replay-btn');
+  var $langToggle = document.getElementById('mmt-lang-toggle');
+  var $muteToggle = document.getElementById('mmt-mute-toggle');
+
+  /* ---------- Speech synthesis ---------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    if (!voices || !voices.length) return null;
+    var target = langCode === 'en' ? 'en' : 'id';
+    var exact = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target === 'en' ? 'en-us' : 'id-id') === 0; });
+    if (exact) return exact;
+    var loose = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target) === 0; });
+    if (loose) return loose;
+    return voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('en') === 0; }) || null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (state.muted) return;
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice(state.lang);
+    if (v) u.voice = v;
+    u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------- Progress dots ---------- */
+  function renderDots(){
+    $progress.innerHTML = '';
+    STAGES.forEach(function(_, i){
+      var d = document.createElement('div');
+      d.className = 'mmt-dot';
+      if (i === state.stageIndex) d.className += ' mmt-dot-active';
+      else if (i < state.stageIndex) d.className += ' mmt-dot-done';
+      $progress.appendChild(d);
+    });
+  }
+
+  /* ---------- Render stage ---------- */
+  function renderTitleScreen(){
+    $scene.innerHTML =
+      '<div id="mmt-title-overlay" class="mmt-fade-in">' +
+        '<div style="font-size:52px;">🍑</div>' +
+        '<h1>' + T[state.lang].title + '</h1>' +
+        '<p>' + T[state.lang].subtitle + '</p>' +
+      '</div>';
+    $narration.textContent = '';
+    $interaction.innerHTML = '';
+    $startBtn.style.display = 'inline-block';
+    $nextBtn.style.display = 'none';
+    $replayBtn.style.display = 'none';
+    $startBtn.textContent = T[state.lang].start;
+    renderDots();
+  }
+
+  function renderStage(){
+    var s = STAGES[state.stageIndex];
+    $scene.innerHTML = '<div class="mmt-fade-in">' + s.scene() + '</div>';
+    $narration.textContent = s.text[state.lang];
+    $interaction.innerHTML = '';
+    renderDots();
+    speak(s.text[state.lang]);
+
+    $startBtn.style.display = 'none';
+
+    if (s.interaction && s.interaction.type === 'give') {
+      $nextBtn.style.display = 'none';
+      $replayBtn.style.display = 'none';
+      var btn = document.createElement('button');
+      btn.className = 'mmt-qte-btn';
+      btn.textContent = T[state.lang].give;
+      btn.type = 'button';
+      btn.addEventListener('click', function(){
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        setTimeout(advanceStage, 350);
+      });
+      $interaction.appendChild(btn);
+    } else if (s.interaction && s.interaction.type === 'battle') {
+      $nextBtn.style.display = 'none';
+      $replayBtn.style.display = 'none';
+      state.battleProgress = 0;
+      var wrap = document.createElement('div');
+      wrap.id = 'mmt-battle-wrap';
+      var track = document.createElement('div');
+      track.id = 'mmt-battle-bar-track';
+      var fill = document.createElement('div');
+      fill.id = 'mmt-battle-bar-fill';
+      track.appendChild(fill);
+      var atkBtn = document.createElement('button');
+      atkBtn.className = 'mmt-qte-btn';
+      atkBtn.textContent = T[state.lang].attack;
+      atkBtn.type = 'button';
+      atkBtn.addEventListener('click', function(){
+        state.battleProgress++;
+        fill.style.width = Math.min(100, (state.battleProgress / state.battleTarget) * 100) + '%';
+        var oniEl = document.getElementById('mmt-oni-fig');
+        if (oniEl) {
+          oniEl.style.transition = 'transform .1s';
+          oniEl.style.transform = 'translateX(-4px)';
+          setTimeout(function(){ oniEl.style.transform = 'translateX(0)'; }, 100);
+        }
+        if (state.battleProgress >= state.battleTarget) {
+          atkBtn.disabled = true;
+          atkBtn.style.opacity = '0.6';
+          setTimeout(advanceStage, 500);
+        }
+      });
+      wrap.appendChild(track);
+      wrap.appendChild(atkBtn);
+      $interaction.appendChild(wrap);
+    } else {
+      var isLast = state.stageIndex === STAGES.length - 1;
+      if (isLast) {
+        $nextBtn.style.display = 'none';
+        $replayBtn.style.display = 'inline-block';
+        $replayBtn.textContent = T[state.lang].replay;
+      } else {
+        $nextBtn.style.display = 'inline-block';
+        $replayBtn.style.display = 'none';
+        $nextBtn.textContent = T[state.lang].next;
+      }
+    }
+    reportHeight();
+  }
+
+  function advanceStage(){
+    stopSpeak();
+    state.stageIndex++;
+    if (state.stageIndex >= STAGES.length) {
+      state.stageIndex = STAGES.length - 1;
+    }
+    renderStage();
+  }
+
+  function startStory(){
+    state.stageIndex = 0;
+    renderStage();
+  }
+
+  function replayStory(){
+    state.stageIndex = -1;
+    renderTitleScreen();
+    reportHeight();
+  }
+
+  /* ---------- Controls ---------- */
+  $startBtn.addEventListener('click', startStory);
+  $nextBtn.addEventListener('click', advanceStage);
+  $replayBtn.addEventListener('click', replayStory);
+
+  $muteToggle.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('mmt_muted', state.muted ? '1' : '0');
+    $muteToggle.textContent = state.muted ? T[state.lang].muteOff : T[state.lang].muteOn;
+    if (state.muted) stopSpeak();
+    else if (state.stageIndex >= 0) speak(STAGES[state.stageIndex].text[state.lang]);
+  });
+
+  $langToggle.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    $langToggle.textContent = T[state.lang].langBtn;
+    if (state.stageIndex === -1) {
+      renderTitleScreen();
+    } else {
+      renderStage();
+    }
+  });
+
+  /* init mute button label */
+  $muteToggle.textContent = state.muted ? T[state.lang].muteOff : T[state.lang].muteOn;
+  $langToggle.textContent = T[state.lang].langBtn;
+
+  /* ---------- iframe auto-resize ---------- */
+  function reportHeight(){
+    try {
+      var h = document.getElementById('mmt-app').offsetHeight;
+      window.parent.postMessage({ type: 'momotaroHeight', height: h }, '*');
+    } catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  setInterval(reportHeight, 1200);
+
+  /* ---------- Scene SVGs (no external assets) ---------- */
+  function sceneRiverPeach(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="150" fill="#cfe8f7"/>' +
+      '<circle cx="330" cy="45" r="26" fill="#ffe9a8"/>' +
+      '<rect x="0" y="150" width="400" height="100" fill="#7fae63"/>' +
+      '<path d="M0 160 Q100 145 200 165 T400 160 V210 Q300 195 200 210 T0 205 Z" fill="#6fa8d6"/>' +
+      '<ellipse cx="205" cy="182" rx="20" ry="16" fill="#e8798a"/>' +
+      '<path d="M205 166 q4 -8 10 -6" stroke="#5c8a4a" stroke-width="3" fill="none"/>' +
+      '<g transform="translate(60,190)"><ellipse cx="0" cy="0" rx="26" ry="30" fill="#8a6a4a"/><circle cx="0" cy="-34" r="16" fill="#e6c19c"/><rect x="-6" y="-46" width="12" height="8" fill="#f2f2f2"/></g>' +
+      '<g transform="translate(0,0)"><path d="M300 150 q40 -10 60 5 q-30 0 -60 -5" fill="#a9d18e"/></g>' +
+      '</svg>';
+  }
+  function sceneHouseBaby(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="160" fill="#fbe6c3"/>' +
+      '<rect x="0" y="160" width="400" height="90" fill="#c8a976"/>' +
+      '<polygon points="90,150 200,80 310,150" fill="#a1543a"/>' +
+      '<rect x="115" y="150" width="170" height="90" fill="#e8d3ab"/>' +
+      '<rect x="185" y="185" width="30" height="55" fill="#6b4226"/>' +
+      '<circle cx="230" cy="130" r="9" fill="#fff6e6" stroke="#a1543a" stroke-width="2"/>' +
+      '<g transform="translate(150,205)"><ellipse cx="0" cy="10" rx="22" ry="12" fill="#f2b6b0"/><circle cx="0" cy="-4" r="14" fill="#ffe0c2"/></g>' +
+      '<g transform="translate(95,215)"><ellipse cx="0" cy="0" rx="14" ry="20" fill="#8a6a4a"/><circle cx="0" cy="-24" r="11" fill="#e6c19c"/></g>' +
+      '<g transform="translate(205,218)"><ellipse cx="0" cy="0" rx="14" ry="20" fill="#9c7a58"/><circle cx="0" cy="-24" r="11" fill="#f0d3ae"/></g>' +
+      '</svg>';
+  }
+  function sceneGrownUp(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="170" fill="#d7ecf8"/>' +
+      '<rect x="0" y="170" width="400" height="80" fill="#8bb26b"/>' +
+      '<circle cx="60" cy="45" r="22" fill="#fff2c9"/>' +
+      '<g transform="translate(200,175)">' +
+        '<rect x="-14" y="-70" width="28" height="55" fill="#3f6b8f" rx="4"/>' +
+        '<circle cx="0" cy="-84" r="16" fill="#ffe0c2"/>' +
+        '<rect x="-16" y="-100" width="32" height="10" fill="#c1443c"/>' +
+        '<line x1="20" y1="-60" x2="42" y2="-95" stroke="#c9c9c9" stroke-width="4"/>' +
+        '<rect x="34" y="-100" width="16" height="6" fill="#8a5a2c"/>' +
+      '</g>' +
+      '<path d="M40 170 q60 -14 100 0 t100 0 t100 0 t60 0" stroke="#5c8a4a" stroke-width="4" fill="none"/>' +
+      '</svg>';
+  }
+  function animalCompanionRow(showDog, showMonkey, showPheasant){
+    var g = '';
+    if (showDog) g += '<g transform="translate(70,215)"><ellipse cx="0" cy="0" rx="16" ry="11" fill="#c99a5b"/><circle cx="16" cy="-6" r="8" fill="#c99a5b"/></g>';
+    if (showMonkey) g += '<g transform="translate(105,212)"><ellipse cx="0" cy="0" rx="13" ry="12" fill="#8a5a3a"/><circle cx="0" cy="-14" r="9" fill="#c98a5b"/></g>';
+    if (showPheasant) g += '<g transform="translate(135,208)"><ellipse cx="0" cy="0" rx="12" ry="9" fill="#3f6b8f"/><circle cx="10" cy="-6" r="6" fill="#c1443c"/></g>';
+    return g;
+  }
+  function sceneDog(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="170" fill="#d7ecf8"/>' +
+      '<rect x="0" y="170" width="400" height="80" fill="#8bb26b"/>' +
+      '<g transform="translate(200,175)">' +
+        '<rect x="-14" y="-70" width="28" height="55" fill="#3f6b8f" rx="4"/>' +
+        '<circle cx="0" cy="-84" r="16" fill="#ffe0c2"/>' +
+        '<rect x="-16" y="-100" width="32" height="10" fill="#c1443c"/>' +
+        '<circle cx="26" cy="-58" r="9" fill="#e8b25a"/>' +
+      '</g>' +
+      '<g transform="translate(280,220)">' +
+        '<ellipse cx="0" cy="0" rx="30" ry="20" fill="#c99a5b"/>' +
+        '<circle cx="26" cy="-16" r="14" fill="#c99a5b"/>' +
+        '<circle cx="32" cy="-22" r="3" fill="#3a2b1f"/>' +
+        '<polygon points="14,-26 20,-40 26,-24" fill="#a97a3f"/>' +
+      '</g>' +
+      '</svg>';
+  }
+  function sceneMonkey(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="170" fill="#d7ecf8"/>' +
+      '<rect x="0" y="170" width="400" height="80" fill="#8bb26b"/>' +
+      '<rect x="330" y="60" width="14" height="150" fill="#6b4226"/>' +
+      '<circle cx="337" cy="55" r="34" fill="#6fa84f"/>' +
+      '<g transform="translate(200,175)">' +
+        '<rect x="-14" y="-70" width="28" height="55" fill="#3f6b8f" rx="4"/>' +
+        '<circle cx="0" cy="-84" r="16" fill="#ffe0c2"/>' +
+        '<rect x="-16" y="-100" width="32" height="10" fill="#c1443c"/>' +
+        '<circle cx="26" cy="-58" r="9" fill="#e8b25a"/>' +
+      '</g>' +
+      '<g transform="translate(280,220)"><ellipse cx="0" cy="0" rx="16" ry="11" fill="#c99a5b"/><circle cx="16" cy="-6" r="8" fill="#c99a5b"/></g>' +
+      '<g transform="translate(300,175)">' +
+        '<ellipse cx="0" cy="0" rx="18" ry="20" fill="#8a5a3a"/>' +
+        '<circle cx="0" cy="-24" r="13" fill="#c98a5b"/>' +
+        '<circle cx="-5" cy="-26" r="2" fill="#3a2b1f"/><circle cx="5" cy="-26" r="2" fill="#3a2b1f"/>' +
+      '</g>' +
+      '</svg>';
+  }
+  function scenePheasant(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="170" fill="#d7ecf8"/>' +
+      '<rect x="0" y="170" width="400" height="80" fill="#8bb26b"/>' +
+      '<ellipse cx="300" cy="60" rx="22" ry="16" fill="#3f6b8f" transform="rotate(-20 300 60)"/>' +
+      '<circle cx="318" cy="52" r="9" fill="#c1443c"/>' +
+      '<g transform="translate(200,175)">' +
+        '<rect x="-14" y="-70" width="28" height="55" fill="#3f6b8f" rx="4"/>' +
+        '<circle cx="0" cy="-84" r="16" fill="#ffe0c2"/>' +
+        '<rect x="-16" y="-100" width="32" height="10" fill="#c1443c"/>' +
+        '<circle cx="26" cy="-58" r="9" fill="#e8b25a"/>' +
+      '</g>' +
+      '<g transform="translate(280,220)"><ellipse cx="0" cy="0" rx="16" ry="11" fill="#c99a5b"/><circle cx="16" cy="-6" r="8" fill="#c99a5b"/></g>' +
+      '<g transform="translate(300,205)"><ellipse cx="0" cy="0" rx="13" ry="12" fill="#8a5a3a"/><circle cx="0" cy="-14" r="9" fill="#c98a5b"/></g>' +
+      '</svg>';
+  }
+  function sceneSail(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="150" fill="#bfe0f2"/>' +
+      '<circle cx="340" cy="40" r="24" fill="#ffe9a8"/>' +
+      '<rect x="0" y="150" width="400" height="100" fill="#3f7ba6"/>' +
+      '<path d="M0 155 q50 -10 100 0 t100 0 t100 0 t100 0 v10 q-50 10 -100 0 t-100 0 t-100 0 t-100 0 Z" fill="#5c96bd"/>' +
+      '<g transform="translate(200,150)">' +
+        '<path d="M-70 20 L70 20 L50 45 L-50 45 Z" fill="#8a5a2c"/>' +
+        '<rect x="-2" y="-60" width="4" height="80" fill="#6b4226"/>' +
+        '<path d="M2 -55 L2 5 L46 -10 Z" fill="#f4ecd0" stroke="#d9c79a"/>' +
+        '<circle cx="-24" cy="10" r="9" fill="#ffe0c2"/>' +
+        '<rect x="-30" y="12" width="12" height="16" fill="#c1443c"/>' +
+        '<ellipse cx="4" cy="26" rx="10" ry="7" fill="#c99a5b"/>' +
+        '<ellipse cx="20" cy="24" rx="8" ry="8" fill="#8a5a3a"/>' +
+        '<ellipse cx="34" cy="16" rx="9" ry="7" fill="#3f6b8f"/>' +
+      '</g>' +
+      '</svg>';
+  }
+  function sceneBattle(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="170" fill="#e7c9c2"/>' +
+      '<rect x="0" y="170" width="400" height="80" fill="#8a7a5c"/>' +
+      '<rect x="20" y="70" width="30" height="100" fill="#6b6455"/>' +
+      '<rect x="350" y="60" width="30" height="110" fill="#6b6455"/>' +
+      '<g transform="translate(120,180)">' +
+        '<rect x="-14" y="-70" width="28" height="55" fill="#3f6b8f" rx="4"/>' +
+        '<circle cx="0" cy="-84" r="16" fill="#ffe0c2"/>' +
+        '<rect x="-16" y="-100" width="32" height="10" fill="#c1443c"/>' +
+        '<line x1="16" y1="-60" x2="45" y2="-85" stroke="#d9d9d9" stroke-width="5"/>' +
+      '</g>' +
+      '<g id="mmt-oni-fig" transform="translate(270,175)">' +
+        '<ellipse cx="0" cy="0" rx="34" ry="42" fill="#c1443c"/>' +
+        '<circle cx="0" cy="-52" r="24" fill="#c1443c"/>' +
+        '<polygon points="-12,-72 -6,-90 -2,-72" fill="#f4ecd0"/>' +
+        '<polygon points="12,-72 6,-90 2,-72" fill="#f4ecd0"/>' +
+        '<circle cx="-8" cy="-54" r="3" fill="#fff"/><circle cx="8" cy="-54" r="3" fill="#fff"/>' +
+        '<path d="M-10 -40 q10 8 20 0" stroke="#4a1a12" stroke-width="3" fill="none"/>' +
+      '</g>' +
+      '</svg>';
+  }
+  function sceneVictory(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="170" fill="#fbe6c3"/>' +
+      '<rect x="0" y="170" width="400" height="80" fill="#8a7a5c"/>' +
+      '<g transform="translate(150,180)">' +
+        '<rect x="-14" y="-70" width="28" height="55" fill="#3f6b8f" rx="4"/>' +
+        '<circle cx="0" cy="-84" r="16" fill="#ffe0c2"/>' +
+        '<rect x="-16" y="-100" width="32" height="10" fill="#c1443c"/>' +
+      '</g>' +
+      '<g transform="translate(260,190)">' +
+        '<ellipse cx="0" cy="0" rx="30" ry="38" fill="#a05a4a"/>' +
+        '<circle cx="0" cy="-46" r="20" fill="#a05a4a"/>' +
+        '<path d="M-10 -52 q10 -6 20 0" stroke="#4a1a12" stroke-width="3" fill="none"/>' +
+      '</g>' +
+      '<g transform="translate(200,210)">' +
+        '<rect x="-28" y="0" width="56" height="30" rx="4" fill="#8a5a2c"/>' +
+        '<rect x="-30" y="-8" width="60" height="14" rx="4" fill="#a97a3f"/>' +
+        '<circle cx="0" cy="-1" r="4" fill="#e8b25a"/>' +
+      '</g>' +
+      '<circle cx="90" cy="40" r="4" fill="#f2d374"/><circle cx="120" cy="25" r="3" fill="#f2d374"/><circle cx="300" cy="30" r="4" fill="#f2d374"/>' +
+      '</svg>';
+  }
+  function sceneHome(){
+    return '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="400" height="160" fill="#fde8b8"/>' +
+      '<rect x="0" y="160" width="400" height="90" fill="#c8a976"/>' +
+      '<polygon points="90,150 200,80 310,150" fill="#a1543a"/>' +
+      '<rect x="115" y="150" width="170" height="90" fill="#e8d3ab"/>' +
+      '<rect x="185" y="185" width="30" height="55" fill="#6b4226"/>' +
+      '<g transform="translate(150,205)"><ellipse cx="0" cy="10" rx="24" ry="14" fill="#f2b6b0"/><circle cx="0" cy="-6" r="16" fill="#ffe0c2"/></g>' +
+      '<g transform="translate(95,215)"><ellipse cx="0" cy="0" rx="14" ry="20" fill="#8a6a4a"/><circle cx="0" cy="-24" r="11" fill="#e6c19c"/></g>' +
+      '<g transform="translate(205,218)"><ellipse cx="0" cy="0" rx="14" ry="20" fill="#9c7a58"/><circle cx="0" cy="-24" r="11" fill="#f0d3ae"/></g>' +
+      '<g transform="translate(240,230)"><rect x="-18" y="-14" width="36" height="20" rx="3" fill="#8a5a2c"/></g>' +
+      '<g transform="translate(75,235)"><ellipse cx="0" cy="0" rx="14" ry="9" fill="#c99a5b"/></g>' +
+      '<g transform="translate(255,240)"><ellipse cx="0" cy="0" rx="11" ry="10" fill="#8a5a3a"/></g>' +
+      '</svg>';
+  }
+
+  /* ---------- initial paint ---------- */
+  renderTitleScreen();
+  reportHeight();
+
+})();
+</script>
+</body>
+</html>
