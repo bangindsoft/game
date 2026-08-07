@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menimbang Gajah - Dongeng Anak Tiongkok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fbf3e1;
+    --page:#fff8ec;
+    --ink:#4a3423;
+    --wood:#8a5a34;
+    --wood-dark:#6b4224;
+    --gold:#d79a2c;
+    --gold-dark:#b97e1a;
+    --river:#5aa7d6;
+    --river-deep:#3f7fb0;
+    --leaf:#5c8a4e;
+    --red:#c0392b;
+    --shadow:rgba(74,52,35,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:900px;
+    background:var(--page);
+    border-radius:18px;
+    box-shadow:0 8px 28px var(--shadow);
+    overflow:hidden;
+    border:6px solid var(--gold);
+    position:relative;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#fff;
+  }
+  #topbar h1{
+    font-family:'Baloo 2',sans-serif;
+    font-size:18px;
+    margin:0;
+    letter-spacing:.3px;
+    text-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .top-controls{display:flex;gap:8px;align-items:center;}
+  .icon-btn{
+    background:rgba(255,255,255,.22);
+    border:none;
+    color:#fff;
+    border-radius:999px;
+    width:36px;height:36px;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.35);}
+  .icon-btn:active{transform:scale(.92);}
+  .lang-btn{
+    background:rgba(255,255,255,.22);
+    border:none;color:#fff;
+    border-radius:999px;
+    padding:0 12px;height:36px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .lang-btn:hover{background:rgba(255,255,255,.35);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 900 / 480;
+    background:#cfe8f7;
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+
+  #dialogue-box{
+    padding:16px 18px 14px;
+    background:var(--cream);
+    border-top:3px solid var(--gold);
+  }
+  #narration-text{
+    margin:0 0 12px 0;
+    font-size:16px;
+    line-height:1.5;
+    min-height:48px;
+    color:var(--ink);
+  }
+  #narration-text b{color:var(--red);}
+
+  #nav-controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .nav-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    border:none;
+    border-radius:12px;
+    padding:10px 18px;
+    cursor:pointer;
+    color:#fff;
+    background:linear-gradient(180deg,var(--wood),var(--wood-dark));
+    box-shadow:0 3px 0 rgba(0,0,0,.2);
+    transition:transform .08s ease;
+  }
+  .nav-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.2);}
+  .nav-btn.primary{background:linear-gradient(180deg,var(--red),#96281b);}
+  .nav-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .nav-btn.ghost{background:transparent;color:var(--wood-dark);box-shadow:none;border:2px solid var(--wood);}
+
+  #interactive-panel{
+    display:none;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:2px;
+    align-items:center;
+  }
+  #interactive-panel .nav-btn{font-size:14px;padding:9px 14px;}
+  #gauge-wrap{
+    display:none;
+    flex:1;
+    min-width:160px;
+    height:14px;
+    background:#e4d6b8;
+    border-radius:999px;
+    overflow:hidden;
+    position:relative;
+    border:2px solid var(--wood);
+  }
+  #gauge-target{
+    position:absolute;
+    top:0;bottom:0;
+    background:rgba(92,138,78,.45);
+  }
+  #gauge-fill{
+    position:absolute;
+    top:0;bottom:0;left:0;
+    background:linear-gradient(90deg,var(--river-deep),var(--river));
+    width:0%;
+    transition:width .25s ease;
+  }
+  #feedback-text{
+    font-weight:700;
+    font-size:13px;
+    color:var(--red);
+    min-height:18px;
+    width:100%;
+  }
+
+  #start-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(160deg,#f6dfa7,#e9bd6a);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;
+    z-index:5;
+  }
+  #start-overlay h2{
+    font-family:'Baloo 2',sans-serif;
+    font-size:clamp(24px,5vw,34px);
+    color:var(--red);
+    margin:0 0 4px 0;
+    text-shadow:0 2px 0 rgba(255,255,255,.5);
+  }
+  #start-overlay p{
+    font-size:15px;margin:0 0 20px 0;color:var(--wood-dark);max-width:480px;
+  }
+  #start-overlay .emoji-row{font-size:48px;margin-bottom:10px;}
+  #start-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    color:#fff;
+    background:linear-gradient(180deg,var(--red),#96281b);
+    border:none;
+    border-radius:999px;
+    padding:14px 34px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #7a2015;
+  }
+  #start-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7a2015;}
+
+  @media (max-width:480px){
+    #narration-text{font-size:14.5px;}
+    #topbar h1{font-size:15px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1 id="game-title">🐘 Menimbang Gajah</h1>
+    <div class="top-controls">
+      <button class="lang-btn" id="langBtn" title="Ganti Bahasa">EN</button>
+      <button class="icon-btn" id="muteBtn" title="Bisukan narasi">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="gameCanvas"></canvas>
+    <div id="start-overlay">
+      <div class="emoji-row">🐘👑🚣</div>
+      <h2 id="start-title">Menimbang Gajah</h2>
+      <p id="start-desc">Sebuah dongeng anak dari Tiongkok. Bantu sang pangeran cilik menemukan cara cerdas untuk menimbang seekor gajah!</p>
+      <button id="start-btn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="dialogue-box">
+    <p id="narration-text"></p>
+
+    <div id="interactive-panel">
+      <button class="nav-btn primary" id="btnLoadElephant">Naikkan Gajah</button>
+      <button class="nav-btn primary" id="btnUnloadElephant">Turunkan Gajah</button>
+      <button class="nav-btn" id="btnAddBrick">Tambah Batu Bata</button>
+      <button class="nav-btn ghost" id="btnRemoveBrick">Ambil 1 Batu Bata</button>
+      <div id="gauge-wrap"><div id="gauge-target"></div><div id="gauge-fill"></div></div>
+      <button class="nav-btn primary" id="btnWeigh">Timbang Sekarang!</button>
+      <div id="feedback-text"></div>
+    </div>
+
+    <div id="nav-controls">
+      <button class="nav-btn ghost" id="btnBack">‹ Kembali</button>
+      <button class="nav-btn primary" id="btnNext">Lanjut ›</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- i18n ---------------- */
+  const T = {
+    id:{
+      gameTitle:"🐘 Menimbang Gajah",
+      startTitle:"Menimbang Gajah",
+      startDesc:"Sebuah dongeng anak dari Tiongkok. Bantu sang pangeran cilik menemukan cara cerdas untuk menimbang seekor gajah!",
+      startBtn:"▶ Mulai Cerita",
+      back:"‹ Kembali",
+      next:"Lanjut ›",
+      replay:"↻ Main Lagi",
+      mute:"Bisukan narasi",
+      unmute:"Aktifkan narasi",
+      loadElephant:"Naikkan Gajah",
+      unloadElephant:"Turunkan Gajah",
+      addBrick:"Tambah Batu Bata",
+      removeBrick:"Ambil 1 Batu Bata",
+      weigh:"Timbang Sekarang!",
+      steps:[
+        "Pada zaman dahulu, Raja India berkunjung ke istana Kaisar Tiongkok dan membawa hadiah istimewa: seekor <b>gajah</b>!",
+        "Kaisar Tiongkok senang menerimanya, tapi ia bingung. Ia ingin membalas dengan hadiah yang setara. Tapi... seberapa <b>berat</b> gajah ini?",
+        "Kaisar pun membuat sayembara ke seluruh negeri. “Siapa yang bisa menimbang gajah ini, akan kuberi hadiah yang sangat banyak!”",
+        "Rakyat berduyun-duyun mencoba. Tapi tidak ada satu pun timbangan yang cukup besar untuk seekor gajah. Semua orang kebingungan.",
+        "Tiba-tiba, putra mahkota yang baru berusia <b>7 tahun</b> maju dan berkata, “Ayahanda, Ananda tahu caranya menimbang gajah!”",
+        "Semua orang meragukan anak sekecil itu. Namun sang Kaisar penasaran. “Coba jelaskan caramu, anakku.”",
+        "Ayo bantu sang pangeran membuktikan idenya! Pertama, naikkan gajah ke atas perahu yang mengapung di sungai."
+      ],
+      boatLoadHint:"Klik tombol di bawah untuk menaikkan gajah ke atas perahu.",
+      boatLoadedHint:"Perahu tenggelam sedikit! Lihat, ada tanda batas air di lambung perahu. Sekarang, turunkan gajahnya.",
+      boatUnloadedHint:"Bagus! Tanda batas air sudah tersimpan. Sekarang saatnya mengganti gajah dengan batu bata satu per satu.",
+      brickHint:"Masukkan batu bata ke dalam perahu, sampai perahu tenggelam <b>tepat</b> di tanda tadi!",
+      fbLow:"Masih kurang berat. Tambahkan lagi batu batanya.",
+      fbHigh:"Wah, terlalu berat! Perahu tenggelam melewati tanda. Coba ambil satu batu bata.",
+      fbPerfect:"Tepat sekali! 🎉 Berat semua batu bata ini sama dengan berat sang gajah!",
+      successText:"Kaisar dan seisi istana pun kagum! Cukup dengan menimbang batu bata di dalam perahu, berat gajah bisa diketahui — tanpa timbangan raksasa mana pun.",
+      endText:"Sang pangeran cilik dipuji oleh seluruh negeri atas kecerdasannya. Ternyata, akal yang cerdik bisa menyelesaikan masalah yang tampak mustahil.",
+      moralLabel:"📖 Pesan Moral: ",
+      moralText:"Kecerdikan tidak selalu soal usia atau kekuatan, tapi soal cara berpikir yang jernih."
+    },
+    en:{
+      gameTitle:"🐘 Weighing the Elephant",
+      startTitle:"Weighing the Elephant",
+      startDesc:"A children's folktale from China. Help the young prince discover a clever way to weigh an elephant!",
+      startBtn:"▶ Start the Story",
+      back:"‹ Back",
+      next:"Next ›",
+      replay:"↻ Play Again",
+      mute:"Mute narration",
+      unmute:"Enable narration",
+      loadElephant:"Load the Elephant",
+      unloadElephant:"Unload the Elephant",
+      addBrick:"Add a Brick",
+      removeBrick:"Remove 1 Brick",
+      weigh:"Weigh It Now!",
+      steps:[
+        "Long ago, the King of India visited the Emperor of China's palace and brought a special gift: an <b>elephant</b>!",
+        "The Emperor was delighted, but puzzled. He wanted to send an equally grand gift in return. But... how <b>heavy</b> was this elephant, anyway?",
+        "So the Emperor announced a contest across the land. “Whoever can weigh this elephant shall receive a great reward!”",
+        "People flocked to try, but no scale in the kingdom was big enough for an elephant. Everyone was stumped.",
+        "Suddenly, the young crown prince — only <b>7 years old</b> — stepped forward and said, “Father, I know how to weigh the elephant!”",
+        "Everyone doubted such a small child. But the Emperor was curious. “Go on, explain your idea, my son.”",
+        "Let's help the prince prove his idea! First, load the elephant onto a boat floating on the river."
+      ],
+      boatLoadHint:"Click the button below to load the elephant onto the boat.",
+      boatLoadedHint:"The boat sinks a little! Look, a mark now shows the waterline on the hull. Now, unload the elephant.",
+      boatUnloadedHint:"Great! The waterline mark is saved. Now it's time to replace the elephant with bricks, one at a time.",
+      brickHint:"Load bricks into the boat until it sinks <b>exactly</b> to that mark!",
+      fbLow:"Still too light. Add a few more bricks.",
+      fbHigh:"Whoa, too heavy! The boat sank past the mark. Try removing a brick.",
+      fbPerfect:"Perfect! 🎉 The weight of these bricks equals the weight of the elephant!",
+      successText:"The Emperor and the whole palace were amazed! Simply by weighing the bricks in the boat, the elephant's weight was revealed — without any giant scale at all.",
+      endText:"The young prince was praised throughout the land for his wisdom. A clever mind, it turns out, can solve problems that seem impossible.",
+      moralLabel:"📖 Moral: ",
+      moralText:"Cleverness isn't about age or strength — it's about thinking clearly."
+    }
+  };
+
+  /* ---------------- state ---------------- */
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+  let muted = false;
+  let started = false;
+  let stepIndex = 0; // index within story steps before interactive stages
+
+  const STAGES = ["story","boat","brick","success","end"];
+  let stage = "story"; // story -> boat -> brick -> success -> end
+
+  let elephantLoaded = false;
+  let elephantHasUnloaded = false;
+  let brickCount = 0;
+  let draft = 0;        // current visual draft 0..1
+  let targetDraft = 0;  // where draft animates toward
+  const ELEPHANT_DRAFT = 0.62;
+  const TARGET_TOL = 0.045;
+  let markSaved = false;
+  let solved = false;
+  let boatShake = 0;
+
+  /* ---------------- DOM refs ---------------- */
+  const el = {
+    title: document.getElementById('game-title'),
+    langBtn: document.getElementById('langBtn'),
+    muteBtn: document.getElementById('muteBtn'),
+    startOverlay: document.getElementById('start-overlay'),
+    startTitle: document.getElementById('start-title'),
+    startDesc: document.getElementById('start-desc'),
+    startBtn: document.getElementById('start-btn'),
+    narration: document.getElementById('narration-text'),
+    btnBack: document.getElementById('btnBack'),
+    btnNext: document.getElementById('btnNext'),
+    panel: document.getElementById('interactive-panel'),
+    btnLoad: document.getElementById('btnLoadElephant'),
+    btnUnload: document.getElementById('btnUnloadElephant'),
+    btnAddBrick: document.getElementById('btnAddBrick'),
+    btnRemoveBrick: document.getElementById('btnRemoveBrick'),
+    gaugeWrap: document.getElementById('gauge-wrap'),
+    gaugeFill: document.getElementById('gauge-fill'),
+    gaugeTarget: document.getElementById('gauge-target'),
+    feedback: document.getElementById('feedback-text'),
+    canvas: document.getElementById('gameCanvas'),
+  };
+  const ctx = el.canvas.getContext('2d');
+
+  /* ---------------- canvas sizing ---------------- */
+  const CW = 900, CH = 480;
+  function resizeCanvas(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    el.canvas.width = CW * dpr;
+    el.canvas.height = CH * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  /* ---------------- speech ---------------- */
+  let voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function stripTags(s){ return s.replace(/<[^>]+>/g,''); }
+  function speak(text){
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (muted) return;
+    const utter = new SpeechSynthesisUtterance(stripTags(text));
+    utter.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    utter.rate = 0.98;
+    utter.pitch = 1.05;
+    const wanted = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(utter.lang.toLowerCase()));
+    if (wanted) utter.voice = wanted;
+    window.speechSynthesis.speak(utter);
+  }
+
+  /* ---------------- postMessage auto-resize ---------------- */
+  function postHeight(){
+    const h = document.getElementById('app').offsetHeight;
+    try{ window.parent.postMessage({ type:'menimbangGajahHeight', height:h }, '*'); }catch(e){}
+  }
+  new ResizeObserver(postHeight).observe(document.getElementById('app'));
+  window.addEventListener('load', postHeight);
+
+  /* ---------------- drawing helpers ---------------- */
+  function drawBackground(){
+    // sky
+    const sky = ctx.createLinearGradient(0,0,0,CH*0.62);
+    sky.addColorStop(0,'#bfe3f7');
+    sky.addColorStop(1,'#eaf6ff');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,CW,CH*0.62);
+
+    // sun
+    ctx.fillStyle = 'rgba(255,224,140,0.9)';
+    ctx.beginPath(); ctx.arc(CW-90,70,42,0,Math.PI*2); ctx.fill();
+
+    // distant pagoda silhouette
+    ctx.fillStyle = 'rgba(139,90,52,0.35)';
+    drawPagoda(120,CH*0.42,70);
+    drawPagoda(720,CH*0.40,90);
+
+    // riverbank (far)
+    ctx.fillStyle = '#8fbf6e';
+    ctx.fillRect(0, CH*0.55, CW, CH*0.12);
+
+    // river
+    const river = ctx.createLinearGradient(0,CH*0.6,0,CH);
+    river.addColorStop(0,'#6db6e0');
+    river.addColorStop(1,'#3f7fb0');
+    ctx.fillStyle = river;
+    ctx.fillRect(0, CH*0.6, CW, CH*0.4);
+
+    // wave lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for(let i=0;i<5;i++){
+      const y = CH*0.68 + i*20;
+      ctx.beginPath();
+      for(let x=0;x<=CW;x+=20){
+        ctx.lineTo(x, y + Math.sin((x/40)+i)*3);
+      }
+      ctx.stroke();
+    }
+
+    // near bank strips
+    ctx.fillStyle = '#5c8a4e';
+    ctx.fillRect(0, CH*0.58, 90, CH*0.14);
+    ctx.fillRect(CW-90, CH*0.58, 90, CH*0.14);
+  }
+
+  function drawPagoda(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.beginPath();
+    ctx.moveTo(-scale*0.6,scale*0.55);
+    ctx.lineTo(scale*0.6,scale*0.55);
+    ctx.lineTo(scale*0.45,0);
+    ctx.lineTo(scale*0.6,-scale*0.05);
+    ctx.lineTo(0,-scale*0.55);
+    ctx.lineTo(-scale*0.6,-scale*0.05);
+    ctx.lineTo(-scale*0.45,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function emoji(str, x, y, size){
+    ctx.font = size+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawCrowd(x,y){
+    const arr = ['🧑','👩','🧔','👨‍🌾','👵','🧑‍🌾'];
+    for(let i=0;i<6;i++){
+      emoji(arr[i%arr.length], x + (i-2.5)*34, y + (i%2===0?0:8), 30);
+    }
+  }
+
+  function drawScroll(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#f3e3b8';
+    ctx.strokeStyle = '#b98f4b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(-70*scale,-45*scale,140*scale,90*scale,10*scale);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#b98f4b';
+    ctx.beginPath(); ctx.roundRect(-78*scale,-50*scale,156*scale,12*scale,6*scale); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-78*scale,38*scale,156*scale,12*scale,6*scale); ctx.fill();
+    ctx.restore();
+  }
+
+  // boat + water logic, shared by boat and brick stages
+  const BOAT_X = CW/2, BOAT_TOP_Y = 250, BOAT_BOTTOM_Y = 320, BOAT_W = 230;
+  const WATER_BASE_Y = 300; // waterline when empty
+  const MAX_DEPTH = 62;     // px hull can submerge
+
+  function drawBoat(){
+    const waterOverlayTop = WATER_BASE_Y - draft*MAX_DEPTH;
+    const shakeX = boatShake ? Math.sin(Date.now()/40)*boatShake : 0;
+
+    ctx.save();
+    ctx.translate(shakeX,0);
+
+    // hull
+    ctx.fillStyle = '#8a5a34';
+    ctx.strokeStyle = '#5e3a1e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(BOAT_X-BOAT_W/2, BOAT_TOP_Y);
+    ctx.lineTo(BOAT_X+BOAT_W/2, BOAT_TOP_Y);
+    ctx.lineTo(BOAT_X+BOAT_W/2-24, BOAT_BOTTOM_Y);
+    ctx.lineTo(BOAT_X-BOAT_W/2+24, BOAT_BOTTOM_Y);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // plank lines
+    ctx.strokeStyle='rgba(0,0,0,0.12)';
+    ctx.lineWidth=1.5;
+    for(let i=1;i<4;i++){
+      const yy = BOAT_TOP_Y + (BOAT_BOTTOM_Y-BOAT_TOP_Y)*i/4;
+      ctx.beginPath(); ctx.moveTo(BOAT_X-BOAT_W/2+i*2, yy); ctx.lineTo(BOAT_X+BOAT_W/2-i*2, yy); ctx.stroke();
+    }
+
+    // mast
+    ctx.strokeStyle='#5e3a1e'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(BOAT_X-BOAT_W/2+18, BOAT_TOP_Y); ctx.lineTo(BOAT_X-BOAT_W/2+18, BOAT_TOP_Y-55); ctx.stroke();
+    ctx.fillStyle='#c0392b';
+    ctx.beginPath();
+    ctx.moveTo(BOAT_X-BOAT_W/2+18, BOAT_TOP_Y-55);
+    ctx.lineTo(BOAT_X-BOAT_W/2+18+34, BOAT_TOP_Y-46);
+    ctx.lineTo(BOAT_X-BOAT_W/2+18, BOAT_TOP_Y-36);
+    ctx.closePath(); ctx.fill();
+
+    // bricks stacked (visual count, capped)
+    const showBricks = Math.min(brickCount, 10);
+    for(let i=0;i<showBricks;i++){
+      const col = i % 5;
+      const row = Math.floor(i/5);
+      const bx = BOAT_X - 60 + col*28;
+      const by = BOAT_BOTTOM_Y - 14 - row*16;
+      ctx.fillStyle = '#b5493a';
+      ctx.strokeStyle = '#7a2c22';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.roundRect(bx-11, by-8, 22, 14, 2);
+      ctx.fill(); ctx.stroke();
+    }
+
+    // elephant on boat
+    if (stage === 'boat' && elephantLoaded){
+      emoji('🐘', BOAT_X+10, BOAT_TOP_Y-10, 70);
+    }
+
+    // waterline mark (saved from elephant)
+    if (markSaved){
+      const markY = WATER_BASE_Y - ELEPHANT_DRAFT*MAX_DEPTH;
+      ctx.save();
+      ctx.strokeStyle = '#c0392b';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6,4]);
+      ctx.beginPath();
+      ctx.moveTo(BOAT_X-BOAT_W/2-10, markY);
+      ctx.lineTo(BOAT_X+BOAT_W/2+10, markY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#c0392b';
+      ctx.font='bold 12px Nunito, sans-serif';
+      ctx.textAlign='left';
+      ctx.fillText(lang==='en' ? 'mark' : 'tanda', BOAT_X+BOAT_W/2+14, markY+4);
+      ctx.restore();
+    }
+
+    // water overlay on top of boat lower part (submersion illusion)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(BOAT_X-BOAT_W/2-30, waterOverlayTop, BOAT_W+60, 400);
+    ctx.clip();
+    ctx.fillStyle='rgba(63,127,176,0.55)';
+    ctx.fillRect(BOAT_X-BOAT_W/2-30, waterOverlayTop, BOAT_W+60, 400);
+    ctx.strokeStyle='rgba(255,255,255,0.5)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let x=BOAT_X-BOAT_W/2-30;x<=BOAT_X+BOAT_W/2+30;x+=14){
+      ctx.lineTo(x, waterOverlayTop + Math.sin((x/20)+Date.now()/300)*2);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function drawStorySceneExtra(name){
+    switch(name){
+      case 0: // gift
+        emoji('👑', CW*0.28, CH*0.42, 60);
+        emoji('🐘', CW*0.52, CH*0.46, 90);
+        emoji('🤵', CW*0.72, CH*0.42, 56);
+        break;
+      case 1: // puzzled
+        emoji('👑', CW*0.42, CH*0.42, 70);
+        emoji('🐘', CW*0.65, CH*0.46, 90);
+        emoji('❓', CW*0.42, CH*0.22, 40);
+        break;
+      case 2: // proclamation
+        drawScroll(CW*0.5, CH*0.36, 1.3);
+        emoji('👑', CW*0.5, CH*0.36, 46);
+        drawCrowd(CW*0.5, CH*0.55);
+        break;
+      case 3: // crowd fails
+        drawCrowd(CW*0.35, CH*0.42);
+        emoji('⚖️', CW*0.68, CH*0.4, 60);
+        emoji('❌', CW*0.78, CH*0.28, 34);
+        emoji('🐘', CW*0.68, CH*0.55, 60);
+        break;
+      case 4: // prince volunteers
+        emoji('👑', CW*0.3, CH*0.42, 60);
+        emoji('🧒', CW*0.52, CH*0.46, 60);
+        emoji('💡', CW*0.62, CH*0.26, 34);
+        break;
+      case 5: // curious emperor
+        emoji('👑', CW*0.35, CH*0.4, 66);
+        emoji('🧒', CW*0.58, CH*0.44, 60);
+        break;
+      case 6: // transition to boat
+        emoji('🧒', CW*0.28, CH*0.42, 56);
+        drawBoat();
+        break;
+    }
+  }
+
+  function drawSuccessScene(){
+    emoji('👑', CW*0.32, CH*0.36, 60);
+    emoji('🧒', CW*0.5, CH*0.42, 56);
+    emoji('🎉', CW*0.66, CH*0.24, 40);
+    emoji('🎉', CW*0.36, CH*0.2, 32);
+    drawBoat();
+  }
+
+  function drawEndScene(){
+    emoji('👑', CW*0.3, CH*0.36, 58);
+    emoji('🧒', CW*0.48, CH*0.4, 60);
+    emoji('⭐', CW*0.58, CH*0.22, 30);
+    emoji('⭐', CW*0.4, CH*0.18, 26);
+    emoji('🐘', CW*0.72, CH*0.48, 70);
+  }
+
+  /* ---------------- animation loop ---------------- */
+  function tick(){
+    draft += (targetDraft-draft)*0.12;
+    if (Math.abs(targetDraft-draft) < 0.001) draft = targetDraft;
+    if (boatShake > 0) boatShake *= 0.9;
+    if (boatShake < 0.05) boatShake = 0;
+
+    ctx.clearRect(0,0,CW,CH);
+    drawBackground();
+
+    if (stage === 'story'){
+      drawStorySceneExtra(stepIndex);
+    } else if (stage === 'boat' || stage === 'brick'){
+      drawBoat();
+    } else if (stage === 'success'){
+      drawSuccessScene();
+    } else if (stage === 'end'){
+      drawEndScene();
+    }
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ---------------- UI state machine ---------------- */
+  function currentTexts(){ return T[lang]; }
+
+  function setNarration(html){
+    el.narration.innerHTML = html;
+  }
+
+  function render(){
+    const t = currentTexts();
+    el.title.textContent = t.gameTitle;
+    el.langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    el.muteBtn.textContent = muted ? '🔇' : '🔊';
+    el.muteBtn.title = muted ? t.unmute : t.mute;
+    el.startTitle.textContent = t.startTitle;
+    el.startDesc.textContent = t.startDesc;
+    el.startBtn.textContent = t.startBtn;
+    el.btnBack.textContent = t.back;
+    el.btnLoad.textContent = t.loadElephant;
+    el.btnUnload.textContent = t.unloadElephant;
+    el.btnAddBrick.textContent = t.addBrick;
+    el.btnRemoveBrick.textContent = t.removeBrick;
+    el.btnWeigh.textContent = t.weigh;
+    document.documentElement.lang = lang;
+
+    // reset panel visibility
+    el.panel.style.display = 'none';
+    el.btnLoad.style.display = 'none';
+    el.btnUnload.style.display = 'none';
+    el.btnAddBrick.style.display = 'none';
+    el.btnRemoveBrick.style.display = 'none';
+    el.gaugeWrap.style.display = 'none';
+    el.btnWeigh.style.display = 'none';
+    el.feedback.style.display = 'none';
+    el.btnNext.style.display = 'inline-block';
+    el.btnBack.style.display = 'inline-block';
+    el.btnNext.disabled = false;
+
+    if (stage === 'story'){
+      setNarration(t.steps[stepIndex]);
+      el.btnBack.disabled = stepIndex === 0;
+      el.btnNext.textContent = t.next;
+    } else if (stage === 'boat'){
+      el.panel.style.display = 'flex';
+      el.btnBack.style.display = 'inline-block';
+      el.btnBack.disabled = false;
+      if (!elephantLoaded){
+        setNarration(t.boatLoadHint);
+        el.btnLoad.style.display = 'inline-block';
+        el.btnNext.disabled = true;
+      } else if (elephantLoaded && !markSaved){
+        setNarration(t.boatLoadedHint);
+        el.btnUnload.style.display = 'inline-block';
+        el.btnNext.disabled = true;
+      } else {
+        setNarration(t.boatUnloadedHint);
+        el.btnNext.disabled = false;
+      }
+      el.btnNext.textContent = t.next;
+    } else if (stage === 'brick'){
+      el.panel.style.display = 'flex';
+      el.btnBack.style.display = 'none';
+      setNarration(t.brickHint);
+      el.btnAddBrick.style.display = 'inline-block';
+      el.btnRemoveBrick.style.display = 'inline-block';
+      el.gaugeWrap.style.display = 'block';
+      el.btnWeigh.style.display = 'inline-block';
+      el.feedback.style.display = 'block';
+      el.btnNext.style.display = solved ? 'inline-block' : 'none';
+      el.btnNext.disabled = !solved;
+      el.btnNext.textContent = t.next;
+      updateGauge();
+    } else if (stage === 'success'){
+      setNarration(t.successText);
+      el.btnBack.style.display = 'none';
+      el.btnNext.textContent = t.next;
+    } else if (stage === 'end'){
+      setNarration(`${t.endText}<br><br><b>${t.moralLabel}</b>${t.moralText}`);
+      el.btnBack.style.display = 'none';
+      el.btnNext.textContent = t.replay;
+    }
+
+    speak(stripSpeakText());
+  }
+
+  function stripSpeakText(){
+    const t = currentTexts();
+    if (stage === 'story') return t.steps[stepIndex];
+    if (stage === 'boat'){
+      if (!elephantLoaded) return t.boatLoadHint;
+      if (!markSaved) return t.boatLoadedHint;
+      return t.boatUnloadedHint;
+    }
+    if (stage === 'brick') return t.brickHint;
+    if (stage === 'success') return t.successText;
+    if (stage === 'end') return t.endText + '. ' + t.moralText;
+    return '';
+  }
+
+  function updateGauge(){
+    const pct = Math.max(0,Math.min(1,draft))*100;
+    el.gaugeFill.style.width = pct+'%';
+    const targetPct = ELEPHANT_DRAFT*100;
+    const tolPct = TARGET_TOL*100;
+    el.gaugeTarget.style.left = (targetPct-tolPct)+'%';
+    el.gaugeTarget.style.width = (tolPct*2)+'%';
+  }
+
+  /* ---------------- navigation ---------------- */
+  function goNext(){
+    if (stage === 'story'){
+      if (stepIndex < currentTexts().steps.length-1){
+        stepIndex++;
+        render();
+      } else {
+        stage = 'boat';
+        render();
+      }
+    } else if (stage === 'boat'){
+      stage = 'brick';
+      render();
+    } else if (stage === 'success'){
+      stage = 'end';
+      render();
+    } else if (stage === 'end'){
+      resetGame();
+    }
+  }
+
+  function goBack(){
+    if (stage === 'story' && stepIndex > 0){
+      stepIndex--;
+      render();
+    } else if (stage === 'boat'){
+      stage = 'story';
+      stepIndex = currentTexts().steps.length-1;
+      render();
+    }
+  }
+
+  function resetGame(){
+    stage = 'story';
+    stepIndex = 0;
+    elephantLoaded = false;
+    markSaved = false;
+    brickCount = 0;
+    draft = 0; targetDraft = 0;
+    solved = false;
+    render();
+  }
+
+  /* ---------------- interactive handlers ---------------- */
+  el.btnLoad.addEventListener('click', function(){
+    elephantLoaded = true;
+    targetDraft = ELEPHANT_DRAFT;
+    setTimeout(function(){
+      markSaved = true;
+      render();
+    }, 900);
+    render();
+  });
+
+  el.btnUnload.addEventListener('click', function(){
+    elephantLoaded = false;
+    targetDraft = 0;
+    render();
+  });
+
+  el.btnAddBrick.addEventListener('click', function(){
+    if (solved) return;
+    brickCount++;
+    const inc = 0.085 + (Math.random()*0.02-0.01);
+    targetDraft = Math.min(1, targetDraft + inc);
+    render();
+  });
+
+  el.btnRemoveBrick.addEventListener('click', function(){
+    if (solved || brickCount === 0) return;
+    brickCount--;
+    targetDraft = Math.max(0, targetDraft - 0.085);
+    render();
+  });
+
+  el.btnWeigh.addEventListener('click', function(){
+    const t = currentTexts();
+    const diff = targetDraft - ELEPHANT_DRAFT;
+    if (Math.abs(diff) <= TARGET_TOL){
+      solved = true;
+      el.feedback.style.color = '#3f7f2b';
+      el.feedback.innerHTML = t.fbPerfect;
+      el.btnNext.style.display = 'inline-block';
+      el.btnNext.disabled = false;
+      el.btnAddBrick.disabled = true;
+      el.btnRemoveBrick.disabled = true;
+      speak(t.fbPerfect);
+    } else if (diff < 0){
+      el.feedback.style.color = '#c0392b';
+      el.feedback.textContent = t.fbLow;
+      speak(t.fbLow);
+    } else {
+      el.feedback.style.color = '#c0392b';
+      el.feedback.textContent = t.fbHigh;
+      boatShake = 4;
+      speak(t.fbHigh);
+    }
+  });
+
+  el.btnNext.addEventListener('click', function(){
+    if (stage === 'brick' && solved){
+      stage = 'success';
+      render();
+      return;
+    }
+    goNext();
+  });
+  el.btnBack.addEventListener('click', goBack);
+
+  el.startBtn.addEventListener('click', function(){
+    started = true;
+    el.startOverlay.style.display = 'none';
+    render();
+    // small delay so speech works after user gesture on some browsers
+    setTimeout(function(){ speak(stripSpeakText()); }, 150);
+  });
+
+  el.langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    const url = new URL(location.href);
+    url.searchParams.set('lang', lang);
+    history.replaceState(null,'',url.toString());
+    render();
+  });
+
+  el.muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    if (muted && window.speechSynthesis) window.speechSynthesis.cancel();
+    render();
+  });
+
+  /* ---------------- init ---------------- */
+  render();
+  postHeight();
+})();
+</script>
+</body>
+</html>
