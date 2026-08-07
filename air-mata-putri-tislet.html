@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Air Mata Putri Tislet — Dongeng Interaktif</title>
+<style>
+  :root{
+    --ink:#241a14;
+    --paper:#fdf6e9;
+    --accent:#e8b44f;
+    --accent2:#4fa8d8;
+    --panel:#fffaf0;
+    --panel-border:#e3d3ad;
+    --shadow:0 10px 26px rgba(36,26,20,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,#fbf1da,#f3e4c4);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 20px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+  }
+  .titlebar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .titlebar h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:19px;
+    margin:0;
+    color:#7a3b1a;
+    letter-spacing:.3px;
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .btn-chip{
+    border:1.5px solid var(--panel-border);
+    background:var(--panel);
+    color:var(--ink);
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:13px;
+    cursor:pointer;
+    font-weight:600;
+    transition:all .15s ease;
+  }
+  .btn-chip.active{
+    background:#7a3b1a;
+    color:#fff8ea;
+    border-color:#7a3b1a;
+  }
+  .btn-chip:hover{ filter:brightness(1.05); }
+  #muteBtn{
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;padding:0;
+  }
+  .stage-wrap{
+    position:relative;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    border:1px solid #d8c090;
+    background:#000;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    aspect-ratio:16/9;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .interaction-hint{
+    position:absolute;
+    top:10px;left:0;right:0;
+    text-align:center;
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    text-shadow:0 2px 6px rgba(0,0,0,.6);
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .25s ease;
+  }
+  .interaction-hint.show{ opacity:1; }
+  .progress-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:10px 0 4px;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#d8c090;
+    transition:all .2s ease;
+  }
+  .dot.active{ background:#7a3b1a; transform:scale(1.3); }
+  .dot.done{ background:#c98f4a; }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-top:10px;
+    box-shadow:0 4px 14px rgba(36,26,20,.08);
+    min-height:96px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:10px;
+  }
+  #storyText{
+    font-size:15.5px;
+    line-height:1.55;
+    margin:0;
+  }
+  .panel-footer{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+  }
+  .goal-note{
+    font-size:12.5px;
+    color:#8a6a3a;
+    font-style:italic;
+    margin-right:auto;
+  }
+  .btn-next{
+    background:#e0483e;
+    color:#fff;
+    border:none;
+    border-radius:24px;
+    padding:9px 20px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(224,72,62,.35);
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn-next:hover{ transform:translateY(-1px); }
+  .btn-next[disabled]{
+    opacity:.35;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+  .btn-next.hidden{ display:none; }
+  .credit{
+    text-align:center;
+    font-size:11.5px;
+    color:#9a8360;
+    margin-top:12px;
+  }
+  .credit a{ color:#7a3b1a; text-decoration:none; font-weight:600; }
+  .replay-row{
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+  }
+  .btn-replay{
+    background:#7a3b1a;
+    color:#fff8ea;
+    border:none;
+    border-radius:24px;
+    padding:9px 22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="titlebar">
+    <h1 id="mainTitle">🕊️ Air Mata Putri Tislet</h1>
+    <div class="controls">
+      <button class="btn-chip" id="langId" onclick="setLang('id')">ID</button>
+      <button class="btn-chip" id="langEn" onclick="setLang('en')">EN</button>
+      <button class="btn-chip" id="muteBtn" onclick="toggleMute()" title="Mute/unmute narration">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="stage" width="800" height="450"></canvas>
+    <div class="interaction-hint" id="hint"></div>
+  </div>
+
+  <div class="progress-dots" id="dots"></div>
+
+  <div class="panel">
+    <p id="storyText"></p>
+    <div class="panel-footer">
+      <span class="goal-note" id="goalNote"></span>
+      <button class="btn-next" id="nextBtn" onclick="nextStep()">Lanjut ▶</button>
+    </div>
+  </div>
+
+  <div class="replay-row hidden" id="replayRow">
+    <button class="btn-replay" onclick="restart()" id="replayBtn">🔁 Ulangi Cerita</button>
+  </div>
+
+  <div class="credit">
+    Dongeng anak Maroko · <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a>
+  </div>
+</div>
+
+<script>
+/* ============ DATA ============ */
+const STRINGS = {
+  id: {
+    title: "🕊️ Air Mata Putri Tislet",
+    next: "Lanjut ▶",
+    finish: "Selesai 🌊",
+    replay: "🔁 Ulangi Cerita",
+    hintWait: "Sentuh bintang yang berkelip untuk menemani Putri Tislet menunggu semalaman",
+    hintFlowers: "Sentuh bunga-bunga untuk dipetik bersama Isli",
+    hintTears: "Sentuh titik air mata sebelum jatuh, untuk membentuk danau",
+    goalWait: "Bintang: {n}/6",
+    goalFlowers: "Bunga: {n}/6",
+    goalTears: "Air mata: {n}/12",
+  },
+  en: {
+    title: "🕊️ Tears of Princess Tislet",
+    next: "Next ▶",
+    finish: "Finished 🌊",
+    replay: "🔁 Replay Story",
+    hintWait: "Tap the twinkling stars to keep Princess Tislet company through the night",
+    hintFlowers: "Tap the flowers to pick them together with Isli",
+    hintTears: "Tap the falling tears before they land, to form the lake",
+    goalWait: "Stars: {n}/6",
+    goalFlowers: "Flowers: {n}/6",
+    goalTears: "Tears: {n}/12",
+  }
+};
+
+const STEPS = [
+  {
+    scene: "hill-day",
+    id: "Alkisah, kepala suku Ait Haddidou memiliki seorang putri bernama Tislet. Menurut nasihat seorang peramal, kelak ia akan menikah dengan anak dari suku musuh. Karena itu, Putri Tislet harus tinggal terasing di atas bukit.",
+    en: "Once upon a time, the chief of the Ait Haddidou tribe had a daughter named Princess Tislet. A soothsayer warned that she would one day marry a boy from a rival tribe — so Princess Tislet had to live alone on a hill.",
+  },
+  {
+    scene: "hill-day2",
+    id: "Di atas bukit, Tislet ditemani seorang pengasuh. Setiap satu minggu sekali, kedua orang tuanya datang berkunjung. Ia gemar bermain dengan burung-burung, terutama seekor merpati kesayangannya yang selalu kembali kepadanya.",
+    en: "On the hill, Tislet lived with a caretaker. Her parents visited once a week. She loved playing with the birds, especially her beloved dove, which always returned to her.",
+  },
+  {
+    scene: "hill-night",
+    id: "Suatu hari, merpati kesayangannya tidak kunjung kembali. Putri Tislet cemas memikirkannya, hingga semalaman ia tak bisa memejamkan mata.",
+    en: "One day, her beloved dove did not come back. Princess Tislet grew anxious thinking about it, and could not close her eyes all night long.",
+    interaction: "wait",
+  },
+  {
+    scene: "meet",
+    id: "Keesokan harinya, seorang anak laki-laki bernama Isli datang membawa merpati itu. \u201cMaafkan aku, burung ini tak sengaja terkena ketapelku. Karena tak bisa terbang, kuantar ia kemari — ia sangat pintar menunjukkan jalan,\u201d katanya.",
+    en: "The next morning, a boy named Isli arrived carrying the dove. \u201cForgive me, my slingshot accidentally hit this bird. Since it couldn't fly, I brought it here — it was clever enough to show me the way,\u201d he said.",
+  },
+  {
+    scene: "friends",
+    id: "Awalnya Tislet marah, namun pengasuhnya menenangkan bahwa itu tidak disengaja. Sejak hari itu, Isli dan Tislet menjadi sahabat baik dan sering bermain bersama di bukit.",
+    en: "At first Tislet was upset, but her caretaker calmed her, saying it was an accident. From that day on, Isli and Tislet became close friends and often played together on the hill.",
+    interaction: "flowers",
+  },
+  {
+    scene: "parents",
+    id: "Seperti biasa, orang tua Tislet berkunjung dan bertanya tentang keluarga Isli. Betapa terkejutnya mereka mengetahui bahwa Isli adalah anak dari kepala suku musuh Ait Haddidou.",
+    en: "As usual, Tislet's parents came to visit and asked about Isli's family. They were shocked to learn that Isli was the son of the chief of the rival tribe.",
+  },
+  {
+    scene: "anger",
+    id: "Ayah Tislet murka bukan kepalang. Ia memerintahkan putrinya pulang ke desa, jauh dari Isli. Namun Putri Tislet menolak dengan sepenuh hati.",
+    en: "Tislet's father was furious. He ordered his daughter to return to the village, far away from Isli. But Princess Tislet refused with all her heart.",
+  },
+  {
+    scene: "tears",
+    id: "Putri Tislet menangis sejadi-jadinya hingga air matanya membasahi tanah dan berubah menjadi lumpur. Isli berusaha menolongnya, namun tubuh mereka berdua justru terbawa masuk ke dalam lumpur bersama-sama.",
+    en: "Princess Tislet wept without end until her tears soaked the ground and turned it to mud. Isli tried to save her, but they were both pulled down into the mud together.",
+    interaction: "tears",
+  },
+  {
+    scene: "lake",
+    id: "Dalam sekejap, air mata Putri Tislet menggenangi daerah itu dan berubah menjadi sebuah danau. Hingga kini, danau itu dikenal sebagai Danau Isli dan Tislet di Maroko — kenangan abadi akan cinta mereka.",
+    en: "In an instant, Princess Tislet's tears filled the area and turned it into a lake. To this day, it is known as Lake Isli and Tislet in Morocco — an eternal memory of their love.",
+    ending: true,
+  },
+];
+
+/* ============ STATE ============ */
+let lang = (new URLSearchParams(location.search).get('lang') === 'en') ? 'en' : 'id';
+let muted = false;
+let stepIndex = 0;
+let particles = [];       // interactive particles (stars/flowers/tears)
+let interactionDone = false;
+let interactionCount = 0;
+let lakeProgress = 0;     // 0..1 for tears scene ground fill
+let spawnTimer = null;
+let raf = null;
+let t = 0; // animation clock
+
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 450;
+
+/* ============ UTIL ============ */
+function rnd(a,b){ return a + Math.random()*(b-a); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function lerp(a,b,f){ return a+(b-a)*f; }
+
+/* ============ DRAWING PRIMITIVES ============ */
+function skyGradient(type){
+  let g;
+  if(type==="day"){
+    g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#ffd89b"); g.addColorStop(1,"#f7a072");
+  } else if(type==="night"){
+    g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#0b1e3d"); g.addColorStop(1,"#2b3a67");
+  } else if(type==="storm"){
+    g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#5c6470"); g.addColorStop(1,"#93a0ad");
+  } else if(type==="lake"){
+    g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#bfe9ff"); g.addColorStop(1,"#5fb6df");
+  } else {
+    g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#ffe6b0"); g.addColorStop(1,"#f0925f");
+  }
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+}
+
+function drawSun(x,y,r){
+  ctx.save();
+  ctx.fillStyle = "rgba(255,235,180,.9)";
+  ctx.beginPath(); ctx.arc(x,y,r*1.7,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#fff3cf";
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawMoon(x,y,r){
+  ctx.save();
+  ctx.fillStyle = "#f6f1d8";
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "rgba(43,58,103,1)";
+  ctx.beginPath(); ctx.arc(x+r*0.42,y-r*0.12,r*0.88,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawStarsBG(n,seed){
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  for(let i=0;i<n;i++){
+    const x = (Math.sin(i*99.13+seed)*0.5+0.5)*W;
+    const y = (Math.cos(i*57.7+seed)*0.5+0.5)*(H*0.55);
+    const s = 0.6+((i*37)%3)*0.5;
+    const tw = 0.5+0.5*Math.sin(t*2 + i);
+    ctx.globalAlpha = 0.4+0.6*tw;
+    ctx.beginPath(); ctx.arc(x,y,s,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawHills(color, baseY){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,H);
+  ctx.lineTo(0,baseY+30);
+  ctx.bezierCurveTo(W*0.2,baseY-40, W*0.35,baseY+20, W*0.5,baseY-10);
+  ctx.bezierCurveTo(W*0.68,baseY-45, W*0.82,baseY+10, W,baseY-25);
+  ctx.lineTo(W,H);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawHillsFar(color, baseY){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,H);
+  ctx.lineTo(0,baseY+10);
+  ctx.bezierCurveTo(W*0.25,baseY-70, W*0.55,baseY+30, W*0.78,baseY-20);
+  ctx.bezierCurveTo(W*0.9,baseY-45, W*0.97,baseY-10, W,baseY);
+  ctx.lineTo(W,H);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawHut(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#241a14";
+  ctx.beginPath();
+  ctx.moveTo(-30,10); ctx.lineTo(0,-32); ctx.lineTo(30,10); ctx.closePath(); ctx.fill();
+  ctx.fillRect(-22,10,44,26);
+  ctx.restore();
+}
+function drawTree(x,y,scale,color){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = color||"#241a14";
+  ctx.fillRect(-3,-6,6,26);
+  ctx.beginPath(); ctx.arc(0,-18,17,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// Silhouette figures ---------------------------------------------------
+function drawGirl(x,y,scale,mood){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#241a14";
+  // robe
+  ctx.beginPath();
+  ctx.moveTo(-16,40); ctx.quadraticCurveTo(-22,5,-8,-6);
+  ctx.quadraticCurveTo(0,-10,8,-6);
+  ctx.quadraticCurveTo(22,5,16,40);
+  ctx.closePath(); ctx.fill();
+  // head
+  ctx.beginPath(); ctx.arc(0,-20,11,0,Math.PI*2); ctx.fill();
+  // headscarf point
+  ctx.beginPath();
+  ctx.moveTo(-11,-24); ctx.lineTo(-3,-40); ctx.lineTo(6,-26); ctx.closePath(); ctx.fill();
+  if(mood==="worried"){
+    ctx.save(); ctx.translate(0, rnd(-1,1)); ctx.restore();
+  }
+  if(mood==="crying"){
+    ctx.fillStyle = "#4fa8d8";
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.ellipse(-4,-14,1.6,3,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4,-14,1.6,3,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawBoy(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#241a14";
+  ctx.beginPath();
+  ctx.moveTo(-14,40); ctx.lineTo(-12,-2); ctx.quadraticCurveTo(0,-10,12,-2); ctx.lineTo(14,40);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-16,10,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-24,10.5,Math.PI,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawParent(x,y,scale,gender){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#241a14";
+  ctx.beginPath();
+  ctx.moveTo(-16,44); ctx.quadraticCurveTo(-20,0,-9,-8);
+  ctx.quadraticCurveTo(0,-12,9,-8);
+  ctx.quadraticCurveTo(20,0,16,44);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-24,11,0,Math.PI*2); ctx.fill();
+  if(gender==="m"){
+    ctx.beginPath(); ctx.moveTo(-13,-30); ctx.lineTo(13,-30); ctx.lineTo(9,-38); ctx.lineTo(-9,-38); ctx.closePath(); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-12,-28); ctx.lineTo(-3,-44); ctx.lineTo(7,-30); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawDove(x,y,scale,flap){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#fdf6e9";
+  ctx.beginPath(); ctx.ellipse(0,0,9,6,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(8,-2,3.6,0,Math.PI*2); ctx.fill();
+  const wingY = Math.sin(flap)*5;
+  ctx.beginPath();
+  ctx.moveTo(-2,-1); ctx.quadraticCurveTo(-10,-8-wingY,-16,-2-wingY); ctx.quadraticCurveTo(-8,2,-2,3);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+/* ============ PARTICLES ============ */
+function spawnStar(){
+  particles.push({x:rnd(40,W-40), y:rnd(30,H*0.5), r:0, targetR:9, life:0, kind:'star', caught:false});
+}
+function spawnFlowerField(){
+  particles = [];
+  const cols=6;
+  for(let i=0;i<cols;i++){
+    particles.push({x: 90 + i*((W-180)/(cols-1)) + rnd(-14,14), y: rnd(H*0.68,H*0.85), r:10, kind:'flower', caught:false, hue:[ "#e0483e","#e8b44f","#4fa8d8","#e0483e","#e8b44f","#4fa8d8"][i]});
+  }
+}
+function spawnTear(){
+  particles.push({x:rnd(W*0.35,W*0.65), y:H*0.28, vy:rnd(1.4,2.1), r:7, kind:'tear', caught:false});
+}
+
+function hitTest(px,py){
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    if(p.caught) continue;
+    const d = Math.hypot(px-p.x, py-p.y);
+    if(d < (p.r||10)+10){ return p; }
+  }
+  return null;
+}
+
+canvas.addEventListener('pointerdown', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX-rect.left) * (W/rect.width);
+  const py = (e.clientY-rect.top) * (H/rect.height);
+  const step = STEPS[stepIndex];
+  if(!step.interaction || interactionDone) return;
+  const hit = hitTest(px,py);
+  if(hit){
+    hit.caught = true;
+    interactionCount++;
+    if(step.interaction === 'tears'){
+      lakeProgress = clamp(interactionCount/12, 0, 1);
+    }
+    updateGoalNote();
+    checkInteractionComplete();
+  }
+});
+
+function checkInteractionComplete(){
+  const step = STEPS[stepIndex];
+  const need = step.interaction==='wait'?6 : step.interaction==='flowers'?6 : step.interaction==='tears'?12 : 0;
+  if(interactionCount >= need && !interactionDone){
+    interactionDone = true;
+    if(spawnTimer){ clearInterval(spawnTimer); spawnTimer=null; }
+    document.getElementById('nextBtn').disabled = false;
+    if(step.interaction==='tears'){
+      setTimeout(()=>{ nextStep(); }, 900);
+    }
+  }
+}
+
+/* ============ SCENE RENDER ============ */
+function renderScene(step){
+  const s = step.scene;
+  if(s==="hill-day"){
+    skyGradient("day");
+    drawSun(W*0.82,70,34);
+    drawHillsFar("#c9773f", 250);
+    drawHills("#241a14", 300);
+    drawHut(W*0.28,300,1.1);
+    for(let i=0;i<3;i++) drawTree(120+i*40, 320, 0.8,"#241a14");
+    const bob = Math.sin(t*1.2)*3;
+    drawGirl(W*0.6,300+bob,1.5,"calm");
+    drawDove(W*0.6+50,270+Math.sin(t*3)*6,1.3, t*4);
+  }
+  else if(s==="hill-day2"){
+    skyGradient("day");
+    drawSun(W*0.18,64,30);
+    drawHillsFar("#c9773f", 250);
+    drawHills("#241a14", 300);
+    drawHut(W*0.75,300,1.1);
+    drawGirl(W*0.4,300,1.5,"calm");
+    for(let i=0;i<3;i++){
+      const ang = t*1.4 + i*2.1;
+      drawDove(W*0.4+Math.cos(ang)*70, 250+Math.sin(ang)*22, 1.0, t*5+i);
+    }
+  }
+  else if(s==="hill-night"){
+    skyGradient("night");
+    drawStarsBG(60, 3.3);
+    drawMoon(W*0.84,64,26);
+    drawHillsFar("#141018", 250);
+    drawHills("#0c0810", 300);
+    drawHut(W*0.75,300,1.1);
+    const bob = Math.sin(t*2.4)*2;
+    drawGirl(W*0.35,300+bob,1.6,"worried");
+    // interactive stars drawn later in particle pass
+  }
+  else if(s==="meet"){
+    skyGradient("day");
+    drawSun(W*0.5,56,28);
+    drawHillsFar("#c9773f", 250);
+    drawHills("#241a14", 300);
+    drawBoy(W*0.36,300,1.4);
+    drawGirl(W*0.62,300,1.5,"calm");
+    drawDove(W*0.36+18,278+Math.sin(t*4)*4,1.1, t*5);
+  }
+  else if(s==="friends"){
+    skyGradient("day");
+    drawSun(W*0.9,60,26);
+    drawHillsFar("#c9773f", 250);
+    drawHills("#241a14", 300);
+    const b1 = Math.sin(t*2)*4, b2=Math.sin(t*2+1)*4;
+    drawBoy(W*0.42,300+b1,1.4);
+    drawGirl(W*0.6,300+b2,1.5,"calm");
+    drawDove(W*0.5, 250+Math.sin(t*3)*8, 1.0, t*5);
+    // flowers drawn in particle pass
+  }
+  else if(s==="parents"){
+    skyGradient("day");
+    drawSun(W*0.15,58,26);
+    drawHillsFar("#c9773f", 250);
+    drawHills("#241a14", 300);
+    drawParent(W*0.2,300,1.3,"m");
+    drawParent(W*0.32,300,1.25,"f");
+    drawBoy(W*0.55,300,1.35);
+    drawGirl(W*0.72,300,1.45,"calm");
+  }
+  else if(s==="anger"){
+    skyGradient("storm");
+    drawHillsFar("#4a4a4a", 250);
+    drawHills("#241a14", 300);
+    const shake = Math.sin(t*30)*1.5;
+    drawParent(W*0.32+shake,300,1.4,"m");
+    drawGirl(W*0.62,300,1.5,"worried");
+  }
+  else if(s==="tears"){
+    skyGradient("storm");
+    drawHillsFar("#4a4a4a", 250);
+    // ground morphs from mud brown to lake blue as lakeProgress rises
+    const mud = "#6b4a2b", water = "#3f8fc0";
+    ctx.fillStyle = lakeProgress<=0? mud : mixColor(mud,water,lakeProgress);
+    ctx.fillRect(0,300,W,H-300);
+    const sinkY = lerp(300, 330, lakeProgress);
+    drawBoy(W*0.44,sinkY,1.35);
+    drawGirl(W*0.6,sinkY,1.45,"crying");
+    if(lakeProgress>0.05){
+      ctx.save();
+      ctx.globalAlpha = 0.35*lakeProgress;
+      ctx.fillStyle="#eaf6ff";
+      for(let i=0;i<4;i++){
+        const ry = 305+i*10 + Math.sin(t*2+i)*2;
+        ctx.beginPath(); ctx.ellipse(W*0.5, ry, W*0.42*lakeProgress, 4,0,0,Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+  else if(s==="lake"){
+    skyGradient("lake");
+    drawSun(W*0.78,60,26);
+    drawHillsFar("#3f7d54", 250);
+    // lake water fills bottom
+    ctx.fillStyle="#3f8fc0";
+    ctx.fillRect(0,290,W,H-290);
+    ctx.save();
+    ctx.globalAlpha=0.25;
+    ctx.fillStyle="#fff";
+    for(let i=0;i<5;i++){
+      const ry = 300+i*12+Math.sin(t*1.5+i)*3;
+      ctx.beginPath(); ctx.ellipse(W*0.5, ry, W*0.46, 3,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+    // two doves flying over the lake, symbolizing them together
+    const ang = t*0.8;
+    drawDove(W*0.42+Math.cos(ang)*40, 130+Math.sin(ang*1.3)*14, 1.3, t*5);
+    drawDove(W*0.58+Math.cos(ang+1)*40, 150+Math.sin(ang*1.3+1)*14, 1.3, t*5+1);
+  }
+}
+
+function mixColor(c1,c2,f){
+  const p1 = hexToRgb(c1), p2 = hexToRgb(c2);
+  const r = Math.round(lerp(p1[0],p2[0],f));
+  const g = Math.round(lerp(p1[1],p2[1],f));
+  const b = Math.round(lerp(p1[2],p2[2],f));
+  return `rgb(${r},${g},${b})`;
+}
+function hexToRgb(h){
+  h = h.replace('#','');
+  return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+}
+
+function renderParticles(step){
+  if(!step.interaction) return;
+  if(step.interaction==='wait'){
+    particles.forEach(p=>{
+      if(p.caught) return;
+      p.targetR = 9;
+      p.r = lerp(p.r||0, p.targetR, 0.2);
+      const glow = 0.6+0.4*Math.sin(t*6+p.x);
+      ctx.save();
+      ctx.globalAlpha = glow;
+      ctx.fillStyle = "#ffe9a8";
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,.7)"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r+4,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    });
+  } else if(step.interaction==='flowers'){
+    particles.forEach(p=>{
+      if(p.caught) return;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.strokeStyle="#2f5c33"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,18); ctx.stroke();
+      ctx.fillStyle = p.hue;
+      for(let k=0;k<5;k++){
+        const a = k*(Math.PI*2/5);
+        ctx.beginPath(); ctx.ellipse(Math.cos(a)*6,Math.sin(a)*6,4,2.6,a,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle="#fff6d0";
+      ctx.beginPath(); ctx.arc(0,0,2.6,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+  } else if(step.interaction==='tears'){
+    particles.forEach(p=>{
+      if(p.caught){ return; }
+      p.y += p.vy;
+      ctx.save();
+      ctx.fillStyle="#8fd0f2";
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y-8);
+      ctx.quadraticCurveTo(p.x+6,p.y+2,p.x,p.y+8);
+      ctx.quadraticCurveTo(p.x-6,p.y+2,p.x,p.y-8);
+      ctx.fill();
+      ctx.restore();
+      if(p.y>340) p.caught = true; // recycle off-screen drop
+    });
+    particles = particles.filter(p=>!(p.caught && p.kind==='tear' && p.y>340));
+  }
+}
+
+/* ============ ANIMATION LOOP ============ */
+function loop(){
+  t += 0.016;
+  const step = STEPS[stepIndex];
+  renderScene(step);
+  renderParticles(step);
+  raf = requestAnimationFrame(loop);
+}
+
+/* ============ STEP MACHINE ============ */
+function setupInteraction(step){
+  particles = [];
+  interactionDone = false;
+  interactionCount = 0;
+  lakeProgress = 0;
+  if(spawnTimer){ clearInterval(spawnTimer); spawnTimer=null; }
+  const hint = document.getElementById('hint');
+  const S = STRINGS[lang];
+
+  if(!step.interaction){
+    hint.classList.remove('show');
+    document.getElementById('nextBtn').disabled = false;
+    return;
+  }
+  document.getElementById('nextBtn').disabled = !step.ending ? true : false;
+
+  if(step.interaction==='wait'){
+    hint.textContent = S.hintWait; hint.classList.add('show');
+    spawnTimer = setInterval(()=>{
+      if(particles.filter(p=>!p.caught).length < 4) spawnStar();
+    }, 650);
+    spawnStar();
+  } else if(step.interaction==='flowers'){
+    hint.textContent = S.hintFlowers; hint.classList.add('show');
+    spawnFlowerField();
+  } else if(step.interaction==='tears'){
+    hint.textContent = S.hintTears; hint.classList.add('show');
+    spawnTimer = setInterval(()=>{
+      if(particles.filter(p=>!p.caught).length < 3) spawnTear();
+    }, 550);
+  }
+  updateGoalNote();
+}
+
+function updateGoalNote(){
+  const step = STEPS[stepIndex];
+  const S = STRINGS[lang];
+  const note = document.getElementById('goalNote');
+  if(!step.interaction){ note.textContent=""; return; }
+  const need = step.interaction==='wait'?6 : step.interaction==='flowers'?6 : 12;
+  const tmpl = step.interaction==='wait'? S.goalWait : step.interaction==='flowers'? S.goalFlowers : S.goalTears;
+  note.textContent = tmpl.replace('{n}', Math.min(interactionCount,need));
+}
+
+function renderDots(){
+  const dots = document.getElementById('dots');
+  dots.innerHTML = "";
+  STEPS.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===stepIndex?' active': i<stepIndex? ' done':'');
+    dots.appendChild(d);
+  });
+}
+
+function goToStep(i){
+  stepIndex = clamp(i,0,STEPS.length-1);
+  const step = STEPS[stepIndex];
+  document.getElementById('storyText').textContent = step[lang];
+  renderDots();
+  setupInteraction(step);
+  const nextBtn = document.getElementById('nextBtn');
+  const S = STRINGS[lang];
+  if(step.ending){
+    nextBtn.classList.add('hidden');
+    document.getElementById('replayRow').classList.remove('hidden');
+  } else {
+    nextBtn.classList.remove('hidden');
+    document.getElementById('replayRow').classList.add('hidden');
+    nextBtn.textContent = (stepIndex===STEPS.length-2) ? S.finish : S.next;
+  }
+  speak(step[lang]);
+  reportHeight();
+}
+
+function nextStep(){
+  if(stepIndex < STEPS.length-1) goToStep(stepIndex+1);
+}
+function restart(){
+  goToStep(0);
+}
+
+/* ============ NARRATION ============ */
+let voicesCache = [];
+function loadVoices(){ voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if(muted) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang==='id' ? 'id-ID' : 'en-US';
+  u.rate = 0.94;
+  u.pitch = 1.05;
+  const match = voicesCache.find(v=>v.lang && v.lang.toLowerCase().startsWith(u.lang.toLowerCase().slice(0,2)));
+  if(match) u.voice = match;
+  window.speechSynthesis.speak(u);
+}
+function toggleMute(){
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? "🔇" : "🔊";
+  if(muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  else speak(STEPS[stepIndex][lang]);
+}
+
+/* ============ LANGUAGE ============ */
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l;
+  document.getElementById('langId').classList.toggle('active', l==='id');
+  document.getElementById('langEn').classList.toggle('active', l==='en');
+  document.getElementById('mainTitle').textContent = STRINGS[l].title;
+  document.title = STRINGS[l].title + (l==='id' ? " — Dongeng Interaktif" : " — Interactive Tale");
+  document.getElementById('replayBtn').textContent = STRINGS[l].replay;
+  const url = new URL(location.href);
+  url.searchParams.set('lang', l);
+  history.replaceState(null,'',url.toString());
+  goToStep(stepIndex);
+}
+
+/* ============ IFRAME AUTO-RESIZE ============ */
+function reportHeight(){
+  requestAnimationFrame(()=>{
+    const h = document.getElementById('app').getBoundingClientRect().height + 24;
+    try{
+      parent.postMessage({type:'ctsGameResize', slug:'air-mata-putri-tislet', height: Math.ceil(h)}, '*');
+    }catch(e){}
+  });
+}
+if('ResizeObserver' in window){
+  new ResizeObserver(reportHeight).observe(document.getElementById('app'));
+}
+window.addEventListener('load', reportHeight);
+
+/* ============ INIT ============ */
+document.getElementById('langId').classList.toggle('active', lang==='id');
+document.getElementById('langEn').classList.toggle('active', lang==='en');
+document.documentElement.lang = lang;
+document.getElementById('mainTitle').textContent = STRINGS[lang].title;
+document.getElementById('replayBtn').textContent = STRINGS[lang].replay;
+document.title = STRINGS[lang].title + (lang==='id' ? " — Dongeng Interaktif" : " — Interactive Tale");
+goToStep(0);
+loop();
+</script>
+</body>
+</html>
