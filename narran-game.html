@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Danau Narran</title>
+<style>
+  :root{
+    --narran-cream:#fbf1de;
+    --narran-panel:#fffaf0;
+    --narran-ink:#3a2a1c;
+    --narran-brown:#6b4226;
+    --narran-ochre:#c96a35;
+    --narran-ochre-dark:#a24d22;
+    --narran-red:#b5451f;
+    --narran-blue:#2f7fa3;
+    --narran-green:#5a7d3c;
+    --narran-gold:#e0a83e;
+    --narran-shadow:rgba(60,35,15,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:'Segoe UI',Tahoma,Verdana,sans-serif;}
+  #narranApp{
+    max-width:820px;margin:0 auto;background:var(--narran-cream);
+    border:1px solid #e6d3ad;border-radius:18px;overflow:hidden;
+    box-shadow:0 10px 30px var(--narran-shadow);color:var(--narran-ink);
+  }
+  #narranTopBar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;background:linear-gradient(135deg,var(--narran-ochre),var(--narran-red));
+    color:#fff;
+  }
+  #narranTitle{font-size:15px;font-weight:700;letter-spacing:.3px;margin:0;}
+  #narranTitle small{display:block;font-weight:400;font-size:11px;opacity:.9;}
+  .narranBtnRow{display:flex;gap:6px;}
+  .narranIconBtn{
+    background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);
+    color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:4px;transition:background .15s;
+  }
+  .narranIconBtn:hover{background:rgba(255,255,255,0.32);}
+  #narranDots{display:flex;justify-content:center;gap:6px;padding:10px 8px 4px;flex-wrap:wrap;}
+  .narranDot{
+    width:9px;height:9px;border-radius:50%;background:#e2cda3;
+    transition:background .25s, transform .25s;
+  }
+  .narranDot.active{background:var(--narran-red);transform:scale(1.3);}
+  .narranDot.done{background:var(--narran-ochre-dark);}
+  #narranStageWrap{
+    position:relative;margin:8px 14px 0;border-radius:12px;overflow:hidden;
+    background:#eadfc4;box-shadow:inset 0 0 0 1px #dcc79a;
+  }
+  #narranCanvas{display:block;width:100%;height:auto;aspect-ratio:800/450;cursor:pointer;}
+  #narranQteOverlay{
+    position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;
+    align-items:center;gap:6px;padding:8px;pointer-events:none;
+  }
+  #narranQteHint{
+    pointer-events:none;background:rgba(58,42,28,0.78);color:#fff;padding:6px 12px;
+    border-radius:20px;font-size:13px;text-align:center;max-width:90%;
+  }
+  #narranProgressBarWrap{
+    width:70%;max-width:320px;height:12px;background:rgba(255,255,255,0.5);
+    border-radius:8px;overflow:hidden;display:none;pointer-events:none;border:1px solid rgba(58,42,28,0.4);
+  }
+  #narranProgressBar{height:100%;width:0%;background:linear-gradient(90deg,var(--narran-gold),var(--narran-red));transition:width .12s;}
+  #narranCover{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;color:#fff;padding:20px;
+    background:linear-gradient(180deg,rgba(30,20,10,0.15),rgba(30,20,10,0.65));
+  }
+  #narranCover h2{margin:0 0 8px;font-size:22px;text-shadow:0 2px 6px rgba(0,0,0,0.5);}
+  #narranCover p{margin:0 0 16px;font-size:13px;max-width:440px;text-shadow:0 2px 4px rgba(0,0,0,0.5);}
+  #narranSubtitleBox{
+    margin:10px 14px 0;min-height:44px;background:var(--narran-panel);border:1px solid #e6d3ad;
+    border-radius:10px;padding:10px 14px;font-size:14.5px;line-height:1.5;color:var(--narran-ink);
+  }
+  #narranControls{display:flex;justify-content:center;gap:10px;padding:14px;}
+  .narranMainBtn{
+    background:var(--narran-red);color:#fff;border:none;border-radius:24px;
+    padding:11px 26px;font-size:14.5px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 10px rgba(181,69,31,0.4);transition:transform .12s, background .15s;
+  }
+  .narranMainBtn:hover{background:var(--narran-ochre-dark);transform:translateY(-1px);}
+  .narranMainBtn:disabled{background:#cbb98e;cursor:not-allowed;box-shadow:none;transform:none;}
+  .narranGhostBtn{
+    background:transparent;color:var(--narran-red);border:2px solid var(--narran-red);
+    border-radius:24px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;
+  }
+  #narranFooter{
+    text-align:center;font-size:11px;color:#8a7355;padding:6px 10px 12px;
+  }
+  #narranFooter a{color:var(--narran-ochre-dark);text-decoration:none;font-weight:600;}
+  .narranHidden{display:none !important;}
+  @media (max-width:480px){
+    #narranTitle{font-size:13px;}
+    .narranMainBtn{padding:10px 20px;font-size:13.5px;}
+    #narranSubtitleBox{font-size:13.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="narranApp">
+  <div id="narranTopBar">
+    <p id="narranTitle">🐊 Asal Mula Danau Narran
+      <small id="narranSubtitleTag">Dongeng Anak Australia</small>
+    </p>
+    <div class="narranBtnRow">
+      <button class="narranIconBtn" id="narranLangBtn" title="Ganti Bahasa">🌐 <span id="narranLangLabel">EN</span></button>
+      <button class="narranIconBtn" id="narranMuteBtn" title="Mute">🔊</button>
+      <button class="narranIconBtn" id="narranRestartBtn" title="Ulangi">🔄</button>
+    </div>
+  </div>
+
+  <div id="narranDots"></div>
+
+  <div id="narranStageWrap">
+    <canvas id="narranCanvas" width="800" height="450"></canvas>
+    <div id="narranQteOverlay">
+      <div id="narranProgressBarWrap"><div id="narranProgressBar"></div></div>
+      <div id="narranQteHint" class="narranHidden"></div>
+    </div>
+    <div id="narranCover">
+      <h2 id="narranCoverTitle">Asal Mula Danau Narran</h2>
+      <p id="narranCoverDesc">Bantu Byamee menyelamatkan keluarganya dari buaya sungai Narran, dan temukan bagaimana danau itu tercipta.</p>
+      <button class="narranMainBtn" id="narranStartBtn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="narranSubtitleBox">Tekan "Mulai Cerita" untuk memulai.</div>
+
+  <div id="narranControls">
+    <button class="narranGhostBtn narranHidden" id="narranPrevBtn">⟵ Sebelumnya</button>
+    <button class="narranMainBtn narranHidden" id="narranNextBtn">Lanjut ⟶</button>
+    <button class="narranMainBtn narranHidden" id="narranReplayBtn">🔁 Ulangi Cerita</button>
+  </div>
+
+  <div id="narranFooter">Dongeng Australia · <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- STATE ---------- */
+  var narranState = {
+    lang: 'id',
+    muted: false,
+    started: false,
+    sceneIndex: 0, // 0-based into narranScenes
+    qte: { yamsFound:0, yamsTarget:5, yamMounds:[], digProgress:0, denPicked:false, denCorrect:2, denShake:0 },
+    time: 0
+  };
+
+  try{
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('lang') === 'en') narranState.lang = 'en';
+  }catch(e){}
+  try{
+    var storedMute = localStorage.getItem('narranMuted');
+    if(storedMute === '1') narranState.muted = true;
+  }catch(e){}
+
+  /* ---------- STRINGS ---------- */
+  var narranUI = {
+    id:{
+      tag:'Dongeng Anak Australia',
+      coverTitle:'Asal Mula Danau Narran',
+      coverDesc:'Bantu Byamee menyelamatkan keluarganya dari buaya sungai Narran, dan temukan bagaimana danau itu tercipta.',
+      start:'▶ Mulai Cerita',
+      next:'Lanjut ⟶',
+      prev:'⟵ Sebelumnya',
+      replay:'🔁 Ulangi Cerita',
+      tapStart:'Tekan "Mulai Cerita" untuk memulai.',
+      yamHint:'Ketuk gundukan tanah untuk menggali ubi jalar!',
+      yamProgress:function(n,t){return 'Ubi terkumpul: '+n+' / '+t;},
+      digHint:'Ketuk tanah berulang kali untuk menggali lubang raksasa!',
+      denHint:'Ketuk salah satu lubang sarang buaya. Cari yang benar!',
+      denWrong:'Lubang ini kosong, coba yang lain!',
+      denCorrect:'Ditemukan! Byamee segera menyelamatkan mereka!',
+      muteOn:'🔇',muteOff:'🔊'
+    },
+    en:{
+      tag:'Australian Children\'s Tale',
+      coverTitle:'The Origin of Lake Narran',
+      coverDesc:'Help Byamee rescue his family from the crocodiles of the Narran River, and discover how the lake was formed.',
+      start:'▶ Start Story',
+      next:'Next ⟶',
+      prev:'⟵ Previous',
+      replay:'🔁 Replay Story',
+      tapStart:'Press "Start Story" to begin.',
+      yamHint:'Tap the mounds of earth to dig up sweet potatoes!',
+      yamProgress:function(n,t){return 'Sweet potatoes collected: '+n+' / '+t;},
+      digHint:'Tap the ground repeatedly to dig the giant hole!',
+      denHint:'Tap one of the crocodile dens. Find the right one!',
+      denWrong:'This den is empty, try another!',
+      denCorrect:'Found them! Byamee rushes to save them!',
+      muteOn:'🔇',muteOff:'🔊'
+    }
+  };
+
+  /* ---------- SCENE NARRATION ---------- */
+  var narranScenes = [
+    { key:'intro', type:'next',
+      lines:{
+        id:['Di sebuah lembah di Australia, tinggallah Byamee bersama istri dan anaknya.',
+            'Sungai Narran yang mengalir di lembah itu terkenal angker, sarang buaya-buaya ganas.'],
+        en:['In a valley in Australia lived Byamee, together with his wife and daughter.',
+            'The Narran River flowing through the valley was known to be dangerous, home to fierce crocodiles.']
+      }
+    },
+    { key:'yams', type:'qte-yams',
+      lines:{
+        id:['Saat musim panas tiba, keluarga Byamee mencari makanan untuk musim dingin.',
+            'Byamee bertugas mencari madu, sedangkan istri dan anaknya mencari ubi jalar di hutan.'],
+        en:['When summer came, Byamee\'s family gathered food to store for winter.',
+            'Byamee was in charge of finding honey, while his wife and daughter dug for sweet potatoes in the forest.']
+      }
+    },
+    { key:'river', type:'next',
+      lines:{
+        id:['Keranjang ubi jalar kini penuh. Dalam perjalanan pulang, mereka melewati sungai Narran.',
+            'Airnya terlihat begitu jernih, hingga keduanya memutuskan untuk mandi sejenak.'],
+        en:['The basket of sweet potatoes was full. On the way home, they passed by the Narran River.',
+            'The water looked so clear that the two of them decided to bathe for a while.']
+      }
+    },
+    { key:'attack', type:'next',
+      lines:{
+        id:['Tanpa mereka sadari, seekor buaya ganas telah mengintai dari balik air.',
+            'Dengan cepat, buaya itu menyeret istri dan anak Byamee ke dalam lubang sarangnya.'],
+        en:['Without them realizing it, a fierce crocodile had been watching from beneath the water.',
+            'In an instant, the crocodile dragged Byamee\'s wife and daughter into its den.']
+      }
+    },
+    { key:'search', type:'next',
+      lines:{
+        id:['Byamee merasa ada yang tidak beres, dan bergegas mencari istri dan anaknya.',
+            'Di tepi sungai Narran, ia hanya menemukan keranjang ubi jalar tergeletak sendirian.',
+            'Byamee memanggil-manggil, namun tak ada jawaban.'],
+        en:['Byamee sensed something was wrong, and rushed to search for his wife and daughter.',
+            'At the bank of the Narran River, he found only the basket of sweet potatoes lying alone.',
+            'Byamee called out again and again, but there was no answer.']
+      }
+    },
+    { key:'dig', type:'qte-dig',
+      lines:{
+        id:['Byamee yakin buaya sungai telah menangkap keluarganya. Ia harus bertindak cepat.',
+            'Dengan kesaktiannya, Byamee mulai menggali lubang raksasa di tepi sungai.'],
+        en:['Byamee was certain a river crocodile had taken his family. He had to act quickly.',
+            'Using his magical power, Byamee began digging a giant hole beside the river.']
+      }
+    },
+    { key:'drain', type:'next',
+      lines:{
+        id:['Byamee mengalirkan air sungai Narran ke dalam lubang buatannya.',
+            'Perlahan-lahan, sungai Narran mengering hingga dasarnya terlihat.'],
+        en:['Byamee channeled the water of the Narran River into the hole he had dug.',
+            'Slowly, the Narran River dried up until its riverbed was exposed.']
+      }
+    },
+    { key:'search-den', type:'qte-den',
+      lines:{
+        id:['Byamee turun ke dasar sungai yang kering untuk mencari istri dan anaknya.',
+            'Ada beberapa lubang sarang buaya di sana.'],
+        en:['Byamee stepped down into the dry riverbed to search for his wife and daughter.',
+            'There were several crocodile dens down there.']
+      }
+    },
+    { key:'rescue', type:'next',
+      lines:{
+        id:['Akhirnya Byamee menemukan istri dan anaknya, dan segera menyelamatkan mereka berdua!',
+            'Setelah itu, Byamee mengalirkan kembali air dari lubang buatannya ke sungai Narran.'],
+        en:['At last Byamee found his wife and daughter, and quickly rescued them both!',
+            'Afterwards, Byamee let the water flow back from the hole into the Narran River.']
+      }
+    },
+    { key:'ending', type:'end',
+      lines:{
+        id:['Lubang besar galian Byamee kini tertinggal kering di tepi sungai.',
+            'Seiring waktu, air hujan perlahan mengisinya hingga menjadi sebuah danau.',
+            'Kini, orang Australia menyebutnya Danau Narran, atau Narran Wetlands.'],
+        en:['The great hole Byamee had dug was left dry beside the river.',
+            'Over time, rainwater slowly filled it until it became a lake.',
+            'Today, Australians call it Lake Narran, or the Narran Wetlands.']
+      }
+    }
+  ];
+
+  /* ---------- DOM refs ---------- */
+  var canvas = document.getElementById('narranCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+  var dotsWrap = document.getElementById('narranDots');
+  var subtitleBox = document.getElementById('narranSubtitleBox');
+  var nextBtn = document.getElementById('narranNextBtn');
+  var prevBtn = document.getElementById('narranPrevBtn');
+  var replayBtn = document.getElementById('narranReplayBtn');
+  var startBtn = document.getElementById('narranStartBtn');
+  var cover = document.getElementById('narranCover');
+  var coverTitle = document.getElementById('narranCoverTitle');
+  var coverDesc = document.getElementById('narranCoverDesc');
+  var langBtn = document.getElementById('narranLangBtn');
+  var langLabel = document.getElementById('narranLangLabel');
+  var muteBtn = document.getElementById('narranMuteBtn');
+  var restartBtn = document.getElementById('narranRestartBtn');
+  var qteHint = document.getElementById('narranQteHint');
+  var progressBarWrap = document.getElementById('narranProgressBarWrap');
+  var progressBar = document.getElementById('narranProgressBar');
+  var subtitleTag = document.getElementById('narranSubtitleTag');
+
+  /* ---------- DOTS ---------- */
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<narranScenes.length;i++){
+      var d = document.createElement('div');
+      d.className = 'narranDot';
+      d.setAttribute('data-i', i);
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = dotsWrap.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].className = 'narranDot' + (i < narranState.sceneIndex ? ' done' : '') + (i === narranState.sceneIndex ? ' active' : '');
+    }
+  }
+  buildDots();
+
+  /* ---------- SPEECH ---------- */
+  var narranVoices = [];
+  function loadVoices(){
+    try{ narranVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }catch(e){ narranVoices = []; }
+  }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    var prefix = lang === 'id' ? 'id' : 'en';
+    for(var i=0;i<narranVoices.length;i++){
+      if(narranVoices[i].lang && narranVoices[i].lang.toLowerCase().indexOf(prefix) === 0) return narranVoices[i];
+    }
+    return narranVoices.length ? narranVoices[0] : null;
+  }
+  var narranSpeechQueue = [];
+  var narranSpeaking = false;
+
+  function stopSpeech(){
+    narranSpeechQueue = [];
+    narranSpeaking = false;
+    try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  }
+
+  function speakLines(lines, onLine, onDone){
+    stopSpeech();
+    if(narranState.muted || !('speechSynthesis' in window)){
+      // Just show text lines in sequence quickly without audio
+      var idx = 0;
+      function showNext(){
+        if(idx >= lines.length){ if(onDone) onDone(); return; }
+        onLine(lines[idx], idx);
+        idx++;
+        setTimeout(showNext, 1600);
+      }
+      showNext();
+      return;
+    }
+    narranSpeechQueue = lines.slice();
+    narranSpeaking = true;
+    var i = 0;
+    function speakNext(){
+      if(i >= narranSpeechQueue.length){
+        narranSpeaking = false;
+        if(onDone) onDone();
+        return;
+      }
+      var text = narranSpeechQueue[i];
+      onLine(text, i);
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = narranState.lang === 'id' ? 'id-ID' : 'en-US';
+      var v = pickVoice(narranState.lang);
+      if(v) utter.voice = v;
+      utter.rate = 0.95;
+      utter.pitch = 1.0;
+      utter.onend = function(){ i++; speakNext(); };
+      utter.onerror = function(){ i++; speakNext(); };
+      try{ window.speechSynthesis.speak(utter); }catch(e){ i++; speakNext(); }
+    }
+    speakNext();
+  }
+
+  /* ---------- HELPERS: DRAWING ---------- */
+  function grd(ctx,x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    for(var i=0;i<stops.length;i++) g.addColorStop(stops[i][0], stops[i][1]);
+    return g;
+  }
+  function drawSky(t, dryMood){
+    var top = dryMood ? '#f6c98a' : '#ffe0ad';
+    var mid = dryMood ? '#f0a15d' : '#ffb066';
+    var g = grd(ctx,0,0,0,300,[[0,top],[1,mid]]);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,300);
+    // sun
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#fff3d6';
+    ctx.beginPath(); ctx.arc(650,80,42,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    // clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    for(var i=0;i<3;i++){
+      var cx = 120 + i*220 + Math.sin(t*0.0003+i)*10;
+      var cy = 60 + i*18;
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,38,14,0,0,Math.PI*2);
+      ctx.ellipse(cx+26,cy+4,26,11,0,0,Math.PI*2);
+      ctx.ellipse(cx-24,cy+5,24,10,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+  function drawGround(){
+    var g = grd(ctx,0,300,0,H,[[0,'#c96a35'],[1,'#8a4a24']]);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,300,W,H-300);
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4226';
+    ctx.fillRect(-6,-10,12,60);
+    ctx.fillStyle = '#5a7d3c';
+    var clumps = [[0,-40,30],[-22,-20,22],[22,-24,24],[0,-65,24]];
+    for(var i=0;i<clumps.length;i++){
+      ctx.beginPath();
+      ctx.ellipse(clumps[i][0],clumps[i][1],clumps[i][2],clumps[i][2]*0.75,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawTreesRow(){
+    var positions = [[60,300,0.85],[130,310,0.6],[720,300,0.9],[760,315,0.55],[40,280,0.5]];
+    for(var i=0;i<positions.length;i++) drawTree(positions[i][0],positions[i][1],positions[i][2]);
+  }
+  function drawRiver(x,y,w,h,t,dryLevel){
+    dryLevel = dryLevel || 0; // 0 = full water, 1 = fully dry
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x+w,y);
+    ctx.lineTo(x+w,y+h);
+    ctx.lineTo(x,y+h);
+    ctx.closePath();
+    ctx.clip();
+    if(dryLevel < 1){
+      var wg = grd(ctx,x,y,x,y+h,[[0,'#68b6d6'],[1,'#2f7fa3']]);
+      ctx.fillStyle = wg;
+      ctx.fillRect(x,y,w,h*(1-dryLevel));
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 2;
+      for(var i=0;i<4;i++){
+        var yy = y + 14 + i*((h*(1-dryLevel))/5) + Math.sin(t*0.002+i)*3;
+        ctx.beginPath();
+        for(var xx=x;xx<=x+w;xx+=14){
+          var yOff = Math.sin((xx*0.05)+t*0.003+i)*3;
+          if(xx===x) ctx.moveTo(xx,yy+yOff); else ctx.lineTo(xx,yy+yOff);
+        }
+        ctx.stroke();
+      }
+    }
+    if(dryLevel > 0){
+      ctx.fillStyle = '#7a5535';
+      ctx.fillRect(x,y+h*(1-dryLevel),w,h*dryLevel);
+      ctx.strokeStyle = '#5c3f24';
+      ctx.lineWidth = 1.5;
+      for(var c=0;c<6;c++){
+        var cx0 = x + (c+0.5)*(w/6);
+        ctx.beginPath();
+        ctx.moveTo(cx0-10, y+h*(1-dryLevel)+10);
+        ctx.lineTo(cx0+8, y+h-8);
+        ctx.moveTo(cx0+6, y+h*(1-dryLevel)+14);
+        ctx.lineTo(cx0-4, y+h-6);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  function drawFigure(x,y,scale,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var skin = '#b3703e';
+    var cloth = opts.color || '#b5451f';
+    // legs
+    ctx.strokeStyle = skin; ctx.lineWidth = 6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-6,20); ctx.lineTo(-10,42); ctx.moveTo(6,20); ctx.lineTo(10,42); ctx.stroke();
+    // body
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(-13,20); ctx.lineTo(13,20); ctx.lineTo(9,-14); ctx.lineTo(-9,-14); ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = skin; ctx.lineWidth = 5;
+    if(opts.armsUp){
+      ctx.beginPath(); ctx.moveTo(-9,-8); ctx.lineTo(-20,-28); ctx.moveTo(9,-8); ctx.lineTo(20,-28); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-9,-6); ctx.lineTo(-18,10); ctx.moveTo(9,-6); ctx.lineTo(18,10); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-24,11,0,Math.PI*2); ctx.fill();
+    // hair/headband
+    ctx.fillStyle = '#2b2118';
+    ctx.beginPath(); ctx.arc(0,-27,11,Math.PI,Math.PI*2); ctx.fill();
+    if(opts.headband){
+      ctx.fillStyle = opts.headband;
+      ctx.fillRect(-11,-27,22,4);
+    }
+    if(opts.basket){
+      ctx.fillStyle = '#8a5a2b';
+      ctx.beginPath();
+      ctx.moveTo(16,6); ctx.lineTo(30,2); ctx.lineTo(32,16); ctx.lineTo(17,18); ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle='#5c3a18'; ctx.lineWidth=1;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawCrocodile(x,y,scale,mouthOpen,dir){
+    dir = dir || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*dir, scale);
+    ctx.fillStyle = '#4c7a3c';
+    // tail
+    ctx.beginPath();
+    ctx.moveTo(-30,4); ctx.lineTo(-70,-10); ctx.lineTo(-66,6); ctx.lineTo(-70,18); ctx.lineTo(-30,10);
+    ctx.closePath(); ctx.fill();
+    // body
+    ctx.beginPath();
+    ctx.ellipse(0,4,34,14,0,0,Math.PI*2);
+    ctx.fill();
+    // snout
+    ctx.beginPath();
+    ctx.moveTo(30,-2); ctx.lineTo(58, mouthOpen ? -16 : -2); ctx.lineTo(58, mouthOpen ? 10 : 2); ctx.lineTo(30,10);
+    ctx.closePath(); ctx.fill();
+    if(mouthOpen){
+      ctx.fillStyle = '#c1440e';
+      ctx.beginPath();
+      ctx.moveTo(34,-2); ctx.lineTo(54,-10); ctx.lineTo(54,8); ctx.lineTo(34,8);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fff';
+      for(var i=0;i<4;i++){
+        ctx.beginPath();
+        ctx.moveTo(36+i*5,-8); ctx.lineTo(38+i*5,-3); ctx.lineTo(34+i*5,-3);
+        ctx.fill();
+      }
+    }
+    // eyes
+    ctx.fillStyle = '#2b2118';
+    ctx.beginPath(); ctx.arc(20,-10,3,0,Math.PI*2); ctx.arc(10,-10,3,0,Math.PI*2); ctx.fill();
+    // back ridges
+    ctx.fillStyle = '#3d6430';
+    for(var r=-20;r<20;r+=10){
+      ctx.beginPath();
+      ctx.moveTo(r,-8); ctx.lineTo(r+5,-14); ctx.lineTo(r+10,-8);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawHole(x,y,r,fillLevel){
+    fillLevel = fillLevel===undefined ? 0 : fillLevel;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(x,y,r,r*0.5,0,0,Math.PI*2);
+    ctx.fillStyle = '#5c3f24';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x,y,r*0.82,r*0.4,0,0,Math.PI*2);
+    ctx.fillStyle = '#3a2814';
+    ctx.fill();
+    if(fillLevel > 0){
+      ctx.beginPath();
+      ctx.ellipse(x,y,r*0.82*fillLevel + r*0.1, r*0.4*fillLevel + r*0.06,0,0,Math.PI*2);
+      ctx.fillStyle = '#3a8fb7';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawRain(t,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha===undefined?1:alpha;
+    ctx.strokeStyle = '#bfe4f2';
+    ctx.lineWidth = 2;
+    for(var i=0;i<40;i++){
+      var rx = (i*53 + (t*0.15)) % (W+40) - 20;
+      var ry = (i*37 + t*0.35) % H;
+      ctx.beginPath();
+      ctx.moveTo(rx,ry);
+      ctx.lineTo(rx-4,ry+14);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawLake(x,y,rx,ry){
+    ctx.save();
+    var g = grd(ctx,x,y-ry,x,y+ry,[[0,'#7fc4de'],[1,'#2f7fa3']]);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x,y-ry*0.2,rx*0.6,ry*0.3,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- SCENE-SPECIFIC RENDER ---------- */
+  function renderScene(sceneKey, t){
+    ctx.clearRect(0,0,W,H);
+    var dry = (sceneKey==='drain' || sceneKey==='search-den');
+    drawSky(t, dry);
+    drawGround();
+    drawTreesRow();
+
+    if(sceneKey==='intro'){
+      drawRiver(260,300,540,150,t,0);
+      drawFigure(140,340,1.1,{color:'#b5451f',headband:'#e0a83e'});
+      drawFigure(180,346,0.85,{color:'#d9752e'});
+      drawFigure(205,352,0.6,{color:'#e0a83e'});
+      // lurking eyes in water
+      ctx.fillStyle='#2b2118';
+      ctx.beginPath(); ctx.arc(500,330,3,0,Math.PI*2); ctx.arc(510,330,3,0,Math.PI*2); ctx.fill();
+    }
+    else if(sceneKey==='yams'){
+      drawRiver(600,300,200,150,t,0);
+      drawFigure(660,120,0.0,{}); // (unused honey figure placeholder off-canvas)
+      drawFigure(150,120,0.9,{color:'#b5451f',headband:'#e0a83e',armsUp:true}); // byamee searching honey far
+      drawFigure(360,330,1,{color:'#d9752e',basket:true});
+      drawFigure(400,345,0.7,{color:'#e0a83e'});
+      // yam mounds
+      for(var i=0;i<narranState.qte.yamMounds.length;i++){
+        var m = narranState.qte.yamMounds[i];
+        if(m.found) continue;
+        ctx.fillStyle = '#8a4a24';
+        ctx.beginPath();
+        ctx.ellipse(m.x,m.y,22,10,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='#6b4226';
+        ctx.beginPath();
+        ctx.ellipse(m.x,m.y-4,15,7,0,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+    else if(sceneKey==='river'){
+      drawRiver(200,290,460,160,t,0);
+      drawFigure(340,340,1,{color:'#d9752e',basket:true});
+      drawFigure(390,350,0.7,{color:'#e0a83e'});
+    }
+    else if(sceneKey==='attack'){
+      drawRiver(150,290,560,160,t,0);
+      drawFigure(360,340,1,{color:'#d9752e'});
+      drawFigure(400,352,0.7,{color:'#e0a83e'});
+      var lunge = 30 + Math.sin(t*0.006)*10;
+      drawCrocodile(300 - lunge, 380, 1.1, true, 1);
+    }
+    else if(sceneKey==='search'){
+      drawRiver(180,290,540,160,t,0);
+      drawFigure(160,340,1.1,{color:'#b5451f',headband:'#e0a83e',armsUp:true});
+      ctx.fillStyle = '#8a5a2b';
+      ctx.beginPath();
+      ctx.moveTo(430,410); ctx.lineTo(452,404); ctx.lineTo(456,420); ctx.lineTo(432,424);
+      ctx.closePath(); ctx.fill();
+    }
+    else if(sceneKey==='dig'){
+      drawRiver(560,290,240,160,t,0);
+      var glow = 0.5 + Math.sin(t*0.006)*0.3;
+      ctx.save();
+      ctx.globalAlpha = glow;
+      ctx.fillStyle = '#ffe08a';
+      ctx.beginPath(); ctx.arc(220,340,46,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      drawFigure(220,350,1.2,{color:'#b5451f',headband:'#e0a83e',armsUp:true});
+      var dp = narranState.qte.digProgress/100;
+      if(dp > 0.02) drawHole(320,400,20+dp*70,0);
+    }
+    else if(sceneKey==='drain'){
+      drawRiver(560,300,240,140,t,1); // still shows dry riverbed decoratively
+      drawHole(220,390,90,0.85);
+      drawFigure(120,350,1.1,{color:'#b5451f',headband:'#e0a83e'});
+      ctx.strokeStyle='#3a8fb7'; ctx.lineWidth=6;
+      ctx.beginPath();
+      ctx.moveTo(560,340); ctx.quadraticCurveTo(400,320,300,380);
+      ctx.stroke();
+    }
+    else if(sceneKey==='search-den'){
+      drawRiver(0,300,W,150,t,1);
+      drawFigure(90,350,1,{color:'#b5451f',headband:'#e0a83e'});
+      var dens = narranQteDens();
+      for(var d=0; d<dens.length; d++){
+        var dd = dens[d];
+        var shakeOff = (narranState.qte.denShake>0 && dd.wrongPick) ? Math.sin(t*0.08)*4 : 0;
+        drawHole(dd.x+shakeOff, dd.y, 30, 0);
+      }
+    }
+    else if(sceneKey==='rescue'){
+      drawRiver(180,290,540,160,t,0);
+      drawFigure(300,340,1,{color:'#d9752e',basket:false});
+      drawFigure(340,350,0.7,{color:'#e0a83e'});
+      drawFigure(260,332,1.1,{color:'#b5451f',headband:'#e0a83e',armsUp:true});
+      drawHole(140,400,55,0.3);
+    }
+    else if(sceneKey==='ending'){
+      var lakeGrow = Math.min(1, (narranState.endTimer||0)/4000);
+      if(lakeGrow < 1) drawRain(t, 0.7);
+      drawLake(300,370, 30+90*lakeGrow, 14+40*lakeGrow);
+      drawFigure(430,340,1,{color:'#b5451f',headband:'#e0a83e'});
+      drawFigure(470,348,0.85,{color:'#d9752e'});
+      drawFigure(500,354,0.6,{color:'#e0a83e'});
+    }
+  }
+
+  function narranQteDens(){
+    return [
+      {x:220,y:390,wrongPick:true},
+      {x:340,y:400,wrongPick:true},
+      {x:460,y:392,wrongPick:false}, // correct: index 2
+      {x:580,y:404,wrongPick:true}
+    ];
+  }
+
+  /* ---------- ANIMATION LOOP ---------- */
+  var narranRAF = null;
+  function animLoop(ts){
+    narranState.time = ts;
+    if(narranState.started){
+      var scene = narranScenes[narranState.sceneIndex];
+      renderScene(scene.key, ts);
+    }
+    narranRAF = requestAnimationFrame(animLoop);
+  }
+  narranRAF = requestAnimationFrame(animLoop);
+
+  /* ---------- HEIGHT REPORTING ---------- */
+  function reportHeight(){
+    try{
+      var h = document.getElementById('narranApp').offsetHeight;
+      window.parent.postMessage({type:'narranHeight', height:h}, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  if('ResizeObserver' in window){
+    var ro = new ResizeObserver(reportHeight);
+    ro.observe(document.getElementById('narranApp'));
+  }
+
+  /* ---------- UI TEXT UPDATE ---------- */
+  function applyLangUI(){
+    var s = narranUI[narranState.lang];
+    subtitleTag.textContent = s.tag;
+    coverTitle.textContent = s.coverTitle;
+    coverDesc.textContent = s.coverDesc;
+    startBtn.textContent = s.start;
+    nextBtn.textContent = s.next;
+    prevBtn.textContent = s.prev;
+    replayBtn.textContent = s.replay;
+    langLabel.textContent = narranState.lang === 'id' ? 'EN' : 'ID';
+    muteBtn.textContent = narranState.muted ? s.muteOn : s.muteOff;
+    document.documentElement.lang = narranState.lang;
+    if(!narranState.started) subtitleBox.textContent = s.tapStart;
+  }
+  applyLangUI();
+
+  /* ---------- SCENE FLOW ---------- */
+  function initYamMounds(){
+    narranState.qte.yamsFound = 0;
+    narranState.qte.yamMounds = [
+      {x:200,y:360,found:false},{x:250,y:390,found:false},{x:300,y:365,found:false},
+      {x:190,y:400,found:false},{x:270,y:410,found:false}
+    ];
+  }
+  function resetQteForScene(scene){
+    if(scene.key==='yams') initYamMounds();
+    if(scene.key==='dig') narranState.qte.digProgress = 0;
+    if(scene.key==='search-den'){ narranState.qte.denPicked=false; narranState.qte.denShake=0; }
+    if(scene.key==='ending') narranState.endTimer = 0;
+  }
+
+  function updateQteUI(scene){
+    var s = narranUI[narranState.lang];
+    progressBarWrap.style.display = 'none';
+    qteHint.classList.add('narranHidden');
+    nextBtn.disabled = false;
+    if(scene.type === 'qte-yams'){
+      qteHint.classList.remove('narranHidden');
+      qteHint.textContent = s.yamHint + '  ' + s.yamProgress(narranState.qte.yamsFound, narranState.qte.yamsTarget);
+      nextBtn.disabled = narranState.qte.yamsFound < narranState.qte.yamsTarget;
+    } else if(scene.type === 'qte-dig'){
+      qteHint.classList.remove('narranHidden');
+      qteHint.textContent = s.digHint;
+      progressBarWrap.style.display = 'block';
+      progressBar.style.width = narranState.qte.digProgress + '%';
+      nextBtn.disabled = narranState.qte.digProgress < 100;
+    } else if(scene.type === 'qte-den'){
+      qteHint.classList.remove('narranHidden');
+      qteHint.textContent = narranState.qte.denPicked ? s.denCorrect : s.denHint;
+      nextBtn.disabled = !narranState.qte.denPicked;
+    }
+  }
+
+  function showScene(index, opts){
+    opts = opts || {};
+    narranState.sceneIndex = index;
+    var scene = narranScenes[index];
+    resetQteForScene(scene);
+    updateDots();
+    prevBtn.classList.toggle('narranHidden', index === 0);
+    nextBtn.classList.toggle('narranHidden', scene.type === 'end');
+    replayBtn.classList.toggle('narranHidden', scene.type !== 'end');
+    var lines = scene.lines[narranState.lang];
+    subtitleBox.textContent = lines[0];
+    updateQteUI(scene);
+    speakLines(lines, function(line){
+      subtitleBox.textContent = line;
+    }, function(){
+      updateQteUI(scene);
+    });
+    reportHeight();
+    if(scene.key === 'ending'){
+      var start = performance.now();
+      function tick(){
+        narranState.endTimer = performance.now() - start;
+        if(narranState.endTimer < 4200 && narranState.sceneIndex === index){
+          requestAnimationFrame(tick);
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+  }
+
+  function goNext(){
+    var scene = narranScenes[narranState.sceneIndex];
+    if(nextBtn.disabled) return;
+    if(narranState.sceneIndex < narranScenes.length - 1){
+      showScene(narranState.sceneIndex + 1);
+    }
+  }
+  function goPrev(){
+    if(narranState.sceneIndex > 0){
+      showScene(narranState.sceneIndex - 1);
+    }
+  }
+  function restartStory(){
+    stopSpeech();
+    narranState.started = true;
+    cover.classList.add('narranHidden');
+    showScene(0);
+  }
+
+  /* ---------- EVENTS ---------- */
+  startBtn.addEventListener('click', function(){
+    narranState.started = true;
+    cover.classList.add('narranHidden');
+    showScene(0);
+  });
+  nextBtn.addEventListener('click', goNext);
+  prevBtn.addEventListener('click', goPrev);
+  replayBtn.addEventListener('click', restartStory);
+  restartBtn.addEventListener('click', function(){
+    if(!narranState.started){ return; }
+    restartStory();
+  });
+  langBtn.addEventListener('click', function(){
+    narranState.lang = narranState.lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+    if(narranState.started){
+      var scene = narranScenes[narranState.sceneIndex];
+      var lines = scene.lines[narranState.lang];
+      subtitleBox.textContent = lines[0];
+      updateQteUI(scene);
+      speakLines(lines, function(line){ subtitleBox.textContent = line; }, function(){ updateQteUI(scene); });
+    }
+  });
+  muteBtn.addEventListener('click', function(){
+    narranState.muted = !narranState.muted;
+    try{ localStorage.setItem('narranMuted', narranState.muted ? '1':'0'); }catch(e){}
+    applyLangUI();
+    if(narranState.muted) stopSpeech();
+  });
+
+  /* ---------- CANVAS CLICK (QTE) ---------- */
+  function getLogicalCoords(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX = (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX;
+    var clientY = (evt.touches && evt.touches[0]) ? evt.touches[0].clientY : evt.clientY;
+    var sx = W / rect.width;
+    var sy = H / rect.height;
+    return { x:(clientX-rect.left)*sx, y:(clientY-rect.top)*sy };
+  }
+  function dist(x1,y1,x2,y2){ return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)); }
+
+  canvas.addEventListener('click', function(evt){
+    if(!narranState.started) return;
+    var scene = narranScenes[narranState.sceneIndex];
+    var p = getLogicalCoords(evt);
+
+    if(scene.type === 'qte-yams'){
+      var mounds = narranState.qte.yamMounds;
+      for(var i=0;i<mounds.length;i++){
+        var m = mounds[i];
+        if(!m.found && dist(p.x,p.y,m.x,m.y) < 30){
+          m.found = true;
+          narranState.qte.yamsFound++;
+          updateQteUI(scene);
+          break;
+        }
+      }
+    } else if(scene.type === 'qte-dig'){
+      narranState.qte.digProgress = Math.min(100, narranState.qte.digProgress + 9);
+      updateQteUI(scene);
+    } else if(scene.type === 'qte-den'){
+      if(narranState.qte.denPicked) return;
+      var dens = narranQteDens();
+      for(var d=0; d<dens.length; d++){
+        var dd = dens[d];
+        if(dist(p.x,p.y,dd.x,dd.y) < 32){
+          if(dd.wrongPick){
+            narranState.qte.denShake = 12;
+            var s = narranUI[narranState.lang];
+            subtitleBox.textContent = s.denWrong;
+            setTimeout(function(){ narranState.qte.denShake = 0; }, 350);
+          } else {
+            narranState.qte.denPicked = true;
+            var s2 = narranUI[narranState.lang];
+            subtitleBox.textContent = s2.denCorrect;
+            updateQteUI(scene);
+          }
+          break;
+        }
+      }
+    }
+  });
+
+  /* Keep canvas crisp on resize (logical coord system stays 800x450 via CSS aspect-ratio) */
+  applyLangUI();
+})();
+</script>
+</body>
+</html>
