@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikan untuk Raja - Dongeng Anak Irak</title>
+<style>
+  :root{
+    --ikr-sand:#f4e4c1;
+    --ikr-sand-dark:#e3c98f;
+    --ikr-gold:#c9962c;
+    --ikr-gold-light:#e8b84b;
+    --ikr-blue:#1f6f8b;
+    --ikr-blue-dark:#144a5c;
+    --ikr-brown:#5a3a22;
+    --ikr-panel:#fffaf0;
+    --ikr-ink:#3b2a1a;
+    --ikr-red:#a8412c;
+    --ikr-green:#3d6b4f;
+    --ikr-shadow: rgba(59,42,26,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  #ikr-root{
+    font-family:'Trebuchet MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg,var(--ikr-sand) 0%, var(--ikr-sand-dark) 100%);
+    color:var(--ikr-ink);
+    width:100%;
+    padding:14px 14px 18px;
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow:hidden;
+  }
+  #ikr-card{
+    width:100%;
+    max-width:760px;
+    background:var(--ikr-panel);
+    border-radius:18px;
+    box-shadow:0 8px 24px var(--ikr-shadow);
+    border:3px solid var(--ikr-gold);
+    overflow:hidden;
+    position:relative;
+  }
+  .ikr-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(90deg,var(--ikr-blue-dark),var(--ikr-blue));
+    color:#fff;
+  }
+  .ikr-title{
+    font-size:15px;
+    font-weight:bold;
+    letter-spacing:0.3px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .ikr-title .ikr-emoji{font-size:18px;}
+  .ikr-controls{display:flex;gap:6px;}
+  .ikr-btn-icon{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.4);
+    color:#fff;
+    border-radius:8px;
+    padding:5px 9px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background 0.2s;
+  }
+  .ikr-btn-icon:hover{background:rgba(255,255,255,0.3);}
+  .ikr-btn-icon.active{background:var(--ikr-gold);border-color:var(--ikr-gold-light);}
+
+  #ikr-stage-wrap{
+    position:relative;
+    width:100%;
+    background:#cfe8ee;
+  }
+  #ikr-canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    cursor:pointer;
+  }
+  .ikr-dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 0 4px;
+    background:var(--ikr-panel);
+  }
+  .ikr-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#e0d3b0;
+    border:1.5px solid var(--ikr-gold);
+    transition:all 0.25s;
+  }
+  .ikr-dot.done{background:var(--ikr-gold);}
+  .ikr-dot.current{background:var(--ikr-red);border-color:var(--ikr-red);transform:scale(1.3);}
+
+  #ikr-narration{
+    padding:12px 18px 6px;
+    font-size:15px;
+    line-height:1.55;
+    min-height:56px;
+    text-align:center;
+    background:var(--ikr-panel);
+  }
+
+  #ikr-choices{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    padding:2px 16px 6px;
+    background:var(--ikr-panel);
+  }
+  .ikr-choice-btn{
+    background:#fff;
+    border:2px solid var(--ikr-blue);
+    color:var(--ikr-blue-dark);
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .ikr-choice-btn:hover{background:var(--ikr-blue);color:#fff;}
+  .ikr-choice-btn.wrong{
+    animation:ikr-shake 0.4s;
+    border-color:var(--ikr-red);
+    color:var(--ikr-red);
+  }
+  .ikr-choice-btn.correct{
+    background:var(--ikr-green);
+    border-color:var(--ikr-green);
+    color:#fff;
+  }
+  @keyframes ikr-shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    75%{transform:translateX(6px);}
+  }
+  #ikr-feedback{
+    text-align:center;
+    font-size:13px;
+    font-style:italic;
+    min-height:18px;
+    color:var(--ikr-red);
+    padding:0 16px;
+    background:var(--ikr-panel);
+  }
+
+  .ikr-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 18px 16px;
+    background:var(--ikr-panel);
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .ikr-main-btn{
+    background:linear-gradient(90deg,var(--ikr-gold),var(--ikr-gold-light));
+    border:none;
+    color:#3b2a10;
+    font-weight:bold;
+    padding:11px 22px;
+    border-radius:24px;
+    font-size:14.5px;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(201,150,44,0.4);
+    transition:transform 0.15s;
+  }
+  .ikr-main-btn:hover{transform:translateY(-2px);}
+  .ikr-main-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .ikr-credit{
+    font-size:11px;
+    color:#8a7554;
+  }
+  .ikr-credit a{color:var(--ikr-blue);text-decoration:none;}
+
+  #ikr-start-overlay, #ikr-end-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,rgba(20,74,92,0.92),rgba(90,58,34,0.94));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:#fff;
+    padding:24px;
+    z-index:5;
+  }
+  #ikr-start-overlay h2, #ikr-end-overlay h2{
+    font-size:22px;
+    margin:0 0 10px;
+    color:var(--ikr-gold-light);
+    text-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  #ikr-start-overlay p, #ikr-end-overlay p{
+    font-size:14px;
+    max-width:480px;
+    line-height:1.6;
+    margin:0 0 18px;
+    opacity:0.95;
+  }
+  .ikr-fish-deco{font-size:38px;margin-bottom:6px;}
+
+  @media (max-width:480px){
+    .ikr-title{font-size:13px;}
+    #ikr-narration{font-size:13.5px;padding:10px 12px 4px;}
+    .ikr-choice-btn{font-size:12.5px;padding:8px 12px;}
+    .ikr-main-btn{font-size:13px;padding:10px 18px;}
+  }
+</style>
+</head>
+<body>
+<div id="ikr-root">
+  <div id="ikr-card">
+    <div class="ikr-header">
+      <div class="ikr-title"><span class="ikr-emoji">🐟</span><span id="ikr-title-text">Ikan untuk Raja</span></div>
+      <div class="ikr-controls">
+        <button class="ikr-btn-icon" id="ikr-lang-btn" title="Ganti Bahasa">🌐 <span id="ikr-lang-label">EN</span></button>
+        <button class="ikr-btn-icon" id="ikr-mute-btn" title="Mute/Unmute">🔊</button>
+      </div>
+    </div>
+
+    <div id="ikr-stage-wrap">
+      <canvas id="ikr-canvas" width="900" height="500"></canvas>
+
+      <div id="ikr-start-overlay">
+        <div class="ikr-fish-deco">🐟👑</div>
+        <h2 id="ikr-start-title">Ikan untuk Raja</h2>
+        <p id="ikr-start-desc">Sebuah dongeng dari Irak tentang seorang nelayan, seekor ikan besar, dan jawaban cerdik yang membuat Raja tersenyum.</p>
+        <button class="ikr-main-btn" id="ikr-start-btn">▶ Mulai Cerita</button>
+      </div>
+
+      <div id="ikr-end-overlay" style="display:none;">
+        <div class="ikr-fish-deco">🎉</div>
+        <h2 id="ikr-end-title">Selesai!</h2>
+        <p id="ikr-end-desc">Kecerdikan mengalahkan kebencian. Nelayan itu pulang dengan hati gembira.</p>
+        <button class="ikr-main-btn" id="ikr-restart-btn">↻ Ulangi Cerita</button>
+      </div>
+    </div>
+
+    <div class="ikr-dots" id="ikr-dots"></div>
+    <div id="ikr-narration"></div>
+    <div id="ikr-choices"></div>
+    <div id="ikr-feedback"></div>
+
+    <div class="ikr-footer">
+      <button class="ikr-main-btn" id="ikr-next-btn">Lanjut ▶</button>
+      <div class="ikr-credit">Dongeng oleh <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var canvas = document.getElementById('ikr-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  /* ---------------- STRINGS ---------------- */
+  var UI = {
+    id: {
+      title: "Ikan untuk Raja",
+      startTitle: "Ikan untuk Raja",
+      startDesc: "Sebuah dongeng dari Irak tentang seorang nelayan, seekor ikan besar, dan jawaban cerdik yang membuat Raja tersenyum.",
+      startBtn: "▶ Mulai Cerita",
+      nextBtn: "Lanjut ▶",
+      nextBtnLast: "Lihat Akhir Cerita ▶",
+      restartBtn: "↻ Ulangi Cerita",
+      endTitle: "Selesai!",
+      endDesc: "Kecerdikan mengalahkan niat buruk. Nelayan itu pulang dengan hati gembira, dan Raja pun tersenyum atas jawabannya yang bijak.",
+      quizWrongFeedback: "Coba pikirkan lagi jawaban si nelayan...",
+      quizCorrectFeedback: "Tepat sekali! Itulah jawaban cerdik si nelayan.",
+      clickHint: "(Ketuk gambar atau tombol Lanjut untuk melanjutkan)"
+    },
+    en: {
+      title: "A Fish for the King",
+      startTitle: "A Fish for the King",
+      startDesc: "An Iraqi folktale about a fisherman, a big fish, and a clever answer that made the King smile.",
+      startBtn: "▶ Start Story",
+      nextBtn: "Next ▶",
+      nextBtnLast: "See the Ending ▶",
+      restartBtn: "↻ Replay Story",
+      endTitle: "The End!",
+      endDesc: "Cleverness triumphed over ill will. The fisherman went home with a joyful heart, and the King smiled at his wise answer.",
+      quizWrongFeedback: "Think again about what the fisherman would say...",
+      quizCorrectFeedback: "Exactly right! That was the fisherman's clever answer.",
+      clickHint: "(Tap the picture or the Next button to continue)"
+    }
+  };
+
+  /* ---------------- SCENES ---------------- */
+  // type: 'normal' | 'quiz'
+  var SCENES = [
+    {
+      id: 'intro',
+      draw: drawScenePalaceIntro,
+      text: {
+        id: "Dahulu kala, hiduplah seorang Raja Irak yang gemar makan ikan. Istananya berdiri megah di tepi Sungai Tigris, tempat Raja dan Ratu sering bersantai memandang air sungai yang berkilau.",
+        en: "Long ago, there lived a King of Iraq who loved eating fish. His palace stood grandly beside the Tigris River, where the King and Queen often relaxed, gazing at the shimmering water."
+      }
+    },
+    {
+      id: 'fisherman-passes',
+      draw: drawSceneFishermanBoat,
+      text: {
+        id: "Para nelayan di sungai itu selalu menyapa raja mereka dengan hormat. Suatu sore, seorang nelayan lewat membawa hasil tangkapan terbaiknya: seekor ikan yang sangat besar.",
+        en: "The fishermen on the river always greeted their king with respect. One evening, a fisherman passed by carrying his finest catch: an extraordinarily large fish."
+      }
+    },
+    {
+      id: 'present-fish',
+      draw: drawScenePresentFish,
+      text: {
+        id: "Melihat Raja dan Ratu bersantai di taman, nelayan itu menghentikan perahunya. Ia memberi hormat, lalu mempersembahkan ikan besar itu. \u201cYang Mulia, ikan ini tangkapan terbaik hamba, sebagai tanda cinta rakyat kepada Raja yang bijaksana.\u201d",
+        en: "Seeing the King and Queen relaxing in the garden, the fisherman stopped his boat. He bowed respectfully, then presented the great fish. \u201cYour Majesty, this is my finest catch, a token of the people's love for their wise King.\u201d"
+      }
+    },
+    {
+      id: 'queen-objects',
+      draw: drawSceneQueenObjects,
+      text: {
+        id: "Sang Ratu tidak suka. Ia curiga nelayan itu hanya ingin hadiah. \u201cJangan diterima ikan itu, ia hanya menginginkan imbalan dari Raja,\u201d bisiknya. Namun Raja tak peduli, ia menerima ikan itu dan bersiap memberi sekantung uang kepada si nelayan.",
+        en: "The Queen was displeased. She suspected the fisherman only wanted a reward. \u201cDon't accept that fish, he only wants payment from you,\u201d she whispered. But the King paid no mind, he accepted the fish and prepared to give the fisherman a bag of coins."
+      }
+    },
+    {
+      id: 'quiz',
+      type: 'quiz',
+      draw: drawSceneQuiz,
+      text: {
+        id: "\u201cTunggu dulu!\u201d sela Ratu. \u201cAku bertanya padamu, wahai nelayan: ikan yang kau bawa itu, laki-laki atau perempuan?\u201d Ratu berharap jawaban apa pun akan membuat Raja menolak memberi hadiah. Apa jawaban cerdik si nelayan?",
+        en: "\u201cWait!\u201d the Queen interrupted. \u201cAnswer me, fisherman: is that fish male or female?\u201d She hoped any answer would make the King refuse to give the reward. What was the fisherman's clever reply?"
+      },
+      choices: [
+        { id: "Ikan laki-laki, Yang Mulia.", en: "It is a male fish, Your Majesty.", correct:false },
+        { id: "Ikan perempuan, Yang Mulia.", en: "It is a female fish, Your Majesty.", correct:false },
+        { id: "Ikan istimewa persembahan untuk Raja, bukan laki-laki atau perempuan.", en: "It is a special fish just for the King, neither male nor female.", correct:true }
+      ]
+    },
+    {
+      id: 'ending',
+      draw: drawSceneEnding,
+      text: {
+        id: "Ratu hanya terdiam mendengar jawaban cerdas itu. Raja tersenyum lebar, lalu tetap memberikan sekantung uang kepada si nelayan. Kecerdikan dan ketulusan hati pun mengalahkan niat buruk sang Ratu.",
+        en: "The Queen fell silent at such a clever answer. The King smiled broadly and still gave the fisherman his bag of coins. Cleverness and a sincere heart triumphed over the Queen's ill will."
+      }
+    }
+  ];
+
+  var TOTAL = SCENES.length;
+
+  /* ---------------- STATE ---------------- */
+  var state = {
+    lang: 'id',
+    muted: false,
+    sceneIndex: 0,
+    started: false,
+    quizSolved: false,
+    time: 0
+  };
+
+  try {
+    var savedMute = localStorage.getItem('ikr_muted');
+    if (savedMute === '1') state.muted = true;
+  } catch(e){}
+
+  /* ---------------- DOM refs ---------------- */
+  var $titleText = document.getElementById('ikr-title-text');
+  var $langBtn = document.getElementById('ikr-lang-btn');
+  var $langLabel = document.getElementById('ikr-lang-label');
+  var $muteBtn = document.getElementById('ikr-mute-btn');
+  var $startOverlay = document.getElementById('ikr-start-overlay');
+  var $endOverlay = document.getElementById('ikr-end-overlay');
+  var $startTitle = document.getElementById('ikr-start-title');
+  var $startDesc = document.getElementById('ikr-start-desc');
+  var $startBtn = document.getElementById('ikr-start-btn');
+  var $endTitle = document.getElementById('ikr-end-title');
+  var $endDesc = document.getElementById('ikr-end-desc');
+  var $restartBtn = document.getElementById('ikr-restart-btn');
+  var $dots = document.getElementById('ikr-dots');
+  var $narration = document.getElementById('ikr-narration');
+  var $choices = document.getElementById('ikr-choices');
+  var $feedback = document.getElementById('ikr-feedback');
+  var $nextBtn = document.getElementById('ikr-next-btn');
+
+  /* ---------------- INIT LANG FROM URL ---------------- */
+  (function initLangFromUrl(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var l = params.get('lang');
+      if (l === 'en') state.lang = 'en';
+    } catch(e){}
+  })();
+
+  /* ---------------- DOTS ---------------- */
+  function buildDots(){
+    $dots.innerHTML = '';
+    for (var i=0;i<TOTAL;i++){
+      var d = document.createElement('div');
+      d.className = 'ikr-dot';
+      d.id = 'ikr-dot-'+i;
+      $dots.appendChild(d);
+    }
+  }
+  function updateDots(){
+    for (var i=0;i<TOTAL;i++){
+      var d = document.getElementById('ikr-dot-'+i);
+      d.className = 'ikr-dot' + (i < state.sceneIndex ? ' done' : '') + (i === state.sceneIndex ? ' current' : '');
+    }
+  }
+
+  /* ---------------- SPEECH ---------------- */
+  var voicesCache = null;
+  function loadVoices(){
+    if (window.speechSynthesis){
+      voicesCache = window.speechSynthesis.getVoices();
+    }
+  }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if (!voicesCache || !voicesCache.length) return null;
+    var target = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = voicesCache.find(function(v){ return v.lang === target; });
+    if (!v) v = voicesCache.find(function(v){ return v.lang && v.lang.indexOf(lang==='en'?'en':'id') === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis || state.muted || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice(state.lang);
+      if (v) u.voice = v;
+      u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function stopSpeak(){
+    if (window.speechSynthesis){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
+  }
+
+  /* ---------------- LANG / MUTE TOGGLES ---------------- */
+  function applyLangUI(){
+    var t = UI[state.lang];
+    $titleText.textContent = t.title;
+    $langLabel.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    $startTitle.textContent = t.startTitle;
+    $startDesc.textContent = t.startDesc;
+    $startBtn.textContent = t.startBtn;
+    $endTitle.textContent = t.endTitle;
+    $endDesc.textContent = t.endDesc;
+    $restartBtn.textContent = t.restartBtn;
+    var isLast = state.sceneIndex === TOTAL - 1;
+    $nextBtn.textContent = isLast ? t.nextBtnLast : t.nextBtn;
+    document.documentElement.lang = state.lang;
+  }
+
+  $langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+    if (state.started){
+      renderScene(state.sceneIndex, true);
+    }
+  });
+
+  function applyMuteUI(){
+    $muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    $muteBtn.classList.toggle('active', state.muted);
+  }
+  $muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    applyMuteUI();
+    try{ localStorage.setItem('ikr_muted', state.muted ? '1':'0'); }catch(e){}
+    if (state.muted) stopSpeak();
+    else if (state.started) speakCurrentScene();
+  });
+
+  function speakCurrentScene(){
+    var sc = SCENES[state.sceneIndex];
+    if (sc) speak(sc.text[state.lang]);
+  }
+
+  /* ---------------- START / RESTART ---------------- */
+  $startBtn.addEventListener('click', startStory);
+  $restartBtn.addEventListener('click', function(){
+    $endOverlay.style.display = 'none';
+    startStory();
+  });
+
+  function startStory(){
+    state.started = true;
+    state.sceneIndex = 0;
+    state.quizSolved = false;
+    $startOverlay.style.display = 'none';
+    $endOverlay.style.display = 'none';
+    renderScene(0, true);
+  }
+
+  /* ---------------- NEXT ---------------- */
+  $nextBtn.addEventListener('click', goNext);
+  canvas.addEventListener('click', function(){
+    if (state.started && SCENES[state.sceneIndex].type !== 'quiz') goNext();
+  });
+
+  function goNext(){
+    var sc = SCENES[state.sceneIndex];
+    if (sc.type === 'quiz' && !state.quizSolved) return; // must solve quiz first
+    if (state.sceneIndex < TOTAL - 1){
+      state.sceneIndex++;
+      renderScene(state.sceneIndex, true);
+    } else {
+      endStory();
+    }
+  }
+
+  function endStory(){
+    stopSpeak();
+    $endOverlay.style.display = 'flex';
+  }
+
+  /* ---------------- RENDER SCENE ---------------- */
+  function renderScene(index, doSpeak){
+    var sc = SCENES[index];
+    updateDots();
+    $narration.textContent = sc.text[state.lang];
+    var t = UI[state.lang];
+    var isLast = index === TOTAL - 1;
+    $nextBtn.textContent = isLast ? t.nextBtnLast : t.nextBtn;
+
+    $choices.innerHTML = '';
+    $feedback.textContent = '';
+
+    if (sc.type === 'quiz'){
+      state.quizSolved = false;
+      $nextBtn.disabled = true;
+      renderQuizChoices(sc);
+    } else {
+      $nextBtn.disabled = false;
+    }
+
+    drawScene(sc);
+    if (doSpeak) speakCurrentScene();
+    reportHeight();
+  }
+
+  function renderQuizChoices(sc){
+    sc.choices.forEach(function(choice, i){
+      var btn = document.createElement('button');
+      btn.className = 'ikr-choice-btn';
+      btn.textContent = choice[state.lang];
+      btn.addEventListener('click', function(){
+        if (state.quizSolved) return;
+        if (choice.correct){
+          btn.classList.add('correct');
+          state.quizSolved = true;
+          $nextBtn.disabled = false;
+          $feedback.style.color = 'var(--ikr-green)';
+          $feedback.textContent = UI[state.lang].quizCorrectFeedback;
+          speak(UI[state.lang].quizCorrectFeedback);
+        } else {
+          btn.classList.add('wrong');
+          $feedback.style.color = 'var(--ikr-red)';
+          $feedback.textContent = UI[state.lang].quizWrongFeedback;
+          setTimeout(function(){ btn.classList.remove('wrong'); }, 420);
+        }
+      });
+      $choices.appendChild(btn);
+    });
+  }
+
+  /* ---------------- CANVAS DRAW HELPERS ---------------- */
+  function clear(){
+    ctx.clearRect(0,0,W,H);
+  }
+  function skyGradient(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,H*0.62);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.62);
+  }
+  function drawSun(x,y,r){
+    var g = ctx.createRadialGradient(x,y,0,x,y,r*2.2);
+    g.addColorStop(0,'rgba(255,214,120,0.9)');
+    g.addColorStop(1,'rgba(255,214,120,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x,y,r*2.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffd678';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+  function drawRiver(waveOffset){
+    var riverTop = H*0.60;
+    var g = ctx.createLinearGradient(0,riverTop,0,H);
+    g.addColorStop(0,'#3a92ad');
+    g.addColorStop(1,'#144a5c');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,riverTop,W,H-riverTop);
+    // wave shimmer lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for (var i=0;i<6;i++){
+      var y = riverTop + 22 + i*26;
+      ctx.beginPath();
+      for (var x=-20;x<=W+20;x+=20){
+        var yy = y + Math.sin((x*0.03)+waveOffset+i)*4;
+        if (x===-20) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawPalmTree(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#6b4423';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(8,-45,2,-90);
+    ctx.stroke();
+    ctx.fillStyle = '#3d6b3f';
+    for (var i=0;i<5;i++){
+      var ang = -Math.PI/2 + (i-2)*0.5;
+      ctx.save();
+      ctx.translate(2,-90);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.ellipse(22,0,26,9,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function drawPalace(x,y,scale,accentColor){
+    scale = scale||1;
+    accentColor = accentColor || '#c9962c';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // base building
+    ctx.fillStyle = '#f0e2bf';
+    ctx.fillRect(-140,-90,280,110);
+    ctx.strokeStyle = '#c9b077';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-140,-90,280,110);
+    // arched windows
+    ctx.fillStyle = accentColor;
+    for (var i=0;i<4;i++){
+      var wx = -110 + i*72;
+      ctx.beginPath();
+      ctx.moveTo(wx,-20);
+      ctx.lineTo(wx,-55);
+      ctx.arc(wx+11,-55,11,Math.PI,0);
+      ctx.lineTo(wx+22,-20);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // central dome tower
+    ctx.fillStyle = '#e8d6a3';
+    ctx.fillRect(-30,-150,60,60);
+    ctx.beginPath();
+    ctx.arc(0,-150,32,Math.PI,0);
+    ctx.fillStyle = accentColor;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,-182); ctx.lineTo(0,-198);
+    ctx.strokeStyle = accentColor; ctx.lineWidth=3; ctx.stroke();
+    // side domes
+    [-95,95].forEach(function(dx){
+      ctx.fillStyle = '#e8d6a3';
+      ctx.fillRect(dx-16,-118,32,28);
+      ctx.beginPath();
+      ctx.arc(dx,-118,17,Math.PI,0);
+      ctx.fillStyle = accentColor;
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+  function drawKing(x,y,scale,mood){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // robe
+    ctx.fillStyle = '#8b1e2b';
+    ctx.beginPath();
+    ctx.moveTo(-30,10); ctx.lineTo(30,10); ctx.lineTo(22,70); ctx.lineTo(-22,70); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#c9962c';
+    ctx.fillRect(-30,10,60,10);
+    // head
+    ctx.fillStyle = '#e8b98a';
+    ctx.beginPath(); ctx.arc(0,-10,20,0,Math.PI*2); ctx.fill();
+    // beard
+    ctx.fillStyle = '#4a3626';
+    ctx.beginPath(); ctx.arc(0,2,14,0,Math.PI); ctx.fill();
+    // crown
+    ctx.fillStyle = '#e8b84b';
+    ctx.beginPath();
+    ctx.moveTo(-18,-24); ctx.lineTo(-18,-38); ctx.lineTo(-9,-28);
+    ctx.lineTo(0,-42); ctx.lineTo(9,-28); ctx.lineTo(18,-38);
+    ctx.lineTo(18,-24); ctx.closePath(); ctx.fill();
+    // face
+    ctx.fillStyle = '#3b2a1a';
+    if (mood === 'smile'){
+      ctx.beginPath(); ctx.arc(0,-8,7,0,Math.PI); ctx.stroke();
+      ctx.lineWidth=1.5; ctx.strokeStyle='#3b2a1a'; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(-6,-12,1.6,0,Math.PI*2); ctx.arc(6,-12,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawQueen(x,y,scale,mood){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a2e6b';
+    ctx.beginPath();
+    ctx.moveTo(-26,8); ctx.lineTo(26,8); ctx.lineTo(30,72); ctx.lineTo(-30,72); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#c9962c';
+    ctx.fillRect(-26,8,52,8);
+    // head + veil
+    ctx.fillStyle = '#f0dcc0';
+    ctx.beginPath(); ctx.arc(0,-10,18,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#6b3fa0';
+    ctx.beginPath();
+    ctx.moveTo(-20,-14); ctx.quadraticCurveTo(0,-42,20,-14);
+    ctx.quadraticCurveTo(22,10,10,26);
+    ctx.quadraticCurveTo(0,4,-10,26);
+    ctx.quadraticCurveTo(-22,10,-20,-14);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e8b84b';
+    ctx.beginPath(); ctx.arc(0,-28,5,0,Math.PI*2); ctx.fill();
+    // face
+    ctx.fillStyle = '#3b2a1a';
+    ctx.beginPath(); ctx.arc(-5,-10,1.5,0,Math.PI*2); ctx.arc(5,-10,1.5,0,Math.PI*2); ctx.fill();
+    if (mood === 'annoyed'){
+      ctx.beginPath(); ctx.moveTo(-9,-1); ctx.lineTo(-1,-3); ctx.strokeStyle='#3b2a1a'; ctx.lineWidth=1.6; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(9,-1); ctx.lineTo(1,-3); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawFisherman(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#b5793a';
+    ctx.beginPath();
+    ctx.moveTo(-22,8); ctx.lineTo(22,8); ctx.lineTo(16,64); ctx.lineTo(-16,64); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e0b57c';
+    ctx.beginPath(); ctx.arc(0,-8,16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5a3a22';
+    ctx.beginPath(); ctx.arc(0,-16,15,Math.PI,0); ctx.fill();
+    ctx.fillStyle = '#3b2a1a';
+    ctx.beginPath(); ctx.arc(-4,-9,1.3,0,Math.PI*2); ctx.arc(4,-9,1.3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawFish(x,y,scale,angle){
+    scale = scale || 1;
+    angle = angle || 0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(angle);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4fa3c9';
+    ctx.beginPath();
+    ctx.ellipse(0,0,32,16,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-30,0); ctx.lineTo(-48,-14); ctx.lineTo(-48,14); ctx.closePath();
+    ctx.fillStyle = '#3a86ad';
+    ctx.fill();
+    ctx.fillStyle = '#e8b84b';
+    ctx.beginPath(); ctx.ellipse(10,0,14,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(20,-4,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.arc(20,-4,1.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawBoat(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a4a26';
+    ctx.beginPath();
+    ctx.moveTo(-60,0); ctx.quadraticCurveTo(0,26,60,0);
+    ctx.quadraticCurveTo(0,14,-60,0);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawMoneyBag(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#c9962c';
+    ctx.beginPath();
+    ctx.moveTo(-16,-4);
+    ctx.quadraticCurveTo(-22,24,0,30);
+    ctx.quadraticCurveTo(22,24,16,-4);
+    ctx.quadraticCurveTo(8,-14,0,-16);
+    ctx.quadraticCurveTo(-8,-14,-16,-4);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#7a5416';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6,-14); ctx.lineTo(-6,-22);
+    ctx.lineTo(6,-22); ctx.lineTo(6,-14); ctx.stroke();
+    ctx.fillStyle = '#7a5416';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('$', 0, 14);
+    ctx.restore();
+  }
+  function speechBubble(x,y,w,h,text,align){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.strokeStyle = '#c9962c';
+    ctx.lineWidth = 2;
+    roundRect(x,y,w,h,12);
+    ctx.fill(); ctx.stroke();
+    // little tail
+    ctx.beginPath();
+    if (align === 'left'){
+      ctx.moveTo(x+20,y+h); ctx.lineTo(x+8,y+h+14); ctx.lineTo(x+34,y+h);
+    } else {
+      ctx.moveTo(x+w-20,y+h); ctx.lineTo(x+w-8,y+h+14); ctx.lineTo(x+w-34,y+h);
+    }
+    ctx.closePath(); ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#3b2a1a';
+    ctx.font = '15px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    wrapText(text, x+w/2, y+26, w-20, 20);
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function wrapText(text,x,y,maxWidth,lineHeight){
+    var words = text.split(' ');
+    var line = '';
+    var yy = y;
+    for (var n=0;n<words.length;n++){
+      var testLine = line + words[n] + ' ';
+      var metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0){
+        ctx.fillText(line, x, yy);
+        line = words[n] + ' ';
+        yy += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, x, yy);
+  }
+  function groundStrip(color){
+    ctx.fillStyle = color || '#d8c48f';
+    ctx.fillRect(0, H*0.60-6, W, 10);
+  }
+
+  /* ---------------- SCENE DRAW FUNCTIONS ---------------- */
+  function drawScenePalaceIntroBackground(bob){
+    skyGradient('#ffd9a0', '#f4b46a');
+    drawSun(W*0.82,H*0.16,42);
+    drawPalmTree(70,H*0.60,1.1);
+    drawPalmTree(W-90,H*0.60,0.9);
+    drawPalace(W*0.5,H*0.60,1.05);
+    drawRiver(state.time*0.6);
+  }
+
+  function drawScenePalaceIntro(){
+    drawScenePalaceIntroBackground();
+    var bob = Math.sin(state.time*1.3)*3;
+    drawKing(W*0.40,H*0.86+bob,1.35,'smile');
+    drawQueen(W*0.58,H*0.86+bob*0.8,1.25);
+  }
+
+  function drawSceneFishermanBoat(){
+    drawScenePalaceIntroBackground();
+    var bob = Math.sin(state.time*1.3)*3;
+    drawKing(W*0.22,H*0.84+bob,1.1,'neutral');
+    drawQueen(W*0.34,H*0.84+bob*0.8,1.0);
+    var boatBob = Math.sin(state.time*2)*4;
+    drawBoat(W*0.75,H*0.82+boatBob,1.4);
+    drawFisherman(W*0.75,H*0.72+boatBob,1.05);
+    drawFish(W*0.66,H*0.83+boatBob, 0.8, -0.15+Math.sin(state.time*3)*0.05);
+  }
+
+  function drawScenePresentFish(){
+    drawScenePalaceIntroBackground();
+    var bob = Math.sin(state.time*1.3)*3;
+    drawKing(W*0.60,H*0.86+bob,1.3,'neutral');
+    drawQueen(W*0.78,H*0.86+bob*0.8,1.15,'annoyed');
+    drawFisherman(W*0.28,H*0.90,1.15);
+    var fishBob = Math.sin(state.time*3)*6;
+    drawFish(W*0.42,H*0.78+fishBob,1.15,-0.3);
+    speechBubble(W*0.06,H*0.10,W*0.5,64,
+      state.lang==='id' ? "Yang Mulia, ikan ini persembahan terbaik hamba." : "Your Majesty, this is my finest catch.", 'left');
+  }
+
+  function drawSceneQueenObjects(){
+    drawScenePalaceIntroBackground();
+    var bob = Math.sin(state.time*1.3)*3;
+    drawKing(W*0.35,H*0.86+bob,1.3,'neutral');
+    drawQueen(W*0.55,H*0.86+bob*0.8,1.2,'annoyed');
+    drawFisherman(W*0.80,H*0.90,1.1);
+    drawMoneyBag(W*0.44,H*0.62+Math.sin(state.time*2)*3,1.3);
+    speechBubble(W*0.36,H*0.06,W*0.56,58,
+      state.lang==='id' ? "Jangan diterima, ia hanya menginginkan hadiah!" : "Don't accept it, he only wants a reward!", 'right');
+  }
+
+  function drawSceneQuiz(){
+    drawSceneQueenObjects();
+    speechBubble(W*0.20,H*0.06,W*0.62,64,
+      state.lang==='id' ? "Ikan itu, laki-laki atau perempuan?" : "Is that fish male or female?", 'left');
+  }
+
+  function drawSceneEnding(){
+    drawSceneQueenObjects();
+    // override queen mood to silent/surprised via redraw not necessary; add smile king overlay
+    var bob = Math.sin(state.time*1.3)*3;
+    drawKing(W*0.35,H*0.86+bob,1.3,'smile');
+    speechBubble(W*0.10,H*0.06,W*0.55,60,
+      state.lang==='id' ? "Jawaban cerdik! Ambillah uang ini." : "A clever answer! Take this money.", 'left');
+    drawMoneyBag(W*0.62,H*0.70+Math.sin(state.time*2)*4,1.1);
+  }
+
+  function drawScene(sc){
+    clear();
+    sc.draw();
+  }
+
+  /* animate */
+  function tick(){
+    state.time += 0.02;
+    if (state.started && $endOverlay.style.display !== 'flex' && $startOverlay.style.display !== 'flex'){
+      drawScene(SCENES[state.sceneIndex]);
+    } else if (!state.started){
+      drawScene(SCENES[0]);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------------- IFRAME AUTO RESIZE ---------------- */
+  function reportHeight(){
+    try{
+      var h = document.getElementById('ikr-root').getBoundingClientRect().height;
+      window.parent.postMessage({ ikrGameHeight: Math.ceil(h) + 12 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('resize', reportHeight);
+
+  /* ---------------- BOOT ---------------- */
+  buildDots();
+  applyLangUI();
+  applyMuteUI();
+  drawScene(SCENES[0]);
+  requestAnimationFrame(tick);
+  setTimeout(reportHeight, 300);
+  setTimeout(reportHeight, 1000);
+
+})();
+</script>
+</body>
+</html>
