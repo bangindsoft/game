@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guru Goso - Dongeng Anak Tanzania</title>
+<style>
+  :root{
+    --gg-sky-top:#5aa9d6;
+    --gg-sky-bottom:#ffc073;
+    --gg-ground:#d9a441;
+    --gg-ground-dark:#b9822c;
+    --gg-tree:#4a7c3c;
+    --gg-tree-dark:#345c29;
+    --gg-terracotta:#c1440e;
+    --gg-terracotta-dark:#8f3009;
+    --gg-cream:#fff8ec;
+    --gg-brown:#3b2414;
+    --gg-brown-soft:#5c3a22;
+    --gg-gold:#f2b545;
+    --gg-white:#ffffff;
+    --gg-green-ok:#3fa34d;
+    --gg-red-warn:#d1453b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  #gg-root{
+    width:100%;
+    font-family:'Segoe UI',Verdana,Tahoma,sans-serif;
+    background:linear-gradient(180deg,var(--gg-sky-top) 0%, var(--gg-sky-bottom) 70%);
+    border-radius:14px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:0 6px 22px rgba(59,36,20,.28);
+    color:var(--gg-brown);
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  #gg-stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:8/5;
+  }
+  #gg-canvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  /* top bar */
+  #gg-topbar{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 12px;
+    z-index:20;
+    pointer-events:none;
+  }
+  #gg-topbar > *{pointer-events:auto;}
+  .gg-pill-btn{
+    background:rgba(59,36,20,.55);
+    color:var(--gg-cream);
+    border:none;
+    border-radius:20px;
+    padding:7px 12px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+    backdrop-filter:blur(2px);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .gg-pill-btn:hover{background:rgba(59,36,20,.75); transform:translateY(-1px);}
+  .gg-pill-btn:active{transform:translateY(0);}
+  #gg-top-right{display:flex; gap:8px;}
+
+  /* dots */
+  #gg-dots{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    display:flex; gap:6px; z-index:20;
+    background:rgba(59,36,20,.35);
+    padding:6px 10px; border-radius:20px;
+  }
+  .gg-dot{
+    width:7px; height:7px; border-radius:50%;
+    background:rgba(255,248,236,.4);
+    transition:background .25s ease, transform .25s ease;
+  }
+  .gg-dot.gg-dot-active{background:var(--gg-gold); transform:scale(1.35);}
+  .gg-dot.gg-dot-done{background:var(--gg-cream);}
+
+  /* caption box */
+  #gg-caption-box{
+    position:absolute; left:12px; right:12px; bottom:12px;
+    background:rgba(255,248,236,.96);
+    border:2px solid var(--gg-terracotta);
+    border-radius:14px;
+    padding:14px 16px 12px;
+    z-index:20;
+    box-shadow:0 4px 14px rgba(59,36,20,.25);
+  }
+  #gg-caption-text{
+    font-size:15px;
+    line-height:1.5;
+    color:var(--gg-brown);
+    margin:0 0 10px 0;
+    min-height:20px;
+  }
+  #gg-caption-actions{
+    display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;
+  }
+  .gg-btn{
+    background:var(--gg-terracotta);
+    color:var(--gg-cream);
+    border:none;
+    border-radius:22px;
+    padding:9px 18px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform .15s ease, background .15s ease;
+    box-shadow:0 3px 0 var(--gg-terracotta-dark);
+  }
+  .gg-btn:hover{background:#d95419;}
+  .gg-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--gg-terracotta-dark);}
+  .gg-btn-secondary{
+    background:var(--gg-brown-soft);
+    box-shadow:0 3px 0 #331e10;
+  }
+  .gg-btn-secondary:hover{background:#6f4629;}
+  .gg-hint{
+    font-size:12.5px;
+    color:var(--gg-brown-soft);
+    font-style:italic;
+    margin-right:auto;
+    align-self:center;
+  }
+
+  /* mash button */
+  #gg-mash-wrap{
+    display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;
+  }
+  #gg-mash-btn{
+    background:var(--gg-gold);
+    color:var(--gg-brown);
+    border:none;
+    border-radius:50%;
+    width:74px; height:74px;
+    font-size:26px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 0 #b8842a;
+    transition:transform .08s ease;
+  }
+  #gg-mash-btn:active{transform:scale(.9); box-shadow:0 1px 0 #b8842a;}
+  .gg-progress-track{
+    width:100%; max-width:320px; height:14px;
+    background:rgba(59,36,20,.18);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .gg-progress-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg,var(--gg-green-ok),#6fce7c);
+    border-radius:10px;
+    transition:width .12s ease;
+  }
+
+  /* timing minigame */
+  #gg-timing-wrap{
+    width:100%; max-width:420px; margin:0 auto;
+  }
+  #gg-timing-track{
+    position:relative;
+    width:100%; height:22px;
+    background:rgba(59,36,20,.15);
+    border-radius:12px;
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  #gg-timing-zone{
+    position:absolute; top:0; bottom:0;
+    background:rgba(63,163,77,.55);
+    border-left:2px solid var(--gg-green-ok);
+    border-right:2px solid var(--gg-green-ok);
+  }
+  #gg-timing-marker{
+    position:absolute; top:-3px; bottom:-3px;
+    width:6px;
+    background:var(--gg-terracotta);
+    border-radius:3px;
+  }
+  #gg-timing-stars{
+    display:flex; justify-content:center; gap:8px; margin-bottom:8px; font-size:20px;
+  }
+
+  /* cover screen */
+  #gg-cover{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,.18), transparent 55%),
+      linear-gradient(180deg,#5aa9d6 0%, #ffc073 65%, #d9a441 100%);
+    z-index:30;
+    padding:22px;
+  }
+  #gg-cover h1{
+    font-size:clamp(26px,6vw,40px);
+    margin:6px 0 4px;
+    color:var(--gg-brown);
+    text-shadow:0 2px 0 rgba(255,255,255,.4);
+  }
+  #gg-cover p{
+    font-size:clamp(13px,3vw,16px);
+    color:var(--gg-brown-soft);
+    max-width:420px;
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+  .gg-cover-emoji{font-size:clamp(46px,10vw,64px); margin-bottom:4px;}
+  #gg-cover .gg-btn{font-size:16px; padding:12px 30px; margin-top:6px;}
+  #gg-cover-lang{
+    position:absolute; top:12px; right:12px;
+  }
+  #gg-cover-credit{
+    position:absolute; bottom:10px; font-size:11.5px; color:rgba(59,36,20,.6);
+  }
+
+  /* end panel extras */
+  #gg-moral{
+    background:rgba(242,181,69,.35);
+    border-radius:10px;
+    padding:8px 10px;
+    margin-top:6px;
+    font-size:13.5px;
+    font-style:italic;
+  }
+
+  .gg-hidden{display:none !important;}
+
+  @media (max-width:420px){
+    #gg-caption-text{font-size:13.5px;}
+    .gg-btn{padding:8px 14px; font-size:13px;}
+    #gg-mash-btn{width:62px; height:62px; font-size:22px;}
+  }
+</style>
+</head>
+<body>
+<div id="gg-root">
+
+  <div id="gg-stage-wrap">
+    <canvas id="gg-canvas" width="800" height="500"></canvas>
+
+    <div id="gg-topbar">
+      <button class="gg-pill-btn" id="gg-mute-btn" aria-label="Mute">🔊</button>
+      <div id="gg-top-right">
+        <button class="gg-pill-btn" id="gg-lang-btn">EN</button>
+      </div>
+    </div>
+
+    <div id="gg-dots"></div>
+
+    <div id="gg-caption-box" class="gg-hidden">
+      <p id="gg-caption-text"></p>
+
+      <div id="gg-mash-wrap" class="gg-hidden">
+        <div class="gg-progress-track"><div class="gg-progress-fill" id="gg-mash-fill"></div></div>
+        <button id="gg-mash-btn">💪</button>
+      </div>
+
+      <div id="gg-timing-wrap" class="gg-hidden">
+        <div id="gg-timing-stars"><span>☆</span><span>☆</span><span>☆</span></div>
+        <div id="gg-timing-track">
+          <div id="gg-timing-zone"></div>
+          <div id="gg-timing-marker"></div>
+        </div>
+      </div>
+
+      <div id="gg-caption-actions">
+        <span class="gg-hint" id="gg-hint"></span>
+        <button class="gg-btn gg-btn-secondary gg-hidden" id="gg-replay-btn"></button>
+        <button class="gg-btn" id="gg-continue-btn"></button>
+        <button class="gg-btn" id="gg-timing-tap-btn"></button>
+      </div>
+    </div>
+
+    <div id="gg-cover">
+      <button class="gg-pill-btn" id="gg-cover-lang">EN</button>
+      <div class="gg-cover-emoji">🥥</div>
+      <h1 id="gg-cover-title">Guru Goso</h1>
+      <p id="gg-cover-sub">Dongeng Anak Tanzania</p>
+      <button class="gg-btn" id="gg-start-btn">Mulai Cerita</button>
+      <div id="gg-cover-credit">caritasato.blogspot.com</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- i18n text ---------------- */
+  var TXT = {
+    id:{
+      title:"Guru Goso",
+      subtitle:"Dongeng Anak Tanzania",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      continueBtn:"Lanjut",
+      askBtn:"Bertanya",
+      tapHint:"Ketuk gambar untuk bertanya",
+      mashHint:"Ketuk tombol berulang kali!",
+      timingHint:"Ketuk saat penanda ada di zona hijau",
+      timingBtn:"Ketuk!",
+      moralLabel:"Pesan Moral:",
+      moral:"Sebelum menuduh orang lain, carilah kebenaran dengan sabar dan bijaksana.",
+      credit:"caritasato.blogspot.com",
+      stages:[
+        {
+          caption:"Di tanah Tanzania yang subur, hiduplah seorang guru bijaksana bernama Guru Goso. Setiap hari, ia mengajar murid-muridnya dengan sabar di bawah rindangnya pohon kelapa.",
+          narration:"Di tanah Tanzania yang subur, hiduplah seorang guru bijaksana bernama Guru Goso. Setiap hari, ia mengajar murid-muridnya dengan sabar di bawah rindangnya pohon kelapa."
+        },
+        {
+          caption:"Tiba-tiba, sebutir kelapa jatuh mengenai kepala Guru Goso! Ia pun pingsan seketika. Murid-murid panik dan bergegas menolong gurunya.",
+          narration:"Tiba-tiba, sebutir kelapa jatuh mengenai kepala Guru Goso! Ia pun pingsan seketika. Murid-murid panik dan bergegas menolong.",
+          mash:"Bantu murid-murid mengangkat Guru Goso ke dalam rumah!"
+        },
+        {
+          caption:"Murid-murid mencari siapa pelakunya. \"Ini pasti ulah Angin! Ia bertiup sangat kencang,\" kata salah satu murid. Ketuk Angin untuk bertanya.",
+          narration:"Murid-murid mencari siapa pelakunya. Ini pasti ulah Angin, ia bertiup sangat kencang, kata salah satu murid.",
+          reveal:"\"Bukan aku pelakunya,\" jawab Angin. \"Aku tak sekuat yang kalian kira. Jika aku menabrak Gunung, aku akan berhenti bertiup. Gunung lebih kuat dariku.\"",
+          revealNarration:"Bukan aku pelakunya, jawab Angin. Aku tak sekuat yang kalian kira. Jika aku menabrak Gunung, aku akan berhenti bertiup. Gunung lebih kuat dariku."
+        },
+        {
+          caption:"Murid-murid pun mempercayai jawaban Angin, lalu mendatangi Gunung. Ketuk Gunung untuk bertanya.",
+          narration:"Murid-murid pun mempercayai jawaban Angin, lalu mendatangi Gunung.",
+          reveal:"\"Aku tak sekuat yang kalian kira,\" kata Gunung. \"Tikus lebih kuat dariku. Ia mampu membuat lubang di tubuhku.\"",
+          revealNarration:"Aku tak sekuat yang kalian kira, kata Gunung. Tikus lebih kuat dariku. Ia mampu membuat lubang di tubuhku."
+        },
+        {
+          caption:"Murid-murid membenarkan jawaban Gunung, lalu mendatangi Tikus. Ketuk Tikus untuk bertanya.",
+          narration:"Murid-murid membenarkan jawaban Gunung, lalu mendatangi Tikus.",
+          reveal:"\"Bukan aku!\" kata Tikus. \"Aku membuat lubang di Gunung untuk menghindari Kucing. Jadi, Kucing lebih kuat dariku.\"",
+          revealNarration:"Bukan aku, kata Tikus. Aku membuat lubang di Gunung untuk menghindari Kucing. Jadi, Kucing lebih kuat dariku."
+        },
+        {
+          caption:"Murid-murid pun mendatangi Kucing. Ketuk Kucing untuk bertanya.",
+          narration:"Murid-murid pun mendatangi Kucing.",
+          reveal:"\"Mustahil aku menjatuhkan kelapa,\" kata Kucing. \"Memanjat pohon kelapa saja aku tak mampu. Hanya Tupai yang pandai memanjatnya.\"",
+          revealNarration:"Mustahil aku menjatuhkan kelapa, kata Kucing. Memanjat pohon kelapa saja aku tak mampu. Hanya Tupai yang pandai memanjatnya."
+        },
+        {
+          caption:"Murid-murid Guru Goso pun beramai-ramai mendatangi sarang Tupai di puncak pohon kelapa.",
+          narration:"Murid-murid Guru Goso pun beramai-ramai mendatangi sarang Tupai di puncak pohon kelapa."
+        },
+        {
+          caption:"Tupai tak bisa mengelak. Ketuk Tupai untuk mendengar pengakuannya.",
+          narration:"Tupai tak bisa mengelak.",
+          reveal:"\"Maaf, ini salahku,\" kata Tupai menyesal. \"Karena kecerobohanku, guru kalian jadi pingsan. Mulai sekarang aku akan lebih berhati-hati memanjat pohon kelapa.\"",
+          revealNarration:"Maaf, ini salahku, kata Tupai menyesal. Karena kecerobohanku, guru kalian jadi pingsan. Mulai sekarang aku akan lebih berhati-hati memanjat pohon kelapa."
+        },
+        {
+          caption:"Ayo bantu Tupai belajar memetik kelapa dengan hati-hati!",
+          narration:"Ayo bantu Tupai belajar memetik kelapa dengan hati-hati!",
+          timing:true
+        },
+        {
+          caption:"Murid-murid pun memaafkan Tupai. Sejak hari itu, Tupai selalu berhati-hati setiap kali memanjat pohon kelapa, agar tak ada lagi yang celaka.",
+          narration:"Murid-murid pun memaafkan Tupai. Sejak hari itu, Tupai selalu berhati-hati setiap kali memanjat pohon kelapa, agar tak ada lagi yang celaka.",
+          ending:true
+        }
+      ]
+    },
+    en:{
+      title:"Guru Goso",
+      subtitle:"A Folktale from Tanzania",
+      start:"Start Story",
+      replay:"Replay Story",
+      continueBtn:"Continue",
+      askBtn:"Ask",
+      tapHint:"Tap the picture to ask",
+      mashHint:"Tap the button again and again!",
+      timingHint:"Tap when the marker is in the green zone",
+      timingBtn:"Tap!",
+      moralLabel:"Moral of the Story:",
+      moral:"Before blaming others, patiently and wisely search for the truth first.",
+      credit:"caritasato.blogspot.com",
+      stages:[
+        {
+          caption:"In the fertile land of Tanzania lived a wise teacher named Guru Goso. Every day he patiently taught his students beneath the shade of a coconut tree.",
+          narration:"In the fertile land of Tanzania lived a wise teacher named Guru Goso. Every day he patiently taught his students beneath the shade of a coconut tree."
+        },
+        {
+          caption:"Suddenly, a coconut fell and struck Guru Goso's head! He fainted instantly. His students panicked and rushed to help their teacher.",
+          narration:"Suddenly, a coconut fell and struck Guru Goso's head! He fainted instantly. His students panicked and rushed to help.",
+          mash:"Help the students carry Guru Goso inside!"
+        },
+        {
+          caption:"The students searched for the culprit. \"It must be the Wind! It blew so hard,\" said one student. Tap the Wind to ask.",
+          narration:"The students searched for the culprit. It must be the Wind, it blew so hard, said one student.",
+          reveal:"\"It wasn't me,\" the Wind replied. \"I'm not as strong as you think. If I crash into the Mountain, I stop blowing. The Mountain is stronger than me.\"",
+          revealNarration:"It wasn't me, the Wind replied. I'm not as strong as you think. If I crash into the Mountain, I stop blowing. The Mountain is stronger than me."
+        },
+        {
+          caption:"The students believed the Wind and went to the Mountain. Tap the Mountain to ask.",
+          narration:"The students believed the Wind and went to the Mountain.",
+          reveal:"\"I'm not as strong as you think,\" said the Mountain. \"The Mouse is stronger than me. It can dig holes right through my body.\"",
+          revealNarration:"I'm not as strong as you think, said the Mountain. The Mouse is stronger than me. It can dig holes right through my body."
+        },
+        {
+          caption:"The students agreed and went to the Mouse. Tap the Mouse to ask.",
+          narration:"The students agreed and went to the Mouse.",
+          reveal:"\"Not me!\" said the Mouse. \"I dig holes in the Mountain to hide from the Cat. So the Cat is stronger than me.\"",
+          revealNarration:"Not me, said the Mouse. I dig holes in the Mountain to hide from the Cat. So the Cat is stronger than me."
+        },
+        {
+          caption:"The students then went to the Cat. Tap the Cat to ask.",
+          narration:"The students then went to the Cat.",
+          reveal:"\"How could I possibly drop a coconut?\" said the Cat. \"I can't even climb a coconut tree. Only the Squirrel is skilled enough to climb it.\"",
+          revealNarration:"How could I possibly drop a coconut, said the Cat. I can't even climb a coconut tree. Only the Squirrel is skilled enough to climb it."
+        },
+        {
+          caption:"Guru Goso's students all headed together to the Squirrel's nest at the top of the coconut tree.",
+          narration:"Guru Goso's students all headed together to the Squirrel's nest at the top of the coconut tree."
+        },
+        {
+          caption:"The Squirrel could not deny it. Tap the Squirrel to hear its confession.",
+          narration:"The Squirrel could not deny it.",
+          reveal:"\"I'm sorry, it was my fault,\" the Squirrel said regretfully. \"Because of my carelessness, your teacher fainted. From now on, I'll be more careful climbing coconut trees.\"",
+          revealNarration:"I'm sorry, it was my fault, the Squirrel said regretfully. Because of my carelessness, your teacher fainted. From now on, I'll be more careful climbing coconut trees."
+        },
+        {
+          caption:"Let's help the Squirrel learn to pick coconuts carefully!",
+          narration:"Let's help the Squirrel learn to pick coconuts carefully!",
+          timing:true
+        },
+        {
+          caption:"The students forgave the Squirrel. From that day on, the Squirrel was always careful whenever it climbed the coconut tree, so no one would get hurt again.",
+          narration:"The students forgave the Squirrel. From that day on, the Squirrel was always careful whenever it climbed the coconut tree, so no one would get hurt again.",
+          ending:true
+        }
+      ]
+    }
+  };
+
+  var TARGET_LABELS = {
+    id:["Angin","Gunung","Tikus","Kucing","Tupai"],
+    en:["Wind","Mountain","Mouse","Cat","Squirrel"]
+  };
+
+  /* ---------------- state ---------------- */
+  var qs = new URLSearchParams(location.search);
+  var state = {
+    lang: (qs.get('lang')==='en') ? 'en' : 'id',
+    muted: localStorage.getItem('gg_muted') === '1',
+    stageIndex: 0,
+    revealed: false,
+    mashCount: 0,
+    mashTarget: 8,
+    timingHits: 0,
+    timingNeeded: 3,
+    timingRunning: false,
+    timingPos: 0,
+    timingDir: 1,
+    started: false
+  };
+  var STAGE_COUNT = TXT.id.stages.length;
+
+  /* ---------------- dom refs ---------------- */
+  var canvas = document.getElementById('gg-canvas');
+  var ctx = canvas.getContext('2d');
+  var dotsEl = document.getElementById('gg-dots');
+  var captionBox = document.getElementById('gg-caption-box');
+  var captionText = document.getElementById('gg-caption-text');
+  var continueBtn = document.getElementById('gg-continue-btn');
+  var replayBtn = document.getElementById('gg-replay-btn');
+  var hintEl = document.getElementById('gg-hint');
+  var muteBtn = document.getElementById('gg-mute-btn');
+  var langBtn = document.getElementById('gg-lang-btn');
+  var coverLangBtn = document.getElementById('gg-cover-lang');
+  var coverEl = document.getElementById('gg-cover');
+  var coverTitle = document.getElementById('gg-cover-title');
+  var coverSub = document.getElementById('gg-cover-sub');
+  var startBtn = document.getElementById('gg-start-btn');
+  var mashWrap = document.getElementById('gg-mash-wrap');
+  var mashBtn = document.getElementById('gg-mash-btn');
+  var mashFill = document.getElementById('gg-mash-fill');
+  var timingWrap = document.getElementById('gg-timing-wrap');
+  var timingZone = document.getElementById('gg-timing-zone');
+  var timingMarker = document.getElementById('gg-timing-marker');
+  var timingTapBtn = document.getElementById('gg-timing-tap-btn');
+  var timingStars = document.getElementById('gg-timing-stars').children;
+
+  function T(){ return TXT[state.lang]; }
+
+  /* ---------------- resize / postMessage ---------------- */
+  function sendHeight(){
+    var h = document.getElementById('gg-root').getBoundingClientRect().height;
+    try{
+      parent.postMessage({ type:'gurugosoHeight', height: Math.ceil(h) }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', function(){ sendHeight(); draw(); });
+  if (window.ResizeObserver){
+    new ResizeObserver(function(){ sendHeight(); }).observe(document.getElementById('gg-root'));
+  }
+
+  /* ---------------- speech ---------------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    var want = lang==='en' ? 'en' : 'id';
+    var exact = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want==='en'?'en-us':'id-id')===0; });
+    if (exact) return exact;
+    var loose = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want)===0; });
+    return loose || null;
+  }
+  function speak(text){
+    if (state.muted || !window.speechSynthesis || !text) return;
+    try{
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice(state.lang);
+      if (v) u.voice = v;
+      u.lang = state.lang==='en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){ if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+  /* ---------------- mute / lang controls ---------------- */
+  function updateMuteBtn(){ muteBtn.textContent = state.muted ? '🔇' : '🔊'; }
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('gg_muted', state.muted ? '1':'0');
+    updateMuteBtn();
+    if (state.muted) stopSpeak();
+  });
+  updateMuteBtn();
+
+  function applyLangTexts(){
+    var t = T();
+    coverTitle.textContent = t.title;
+    coverSub.textContent = t.subtitle;
+    startBtn.textContent = t.start;
+    langBtn.textContent = state.lang==='id' ? 'EN' : 'ID';
+    coverLangBtn.textContent = state.lang==='id' ? 'EN' : 'ID';
+    timingTapBtn.textContent = t.timingBtn;
+  }
+  function toggleLang(){
+    state.lang = state.lang==='id' ? 'en' : 'id';
+    applyLangTexts();
+    if (state.started){ renderStage(true); }
+  }
+  langBtn.addEventListener('click', toggleLang);
+  coverLangBtn.addEventListener('click', toggleLang);
+  applyLangTexts();
+
+  /* ---------------- dots ---------------- */
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    for (var i=0;i<STAGE_COUNT;i++){
+      var d = document.createElement('div');
+      d.className = 'gg-dot';
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var children = dotsEl.children;
+    for (var i=0;i<children.length;i++){
+      children[i].className = 'gg-dot' +
+        (i===state.stageIndex ? ' gg-dot-active' : (i<state.stageIndex ? ' gg-dot-done' : ''));
+    }
+  }
+  buildDots();
+
+  /* ---------------- drawing helpers ---------------- */
+  var W = canvas.width, H = canvas.height;
+
+  function drawSky(){
+    var g = ctx.createLinearGradient(0,0,0,H*0.75);
+    g.addColorStop(0, '#5aa9d6');
+    g.addColorStop(1, '#ffc073');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.75);
+    // sun
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.arc(W*0.82, H*0.18, 46, 0, Math.PI*2);
+    ctx.fill();
+  }
+  function drawGround(){
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.72);
+    ctx.quadraticCurveTo(W*0.5, H*0.66, W, H*0.72);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(185,130,44,0.5)';
+    for (var i=0;i<6;i++){
+      ctx.beginPath();
+      ctx.ellipse(60+i*140, H*0.86+ (i%2)*14, 46, 8, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  function drawCloud(x,y,s){
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath();
+    ctx.arc(x,y,18*s,0,Math.PI*2);
+    ctx.arc(x+20*s,y-8*s,22*s,0,Math.PI*2);
+    ctx.arc(x+42*s,y,18*s,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawTree(x, baseY, scale, sway){
+    sway = sway || 0;
+    ctx.save();
+    ctx.translate(x, baseY);
+    // trunk
+    ctx.strokeStyle = '#8a6a3f';
+    ctx.lineWidth = 14*scale;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(-10*scale+sway, -100*scale, 4*scale+sway*1.6, -190*scale);
+    ctx.stroke();
+    var topX = 4*scale+sway*1.6, topY = -190*scale;
+    // leaves
+    ctx.fillStyle = '#4a7c3c';
+    for (var i=0;i<7;i++){
+      var ang = (i/7)*Math.PI*2;
+      ctx.save();
+      ctx.translate(topX, topY);
+      ctx.rotate(ang + sway*0.02);
+      ctx.beginPath();
+      ctx.ellipse(0, -34*scale, 12*scale, 40*scale, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#345c29';
+    ctx.beginPath();
+    ctx.arc(topX, topY, 14*scale, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    return {x: x + topX, y: baseY + topY, scale: scale};
+  }
+
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    var skin = opts.skin || '#8a5a35';
+    var shirt = opts.shirt || '#c1440e';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shadow
+    ctx.fillStyle = 'rgba(59,36,20,0.18)';
+    ctx.beginPath(); ctx.ellipse(0,4,20,6,0,0,Math.PI*2); ctx.fill();
+    // legs
+    ctx.strokeStyle = opts.pants || '#3b2414';
+    ctx.lineWidth = 8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-6,0); ctx.lineTo(-8,-20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,0); ctx.lineTo(8,-20); ctx.stroke();
+    // body
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-16,-20);
+    ctx.quadraticCurveTo(0,-30,16,-20);
+    ctx.lineTo(13,-56);
+    ctx.quadraticCurveTo(0,-62,-13,-56);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt; ctx.lineWidth = 7;
+    if (opts.armsUp){
+      ctx.beginPath(); ctx.moveTo(-12,-50); ctx.lineTo(-24,-72); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,-50); ctx.lineTo(24,-72); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-13,-48); ctx.lineTo(-20,-26); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(13,-48); ctx.lineTo(20,-26); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-68,13,0,Math.PI*2); ctx.fill();
+    if (opts.beard){
+      ctx.fillStyle = '#efe7da';
+      ctx.beginPath(); ctx.arc(0,-60,7,0,Math.PI); ctx.fill();
+    }
+    // face
+    ctx.fillStyle = '#2a1a10';
+    ctx.beginPath(); ctx.arc(-4,-69,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-69,1.6,0,Math.PI*2); ctx.fill();
+    if (opts.faint){
+      ctx.strokeStyle = '#2a1a10'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(-6,-72); ctx.lineTo(-2,-68); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2,-68); ctx.lineTo(6,-72); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(0,-64,4,0,Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawFaintGuru(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(59,36,20,0.18)';
+    ctx.beginPath(); ctx.ellipse(0,6,34,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#c1440e';
+    ctx.save();
+    ctx.rotate(Math.PI/2 * 0.92);
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(-14,-40,28,44,10) : ctx.rect(-14,-40,28,44);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#8a5a35';
+    ctx.beginPath(); ctx.arc(30,-4,12,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#efe7da';
+    ctx.beginPath(); ctx.arc(30,4,6,0,Math.PI); ctx.fill();
+    ctx.strokeStyle='#2a1a10'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(26,-6); ctx.lineTo(30,-2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(30,-2); ctx.lineTo(34,-6); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawCoconut(x,y,scale,rot){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rot||0);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2b';
+    ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.arc(-3,-3,3,0,Math.PI*2); ctx.arc(3,-3,3,0,Math.PI*2); ctx.arc(0,3,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function glow(x,y,r,alpha){
+    var g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0, 'rgba(255,220,120,'+alpha+')');
+    g.addColorStop(1, 'rgba(255,220,120,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+
+  function drawWind(x,y,scale,t){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 5; ctx.lineCap='round';
+    for (var i=0;i<3;i++){
+      var off = Math.sin(t*0.003+i)*6;
+      ctx.beginPath();
+      ctx.moveTo(-34, -14+i*14+off);
+      ctx.quadraticCurveTo(0, -30+i*14+off, 34, -14+i*14+off);
+      ctx.stroke();
+    }
+    // little face
+    ctx.fillStyle='#2a1a10';
+    ctx.beginPath(); ctx.arc(-6,4,2,0,Math.PI*2); ctx.arc(6,4,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,10,4,0,Math.PI); ctx.stroke();
+    ctx.restore();
+  }
+  function drawMountain(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a6b4a';
+    ctx.beginPath();
+    ctx.moveTo(-60,20); ctx.lineTo(0,-70); ctx.lineTo(60,20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#efe7da';
+    ctx.beginPath();
+    ctx.moveTo(-14,-40); ctx.lineTo(0,-70); ctx.lineTo(14,-40); ctx.lineTo(0,-30); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#2a1a10';
+    ctx.beginPath(); ctx.arc(-10,0,3,0,Math.PI*2); ctx.arc(10,0,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,10,5,0,Math.PI); ctx.stroke();
+    ctx.restore();
+  }
+  function drawMouse(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#9b8b7a';
+    ctx.beginPath(); ctx.ellipse(0,0,20,14,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16,-2,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(21,-10,5,0,Math.PI*2); ctx.arc(24,-2,5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#9b8b7a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-18,0); ctx.quadraticCurveTo(-34,10,-30,-6); ctx.stroke();
+    ctx.fillStyle='#2a1a10';
+    ctx.beginPath(); ctx.arc(19,-4,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawCat(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#c1440e';
+    ctx.beginPath(); ctx.ellipse(0,4,22,14,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20,-6,12,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(12,-14); ctx.lineTo(16,-24); ctx.lineTo(20,-14); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(24,-14); ctx.lineTo(28,-24); ctx.lineTo(32,-14); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#c1440e'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-20,6); ctx.quadraticCurveTo(-40,-6,-30,-16); ctx.stroke();
+    ctx.fillStyle='#2a1a10';
+    ctx.beginPath(); ctx.arc(16,-6,1.6,0,Math.PI*2); ctx.arc(24,-6,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawSquirrel(x,y,scale,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#a5622c';
+    ctx.beginPath(); ctx.ellipse(0,4,16,20,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(2,-20,11,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-6,-28); ctx.lineTo(-3,-38); ctx.lineTo(2,-28); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(8,-28); ctx.lineTo(12,-38); ctx.lineTo(14,-27); ctx.closePath(); ctx.fill();
+    // fluffy tail
+    ctx.beginPath();
+    ctx.ellipse(20,-6,14,22,0.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#2a1a10';
+    ctx.beginPath(); ctx.arc(-1,-21,1.8,0,Math.PI*2); ctx.arc(6,-21,1.8,0,Math.PI*2); ctx.fill();
+    if (opts.sorry){
+      ctx.strokeStyle='#2a1a10'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(0,-16); ctx.lineTo(4,-13); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawStudentGroup(cx, y, scale, count){
+    count = count || 3;
+    var spread = 46*scale;
+    for (var i=0;i<count;i++){
+      var xx = cx + (i-(count-1)/2)*spread;
+      drawPerson(xx, y, scale*0.72, {shirt: i%2? '#2f6f4f':'#c1440e', armsUp:false});
+    }
+  }
+
+  /* target hit-zones for current stage (for tap detection), in canvas coords */
+  var hitZones = []; // {x,y,r,name}
+
+  function canvasCoordsFromEvent(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+    return { x: cx * (W/rect.width), y: cy * (H/rect.height) };
+  }
+
+  var animTime = 0;
+  var animRAF = null;
+  function loop(ts){
+    animTime = ts||0;
+    draw();
+    animRAF = requestAnimationFrame(loop);
+  }
+
+  function currentStageData(){ return T().stages[state.stageIndex]; }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    drawSky();
+    drawCloud(90, 70, 1);
+    drawCloud(250, 50, 0.7);
+    drawGround();
+    hitZones = [];
+
+    var idx = state.stageIndex;
+    var sway = Math.sin(animTime*0.001)*4;
+
+    if (idx===0){
+      drawTree(160, H*0.78, 1.1, sway*0.4);
+      drawTree(650, H*0.8, 0.85, sway*0.3);
+      drawPerson(400, H*0.72, 1.15, {beard:true, armsUp:true, shirt:'#2f6f4f'});
+      drawStudentGroup(430, H*0.74, 1.0, 4);
+    }
+    else if (idx===1){
+      drawTree(400, H*0.8, 1.3, sway*0.5);
+      // falling coconut animation
+      var fall = (Math.sin(animTime*0.0025)+1)/2;
+      drawCoconut(404, H*0.34 + fall*(H*0.36), 1.6, animTime*0.004);
+      if (state.mashCount < state.mashTarget){
+        drawFaintGuru(400, H*0.72, 1.15);
+        drawStudentGroup(560, H*0.75, 0.95, 3);
+      } else {
+        drawPerson(560, H*0.72, 1.1, {beard:true, armsUp:true, shirt:'#2f6f4f'});
+        drawStudentGroup(400, H*0.75, 0.95, 4);
+      }
+    }
+    else if (idx>=2 && idx<=5){
+      var names = ['wind','mountain','mouse','cat'];
+      var name = names[idx-2];
+      drawTree(120, H*0.82, 0.7, sway*0.3);
+      drawStudentGroup(240, H*0.76, 0.95, 4);
+      var tx = 560, ty = H*0.5;
+      if (!state.revealed){ glow(tx,ty,70,0.35 + Math.sin(animTime*0.005)*0.08); }
+      if (name==='wind') drawWind(tx,ty,1.5, animTime);
+      if (name==='mountain') drawMountain(tx,ty+40,1.0);
+      if (name==='mouse') drawMouse(tx,ty+30,1.6);
+      if (name==='cat') drawCat(tx,ty+30,1.5);
+      if (!state.revealed){
+        hitZones.push({x:tx,y:ty,r:75,name:name});
+      }
+    }
+    else if (idx===6){
+      drawTree(400, H*0.8, 1.4, sway*0.5);
+      drawStudentGroup(400, H*0.77, 0.9, 5);
+      drawSquirrel(410, H*0.28, 1.4);
+    }
+    else if (idx===7){
+      drawTree(560, H*0.85, 1.2, sway*0.4);
+      drawStudentGroup(220, H*0.76, 0.95, 4);
+      var sx=430, sy=H*0.4;
+      if (!state.revealed){ glow(sx,sy,65,0.35+Math.sin(animTime*0.005)*0.08); }
+      drawSquirrel(sx, sy, 1.5, {sorry:state.revealed});
+      if (!state.revealed){ hitZones.push({x:sx,y:sy,r:70,name:'squirrel'}); }
+    }
+    else if (idx===8){
+      drawTree(400, H*0.85, 1.5, sway*0.4);
+      var climb = state.timingHits/state.timingNeeded;
+      drawSquirrel(400 - 10 + climb*20, H*0.72 - climb*230, 1.3, {sorry:false});
+      for (var c=0;c<3;c++){
+        drawCoconut(360+c*40, H*0.3+ (c%2)*20, 1.2, c);
+      }
+    }
+    else if (idx===9){
+      drawTree(150, H*0.8, 1.0, sway*0.3);
+      drawTree(650, H*0.82, 0.8, sway*0.4);
+      drawPerson(400, H*0.72, 1.15, {beard:true, shirt:'#2f6f4f'});
+      drawStudentGroup(400, H*0.62, 0.85, 5);
+      drawSquirrel(400, H*0.34, 1.2, {sorry:true});
+    }
+  }
+
+  /* ---------------- interaction / stage flow ---------------- */
+  function renderStage(langSwitch){
+    var d = currentStageData();
+    updateDots();
+    captionBox.classList.remove('gg-hidden');
+    mashWrap.classList.add('gg-hidden');
+    timingWrap.classList.add('gg-hidden');
+    continueBtn.classList.remove('gg-hidden');
+    timingTapBtn.classList.add('gg-hidden');
+    replayBtn.classList.add('gg-hidden');
+    hintEl.textContent = '';
+    continueBtn.textContent = T().continueBtn;
+
+    var isTarget = (state.stageIndex>=2 && state.stageIndex<=5) || state.stageIndex===7;
+
+    if (isTarget && !state.revealed){
+      captionText.textContent = d.caption;
+      continueBtn.classList.add('gg-hidden');
+      hintEl.textContent = T().tapHint;
+      if (!langSwitch) speak(d.narration);
+    } else if (isTarget && state.revealed){
+      captionText.textContent = d.reveal;
+      continueBtn.classList.remove('gg-hidden');
+      if (!langSwitch) speak(d.revealNarration);
+    } else if (d.mash){
+      captionText.textContent = d.caption;
+      if (state.mashCount < state.mashTarget){
+        continueBtn.classList.add('gg-hidden');
+        mashWrap.classList.remove('gg-hidden');
+        hintEl.textContent = T().mashHint;
+      }
+      if (!langSwitch) speak(d.narration);
+    } else if (d.timing){
+      captionText.textContent = d.caption;
+      if (state.timingHits < state.timingNeeded){
+        continueBtn.classList.add('gg-hidden');
+        timingWrap.classList.remove('gg-hidden');
+        timingTapBtn.classList.remove('gg-hidden');
+        hintEl.textContent = T().timingHint;
+        startTiming();
+      }
+      if (!langSwitch) speak(d.narration);
+    } else if (d.ending){
+      captionText.textContent = d.caption + '\n\n' + T().moralLabel + ' ' + T().moral;
+      continueBtn.classList.add('gg-hidden');
+      replayBtn.classList.remove('gg-hidden');
+      replayBtn.textContent = T().replay;
+      if (!langSwitch) speak(d.narration + '. ' + T().moralLabel + ' ' + T().moral);
+    } else {
+      captionText.textContent = d.caption;
+      if (!langSwitch) speak(d.narration);
+    }
+    sendHeight();
+  }
+
+  function goNext(){
+    stopSpeak();
+    if (state.stageIndex < STAGE_COUNT-1){
+      state.stageIndex++;
+      state.revealed = false;
+      state.mashCount = 0;
+      state.timingHits = 0;
+      stopTiming();
+      renderStage(false);
+    }
+  }
+
+  continueBtn.addEventListener('click', goNext);
+
+  replayBtn.addEventListener('click', function(){
+    stopSpeak();
+    state.stageIndex = 0;
+    state.revealed = false;
+    state.mashCount = 0;
+    state.timingHits = 0;
+    stopTiming();
+    renderStage(false);
+  });
+
+  /* canvas tap for target reveal */
+  function handleCanvasTap(evt){
+    if (!state.started) return;
+    var d = currentStageData();
+    var isTarget = (state.stageIndex>=2 && state.stageIndex<=5) || state.stageIndex===7;
+    if (!isTarget || state.revealed) return;
+    var p = canvasCoordsFromEvent(evt);
+    for (var i=0;i<hitZones.length;i++){
+      var z = hitZones[i];
+      var dist = Math.hypot(p.x-z.x, p.y-z.y);
+      if (dist <= z.r){
+        state.revealed = true;
+        renderStage(false);
+        break;
+      }
+    }
+  }
+  canvas.addEventListener('click', handleCanvasTap);
+  canvas.addEventListener('touchstart', function(e){ handleCanvasTap(e); }, {passive:true});
+
+  /* mash mechanic */
+  mashBtn.addEventListener('click', function(){
+    if (state.mashCount >= state.mashTarget) return;
+    state.mashCount++;
+    var pct = Math.min(100, (state.mashCount/state.mashTarget)*100);
+    mashFill.style.width = pct + '%';
+    if (state.mashCount >= state.mashTarget){
+      setTimeout(function(){ renderStage(false); }, 260);
+    }
+  });
+
+  /* timing mechanic */
+  var timingRAF = null;
+  function startTiming(){
+    stopTiming();
+    state.timingPos = 0; state.timingDir = 1;
+    positionZoneRandom();
+    updateStars();
+    timingRAF = requestAnimationFrame(timingStep);
+  }
+  function stopTiming(){
+    if (timingRAF) cancelAnimationFrame(timingRAF);
+    timingRAF = null;
+  }
+  var zoneStart = 40, zoneWidth = 20;
+  function positionZoneRandom(){
+    zoneStart = 10 + Math.random()*60;
+    zoneWidth = 18 - Math.min(6, state.timingHits*2);
+    timingZone.style.left = zoneStart+'%';
+    timingZone.style.width = zoneWidth+'%';
+  }
+  function timingStep(){
+    state.timingPos += state.timingDir * 1.6;
+    if (state.timingPos >= 100){ state.timingPos = 100; state.timingDir = -1; }
+    if (state.timingPos <= 0){ state.timingPos = 0; state.timingDir = 1; }
+    timingMarker.style.left = state.timingPos + '%';
+    timingRAF = requestAnimationFrame(timingStep);
+  }
+  function updateStars(){
+    for (var i=0;i<timingStars.length;i++){
+      timingStars[i].textContent = i < state.timingHits ? '★' : '☆';
+    }
+  }
+  timingTapBtn.addEventListener('click', function(){
+    if (state.timingHits >= state.timingNeeded) return;
+    var pos = state.timingPos;
+    if (pos >= zoneStart && pos <= zoneStart+zoneWidth){
+      state.timingHits++;
+      updateStars();
+      if (state.timingHits >= state.timingNeeded){
+        stopTiming();
+        setTimeout(function(){ renderStage(false); }, 320);
+        return;
+      }
+      positionZoneRandom();
+    } else {
+      // small miss feedback: shrink zone slightly less punishing, just flash
+      timingMarker.style.background = '#d1453b';
+      setTimeout(function(){ timingMarker.style.background = ''; }, 180);
+    }
+  });
+
+  /* ---------------- start / cover ---------------- */
+  startBtn.addEventListener('click', function(){
+    state.started = true;
+    coverEl.classList.add('gg-hidden');
+    state.stageIndex = 0;
+    state.revealed = false;
+    renderStage(false);
+  });
+
+  /* ---------------- init ---------------- */
+  function fitCanvasCSS(){
+    // canvas internal resolution fixed at 800x500; CSS handles scaling via width/height 100%
+  }
+  fitCanvasCSS();
+  if (!animRAF) animRAF = requestAnimationFrame(loop);
+  draw();
+  window.addEventListener('message', function(){ /* no-op, reserved */ });
+  sendHeight();
+})();
+</script>
+</body>
+</html>
