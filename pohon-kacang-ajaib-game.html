@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pohon Kacang Ajaib</title>
+<style>
+  :root{
+    --pka-sky-1:#16233f;
+    --pka-sky-2:#3d6b93;
+    --pka-gold:#d4a017;
+    --pka-gold-light:#f0c75e;
+    --pka-parchment:#f3e8d2;
+    --pka-parchment-dark:#e4d3ac;
+    --pka-brown:#5b3a24;
+    --pka-brown-dark:#3d2817;
+    --pka-vine:#2d5f3f;
+    --pka-vine-light:#4f8a5e;
+    --pka-ink:#2a2015;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  #pka-root{
+    font-family:Georgia,'Times New Roman',serif;
+    color:var(--pka-ink);
+    background:linear-gradient(180deg,var(--pka-sky-1),var(--pka-sky-2) 60%,#6b9c56 100%);
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 6px 24px rgba(0,0,0,.35);
+    position:relative;
+    border:4px solid var(--pka-brown);
+  }
+  #pka-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    background:var(--pka-brown-dark);
+    color:var(--pka-parchment);
+  }
+  #pka-topbar .pka-title{
+    font-weight:bold;
+    letter-spacing:.5px;
+    font-size:15px;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+  .pka-btn-row{display:flex;gap:6px;}
+  .pka-iconbtn{
+    background:var(--pka-brown);
+    border:1px solid var(--pka-gold);
+    color:var(--pka-parchment);
+    border-radius:8px;
+    padding:5px 10px;
+    font-size:13px;
+    cursor:pointer;
+    font-family:inherit;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .pka-iconbtn:hover{background:#6e4830;transform:translateY(-1px);}
+  .pka-iconbtn:active{transform:translateY(0);}
+
+  #pka-stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 800 / 460;
+    overflow:hidden;
+  }
+  #pka-svg{width:100%;height:100%;display:block;}
+
+  #pka-dots{
+    position:absolute;
+    top:8px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:8px;
+    background:rgba(20,15,8,.35);
+    padding:6px 10px;
+    border-radius:20px;
+    z-index:5;
+  }
+  .pka-dot{
+    width:14px;height:16px;
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+    background:rgba(255,255,255,.35);
+    border:1px solid rgba(0,0,0,.25);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .pka-dot.pka-done{background:var(--pka-gold);}
+  .pka-dot.pka-current{background:var(--pka-gold-light);transform:scale(1.3);box-shadow:0 0 6px var(--pka-gold-light);}
+
+  #pka-caption-box{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    background:linear-gradient(180deg, rgba(243,232,210,0) 0%, var(--pka-parchment) 22%);
+    padding:22px 16px 14px;
+    z-index:4;
+  }
+  #pka-caption{
+    background:var(--pka-parchment);
+    border:2px solid var(--pka-brown);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--pka-brown-dark);
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+    min-height:20px;
+  }
+  #pka-controls{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    gap:8px;
+  }
+  #pka-action-btn{
+    background:var(--pka-gold);
+    border:2px solid var(--pka-brown-dark);
+    color:var(--pka-brown-dark);
+    font-weight:bold;
+    font-family:inherit;
+    padding:10px 18px;
+    border-radius:24px;
+    cursor:pointer;
+    font-size:15px;
+    box-shadow:0 3px 0 #8a6a1c;
+    transition:transform .1s ease;
+  }
+  #pka-action-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6a1c;}
+  #pka-action-btn:disabled{opacity:.4;cursor:default;}
+  #pka-next-btn{
+    background:var(--pka-vine);
+    border:2px solid #1d3c28;
+    color:#f3e8d2;
+    font-family:inherit;
+    font-weight:bold;
+    padding:10px 16px;
+    border-radius:24px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  #pka-meter-wrap{
+    flex:1;
+    height:14px;
+    background:rgba(0,0,0,.15);
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--pka-brown);
+    margin:0 8px;
+  }
+  #pka-meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--pka-vine-light),var(--pka-gold));
+    transition:width .12s ease;
+  }
+
+  #pka-cover, #pka-end{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    background:radial-gradient(circle at 50% 30%, #274a72 0%, #16233f 75%);
+    color:var(--pka-parchment);
+    padding:24px;
+    z-index:10;
+  }
+  #pka-cover h1, #pka-end h1{
+    font-size:26px;
+    margin:6px 0 4px;
+    color:var(--pka-gold-light);
+    text-shadow:0 2px 4px rgba(0,0,0,.6);
+    letter-spacing:1px;
+  }
+  #pka-cover p, #pka-end p{
+    font-size:14px;
+    max-width:420px;
+    line-height:1.6;
+    margin:6px 0 18px;
+    color:#e9dcc0;
+  }
+  .pka-cover-vine{
+    font-size:34px;
+    margin-bottom:6px;
+  }
+  #pka-start-btn, #pka-restart-btn{
+    background:var(--pka-gold);
+    border:2px solid var(--pka-brown-dark);
+    color:var(--pka-brown-dark);
+    font-weight:bold;
+    font-family:inherit;
+    padding:12px 26px;
+    border-radius:28px;
+    cursor:pointer;
+    font-size:16px;
+    box-shadow:0 3px 0 #8a6a1c;
+  }
+  #pka-start-btn:active, #pka-restart-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6a1c;}
+  #pka-hidden{display:none !important;}
+
+  #pka-warn{
+    position:absolute;
+    top:44px;left:50%;
+    transform:translateX(-50%) scale(0.6);
+    background:#b93b2e;
+    color:#fff;
+    font-weight:bold;
+    padding:8px 16px;
+    border-radius:20px;
+    opacity:0;
+    z-index:6;
+    transition:opacity .15s ease, transform .15s ease;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  #pka-warn.pka-show{opacity:1;transform:translateX(-50%) scale(1);}
+
+  #pka-footer{
+    text-align:center;
+    font-size:11px;
+    padding:6px 8px 10px;
+    color:#e9dcc0;
+    opacity:.75;
+    background:var(--pka-brown-dark);
+  }
+  #pka-footer a{color:var(--pka-gold-light);text-decoration:none;}
+
+  @media (max-width:420px){
+    #pka-topbar .pka-title{font-size:13px;}
+    .pka-iconbtn{padding:4px 8px;font-size:12px;}
+    #pka-caption{font-size:13.5px;}
+    #pka-action-btn{font-size:14px;padding:9px 14px;}
+  }
+</style>
+</head>
+<body>
+<div id="pka-root">
+
+  <div id="pka-topbar">
+    <div class="pka-title" data-i18n="gameTitle">🌱 Pohon Kacang Ajaib</div>
+    <div class="pka-btn-row">
+      <button class="pka-iconbtn" id="pka-lang-btn" title="Ganti Bahasa / Change Language">EN</button>
+      <button class="pka-iconbtn" id="pka-mute-btn" title="Mute/Unmute">🔊</button>
+    </div>
+  </div>
+
+  <div id="pka-stage-wrap">
+    <svg id="pka-svg" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid slice"></svg>
+    <div id="pka-dots"></div>
+    <div id="pka-warn" data-i18n="warnText">Sekarang!</div>
+
+    <div id="pka-cover">
+      <div class="pka-cover-vine">🌱🫘🌱</div>
+      <h1 data-i18n="coverTitle">Pohon Kacang Ajaib</h1>
+      <p data-i18n="coverDesc">Ikuti petualangan Jack menukar sapi dengan kacang ajaib, memanjat pohon raksasa hingga ke istana awan, dan melarikan diri dari sang raksasa jahat.</p>
+      <button id="pka-start-btn" data-i18n="startBtn">🌿 Mulai Cerita</button>
+    </div>
+
+    <div id="pka-end" class="pka-hidden">
+      <div class="pka-cover-vine">👑✨👑</div>
+      <h1 data-i18n="endTitle">Selamat! Kisah Berakhir Bahagia</h1>
+      <p data-i18n="endDesc">Jack dan ibunya kini hidup berkecukupan berkat emas dan harpa ajaib dari negeri awan.</p>
+      <button id="pka-restart-btn" data-i18n="restartBtn">🔁 Ulangi Cerita</button>
+    </div>
+
+    <div id="pka-caption-box">
+      <div id="pka-caption"></div>
+      <div id="pka-controls">
+        <button id="pka-action-btn" class="pka-hidden"></button>
+        <div id="pka-meter-wrap" class="pka-hidden"><div id="pka-meter-fill"></div></div>
+        <button id="pka-next-btn" class="pka-hidden" data-i18n="nextBtn">Lanjut ▸</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pka-footer">
+    <span data-i18n="footerText">Kisah interaktif oleh</span> <a href="https://caritasato.blogspot.com/" target="_blank" rel="noopener">CaritaSato</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- i18n ---------------- */
+  var STR = {
+    id: {
+      gameTitle:"🌱 Pohon Kacang Ajaib",
+      coverTitle:"Pohon Kacang Ajaib",
+      coverDesc:"Ikuti petualangan Jack menukar sapi dengan kacang ajaib, memanjat pohon raksasa hingga ke istana awan, dan melarikan diri dari sang raksasa jahat.",
+      startBtn:"🌿 Mulai Cerita",
+      endTitle:"Selamat! Kisah Berakhir Bahagia",
+      endDesc:"Jack dan ibunya kini hidup berkecukupan berkat emas dan harpa ajaib dari negeri awan.",
+      restartBtn:"🔁 Ulangi Cerita",
+      nextBtn:"Lanjut ▸",
+      warnText:"Sekarang!",
+      footerText:"Kisah interaktif oleh",
+      langSwitch:"EN",
+      scenes:[
+        {
+          text:"Di sebuah desa kecil, hiduplah Jack bersama ibunya yang berjuang setiap hari. Harta mereka hanya tersisa seekor sapi tua bernama Milky White. Ketika sapi itu berhenti menghasilkan susu, ibu Jack pun menyuruhnya menjual sapi itu ke pasar."
+        },
+        {
+          text:"Di tengah jalan, Jack bertemu seorang kakek aneh yang menawarkan lima biji kacang ajaib sebagai ganti sapi Jack. \u201cKacang ini bisa tumbuh setinggi langit dalam semalam!\u201d kata sang kakek. Jack, yang mudah percaya pada keajaiban, pun setuju menukarkan sapinya."
+        },
+        {
+          text:"Ibu Jack sangat marah mendengar kacang itu ditukar dengan sapi mereka satu-satunya. Ia melempar kacang-kacang itu keluar jendela. Namun keesokan paginya, sebatang pohon kacang raksasa telah tumbuh menjulang, menembus awan!"
+        },
+        {
+          text:"Penasaran dengan apa yang ada di atas, Jack mulai memanjat batang pohon kacang yang kokoh. Semakin tinggi ia memanjat, semakin dekat ia dengan dunia awan. Bantu Jack memanjat dengan cepat!",
+          action:"Panjat!"
+        },
+        {
+          text:"Di atas awan, Jack menemukan istana megah milik raksasa. Istri raksasa yang baik hati menyembunyikannya di dalam oven besar ketika suaminya, si raksasa jahat, pulang sambil berteriak \u201cFee-fi-fo-fum!\u201d Bantu Jack bersembunyi tepat waktu!",
+          action:"Sembunyi!"
+        },
+        {
+          text:"Setelah sang raksasa tertidur, Jack mengendap-endap dan mengambil sekantung emas serta harpa ajaib. Namun raksasa terbangun dan mulai mengejarnya! Jack pun berlari secepat mungkin menuruni pohon kacang.",
+          action:"Turun!"
+        },
+        {
+          text:"Begitu sampai di tanah, Jack segera mengambil kapak dan menebang pohon kacang secepat mungkin sebelum sang raksasa turun. Pohon itu pun tumbang, membawa sang raksasa jatuh bersamanya. Jack dan ibunya kini hidup berkecukupan berkat emas dan harpa ajaib itu, dan mereka tak pernah lagi kekurangan makanan.",
+          action:"Tebang!"
+        }
+      ]
+    },
+    en: {
+      gameTitle:"🌱 The Magic Beanstalk",
+      coverTitle:"Jack and the Magic Beanstalk",
+      coverDesc:"Follow Jack's adventure as he trades his cow for magic beans, climbs a towering beanstalk to a castle in the clouds, and escapes a fearsome giant.",
+      startBtn:"🌿 Start the Story",
+      endTitle:"Hooray! The Tale Ends Happily",
+      endDesc:"Jack and his mother now live comfortably, thanks to the gold and the magic harp from the land above the clouds.",
+      restartBtn:"🔁 Retell the Story",
+      nextBtn:"Next ▸",
+      warnText:"Now!",
+      footerText:"An interactive tale by",
+      langSwitch:"ID",
+      scenes:[
+        {
+          text:"In a small village lived Jack and his mother, struggling to get by. All they owned was an old cow named Milky White. When the cow stopped giving milk, Jack's mother sent him to sell her at the market."
+        },
+        {
+          text:"Along the way, Jack met a strange old man who offered five magic beans in exchange for his cow. \u201cThese beans can grow sky-high in a single night!\u201d the old man said. Jack, always ready to believe in magic, agreed to the trade."
+        },
+        {
+          text:"Jack's mother was furious to hear the cow had been traded for mere beans. She threw them out the window in anger. But by morning, a giant beanstalk had grown, its top vanishing into the clouds!"
+        },
+        {
+          text:"Curious about what lay above, Jack began climbing the sturdy beanstalk. The higher he climbed, the closer he came to the world of clouds. Help Jack climb quickly!",
+          action:"Climb!"
+        },
+        {
+          text:"Above the clouds, Jack found a grand castle belonging to a giant. The giant's kind-hearted wife hid him in a large oven when her fearsome husband came home bellowing \u201cFee-fi-fo-fum!\u201d Help Jack hide just in time!",
+          action:"Hide!"
+        },
+        {
+          text:"Once the giant fell asleep, Jack crept out and grabbed a bag of gold and a magic harp. But the giant woke and gave chase! Jack scrambled down the beanstalk as fast as he could.",
+          action:"Climb down!"
+        },
+        {
+          text:"As soon as he reached the ground, Jack grabbed an axe and chopped the beanstalk as fast as he could before the giant could climb down. The beanstalk crashed, tumbling the giant down with it. Jack and his mother lived comfortably ever after, thanks to the gold and the magic harp, and never went hungry again.",
+          action:"Chop!"
+        }
+      ]
+    }
+  };
+
+  var qs = new URLSearchParams(location.search);
+  var lang = (qs.get('lang') === 'en') ? 'en' : 'id';
+  var sceneIndex = -1; // -1 = cover
+  var totalScenes = STR.id.scenes.length;
+  var muted = false;
+  try{ muted = localStorage.getItem('pkaMuted') === '1'; }catch(e){}
+  var voices = [];
+  var chosenVoice = null;
+
+  /* ---------------- DOM refs ---------------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var elCaption = $('pka-caption');
+  var elDots = $('pka-dots');
+  var elCover = $('pka-cover');
+  var elEnd = $('pka-end');
+  var elActionBtn = $('pka-action-btn');
+  var elNextBtn = $('pka-next-btn');
+  var elMeterWrap = $('pka-meter-wrap');
+  var elMeterFill = $('pka-meter-fill');
+  var elWarn = $('pka-warn');
+  var elSvg = $('pka-svg');
+  var elMuteBtn = $('pka-mute-btn');
+  var elLangBtn = $('pka-lang-btn');
+
+  /* ---------------- i18n render ---------------- */
+  function applyStaticI18n(){
+    var s = STR[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function(node){
+      var key = node.getAttribute('data-i18n');
+      if(s[key] !== undefined) node.textContent = s[key];
+    });
+    elLangBtn.textContent = s.langSwitch;
+    document.documentElement.lang = lang;
+  }
+
+  /* ---------------- Speech ---------------- */
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    var target = lang === 'en' ? 'en' : 'id';
+    var exact = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = voices.find(function(v){ return v.lang === exact; });
+    if(!v) v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target) === 0; });
+    if(!v && lang === 'id') v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf('en') === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if(!window.speechSynthesis || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    chosenVoice = pickVoice();
+    if(chosenVoice) u.voice = chosenVoice;
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  elMuteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try{ localStorage.setItem('pkaMuted', muted ? '1' : '0'); }catch(e){}
+    elMuteBtn.textContent = muted ? '🔇' : '🔊';
+    if(muted) stopSpeak();
+    else if(sceneIndex >= 0) speak(STR[lang].scenes[sceneIndex].text);
+  });
+  elMuteBtn.textContent = muted ? '🔇' : '🔊';
+
+  elLangBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    applyStaticI18n();
+    if(sceneIndex === -1){
+      renderCover();
+    } else if(sceneIndex >= totalScenes){
+      renderEnd();
+    } else {
+      renderScene(sceneIndex, true);
+    }
+  });
+
+  /* ---------------- SVG scene art ---------------- */
+  function svgDefs(){
+    return '<defs>' +
+      '<linearGradient id="pkaSky" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#16233f"/>' +
+        '<stop offset="55%" stop-color="#3d6b93"/>' +
+        '<stop offset="100%" stop-color="#7fb0c9"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="pkaSkyHigh" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#1c2f52"/>' +
+        '<stop offset="100%" stop-color="#5a89ad"/>' +
+      '</linearGradient>' +
+      '<radialGradient id="pkaSun" cx="50%" cy="50%" r="50%">' +
+        '<stop offset="0%" stop-color="#fff3c4"/>' +
+        '<stop offset="100%" stop-color="#f0c75e" stop-opacity="0"/>' +
+      '</radialGradient>' +
+    '</defs>';
+  }
+  function cloud(x,y,scale){
+    scale = scale || 1;
+    return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')" opacity="0.92">' +
+      '<ellipse cx="0" cy="0" rx="40" ry="18" fill="#fff"/>' +
+      '<ellipse cx="28" cy="-8" rx="26" ry="16" fill="#fff"/>' +
+      '<ellipse cx="-28" cy="-4" rx="22" ry="14" fill="#fff"/>' +
+    '</g>';
+  }
+  function groundHills(){
+    return '<path d="M0,400 Q200,360 400,395 T800,380 L800,460 L0,460 Z" fill="#4c7a3f"/>' +
+           '<path d="M0,430 Q220,400 420,425 T800,415 L800,460 L0,460 Z" fill="#3d5c30"/>';
+  }
+  function beanstalkPath(topY){
+    topY = (topY === undefined) ? 30 : topY;
+    return '<path d="M400,' + (460) + ' C 370,380 430,340 400,300 C 370,260 430,220 400,180 ' +
+      'C 370,140 430,110 405,' + topY + '" stroke="#2d5f3f" stroke-width="26" fill="none" stroke-linecap="round"/>' +
+      '<path d="M400,' + (460) + ' C 370,380 430,340 400,300 C 370,260 430,220 400,180 ' +
+      'C 370,140 430,110 405,' + topY + '" stroke="#4f8a5e" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.7"/>';
+  }
+  function leaf(x,y,rot){
+    return '<ellipse cx="' + x + '" cy="' + y + '" rx="26" ry="14" fill="#3f7a4a" transform="rotate(' + rot + ' ' + x + ' ' + y + ')"/>';
+  }
+  function houseScene(){
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSky)"/>' +
+      '<circle cx="120" cy="90" r="48" fill="url(#pkaSun)"/>' +
+      cloud(650,80,1.1) + cloud(150,140,0.7) +
+      groundHills() +
+      // house
+      '<rect x="270" y="290" width="150" height="110" fill="#a97a4b"/>' +
+      '<polygon points="255,290 345,220 435,290" fill="#7a4a2d"/>' +
+      '<rect x="330" y="330" width="40" height="70" fill="#5b3a24"/>' +
+      '<rect x="285" y="310" width="30" height="30" fill="#dff0f7" stroke="#5b3a24" stroke-width="3"/>' +
+      '<rect x="385" y="310" width="30" height="30" fill="#dff0f7" stroke="#5b3a24" stroke-width="3"/>' +
+      // Jack
+      '<g transform="translate(500,360)">' +
+        '<circle cx="0" cy="0" r="16" fill="#f0c095"/>' +
+        '<rect x="-14" y="14" width="28" height="34" rx="8" fill="#3f6b8a"/>' +
+        '<rect x="-14" y="48" width="10" height="24" fill="#5b3a24"/>' +
+        '<rect x="4" y="48" width="10" height="24" fill="#5b3a24"/>' +
+      '</g>' +
+      // cow
+      '<g transform="translate(590,370)">' +
+        '<ellipse cx="0" cy="0" rx="42" ry="26" fill="#f4ede0"/>' +
+        '<ellipse cx="-30" cy="-6" rx="18" ry="15" fill="#f4ede0"/>' +
+        '<circle cx="-30" cy="-30" r="10" fill="#3d2817"/>' +
+        '<circle cx="-24" cy="-30" r="10" fill="#3d2817"/>' +
+        '<ellipse cx="8" cy="4" rx="10" ry="8" fill="#3d2817" opacity="0.4"/>' +
+        '<ellipse cx="-14" cy="10" rx="8" ry="6" fill="#3d2817" opacity="0.4"/>' +
+      '</g>';
+  }
+  function roadScene(){
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSky)"/>' +
+      cloud(600,100,1) + cloud(200,70,0.8) +
+      groundHills() +
+      '<path d="M0,420 Q400,390 800,420" stroke="#c8b17e" stroke-width="34" fill="none" opacity="0.6"/>' +
+      // Jack + cow walking
+      '<g transform="translate(300,370)">' +
+        '<circle cx="0" cy="0" r="16" fill="#f0c095"/>' +
+        '<rect x="-14" y="14" width="28" height="34" rx="8" fill="#3f6b8a"/>' +
+        '<rect x="-14" y="48" width="10" height="24" fill="#5b3a24"/>' +
+        '<rect x="4" y="48" width="10" height="24" fill="#5b3a24"/>' +
+      '</g>' +
+      '<g transform="translate(380,378)">' +
+        '<ellipse cx="0" cy="0" rx="38" ry="24" fill="#f4ede0"/>' +
+        '<circle cx="-26" cy="-24" r="9" fill="#3d2817"/>' +
+        '<circle cx="-20" cy="-24" r="9" fill="#3d2817"/>' +
+      '</g>' +
+      // old man with bean
+      '<g transform="translate(560,368)">' +
+        '<circle cx="0" cy="0" r="15" fill="#e8c9a3"/>' +
+        '<path d="M-15,-2 Q0,-22 15,-2" fill="#dcdcdc"/>' +
+        '<rect x="-13" y="13" width="26" height="34" rx="8" fill="#7a5a3a"/>' +
+        '<rect x="-13" y="47" width="9" height="20" fill="#4a3624"/>' +
+        '<rect x="4" y="47" width="9" height="20" fill="#4a3624"/>' +
+        '<ellipse cx="26" cy="10" rx="9" ry="7" fill="#d4a017"/>' +
+      '</g>';
+  }
+  function growScene(){
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSky)"/>' +
+      cloud(620,90,1) + cloud(160,60,0.7) +
+      groundHills() +
+      '<rect x="270" y="290" width="150" height="110" fill="#a97a4b"/>' +
+      '<polygon points="255,290 345,220 435,290" fill="#7a4a2d"/>' +
+      beanstalkPath(60) +
+      leaf(430,260,20) + leaf(365,220,-25) + leaf(440,170,15) + leaf(360,120,-15) + leaf(430,80,20) +
+      '<g transform="translate(520,340)">' +
+        '<circle cx="0" cy="0" r="15" fill="#f0c095"/>' +
+        '<rect x="-13" y="13" width="26" height="32" rx="7" fill="#c94f3f"/>' +
+        '<rect x="-13" y="45" width="9" height="20" fill="#4a3624"/>' +
+        '<rect x="4" y="45" width="9" height="20" fill="#4a3624"/>' +
+      '</g>';
+  }
+  function climbScene(progress){
+    var t = Math.max(0, Math.min(1, progress));
+    var jackY = 430 - t * 360;
+    var jackX = 400 + Math.sin(t * 18) * 26;
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSkyHigh)"/>' +
+      cloud(120, 90 + (1-t)*40, 0.9) + cloud(650, 60, 1.1*t+0.3) +
+      groundHills() +
+      beanstalkPath(20) +
+      leaf(430,380,20) + leaf(365,330,-25) + leaf(440,270,15) + leaf(360,210,-15) + leaf(430,150,20) + leaf(370,90,-20) +
+      '<g transform="translate(' + jackX + ',' + jackY + ')">' +
+        '<circle cx="0" cy="0" r="15" fill="#f0c095"/>' +
+        '<rect x="-13" y="13" width="26" height="30" rx="7" fill="#c94f3f"/>' +
+        '<rect x="-13" y="43" width="9" height="18" fill="#4a3624"/>' +
+        '<rect x="4" y="43" width="9" height="18" fill="#4a3624"/>' +
+      '</g>';
+  }
+  function castleScene(hiding){
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSkyHigh)"/>' +
+      cloud(90,380,1.4) + cloud(650,400,1.6) + cloud(400,420,1.8) +
+      cloud(700,80,0.8) +
+      // castle
+      '<rect x="480" y="140" width="220" height="180" fill="#8a8fa0"/>' +
+      '<polygon points="470,140 590,80 710,140" fill="#6a6f80"/>' +
+      '<rect x="500" y="200" width="40" height="60" fill="#3d2817"/>' +
+      '<rect x="560" y="180" width="34" height="34" fill="#dff0f7" stroke="#3d2817" stroke-width="3"/>' +
+      '<rect x="630" y="180" width="34" height="34" fill="#dff0f7" stroke="#3d2817" stroke-width="3"/>' +
+      // oven
+      '<rect x="360" y="230" width="90" height="90" rx="10" fill="#5b3a24"/>' +
+      '<rect x="378" y="256" width="54" height="44" rx="6" fill="' + (hiding ? '#2a1a10' : '#20140c') + '"/>' +
+      (hiding ? '<circle cx="405" cy="278" r="10" fill="#f0c095"/>' : '') +
+      // giant wife
+      '<g transform="translate(600,300)">' +
+        '<ellipse cx="0" cy="0" rx="46" ry="60" fill="#e0b98c"/>' +
+        '<circle cx="0" cy="-70" r="34" fill="#e8c9a3"/>' +
+        '<path d="M-34,-84 Q0,-118 34,-84" fill="#8a5a3a"/>' +
+      '</g>';
+  }
+  function chaseScene(t){
+    t = Math.max(0, Math.min(1, t));
+    var jackY = 60 + t * 360;
+    var jackX = 400 + Math.sin(t * 18) * 26;
+    var giantY = jackY - 90 - (1-t)*30;
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSkyHigh)"/>' +
+      cloud(120, 100, 0.9) + cloud(650, 380, 1.3) +
+      groundHills() +
+      beanstalkPath(20) +
+      leaf(430,380,20) + leaf(365,330,-25) + leaf(440,270,15) + leaf(360,210,-15) +
+      '<g transform="translate(' + jackX + ',' + jackY + ')">' +
+        '<circle cx="0" cy="0" r="15" fill="#f0c095"/>' +
+        '<rect x="-13" y="13" width="26" height="30" rx="7" fill="#c94f3f"/>' +
+        '<rect x="-16" y="16" width="14" height="10" fill="#d4a017"/>' +
+        '<rect x="-13" y="43" width="9" height="18" fill="#4a3624"/>' +
+        '<rect x="4" y="43" width="9" height="18" fill="#4a3624"/>' +
+      '</g>' +
+      '<g transform="translate(' + (jackX-10) + ',' + giantY + ')" opacity="0.92">' +
+        '<ellipse cx="0" cy="0" rx="34" ry="46" fill="#8fae7a"/>' +
+        '<circle cx="0" cy="-56" r="26" fill="#9fbf8a"/>' +
+      '</g>';
+  }
+  function choppingScene(t, fallen){
+    t = Math.max(0, Math.min(1, t));
+    var tilt = fallen ? 78 : t * 55;
+    return '<rect x="0" y="0" width="800" height="460" fill="url(#pkaSky)"/>' +
+      '<circle cx="700" cy="80" r="40" fill="url(#pkaSun)"/>' +
+      cloud(150,90,0.9) +
+      groundHills() +
+      '<path d="M0,440 Q400,455 800,440 L800,460 L0,460 Z" fill="#3f6b8a" opacity="0.85"/>' +
+      '<g transform="translate(400,440) rotate(' + tilt + ')" style="transform-origin:400px 440px;">' +
+        beanstalkPath(20).replace(/400,460/g,'400,440') +
+      '</g>' +
+      (fallen ? '<g transform="translate(640,410)" opacity="0.9"><ellipse cx="0" cy="0" rx="46" ry="26" fill="#8fae7a"/><circle cx="-20" cy="-20" r="20" fill="#9fbf8a"/></g>' : '') +
+      '<g transform="translate(300,400)">' +
+        '<circle cx="0" cy="0" r="15" fill="#f0c095"/>' +
+        '<rect x="-13" y="13" width="26" height="30" rx="7" fill="#c94f3f"/>' +
+        '<rect x="-13" y="43" width="9" height="18" fill="#4a3624"/>' +
+        '<rect x="4" y="43" width="9" height="18" fill="#4a3624"/>' +
+        '<rect x="12" y="-4" width="34" height="8" fill="#7a5a3a" transform="rotate(-30)"/>' +
+      '</g>';
+  }
+  function endingScene(){
+    return houseScene() +
+      '<g transform="translate(560,320)" opacity="0.95">' +
+        '<ellipse cx="0" cy="30" rx="24" ry="16" fill="#d4a017"/>' +
+        '<circle cx="-4" cy="18" r="8" fill="#f0c75e"/>' +
+        '<circle cx="8" cy="22" r="6" fill="#f0c75e"/>' +
+      '</g>';
+  }
+
+  function renderSVG(html){
+    elSvg.innerHTML = svgDefs() + html;
+  }
+
+  /* ---------------- Dots ---------------- */
+  function renderDots(){
+    elDots.innerHTML = '';
+    for(var i=0;i<totalScenes;i++){
+      var d = document.createElement('div');
+      d.className = 'pka-dot';
+      if(sceneIndex > i || sceneIndex >= totalScenes) d.className += ' pka-done';
+      else if(sceneIndex === i) d.className += ' pka-current';
+      elDots.appendChild(d);
+    }
+  }
+
+  /* ---------------- Mini-game state ---------------- */
+  var mgTimer = null, mgInterval = null, mgActive = false;
+
+  function clearMiniGame(){
+    mgActive = false;
+    if(mgTimer) clearTimeout(mgTimer);
+    if(mgInterval) clearInterval(mgInterval);
+    elWarn.classList.remove('pka-show');
+  }
+
+  function setupClimbGame(onComplete, renderFn){
+    var progress = 0;
+    var need = 14;
+    var clicks = 0;
+    elMeterWrap.classList.remove('pka-hidden');
+    elMeterFill.style.width = '0%';
+    elActionBtn.disabled = false;
+    renderSVG(renderFn(0));
+    mgActive = true;
+    elActionBtn.onclick = function(){
+      if(!mgActive) return;
+      clicks++;
+      progress = Math.min(1, clicks / need);
+      elMeterFill.style.width = (progress*100) + '%';
+      renderSVG(renderFn(progress));
+      if(progress >= 1){
+        mgActive = false;
+        elActionBtn.disabled = true;
+        setTimeout(onComplete, 500);
+      }
+    };
+  }
+
+  function setupHideGame(onComplete){
+    var successNeeded = 3;
+    var successes = 0;
+    var canHide = false;
+    elMeterWrap.classList.remove('pka-hidden');
+    elMeterFill.style.width = '0%';
+    elActionBtn.disabled = false;
+    renderSVG(castleScene(false));
+    mgActive = true;
+
+    function roundLoop(){
+      if(!mgActive) return;
+      var delay = 900 + Math.random()*900;
+      mgTimer = setTimeout(function(){
+        if(!mgActive) return;
+        canHide = true;
+        elWarn.classList.add('pka-show');
+        mgTimer = setTimeout(function(){
+          if(!mgActive) return;
+          if(canHide){
+            // missed window
+            canHide = false;
+            elWarn.classList.remove('pka-show');
+            roundLoop();
+          }
+        }, 900);
+      }, delay);
+    }
+    roundLoop();
+
+    elActionBtn.onclick = function(){
+      if(!mgActive) return;
+      if(canHide){
+        canHide = false;
+        successes++;
+        elMeterFill.style.width = ((successes/successNeeded)*100) + '%';
+        elWarn.classList.remove('pka-show');
+        renderSVG(castleScene(true));
+        setTimeout(function(){ if(mgActive) renderSVG(castleScene(false)); }, 400);
+        if(successes >= successNeeded){
+          mgActive = false;
+          elActionBtn.disabled = true;
+          clearMiniGame();
+          setTimeout(onComplete, 500);
+        } else {
+          roundLoop();
+        }
+      }
+    };
+  }
+
+  function setupChaseGame(onComplete){
+    var progress = 0;
+    var need = 14;
+    var clicks = 0;
+    elMeterWrap.classList.remove('pka-hidden');
+    elMeterFill.style.width = '0%';
+    elActionBtn.disabled = false;
+    renderSVG(chaseScene(0));
+    mgActive = true;
+    elActionBtn.onclick = function(){
+      if(!mgActive) return;
+      clicks++;
+      progress = Math.min(1, clicks / need);
+      elMeterFill.style.width = (progress*100) + '%';
+      renderSVG(chaseScene(progress));
+      if(progress >= 1){
+        mgActive = false;
+        elActionBtn.disabled = true;
+        setTimeout(onComplete, 500);
+      }
+    };
+  }
+
+  function setupChopGame(onComplete){
+    var progress = 0;
+    var need = 12;
+    var clicks = 0;
+    elMeterWrap.classList.remove('pka-hidden');
+    elMeterFill.style.width = '0%';
+    elActionBtn.disabled = false;
+    renderSVG(choppingScene(0,false));
+    mgActive = true;
+    elActionBtn.onclick = function(){
+      if(!mgActive) return;
+      clicks++;
+      progress = Math.min(1, clicks / need);
+      elMeterFill.style.width = (progress*100) + '%';
+      renderSVG(choppingScene(progress,false));
+      if(progress >= 1){
+        mgActive = false;
+        elActionBtn.disabled = true;
+        renderSVG(choppingScene(1,true));
+        setTimeout(onComplete, 900);
+      }
+    };
+  }
+
+  /* ---------------- Scene flow ---------------- */
+  function renderScene(idx, skipSpeak){
+    clearMiniGame();
+    sceneIndex = idx;
+    renderDots();
+    var scene = STR[lang].scenes[idx];
+    elCaption.textContent = scene.text;
+    elNextBtn.classList.add('pka-hidden');
+    elActionBtn.classList.add('pka-hidden');
+    elMeterWrap.classList.add('pka-hidden');
+    elActionBtn.disabled = false;
+
+    function goNext(){
+      if(idx + 1 >= totalScenes) renderEnd();
+      else renderScene(idx + 1);
+    }
+
+    if(idx === 0){ renderSVG(houseScene()); }
+    else if(idx === 1){ renderSVG(roadScene()); }
+    else if(idx === 2){ renderSVG(growScene()); }
+    else if(idx === 3){
+      elActionBtn.textContent = scene.action;
+      elActionBtn.classList.remove('pka-hidden');
+      setupClimbGame(goNext, climbScene);
+    }
+    else if(idx === 4){
+      elActionBtn.textContent = scene.action;
+      elActionBtn.classList.remove('pka-hidden');
+      setupHideGame(goNext);
+    }
+    else if(idx === 5){
+      elActionBtn.textContent = scene.action;
+      elActionBtn.classList.remove('pka-hidden');
+      setupChaseGame(goNext);
+    }
+    else if(idx === 6){
+      elActionBtn.textContent = scene.action;
+      elActionBtn.classList.remove('pka-hidden');
+      setupChopGame(goNext);
+    }
+
+    if(!scene.action){
+      elNextBtn.classList.remove('pka-hidden');
+      elNextBtn.onclick = goNext;
+    }
+
+    if(!skipSpeak) speak(scene.text);
+    reportHeight();
+  }
+
+  function renderCover(){
+    sceneIndex = -1;
+    clearMiniGame();
+    stopSpeak();
+    elCover.classList.remove('pka-hidden');
+    elEnd.classList.add('pka-hidden');
+    elCaption.textContent = '';
+    elNextBtn.classList.add('pka-hidden');
+    elActionBtn.classList.add('pka-hidden');
+    elMeterWrap.classList.add('pka-hidden');
+    elDots.innerHTML = '';
+    renderSVG(houseScene());
+    reportHeight();
+  }
+
+  function renderEnd(){
+    sceneIndex = totalScenes;
+    clearMiniGame();
+    renderDots();
+    elCover.classList.add('pka-hidden');
+    elEnd.classList.remove('pka-hidden');
+    elCaption.textContent = '';
+    elNextBtn.classList.add('pka-hidden');
+    elActionBtn.classList.add('pka-hidden');
+    elMeterWrap.classList.add('pka-hidden');
+    renderSVG(endingScene());
+    var s = STR[lang];
+    speak(s.endDesc);
+    reportHeight();
+  }
+
+  $('pka-start-btn').addEventListener('click', function(){
+    elCover.classList.add('pka-hidden');
+    renderScene(0);
+  });
+  $('pka-restart-btn').addEventListener('click', function(){
+    renderCover();
+  });
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function reportHeight(){
+    setTimeout(function(){
+      var h = document.getElementById('pka-root').offsetHeight;
+      try{
+        window.parent.postMessage({ type: 'pohonKacangAjaibHeight', height: h }, '*');
+      }catch(e){}
+    }, 60);
+  }
+  window.addEventListener('resize', reportHeight);
+
+  /* ---------------- init ---------------- */
+  applyStaticI18n();
+  renderCover();
+})();
+</script>
+</body>
+</html>
