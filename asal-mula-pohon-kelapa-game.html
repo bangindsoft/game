@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Pohon Kelapa - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #amk-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #24312B;
+    background: linear-gradient(180deg, #EAF6F0 0%, #F7F3E8 100%);
+    border: 3px solid #2E7D5B;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #amk-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #1B5E42;
+  }
+  #amk-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #5b6f63;
+    margin: 0 0 10px;
+  }
+  #amk-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+  #amk-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    background: #FFD873;
+    color: #5c4300;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  #amk-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #2E7D5B;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #amk-voiceBtn.off { background: #9a9a9a; }
+  #amk-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #2E7D5B;
+    background: #BEE3F8;
+  }
+  #amk-canvas { display: block; width: 100%; height: 100%; }
+  .amk-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(16,36,26,0.88);
+    color: #fff;
+    padding: 20px;
+  }
+  .amk-overlay.show { display: flex; }
+  .amk-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .amk-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .amk-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #FFD873;
+    color: #5c4300;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .amk-btn:active { transform: scale(0.97); }
+
+  #amk-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .amk-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #cfe3d8;
+    border: 2px solid #2E7D5B44;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .amk-dot.active {
+    background: #2E7D5B;
+    transform: scale(1.25);
+  }
+  .amk-dot.done {
+    background: #7FBF9E;
+  }
+
+  #amk-caption {
+    margin-top: 8px;
+    background: #ffffff;
+    border: 2px solid #2E7D5B;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #amk-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #amk-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #2E7D5B;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #amk-actionBtn.hold { background: #B5842A; }
+  #amk-actionBtn:active { transform: scale(0.97); }
+  #amk-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #amk-progressWrap.show { display: block; }
+  #amk-progressBar { height: 100%; width: 0%; background: #B5842A; border-radius: 6px; }
+
+  #amk-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #7c8c83;
+    margin-top: 10px;
+  }
+  #amk-footer a { color: #2E7D5B; text-decoration: none; }
+</style>
+</head>
+<body>
+<div id="amk-wrap">
+  <h2>🥥 Asal Mula Pohon Kelapa</h2>
+  <p id="amk-sub">Dongeng suku Chamorro tentang asal mula pohon kelapa dan pengorbanan seorang anak perempuan baik hati.</p>
+
+  <div id="amk-hud">
+    <span id="amk-phase">Tahap 1 / 5</span>
+    <button id="amk-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
+
+  <div id="amk-canvas-holder">
+    <canvas id="amk-canvas"></canvas>
+
+    <div class="amk-overlay show" id="amk-start">
+      <h3>Asal Mula Pohon Kelapa</h3>
+      <p>Dongeng dari suku Chamorro tentang seorang anak perempuan baik hati, permintaan terakhirnya, dan pohon ajaib yang tumbuh dari makamnya.</p>
+      <button class="amk-btn" id="amk-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="amk-overlay" id="amk-win">
+      <h3>Buah Kelapa Ditemukan! 🥥</h3>
+      <p>Sejak saat itu, pohon kelapa tumbuh subur di tanah Chamorro. Buahnya menjadi makanan pokok yang menghidupi rakyatnya, sebagai kenangan abadi akan kebaikan hati sang putri.</p>
+      <button class="amk-btn" id="amk-playAgainBtn">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="amk-dots"></div>
+
+  <div id="amk-caption">Bersiap memulai kisah...</div>
+
+  <div id="amk-progressWrap"><div id="amk-progressBar"></div></div>
+  <div id="amk-action-row">
+    <button id="amk-actionBtn">Lanjut ▶</button>
+  </div>
+
+  <div id="amk-footer">Cerita Rakyat Chamorro &middot; <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a></div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Asal Mula Pohon Kelapa - Game',
+      h2: '🥥 Asal Mula Pohon Kelapa',
+      sub: 'Dongeng suku Chamorro tentang asal mula pohon kelapa dan pengorbanan seorang anak perempuan baik hati.',
+      startTitle: 'Asal Mula Pohon Kelapa',
+      startBody: 'Dongeng dari suku Chamorro tentang seorang anak perempuan baik hati, permintaan terakhirnya, dan pohon ajaib yang tumbuh dari makamnya.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Buah Kelapa Ditemukan! 🥥',
+      winBody: 'Sejak saat itu, pohon kelapa tumbuh subur di tanah Chamorro. Buahnya menjadi makanan pokok yang menghidupi rakyatnya, sebagai kenangan abadi akan kebaikan hati sang putri.',
+      playAgainBtn: 'Ulangi Cerita',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan untuk Melanjutkan',
+      tendBtn: '🌱 RAWAT TUNAS',
+      splitBtn: '🥥 BELAH BUAH',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      steps: [
+        'Alkisah, di desa suku Achote hiduplah seorang anak perempuan yang cantik dan baik hati. Seluruh penduduk desa sangat menyayanginya karena kebaikan dan kelembutan hatinya.',
+        'Suatu hari, anak perempuan itu jatuh sakit keras. Wajahnya yang biasa ceria kini pucat, dan tubuhnya lemah tak berdaya di atas pembaringan.',
+        'Kedua orang tuanya mendatangkan banyak dukun sakti untuk mengobati putrinya. Namun tak satupun berhasil menyembuhkannya — penyakitnya justru semakin parah.',
+        '"Ayah, Ibu... aku ingin minum air dari dalam buah yang dagingnya berwarna putih," pinta anak perempuan itu dengan suara lemah. Kedua orang tuanya terdiam bingung, sebab belum pernah mereka mendengar buah semacam itu.',
+        'Seluruh penduduk desa pun turun tangan mencari buah aneh yang diminta sang putri, menjelajahi hutan dan ladang. Namun sehebat apapun mereka mencari, buah itu tak kunjung ditemukan.',
+        'Hingga suatu malam, sebelum sempat meminum air yang ia dambakan, anak perempuan cantik itu menghembuskan napas terakhirnya. Seluruh desa berduka atas kepergiannya.',
+        'Jenazah anak perempuan itu dimakamkan di puncak sebuah bukit kecil di tepi desa. Kedua orang tuanya menangis pilu, tak kuasa menerima kepergian putri tercinta.',
+        'Setiap hari, penduduk desa suku Achote mendatangi makam itu untuk memanjatkan doa, mengenang kebaikan hati sang putri yang tak pernah mereka lupakan.',
+        'Suatu hari, seorang peziarah terkejut mendapati sebuah tunas aneh tumbuh tepat di atas pusara. Tak ada yang tahu dari mana asalnya — namun kedua orang tua si anak cantik segera merawatnya dengan penuh kasih.',
+        'Tahan tombol untuk membantu kedua orang tua merawat tunas ajaib itu — menyiraminya setiap pagi dan menjaganya dari terik matahari.',
+        'Tahun demi tahun berlalu, tunas kecil itu tumbuh menjadi pohon yang menjulang tinggi, dengan daun-daun panjang melambai di pucuknya. Di bagian atas pohon, tumbuh buah-buah bulat yang belum pernah dilihat siapapun — namun tak seorang pun berani memetik atau memakannya.',
+        'Hingga suatu hari, salah satu buah itu jatuh dan menggelinding ke tanah. Penduduk desa memungutnya dengan hati-hati, lalu membawanya kepada kedua orang tua sang putri.',
+        'Tahan tombol untuk membantu kedua orang tua membelah buah aneh itu perlahan-lahan.',
+        'Betapa terkejutnya mereka — daging buah itu berwarna putih, dan di dalamnya terdapat air jernih, persis seperti yang dulu diminta sang putri! Sejak hari itu, suku Chamorro menamakan buah ajaib itu "kelapa", dan menjadikannya makanan pokok mereka sebagai penghormatan abadi bagi sang putri yang baik hati.'
+      ]
+    },
+    en: {
+      title: 'The Origin of the Coconut Tree - Game',
+      h2: '🥥 The Origin of the Coconut Tree',
+      sub: 'A Chamorro folktale about the origin of the coconut tree and the sacrifice of a kind-hearted girl.',
+      startTitle: 'The Origin of the Coconut Tree',
+      startBody: 'A Chamorro folktale about a kind-hearted girl, her final wish, and the magical tree that grew from her grave.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Coconut Is Born! 🥥',
+      winBody: 'From that day, coconut palms flourished across Chamorro land. Its fruit became a staple food that sustained its people — an eternal reminder of the beautiful girl\'s kind heart.',
+      playAgainBtn: 'Replay the Tale',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold to Continue',
+      tendBtn: '🌱 TEND THE SPROUT',
+      splitBtn: '🥥 SPLIT THE FRUIT',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      steps: [
+        'Long ago, in the village of the Achote tribe, there lived a beautiful, kind-hearted girl. All the villagers loved her dearly for her gentle and caring nature.',
+        'One day, the girl fell gravely ill. Her once cheerful face grew pale, and her body lay weak and helpless upon her bed.',
+        'Her parents brought in many powerful healers to cure her, but none of them succeeded. Instead, her illness only grew worse.',
+        '"Father, Mother... I want to drink water from a fruit with white flesh," the girl asked in a faint voice. Her parents fell silent, puzzled — they had never heard of such a fruit.',
+        'The whole village joined the search for this strange fruit, combing through forests and fields. But no matter how hard they searched, the fruit was nowhere to be found.',
+        'Then one night, before she could ever taste the water she longed for, the beautiful girl breathed her last. The entire village grieved her passing.',
+        'The girl was laid to rest atop a small hill at the edge of the village. Her parents wept bitterly, unable to accept the loss of their beloved daughter.',
+        'Every day, the villagers of the Achote tribe visited her grave to offer prayers, remembering the kindness they would never forget.',
+        'One day, a visitor was startled to find a strange sprout growing right on top of the grave. No one knew where it came from — but the girl\'s parents began tending it with loving care.',
+        'Hold the button to help the parents tend the magical sprout — watering it each morning and shielding it from the harsh sun.',
+        'Years passed, and the little sprout grew into a towering tree with long leaves swaying at its crown. Round fruits, unlike any seen before, began growing at the top — yet no one dared to pick or eat them.',
+        'One day, one of the fruits fell and rolled to the ground. The villagers carefully picked it up and brought it to the girl\'s parents.',
+        'Hold the button to help the parents carefully split open the strange fruit.',
+        'To their astonishment, the flesh inside was white, and it held clear water — exactly what the girl had once asked for! From that day on, the Chamorro people named this wondrous fruit "coconut", and made it their staple food as an eternal tribute to the kind-hearted girl.'
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#amk-wrap h2').textContent = TXT.h2;
+  document.getElementById('amk-sub').textContent = TXT.sub;
+  document.querySelector('#amk-start h3').textContent = TXT.startTitle;
+  document.querySelector('#amk-start p').textContent = TXT.startBody;
+  document.getElementById('amk-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#amk-win h3').textContent = TXT.winTitle;
+  document.querySelector('#amk-win p').textContent = TXT.winBody;
+  document.getElementById('amk-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('amk-caption').textContent = TXT.captionInit;
+  document.getElementById('amk-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('amk-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  try {
+    var savedMute = localStorage.getItem('amk-muted');
+    if(savedMute === '1'){ narrationOn = false; voiceBtn.textContent = TXT.voiceOff; voiceBtn.className = 'off'; }
+  } catch(e){}
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+    try { localStorage.setItem('amk-muted', narrationOn ? '0' : '1'); } catch(e){}
+  });
+  function pickVoice(){
+    if(!speechSupported) return null;
+    var voices = window.speechSynthesis.getVoices();
+    var want = LANG === 'en' ? 'en-US' : 'id-ID';
+    for(var i=0;i<voices.length;i++){ if(voices[i].lang === want) return voices[i]; }
+    var prefix = LANG === 'en' ? 'en' : 'id';
+    for(var j=0;j<voices.length;j++){ if(voices[j].lang && voices[j].lang.indexOf(prefix)===0) return voices[j]; }
+    return null;
+  }
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      var v = pickVoice();
+      if(v) u.voice = v;
+      u.rate = 0.92;
+      u.pitch = 1.02;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  if(speechSupported && typeof window.speechSynthesis.onvoiceschanged !== 'undefined'){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
+
+  var canvas = document.getElementById('amk-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('amk-phase');
+  var captionEl = document.getElementById('amk-caption');
+  var actionBtn = document.getElementById('amk-actionBtn');
+  var progressWrap = document.getElementById('amk-progressWrap');
+  var progressBar = document.getElementById('amk-progressBar');
+  var startOverlay = document.getElementById('amk-start');
+  var winOverlay = document.getElementById('amk-win');
+  var dotsWrap = document.getElementById('amk-dots');
+
+  var TOTAL_PHASES = 5;
+  for(var d=1; d<=TOTAL_PHASES; d++){
+    var dot = document.createElement('span');
+    dot.className = 'amk-dot';
+    dot.id = 'amk-dot-' + d;
+    dotsWrap.appendChild(dot);
+  }
+  function setDots(activePhase){
+    for(var i=1;i<=TOTAL_PHASES;i++){
+      var el = document.getElementById('amk-dot-' + i);
+      el.className = 'amk-dot' + (i === activePhase ? ' active' : (i < activePhase ? ' done' : ''));
+    }
+  }
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  var steps = [
+    { type:'caption', phase:1, scene:'desa_intro' },
+    { type:'caption', phase:1, scene:'anak_sakit' },
+    { type:'caption', phase:1, scene:'panggil_dukun' },
+    { type:'caption', phase:2, scene:'anak_minta_air' },
+    { type:'caption', phase:2, scene:'desa_mencari' },
+    { type:'caption', phase:2, scene:'anak_meninggal' },
+    { type:'caption', phase:3, scene:'dimakamkan_bukit' },
+    { type:'caption', phase:3, scene:'ziarah_rutin' },
+    { type:'caption', phase:3, scene:'tunas_ditemukan' },
+    { type:'hold', phase:4, scene:'rawat_tunas' },
+    { type:'caption', phase:4, scene:'pohon_tumbuh_berbuah' },
+    { type:'caption', phase:5, scene:'buah_jatuh' },
+    { type:'hold', phase:5, scene:'belah_buah' },
+    { type:'caption', phase:5, scene:'kelapa_ditemukan' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); setDots(p); }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    speak(step.text);
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      if(step.scene === 'rawat_tunas') actionBtn.textContent = TXT.tendBtn;
+      else if(step.scene === 'belah_buah') actionBtn.textContent = TXT.splitBtn;
+      else actionBtn.textContent = TXT.holdBtn;
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      setDots(TOTAL_PHASES + 1);
+      speak(TXT.winBody);
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  document.getElementById('amk-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('amk-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawPerson(px, py, size, robeColor, skinColor, opts){
+    opts = opts || {};
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if(opts.lying){
+      ctx.rotate(Math.PI/2);
+    }
+    ctx.fillStyle = robeColor;
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = skinColor;
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    if(opts.headwear === 'feather'){
+      ctx.fillStyle = '#2E7D5B';
+      ctx.beginPath(); ctx.moveTo(-3*s,-11*s); ctx.lineTo(0,-20*s); ctx.lineTo(3*s,-11*s); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#B5842A';
+      ctx.beginPath(); ctx.moveTo(2*s,-11*s); ctx.lineTo(6*s,-19*s); ctx.lineTo(5*s,-10*s); ctx.closePath(); ctx.fill();
+    } else if(opts.headwear === 'shawl'){
+      ctx.fillStyle = '#D9C79A';
+      ctx.beginPath(); ctx.ellipse(0,-9.5*s,6.5*s,5*s,0,0,Math.PI*2); ctx.fill();
+    }
+    if(opts.pale){
+      ctx.fillStyle = 'rgba(200,210,205,0.55)';
+      ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    }
+    if(opts.sad){
+      ctx.strokeStyle = '#2E2A1F';
+      ctx.lineWidth = 1.2*s;
+      ctx.beginPath(); ctx.moveTo(-2.5*s,-5*s); ctx.lineTo(-1.2*s,-3.8*s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2.5*s,-5*s); ctx.lineTo(1.2*s,-3.8*s); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGrave(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8FBF9E';
+    ctx.beginPath(); ctx.ellipse(0,0,22*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#6FA37F';
+    ctx.beginPath(); ctx.ellipse(0,-2*s,15*s,7*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D8CBAE';
+    ctx.fillRect(-3*s,-16*s,6*s,12*s);
+    ctx.restore();
+  }
+
+  function drawHut(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C9A66B';
+    ctx.fillRect(-18*s,-4*s,36*s,22*s);
+    ctx.fillStyle = '#8A5A2E';
+    ctx.beginPath(); ctx.moveTo(-24*s,-4*s); ctx.lineTo(0,-28*s); ctx.lineTo(24*s,-4*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5c3d1a';
+    ctx.fillRect(-5*s,6*s,10*s,12*s);
+    ctx.restore();
+  }
+
+  function drawHillBg(){
+    var g = ctx.createLinearGradient(0,0,0,300);
+    g.addColorStop(0,'#BEE3F8'); g.addColorStop(1,'#EAF6F0');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,300);
+    ctx.fillStyle = '#7FBF9E';
+    ctx.beginPath();
+    ctx.moveTo(0,340); ctx.quadraticCurveTo(400,180,800,340); ctx.lineTo(800,450); ctx.lineTo(0,450);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function drawVillageBg(){
+    var g = ctx.createLinearGradient(0,0,0,300);
+    g.addColorStop(0,'#FCE9B0'); g.addColorStop(1,'#F7F3E8');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,300);
+    ctx.fillStyle = '#A7C957';
+    ctx.fillRect(0,300,W,H-300);
+  }
+
+  function drawForestBg(){
+    var g = ctx.createLinearGradient(0,0,0,300);
+    g.addColorStop(0,'#CFEAE0'); g.addColorStop(1,'#F0EFE0');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,300);
+    ctx.fillStyle = '#7FA65C';
+    ctx.fillRect(0,300,W,H-300);
+    for(var i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#3C6B40' : '#4C7A4C';
+      ctx.beginPath();
+      ctx.moveTo(40+i*130,300); ctx.lineTo(40+i*130+30,200); ctx.lineTo(40+i*130+60,300);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawDuskBg(){
+    var g = ctx.createLinearGradient(0,0,0,300);
+    g.addColorStop(0,'#8E7BA8'); g.addColorStop(1,'#E7C9A8');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,300);
+    ctx.fillStyle = '#5D7A63';
+    ctx.fillRect(0,300,W,H-300);
+  }
+
+  function drawSprout(px, py, size, growAmt){
+    var s = size/40;
+    var g = Math.max(0.15, growAmt);
+    ctx.save(); ctx.translate(px,py);
+    ctx.strokeStyle = '#3C7A4C';
+    ctx.lineWidth = 2.5*s;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-14*s*g); ctx.stroke();
+    ctx.fillStyle = '#4C9A5C';
+    ctx.beginPath();
+    ctx.ellipse(-6*s*g,-14*s*g,7*s*g,3*s*g,-0.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(6*s*g,-14*s*g,7*s*g,3*s*g,0.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0,-18*s*g,6*s*g,3*s*g,0,0,Math.PI*2); ctx.fill();
+    if(growAmt > 0.4){
+      ctx.fillStyle = '#5FB5EF';
+      drawEmoji('💧', 14*s, -8*s, 12+8*growAmt);
+    }
+    ctx.restore();
+  }
+
+  function drawPalmTree(px, py, size, growAmt, withFruit){
+    var s = size/60;
+    var g = Math.max(0.1, growAmt);
+    var h = 60*s*g;
+    ctx.save(); ctx.translate(px,py);
+    ctx.strokeStyle = '#8A6A3E';
+    ctx.lineWidth = 5*s;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(-4*s, -h*0.5, 2*s, -h);
+    ctx.stroke();
+    var topX = 2*s, topY = -h;
+    ctx.fillStyle = '#3C8A4C';
+    for(var i=0;i<6;i++){
+      var ang = -Math.PI/2 + (i-2.5)*0.42;
+      ctx.save();
+      ctx.translate(topX, topY);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.ellipse(0,-16*s*g,5*s*g,16*s*g,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    if(withFruit && growAmt > 0.55){
+      ctx.font = (14+10*growAmt)+'px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🥥', topX-8*s, topY+10*s);
+      ctx.fillText('🥥', topX+9*s, topY+13*s);
+      ctx.fillText('🥥', topX+1*s, topY+18*s);
+    }
+    ctx.restore();
+  }
+
+  function drawFallingCoconut(px, py, fallAmt){
+    ctx.save();
+    ctx.font = '30px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🥥', px, py - (1-fallAmt)*150);
+    ctx.restore();
+  }
+
+  function drawSplitCoconut(px, py, size, splitAmt){
+    var s = size/40;
+    ctx.save(); ctx.translate(px,py);
+    if(splitAmt < 0.15){
+      ctx.font = (30*s)+'px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🥥', 0, 0);
+      ctx.restore();
+      return;
+    }
+    var gap = splitAmt*22*s;
+    ctx.save(); ctx.translate(-gap,0); ctx.rotate(-splitAmt*0.15);
+    ctx.fillStyle = '#6B4A2A';
+    ctx.beginPath(); ctx.arc(0,0,16*s,Math.PI*0.5,Math.PI*1.5); ctx.fill();
+    ctx.fillStyle = '#F7F3E4';
+    ctx.beginPath(); ctx.arc(0,0,11*s,Math.PI*0.5,Math.PI*1.5); ctx.fill();
+    if(splitAmt>0.5){
+      ctx.fillStyle = '#BFE0F5';
+      ctx.beginPath(); ctx.ellipse(-2*s,0,5*s,7*s,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+    ctx.save(); ctx.translate(gap,0); ctx.rotate(splitAmt*0.15);
+    ctx.fillStyle = '#6B4A2A';
+    ctx.beginPath(); ctx.arc(0,0,16*s,-Math.PI*0.5,Math.PI*0.5); ctx.fill();
+    ctx.fillStyle = '#F7F3E4';
+    ctx.beginPath(); ctx.arc(0,0,11*s,-Math.PI*0.5,Math.PI*0.5); ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'desa_intro';
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='desa_intro'){
+      drawVillageBg();
+      drawHut(560,300,60);
+      drawHut(660,320,50);
+      drawPerson(320,330+bob,44,'#E0483E','#E8B08A');
+      drawPerson(420,335+bob,40,'#6B8E5A','#D89A6A');
+      drawPerson(480,340+bob,40,'#B5842A','#D89A6A');
+    }
+    if(scene==='anak_sakit'){
+      drawVillageBg();
+      drawHut(600,290,70);
+      drawPerson(400,340,50,'#E0483E','#E8B08A',{lying:true, pale:true, sad:true});
+      drawPerson(300,320+bob,40,'#6B8E5A','#D89A6A',{sad:true});
+      drawPerson(500,320+bob,40,'#B5842A','#D89A6A',{sad:true});
+    }
+    if(scene==='panggil_dukun'){
+      drawVillageBg();
+      drawHut(620,290,70);
+      drawPerson(400,340,50,'#E0483E','#E8B08A',{lying:true, pale:true});
+      drawPerson(280,320+bob,38,'#4C6B3C','#C97B3D',{headwear:'feather'});
+      drawPerson(520,320+bob,38,'#7A4A9A','#C97B3D',{headwear:'feather'});
+      drawPerson(340,290+bob,36,'#6B8E5A','#D89A6A',{sad:true});
+    }
+    if(scene==='anak_minta_air'){
+      drawVillageBg();
+      drawHut(620,290,70);
+      drawPerson(400,340,50,'#E0483E','#E8B08A',{lying:true, pale:true});
+      drawPerson(300,320+bob,40,'#6B8E5A','#D89A6A',{sad:true});
+      drawPerson(500,320+bob,40,'#B5842A','#D89A6A',{sad:true});
+      drawEmoji('❓', 400, 250, 26);
+      drawEmoji('🥥', 440, 240, 22);
+    }
+    if(scene==='desa_mencari'){
+      drawForestBg();
+      drawPerson(220,330+bob,38,'#6B8E5A','#D89A6A');
+      drawPerson(340,335+bob,38,'#B5842A','#D89A6A');
+      drawPerson(480,330+bob,38,'#7A4A9A','#C97B3D');
+      drawPerson(600,335+bob,38,'#E0483E','#E8B08A');
+      drawEmoji('🔎', 400, 220, 24);
+    }
+    if(scene==='anak_meninggal'){
+      drawDuskBg();
+      drawHut(620,300,70);
+      drawPerson(400,340,50,'#E0483E','#E8B08A',{lying:true, pale:true});
+      drawPerson(300,320+bob*0.5,40,'#6B8E5A','#D89A6A',{sad:true});
+      drawPerson(500,320+bob*0.5,40,'#B5842A','#D89A6A',{sad:true});
+    }
+    if(scene==='dimakamkan_bukit'){
+      drawHillBg();
+      drawGrave(400,300,44);
+      drawPerson(320,300+bob*0.4,38,'#6B8E5A','#D89A6A',{sad:true});
+      drawPerson(480,300+bob*0.4,38,'#B5842A','#D89A6A',{sad:true});
+    }
+    if(scene==='ziarah_rutin'){
+      drawHillBg();
+      drawGrave(400,300,44);
+      drawPerson(320,300+bob*0.4,34,'#6B8E5A','#D89A6A');
+      drawPerson(480,300+bob*0.4,34,'#B5842A','#D89A6A');
+      drawPerson(400,270+bob*0.4,30,'#7A4A9A','#C97B3D');
+      drawEmoji('🙏', 400, 230, 22);
+    }
+    if(scene==='tunas_ditemukan'){
+      drawHillBg();
+      drawGrave(400,300,44);
+      drawSprout(400,286,40,1);
+      drawPerson(310,300+bob*0.4,36,'#6B8E5A','#D89A6A');
+      drawPerson(490,300+bob*0.4,36,'#B5842A','#D89A6A');
+    }
+    if(scene==='rawat_tunas'){
+      drawHillBg();
+      drawGrave(400,300,44);
+      drawPalmTree(400,286,55, 0.15 + progress*0.25, false);
+      drawPerson(310,300+bob*0.4,36,'#6B8E5A','#D89A6A');
+      drawPerson(490,300+bob*0.4,36,'#B5842A','#D89A6A');
+      if(progress>0.15){ drawEmoji('💧', 460, 260, 18+progress*10); }
+    }
+    if(scene==='pohon_tumbuh_berbuah'){
+      drawHillBg();
+      drawGrave(400,340,40);
+      drawPalmTree(400,340,90,1,true);
+      drawPerson(280,320+bob*0.4,34,'#6B8E5A','#D89A6A');
+      drawPerson(520,320+bob*0.4,34,'#B5842A','#D89A6A');
+      drawPerson(400,320+bob*0.4,32,'#7A4A9A','#C97B3D');
+    }
+    if(scene==='buah_jatuh'){
+      drawHillBg();
+      drawGrave(400,340,40);
+      drawPalmTree(400,340,90,1,true);
+      drawFallingCoconut(430, 300, Math.min(1, (t%2)/1.2));
+      drawPerson(300,320+bob*0.4,34,'#6B8E5A','#D89A6A');
+      drawPerson(500,320+bob*0.4,34,'#B5842A','#D89A6A');
+    }
+    if(scene==='belah_buah'){
+      drawVillageBg();
+      drawHut(620,300,70);
+      drawPerson(310,330+bob*0.3,40,'#6B8E5A','#D89A6A');
+      drawPerson(490,330+bob*0.3,40,'#B5842A','#D89A6A');
+      drawSplitCoconut(400,330,44,progress);
+    }
+    if(scene==='kelapa_ditemukan'){
+      drawVillageBg();
+      drawHut(620,300,70);
+      drawPerson(300,320+bob,40,'#6B8E5A','#D89A6A');
+      drawPerson(500,320+bob,40,'#B5842A','#D89A6A');
+      drawSplitCoconut(400,320,50,1);
+      drawEmoji('✨', 400, 250, 26);
+    }
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('amk-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'amk-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('amk-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
