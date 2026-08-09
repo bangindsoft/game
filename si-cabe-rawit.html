@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Cabe Rawit - Cerita Rakyat Aceh</title>
+<style>
+  :root{
+    --cr-bg-day1:#fde9c8;
+    --cr-bg-day2:#f7c98a;
+    --cr-bg-night1:#1b2a4a;
+    --cr-bg-night2:#3b3a6b;
+    --cr-panel:#3e2723;
+    --cr-panel-light:#5d4037;
+    --cr-cream:#fff3e0;
+    --cr-red:#c0392b;
+    --cr-red-dark:#922b21;
+    --cr-green:#2e7d32;
+    --cr-gold:#d4a017;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Arial,sans-serif;
+    background:transparent;
+    overflow:hidden;
+  }
+  .cr-wrap{
+    width:100%;
+    max-width:800px;
+    margin:0 auto;
+    background:linear-gradient(180deg,#4a2f23,#2e1b14);
+    border-radius:16px;
+    padding:10px;
+    box-shadow:0 4px 18px rgba(0,0,0,0.35);
+  }
+  .cr-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:4px 6px 8px 6px;
+    gap:8px;
+  }
+  .cr-title{
+    color:var(--cr-cream);
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:0.3px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .cr-controls-top{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .cr-icon-btn{
+    background:var(--cr-panel-light);
+    border:none;
+    color:var(--cr-cream);
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background 0.15s;
+  }
+  .cr-icon-btn:hover{background:#7a5548;}
+  .cr-icon-btn.cr-active{background:var(--cr-gold);color:#3e2723;}
+
+  .cr-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:800/450;
+    border-radius:10px;
+    overflow:hidden;
+    background:#000;
+  }
+  .cr-stage canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .cr-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    padding:14px;
+    pointer-events:none;
+  }
+  .cr-textbox{
+    pointer-events:none;
+    background:rgba(20,12,8,0.72);
+    color:var(--cr-cream);
+    padding:12px 16px;
+    border-radius:12px;
+    font-size:15px;
+    line-height:1.45;
+    max-width:100%;
+    text-align:center;
+    box-shadow:0 2px 10px rgba(0,0,0,0.3);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+
+  .cr-startscreen, .cr-endscreen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    background:radial-gradient(circle at 50% 30%, #6b3d2e 0%, #2a1710 100%);
+    color:var(--cr-cream);
+    z-index:5;
+  }
+  .cr-startscreen h1, .cr-endscreen h1{
+    font-size:24px;
+    margin:0 0 10px 0;
+    color:var(--cr-gold);
+  }
+  .cr-startscreen p, .cr-endscreen p{
+    font-size:14px;
+    max-width:480px;
+    margin:0 0 18px 0;
+    opacity:0.9;
+  }
+  .cr-pepper-icon{
+    font-size:44px;
+    margin-bottom:8px;
+  }
+  .cr-btn{
+    background:linear-gradient(180deg,var(--cr-red),var(--cr-red-dark));
+    color:#fff;
+    border:none;
+    padding:12px 28px;
+    border-radius:30px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #6b1a10;
+    transition:transform 0.1s;
+  }
+  .cr-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #6b1a10;}
+  .cr-btn.cr-secondary{
+    background:linear-gradient(180deg,#6d4c41,#4e342e);
+    box-shadow:0 3px 0 #2e1b14;
+    margin-top:10px;
+  }
+
+  .cr-continue-hint{
+    position:absolute;
+    bottom:14px;
+    right:14px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:linear-gradient(180deg,var(--cr-red),var(--cr-red-dark));
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    padding:10px 18px;
+    border-radius:26px;
+    box-shadow:0 3px 0 #6b1a10;
+    pointer-events:none;
+    z-index:4;
+    animation:cr-pulse 1.6s infinite;
+  }
+  .cr-continue-hint .cr-continue-arrow{
+    font-size:15px;
+  }
+  @keyframes cr-pulse{
+    0%,100%{transform:scale(1);opacity:0.85;}
+    50%{transform:scale(1.06);opacity:1;}
+  }
+
+  .cr-clickzone{
+    position:absolute;
+    inset:0;
+    cursor:pointer;
+    z-index:3;
+  }
+  @media (max-width:480px){
+    .cr-continue-hint{
+      bottom:12px;
+      right:12px;
+      font-size:16px;
+      padding:12px 20px;
+    }
+  }
+
+  .cr-shout-panel{
+    position:absolute;
+    bottom:14px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    z-index:4;
+    pointer-events:auto;
+  }
+  .cr-meter-track{
+    width:220px;
+    height:16px;
+    background:rgba(0,0,0,0.45);
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.2);
+  }
+  .cr-meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#f1c40f,var(--cr-red));
+    transition:width 0.05s linear;
+  }
+  .cr-shout-btn{
+    background:radial-gradient(circle,var(--cr-red) 0%,var(--cr-red-dark) 100%);
+    color:#fff;
+    border:none;
+    width:88px;
+    height:88px;
+    border-radius:50%;
+    font-size:28px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #6b1a10;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
+  }
+  .cr-shout-btn:active{box-shadow:0 1px 0 #6b1a10;transform:translateY(3px);}
+  .cr-shout-label{
+    color:var(--cr-cream);
+    font-size:12px;
+    opacity:0.85;
+  }
+
+  .cr-inventory{
+    position:absolute;
+    top:10px;
+    right:10px;
+    display:flex;
+    gap:6px;
+    z-index:4;
+    pointer-events:none;
+  }
+  .cr-inv-item{
+    background:rgba(0,0,0,0.4);
+    border-radius:8px;
+    padding:4px 8px;
+    font-size:18px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:3px;
+  }
+  .cr-inv-count{
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .cr-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:10px 0 4px 0;
+  }
+  .cr-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.25);
+    transition:background 0.2s, transform 0.2s;
+  }
+  .cr-dot.cr-dot-active{
+    background:var(--cr-gold);
+    transform:scale(1.3);
+  }
+  .cr-dot.cr-dot-done{
+    background:#a5d6a7;
+  }
+
+  .cr-footer{
+    text-align:center;
+    color:rgba(255,243,224,0.55);
+    font-size:11px;
+    padding:4px 0 2px 0;
+  }
+
+  .cr-lang-toggle{
+    background:var(--cr-panel-light);
+    border:none;
+    color:var(--cr-cream);
+    padding:0 12px;
+    height:34px;
+    border-radius:17px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="cr-wrap">
+  <div class="cr-topbar">
+    <div class="cr-title" id="crTitle">Si Cabe Rawit</div>
+    <div class="cr-controls-top">
+      <button class="cr-lang-toggle" id="crLangBtn" title="Ganti Bahasa / Change Language">EN</button>
+      <button class="cr-icon-btn" id="crMuteBtn" title="Mute/Unmute">🔊</button>
+    </div>
+  </div>
+
+  <div class="cr-stage" id="crStage">
+    <canvas id="crCanvas" width="800" height="450"></canvas>
+
+    <div class="cr-overlay" id="crOverlay">
+      <div class="cr-textbox" id="crTextbox" style="display:none;"></div>
+    </div>
+
+    <div class="cr-clickzone" id="crClickzone" style="display:none;"></div>
+    <div class="cr-continue-hint" id="crContinueHint" style="display:none;">
+      <span id="crContinueLabel">Lanjut</span><span class="cr-continue-arrow">▶</span>
+    </div>
+
+    <div class="cr-inventory" id="crInventory" style="display:none;"></div>
+
+    <div class="cr-shout-panel" id="crShoutPanel" style="display:none;">
+      <div class="cr-meter-track"><div class="cr-meter-fill" id="crMeterFill"></div></div>
+      <div class="cr-shout-label" id="crShoutLabel">Tahan untuk berteriak</div>
+      <button class="cr-shout-btn" id="crShoutBtn">📣</button>
+    </div>
+
+    <div class="cr-startscreen" id="crStartScreen">
+      <div class="cr-pepper-icon">🌶️</div>
+      <h1 id="crStartTitle">Si Cabe Rawit</h1>
+      <p id="crStartDesc">Sebuah cerita rakyat dari Aceh tentang anak kecil bersuara lantang.</p>
+      <button class="cr-btn" id="crStartBtn">Mulai Cerita</button>
+    </div>
+
+    <div class="cr-endscreen" id="crEndScreen" style="display:none;">
+      <div class="cr-pepper-icon">🌶️</div>
+      <h1 id="crEndTitle">Tamat</h1>
+      <p id="crEndDesc"></p>
+      <button class="cr-btn" id="crReplayBtn">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="cr-dots" id="crDots"></div>
+  <div class="cr-footer" id="crFooter">Cerita Rakyat Interaktif &mdash; Nusantara &amp; Dunia</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- i18n ---------- */
+  var STR = {
+    id: {
+      title: "Si Cabe Rawit",
+      startTitle: "Si Cabe Rawit",
+      startDesc: "Sebuah cerita rakyat dari Aceh tentang anak kecil bersuara lantang.",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      endTitle: "Tamat",
+      endDesc: "Berkat suaranya yang lantang, Si Cabe Rawit dan ibunya hidup berkecukupan. Terima kasih sudah menyimak dongeng ini!",
+      footer: "Cerita Rakyat Interaktif \u2014 Nusantara & Dunia",
+      shoutLabel: "Tahan tombol untuk berteriak!",
+      continueLabel: "Lanjut",
+      langBtn: "EN",
+      stages: [
+        {
+          text: "Dahulu kala, di sebuah gubuk kecil di Aceh, hidup sepasang suami istri tua yang sangat miskin. Sang suami bekerja sebagai buruh angkut di pasar. Meski usia mereka sudah senja, mereka belum juga dikaruniai anak. Namun mereka tak pernah berhenti berdoa."
+        },
+        {
+          text: "\u201cTuhan, berikanlah kepada kami seorang anak. Walaupun ia hanya sebesar cabe rawit, kami akan dengan senang hati menerimanya,\u201d begitu doa sang suami setiap pagi. Tak lama kemudian, sang istri melahirkan seorang bayi yang berukuran sangat kecil, sebesar cabe rawit. Mereka menamainya Si Cabe Rawit."
+        },
+        {
+          text: "Cabe Rawit tumbuh dengan penuh kasih sayang. Namun malang, setelah ia beranjak dewasa, ayahnya meninggal karena sakit. Meski bertubuh kecil, Cabe Rawit memiliki tenaga yang kuat dan suara yang sangat lantang. Ia pun bertekad menjadi kuli panggul di pasar, menggantikan ayahnya."
+        },
+        {
+          text: "Di tengah jalan menuju pasar, Cabe Rawit bertemu para pedagang yang memanggul dagangan mereka. Karena tubuhnya kecil dan sulit terlihat, ia berteriak sekuat tenaga memperingatkan mereka agar tidak menimpanya. Tahan tombol untuk membantu Cabe Rawit berteriak sekeras mungkin!"
+        },
+        {
+          text: "Suara Cabe Rawit yang tiba-tiba dan sangat keras membuat para pedagang terkejut bukan kepalang. Mereka menoleh ke kanan dan kiri, namun tak menemukan siapa pun. Mengira itu suara hantu, mereka lari tunggang-langgang meninggalkan dagangannya di jalan."
+        },
+        {
+          text: "Karena barang-barang itu dibiarkan tergeletak begitu saja, Cabe Rawit membawanya pulang. Hal ini terus berulang setiap hari kepada banyak pedagang lain. Berkat suaranya yang lantang, kehidupan Cabe Rawit dan ibunya pun menjadi berkecukupan."
+        }
+      ],
+      traders: ["Pedagang Pisang", "Pedagang Beras", "Pedagang Sayur"],
+      items: ["\uD83C\uDF4C", "\uD83C\uDF3E", "\uD83E\uDD6C"]
+    },
+    en: {
+      title: "Si Cabe Rawit (The Chili-Sized Boy)",
+      startTitle: "Si Cabe Rawit",
+      startDesc: "A folktale from Aceh, Indonesia, about a tiny boy with a mighty voice.",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      endTitle: "The End",
+      endDesc: "Thanks to his loud voice, Si Cabe Rawit and his mother lived a life of comfort. Thank you for listening to this folktale!",
+      footer: "Interactive Folktale \u2014 Tales from Around the World",
+      shoutLabel: "Hold the button to shout!",
+      continueLabel: "Next",
+      langBtn: "ID",
+      stages: [
+        {
+          text: "Long ago, in a small hut in Aceh, there lived an old and very poor couple. The husband worked as a porter at the market. Though they were already old, they had never been blessed with a child. Still, they never stopped praying."
+        },
+        {
+          text: "\u201cLord, grant us a child. Even if he is only the size of a chili pepper, we will gladly accept him,\u201d the husband prayed every morning. Soon after, his wife gave birth to a baby so tiny, no bigger than a chili pepper. They named him Si Cabe Rawit \u2014 Little Chili."
+        },
+        {
+          text: "Cabe Rawit grew up surrounded by love. Sadly, once he came of age, his father passed away from illness. Though small in size, Cabe Rawit had great strength and an extremely loud voice. He resolved to become a market porter, just like his father before him."
+        },
+        {
+          text: "On his way to the market, Cabe Rawit crossed paths with traders carrying heavy loads on their shoulders. Since he was so small and easy to miss, he shouted with all his might to warn them not to crush him. Hold the button to help Cabe Rawit shout as loud as he can!"
+        },
+        {
+          text: "The sudden, thunderous voice startled the traders badly. They looked left and right but saw no one at all. Believing it was a ghost, they fled in terror, leaving their goods scattered on the road."
+        },
+        {
+          text: "Since the goods were left behind, Cabe Rawit carried them home. This kept happening, day after day, with many other traders. Thanks to his booming voice, Cabe Rawit and his mother finally lived a comfortable life."
+        }
+      ],
+      traders: ["Banana Seller", "Rice Seller", "Vegetable Seller"],
+      items: ["\uD83C\uDF4C", "\uD83C\uDF3E", "\uD83E\uDD6C"]
+    }
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get("lang") === "en" ? "en" : "id";
+
+  /* ---------- DOM refs ---------- */
+  var canvas = document.getElementById("crCanvas");
+  var ctx = canvas.getContext("2d");
+  var textbox = document.getElementById("crTextbox");
+  var clickzone = document.getElementById("crClickzone");
+  var continueHint = document.getElementById("crContinueHint");
+  var startScreen = document.getElementById("crStartScreen");
+  var endScreen = document.getElementById("crEndScreen");
+  var startBtn = document.getElementById("crStartBtn");
+  var replayBtn = document.getElementById("crReplayBtn");
+  var muteBtn = document.getElementById("crMuteBtn");
+  var langBtn = document.getElementById("crLangBtn");
+  var dotsWrap = document.getElementById("crDots");
+  var shoutPanel = document.getElementById("crShoutPanel");
+  var shoutBtn = document.getElementById("crShoutBtn");
+  var meterFill = document.getElementById("crMeterFill");
+  var shoutLabel = document.getElementById("crShoutLabel");
+  var inventory = document.getElementById("crInventory");
+
+  var STAGE_COUNT = 6;
+  var current = -1;
+  var muted = (localStorage.getItem("crCabeRawitMuted") === "1");
+  var narrationEndedResolve = null;
+
+  /* ---------- setup dots ---------- */
+  function buildDots(){
+    dotsWrap.innerHTML = "";
+    for (var i = 0; i < STAGE_COUNT; i++){
+      var d = document.createElement("div");
+      d.className = "cr-dot";
+      d.id = "crDot" + i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(activeIndex){
+    for (var i = 0; i < STAGE_COUNT; i++){
+      var d = document.getElementById("crDot" + i);
+      if (!d) continue;
+      d.className = "cr-dot";
+      if (i < activeIndex) d.className += " cr-dot-done";
+      else if (i === activeIndex) d.className += " cr-dot-active";
+    }
+  }
+
+  /* ---------- text ---------- */
+  function applyStaticText(){
+    var s = STR[lang];
+    document.getElementById("crTitle").textContent = s.title;
+    document.getElementById("crStartTitle").textContent = s.startTitle;
+    document.getElementById("crStartDesc").textContent = s.startDesc;
+    startBtn.textContent = s.startBtn;
+    replayBtn.textContent = s.replayBtn;
+    document.getElementById("crEndTitle").textContent = s.endTitle;
+    document.getElementById("crEndDesc").textContent = s.endDesc;
+    document.getElementById("crFooter").textContent = s.footer;
+    shoutLabel.textContent = s.shoutLabel;
+    document.getElementById("crContinueLabel").textContent = s.continueLabel;
+    langBtn.textContent = s.langBtn;
+    document.documentElement.lang = lang;
+  }
+
+  langBtn.addEventListener("click", function(){
+    lang = (lang === "id") ? "en" : "id";
+    applyStaticText();
+    speechSynthesis.cancel();
+    if (current >= 0 && current < STAGE_COUNT){
+      textbox.textContent = STR[lang].stages[current].text;
+      speak(STR[lang].stages[current].text);
+    }
+  });
+
+  /* ---------- mute ---------- */
+  function updateMuteIcon(){
+    muteBtn.textContent = muted ? "\uD83D\uDD07" : "\uD83D\uDD0A";
+    muteBtn.className = "cr-icon-btn" + (muted ? " cr-active" : "");
+  }
+  muteBtn.addEventListener("click", function(){
+    muted = !muted;
+    localStorage.setItem("crCabeRawitMuted", muted ? "1" : "0");
+    updateMuteIcon();
+    if (muted) speechSynthesis.cancel();
+  });
+  updateMuteIcon();
+
+  function speak(text){
+    if (muted || !("speechSynthesis" in window)) {
+      if (narrationEndedResolve) { narrationEndedResolve(); narrationEndedResolve = null; }
+      return;
+    }
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = (lang === "id") ? "id-ID" : "en-US";
+    u.rate = 0.98;
+    u.pitch = 1.05;
+    u.onend = function(){
+      if (narrationEndedResolve) { narrationEndedResolve(); narrationEndedResolve = null; }
+    };
+    u.onerror = function(){
+      if (narrationEndedResolve) { narrationEndedResolve(); narrationEndedResolve = null; }
+    };
+    speechSynthesis.speak(u);
+  }
+
+  /* ---------- resize / postMessage ---------- */
+  var RESIZE_KEY = "cabeRawitGameHeight";
+  function reportHeight(){
+    var h = document.querySelector(".cr-wrap").offsetHeight;
+    try {
+      window.parent.postMessage({ key: RESIZE_KEY, height: h }, "*");
+    } catch(e){}
+  }
+  window.addEventListener("load", reportHeight);
+  window.addEventListener("resize", reportHeight);
+
+  /* ---------- canvas drawing helpers ---------- */
+  var W = 800, H = 450;
+
+  function skyGradient(top, bottom){
+    var g = ctx.createLinearGradient(0,0,0,H*0.62);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bottom);
+    return g;
+  }
+
+  function drawGround(color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0, H*0.62, W, H*0.38);
+  }
+
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.ellipse(x,y,28*scale,16*scale,0,0,Math.PI*2);
+    ctx.ellipse(x+26*scale,y+4*scale,22*scale,13*scale,0,0,Math.PI*2);
+    ctx.ellipse(x-24*scale,y+5*scale,20*scale,12*scale,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMountains(baseColor){
+    ctx.save();
+    ctx.fillStyle = baseColor;
+    ctx.beginPath();
+    ctx.moveTo(0, H*0.62);
+    ctx.lineTo(W*0.12, H*0.42);
+    ctx.lineTo(W*0.26, H*0.62);
+    ctx.lineTo(W*0.4, H*0.38);
+    ctx.lineTo(W*0.56, H*0.62);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(x, y, scale, litWindow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    // roof
+    ctx.fillStyle = "#5d4037";
+    ctx.beginPath();
+    ctx.moveTo(-70, 0);
+    ctx.lineTo(0, -55);
+    ctx.lineTo(70, 0);
+    ctx.lineTo(55, 0);
+    ctx.lineTo(0, -40);
+    ctx.lineTo(-55, 0);
+    ctx.closePath();
+    ctx.fill();
+    // walls
+    ctx.fillStyle = "#8d6e63";
+    ctx.fillRect(-50, 0, 100, 55);
+    // door
+    ctx.fillStyle = "#3e2723";
+    ctx.fillRect(-12, 20, 24, 35);
+    // window
+    ctx.fillStyle = litWindow ? "#ffe082" : "#2d1a12";
+    ctx.fillRect(-38, 12, 16, 16);
+    ctx.fillRect(22, 12, 16, 16);
+    ctx.restore();
+  }
+
+  // simple human figure (old man/woman/villager), h = height scale
+  function drawPerson(x, y, opts){
+    opts = opts || {};
+    var h = opts.h || 60;
+    var skin = opts.skin || "#c88a5a";
+    var cloth = opts.cloth || "#5d4037";
+    var bent = opts.bent || 0; // 0..1 stoop
+    var armRaise = opts.armRaise || 0; // 0..1
+    var facing = opts.facing || 1; // 1 right, -1 left
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(facing, 1);
+    ctx.rotate(bent * 0.18);
+
+    // legs
+    ctx.strokeStyle = cloth;
+    ctx.lineWidth = h*0.09;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-h*0.08, -h*0.35);
+    ctx.lineTo(-h*0.12, 0);
+    ctx.moveTo(h*0.08, -h*0.35);
+    ctx.lineTo(h*0.1, 0);
+    ctx.stroke();
+
+    // body
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(-h*0.22, -h*0.35);
+    ctx.quadraticCurveTo(0, -h*0.65, h*0.22, -h*0.35);
+    ctx.lineTo(h*0.16, -h*0.85);
+    ctx.lineTo(-h*0.16, -h*0.85);
+    ctx.closePath();
+    ctx.fill();
+
+    // arm (raised or down)
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = h*0.07;
+    ctx.beginPath();
+    ctx.moveTo(h*0.16, -h*0.75);
+    if (armRaise > 0){
+      ctx.lineTo(h*0.32, -h*0.95 - armRaise*h*0.25);
+    } else {
+      ctx.lineTo(h*0.28, -h*0.5);
+    }
+    ctx.stroke();
+
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0, -h*0.95, h*0.14, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Cabe Rawit character: tiny chili-shaped body with face
+  function drawCabeRawit(x, y, scale, mouthOpen){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    // stem
+    ctx.strokeStyle = "#4b7c2f";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(0,-34);
+    ctx.lineTo(-4,-44);
+    ctx.stroke();
+    ctx.fillStyle = "#4b7c2f";
+    ctx.beginPath();
+    ctx.ellipse(-6,-45,5,3,0.5,0,Math.PI*2);
+    ctx.fill();
+    // body (chili curve)
+    ctx.fillStyle = "#c0392b";
+    ctx.beginPath();
+    ctx.moveTo(0,-32);
+    ctx.quadraticCurveTo(20,-10, 8, 30);
+    ctx.quadraticCurveTo(0, 40, -8, 30);
+    ctx.quadraticCurveTo(-20,-10, 0,-32);
+    ctx.closePath();
+    ctx.fill();
+    // highlight
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(-4,-5,4,18,0.3,0,Math.PI*2);
+    ctx.fill();
+    // face
+    ctx.fillStyle = "#1a1a1a";
+    ctx.beginPath();
+    ctx.arc(-4,-2,2.2,0,Math.PI*2);
+    ctx.arc(4,-2,2.2,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if (mouthOpen){
+      ctx.ellipse(0,7,4,6,0,0,Math.PI*2);
+      ctx.fillStyle = "#5c1a12";
+      ctx.fill();
+    } else {
+      ctx.arc(0,5,3,0.15*Math.PI,0.85*Math.PI);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawStars(seedCount){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    var rnd = mulberry32(42);
+    for (var i=0;i<seedCount;i++){
+      var sx = rnd()*W;
+      var sy = rnd()*H*0.5;
+      var r = rnd()*1.6+0.4;
+      ctx.beginPath();
+      ctx.arc(sx,sy,r,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function drawGoodsPile(x, y, kind, scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if (kind === "banana"){
+      ctx.fillStyle = "#f1c40f";
+      for (var i=0;i<4;i++){
+        ctx.save();
+        ctx.rotate((i-1.5)*0.3);
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.quadraticCurveTo(14,-6,10,-22);
+        ctx.quadraticCurveTo(4,-8,0,0);
+        ctx.fill();
+        ctx.restore();
+      }
+    } else if (kind === "rice"){
+      ctx.fillStyle = "#e8dcc8";
+      ctx.beginPath();
+      ctx.moveTo(-16,0); ctx.lineTo(16,0); ctx.lineTo(11,-28); ctx.lineTo(-11,-28);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#8a7a5c";
+      ctx.lineWidth=1.4;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = "#27ae60";
+      for (var j=0;j<3;j++){
+        ctx.beginPath();
+        ctx.ellipse((j-1)*12, -8, 8, 14, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  /* ---------- scene renderers per stage ---------- */
+  var t0 = performance.now();
+  function timeSec(){ return (performance.now() - t0) / 1000; }
+
+  function scene0(tm){ // opening: old couple praying at hut, dusk
+    ctx.fillStyle = skyGradient(STR===null?"":"#f6c98d", "#fde9c8");
+    ctx.fillRect(0,0,W,H*0.62);
+    drawMountains("#c9a67a");
+    drawGround("#7c9a5e");
+    drawSun(W*0.82, H*0.18, 46, "#ffb74d");
+    drawCloud(140, 70, 1);
+    drawCloud(520, 50, 0.8);
+    drawHut(W*0.55, H*0.62, 1.9, true);
+    var bob = Math.sin(tm*1.2)*3;
+    drawPerson(W*0.36, H*0.66+bob*0.2, {h:70, skin:"#c88a5a", cloth:"#8d6e63", bent:0.15, armRaise:0.6});
+    drawPerson(W*0.44, H*0.66+bob*0.2, {h:64, skin:"#d8a878", cloth:"#a1887f", bent:0.1, armRaise:0.3, facing:-1});
+  }
+
+  function scene1(tm){ // birth: inside warm hut, baby comparison with chili
+    ctx.fillStyle = "#3e2723";
+    ctx.fillRect(0,0,W,H);
+    // warm glow
+    var g = ctx.createRadialGradient(W*0.5,H*0.5,20,W*0.5,H*0.5,380);
+    g.addColorStop(0,"#6d4c41");
+    g.addColorStop(1,"#2b1b14");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    drawPerson(W*0.28, H*0.72, {h:75, skin:"#d8a878", cloth:"#a1887f", bent:0.05});
+    // baby bundle
+    ctx.save();
+    ctx.translate(W*0.28, H*0.55);
+    ctx.fillStyle = "#eee7d8";
+    ctx.beginPath();
+    ctx.ellipse(0,0,20,14,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    var pulse = 1 + Math.sin(tm*2)*0.08;
+    drawCabeRawit(W*0.62, H*0.55, 1.1*pulse, false);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "13px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText(lang==="id" ? "sebesar cabe rawit..." : "as tiny as a chili...", W*0.62, H*0.72);
+  }
+
+  function scene2(tm){ // father passed, cabe rawit grows determined, heads to market path
+    ctx.fillStyle = skyGradient("#90a4c2","#e0c9a6");
+    ctx.fillRect(0,0,W,H*0.62);
+    drawMountains("#8894a8");
+    drawGround("#8a7355");
+    // road
+    ctx.fillStyle = "#c2a679";
+    ctx.beginPath();
+    ctx.moveTo(W*0.1,H); ctx.lineTo(W*0.4,H*0.62); ctx.lineTo(W*0.55,H*0.62); ctx.lineTo(W*0.75,H);
+    ctx.closePath(); ctx.fill();
+    drawHut(W*0.16, H*0.62, 1.2, false);
+    var walk = Math.sin(tm*3)*4;
+    drawCabeRawit(W*0.5 + walk, H*0.78, 2.2, false);
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.font = "italic 13px Segoe UI";
+    ctx.textAlign = "center";
+  }
+
+  var traderState = {
+    idx: 0,
+    meter: 0,
+    holding: false,
+    fled: false,
+    scattered: false,
+    collected: [false,false,false],
+    scatterTimer: 0
+  };
+
+  function traderXY(){
+    return { x: W*0.62, y: H*0.72 };
+  }
+
+  function scene3(tm){ // shout minigame market road
+    ctx.fillStyle = skyGradient("#fbe0a6","#f7cf8a");
+    ctx.fillRect(0,0,W,H*0.62);
+    drawMountains("#c9a67a");
+    drawGround("#c2a679");
+    drawSun(W*0.15,H*0.15,40,"#ffcc80");
+    var t = traderXY();
+    var idx = traderState.idx;
+    if (idx < 3){
+      var carryBob = Math.sin(tm*4)*2;
+      // trader carrying goods
+      drawPerson(t.x, t.y+carryBob, {h:66, skin:"#c88a5a", cloth:"#6d4c41", armRaise:0.2, facing:-1});
+      var kind = idx===0?"banana":(idx===1?"rice":"veg");
+      drawGoodsPile(t.x-4, t.y-70, kind, 1.1);
+    }
+    // Cabe Rawit shouting, small, near bottom-left, hides
+    var mouthOpen = traderState.holding && (Math.floor(tm*8)%2===0);
+    drawCabeRawit(W*0.28, H*0.85, 2.0, mouthOpen);
+    if (traderState.holding){
+      ctx.save();
+      ctx.strokeStyle = "rgba(224,72,62,0.5)";
+      ctx.lineWidth = 2;
+      var waveR = 20 + (tm*40 % 40);
+      ctx.beginPath();
+      ctx.arc(W*0.28, H*0.8, waveR, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function scene4(tm){ // traders fled, cabe rawit gathering scattered goods
+    ctx.fillStyle = skyGradient("#fbe0a6","#f7cf8a");
+    ctx.fillRect(0,0,W,H*0.62);
+    drawMountains("#c9a67a");
+    drawGround("#c2a679");
+    drawSun(W*0.15,H*0.15,40,"#ffcc80");
+    drawGoodsPile(W*0.4, H*0.82, "banana", 1);
+    drawGoodsPile(W*0.55, H*0.85, "rice", 1);
+    drawGoodsPile(W*0.68, H*0.8, "veg", 1);
+    var bob = Math.sin(tm*2)*3;
+    drawCabeRawit(W*0.5, H*0.62+bob, 2.4, false);
+  }
+
+  function scene5(tm){ // ending: prosperous, mother and cabe rawit at hut with goods
+    ctx.fillStyle = skyGradient("#1b2a4a","#3b3a6b");
+    ctx.fillRect(0,0,W,H*0.62);
+    drawStars(70);
+    var moonGlow = 1;
+    drawSun(W*0.8,H*0.16,32,"#fff3d0");
+    drawMountains("#22314f");
+    drawGround("#3a4a30");
+    drawHut(W*0.5, H*0.62, 2.1, true);
+    drawPerson(W*0.35, H*0.68, {h:66, skin:"#d8a878", cloth:"#8e6b8f", bent:0, armRaise:0.4, facing:1});
+    var bob = Math.sin(tm*1.5)*2;
+    drawCabeRawit(W*0.63, H*0.72+bob, 1.6, false);
+    drawGoodsPile(W*0.72, H*0.82, "rice", 0.8);
+    drawGoodsPile(W*0.62, H*0.85, "banana", 0.8);
+  }
+
+  var scenes = [scene0, scene1, scene2, scene3, scene4, scene5];
+
+  var rafId = null;
+  function loop(){
+    var tm = timeSec();
+    var s = scenes[Math.max(current,0)];
+    if (s) s(tm);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ---------- flow control ---------- */
+  function showTextbox(text){
+    textbox.style.display = "block";
+    textbox.textContent = text;
+  }
+  function hideTextbox(){
+    textbox.style.display = "none";
+  }
+
+  function goToStage(i){
+    current = i;
+    updateDots(i);
+    hideShout();
+    inventory.style.display = "none";
+    if (i < 3 || i === 5){
+      var text = STR[lang].stages[i].text;
+      showTextbox(text);
+      clickzone.style.display = "block";
+      continueHint.style.display = "block";
+      waitForAdvance(text);
+    } else if (i === 4){
+      var text2 = STR[lang].stages[i].text;
+      showTextbox(text2);
+      clickzone.style.display = "block";
+      continueHint.style.display = "block";
+      waitForAdvance(text2);
+    } else if (i === 3){
+      startShoutMinigame();
+    }
+  }
+
+  function waitForAdvance(text){
+    var advanced = false;
+    function advance(){
+      if (advanced) return;
+      advanced = true;
+      clickzone.removeEventListener("click", advance);
+      speechSynthesis.cancel();
+      nextStage();
+    }
+    clickzone.style.display = "block";
+    clickzone.addEventListener("click", advance);
+    narrationEndedResolve = null;
+    speak(text);
+  }
+
+  function nextStage(){
+    if (current + 1 >= STAGE_COUNT){
+      finishStory();
+    } else {
+      goToStage(current + 1);
+    }
+  }
+
+  function finishStory(){
+    hideTextbox();
+    clickzone.style.display = "none";
+    continueHint.style.display = "none";
+    hideShout();
+    inventory.style.display = "none";
+    updateDots(STAGE_COUNT);
+    endScreen.style.display = "flex";
+  }
+
+  /* ---------- shout minigame ---------- */
+  var SHOUT_FILL_RATE = 55; // per second while held
+  var SHOUT_DRAIN_RATE = 35; // per second while released
+  var SHOUT_THRESHOLD = 100;
+  var shoutRafId = null;
+  var lastFrameTime = null;
+
+  function buildInventoryUI(){
+    inventory.innerHTML = "";
+    var items = STR[lang].items;
+    for (var i=0;i<3;i++){
+      var el = document.createElement("div");
+      el.className = "cr-inv-item";
+      el.id = "crInvItem" + i;
+      el.innerHTML = items[i] + ' <span class="cr-inv-count" id="crInvCount' + i + '">0</span>';
+      el.style.opacity = "0.35";
+      inventory.appendChild(el);
+    }
+  }
+
+  function startShoutMinigame(){
+    traderState = { idx:0, meter:0, holding:false, fled:false, scattered:false, collected:[false,false,false], scatterTimer:0 };
+    var text = STR[lang].stages[3].text;
+    showTextbox(text);
+    clickzone.style.display = "none";
+    continueHint.style.display = "none";
+    buildInventoryUI();
+    inventory.style.display = "flex";
+    shoutPanel.style.display = "flex";
+    meterFill.style.width = "0%";
+    narrationEndedResolve = null;
+    speak(text);
+    lastFrameTime = performance.now();
+    if (shoutRafId) cancelAnimationFrame(shoutRafId);
+    shoutRafId = requestAnimationFrame(shoutTick);
+  }
+
+  function hideShout(){
+    shoutPanel.style.display = "none";
+    if (shoutRafId){ cancelAnimationFrame(shoutRafId); shoutRafId = null; }
+  }
+
+  function shoutTick(now){
+    var dt = Math.min((now - lastFrameTime)/1000, 0.05);
+    lastFrameTime = now;
+
+    if (traderState.idx < 3){
+      if (traderState.holding){
+        traderState.meter += SHOUT_FILL_RATE * dt * (1 + traderState.idx*0.15);
+      } else {
+        traderState.meter -= SHOUT_DRAIN_RATE * dt;
+      }
+      traderState.meter = Math.max(0, Math.min(SHOUT_THRESHOLD, traderState.meter));
+      meterFill.style.width = traderState.meter + "%";
+
+      if (traderState.meter >= SHOUT_THRESHOLD && !traderState.fled){
+        traderState.fled = true;
+        onTraderFled();
+      }
+    }
+    shoutRafId = requestAnimationFrame(shoutTick);
+  }
+
+  function onTraderFled(){
+    var idx = traderState.idx;
+    var countEl = document.getElementById("crInvCount" + idx);
+    var itemEl = document.getElementById("crInvItem" + idx);
+    if (countEl) countEl.textContent = "1";
+    if (itemEl) itemEl.style.opacity = "1";
+    traderState.idx += 1;
+    traderState.meter = 0;
+    traderState.fled = false;
+    if (traderState.idx >= 3){
+      setTimeout(function(){
+        nextStage();
+      }, 900);
+    } else {
+      meterFill.style.width = "0%";
+    }
+  }
+
+  function setHolding(v){
+    traderState.holding = v;
+  }
+  shoutBtn.addEventListener("mousedown", function(){ setHolding(true); });
+  shoutBtn.addEventListener("mouseup", function(){ setHolding(false); });
+  shoutBtn.addEventListener("mouseleave", function(){ setHolding(false); });
+  shoutBtn.addEventListener("touchstart", function(e){ e.preventDefault(); setHolding(true); }, {passive:false});
+  shoutBtn.addEventListener("touchend", function(e){ e.preventDefault(); setHolding(false); }, {passive:false});
+  shoutBtn.addEventListener("touchcancel", function(){ setHolding(false); });
+  window.addEventListener("keydown", function(e){
+    if (e.code === "Space" && shoutPanel.style.display !== "none"){
+      e.preventDefault();
+      setHolding(true);
+    }
+  });
+  window.addEventListener("keyup", function(e){
+    if (e.code === "Space"){
+      setHolding(false);
+    }
+  });
+
+  /* ---------- start / replay ---------- */
+  function startStory(){
+    startScreen.style.display = "none";
+    endScreen.style.display = "none";
+    t0 = performance.now();
+    if (!rafId) rafId = requestAnimationFrame(loop);
+    goToStage(0);
+    setTimeout(reportHeight, 60);
+  }
+
+  startBtn.addEventListener("click", startStory);
+  replayBtn.addEventListener("click", startStory);
+
+  /* ---------- init ---------- */
+  buildDots();
+  applyStaticText();
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+  scene0(0);
+
+  window.addEventListener("beforeunload", function(){
+    speechSynthesis.cancel();
+  });
+
+})();
+</script>
+</body>
+</html>
