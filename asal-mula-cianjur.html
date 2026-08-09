@@ -141,6 +141,11 @@
     gap: 10px;
     flex-wrap: wrap;
     padding: 0 12px;
+    pointer-events: none; /* let clicks pass through to canvas beneath, except real controls */
+  }
+  .acj-interact .acj-btn,
+  .acj-interact button {
+    pointer-events: auto;
   }
 
   .acj-nextwrap {
@@ -920,19 +925,19 @@
     drawWaterOverlay(0.15 + flood*0.75);
   }
 
-  function sceneNewVillage(landDone, landTotal){
+  function sceneNewVillage(landFilled, landTotal){
     clearCanvas();
     drawSky();
     drawHills();
     drawGroundBase();
     // plots
     var cols = 3, rows = 2;
-    var pw = 180, ph = 70, gx0 = 90, gy0 = 340, gapx = 40, gapy = 20;
+    var pw = 180, ph = 64, gx0 = 90, gy0 = 305, gapx = 40, gapy = 16;
     for (var i=0;i<landTotal;i++){
       var cx = i % cols, cy = Math.floor(i/cols);
       var x = gx0 + cx*(pw+gapx);
       var y = gy0 + cy*(ph+gapy);
-      var done = i < landDone;
+      var done = !!landFilled[i];
       ctx.save();
       ctx.fillStyle = done ? "#a9d986" : "#e0d3a0";
       ctx.fillRect(x, y, pw, ph);
@@ -962,7 +967,7 @@
       case 3: sceneCurse(sceneRuntime.planted ? 1 : 0); break;
       case 4: sceneFlood(sceneRuntime.runProgress); break;
       case 5: sceneTreasure(sceneRuntime.digProgress, sceneRuntime.floodLevel); break;
-      case 6: sceneNewVillage(sceneRuntime.landDone, tr().scenes[6].landTotal); break;
+      case 6: sceneNewVillage(sceneRuntime.landFilled, tr().scenes[6].landTotal); break;
     }
   }
 
@@ -971,7 +976,8 @@
     runProgress: 0,
     digProgress: 0,
     floodLevel: 0,
-    landDone: 0,
+    landFilled: [],
+    landCount: 0,
     plateFilled: 0
   };
 
@@ -995,7 +1001,8 @@
     sceneRuntime.runProgress = 0;
     sceneRuntime.digProgress = 0;
     sceneRuntime.floodLevel = 0;
-    sceneRuntime.landDone = 0;
+    sceneRuntime.landFilled = [];
+    sceneRuntime.landCount = 0;
     sceneRuntime.plateFilled = 0;
     if (state.treasureTimer) { clearInterval(state.treasureTimer); state.treasureTimer = null; }
   }
@@ -1221,37 +1228,53 @@
 
     canvas.style.cursor = "pointer";
     var total = sc.landTotal;
-    function handleClick(evt){
-      if (sceneRuntime.landDone >= total) return;
+    var finished = false;
+    var lastTouchTime = 0;
+
+    function plotAt(clientX, clientY){
       var rect = canvas.getBoundingClientRect();
-      var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-      var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
       var xr = (clientX - rect.left) / rect.width;
       var yr = (clientY - rect.top) / rect.height;
       var x = xr * CW, y = yr * CH;
-      var cols = 3, pw = 180, ph = 70, gx0 = 90, gy0 = 340, gapx = 40, gapy = 20;
+      var cols = 3, pw = 180, ph = 64, gx0 = 90, gy0 = 305, gapx = 40, gapy = 16;
       for (var i=0;i<total;i++){
         var cx = i % cols, cy = Math.floor(i/cols);
         var px = gx0 + cx*(pw+gapx);
         var py = gy0 + cy*(ph+gapy);
-        if (x >= px && x <= px+pw && y >= py && y <= py+ph){
-          if (i === sceneRuntime.landDone){
-            sceneRuntime.landDone++;
-            drawCurrentScene();
-            if (sceneRuntime.landDone >= total){
-              canvas.removeEventListener("click", handleClick);
-              canvas.removeEventListener("touchstart", handleClick);
-              canvas.style.cursor = "default";
-              elInteract.innerHTML = "";
-              setTimeout(function(){ advanceAfterNarration(sc, idx); }, 500);
-            }
-          }
-          break;
-        }
+        if (x >= px && x <= px+pw && y >= py && y <= py+ph) return i;
+      }
+      return -1;
+    }
+
+    function fillPlot(i){
+      if (finished || i < 0 || i >= total) return;
+      if (sceneRuntime.landFilled[i]) return; // already filled, any order allowed
+      sceneRuntime.landFilled[i] = true;
+      sceneRuntime.landCount++;
+      drawCurrentScene();
+      if (sceneRuntime.landCount >= total){
+        finished = true;
+        canvas.removeEventListener("click", handleClick);
+        canvas.removeEventListener("touchstart", handleTouch);
+        canvas.style.cursor = "default";
+        elInteract.innerHTML = "";
+        setTimeout(function(){ advanceAfterNarration(sc, idx); }, 500);
       }
     }
+
+    function handleClick(evt){
+      // avoid double-firing right after a touch (browsers fire a synthetic click after touchend)
+      if (Date.now() - lastTouchTime < 700) return;
+      fillPlot(plotAt(evt.clientX, evt.clientY));
+    }
+    function handleTouch(evt){
+      lastTouchTime = Date.now();
+      if (!evt.touches || !evt.touches[0]) return;
+      fillPlot(plotAt(evt.touches[0].clientX, evt.touches[0].clientY));
+    }
+
     canvas.addEventListener("click", handleClick);
-    canvas.addEventListener("touchstart", handleClick, {passive:true});
+    canvas.addEventListener("touchstart", handleTouch, {passive:true});
   }
 
   /* ===================== START / END ===================== */
