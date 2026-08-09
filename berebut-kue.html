@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Berebut Kue - Dongeng Anak Nigeria</title>
+<style>
+  :root{
+    --bk-cream:#fff8ec;
+    --bk-brown:#6b4226;
+    --bk-brown-dark:#4a2c18;
+    --bk-accent:#e0793e;
+    --bk-accent-dark:#c65f28;
+    --bk-green:#3fa34d;
+    --bk-shadow:rgba(0,0,0,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:'Segoe UI',Verdana,Tahoma,sans-serif;}
+  .bk-wrap{
+    position:relative;
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    background:var(--bk-cream);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 4px 18px var(--bk-shadow);
+    border:3px solid var(--bk-brown);
+  }
+  .bk-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/10;
+    overflow:hidden;
+    background:#bfe8ff;
+  }
+  .bk-stage canvas{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  /* Topbar */
+  .bk-topbar{
+    position:absolute;
+    top:8px; right:8px;
+    display:flex;
+    gap:6px;
+    z-index:30;
+  }
+  .bk-iconbtn{
+    background:rgba(74,44,24,.75);
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:34px;height:34px;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s;
+    padding:0;
+  }
+  .bk-iconbtn:hover{background:rgba(74,44,24,.95);}
+  .bk-langbtn{
+    background:rgba(74,44,24,.75);
+    color:#fff;
+    border:none;
+    border-radius:16px;
+    height:34px;
+    padding:0 12px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    letter-spacing:.5px;
+  }
+  /* Cover */
+  .bk-cover{
+    position:absolute; inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    background:linear-gradient(180deg,#fceec0 0%, #f7d9a0 60%, #eab868 100%);
+    z-index:20;
+    padding:20px;
+  }
+  .bk-cover h1{
+    margin:0 0 6px;
+    font-size:clamp(22px,5.5vw,34px);
+    color:var(--bk-brown-dark);
+    text-shadow:1px 2px 0 #fff3;
+  }
+  .bk-cover p.bk-sub{
+    margin:0 0 22px;
+    color:var(--bk-brown);
+    font-size:clamp(13px,3vw,16px);
+    font-style:italic;
+  }
+  .bk-startbtn{
+    background:var(--bk-accent);
+    color:#fff;
+    border:none;
+    padding:14px 30px;
+    font-size:17px;
+    font-weight:700;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--bk-accent-dark);
+    transition:transform .1s;
+  }
+  .bk-startbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--bk-accent-dark);}
+  .bk-cover-emoji{font-size:54px;margin-bottom:6px;}
+  /* Dots */
+  .bk-dots{
+    position:absolute;
+    top:8px; left:8px;
+    display:flex;
+    gap:5px;
+    z-index:30;
+    background:rgba(74,44,24,.55);
+    padding:6px 9px;
+    border-radius:20px;
+  }
+  .bk-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,.4);
+    transition:background .2s, transform .2s;
+  }
+  .bk-dot.active{background:#fff;transform:scale(1.3);}
+  .bk-dot.done{background:var(--bk-accent);}
+  /* Caption box */
+  .bk-caption-box{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    z-index:25;
+    background:linear-gradient(180deg, rgba(74,44,24,0) 0%, rgba(74,44,24,.92) 30%);
+    padding:34px 16px 14px;
+    cursor:pointer;
+    display:none;
+  }
+  .bk-caption-box.show{display:block;}
+  .bk-caption-text{
+    color:#fff;
+    font-size:clamp(13px,3.4vw,16.5px);
+    line-height:1.45;
+    text-align:center;
+    max-width:560px;
+    margin:0 auto 8px;
+    text-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .bk-tap-hint{
+    text-align:center;
+    color:#ffe;
+    font-size:12px;
+    opacity:.85;
+    animation:bk-pulse 1.4s infinite;
+  }
+  @keyframes bk-pulse{0%,100%{opacity:.5;}50%{opacity:1;}}
+  /* Minigame UI */
+  .bk-minigame-ui{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    z-index:25;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px 16px;
+    background:linear-gradient(180deg, rgba(74,44,24,0) 0%, rgba(74,44,24,.85) 40%);
+  }
+  .bk-minigame-ui.show{display:flex;}
+  .bk-minigame-instr{
+    color:#fff;
+    font-size:clamp(12px,3.2vw,15px);
+    text-align:center;
+    max-width:560px;
+    text-shadow:0 1px 3px rgba(0,0,0,.4);
+    margin-bottom:2px;
+  }
+  .bk-actionbtn{
+    background:var(--bk-accent);
+    color:#fff;
+    border:none;
+    padding:14px 36px;
+    font-size:18px;
+    font-weight:800;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--bk-accent-dark);
+    user-select:none;
+    touch-action:manipulation;
+  }
+  .bk-actionbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--bk-accent-dark);}
+  .bk-progress-outer{
+    width:80%;
+    max-width:340px;
+    height:14px;
+    background:rgba(255,255,255,.25);
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.4);
+  }
+  .bk-progress-inner{
+    height:100%;
+    width:0%;
+    background:var(--bk-green);
+    transition:width .12s;
+  }
+  .bk-round-label{
+    color:#ffe;
+    font-size:12px;
+    letter-spacing:.5px;
+  }
+  /* Ending */
+  .bk-ending{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    align-items:center;justify-content:center;
+    text-align:center;
+    background:linear-gradient(180deg,#fceec0 0%, #f7d9a0 60%, #eab868 100%);
+    z-index:20;
+    padding:24px;
+  }
+  .bk-ending.show{display:flex;}
+  .bk-ending h2{
+    margin:0 0 10px;
+    color:var(--bk-brown-dark);
+    font-size:clamp(18px,4.5vw,24px);
+  }
+  .bk-ending p{
+    color:var(--bk-brown);
+    font-size:clamp(13px,3.2vw,15.5px);
+    line-height:1.5;
+    max-width:480px;
+    margin:0 0 20px;
+  }
+  .bk-footer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--bk-brown);
+    padding:9px 10px 11px;
+    background:#f3e4c9;
+    border-top:2px solid var(--bk-brown);
+  }
+  .bk-footer a{color:var(--bk-accent-dark);text-decoration:none;font-weight:700;}
+  .bk-footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="bk-wrap" id="bkWrap">
+  <div class="bk-stage" id="bkStage">
+    <canvas id="bkCanvas" width="900" height="562"></canvas>
+
+    <div class="bk-topbar">
+      <button class="bk-langbtn" id="bkLangBtn" type="button" aria-label="Switch language">EN</button>
+      <button class="bk-iconbtn" id="bkMuteBtn" type="button" aria-label="Mute">🔊</button>
+    </div>
+
+    <div class="bk-dots" id="bkDots"></div>
+
+    <div class="bk-cover" id="bkCover">
+      <div class="bk-cover-emoji">🍰</div>
+      <h1 id="bkCoverTitle">Berebut Kue</h1>
+      <p class="bk-sub" id="bkCoverSub">Dongeng Anak dari Nigeria</p>
+      <button class="bk-startbtn" id="bkStartBtn" type="button">Mulai Cerita</button>
+    </div>
+
+    <div class="bk-caption-box" id="bkCaptionBox">
+      <p class="bk-caption-text" id="bkCaptionText"></p>
+      <p class="bk-tap-hint" id="bkTapHint">▶ Ketuk untuk lanjut</p>
+    </div>
+
+    <div class="bk-minigame-ui" id="bkMinigameUI">
+      <p class="bk-minigame-instr" id="bkMinigameInstr"></p>
+      <div class="bk-progress-outer" id="bkProgressOuter" style="display:none;">
+        <div class="bk-progress-inner" id="bkProgressInner"></div>
+      </div>
+      <span class="bk-round-label" id="bkRoundLabel" style="display:none;"></span>
+      <button class="bk-actionbtn" id="bkActionBtn" type="button">GO</button>
+    </div>
+
+    <div class="bk-ending" id="bkEnding">
+      <div class="bk-cover-emoji">🍽️</div>
+      <h2 id="bkEndTitle">Kue Pun Habis Tak Bersisa</h2>
+      <p id="bkEndMoral"></p>
+      <button class="bk-startbtn" id="bkRepeatBtn" type="button">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="bk-footer">
+    🍰 <span id="bkFooterText">Dongeng interaktif dari</span> <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ I18N ============ */
+  var TXT = {
+    id: {
+      coverTitle: "Berebut Kue",
+      coverSub: "Dongeng Anak dari Nigeria",
+      startBtn: "Mulai Cerita",
+      repeatBtn: "Ulangi Cerita",
+      tapHint: "▶ Ketuk untuk lanjut",
+      footer: "Dongeng interaktif dari",
+      endTitle: "Kue Pun Habis Tak Bersisa",
+      endMoral: "Andai saja mereka mau berbagi dengan baik sejak awal, tentu kue lezat itu bisa mereka nikmati bersama. Pertengkaran karena keserakahan hanya akan membuat kita kehilangan segalanya.",
+      steps: [
+        { type:"caption", text:"Pada suatu pagi yang cerah, dua orang anak laki-laki berjalan-jalan bersama di sepanjang jalan desa." },
+        { type:"caption", text:"Tiba-tiba, mata mereka tertuju pada sebuah keranjang yang tergeletak di tepi jalan. Di dalamnya ada sepotong kue yang lezat!" },
+        { type:"grab", instr:"Kedua anak itu sama-sama ingin memiliki kue itu. Ketuk tombol dengan cepat untuk membantu mereka meraihnya bersamaan!", btn:"RAIH KUE!" },
+        { type:"caption", text:"\u201CKue ini milikku!\u201D seru anak pertama sambil menggenggam erat kue itu." },
+        { type:"caption", text:"\u201CTidak! Aku yang memegangnya lebih dulu,\u201D balas anak kedua tak mau kalah." },
+        { type:"caption", text:"Keduanya pun bertengkar hebat, saling tarik dan tidak ada yang mau mengalah." },
+        { type:"caption", text:"Di tengah pertengkaran itu, lewatlah seorang anak perempuan yang penasaran melihat keributan mereka." },
+        { type:"caption", text:"\u201CDaripada bertengkar, lebih baik kue itu dibagi dua sama besar. Ayo ikut aku, aku akan membantu membaginya,\u201D kata anak perempuan itu." },
+        { type:"caption", text:"Kedua anak laki-laki setuju. Mereka pun mengikuti anak perempuan itu pulang ke rumahnya." },
+        { type:"balance", instr:"Anak perempuan itu mulai menimbang kue dengan sebuah timbangan. Ketuk POTONG saat jarum tepat di tengah agar kue terbagi sama besar!", btn:"POTONG!",
+          roundLabel:"Percobaan", feedback:"Timbangannya belum seimbang. Anak perempuan itu memotong sedikit bagian yang lebih besar\u2026 dan memakannya sendiri." },
+        { type:"caption", text:"Kejadian itu berulang beberapa kali, hingga akhirnya kue itu habis tak bersisa sedikit pun." },
+        { type:"caption", text:"Kedua anak laki-laki hanya bisa terdiam. Mereka menyesal karena telah bertengkar memperebutkan kue itu." }
+      ]
+    },
+    en: {
+      coverTitle: "The Fight Over the Cake",
+      coverSub: "A Children's Folktale from Nigeria",
+      startBtn: "Start Story",
+      repeatBtn: "Replay Story",
+      tapHint: "▶ Tap to continue",
+      footer: "An interactive folktale from",
+      endTitle: "The Cake Was All Gone",
+      endMoral: "If only they had chosen to share kindly from the start, they could have enjoyed the delicious cake together. Fighting out of greed only leaves us with nothing.",
+      steps: [
+        { type:"caption", text:"One bright morning, two young boys were walking together along the village road." },
+        { type:"caption", text:"Suddenly, they spotted a basket lying by the roadside. Inside it was a delicious piece of cake!" },
+        { type:"grab", instr:"Both boys wanted the cake for themselves. Tap the button quickly to help them grab it at the same time!", btn:"GRAB THE CAKE!" },
+        { type:"caption", text:"\u201CThis cake is mine!\u201D cried the first boy, gripping it tightly." },
+        { type:"caption", text:"\u201CNo, I touched it first!\u201D shot back the second boy, refusing to give in." },
+        { type:"caption", text:"The two of them argued fiercely, pulling back and forth, neither willing to let go." },
+        { type:"caption", text:"In the middle of their quarrel, a girl happened to pass by, curious about the commotion." },
+        { type:"caption", text:"\u201CInstead of fighting, why not split it evenly? Come with me, I can help divide it fairly,\u201D said the girl." },
+        { type:"caption", text:"The two boys agreed and followed the girl back to her house." },
+        { type:"balance", instr:"The girl began weighing the cake on a scale. Tap CUT when the needle is right in the middle so the pieces come out equal!", btn:"CUT!",
+          roundLabel:"Attempt", feedback:"The scale isn't balanced yet. The girl trims a bit off the bigger side\u2026 and eats it herself." },
+        { type:"caption", text:"This happened again and again, until at last there was no cake left at all." },
+        { type:"caption", text:"The two boys could only stand in silence, regretting that they had ever fought over the cake." }
+      ]
+    }
+  };
+
+  /* ============ STATE ============ */
+  var state = {
+    screen: "cover",      // cover | story | ending
+    stepIndex: 0,
+    lang: "id",
+    muted: false,
+    grab: { progress: 0, active:false },
+    balance: { round:0, totalRounds:3, needleX:0.5, dir:1, speed:0.9, cakeScale:1 },
+    t: 0
+  };
+
+  try {
+    var savedLang = localStorage.getItem("bk_lang");
+    var urlLang = new URLSearchParams(window.location.search).get("lang");
+    if (urlLang === "en" || urlLang === "id") state.lang = urlLang;
+    else if (savedLang === "en" || savedLang === "id") state.lang = savedLang;
+    var savedMute = localStorage.getItem("bk_muted");
+    if (savedMute === "1") state.muted = true;
+  } catch(e){}
+
+  /* ============ DOM refs ============ */
+  var wrap = document.getElementById("bkWrap");
+  var stageEl = document.getElementById("bkStage");
+  var canvas = document.getElementById("bkCanvas");
+  var ctx = canvas.getContext("2d");
+
+  var coverEl = document.getElementById("bkCover");
+  var coverTitleEl = document.getElementById("bkCoverTitle");
+  var coverSubEl = document.getElementById("bkCoverSub");
+  var startBtn = document.getElementById("bkStartBtn");
+
+  var captionBox = document.getElementById("bkCaptionBox");
+  var captionText = document.getElementById("bkCaptionText");
+  var tapHint = document.getElementById("bkTapHint");
+
+  var minigameUI = document.getElementById("bkMinigameUI");
+  var minigameInstr = document.getElementById("bkMinigameInstr");
+  var actionBtn = document.getElementById("bkActionBtn");
+  var progressOuter = document.getElementById("bkProgressOuter");
+  var progressInner = document.getElementById("bkProgressInner");
+  var roundLabel = document.getElementById("bkRoundLabel");
+
+  var endingEl = document.getElementById("bkEnding");
+  var endTitleEl = document.getElementById("bkEndTitle");
+  var endMoralEl = document.getElementById("bkEndMoral");
+  var repeatBtn = document.getElementById("bkRepeatBtn");
+
+  var dotsEl = document.getElementById("bkDots");
+  var langBtn = document.getElementById("bkLangBtn");
+  var muteBtn = document.getElementById("bkMuteBtn");
+  var footerText = document.getElementById("bkFooterText");
+
+  /* ============ Helpers ============ */
+  function T(){ return TXT[state.lang]; }
+  function totalSteps(){ return TXT.id.steps.length; }
+
+  function buildDots(){
+    dotsEl.innerHTML = "";
+    for (var i=0;i<totalSteps();i++){
+      var d = document.createElement("div");
+      d.className = "bk-dot";
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var children = dotsEl.children;
+    for (var i=0;i<children.length;i++){
+      children[i].className = "bk-dot" + (i < state.stepIndex ? " done" : "") + (i === state.stepIndex && state.screen==="story" ? " active" : "");
+    }
+  }
+
+  /* ============ Speech ============ */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    var target = lang === "en" ? "en" : "id";
+    var exact = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target === "en" ? "en-us" : "id-id") === 0; });
+    if (exact.length) return exact[0];
+    var loose = voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target) === 0; });
+    if (loose.length) return loose[0];
+    return null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis || state.muted || !text) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text.replace(/[\u201C\u201D]/g,'"'));
+      u.lang = state.lang === "en" ? "en-US" : "id-ID";
+      var v = pickVoice(state.lang);
+      if (v) u.voice = v;
+      u.rate = 0.98;
+      u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){ if (window.speechSynthesis){ try{ window.speechSynthesis.cancel(); }catch(e){} } }
+
+  /* ============ Resize / postMessage ============ */
+  function notifyHeight(){
+    try{
+      var h = wrap.getBoundingClientRect().height;
+      window.parent.postMessage({ type:"berebutkueHeight", height:Math.ceil(h) }, "*");
+    }catch(e){}
+  }
+  window.addEventListener("load", notifyHeight);
+  window.addEventListener("resize", notifyHeight);
+  if (window.ResizeObserver){
+    new ResizeObserver(notifyHeight).observe(wrap);
+  }
+
+  /* ============ Screen switching ============ */
+  function showScreen(name){
+    state.screen = name;
+    coverEl.style.display = name === "cover" ? "flex" : "none";
+    endingEl.classList.toggle("show", name === "ending");
+    dotsEl.style.display = name === "story" ? "flex" : "none";
+    if (name !== "story"){
+      captionBox.classList.remove("show");
+      minigameUI.classList.remove("show");
+    }
+  }
+
+  function applyLangTexts(){
+    var t = T();
+    coverTitleEl.textContent = t.coverTitle;
+    coverSubEl.textContent = t.coverSub;
+    startBtn.textContent = t.startBtn;
+    repeatBtn.textContent = t.repeatBtn;
+    tapHint.textContent = t.tapHint;
+    footerText.textContent = t.footer;
+    endTitleEl.textContent = t.endTitle;
+    endMoralEl.textContent = t.endMoral;
+    langBtn.textContent = state.lang === "id" ? "EN" : "ID";
+    document.documentElement.lang = state.lang;
+  }
+
+  /* ============ Step rendering ============ */
+  function renderStep(){
+    var t = T();
+    var step = t.steps[state.stepIndex];
+    if (!step) return;
+    updateDots();
+
+    if (step.type === "caption"){
+      minigameUI.classList.remove("show");
+      captionBox.classList.add("show");
+      captionText.textContent = step.text;
+      speak(step.text);
+    } else if (step.type === "grab"){
+      captionBox.classList.remove("show");
+      minigameUI.classList.add("show");
+      minigameInstr.textContent = step.instr;
+      actionBtn.textContent = step.btn;
+      progressOuter.style.display = "block";
+      roundLabel.style.display = "none";
+      state.grab.progress = 0;
+      progressInner.style.width = "0%";
+      speak(step.instr);
+    } else if (step.type === "balance"){
+      captionBox.classList.remove("show");
+      minigameUI.classList.add("show");
+      minigameInstr.textContent = step.instr;
+      actionBtn.textContent = step.btn;
+      progressOuter.style.display = "none";
+      roundLabel.style.display = "inline-block";
+      state.balance.round = 0;
+      state.balance.cakeScale = 1;
+      roundLabel.textContent = step.roundLabel + " 1/" + state.balance.totalRounds;
+      speak(step.instr);
+    }
+  }
+
+  function goToStep(idx){
+    if (idx >= totalSteps()){
+      state.stepIndex = totalSteps();
+      showEnding();
+      return;
+    }
+    state.stepIndex = idx;
+    renderStep();
+  }
+
+  function nextStep(){ goToStep(state.stepIndex + 1); }
+
+  function showEnding(){
+    stopSpeak();
+    showScreen("ending");
+    speak(T().endMoral);
+  }
+
+  /* ============ Cover / Start / Repeat ============ */
+  function startStory(){
+    stopSpeak();
+    showScreen("story");
+    goToStep(0);
+  }
+  startBtn.addEventListener("click", startStory);
+  repeatBtn.addEventListener("click", function(){
+    showScreen("cover");
+    stopSpeak();
+  });
+
+  /* Caption box: tap to advance */
+  captionBox.addEventListener("click", function(){
+    nextStep();
+  });
+
+  /* ============ Language & Mute ============ */
+  langBtn.addEventListener("click", function(){
+    state.lang = state.lang === "id" ? "en" : "id";
+    try{ localStorage.setItem("bk_lang", state.lang); }catch(e){}
+    applyLangTexts();
+    if (state.screen === "story") renderStep();
+    else if (state.screen === "ending"){ endMoralEl.textContent = T().endMoral; }
+  });
+  function updateMuteIcon(){ muteBtn.textContent = state.muted ? "🔇" : "🔊"; }
+  muteBtn.addEventListener("click", function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem("bk_muted", state.muted ? "1" : "0"); }catch(e){}
+    updateMuteIcon();
+    if (state.muted) stopSpeak();
+  });
+
+  /* ============ Minigame: Grab ============ */
+  var grabCooldown = false;
+  function handleGrabTap(){
+    if (state.grab.progress >= 100) return;
+    state.grab.progress = Math.min(100, state.grab.progress + 9);
+    progressInner.style.width = state.grab.progress + "%";
+    state.grab.pulse = 1;
+    if (state.grab.progress >= 100){
+      setTimeout(function(){ nextStep(); }, 350);
+    }
+  }
+
+  /* ============ Minigame: Balance ============ */
+  var balanceLocked = false;
+  function handleBalanceTap(){
+    if (balanceLocked) return;
+    var b = state.balance;
+    var dist = Math.abs(b.needleX - 0.5);
+    var success = dist < 0.16;
+    if (!success){
+      // gentle shake feedback, no penalty, just encourage retry
+      minigameInstr.style.transform = "translateX(-4px)";
+      setTimeout(function(){ minigameInstr.style.transform = "translateX(4px)"; }, 60);
+      setTimeout(function(){ minigameInstr.style.transform = "translateX(0)"; }, 120);
+      return;
+    }
+    balanceLocked = true;
+    b.cakeScale = Math.max(0.15, b.cakeScale - 0.32);
+    b.round++;
+    var t = T();
+    var stepDef = t.steps[state.stepIndex];
+    if (b.round >= b.totalRounds){
+      minigameInstr.textContent = stepDef.feedback;
+      speak(stepDef.feedback);
+      setTimeout(function(){ balanceLocked = false; nextStep(); }, 1600);
+    } else {
+      minigameInstr.textContent = stepDef.feedback;
+      speak(stepDef.feedback);
+      roundLabel.textContent = stepDef.roundLabel + " " + (b.round+1) + "/" + b.totalRounds;
+      setTimeout(function(){
+        balanceLocked = false;
+        minigameInstr.textContent = stepDef.instr;
+      }, 1500);
+    }
+  }
+
+  actionBtn.addEventListener("click", function(){
+    var step = T().steps[state.stepIndex];
+    if (!step) return;
+    if (step.type === "grab") handleGrabTap();
+    else if (step.type === "balance") handleBalanceTap();
+  });
+
+  /* ============ Canvas drawing ============ */
+  var W = canvas.width, H = canvas.height;
+
+  function drawSky(){
+    var g = ctx.createLinearGradient(0,0,0,H*0.7);
+    g.addColorStop(0, "#8fd3ff");
+    g.addColorStop(1, "#d9f2ff");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.7);
+    // sun
+    ctx.fillStyle = "#ffe27a";
+    ctx.beginPath(); ctx.arc(W*0.85, H*0.16, 44, 0, Math.PI*2); ctx.fill();
+    // clouds
+    drawCloud(W*0.18, H*0.14, 1);
+    drawCloud(W*0.5, H*0.09, 0.7);
+  }
+  function drawCloud(x,y,s){
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    ctx.beginPath();
+    ctx.ellipse(x,y,40*s,20*s,0,0,Math.PI*2);
+    ctx.ellipse(x+30*s,y+6*s,28*s,16*s,0,0,Math.PI*2);
+    ctx.ellipse(x-30*s,y+6*s,26*s,15*s,0,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawOutdoorGround(){
+    ctx.fillStyle = "#8bc76a";
+    ctx.fillRect(0,H*0.62,W,H*0.38);
+    ctx.strokeStyle = "#79b358";
+    ctx.lineWidth = 2;
+    for (var i=0;i<10;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*W/9, H*0.62);
+      ctx.lineTo(i*W/9 - 14, H);
+      ctx.stroke();
+    }
+    // path
+    ctx.fillStyle = "#e8c98a";
+    ctx.beginPath();
+    ctx.moveTo(W*0.32,H); ctx.lineTo(W*0.44,H*0.63); ctx.lineTo(W*0.6,H*0.63); ctx.lineTo(W*0.78,H);
+    ctx.closePath(); ctx.fill();
+  }
+  function drawTree(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = "#8a5a34";
+    ctx.fillRect(-9,-10,18,60);
+    ctx.fillStyle = "#4d9a4d";
+    ctx.beginPath(); ctx.arc(0,-40,42,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-28,-20,28,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(28,-20,28,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawIndoorBG(){
+    ctx.fillStyle = "#f2d9a8";
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = "#e4c186";
+    ctx.fillRect(0,H*0.66,W,H*0.34);
+    // window
+    ctx.fillStyle = "#bfe8ff";
+    ctx.fillRect(W*0.08,H*0.1,W*0.18,H*0.22);
+    ctx.strokeStyle = "#8a5a34"; ctx.lineWidth=6;
+    ctx.strokeRect(W*0.08,H*0.1,W*0.18,H*0.22);
+    ctx.beginPath();
+    ctx.moveTo(W*0.08+W*0.09,H*0.1); ctx.lineTo(W*0.08+W*0.09,H*0.32);
+    ctx.moveTo(W*0.08,H*0.1+H*0.11); ctx.lineTo(W*0.08+W*0.18,H*0.1+H*0.11);
+    ctx.stroke();
+    // table
+    ctx.fillStyle = "#a5713f";
+    ctx.fillRect(W*0.28,H*0.68,W*0.44,H*0.07);
+    ctx.fillRect(W*0.32,H*0.75,W*0.04,H*0.2);
+    ctx.fillRect(W*0.64,H*0.75,W*0.04,H*0.2);
+  }
+
+  function drawBasket(x,y,s){
+    ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+    ctx.fillStyle = "#a5713f";
+    ctx.beginPath();
+    ctx.moveTo(-34,0); ctx.lineTo(34,0); ctx.lineTo(24,26); ctx.lineTo(-24,26); ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#7a4f28"; ctx.lineWidth=2;
+    for (var i=-28;i<=28;i+=10){
+      ctx.beginPath(); ctx.moveTo(i, i<0? -1: -1); ctx.lineTo(i*0.72, 25); ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.ellipse(0,0,34,7,0,0,Math.PI*2);
+    ctx.fillStyle = "#8a5a34"; ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCake(x,y,s,scaleAmt){
+    scaleAmt = scaleAmt===undefined?1:scaleAmt;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s*scaleAmt, s*scaleAmt);
+    // base
+    ctx.fillStyle = "#e8b06a";
+    ctx.beginPath();
+    ctx.moveTo(-30,10); ctx.lineTo(30,10); ctx.lineTo(24,-14); ctx.lineTo(-24,-14); ctx.closePath();
+    ctx.fill();
+    // frosting top wavy
+    ctx.fillStyle = "#fff3df";
+    ctx.beginPath();
+    ctx.moveTo(-26,-14);
+    for (var i=-26;i<=26;i+=8){
+      ctx.quadraticCurveTo(i+4,-24,i+8,-14);
+    }
+    ctx.lineTo(-26,-14);
+    ctx.closePath();
+    ctx.fill();
+    // cherry
+    ctx.fillStyle = "#c1273b";
+    ctx.beginPath(); ctx.arc(0,-22,5,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBoy(x,y,shirtColor,mirrored,armPull){
+    ctx.save();
+    ctx.translate(x,y);
+    if (mirrored) ctx.scale(-1,1);
+    // legs
+    ctx.fillStyle = "#3b3b3b";
+    ctx.fillRect(-10,40,8,26);
+    ctx.fillRect(4,40,8,26);
+    // body
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath();
+    ctx.moveTo(-16,10); ctx.lineTo(16,10); ctx.lineTo(13,44); ctx.lineTo(-13,44); ctx.closePath();
+    ctx.fill();
+    // arm reaching
+    ctx.strokeStyle = "#e8b98a"; ctx.lineWidth=7; ctx.lineCap="round";
+    ctx.beginPath();
+    ctx.moveTo(12,16);
+    ctx.lineTo(12 + (armPull||0), 8);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = "#f0c39a";
+    ctx.beginPath(); ctx.arc(0,-6,15,0,Math.PI*2); ctx.fill();
+    // hair
+    ctx.fillStyle = "#3a2a1a";
+    ctx.beginPath(); ctx.arc(0,-14,15,Math.PI,Math.PI*2); ctx.fill();
+    // face
+    ctx.fillStyle = "#3a2a1a";
+    ctx.beginPath(); ctx.arc(-5,-6,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-6,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGirl(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    // legs
+    ctx.fillStyle = "#f0c39a";
+    ctx.fillRect(-8,44,6,20);
+    ctx.fillRect(2,44,6,20);
+    // dress
+    ctx.fillStyle = "#e6739e";
+    ctx.beginPath();
+    ctx.moveTo(-18,8); ctx.lineTo(18,8); ctx.lineTo(24,48); ctx.lineTo(-24,48); ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = "#f0c39a";
+    ctx.beginPath(); ctx.arc(0,-8,15,0,Math.PI*2); ctx.fill();
+    // hair + pigtails
+    ctx.fillStyle = "#241a12";
+    ctx.beginPath(); ctx.arc(0,-15,15,Math.PI,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,-6,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,-6,6,0,Math.PI*2); ctx.fill();
+    // face
+    ctx.fillStyle = "#241a12";
+    ctx.beginPath(); ctx.arc(-5,-8,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-8,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawScaleStand(x,y,needleX){
+    ctx.save();
+    ctx.translate(x,y);
+    // stand
+    ctx.strokeStyle = "#5a3a20"; ctx.lineWidth=8; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(0,60); ctx.lineTo(0,-40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-30,60); ctx.lineTo(30,60); ctx.stroke();
+    // beam pivots around needle position (deviation from center)
+    var angle = (needleX - 0.5) * 0.7;
+    ctx.save();
+    ctx.translate(0,-40);
+    ctx.rotate(angle);
+    ctx.strokeStyle = "#5a3a20"; ctx.lineWidth=6;
+    ctx.beginPath(); ctx.moveTo(-70,0); ctx.lineTo(70,0); ctx.stroke();
+    // pans
+    ctx.strokeStyle = "#8a5a34"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-70,0); ctx.lineTo(-70,26); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(70,0); ctx.lineTo(70,26); ctx.stroke();
+    ctx.fillStyle = "#c7965b";
+    ctx.beginPath(); ctx.ellipse(-70,28,20,7,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(70,28,20,7,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    // needle target zone marker (fixed, not rotating) drawn above pivot
+    ctx.strokeStyle = "rgba(63,163,77,.55)";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(-8,-70); ctx.lineTo(8,-70);
+    ctx.stroke();
+    // needle pointer
+    ctx.save();
+    ctx.translate(0,-40);
+    ctx.rotate(angle);
+    ctx.strokeStyle = "#c1273b"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-32); ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  /* ============ Main draw per scene ============ */
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    var idx = state.stepIndex;
+    var step = T().steps[idx] || {};
+    var t = state.t;
+    var bob = Math.sin(t/280) * 3;
+
+    var indoor = state.screen === "story" && idx >= 9; // balance mini-game & after
+
+    if (indoor) drawIndoorBG();
+    else { drawSky(); drawOutdoorGround(); drawTree(W*0.08,H*0.62,1.1); drawTree(W*0.94,H*0.6,0.9); }
+
+    if (state.screen === "cover"){
+      drawSky(); drawOutdoorGround();
+      drawTree(W*0.08,H*0.62,1.1); drawTree(W*0.94,H*0.6,0.9);
+      drawBasket(W*0.5,H*0.7,1.6);
+      drawCake(W*0.5,H*0.66,1.6);
+      requestAnimationFrame(loop);
+      return;
+    }
+    if (state.screen === "ending"){
+      drawIndoorBG();
+      drawGirl(W*0.5, H*0.5 + bob*0.6);
+      drawBoy(W*0.28,H*0.52+bob, "#4a90d9", false, 0);
+      drawBoy(W*0.72,H*0.52+bob, "#d9534a", true, 0);
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    // STORY SCREEN
+    if (idx <= 1){
+      // walking boys, then spotting basket
+      drawBoy(W*0.36,H*0.52+bob,"#4a90d9",false,0);
+      drawBoy(W*0.52,H*0.52+bob,"#d9534a",true,0);
+      if (idx === 1){
+        drawBasket(W*0.5,H*0.72,1.3);
+        drawCake(W*0.5,H*0.685,1.3);
+      }
+    } else if (idx === 2){
+      // grab minigame
+      var pull = (state.grab.progress||0)/100 * 10;
+      drawBasket(W*0.5,H*0.72,1.3);
+      drawCake(W*0.5,H*0.685,1.3);
+      drawBoy(W*0.34,H*0.5+bob,"#4a90d9",false,10+pull);
+      drawBoy(W*0.66,H*0.5+bob,"#d9534a",true,10+pull);
+    } else if (idx >= 3 && idx <= 5){
+      // dispute
+      drawBoy(W*0.36,H*0.5+bob,"#4a90d9",false,14);
+      drawBoy(W*0.64,H*0.5+bob,"#d9534a",true,14);
+      drawCake(W*0.5,H*0.42,1.0);
+    } else if (idx === 6 || idx === 7){
+      drawBoy(W*0.3,H*0.52+bob,"#4a90d9",false,10);
+      drawBoy(W*0.5,H*0.52+bob,"#d9534a",true,10);
+      drawGirl(W*0.74,H*0.52+bob*0.7);
+    } else if (idx === 8){
+      drawGirl(W*0.3,H*0.5+bob*0.7);
+      drawBoy(W*0.52,H*0.52+bob,"#4a90d9",false,0);
+      drawBoy(W*0.7,H*0.52+bob,"#d9534a",true,0);
+    } else if (idx === 9){
+      // balance minigame
+      var b = state.balance;
+      drawScaleStand(W*0.5,H*0.55,b.needleX);
+      drawCake(W*0.28,H*0.5,1.0,b.cakeScale);
+      drawGirl(W*0.75,H*0.52+bob*0.6);
+    } else if (idx === 10 || idx === 11){
+      drawGirl(W*0.5,H*0.5+bob*0.6);
+      drawBoy(W*0.26,H*0.52+bob,"#4a90d9",false,0);
+      drawBoy(W*0.74,H*0.52+bob,"#d9534a",true,0);
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  var lastTime = 0;
+  function loop(now){
+    state.t = now || 0;
+    if (state.screen === "story" && state.stepIndex === 2 && state.grab.progress > 0 && state.grab.progress < 100){
+      state.grab.progress = Math.max(0, state.grab.progress - 0.06); // slow decay so repeated taps needed
+      progressInner.style.width = state.grab.progress + "%";
+    }
+    if (state.screen === "story" && state.stepIndex === 9){
+      var b = state.balance;
+      b.needleX += 0.006 * b.dir * b.speed * 60/60;
+      if (b.needleX > 1){ b.needleX = 1; b.dir = -1; }
+      if (b.needleX < 0){ b.needleX = 0; b.dir = 1; }
+    }
+    draw();
+  }
+  requestAnimationFrame(loop);
+
+  /* ============ Init ============ */
+  buildDots();
+  applyLangTexts();
+  updateMuteIcon();
+  showScreen("cover");
+  setTimeout(notifyHeight, 200);
+
+})();
+</script>
+</body>
+</html>
