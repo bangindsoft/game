@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Situ Bagendit - Cerita Rakyat Jawa Barat</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: transparent;
+    font-family: 'Segoe UI', Verdana, Tahoma, sans-serif;
+    overflow: hidden;
+  }
+  #sb-wrap {
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
+    background: linear-gradient(#fdf6e3, #f3e6c8);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+    position: relative;
+  }
+  #sb-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #5b3a29;
+    color: #fdf6e3;
+  }
+  #sb-topbar h1 {
+    font-size: 15px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .sb-topbtns { display: flex; gap: 8px; }
+  .sb-iconbtn {
+    background: #7a4f36;
+    border: none;
+    color: #fdf6e3;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sb-iconbtn:hover { background: #8f5f42; }
+  #sb-stage {
+    position: relative;
+    width: 100%;
+    background: #bcdff5;
+  }
+  #sb-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  #sb-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+  }
+  #sb-overlay-inner {
+    pointer-events: none;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 12px 16px;
+  }
+  #sb-caption {
+    pointer-events: none;
+    background: rgba(30,20,12,0.72);
+    color: #fdf6e3;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 92%;
+    text-align: center;
+  }
+  .sb-controls {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .sb-btn {
+    background: #e0483e;
+    color: #fff;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .sb-btn:active { transform: scale(0.96); }
+  .sb-btn.secondary {
+    background: #3a7d5c;
+  }
+  .sb-progressbar-wrap {
+    width: 220px;
+    height: 12px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .sb-progressbar-fill {
+    height: 100%;
+    width: 0%;
+    background: #ffd23f;
+    transition: width 0.08s linear;
+  }
+  .sb-hint {
+    color: #fdf6e3;
+    font-size: 12px;
+    opacity: 0.9;
+  }
+  #sb-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 0;
+    background: #fdf6e3;
+  }
+  .sb-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ddc9a3;
+    transition: background 0.25s, transform 0.25s;
+  }
+  .sb-dot.active {
+    background: #e0483e;
+    transform: scale(1.3);
+  }
+  .sb-dot.done {
+    background: #b3925f;
+  }
+  #sb-footer-text {
+    text-align: center;
+    font-size: 11px;
+    color: #8a7256;
+    padding: 4px 0 10px;
+    background: #fdf6e3;
+  }
+  .sb-rhythm-wrap {
+    width: 240px;
+    height: 20px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .sb-rhythm-zone {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: rgba(58,125,92,0.55);
+  }
+  .sb-rhythm-marker {
+    position: absolute;
+    top: -2px;
+    width: 4px;
+    height: 24px;
+    background: #fff;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+<div id="sb-wrap">
+  <div id="sb-topbar">
+    <h1 id="sb-title">Situ Bagendit</h1>
+    <div class="sb-topbtns">
+      <button class="sb-iconbtn" id="sb-lang-btn" type="button">EN</button>
+      <button class="sb-iconbtn" id="sb-mute-btn" type="button">🔊</button>
+    </div>
+  </div>
+  <div id="sb-stage">
+    <canvas id="sb-canvas" width="800" height="450"></canvas>
+    <div id="sb-overlay">
+      <div id="sb-overlay-inner">
+        <div id="sb-caption"></div>
+        <div class="sb-controls" id="sb-controls"></div>
+      </div>
+    </div>
+  </div>
+  <div id="sb-dots"></div>
+  <div id="sb-footer-text">Situ Bagendit &mdash; Kisah Rakyat Jawa Barat</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var RESIZE_KEY = "sbg2026resize";
+
+  // ---------- Language & text ----------
+  var TXT = {
+    id: {
+      title: "Situ Bagendit",
+      footer: "Situ Bagendit — Kisah Rakyat Jawa Barat",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      knock: "Ketuk Pintu",
+      hold: "Tahan untuk Mencabut Tongkat",
+      run: "Lari!",
+      knockHint: "Ketuk tombol berkali-kali",
+      holdHint: "Tekan dan tahan tombolnya",
+      runHint: "Tekan saat penunjuk ada di area hijau",
+      muteOn: "🔊",
+      muteOff: "🔇",
+      scenes: [
+        "Di sebuah desa yang subur di Jawa Barat, hidup seorang janda kaya bernama Nyi Endit. Sawah dan ladangnya terbentang luas, namun hatinya sangat kikir. Ia tak pernah mau berbagi kepada tetangganya yang kekurangan.",
+        "Suatu hari, seorang kakek tua yang lusuh datang ke rumah Nyi Endit. Dengan tertatih-tatih ia mengetuk pintu berkali-kali, memohon sedikit makanan untuk mengganjal perutnya yang lapar.",
+        "Namun Nyi Endit membentaknya dengan kasar dan mengusirnya pergi. \"Pergi kau dari sini! Aku tidak punya apa-apa untuk orang sepertimu!\" teriaknya sambil membanting pintu.",
+        "Kakek itu berjalan pergi dengan sedih, lalu menancapkan sebatang tongkat kayu ke tanah dekat rumah Nyi Endit. Ia mencoba mencabutnya kembali, tetapi tongkat itu seperti berakar kuat ke bumi.",
+        "Ketika akhirnya tongkat itu tercabut, air menyembur deras dari dalam tanah! Warga desa berlarian menyelamatkan diri ke tempat tinggi, sementara air terus naik menenggelamkan rumah Nyi Endit yang serakah.",
+        "Air itu terus meluap hingga membentuk sebuah danau yang luas. Warga menyebutnya Situ Bagendit — sebagai peringatan bahwa keserakahan dan kesombongan akan berbuah petaka bagi siapa saja yang memilikinya."
+      ]
+    },
+    en: {
+      title: "Situ Bagendit",
+      footer: "Situ Bagendit — A West Java Folktale",
+      start: "Start the Story",
+      replay: "Replay Story",
+      next: "Continue",
+      knock: "Knock on the Door",
+      hold: "Hold to Pull the Stick",
+      run: "Run!",
+      knockHint: "Tap the button repeatedly",
+      holdHint: "Press and hold the button",
+      runHint: "Tap when the marker is in the green zone",
+      muteOn: "🔊",
+      muteOff: "🔇",
+      scenes: [
+        "In a fertile village in West Java lived a wealthy widow named Nyi Endit. Her rice fields stretched far and wide, yet her heart was terribly stingy. She never once shared with her struggling neighbors.",
+        "One day, a ragged old man came to Nyi Endit's house. Leaning on his cane, he knocked on the door again and again, begging for a bit of food to ease his hunger.",
+        "But Nyi Endit shouted at him harshly and drove him away. \"Get away from here! I have nothing for someone like you!\" she yelled as she slammed the door shut.",
+        "The old man walked away sadly, then planted a wooden stick into the ground near Nyi Endit's house. He tried to pull it back out, but it seemed rooted deep into the earth.",
+        "When the stick finally came loose, water burst out from the ground with tremendous force! Villagers ran for higher ground in a panic, while the water rose and swallowed the greedy Nyi Endit's house.",
+        "The water kept rising until it formed a vast lake. The villagers named it Situ Bagendit — a reminder that greed and arrogance bring disaster to whoever holds onto them."
+      ]
+    }
+  };
+
+  var lang = "id";
+  var urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("lang") === "en") lang = "en";
+
+  // ---------- State ----------
+  var sceneIndex = 0;
+  var totalScenes = 6;
+  var muted = false;
+  try {
+    muted = localStorage.getItem("sb_muted") === "1";
+  } catch(e) {}
+
+  var started = false;
+  var mashCount = 0;
+  var mashTarget = 8;
+  var holding = false;
+  var holdProgress = 0; // 0-1
+  var holdReq = 1600; // ms
+  var holdStart = 0;
+  var runHits = 0;
+  var runTarget = 3;
+  var rhythmPos = 0;
+  var rhythmDir = 1;
+  var rhythmZoneStart = 0.62;
+  var rhythmZoneWidth = 0.22;
+  var floodLevel = 0; // 0-1 within flood scene
+
+  var animT = 0;
+
+  // ---------- DOM refs ----------
+  var canvas = document.getElementById("sb-canvas");
+  var ctx = canvas.getContext("2d");
+  var captionEl = document.getElementById("sb-caption");
+  var controlsEl = document.getElementById("sb-controls");
+  var dotsEl = document.getElementById("sb-dots");
+  var titleEl = document.getElementById("sb-title");
+  var footerEl = document.getElementById("sb-footer-text");
+  var langBtn = document.getElementById("sb-lang-btn");
+  var muteBtn = document.getElementById("sb-mute-btn");
+
+  function t() { return TXT[lang]; }
+
+  // ---------- Dots ----------
+  function buildDots() {
+    dotsEl.innerHTML = "";
+    for (var i = 0; i < totalScenes; i++) {
+      var d = document.createElement("div");
+      d.className = "sb-dot";
+      dotsEl.appendChild(d);
+    }
+    updateDots();
+  }
+  function updateDots() {
+    var dots = dotsEl.querySelectorAll(".sb-dot");
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].className = "sb-dot" + (i === sceneIndex && started ? " active" : "") + (i < sceneIndex && started ? " done" : "");
+    }
+  }
+
+  // ---------- Speech ----------
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    if (muted) return;
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === "id" ? "id-ID" : "en-US";
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    try { window.speechSynthesis.speak(u); } catch(e) {}
+  }
+
+  function updateMuteBtn() {
+    muteBtn.textContent = muted ? t().muteOff : t().muteOn;
+  }
+
+  muteBtn.addEventListener("click", function(){
+    muted = !muted;
+    try { localStorage.setItem("sb_muted", muted ? "1" : "0"); } catch(e) {}
+    updateMuteBtn();
+    if (muted && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    else if (started) speak(t().scenes[sceneIndex]);
+  });
+
+  langBtn.addEventListener("click", function(){
+    lang = lang === "id" ? "en" : "id";
+    langBtn.textContent = lang === "id" ? "EN" : "ID";
+    applyLangStrings();
+    renderControls();
+    if (started) {
+      captionEl.textContent = t().scenes[sceneIndex];
+      speak(t().scenes[sceneIndex]);
+    }
+  });
+
+  function applyLangStrings() {
+    titleEl.textContent = t().title;
+    footerEl.textContent = t().footer;
+    updateMuteBtn();
+  }
+
+  // ---------- Canvas drawing helpers ----------
+  var W = 800, H = 450;
+
+  function drawSky() {
+    var g = ctx.createLinearGradient(0,0,0,H*0.62);
+    g.addColorStop(0, "#8fd0ee");
+    g.addColorStop(1, "#d9f0ee");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.62);
+    // sun
+    ctx.beginPath();
+    ctx.fillStyle = "#ffe08a";
+    ctx.arc(680, 70, 34, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawMountains() {
+    ctx.fillStyle = "#9cc98a";
+    ctx.beginPath();
+    ctx.moveTo(0, H*0.42);
+    ctx.lineTo(120, H*0.28);
+    ctx.lineTo(260, H*0.42);
+    ctx.lineTo(420, H*0.24);
+    ctx.lineTo(600, H*0.42);
+    ctx.lineTo(800, H*0.30);
+    ctx.lineTo(800, H*0.5);
+    ctx.lineTo(0, H*0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawGroundBase(waterFrac) {
+    // ground
+    ctx.fillStyle = "#7fbf6b";
+    ctx.fillRect(0, H*0.5, W, H*0.5);
+    // rice-field stripes
+    ctx.strokeStyle = "rgba(70,120,55,0.35)";
+    ctx.lineWidth = 2;
+    for (var i=0;i<9;i++){
+      ctx.beginPath();
+      ctx.moveTo(0, H*0.55 + i*14);
+      ctx.lineTo(W, H*0.55 + i*14 - 20);
+      ctx.stroke();
+    }
+    if (waterFrac > 0) {
+      var wy = H - waterFrac * (H*0.46);
+      var g = ctx.createLinearGradient(0, wy, 0, H);
+      g.addColorStop(0, "#5aa8d6");
+      g.addColorStop(1, "#2f6fa0");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(0, wy);
+      for (var x=0;x<=W;x+=20) {
+        var wave = Math.sin((x*0.04) + animT*3) * 4;
+        ctx.lineTo(x, wy + wave);
+      }
+      ctx.lineTo(W,H);
+      ctx.lineTo(0,H);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawHouse(x,y,scale,big,sunk) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var bodyH = big ? 90 : 55;
+    var bodyW = big ? 110 : 70;
+    var sinkOffset = sunk ? sunk*bodyH*0.85 : 0;
+    ctx.translate(0, sinkOffset);
+    // walls
+    ctx.fillStyle = big ? "#c98b4b" : "#b9793a";
+    ctx.fillRect(-bodyW/2, -bodyH, bodyW, bodyH);
+    // roof
+    ctx.fillStyle = "#8a3b2b";
+    ctx.beginPath();
+    ctx.moveTo(-bodyW/2 - 12, -bodyH);
+    ctx.lineTo(0, -bodyH - (big?55:35));
+    ctx.lineTo(bodyW/2 + 12, -bodyH);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = "#5b3a29";
+    ctx.fillRect(-14, -bodyH*0.5, 28, bodyH*0.5);
+    // window
+    if (big) {
+      ctx.fillStyle = "#eee7d8";
+      ctx.fillRect(-bodyW/2+14, -bodyH*0.8, 20, 20);
+      ctx.fillRect(bodyW/2-34, -bodyH*0.8, 20, 20);
+    }
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,skin,shirt,pose) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var legPhase = pose && pose.walk ? Math.sin(animT*8) * 8 : 0;
+    // legs
+    ctx.strokeStyle = "#4a3b2b";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-4, 0); ctx.lineTo(-4 + legPhase, 22);
+    ctx.moveTo(4, 0); ctx.lineTo(4 - legPhase, 22);
+    ctx.stroke();
+    // body
+    ctx.fillStyle = shirt || "#e0483e";
+    ctx.beginPath();
+    ctx.moveTo(-11,-2);
+    ctx.lineTo(11,-2);
+    ctx.lineTo(9,-40);
+    ctx.lineTo(-9,-40);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt || "#e0483e";
+    ctx.lineWidth = 6;
+    var armAngle = pose && pose.armUp ? -0.9 : (pose && pose.point ? -0.2 : 0.35);
+    ctx.beginPath();
+    ctx.moveTo(9,-34);
+    ctx.lineTo(9 + Math.cos(armAngle)*20, -34 + Math.sin(armAngle)*20);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-9,-34);
+    var armAngle2 = pose && pose.bothUp ? -0.9 : 0.6;
+    ctx.lineTo(-9 - Math.cos(armAngle2)*20, -34 + Math.sin(armAngle2)*20);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = skin || "#e8b98a";
+    ctx.beginPath();
+    ctx.arc(0,-48,11,0,Math.PI*2);
+    ctx.fill();
+    if (pose && pose.old) {
+      ctx.strokeStyle = "#e6e6e6";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0,-52,9,Math.PI*0.9,Math.PI*2.1);
+      ctx.stroke();
+      // cane
+      ctx.strokeStyle = "#6b4a2b";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(14,-30);
+      ctx.lineTo(20,10);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawStick(x,y,shake) {
+    ctx.save();
+    ctx.translate(x,y);
+    var sh = shake ? Math.sin(animT*30)*shake : 0;
+    ctx.rotate(sh*0.03);
+    ctx.strokeStyle = "#6b4a2b";
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(0,10);
+    ctx.lineTo(0,-46);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawVillageBackdrop(withHouses) {
+    if (withHouses) {
+      drawHouse(140, H*0.72, 0.9, false, 0);
+      drawHouse(660, H*0.7, 0.85, false, 0);
+    }
+  }
+
+  function drawBirds() {
+    ctx.strokeStyle = "#5b3a29";
+    ctx.lineWidth = 2;
+    for (var i=0;i<3;i++){
+      var bx = 100 + i*60 + Math.sin(animT+i)*10;
+      var by = 50 + i*10;
+      ctx.beginPath();
+      ctx.moveTo(bx-8,by);
+      ctx.quadraticCurveTo(bx,by-6,bx+8,by);
+      ctx.stroke();
+    }
+  }
+
+  // ---------- Scene renderers ----------
+  function renderScene() {
+    ctx.clearRect(0,0,W,H);
+    drawSky();
+    drawBirds();
+    drawMountains();
+
+    switch(sceneIndex) {
+      case 0: // intro
+        drawGroundBase(0);
+        drawVillageBackdrop(true);
+        drawHouse(400, H*0.78, 1.35, true, 0);
+        drawPerson(400, H*0.9, 1.1, "#e8b98a", "#c9455a", {});
+        break;
+      case 1: // beggar knocking
+        drawGroundBase(0);
+        drawVillageBackdrop(false);
+        drawHouse(400, H*0.78, 1.35, true, 0);
+        var knockShake = (mashCount % 2 === 0) ? 2 : -2;
+        ctx.save();
+        ctx.translate(knockShake,0);
+        drawHouse(400, H*0.78, 1.35, true, 0);
+        ctx.restore();
+        drawPerson(300, H*0.9, 1.15, "#d8c8a8", "#8a7256", {old:true, armUp:true});
+        break;
+      case 2: // refuse
+        drawGroundBase(0);
+        drawVillageBackdrop(false);
+        drawHouse(400, H*0.78, 1.35, true, 0);
+        drawPerson(430, H*0.9, 1.1, "#e8b98a", "#c9455a", {point:true});
+        drawPerson(250 - Math.sin(animT)*4, H*0.9, 1.1, "#d8c8a8", "#8a7256", {old:true});
+        break;
+      case 3: // stick
+        drawGroundBase(0);
+        drawVillageBackdrop(false);
+        drawHouse(400, H*0.78, 1.35, true, 0);
+        drawStick(300, H*0.92, holding ? 1 + holdProgress*3 : 0.3);
+        drawPerson(300, H*0.86, 1.1, "#d8c8a8", "#8a7256", {old:true, bothUp: holding});
+        break;
+      case 4: // flood
+        drawGroundBase(floodLevel);
+        drawHouse(400, H*0.78, 1.35, true, Math.min(1, floodLevel*1.4));
+        drawPerson(180, H*0.9 - floodLevel*40, 1.1, "#e8b98a", "#3a7d5c", {walk:true});
+        drawPerson(620, H*0.88 - floodLevel*40, 1.0, "#e8b98a", "#4a6fa5", {walk:true});
+        drawPerson(300, H*0.85 - floodLevel*30, 1.05, "#d8c8a8", "#8a7256", {old:true, walk:true});
+        break;
+      case 5: // end - lake
+        drawGroundBase(1);
+        // small islands / reflection
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        for (var i=0;i<4;i++){
+          var ry = H*0.75 + i*10;
+          ctx.beginPath();
+          ctx.ellipse(200+i*140, ry, 40, 6, 0, 0, Math.PI*2);
+          ctx.fill();
+        }
+        break;
+    }
+    animT += 0.02;
+    requestAnimationFrame(renderScene);
+  }
+
+  // ---------- Controls per scene ----------
+  function renderControls() {
+    controlsEl.innerHTML = "";
+    if (!started) {
+      var btn = document.createElement("button");
+      btn.className = "sb-btn";
+      btn.type = "button";
+      btn.textContent = t().start;
+      btn.addEventListener("click", startStory);
+      controlsEl.appendChild(btn);
+      return;
+    }
+
+    if (sceneIndex === totalScenes - 1) {
+      var rbtn = document.createElement("button");
+      rbtn.className = "sb-btn secondary";
+      rbtn.type = "button";
+      rbtn.textContent = t().replay;
+      rbtn.addEventListener("click", replayStory);
+      controlsEl.appendChild(rbtn);
+      return;
+    }
+
+    if (sceneIndex === 1) {
+      buildMashControl();
+    } else if (sceneIndex === 3) {
+      buildHoldControl();
+    } else if (sceneIndex === 4) {
+      buildRhythmControl();
+    } else {
+      var nbtn = document.createElement("button");
+      nbtn.className = "sb-btn";
+      nbtn.type = "button";
+      nbtn.textContent = t().next;
+      nbtn.addEventListener("click", nextScene);
+      controlsEl.appendChild(nbtn);
+    }
+  }
+
+  function buildMashControl() {
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "6px";
+
+    var hint = document.createElement("div");
+    hint.className = "sb-hint";
+    hint.textContent = t().knockHint;
+
+    var pbwrap = document.createElement("div");
+    pbwrap.className = "sb-progressbar-wrap";
+    var pbfill = document.createElement("div");
+    pbfill.className = "sb-progressbar-fill";
+    pbfill.style.width = (mashCount / mashTarget * 100) + "%";
+    pbwrap.appendChild(pbfill);
+
+    var btn = document.createElement("button");
+    btn.className = "sb-btn";
+    btn.type = "button";
+    btn.textContent = t().knock;
+    btn.addEventListener("click", function(){
+      mashCount++;
+      pbfill.style.width = Math.min(100, mashCount / mashTarget * 100) + "%";
+      if (mashCount >= mashTarget) {
+        setTimeout(nextScene, 250);
+      }
+    });
+
+    wrap.appendChild(pbwrap);
+    wrap.appendChild(btn);
+    wrap.appendChild(hint);
+    controlsEl.appendChild(wrap);
+  }
+
+  var holdRAF = null;
+  function buildHoldControl() {
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "6px";
+
+    var hint = document.createElement("div");
+    hint.className = "sb-hint";
+    hint.textContent = t().holdHint;
+
+    var pbwrap = document.createElement("div");
+    pbwrap.className = "sb-progressbar-wrap";
+    var pbfill = document.createElement("div");
+    pbfill.className = "sb-progressbar-fill";
+    pbwrap.appendChild(pbfill);
+
+    var btn = document.createElement("button");
+    btn.className = "sb-btn";
+    btn.type = "button";
+    btn.textContent = t().hold;
+
+    function tick() {
+      if (!holding) return;
+      var elapsed = Date.now() - holdStart;
+      holdProgress = Math.min(1, elapsed / holdReq);
+      pbfill.style.width = (holdProgress * 100) + "%";
+      if (holdProgress >= 1) {
+        holding = false;
+        setTimeout(nextScene, 300);
+        return;
+      }
+      holdRAF = requestAnimationFrame(tick);
+    }
+
+    function startHold(e) {
+      e.preventDefault();
+      holding = true;
+      holdStart = Date.now() - (holdProgress * holdReq);
+      holdRAF = requestAnimationFrame(tick);
+    }
+    function endHold(e) {
+      if (e) e.preventDefault();
+      holding = false;
+      if (holdRAF) cancelAnimationFrame(holdRAF);
+      // decay a bit if released early
+      holdProgress = Math.max(0, holdProgress - 0.15);
+      pbfill.style.width = (holdProgress * 100) + "%";
+    }
+
+    btn.addEventListener("mousedown", startHold);
+    btn.addEventListener("touchstart", startHold, {passive:false});
+    btn.addEventListener("mouseup", endHold);
+    btn.addEventListener("mouseleave", endHold);
+    btn.addEventListener("touchend", endHold);
+
+    wrap.appendChild(pbwrap);
+    wrap.appendChild(btn);
+    wrap.appendChild(hint);
+    controlsEl.appendChild(wrap);
+  }
+
+  var rhythmRAF = null;
+  function buildRhythmControl() {
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "6px";
+
+    var hint = document.createElement("div");
+    hint.className = "sb-hint";
+    hint.textContent = t().runHint + "  (" + runHits + "/" + runTarget + ")";
+
+    var track = document.createElement("div");
+    track.className = "sb-rhythm-wrap";
+    var zone = document.createElement("div");
+    zone.className = "sb-rhythm-zone";
+    zone.style.left = (rhythmZoneStart*100) + "%";
+    zone.style.width = (rhythmZoneWidth*100) + "%";
+    var marker = document.createElement("div");
+    marker.className = "sb-rhythm-marker";
+    track.appendChild(zone);
+    track.appendChild(marker);
+
+    var btn = document.createElement("button");
+    btn.className = "sb-btn";
+    btn.type = "button";
+    btn.textContent = t().run;
+
+    function tick() {
+      rhythmPos += rhythmDir * 0.018;
+      if (rhythmPos >= 1) { rhythmPos = 1; rhythmDir = -1; }
+      if (rhythmPos <= 0) { rhythmPos = 0; rhythmDir = 1; }
+      marker.style.left = (rhythmPos*100) + "%";
+      rhythmRAF = requestAnimationFrame(tick);
+    }
+    rhythmRAF = requestAnimationFrame(tick);
+
+    btn.addEventListener("click", function(){
+      if (rhythmPos >= rhythmZoneStart && rhythmPos <= rhythmZoneStart + rhythmZoneWidth) {
+        runHits++;
+        floodLevel = Math.min(1, runHits / runTarget * 0.85);
+      } else {
+        floodLevel = Math.min(1, floodLevel + 0.08);
+      }
+      hint.textContent = t().runHint + "  (" + Math.min(runHits,runTarget) + "/" + runTarget + ")";
+      if (runHits >= runTarget) {
+        if (rhythmRAF) cancelAnimationFrame(rhythmRAF);
+        floodLevel = 1;
+        setTimeout(nextScene, 500);
+      }
+    });
+
+    wrap.appendChild(track);
+    wrap.appendChild(btn);
+    wrap.appendChild(hint);
+    controlsEl.appendChild(wrap);
+  }
+
+  // ---------- Flow ----------
+  function startStory() {
+    started = true;
+    sceneIndex = 0;
+    resetMechanicState();
+    captionEl.textContent = t().scenes[sceneIndex];
+    speak(t().scenes[sceneIndex]);
+    updateDots();
+    renderControls();
+    sendHeight();
+  }
+
+  function nextScene() {
+    if (sceneIndex < totalScenes - 1) {
+      sceneIndex++;
+      resetMechanicState();
+      captionEl.textContent = t().scenes[sceneIndex];
+      speak(t().scenes[sceneIndex]);
+      updateDots();
+      renderControls();
+      sendHeight();
+    }
+  }
+
+  function resetMechanicState() {
+    mashCount = 0;
+    holding = false;
+    holdProgress = 0;
+    if (holdRAF) cancelAnimationFrame(holdRAF);
+    if (rhythmRAF) cancelAnimationFrame(rhythmRAF);
+    if (sceneIndex !== 4) {
+      runHits = 0;
+      if (sceneIndex < 4) floodLevel = 0;
+    }
+  }
+
+  function replayStory() {
+    sceneIndex = 0;
+    floodLevel = 0;
+    runHits = 0;
+    resetMechanicState();
+    captionEl.textContent = t().scenes[sceneIndex];
+    speak(t().scenes[sceneIndex]);
+    updateDots();
+    renderControls();
+    sendHeight();
+  }
+
+  // ---------- Resize messaging for iframe embed ----------
+  function sendHeight() {
+    try {
+      var h = document.getElementById("sb-wrap").scrollHeight;
+      window.parent.postMessage({ key: RESIZE_KEY, height: h }, "*");
+    } catch(e) {}
+  }
+
+  window.addEventListener("resize", sendHeight);
+
+  // ---------- Init ----------
+  langBtn.textContent = lang === "id" ? "EN" : "ID";
+  applyLangStrings();
+  buildDots();
+  renderControls();
+  requestAnimationFrame(renderScene);
+
+  window.addEventListener("load", function(){
+    setTimeout(sendHeight, 200);
+    setTimeout(sendHeight, 800);
+  });
+  setInterval(sendHeight, 1500);
+
+})();
+</script>
+</body>
+</html>
