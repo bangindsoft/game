@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Urashima Taro - Dongeng Interaktif</title>
+<style>
+  :root{
+    --ut-deepsea:#0a2f4a;
+    --ut-sea:#0f5c86;
+    --ut-sea-light:#3a94c2;
+    --ut-foam:#eaf6fb;
+    --ut-sand:#e9d3a3;
+    --ut-sand-dark:#c9a86a;
+    --ut-gold:#d9ad3f;
+    --ut-gold-light:#f2d488;
+    --ut-coral:#ff7d6b;
+    --ut-ink:#132635;
+    --ut-panel:#0d3550;
+    --ut-panel-light:#134a71;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',-apple-system,'Noto Sans','Helvetica Neue',Arial,sans-serif;
+    background:transparent;
+    color:var(--ut-foam);
+    overflow:hidden;
+  }
+  #ut-app{
+    position:relative;
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    border-radius:14px;
+    overflow:hidden;
+    background:linear-gradient(180deg,var(--ut-sea) 0%,var(--ut-deepsea) 100%);
+    box-shadow:0 6px 24px rgba(0,0,0,0.35);
+  }
+  /* ---------- TOP BAR ---------- */
+  #ut-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 12px;
+    background:rgba(6,26,42,0.55);
+    position:relative;
+    z-index:5;
+  }
+  #ut-title-mini{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    color:var(--ut-gold-light);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .ut-btn-icon{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    color:var(--ut-foam);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:14px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    transition:background .15s ease;
+    user-select:none;
+  }
+  .ut-btn-icon:hover{background:rgba(255,255,255,0.22);}
+  .ut-btn-icon:active{transform:scale(0.96);}
+  #ut-topbar-controls{display:flex;gap:6px;flex-shrink:0;}
+
+  /* ---------- STAGE ---------- */
+  #ut-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    overflow:hidden;
+  }
+  #ut-canvas{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  #ut-target-layer{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    z-index:4;
+  }
+  .ut-target{
+    position:absolute;
+    width:15%;
+    aspect-ratio:1/1;
+    max-width:64px;
+    max-height:64px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.5), rgba(255,255,255,0.05));
+    border:2px solid rgba(255,255,255,0.6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    cursor:pointer;
+    animation:ut-pop-in .25s ease;
+    touch-action:manipulation;
+  }
+  @keyframes ut-pop-in{from{transform:scale(0.3);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .ut-target.ut-hit{animation:ut-pop-out .2s ease forwards;}
+  @keyframes ut-pop-out{to{transform:scale(1.6);opacity:0;}}
+
+  /* ---------- CAPTION BAR ---------- */
+  #ut-caption-wrap{
+    position:relative;
+    z-index:6;
+    padding:14px 16px 16px;
+    background:linear-gradient(180deg, rgba(10,35,55,0.0) 0%, rgba(7,26,41,0.92) 30%);
+    margin-top:-70px;
+  }
+  #ut-caption{
+    font-size:15px;
+    line-height:1.5;
+    min-height:44px;
+    text-shadow:0 1px 3px rgba(0,0,0,0.6);
+  }
+  #ut-caption-hint{
+    margin-top:4px;
+    font-size:11px;
+    color:var(--ut-gold-light);
+    opacity:0.85;
+  }
+  #ut-tap-next{
+    margin-top:10px;
+    width:100%;
+    padding:10px;
+    background:linear-gradient(180deg,var(--ut-gold-light),var(--ut-gold));
+    color:#2a1c04;
+    border:none;
+    border-radius:10px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #9c7a1f;
+  }
+  #ut-tap-next:active{transform:translateY(2px);box-shadow:0 1px 0 #9c7a1f;}
+
+  /* ---------- HOLD BUTTON ---------- */
+  #ut-hold-wrap{margin-top:10px;}
+  #ut-hold-btn{
+    position:relative;
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:2px solid var(--ut-gold);
+    background:rgba(217,173,63,0.12);
+    color:var(--ut-gold-light);
+    font-weight:700;
+    font-size:14px;
+    text-align:center;
+    cursor:pointer;
+    overflow:hidden;
+    user-select:none;
+    touch-action:none;
+  }
+  #ut-hold-fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:linear-gradient(90deg,var(--ut-sea-light),var(--ut-gold));
+    opacity:0.55;
+    transition:width .05s linear;
+  }
+  #ut-hold-label{position:relative;z-index:2;}
+
+  /* ---------- CHOICE ---------- */
+  #ut-choice-wrap{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .ut-choice-btn{
+    flex:1;
+    padding:12px 8px;
+    border-radius:10px;
+    border:2px solid rgba(255,255,255,0.35);
+    background:rgba(255,255,255,0.08);
+    color:var(--ut-foam);
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .ut-choice-btn:hover{background:rgba(255,255,255,0.18);}
+  .ut-choice-btn.ut-choice-gold{border-color:var(--ut-gold);}
+  .ut-choice-btn.ut-choice-coral{border-color:var(--ut-coral);}
+
+  /* ---------- DOTS ---------- */
+  #ut-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    padding:8px 0 12px;
+    background:rgba(7,26,41,0.92);
+    position:relative;
+    z-index:6;
+  }
+  .ut-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,0.25);
+    transition:all .2s ease;
+  }
+  .ut-dot.ut-dot-active{background:var(--ut-gold-light);width:18px;border-radius:5px;}
+  .ut-dot.ut-dot-done{background:rgba(242,212,136,0.55);}
+
+  /* ---------- COVER ---------- */
+  #ut-cover{
+    position:absolute;
+    inset:0;
+    z-index:20;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    background:linear-gradient(180deg,#1a5f86 0%, #0a2f4a 55%, #071c29 100%);
+  }
+  #ut-cover-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0.9;}
+  .ut-cover-content{position:relative;z-index:2;}
+  #ut-cover h1{
+    font-size:26px;
+    margin:6px 0 4px;
+    color:var(--ut-gold-light);
+    text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  }
+  #ut-cover p{
+    font-size:13.5px;
+    max-width:440px;
+    margin:0 auto 18px;
+    line-height:1.5;
+    color:#dff1fb;
+    text-shadow:0 1px 3px rgba(0,0,0,0.5);
+  }
+  #ut-start-btn{
+    padding:12px 28px;
+    font-size:15px;
+    font-weight:700;
+    border-radius:30px;
+    border:none;
+    background:linear-gradient(180deg,var(--ut-gold-light),var(--ut-gold));
+    color:#2a1c04;
+    cursor:pointer;
+    box-shadow:0 4px 0 #9c7a1f;
+  }
+  #ut-start-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #9c7a1f;}
+  #ut-cover-lang{
+    margin-top:14px;
+    font-size:12px;
+    color:rgba(255,255,255,0.7);
+  }
+  #ut-cover-lang button{
+    background:none;border:none;color:var(--ut-gold-light);
+    text-decoration:underline;cursor:pointer;font-size:12px;padding:0 4px;
+  }
+
+  /* ---------- ENDING ---------- */
+  #ut-ending-wrap{display:none;}
+  #ut-ending-wrap.ut-show{display:block;}
+  #ut-moral-box{
+    margin-top:10px;
+    padding:10px 12px;
+    border-left:3px solid var(--ut-gold);
+    background:rgba(217,173,63,0.1);
+    font-size:13px;
+    font-style:italic;
+    line-height:1.5;
+  }
+  #ut-replay-btn{
+    margin-top:12px;
+    width:100%;
+    padding:11px;
+    background:linear-gradient(180deg,#5bb3d6,#1c6e8c);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #0c4560;
+  }
+  #ut-replay-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0c4560;}
+
+  #ut-footer{
+    text-align:center;
+    font-size:10.5px;
+    padding:6px 0 10px;
+    color:rgba(255,255,255,0.45);
+    background:rgba(7,26,41,0.92);
+  }
+  #ut-footer a{color:rgba(242,212,136,0.7);text-decoration:none;}
+
+  .ut-hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="ut-app">
+
+  <div id="ut-topbar">
+    <div id="ut-title-mini">🐢 Urashima Taro</div>
+    <div id="ut-topbar-controls">
+      <button class="ut-btn-icon" id="ut-lang-btn" title="Language">🌐 ID</button>
+      <button class="ut-btn-icon" id="ut-mute-btn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="ut-stage">
+    <canvas id="ut-canvas"></canvas>
+    <div id="ut-target-layer"></div>
+
+    <div id="ut-cover">
+      <canvas id="ut-cover-canvas"></canvas>
+      <div class="ut-cover-content">
+        <div style="font-size:40px;">🐢🌊</div>
+        <h1 id="ut-cover-title">Urashima Taro</h1>
+        <p id="ut-cover-desc">Dongeng klasik Jepang tentang seorang nelayan baik hati, Istana Naga di dasar laut, dan sebuah janji yang harus dijaga.</p>
+        <button id="ut-start-btn">▶ Mulai Cerita</button>
+        <div id="ut-cover-lang">Bahasa: <button data-lang="id">Indonesia</button> | <button data-lang="en">English</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ut-caption-wrap">
+    <div id="ut-caption"></div>
+    <div id="ut-caption-hint"></div>
+
+    <button id="ut-tap-next">Lanjut ▶</button>
+
+    <div id="ut-hold-wrap" class="ut-hidden">
+      <div id="ut-hold-btn">
+        <div id="ut-hold-fill"></div>
+        <div id="ut-hold-label">Tahan di sini</div>
+      </div>
+    </div>
+
+    <div id="ut-choice-wrap" class="ut-hidden">
+      <button class="ut-choice-btn ut-choice-gold" id="ut-choice-a"></button>
+      <button class="ut-choice-btn ut-choice-coral" id="ut-choice-b"></button>
+    </div>
+
+    <div id="ut-ending-wrap">
+      <div id="ut-moral-box"></div>
+      <button id="ut-replay-btn">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="ut-dots"></div>
+
+  <div id="ut-footer">
+    <span id="ut-footer-text">Dongeng anak &middot; caritasato.blogspot.com</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     I18N
+  ============================================================ */
+  var TXT = {
+    id:{
+      title:"Urashima Taro",
+      coverDesc:"Dongeng klasik Jepang tentang seorang nelayan baik hati, Istana Naga di dasar laut, dan sebuah janji yang harus dijaga.",
+      startBtn:"▶ Mulai Cerita",
+      nextBtn:"Lanjut ▶",
+      replayBtn:"↺ Ulangi Cerita",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      langLabel:"🌐 ID",
+      footer:"Dongeng anak · caritasato.blogspot.com",
+      moralLabel:"Pesan Moral: ",
+      steps:[
+        {
+          scene:"beach-intro",
+          text:"Di sebuah desa nelayan kecil di pesisir Jepang, hiduplah seorang pemuda baik hati bernama Urashima Taro. Setiap hari ia melaut mencari ikan untuk menghidupi ibunya."
+        },
+        {
+          scene:"bullies-turtle",
+          text:"Suatu sore sepulang melaut, Urashima melihat sekelompok anak-anak sedang mengganggu seekor kura-kura kecil di tepi pantai."
+        },
+        {
+          scene:"rescue-hold",
+          type:"hold",
+          text:"Urashima segera menghampiri mereka.",
+          holdLabel:"Tahan untuk Mengusir Anak-anak Nakal",
+          hint:"Tahan tombol untuk menghampiri dan menghentikan mereka!"
+        },
+        {
+          scene:"turtle-saved",
+          text:"Dengan lembut Urashima menasihati anak-anak itu hingga mereka pergi. Ia pun melepaskan kura-kura kecil itu kembali ke laut."
+        },
+        {
+          scene:"turtle-returns",
+          text:"Keesokan harinya, kura-kura itu muncul kembali—kali ini bisa berbicara! \"Terima kasih telah menyelamatkanku,\" katanya. \"Sebagai balasan, aku ingin mengajakmu ke Istana Naga di dasar laut.\""
+        },
+        {
+          scene:"dive-hold",
+          type:"hold",
+          text:"Urashima naik ke punggung kura-kura raksasa itu.",
+          holdLabel:"Tahan untuk Menyelam ke Dasar Laut",
+          hint:"Tahan tombol untuk menyelam mengikuti sang kura-kura!"
+        },
+        {
+          scene:"arrive-palace",
+          text:"Menakjubkan! Di dasar laut berdiri Istana Ryugu-jo yang megah, terbuat dari karang dan mutiara berkilauan. Puteri Otohime menyambut Urashima dengan hangat."
+        },
+        {
+          scene:"feast-qte",
+          type:"qte",
+          text:"Ketuk ikan dan ubur-ubur yang menari untuk merayakan pesta di istana!",
+          hint:"Ketuk sebanyak mungkin sebelum waktu habis!"
+        },
+        {
+          scene:"feast-after",
+          text:"Hari demi hari berlalu dengan tarian, musik, dan hidangan lezat. Urashima merasa sangat bahagia, hingga lupa waktu."
+        },
+        {
+          scene:"miss-home",
+          text:"Namun suatu hari, Urashima teringat ibunya di desa. \"Aku harus pulang,\" katanya kepada Puteri Otohime."
+        },
+        {
+          scene:"given-box",
+          text:"Dengan sedih, sang puteri memberinya kotak permata bernama Tamatebako. \"Bawalah ini,\" katanya, \"tapi berjanjilah, jangan pernah membukanya, apa pun yang terjadi.\""
+        },
+        {
+          scene:"swim-home-hold",
+          type:"hold",
+          text:"Urashima berpamitan dan naik kembali ke punggung kura-kura.",
+          holdLabel:"Tahan untuk Berenang Pulang",
+          hint:"Tahan tombol untuk berenang kembali ke daratan!"
+        },
+        {
+          scene:"village-changed",
+          text:"Sesampainya di desa, Urashima terkejut. Rumahnya tak ada, wajah-wajah di sekitarnya asing baginya. Seorang kakek tua berkata bahwa nama \"Urashima Taro\" hanya ada dalam legenda 300 tahun lalu."
+        },
+        {
+          scene:"choice",
+          type:"choice",
+          text:"Bingung dan sedih, Urashima memegang kotak Tamatebako di tangannya. Apa yang akan ia lakukan?",
+          optionA:"Buka Kotaknya",
+          optionB:"Jangan Dibuka, Simpan Janjinya"
+        }
+      ],
+      endingOpen:{
+        text:"Urashima pun membuka Tamatebako. Asap putih tebal keluar dari dalamnya... dan seketika itu juga, rambutnya memutih dan kulitnya keriput—ia berubah menjadi kakek tua dalam sekejap. Waktu yang tertunda selama bertahun-tahun akhirnya mengejarnya.",
+        moral:"Sebuah janji, sekecil apa pun, harus selalu dijaga. Rasa penasaran yang tak terkendali bisa membawa penyesalan."
+      },
+      endingClosed:{
+        text:"Urashima memilih menepati janjinya. Ia menyimpan kotak itu erat-erat tanpa membukanya. Meski sedih kehilangan kampung halamannya, ia hidup tenang di tepi laut, sesekali memandangi ombak sambil mengenang Istana Naga—menjaga rahasia dan janjinya hingga akhir hayat.",
+        moral:"Menepati janji, meskipun berat, adalah bentuk kehormatan dan kebijaksanaan sejati."
+      }
+    },
+    en:{
+      title:"Urashima Taro",
+      coverDesc:"A classic Japanese folktale about a kind fisherman, an undersea Dragon Palace, and a promise that must be kept.",
+      startBtn:"▶ Start Story",
+      nextBtn:"Next ▶",
+      replayBtn:"↺ Replay Story",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      langLabel:"🌐 EN",
+      footer:"Children's folktale · caritasato.blogspot.com",
+      moralLabel:"Moral: ",
+      steps:[
+        {
+          scene:"beach-intro",
+          text:"In a small fishing village on the coast of Japan lived a kind young man named Urashima Taro. Every day he went out to sea to catch fish for his mother."
+        },
+        {
+          scene:"bullies-turtle",
+          text:"One evening on his way home, Urashima saw a group of children tormenting a small turtle on the beach."
+        },
+        {
+          scene:"rescue-hold",
+          type:"hold",
+          text:"Urashima hurried over to them.",
+          holdLabel:"Hold to Shoo the Naughty Children",
+          hint:"Hold the button to approach and stop them!"
+        },
+        {
+          scene:"turtle-saved",
+          text:"Urashima gently persuaded the children to leave. He then released the little turtle back into the sea."
+        },
+        {
+          scene:"turtle-returns",
+          text:"The next day, the turtle reappeared—and this time it could speak! \"Thank you for saving me,\" it said. \"As thanks, I would like to take you to the Dragon Palace at the bottom of the sea.\""
+        },
+        {
+          scene:"dive-hold",
+          type:"hold",
+          text:"Urashima climbed onto the giant turtle's back.",
+          holdLabel:"Hold to Dive to the Sea Floor",
+          hint:"Hold the button to dive down and follow the turtle!"
+        },
+        {
+          scene:"arrive-palace",
+          text:"Amazing! At the bottom of the sea stood the magnificent Ryugu-jo Palace, built from coral and shimmering pearls. Princess Otohime warmly welcomed Urashima."
+        },
+        {
+          scene:"feast-qte",
+          type:"qte",
+          text:"Tap the dancing fish and jellyfish to join the palace celebration!",
+          hint:"Tap as many as you can before time runs out!"
+        },
+        {
+          scene:"feast-after",
+          text:"Day after day passed with dancing, music, and delicious feasts. Urashima felt so happy that he lost track of time."
+        },
+        {
+          scene:"miss-home",
+          text:"But one day, Urashima remembered his mother back in the village. \"I must go home,\" he told Princess Otohime."
+        },
+        {
+          scene:"given-box",
+          text:"Sadly, the princess gave him a jeweled box called the Tamatebako. \"Take this,\" she said, \"but promise me—never open it, no matter what happens.\""
+        },
+        {
+          scene:"swim-home-hold",
+          type:"hold",
+          text:"Urashima said his farewells and climbed back onto the turtle.",
+          holdLabel:"Hold to Swim Back Home",
+          hint:"Hold the button to swim back to shore!"
+        },
+        {
+          scene:"village-changed",
+          text:"When he arrived at the village, Urashima was shocked. His house was gone, and every face around him was unfamiliar. An old man told him the name \"Urashima Taro\" only existed in a legend from 300 years ago."
+        },
+        {
+          scene:"choice",
+          type:"choice",
+          text:"Confused and sorrowful, Urashima held the Tamatebako box in his hands. What should he do?",
+          optionA:"Open the Box",
+          optionB:"Leave It Closed, Keep His Promise"
+        }
+      ],
+      endingOpen:{
+        text:"Urashima opened the Tamatebako. Thick white smoke poured out... and in an instant, his hair turned white and his skin wrinkled—he transformed into an old man. The years that had been held back finally caught up with him.",
+        moral:"A promise, however small, should always be kept. Uncontrolled curiosity can lead to regret."
+      },
+      endingClosed:{
+        text:"Urashima chose to keep his promise. He held the box tightly and never opened it. Though sorrowful over his lost home, he lived peacefully by the sea, gazing at the waves and remembering the Dragon Palace—keeping his secret and his promise for the rest of his life.",
+        moral:"Keeping a promise, even when it's hard, is a true form of honor and wisdom."
+      }
+    }
+  };
+
+  /* ============================================================
+     STATE
+  ============================================================ */
+  var state = {
+    lang: 'id',
+    muted: false,
+    started: false,
+    stepIndex: 0,
+    ending: null, // 'open' | 'closed'
+    holdActive:false,
+    holdProgress:0,
+    qteActive:false,
+    qteScore:0,
+    qteSpawned:0
+  };
+
+  try{
+    var savedMute = localStorage.getItem('ut_muted');
+    if(savedMute === '1') state.muted = true;
+  }catch(e){}
+
+  var urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('lang') === 'en') state.lang = 'en';
+  if(urlParams.get('lang') === 'id') state.lang = 'id';
+
+  function T(){ return TXT[state.lang]; }
+
+  /* ============================================================
+     DOM REFS
+  ============================================================ */
+  var $ = function(id){ return document.getElementById(id); };
+  var elCover = $('ut-cover');
+  var elCoverTitle = $('ut-cover-title');
+  var elCoverDesc = $('ut-cover-desc');
+  var elStartBtn = $('ut-start-btn');
+  var elCoverLangBtns = document.querySelectorAll('#ut-cover-lang button');
+  var elTitleMini = $('ut-title-mini');
+  var elLangBtn = $('ut-lang-btn');
+  var elMuteBtn = $('ut-mute-btn');
+  var elCaption = $('ut-caption');
+  var elCaptionHint = $('ut-caption-hint');
+  var elTapNext = $('ut-tap-next');
+  var elHoldWrap = $('ut-hold-wrap');
+  var elHoldBtn = $('ut-hold-btn');
+  var elHoldFill = $('ut-hold-fill');
+  var elHoldLabel = $('ut-hold-label');
+  var elChoiceWrap = $('ut-choice-wrap');
+  var elChoiceA = $('ut-choice-a');
+  var elChoiceB = $('ut-choice-b');
+  var elEndingWrap = $('ut-ending-wrap');
+  var elMoralBox = $('ut-moral-box');
+  var elReplayBtn = $('ut-replay-btn');
+  var elDots = $('ut-dots');
+  var elFooterText = $('ut-footer-text');
+  var elTargetLayer = $('ut-target-layer');
+  var canvas = $('ut-canvas');
+  var ctx = canvas.getContext('2d');
+  var coverCanvas = $('ut-cover-canvas');
+  var coverCtx = coverCanvas.getContext('2d');
+
+  /* ============================================================
+     RESIZE / CANVAS SETUP
+  ============================================================ */
+  var CW=0, CH=0, DPR=1;
+  function resizeCanvas(){
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var stageEl = $('ut-stage');
+    var rect = stageEl.getBoundingClientRect();
+    CW = rect.width; CH = rect.height;
+    [canvas, coverCanvas].forEach(function(c){
+      c.width = CW*DPR; c.height = CH*DPR;
+      c.style.width = CW+'px'; c.style.height = CH+'px';
+    });
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    coverCtx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  /* ============================================================
+     IFRAME AUTO-RESIZE
+  ============================================================ */
+  function postHeight(){
+    try{
+      var h = document.getElementById('ut-app').offsetHeight;
+      window.parent.postMessage({type:'urashimaTaroHeight', height:h}, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    new ResizeObserver(postHeight).observe(document.getElementById('ut-app'));
+  }
+  window.addEventListener('load', function(){ setTimeout(postHeight,150); });
+
+  /* ============================================================
+     SPEECH
+  ============================================================ */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang === langCode) return voices[i];
+    }
+    for(var j=0;j<voices.length;j++){
+      if(voices[j].lang && voices[j].lang.indexOf(langCode.slice(0,2)) === 0) return voices[j];
+    }
+    return null;
+  }
+  function speak(text){
+    if(!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if(state.muted || !text) return;
+    var u = new SpeechSynthesisUtterance(text);
+    var langCode = state.lang === 'id' ? 'id-ID' : 'en-US';
+    u.lang = langCode;
+    var v = pickVoice(langCode);
+    if(v) u.voice = v;
+    u.rate = 0.93;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ============================================================
+     UI TEXT REFRESH
+  ============================================================ */
+  function refreshStaticText(){
+    var t = T();
+    elCoverTitle.textContent = t.title;
+    elCoverDesc.textContent = t.coverDesc;
+    elStartBtn.textContent = t.startBtn;
+    elTapNext.textContent = t.nextBtn;
+    elReplayBtn.textContent = t.replayBtn;
+    elLangBtn.textContent = t.langLabel;
+    elMuteBtn.textContent = state.muted ? t.muteOff : t.muteOn;
+    elFooterText.textContent = t.footer;
+    elTitleMini.textContent = '🐢 ' + t.title;
+    document.documentElement.lang = state.lang;
+  }
+
+  /* ============================================================
+     DOTS
+  ============================================================ */
+  function buildDots(){
+    elDots.innerHTML = '';
+    var steps = T().steps;
+    for(var i=0;i<steps.length;i++){
+      var d = document.createElement('div');
+      d.className = 'ut-dot';
+      elDots.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = elDots.querySelectorAll('.ut-dot');
+    for(var i=0;i<dots.length;i++){
+      dots[i].classList.remove('ut-dot-active','ut-dot-done');
+      if(i < state.stepIndex) dots[i].classList.add('ut-dot-done');
+      else if(i === state.stepIndex) dots[i].classList.add('ut-dot-active');
+    }
+  }
+
+  /* ============================================================
+     SCENE DRAWING (animated background)
+  ============================================================ */
+  var animT = 0;
+  var bubbleField = [];
+  function initBubbles(n){
+    bubbleField = [];
+    for(var i=0;i<n;i++){
+      bubbleField.push({
+        x: Math.random(), y: Math.random(),
+        r: 3+Math.random()*6,
+        speed: 0.15+Math.random()*0.3,
+        drift: (Math.random()-0.5)*0.15
+      });
+    }
+  }
+  initBubbles(18);
+
+  function lerp(a,b,t){ return a+(b-a)*t; }
+
+  function drawSkyBeach(c, t){
+    var g = c.createLinearGradient(0,0,0,CH);
+    g.addColorStop(0,'#bfe6f5');
+    g.addColorStop(0.55,'#7fc6df');
+    g.addColorStop(0.56,'#1c7fa3');
+    g.addColorStop(1,'#0a4c68');
+    c.fillStyle = g; c.fillRect(0,0,CW,CH);
+    // sun
+    c.beginPath();
+    c.fillStyle = 'rgba(255,244,200,0.9)';
+    c.arc(CW*0.82, CH*0.18, CH*0.07, 0, Math.PI*2);
+    c.fill();
+    // waves on sea
+    for(var i=0;i<3;i++){
+      c.beginPath();
+      c.moveTo(0, CH*0.56 + i*10);
+      for(var x=0;x<=CW;x+=14){
+        var y = CH*0.56 + i*10 + Math.sin((x*0.03)+t*1.4+i)*3;
+        c.lineTo(x,y);
+      }
+      c.strokeStyle = 'rgba(255,255,255,'+(0.25-i*0.06)+')';
+      c.lineWidth = 2;
+      c.stroke();
+    }
+    // sand
+    c.fillStyle = '#e9d3a3';
+    c.beginPath();
+    c.moveTo(0, CH*0.78);
+    for(var x2=0;x2<=CW;x2+=20){
+      var y2 = CH*0.78 + Math.sin(x2*0.02)*4;
+      c.lineTo(x2,y2);
+    }
+    c.lineTo(CW,CH); c.lineTo(0,CH); c.closePath();
+    c.fill();
+  }
+
+  function drawUnderwater(c,t){
+    var g = c.createLinearGradient(0,0,0,CH);
+    g.addColorStop(0,'#1c6e8c');
+    g.addColorStop(1,'#04182a');
+    c.fillStyle = g; c.fillRect(0,0,CW,CH);
+    // light rays
+    for(var i=0;i<4;i++){
+      c.save();
+      c.globalAlpha = 0.06;
+      c.fillStyle = '#eafcff';
+      c.beginPath();
+      var rx = CW*(0.15+i*0.25) + Math.sin(t*0.3+i)*10;
+      c.moveTo(rx-30,0); c.lineTo(rx+30,0); c.lineTo(rx+70,CH); c.lineTo(rx-70,CH);
+      c.closePath(); c.fill();
+      c.restore();
+    }
+    // bubbles
+    c.fillStyle = 'rgba(255,255,255,0.55)';
+    for(var b=0;b<bubbleField.length;b++){
+      var bb = bubbleField[b];
+      bb.y -= (bb.speed*0.002);
+      bb.x += bb.drift*0.0015;
+      if(bb.y < -0.05){ bb.y = 1.05; bb.x = Math.random(); }
+      c.beginPath();
+      c.arc(bb.x*CW, bb.y*CH, bb.r, 0, Math.PI*2);
+      c.fill();
+    }
+  }
+
+  function drawPalaceBg(c,t){
+    drawUnderwater(c,t);
+    // palace silhouette
+    c.save();
+    c.globalAlpha = 0.9;
+    var baseY = CH*0.72;
+    c.fillStyle = '#d9ad3f';
+    // central tower
+    roundRect(c, CW*0.42, baseY-CH*0.34, CW*0.16, CH*0.34, 6); c.fill();
+    // roof
+    c.beginPath();
+    c.moveTo(CW*0.38, baseY-CH*0.34);
+    c.lineTo(CW*0.5, baseY-CH*0.46);
+    c.lineTo(CW*0.62, baseY-CH*0.34);
+    c.closePath(); c.fillStyle = '#ff7d6b'; c.fill();
+    // side wings
+    c.fillStyle = '#c9973a';
+    roundRect(c, CW*0.22, baseY-CH*0.2, CW*0.16, CH*0.2, 6); c.fill();
+    roundRect(c, CW*0.62, baseY-CH*0.2, CW*0.16, CH*0.2, 6); c.fill();
+    c.restore();
+  }
+
+  function drawVillageOld(c,t){
+    var g = c.createLinearGradient(0,0,0,CH);
+    g.addColorStop(0,'#9fb9c4');
+    g.addColorStop(0.55,'#6f8b96');
+    g.addColorStop(0.56,'#3a5560');
+    g.addColorStop(1,'#1c2d33');
+    c.fillStyle = g; c.fillRect(0,0,CW,CH);
+    // dim sun (dusk)
+    c.beginPath();
+    c.fillStyle='rgba(255,220,180,0.55)';
+    c.arc(CW*0.78,CH*0.2,CH*0.05,0,Math.PI*2); c.fill();
+    // empty overgrown ground
+    c.fillStyle = '#4b5f52';
+    c.fillRect(0, CH*0.72, CW, CH*0.28);
+    // ruined post
+    c.strokeStyle = '#33262066';
+    c.lineWidth=3;
+    c.beginPath(); c.moveTo(CW*0.18,CH*0.72); c.lineTo(CW*0.2,CH*0.5); c.stroke();
+  }
+
+  function roundRect(c,x,y,w,h,r){
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+
+  /* ---- characters ---- */
+  function drawTurtle(c,x,y,scale,t){
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    var bob = Math.sin(t*2)*3;
+    c.translate(0,bob);
+    // flippers
+    c.fillStyle = '#3f8f5a';
+    c.beginPath(); c.ellipse(-38,10,16,7,Math.sin(t*3)*0.3,0,Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(38,10,16,7,-Math.sin(t*3)*0.3,0,Math.PI*2); c.fill();
+    // shell
+    c.fillStyle = '#4caf6e';
+    c.beginPath(); c.ellipse(0,0,42,28,0,0,Math.PI*2); c.fill();
+    c.strokeStyle = '#2e7a49'; c.lineWidth=2;
+    c.beginPath(); c.ellipse(0,0,30,18,0,0,Math.PI*2); c.stroke();
+    // head
+    c.fillStyle = '#6fbf82';
+    c.beginPath(); c.ellipse(48,-2,12,9,0,0,Math.PI*2); c.fill();
+    c.fillStyle = '#222';
+    c.beginPath(); c.arc(53,-4,1.6,0,Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function drawBoy(c,x,y,scale,t,style){
+    style = style||'young';
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    var bob = Math.sin(t*1.6)*2;
+    c.translate(0,bob);
+    if(style==='old'){
+      // hunched old man
+      c.strokeStyle='#8a7a63'; c.lineWidth=4; c.lineCap='round';
+      c.beginPath(); c.moveTo(14,10); c.lineTo(22,34); c.stroke(); // cane
+      c.fillStyle = '#cbd6da';
+      c.beginPath(); c.ellipse(0,26,13,16,0.15,0,Math.PI*2); c.fill(); // robe hunched
+      c.fillStyle = '#e8d9c4';
+      c.beginPath(); c.arc(-2,4,9,0,Math.PI*2); c.fill(); // head
+      c.fillStyle = '#f5f5f5';
+      c.beginPath(); c.ellipse(-4,-1,7,3,0.2,0,Math.PI*2); c.fill(); // white hair
+      c.strokeStyle='#8a7a63'; c.lineWidth=1.5;
+      c.beginPath(); c.moveTo(-6,6); c.lineTo(-2,6); c.stroke(); // eyes closed/tired
+    } else {
+      c.fillStyle = '#3a6b91';
+      roundRect(c,-11,4,22,30,8); c.fill(); // body tunic
+      c.fillStyle = '#e8c39e';
+      c.beginPath(); c.arc(0,-6,10,0,Math.PI*2); c.fill(); // head
+      c.fillStyle = '#2c2320';
+      c.beginPath(); c.ellipse(0,-13,10,6,0,Math.PI,Math.PI*2); c.fill(); // hair
+      c.fillStyle = '#222';
+      c.beginPath(); c.arc(-3,-6,1.3,0,Math.PI*2); c.fill();
+      c.beginPath(); c.arc(3,-6,1.3,0,Math.PI*2); c.fill();
+    }
+    c.restore();
+  }
+
+  function drawPrincess(c,x,y,scale,t){
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    var sway = Math.sin(t*1.2)*2;
+    c.translate(sway,0);
+    c.fillStyle = '#ff9fb0';
+    roundRect(c,-16,4,32,40,14); c.fill(); // dress
+    c.fillStyle = '#ffd27a';
+    c.beginPath(); c.moveTo(-16,4); c.lineTo(16,4); c.lineTo(0,26); c.closePath(); c.fill(); // sash
+    c.fillStyle = '#f2cba0';
+    c.beginPath(); c.arc(0,-6,10,0,Math.PI*2); c.fill(); // head
+    c.fillStyle = '#3a2418';
+    c.beginPath(); c.ellipse(0,-14,12,8,0,Math.PI,Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(-12,0,4,14,0.2,0,Math.PI*2); c.fill(); // hair side
+    c.beginPath(); c.ellipse(12,0,4,14,-0.2,0,Math.PI*2); c.fill();
+    c.fillStyle = '#d9ad3f';
+    c.beginPath(); c.arc(0,-19,3,0,Math.PI*2); c.fill(); // crown ornament
+    c.restore();
+  }
+
+  function drawBox(c,x,y,scale,t,glow){
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    if(glow){
+      c.save();
+      c.globalAlpha = 0.35+Math.sin(t*4)*0.15;
+      c.fillStyle = '#fff3c4';
+      c.beginPath(); c.arc(0,10,34,0,Math.PI*2); c.fill();
+      c.restore();
+    }
+    c.fillStyle = '#b8842f';
+    roundRect(c,-20,0,40,26,4); c.fill();
+    c.fillStyle = '#d9ad3f';
+    roundRect(c,-22,-8,44,12,4); c.fill();
+    c.fillStyle = '#f2d488';
+    c.fillRect(-2,-8,4,34);
+    c.restore();
+  }
+
+  function drawSmoke(c,x,y,t,amount){
+    c.save();
+    for(var i=0;i<amount;i++){
+      var a = 1-(i/amount);
+      c.globalAlpha = 0.5*a;
+      c.fillStyle = '#f5f5f5';
+      var ox = Math.sin(t*2+i)*10*i*0.15;
+      var oy = -i*8;
+      c.beginPath();
+      c.arc(x+ox, y+oy, 8+i*2, 0, Math.PI*2);
+      c.fill();
+    }
+    c.restore();
+  }
+
+  /* ---- fish / jellyfish for QTE and ambience ---- */
+  function drawFishAmbient(c,t){
+    for(var i=0;i<4;i++){
+      var fx = ((t*20 + i*160) % (CW+80)) - 40;
+      var fy = CH*0.3 + Math.sin(t+i)*20 + i*40;
+      c.save();
+      c.translate(fx,fy);
+      c.fillStyle = ['#ffb6a3','#8fd6e8','#ffd98f','#c6a6ff'][i%4];
+      c.beginPath(); c.ellipse(0,0,10,6,0,0,Math.PI*2); c.fill();
+      c.beginPath(); c.moveTo(-9,0); c.lineTo(-16,-5); c.lineTo(-16,5); c.closePath(); c.fill();
+      c.restore();
+    }
+  }
+
+  /* ============================================================
+     PER-SCENE RENDER
+  ============================================================ */
+  function renderScene(sceneKey, t, progressForHold, ending){
+    ctx.clearRect(0,0,CW,CH);
+    switch(sceneKey){
+      case 'beach-intro':
+        drawSkyBeach(ctx,t);
+        drawBoy(ctx, CW*0.5, CH*0.68, 1.5, t, 'young');
+        break;
+      case 'bullies-turtle':
+        drawSkyBeach(ctx,t);
+        drawTurtle(ctx, CW*0.5, CH*0.74, 1.0, t*0.3);
+        drawBoy(ctx, CW*0.22, CH*0.7, 1.1, t, 'young');
+        drawBoy(ctx, CW*0.72, CH*0.68, 0.9, t+1, 'young');
+        drawBoy(ctx, CW*0.82, CH*0.72, 0.8, t+2, 'young');
+        break;
+      case 'rescue-hold':
+        drawSkyBeach(ctx,t);
+        var push = (progressForHold||0)*40;
+        drawTurtle(ctx, CW*0.5, CH*0.74, 1.0, t*0.3);
+        drawBoy(ctx, CW*0.22+push, CH*0.7, 1.1, t, 'young');
+        drawBoy(ctx, CW*0.78+push*0.6, CH*0.68, 0.9, t+1, 'young');
+        break;
+      case 'turtle-saved':
+        drawSkyBeach(ctx,t);
+        drawTurtle(ctx, CW*(0.4+Math.min(t*0.03,0.4)), CH*0.7, 1.0, t*0.5);
+        drawBoy(ctx, CW*0.5, CH*0.72, 1.3, t, 'young');
+        break;
+      case 'turtle-returns':
+        drawSkyBeach(ctx,t);
+        drawTurtle(ctx, CW*0.42, CH*0.72, 1.3, t*0.6);
+        drawBoy(ctx, CW*0.65, CH*0.7, 1.2, t, 'young');
+        break;
+      case 'dive-hold':
+        drawUnderwater(ctx,t);
+        var depth = (progressForHold||0);
+        drawTurtle(ctx, CW*0.5, CH*(0.3+depth*0.4), 1.1, t*0.6);
+        drawBoy(ctx, CW*0.5, CH*(0.22+depth*0.4), 1.0, t, 'young');
+        break;
+      case 'arrive-palace':
+        drawPalaceBg(ctx,t);
+        drawTurtle(ctx, CW*0.28, CH*0.66, 0.9, t*0.5);
+        drawBoy(ctx, CW*0.4, CH*0.62, 1.1, t, 'young');
+        drawPrincess(ctx, CW*0.62, CH*0.6, 1.2, t);
+        break;
+      case 'feast-qte':
+        drawPalaceBg(ctx,t);
+        drawFishAmbient(ctx,t*0.6);
+        drawBoy(ctx, CW*0.32, CH*0.68, 1.0, t, 'young');
+        drawPrincess(ctx, CW*0.66, CH*0.64, 1.05, t);
+        break;
+      case 'feast-after':
+        drawPalaceBg(ctx,t);
+        drawFishAmbient(ctx,t*0.4);
+        drawBoy(ctx, CW*0.4, CH*0.66, 1.15, t, 'young');
+        drawPrincess(ctx, CW*0.62, CH*0.62, 1.1, t);
+        break;
+      case 'miss-home':
+        drawPalaceBg(ctx,t);
+        drawBoy(ctx, CW*0.42, CH*0.66, 1.15, t, 'young');
+        drawPrincess(ctx, CW*0.63, CH*0.62, 1.05, t);
+        break;
+      case 'given-box':
+        drawPalaceBg(ctx,t);
+        drawBoy(ctx, CW*0.36, CH*0.66, 1.1, t, 'young');
+        drawPrincess(ctx, CW*0.62, CH*0.6, 1.05, t);
+        drawBox(ctx, CW*0.49, CH*0.68, 0.9, t, true);
+        break;
+      case 'swim-home-hold':
+        drawUnderwater(ctx,t);
+        var rise = (progressForHold||0);
+        drawTurtle(ctx, CW*0.5, CH*(0.7-rise*0.4), 1.1, t*0.6);
+        drawBoy(ctx, CW*0.5, CH*(0.6-rise*0.4), 1.0, t, 'young');
+        break;
+      case 'village-changed':
+        drawVillageOld(ctx,t);
+        drawBoy(ctx, CW*0.5, CH*0.78, 1.2, t, 'young');
+        break;
+      case 'choice':
+        drawVillageOld(ctx,t);
+        drawBoy(ctx, CW*0.42, CH*0.78, 1.15, t, 'young');
+        drawBox(ctx, CW*0.62, CH*0.78, 0.85, t, true);
+        break;
+      case 'ending-open':
+        drawVillageOld(ctx,t);
+        drawBoy(ctx, CW*0.5, CH*0.75, 1.25, t, 'old');
+        drawSmoke(ctx, CW*0.5, CH*0.65, t, 5);
+        break;
+      case 'ending-closed':
+        drawSkyBeach(ctx,t);
+        drawBoy(ctx, CW*0.45, CH*0.68, 1.25, t, 'young');
+        drawBox(ctx, CW*0.62, CH*0.72, 0.75, t, false);
+        break;
+      default:
+        drawSkyBeach(ctx,t);
+    }
+  }
+
+  var currentSceneKey = 'beach-intro';
+  var currentHoldProgress = 0;
+  function loop(ts){
+    animT += 0.016;
+    renderScene(currentSceneKey, animT, currentHoldProgress);
+    requestAnimationFrame(loop);
+  }
+
+  /* cover animation loop (separate lightweight) */
+  function coverLoop(){
+    var t = animT;
+    coverCtx.clearRect(0,0,CW,CH);
+    drawUnderwater(coverCtx,t);
+    drawPalaceBg(coverCtx,t*0.6);
+    drawTurtle(coverCtx, CW*0.3, CH*0.55, 1.1, t*0.6);
+    drawFishAmbient(coverCtx,t*0.5);
+    if(!state.started) requestAnimationFrame(coverLoop);
+  }
+
+  /* ============================================================
+     TARGET LAYER (QTE)
+  ============================================================ */
+  var qteTimer=null, qteSpawnTimer=null;
+  function clearTargets(){
+    elTargetLayer.innerHTML='';
+  }
+  function spawnTarget(){
+    var emojis = ['🐠','🐟','🎐','🐡'];
+    var div = document.createElement('div');
+    div.className='ut-target';
+    div.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    var left = 8+Math.random()*80;
+    var top = 10+Math.random()*65;
+    div.style.left = left+'%';
+    div.style.top = top+'%';
+    div.addEventListener('pointerdown', function(ev){
+      ev.stopPropagation();
+      if(div.classList.contains('ut-hit')) return;
+      div.classList.add('ut-hit');
+      state.qteScore++;
+      setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); },220);
+    });
+    elTargetLayer.appendChild(div);
+    setTimeout(function(){ if(div.parentNode && !div.classList.contains('ut-hit')) div.parentNode.removeChild(div); }, 1800);
+  }
+  function startQTE(){
+    state.qteActive = true;
+    state.qteScore = 0;
+    state.qteSpawned = 0;
+    clearTargets();
+    qteSpawnTimer = setInterval(function(){
+      if(state.qteSpawned >= 10){ endQTE(); return; }
+      spawnTarget();
+      state.qteSpawned++;
+    }, 550);
+    qteTimer = setTimeout(endQTE, 6500);
+  }
+  function endQTE(){
+    if(!state.qteActive) return;
+    state.qteActive = false;
+    clearInterval(qteSpawnTimer);
+    clearTimeout(qteTimer);
+    clearTargets();
+    goNext();
+  }
+
+  /* ============================================================
+     HOLD BUTTON LOGIC
+  ============================================================ */
+  var holdRAF=null, holdStartTime=null;
+  var HOLD_DURATION = 1600;
+  function startHold(){
+    if(state.holdActive) return;
+    state.holdActive = true;
+    holdStartTime = performance.now();
+    function step(now){
+      var elapsed = now-holdStartTime;
+      var pct = Math.min(elapsed/HOLD_DURATION,1);
+      state.holdProgress = pct;
+      currentHoldProgress = pct;
+      elHoldFill.style.width = (pct*100)+'%';
+      if(pct>=1){
+        state.holdActive=false;
+        elHoldFill.style.width='100%';
+        setTimeout(goNext, 150);
+        return;
+      }
+      if(state.holdActive) holdRAF = requestAnimationFrame(step);
+    }
+    holdRAF = requestAnimationFrame(step);
+  }
+  function cancelHold(){
+    if(!state.holdActive) return;
+    state.holdActive = false;
+    if(holdRAF) cancelAnimationFrame(holdRAF);
+    state.holdProgress = 0;
+    currentHoldProgress = 0;
+    elHoldFill.style.width='0%';
+  }
+
+  /* ============================================================
+     STEP FLOW
+  ============================================================ */
+  function renderStep(){
+    var steps = T().steps;
+    var idx = state.stepIndex;
+    var step = steps[idx];
+    if(!step) return;
+
+    currentSceneKey = step.scene;
+    currentHoldProgress = 0;
+    elHoldFill.style.width='0%';
+
+    elCaption.textContent = step.text;
+    elCaptionHint.textContent = step.hint || '';
+
+    elTapNext.classList.add('ut-hidden');
+    elHoldWrap.classList.add('ut-hidden');
+    elChoiceWrap.classList.add('ut-hidden');
+    elEndingWrap.classList.remove('ut-show');
+
+    if(step.type === 'hold'){
+      elHoldWrap.classList.remove('ut-hidden');
+      elHoldLabel.textContent = step.holdLabel;
+    } else if(step.type === 'qte'){
+      // no next button shown until qte completes; start automatically
+      startQTE();
+    } else if(step.type === 'choice'){
+      elChoiceWrap.classList.remove('ut-hidden');
+      elChoiceA.textContent = step.optionA;
+      elChoiceB.textContent = step.optionB;
+    } else {
+      elTapNext.classList.remove('ut-hidden');
+    }
+
+    updateDots();
+    speak(step.text);
+    setTimeout(postHeight,60);
+  }
+
+  function goNext(){
+    var steps = T().steps;
+    if(state.stepIndex < steps.length-1){
+      state.stepIndex++;
+      renderStep();
+    }
+  }
+
+  function chooseEnding(which){
+    stopSpeak();
+    state.ending = which;
+    var t = T();
+    var data = which === 'open' ? t.endingOpen : t.endingClosed;
+    currentSceneKey = which === 'open' ? 'ending-open' : 'ending-closed';
+
+    elCaption.textContent = data.text;
+    elCaptionHint.textContent = '';
+    elTapNext.classList.add('ut-hidden');
+    elHoldWrap.classList.add('ut-hidden');
+    elChoiceWrap.classList.add('ut-hidden');
+    elEndingWrap.classList.add('ut-show');
+    elMoralBox.textContent = t.moralLabel + data.moral;
+
+    // fill all dots as done
+    var dots = elDots.querySelectorAll('.ut-dot');
+    for(var i=0;i<dots.length;i++){ dots[i].classList.remove('ut-dot-active'); dots[i].classList.add('ut-dot-done'); }
+
+    speak(data.text + '. ' + t.moralLabel + data.moral);
+    setTimeout(postHeight,60);
+  }
+
+  function resetGame(){
+    stopSpeak();
+    state.stepIndex = 0;
+    state.ending = null;
+    buildDots();
+    renderStep();
+  }
+
+  /* ============================================================
+     EVENT WIRING
+  ============================================================ */
+  elStartBtn.addEventListener('click', function(){
+    state.started = true;
+    elCover.style.display='none';
+    buildDots();
+    renderStep();
+    postHeight();
+  });
+
+  elCoverLangBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.lang = btn.getAttribute('data-lang');
+      refreshStaticText();
+    });
+  });
+
+  elLangBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    refreshStaticText();
+    if(state.started){
+      if(state.ending){
+        chooseEnding(state.ending);
+      } else {
+        buildDots();
+        renderStep();
+      }
+    }
+  });
+
+  elMuteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('ut_muted', state.muted?'1':'0'); }catch(e){}
+    refreshStaticText();
+    if(state.muted) stopSpeak();
+  });
+
+  elTapNext.addEventListener('click', goNext);
+
+  elHoldBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); startHold(); });
+  elHoldBtn.addEventListener('pointerup', cancelHold);
+  elHoldBtn.addEventListener('pointerleave', cancelHold);
+  elHoldBtn.addEventListener('pointercancel', cancelHold);
+
+  elChoiceA.addEventListener('click', function(){ chooseEnding('open'); });
+  elChoiceB.addEventListener('click', function(){ chooseEnding('closed'); });
+
+  elReplayBtn.addEventListener('click', resetGame);
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  function init(){
+    resizeCanvas();
+    refreshStaticText();
+    requestAnimationFrame(loop);
+    requestAnimationFrame(coverLoop);
+    window.addEventListener('resize', function(){ setTimeout(postHeight,100); });
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>
