@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tigran dan Ikan Kecil</title>
+<style>
+  #tgik-root, #tgik-root * { box-sizing: border-box; }
+  #tgik-root {
+    --tgik-cream:#f6ecd6;
+    --tgik-paper:#fbf4e4;
+    --tgik-ink:#3a2c22;
+    --tgik-sea:#2c6079;
+    --tgik-sea-dark:#204a5e;
+    --tgik-sun:#e8a33d;
+    --tgik-rug-red:#a63d38;
+    --tgik-rug-gold:#c98f2e;
+    --tgik-green:#5c8a52;
+    --tgik-giant:#7c6a52;
+    font-family: 'Segoe UI', 'Trebuchet MS', 'Poppins', Verdana, sans-serif;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--tgik-paper);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(58,44,34,0.18);
+    border: 6px solid var(--tgik-rug-red);
+    color: var(--tgik-ink);
+    position: relative;
+  }
+  #tgik-rugband {
+    height: 14px;
+    width: 100%;
+    background-image: repeating-linear-gradient(45deg, var(--tgik-rug-gold) 0 8px, var(--tgik-rug-red) 8px 16px);
+  }
+  #tgik-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--tgik-cream);
+    border-bottom: 2px solid rgba(58,44,34,0.1);
+  }
+  #tgik-title-mini {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .3px;
+    color: var(--tgik-rug-red);
+  }
+  .tgik-btn-group { display: flex; gap: 6px; }
+  .tgik-icon-btn {
+    background: var(--tgik-paper);
+    border: 2px solid var(--tgik-rug-gold);
+    color: var(--tgik-ink);
+    border-radius: 10px;
+    padding: 5px 9px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform .12s ease, background .12s ease;
+    line-height: 1.2;
+  }
+  .tgik-icon-btn:hover { background: #fff; transform: translateY(-1px); }
+  .tgik-icon-btn:active { transform: translateY(0); }
+  #tgik-stage-wrap {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(#dff0f4, #f6ecd6 70%);
+  }
+  #tgik-canvas { display: block; width: 100%; height: auto; }
+  #tgik-caption-box {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 14px 16px 12px;
+    background: linear-gradient(to top, rgba(58,44,34,0.92), rgba(58,44,34,0.86) 70%, rgba(58,44,34,0));
+    color: #fbf4e4;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 60px;
+  }
+  #tgik-caption-text { margin: 0 0 8px 0; }
+  #tgik-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  #tgik-dots { display: flex; gap: 6px; }
+  .tgik-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(251,244,228,0.35);
+    transition: background .2s ease, transform .2s ease;
+  }
+  .tgik-dot.active { background: var(--tgik-sun); transform: scale(1.25); }
+  .tgik-dot.done { background: rgba(232,163,61,0.65); }
+  #tgik-next-btn {
+    background: var(--tgik-sun);
+    color: #3a2c22;
+    border: none;
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 3px 0 #a9711d;
+  }
+  #tgik-next-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #a9711d; }
+  #tgik-quiz-choices {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 12px 16px 16px;
+    background: linear-gradient(to top, rgba(58,44,34,0.95), rgba(58,44,34,0.9) 75%, rgba(58,44,34,0));
+    display: none;
+  }
+  #tgik-quiz-question {
+    color: #fbf4e4;
+    font-size: 14.5px;
+    margin: 0 0 10px 0;
+    line-height: 1.45;
+  }
+  #tgik-quiz-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .tgik-choice-btn {
+    background: var(--tgik-paper);
+    border: 2px solid var(--tgik-rug-gold);
+    border-radius: 10px;
+    padding: 9px 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--tgik-ink);
+    cursor: pointer;
+  }
+  .tgik-choice-btn:hover { background: #fff; }
+  .tgik-choice-btn.wrong { background: #e6b0ac; border-color: #a63d38; }
+  .tgik-choice-btn.correct { background: #c7dfb0; border-color: #5c8a52; }
+  #tgik-hint-btn {
+    display: block;
+    margin: 0 auto 10px;
+    background: var(--tgik-sea);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #tgik-cover, #tgik-end {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 26px 22px;
+    background: radial-gradient(circle at 50% 30%, #3a7089, #1f4a5e 75%);
+    color: #fbf4e4;
+    z-index: 5;
+  }
+  #tgik-end { display: none; }
+  .tgik-cover-emblem {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: var(--tgik-sun);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 0 6px rgba(251,244,228,0.15);
+  }
+  .tgik-cover-title { font-size: 24px; font-weight: 800; margin: 0 0 6px; }
+  .tgik-cover-sub { font-size: 14px; opacity: .85; margin: 0 0 22px; }
+  #tgik-start-btn, #tgik-replay-btn {
+    background: var(--tgik-sun);
+    color: #3a2c22;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-size: 15.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #a9711d;
+  }
+  #tgik-start-btn:active, #tgik-replay-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #a9711d; }
+  .tgik-moral {
+    margin-top: 16px;
+    font-size: 13px;
+    font-style: italic;
+    opacity: .9;
+    max-width: 320px;
+  }
+  #tgik-footer {
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 11.5px;
+    color: rgba(58,44,34,0.65);
+    background: var(--tgik-cream);
+    border-top: 2px solid rgba(58,44,34,0.08);
+  }
+  #tgik-footer a { color: var(--tgik-rug-red); text-decoration: none; font-weight: 700; }
+  @media (max-width:420px){
+    .tgik-cover-title { font-size: 20px; }
+    #tgik-caption-box { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="tgik-root">
+  <div id="tgik-rugband"></div>
+  <div id="tgik-topbar">
+    <div id="tgik-title-mini">Tigran &amp; Ikan Kecil</div>
+    <div class="tgik-btn-group">
+      <button class="tgik-icon-btn" id="tgik-lang-btn" type="button">EN</button>
+      <button class="tgik-icon-btn" id="tgik-mute-btn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="tgik-stage-wrap">
+    <canvas id="tgik-canvas" width="1000" height="640"></canvas>
+
+    <div id="tgik-cover">
+      <div class="tgik-cover-emblem">🐟</div>
+      <h1 class="tgik-cover-title" id="tgik-cover-title">Tigran dan Ikan Kecil</h1>
+      <p class="tgik-cover-sub" id="tgik-cover-sub">Dongeng Anak Armenia</p>
+      <button id="tgik-start-btn" type="button">Mulai Cerita</button>
+    </div>
+
+    <div id="tgik-end">
+      <div class="tgik-cover-emblem">🐄</div>
+      <h1 class="tgik-cover-title" id="tgik-end-title">Tamat</h1>
+      <p class="tgik-moral" id="tgik-end-moral">Kebaikan sekecil apapun akan berbuah kebaikan pula.</p>
+      <button id="tgik-replay-btn" type="button">Ulangi Cerita</button>
+    </div>
+
+    <div id="tgik-caption-box">
+      <p id="tgik-caption-text"></p>
+      <div id="tgik-controls-row">
+        <div id="tgik-dots"></div>
+        <button id="tgik-next-btn" type="button">Lanjut ▶</button>
+      </div>
+    </div>
+
+    <div id="tgik-quiz-choices">
+      <p id="tgik-quiz-question"></p>
+      <button id="tgik-hint-btn" type="button">🐟 Dengar Bisikan Ikan</button>
+      <div id="tgik-quiz-grid"></div>
+    </div>
+  </div>
+
+  <div id="tgik-footer">caritasato.blogspot.com</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var root = document.getElementById('tgik-root');
+  var canvas = document.getElementById('tgik-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 1000, H = 640;
+
+  /* ---------------- i18n ---------------- */
+  var TXT = {
+    id: {
+      coverTitle: "Tigran dan Ikan Kecil",
+      coverSub: "Dongeng Anak Armenia",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      endTitle: "Tamat",
+      endMoral: "Kebaikan sekecil apapun akan berbuah kebaikan yang besar.",
+      next: "Lanjut ▶",
+      hint: "🐟 Dengar Bisikan Ikan",
+      steps: [
+        "Tigran adalah seorang laki-laki miskin. Ia tak punya perahu sendiri, jadi setiap hari ia membantu seorang nelayan mencari ikan di laut.",
+        "Suatu hari, saat menarik jala, Tigran mendengar suara kecil, “Tuan, tolonglah lepaskan aku…” Suara itu berasal dari seekor ikan kecil yang baru saja tertangkap.",
+        "Tigran merasa iba. Tanpa berpikir panjang, ia melemparkan ikan kecil itu kembali ke laut. Nelayan yang melihatnya menjadi sangat marah dan memecat Tigran saat itu juga.",
+        "Dengan hati sedih, Tigran berjalan pulang. Ia bingung memikirkan cara memberi makan istri dan anak-anaknya. Di tengah jalan, ia bertemu seorang raksasa yang menuntun seekor sapi.",
+        "Raksasa itu berkata, “Aku akan memberimu sapi ini — tapi hanya jika kau bisa menjawab satu pertanyaan. Jika kau salah, kau harus menjadi budakku.”",
+        "“Burung elang!” jawab Tigran mantap. Raksasa itu terkejut — jawabannya benar! Karena ia raksasa yang menepati janji, ia pun menyerahkan sapi itu kepada Tigran.",
+        "Tigran membawa pulang sapi itu kepada keluarganya. Sejak hari itu, mereka hidup berkecukupan dari hasil susu sapi — berkat kebaikan hati Tigran kepada seekor ikan kecil."
+      ],
+      quizQuestion: "Siapa yang paling ditakuti oleh ikan kecil?",
+      hintLine: "Samar-samar, Tigran mendengar suara ikan kecil yang pernah ia tolong berbisik, “Tuan… yang paling ditakuti ikan kecil adalah burung elang.”",
+      choices: ["Burung Elang", "Ikan Hiu", "Kucing", "Manusia"],
+      correctIndex: 0,
+      wrongMsg: "Bukan itu jawabannya… coba dengarkan bisikan ikan sekali lagi.",
+      correctMsg: "Benar sekali!"
+    },
+    en: {
+      coverTitle: "Tigran and the Little Fish",
+      coverSub: "An Armenian Folktale",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      endTitle: "The End",
+      endMoral: "Even the smallest kindness can grow into something great.",
+      next: "Next ▶",
+      hint: "🐟 Listen to the Fish's Whisper",
+      steps: [
+        "Tigran was a poor man with no boat of his own. Every day he helped a fisherman catch fish out at sea.",
+        "One day, while pulling in the net, Tigran heard a tiny voice: “Please, sir, let me go…” It came from a little fish he had just caught.",
+        "Tigran felt sorry for the fish. Without a second thought, he threw it back into the sea. The fisherman, furious at what he saw, fired Tigran on the spot.",
+        "With a heavy heart, Tigran walked home, worried about how to feed his wife and children. On the way, he met a giant leading a cow.",
+        "The giant said, “I will give you this cow — but only if you answer one question correctly. If you fail, you become my slave.”",
+        "“The eagle!” Tigran answered confidently. The giant was stunned — it was correct! Being a giant of his word, he handed the cow over to Tigran.",
+        "Tigran brought the cow home to his family. From that day on, they lived comfortably from its milk — all thanks to Tigran's kindness to a little fish."
+      ],
+      quizQuestion: "What does a little fish fear the most?",
+      hintLine: "Faintly, Tigran heard the voice of the little fish he once saved, whispering, “Sir… the thing a little fish fears most is the eagle.”",
+      choices: ["Eagle", "Shark", "Cat", "Human"],
+      correctIndex: 0,
+      wrongMsg: "That's not quite right… try listening to the fish's whisper again.",
+      correctMsg: "That's correct!"
+    }
+  };
+
+  var state = {
+    lang: 'id',
+    muted: false,
+    phase: 'cover',   // cover | story | quizIntro | quizHint | quizChoices | quizResult | story2 | end
+    step: 0,          // index into steps 0..6 (7 total captions)
+    t: 0
+  };
+
+  try { state.muted = localStorage.getItem('tgik_muted') === '1'; } catch(e){}
+
+  // Story flow mapping: steps 0,1,2,3 are plain captions (drawn scenes 0-3)
+  // step 4 is the quiz intro caption (scene 4), then quiz interaction happens
+  // step 5 is result caption (scene 5), step 6 is ending caption (scene 6)
+  var TOTAL_DOTS = 7;
+
+  /* ---------------- Speech ---------------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    if (!voices || !voices.length) return null;
+    var exact = voices.filter(function(v){ return v.lang === langCode; });
+    if (exact.length) return exact[0];
+    var prefix = langCode.split('-')[0];
+    var loose = voices.filter(function(v){ return v.lang && v.lang.indexOf(prefix) === 0; });
+    if (loose.length) return loose[0];
+    return null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (state.muted || !text) return;
+    var langCode = state.lang === 'id' ? 'id-ID' : 'en-US';
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = langCode;
+    var v = pickVoice(langCode);
+    if (v) u.voice = v;
+    u.rate = 0.92;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------------- Drawing helpers ---------------- */
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  function drawSky(grad1, grad2){
+    var g = ctx.createLinearGradient(0,0,0,H*0.62);
+    g.addColorStop(0, grad1);
+    g.addColorStop(1, grad2);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.62);
+  }
+
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = 'rgba(232,163,61,0.9)';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMountains(baseY){
+    // twin-peak Ararat-like silhouette
+    ctx.save();
+    ctx.fillStyle = 'rgba(90,110,120,0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, baseY);
+    ctx.lineTo(W*0.18, baseY-70);
+    ctx.lineTo(W*0.30, baseY-30);
+    ctx.lineTo(W*0.42, baseY-140);
+    ctx.lineTo(W*0.52, baseY-40);
+    ctx.lineTo(W*0.66, baseY-95);
+    ctx.lineTo(W*0.80, baseY-25);
+    ctx.lineTo(W, baseY-55);
+    ctx.lineTo(W, baseY);
+    ctx.closePath();
+    ctx.fill();
+    // snow caps
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.moveTo(W*0.38, baseY-118);
+    ctx.lineTo(W*0.42, baseY-140);
+    ctx.lineTo(W*0.46, baseY-115);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWaves(baseY, t, colorA, colorB){
+    ctx.save();
+    ctx.fillStyle = colorA;
+    ctx.fillRect(0, baseY, W, H-baseY);
+    ctx.fillStyle = colorB;
+    for (var layer=0; layer<3; layer++){
+      ctx.beginPath();
+      var yOff = baseY + layer*18;
+      ctx.moveTo(0, yOff);
+      for (var x=0; x<=W; x+=20){
+        var y = yOff + Math.sin((x*0.02) + t*1.4 + layer) * (5 - layer);
+        ctx.lineTo(x,y);
+      }
+      ctx.lineTo(W, H); ctx.lineTo(0,H); ctx.closePath();
+      ctx.globalAlpha = 0.18 + layer*0.08;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawBoat(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a5a34';
+    ctx.beginPath();
+    ctx.moveTo(-60,10); ctx.quadraticCurveTo(0,40,60,10);
+    ctx.lineTo(50,-4); ctx.lineTo(-50,-4); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#5c3a20'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPersonBase(x,y,scale,skin,robe,mood){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#4a3620';
+    ctx.fillRect(-10,40,8,22); ctx.fillRect(4,40,8,22);
+    // robe/body
+    ctx.fillStyle = robe;
+    ctx.beginPath();
+    ctx.moveTo(-22,42); ctx.quadraticCurveTo(0,-6,22,42); ctx.closePath(); ctx.fill();
+    // sash
+    ctx.strokeStyle = 'var(--tgik-rug-red)'.indexOf('var')===0 ? '#a63d38' : '#a63d38';
+    ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-16,20); ctx.lineTo(16,26); ctx.stroke();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-18,16,0,Math.PI*2); ctx.fill();
+    // hair
+    ctx.fillStyle = '#2b2016';
+    ctx.beginPath(); ctx.arc(0,-24,16,Math.PI,0); ctx.fill();
+    // face - mood
+    ctx.fillStyle = '#2b2016';
+    if (mood === 'sad'){
+      ctx.beginPath(); ctx.arc(-5,-16,1.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5,-16,1.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0,-8,5,Math.PI*1.15,Math.PI*1.85); ctx.stroke();
+    } else if (mood === 'happy'){
+      ctx.beginPath(); ctx.arc(-5,-17,1.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5,-17,1.6,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#2b2016'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0,-11,5,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(-5,-17,1.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5,-17,1.6,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#2b2016'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-4,-10); ctx.lineTo(4,-10); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawTigran(x,y,scale,mood){ drawPersonBase(x,y,scale,'#d8a878','#3f7d63',mood || 'neutral'); }
+  function drawFisherman(x,y,scale,mood){ drawPersonBase(x,y,scale,'#c99566','#4a5a73',mood || 'angry'); }
+
+  function drawFish(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    if (glow){
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#fff6c9';
+      ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#e8a33d';
+    ctx.beginPath();
+    ctx.ellipse(0,0,16,9,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14,0); ctx.lineTo(-24,-8); ctx.lineTo(-24,8); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#2b2016';
+    ctx.beginPath(); ctx.arc(8,-2,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSpeechBubble(x,y,w,h,text,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.fillStyle = opts.fill || 'rgba(251,244,228,0.95)';
+    ctx.strokeStyle = opts.stroke || '#3a2c22';
+    ctx.lineWidth = 2;
+    roundRect(x,y,w,h,12);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x+18, y+h);
+    ctx.lineTo(x+8, y+h+14);
+    ctx.lineTo(x+34, y+h);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = opts.text || '#3a2c22';
+    ctx.font = (opts.fontStyle||'') + ' 15px Segoe UI, sans-serif';
+    wrapText(text, x+14, y+24, w-28, 19);
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function wrapText(text,x,y,maxWidth,lineHeight){
+    var words = text.split(' ');
+    var line = '';
+    var yy = y;
+    for (var n=0;n<words.length;n++){
+      var test = line + words[n] + ' ';
+      if (ctx.measureText(test).width > maxWidth && n>0){
+        ctx.fillText(line, x, yy);
+        line = words[n] + ' ';
+        yy += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line, x, yy);
+  }
+
+  function drawGiant(x,y,scale,withCow){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#5c4a34';
+    ctx.fillRect(-20,70,16,40); ctx.fillRect(8,70,16,40);
+    // body
+    ctx.fillStyle = '#7c6a52';
+    ctx.beginPath();
+    ctx.moveTo(-40,74); ctx.quadraticCurveTo(0,-30,40,74); ctx.closePath(); ctx.fill();
+    // belt
+    ctx.fillStyle = '#3a2c22';
+    ctx.fillRect(-34,44,68,10);
+    // arms
+    ctx.strokeStyle = '#7c6a52'; ctx.lineWidth = 18; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-30,10); ctx.lineTo(-58,-20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(30,10); ctx.lineTo(60,-10); ctx.stroke();
+    // head
+    ctx.fillStyle = '#a58a68';
+    ctx.beginPath(); ctx.arc(0,-42,26,0,Math.PI*2); ctx.fill();
+    // eyes
+    ctx.fillStyle = '#2b2016';
+    ctx.beginPath(); ctx.arc(-9,-44,2.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(9,-44,2.4,0,Math.PI*2); ctx.fill();
+    // brow
+    ctx.strokeStyle = '#2b2016'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(-16,-52); ctx.lineTo(-3,-50); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(16,-52); ctx.lineTo(3,-50); ctx.stroke();
+    ctx.restore();
+    if (withCow) drawCow(x+95,y+62,0.85*scale);
+  }
+
+  function drawCow(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#f2ede0';
+    ctx.beginPath(); ctx.ellipse(0,0,44,26,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7c6a52';
+    ctx.beginPath(); ctx.ellipse(-16,-6,10,7,0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(12,8,12,8,-0.2,0,Math.PI*2); ctx.fill();
+    // legs
+    ctx.fillStyle = '#e8e0cc';
+    ctx.fillRect(-30,14,7,20); ctx.fillRect(-10,16,7,20);
+    ctx.fillRect(14,16,7,20); ctx.fillRect(32,14,7,20);
+    // head
+    ctx.fillStyle = '#f2ede0';
+    ctx.beginPath(); ctx.ellipse(48,-8,16,13,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3a2c22';
+    ctx.beginPath(); ctx.arc(54,-9,1.8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5c4a34';
+    ctx.beginPath(); ctx.ellipse(38,-18,4,7,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(38,4,4,7,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHouse(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#c98f2e';
+    ctx.fillRect(-40,0,80,56);
+    ctx.fillStyle = '#a63d38';
+    ctx.beginPath(); ctx.moveTo(-50,0); ctx.lineTo(0,-36); ctx.lineTo(50,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5c3a20';
+    ctx.fillRect(-10,26,20,30);
+    ctx.fillStyle = '#fbf4e4';
+    ctx.fillRect(-32,10,16,16); ctx.fillRect(16,10,16,16);
+    ctx.restore();
+  }
+
+  /* ---------------- Scenes ---------------- */
+  function bgSea(t){
+    drawSky('#bfe3ee', '#eaf3d9');
+    drawSun(W*0.82, H*0.14, 46);
+    drawMountains(H*0.42);
+    drawWaves(H*0.5, t, '#2c6079', '#1f4a5e');
+  }
+  function bgLand(t){
+    drawSky('#f7d8a6', '#f6ecd6');
+    drawSun(W*0.18, H*0.16, 50);
+    drawMountains(H*0.5);
+    ctx.fillStyle = '#8aab5e';
+    ctx.fillRect(0, H*0.56, W, H*0.44);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  }
+  function bgHome(t){
+    drawSky('#f3b06b', '#f6ecd6');
+    drawSun(W*0.5, H*0.2, 54);
+    drawMountains(H*0.48);
+    ctx.fillStyle = '#7c9c53';
+    ctx.fillRect(0, H*0.54, W, H*0.46);
+  }
+
+  function scene0(t){ // Tigran works for fisherman
+    bgSea(t);
+    drawBoat(W*0.5, H*0.56, 1.6);
+    drawFisherman(W*0.58, H*0.5, 1.1, 'neutral');
+    drawTigran(W*0.42, H*0.5, 1.1, 'neutral');
+  }
+  function scene1(t){ // hears voice from small fish
+    bgSea(t);
+    drawBoat(W*0.5, H*0.58, 1.6);
+    drawTigran(W*0.5, H*0.5, 1.2, 'neutral');
+    drawFish(W*0.5, H*0.66, 1.6, true);
+    drawSpeechBubble(W*0.56, H*0.30, 230, 70, '"Tuan, tolonglah lepaskan aku..."', {fontStyle:'italic'});
+  }
+  function scene2(t){ // release fish, fisherman angry
+    bgSea(t);
+    drawBoat(W*0.5, H*0.6, 1.6);
+    drawTigran(W*0.42, H*0.5, 1.15, 'happy');
+    drawFisherman(W*0.62, H*0.48, 1.15, 'angry');
+    drawFish(W*0.3, H*0.35 + Math.sin(t*3)*4, 1.3, false);
+    drawSpeechBubble(W*0.55, H*0.16, 220, 60, '"Kau apakan ikan kita?!"', {fontStyle:'italic', fill:'rgba(230,176,172,0.95)'});
+  }
+  function scene3(t){ // walk home, meet giant
+    bgLand(t);
+    drawGiant(W*0.68, H*0.5, 1.05, true);
+    drawTigran(W*0.28, H*0.62, 1.15, 'sad');
+  }
+  function scene4(t){ // giant question intro
+    bgLand(t);
+    drawGiant(W*0.62, H*0.48, 1.15, true);
+    drawTigran(W*0.24, H*0.66, 1.15, 'neutral');
+    drawSpeechBubble(W*0.30, H*0.10, 260, 78, '"Siapa yang paling ditakuti ikan kecil?"', {fontStyle:'italic'});
+  }
+  function sceneHint(t){
+    bgLand(t);
+    drawGiant(W*0.62, H*0.48, 1.15, true);
+    drawTigran(W*0.24, H*0.66, 1.15, 'neutral');
+    ctx.save();
+    ctx.globalAlpha = 0.85 + Math.sin(t*2)*0.1;
+    drawFish(W*0.16, H*0.42, 1.4, true);
+    ctx.restore();
+    drawSpeechBubble(W*0.10, H*0.10, 240, 78, '"...burung elang..."', {fontStyle:'italic', fill:'rgba(191,227,238,0.95)'});
+  }
+  function scene5(t){ // correct answer, giant gives cow
+    bgLand(t);
+    drawGiant(W*0.6, H*0.48, 1.15, false);
+    drawCow(W*0.32, H*0.66, 1.2);
+    drawTigran(W*0.20, H*0.66, 1.15, 'happy');
+    // sun rays celebratory
+    ctx.save();
+    ctx.strokeStyle = 'rgba(232,163,61,0.5)';
+    ctx.lineWidth = 3;
+    for (var i=0;i<8;i++){
+      var ang = (i/8)*Math.PI*2 + t;
+      ctx.beginPath();
+      ctx.moveTo(W*0.5+Math.cos(ang)*40, H*0.18+Math.sin(ang)*40);
+      ctx.lineTo(W*0.5+Math.cos(ang)*60, H*0.18+Math.sin(ang)*60);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function scene6(t){ // ending, home with family and cow
+    bgHome(t);
+    drawHouse(W*0.72, H*0.44, 1.3);
+    drawCow(W*0.30, H*0.68, 1.15);
+    drawTigran(W*0.44, H*0.62, 1.05, 'happy');
+    drawPersonBase(W*0.52, H*0.64, 0.85, '#d8a878', '#a63d38', 'happy');
+    drawPersonBase(W*0.58, H*0.72, 0.55, '#d8a878', '#c98f2e', 'happy');
+  }
+
+  var SCENE_FNS = [scene0, scene1, scene2, scene3, scene4, scene5, scene6];
+
+  function drawCurrentFrame(t){
+    ctx.clearRect(0,0,W,H);
+    if (state.phase === 'cover' || state.phase === 'end'){
+      bgSea(t);
+      return;
+    }
+    if (state.phase === 'quizHint'){
+      sceneHint(t);
+      return;
+    }
+    var idx = state.step;
+    if (idx < 0) idx = 0;
+    if (idx > 6) idx = 6;
+    var fn = SCENE_FNS[idx] || scene0;
+    fn(t);
+  }
+
+  /* ---------------- UI wiring ---------------- */
+  var captionBox = document.getElementById('tgik-caption-box');
+  var captionText = document.getElementById('tgik-caption-text');
+  var nextBtn = document.getElementById('tgik-next-btn');
+  var dotsWrap = document.getElementById('tgik-dots');
+  var coverEl = document.getElementById('tgik-cover');
+  var endEl = document.getElementById('tgik-end');
+  var startBtn = document.getElementById('tgik-start-btn');
+  var replayBtn = document.getElementById('tgik-replay-btn');
+  var muteBtn = document.getElementById('tgik-mute-btn');
+  var langBtn = document.getElementById('tgik-lang-btn');
+  var quizBox = document.getElementById('tgik-quiz-choices');
+  var quizQuestionEl = document.getElementById('tgik-quiz-question');
+  var quizGrid = document.getElementById('tgik-quiz-grid');
+  var hintBtn = document.getElementById('tgik-hint-btn');
+
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for (var i=0;i<TOTAL_DOTS;i++){
+      var d = document.createElement('div');
+      d.className = 'tgik-dot';
+      d.dataset.i = i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = dotsWrap.querySelectorAll('.tgik-dot');
+    for (var i=0;i<dots.length;i++){
+      dots[i].className = 'tgik-dot' + (i===state.step ? ' active' : (i<state.step ? ' done':''));
+    }
+  }
+
+  function currentTxt(){ return TXT[state.lang]; }
+
+  function renderCaption(){
+    var T = currentTxt();
+    captionBox.style.display = 'block';
+    quizBox.style.display = 'none';
+    captionText.textContent = T.steps[state.step];
+    nextBtn.textContent = T.next;
+    updateDots();
+    speak(T.steps[state.step]);
+  }
+
+  function renderQuiz(){
+    var T = currentTxt();
+    captionBox.style.display = 'none';
+    quizBox.style.display = 'block';
+    quizQuestionEl.textContent = T.quizQuestion;
+    hintBtn.style.display = 'block';
+    hintBtn.textContent = T.hint;
+    quizGrid.innerHTML = '';
+    var order = [0,1,2,3];
+    order.forEach(function(ci){
+      var b = document.createElement('button');
+      b.className = 'tgik-choice-btn';
+      b.type = 'button';
+      b.textContent = T.choices[ci];
+      b.addEventListener('click', function(choiceIndex, btnEl){
+        return function(){ handleChoice(choiceIndex, btnEl); };
+      }(ci, b));
+      quizGrid.appendChild(b);
+    });
+    speak(T.quizQuestion);
+  }
+
+  var quizAnswered = false;
+  function handleChoice(choiceIndex, btnEl){
+    if (quizAnswered) return;
+    var T = currentTxt();
+    if (choiceIndex === T.correctIndex){
+      quizAnswered = true;
+      btnEl.classList.add('correct');
+      speak(T.correctMsg);
+      setTimeout(function(){
+        state.step = 5;
+        state.phase = 'story';
+        renderCaption();
+      }, 900);
+    } else {
+      btnEl.classList.add('wrong');
+      speak(T.wrongMsg);
+      setTimeout(function(){ btnEl.classList.remove('wrong'); }, 700);
+    }
+  }
+
+  hintBtn.addEventListener('click', function(){
+    var T = currentTxt();
+    state.phase = 'quizHint';
+    speak(T.hintLine);
+  });
+
+  nextBtn.addEventListener('click', function(){
+    stopSpeak();
+    if (state.phase === 'quizHint'){
+      state.phase = 'quizChoices';
+      renderQuiz();
+      return;
+    }
+    if (state.step === 4 && state.phase === 'story'){
+      // move into quiz interaction after the giant's question caption
+      state.phase = 'quizChoices';
+      quizAnswered = false;
+      renderQuiz();
+      return;
+    }
+    if (state.step >= 6){
+      showEnd();
+      return;
+    }
+    state.step += 1;
+    state.phase = 'story';
+    renderCaption();
+  });
+
+  function showCover(){
+    state.phase = 'cover';
+    coverEl.style.display = 'flex';
+    endEl.style.display = 'none';
+    captionBox.style.display = 'none';
+    quizBox.style.display = 'none';
+    var T = currentTxt();
+    document.getElementById('tgik-cover-title').textContent = T.coverTitle;
+    document.getElementById('tgik-cover-sub').textContent = T.coverSub;
+    startBtn.textContent = T.startBtn;
+  }
+
+  function showEnd(){
+    state.phase = 'end';
+    coverEl.style.display = 'none';
+    endEl.style.display = 'flex';
+    captionBox.style.display = 'none';
+    quizBox.style.display = 'none';
+    var T = currentTxt();
+    document.getElementById('tgik-end-title').textContent = T.endTitle;
+    document.getElementById('tgik-end-moral').textContent = T.endMoral;
+    replayBtn.textContent = T.replayBtn;
+    speak(T.endTitle + '. ' + T.endMoral);
+  }
+
+  startBtn.addEventListener('click', function(){
+    coverEl.style.display = 'none';
+    state.step = 0;
+    state.phase = 'story';
+    renderCaption();
+  });
+
+  replayBtn.addEventListener('click', function(){
+    quizAnswered = false;
+    showCover();
+  });
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    try { localStorage.setItem('tgik_muted', state.muted ? '1' : '0'); } catch(e){}
+    if (state.muted) stopSpeak();
+  });
+  muteBtn.textContent = state.muted ? '🔇' : '🔊';
+
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    if (state.phase === 'cover') showCover();
+    else if (state.phase === 'story') renderCaption();
+    else if (state.phase === 'quizChoices'){ quizAnswered = false; renderQuiz(); }
+    else if (state.phase === 'quizHint') { /* keep hint scene, just refresh speech lang */ speak(currentTxt().hintLine); }
+    else if (state.phase === 'end') showEnd();
+  });
+
+  /* ---------------- URL lang param ---------------- */
+  (function(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var l = params.get('lang');
+      if (l === 'en' || l === 'id') {
+        state.lang = l;
+        langBtn.textContent = l === 'id' ? 'EN' : 'ID';
+      }
+    } catch(e){}
+  })();
+
+  /* ---------------- resize / render loop ---------------- */
+  function resizeCanvasCSS(){
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+  }
+  resizeCanvasCSS();
+
+  function loop(ts){
+    var t = ts / 1000;
+    drawCurrentFrame(t);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  buildDots();
+  showCover();
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function postHeight(){
+    try {
+      var h = root.getBoundingClientRect().height;
+      window.parent.postMessage({ type: 'tgikResize', height: Math.ceil(h) }, '*');
+    } catch(e){}
+  }
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ postHeight(); });
+    ro.observe(root);
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  setInterval(postHeight, 900);
+
+})();
+</script>
+</body>
+</html>
