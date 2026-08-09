@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matahari dan Angin - Dongeng Interaktif</title>
+<style>
+  :root{
+    --msa-sky-top:#8fd3f4;
+    --msa-sky-bottom:#e9f7fd;
+    --msa-panel:#fffaf0;
+    --msa-ink:#3a2e26;
+    --msa-accent:#f2994a;
+    --msa-accent2:#56b6e6;
+    --msa-good:#4caf83;
+    --msa-shadow: rgba(0,0,0,0.15);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:transparent;
+    color:var(--msa-ink);
+  }
+  #msa-app{
+    max-width:720px;
+    margin:0 auto;
+    background:var(--msa-panel);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 6px 24px var(--msa-shadow);
+    position:relative;
+  }
+  #msa-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 12px;
+    background:#fff3df;
+    border-bottom:2px solid #f0e0c0;
+  }
+  #msa-app-title{
+    font-weight:700;
+    font-size:14px;
+    color:#8a5a2b;
+    letter-spacing:0.5px;
+  }
+  #msa-topbar-controls{
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .msa-btn-small{
+    border:none;
+    background:#fff;
+    border:1px solid #e0c9a0;
+    color:#8a5a2b;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease;
+  }
+  .msa-btn-small:hover{ background:#fff0da; }
+  .msa-btn-small:active{ transform:scale(0.94); }
+  .msa-btn-small.msa-active{
+    background:var(--msa-accent);
+    color:#fff;
+    border-color:var(--msa-accent);
+  }
+  #msa-mute-btn{
+    font-size:16px;
+    padding:5px 9px;
+    border-radius:50%;
+    width:32px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #msa-stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:800/450;
+    background:linear-gradient(var(--msa-sky-top),var(--msa-sky-bottom));
+  }
+  #msa-canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .msa-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:rgba(20,25,40,0.55);
+    padding:20px;
+    color:#fff;
+  }
+  .msa-hidden{ display:none !important; }
+  #msa-title{
+    font-size:clamp(20px,5vw,32px);
+    margin:0 0 6px 0;
+    text-shadow:0 2px 6px rgba(0,0,0,0.4);
+  }
+  #msa-subtitle{
+    font-size:clamp(12px,2.6vw,15px);
+    max-width:480px;
+    line-height:1.5;
+    margin:0 0 18px 0;
+    opacity:0.95;
+  }
+  .msa-cta-btn{
+    background:var(--msa-accent);
+    color:#fff;
+    border:none;
+    padding:12px 28px;
+    font-size:15px;
+    font-weight:700;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    transition:transform 0.15s ease;
+  }
+  .msa-cta-btn:hover{ transform:translateY(-2px); }
+  .msa-cta-btn:active{ transform:scale(0.96); }
+  #msa-end-title{
+    font-size:clamp(18px,4.5vw,26px);
+    margin:0 0 10px 0;
+  }
+  #msa-end-text{
+    font-size:clamp(12px,2.6vw,15px);
+    max-width:500px;
+    line-height:1.6;
+    margin:0 0 18px 0;
+  }
+  #msa-caption-box{
+    padding:14px 18px 6px 18px;
+    min-height:70px;
+  }
+  #msa-caption-text{
+    font-size:clamp(13px,3vw,16px);
+    line-height:1.6;
+    margin:0 0 12px 0;
+    color:#4a3a2c;
+  }
+  #msa-next-btn{
+    display:block;
+    margin:0 auto 8px auto;
+    background:var(--msa-accent2);
+    color:#fff;
+    border:none;
+    padding:9px 22px;
+    border-radius:22px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  #msa-next-btn:hover{ transform:translateY(-1px); }
+  #msa-next-btn:active{ transform:scale(0.95); }
+  #msa-hold-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  #msa-hold-btn{
+    background:var(--msa-accent);
+    color:#fff;
+    border:none;
+    padding:14px 30px;
+    border-radius:30px;
+    font-size:14px;
+    font-weight:800;
+    cursor:pointer;
+    user-select:none;
+    touch-action:none;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  }
+  #msa-hold-btn:active{ filter:brightness(0.92); }
+  #msa-hold-progress-track{
+    width:220px;
+    max-width:70vw;
+    height:12px;
+    background:#e7ddc9;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid #d8c8a6;
+  }
+  #msa-hold-progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--msa-accent2),var(--msa-good));
+    transition:width 0.05s linear;
+  }
+  #msa-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    padding:4px 0 14px 0;
+  }
+  .msa-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#e0d3ba;
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+  .msa-dot.msa-dot-active{
+    background:var(--msa-accent);
+    transform:scale(1.3);
+  }
+  .msa-dot.msa-dot-done{
+    background:var(--msa-good);
+  }
+  #msa-footer{
+    text-align:center;
+    font-size:11px;
+    color:#a08a68;
+    padding:6px 0 12px 0;
+    letter-spacing:0.3px;
+  }
+  #msa-footer a{
+    color:#a08a68;
+    text-decoration:none;
+    font-weight:700;
+  }
+  #msa-footer a:hover{ text-decoration:underline; }
+</style>
+</head>
+<body>
+<div id="msa-app">
+  <div id="msa-topbar">
+    <div id="msa-app-title">🌤️ Matahari &amp; Angin</div>
+    <div id="msa-topbar-controls">
+      <button class="msa-btn-small msa-active" id="msa-lang-id" data-lang="id">ID</button>
+      <button class="msa-btn-small" id="msa-lang-en" data-lang="en">EN</button>
+      <button class="msa-btn-small" id="msa-mute-btn" title="mute/unmute">🔊</button>
+    </div>
+  </div>
+
+  <div id="msa-stage-wrap">
+    <canvas id="msa-canvas" width="800" height="450"></canvas>
+
+    <div id="msa-cover-screen" class="msa-overlay">
+      <h1 id="msa-title">Matahari dan Angin</h1>
+      <p id="msa-subtitle">Dongeng anak Amerika tentang dua sahabat yang bertengkar soal siapa yang paling hebat.</p>
+      <button class="msa-cta-btn" id="msa-start-btn">▶ Mulai Cerita</button>
+    </div>
+
+    <div id="msa-end-screen" class="msa-overlay msa-hidden">
+      <h2 id="msa-end-title">Selesai!</h2>
+      <p id="msa-end-text">Kelembutan sering kali lebih berarti daripada kekuatan.</p>
+      <button class="msa-cta-btn" id="msa-restart-btn">↻ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="msa-caption-box">
+    <p id="msa-caption-text">&nbsp;</p>
+    <button id="msa-next-btn" class="msa-hidden">Lanjut ▸</button>
+    <div id="msa-hold-wrap" class="msa-hidden">
+      <button id="msa-hold-btn">TAHAN</button>
+      <div id="msa-hold-progress-track"><div id="msa-hold-progress-fill"></div></div>
+    </div>
+  </div>
+
+  <div id="msa-dots"></div>
+
+  <div id="msa-footer">📖 <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a> — kumpulan dongeng anak nusantara &amp; dunia</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ TEXT / I18N ============ */
+  var msaTXT = {
+    id:{
+      appTitle:"🌤️ Matahari & Angin",
+      coverTitle:"Matahari dan Angin",
+      coverSubtitle:"Dongeng anak Amerika tentang dua sahabat yang bertengkar soal siapa yang paling hebat.",
+      startBtn:"▶ Mulai Cerita",
+      restartBtn:"↻ Ulangi Cerita",
+      nextBtn:"Lanjut ▸",
+      holdBtnWind:"TAHAN untuk MENIUP",
+      holdBtnSun:"TAHAN untuk BERSINAR",
+      endTitle:"Tamat",
+      endText:"Sejak saat itu, Angin dan Matahari tak pernah lagi bertengkar. Keduanya sadar, kelembutan sering kali lebih berarti daripada kekuatan — dan mereka berdua sama-sama dibutuhkan manusia.",
+      footer:"kumpulan dongeng anak nusantara & dunia"
+    },
+    en:{
+      appTitle:"🌤️ Sun & Wind",
+      coverTitle:"The Sun and the Wind",
+      coverSubtitle:"An American folktale about two friends who argue over who is truly the strongest.",
+      startBtn:"▶ Start the Story",
+      restartBtn:"↻ Replay the Story",
+      nextBtn:"Next ▸",
+      holdBtnWind:"HOLD to BLOW",
+      holdBtnSun:"HOLD to SHINE",
+      endTitle:"The End",
+      endText:"From that day on, Wind and Sun never quarreled again. They learned that gentleness often means more than force — and that people need them both.",
+      footer:"Indonesian & world folktales for kids"
+    }
+  };
+
+  var msaStages = [
+    { type:"caption", mood:"village",
+      id:"Di negeri awan, tinggal Matahari dan Angin yang bertetangga. Keduanya merasa paling dibutuhkan oleh manusia.",
+      en:"In the land of clouds lived Sun and Wind, next-door neighbors. Each felt they were the one people needed most." },
+    { type:"caption", mood:"argue",
+      id:"“Saat manusia kepanasan olehmu, mereka pasti merindukan kesejukanku!” kata Angin membanggakan diri.",
+      en:"\u201cWhen people feel hot because of you, they will surely long for my cool breeze!\u201d Wind boasted." },
+    { type:"caption", mood:"argue2",
+      id:"“Tapi kau sering mengamuk jadi badai dan merusak rumah mereka. Kehadiranku jauh lebih mereka rindukan,” balas Matahari mengejek.",
+      en:"\u201cBut you often rage into storms and wreck their homes. They miss my presence far more,\u201d Sun teased back." },
+    { type:"caption", mood:"traveler",
+      id:"Kebetulan, seorang laki-laki tengah berjalan sendirian melewati sebuah desa yang sepi.",
+      en:"Just then, a man happened to be walking alone through a quiet village." },
+    { type:"caption", mood:"wind-idea",
+      id:"Angin punya ide. “Akan kutunjukkan kehebatanku. Lihat saja, sebentar lagi ia akan memakai jaketnya!”",
+      en:"Wind had an idea. \u201cI\u2019ll show you my power. Watch \u2014 he\u2019ll put on his jacket any moment now!\u201d" },
+    { type:"hold", mood:"wind-blow", target:"wind",
+      id:"Ayo bantu Angin! Tahan tombolnya untuk membuat Angin bertiup sekencang-kencangnya!",
+      en:"Help the Wind! Hold the button to make it blow as hard as it can!" },
+    { type:"caption", mood:"wind-result",
+      id:"Angin bertiup sangat kencang. Laki-laki itu kedinginan dan segera memakai jaketnya erat-erat.",
+      en:"The Wind blew fiercely. The man felt very cold and quickly wrapped his jacket tight." },
+    { type:"caption", mood:"sun-idea",
+      id:"Matahari tak mau kalah. “Lihat apa yang bisa kulakukan, hai Angin sombong!” serunya.",
+      en:"Sun wouldn\u2019t be outdone. \u201cWatch what I can do, proud Wind!\u201d she called out." },
+    { type:"hold", mood:"sun-shine", target:"sun",
+      id:"Sekarang bantu Matahari! Tahan tombolnya untuk membuat sinarnya sehangat mungkin!",
+      en:"Now help the Sun! Hold the button to make its rays as warm as possible!" },
+    { type:"caption", mood:"sun-result",
+      id:"Matahari memancarkan sinar hangat. Laki-laki itu kepanasan dan segera melepas jaketnya.",
+      en:"The Sun beamed warmly. The man grew hot and quickly took off his jacket." },
+    { type:"caption", mood:"man-wish",
+      id:"Laki-laki itu berkata, “Andai angin bertiup sepoi-sepoi dan matahari tak seterik ini, tentu perjalananku akan menyenangkan.”",
+      en:"The man said, \u201cIf only the wind blew gently and the sun weren\u2019t so scorching, my journey would be so pleasant.\u201d" },
+    { type:"caption", mood:"realize",
+      id:"Mendengar itu, Angin dan Matahari sadar — keduanya sama-sama dibutuhkan manusia, tak perlu saling menyombongkan diri.",
+      en:"Hearing this, Wind and Sun realized \u2014 they were both needed by people, and neither had to boast." }
+  ];
+
+  /* ============ STATE ============ */
+  var msaLang = "id";
+  var msaMuted = false;
+  try { msaMuted = localStorage.getItem("msaMuted") === "1"; } catch(e){ msaMuted = false; }
+  var msaStageIdx = -1; // -1 = cover screen
+  var msaStarted = false;
+  var msaFinished = false;
+
+  var scene = {
+    mood:"village",
+    jacketOn:false,
+    intensity:0,
+    targetIntensity:0,
+    holdActive:false,
+    holdProgress:0,
+    holding:false,
+    time:0,
+    manShiver:0,
+    manSweat:0,
+    resolvedPulse:0
+  };
+
+  /* ============ DOM ============ */
+  var elApp = document.getElementById("msa-app");
+  var elCanvas = document.getElementById("msa-canvas");
+  var ctx = elCanvas.getContext("2d");
+  var elCover = document.getElementById("msa-cover-screen");
+  var elEnd = document.getElementById("msa-end-screen");
+  var elTitle = document.getElementById("msa-title");
+  var elSubtitle = document.getElementById("msa-subtitle");
+  var elStartBtn = document.getElementById("msa-start-btn");
+  var elRestartBtn = document.getElementById("msa-restart-btn");
+  var elEndTitle = document.getElementById("msa-end-title");
+  var elEndText = document.getElementById("msa-end-text");
+  var elCaptionText = document.getElementById("msa-caption-text");
+  var elNextBtn = document.getElementById("msa-next-btn");
+  var elHoldWrap = document.getElementById("msa-hold-wrap");
+  var elHoldBtn = document.getElementById("msa-hold-btn");
+  var elHoldFill = document.getElementById("msa-hold-progress-fill");
+  var elDots = document.getElementById("msa-dots");
+  var elMuteBtn = document.getElementById("msa-mute-btn");
+  var elLangId = document.getElementById("msa-lang-id");
+  var elLangEn = document.getElementById("msa-lang-en");
+  var elAppTitle = document.getElementById("msa-app-title");
+  var elFooter = document.getElementById("msa-footer");
+
+  /* ============ DOTS ============ */
+  function msaBuildDots(){
+    elDots.innerHTML = "";
+    for (var i=0; i<msaStages.length; i++){
+      var d = document.createElement("div");
+      d.className = "msa-dot";
+      d.setAttribute("data-idx", i);
+      elDots.appendChild(d);
+    }
+  }
+  function msaUpdateDots(){
+    var dots = elDots.querySelectorAll(".msa-dot");
+    for (var i=0; i<dots.length; i++){
+      dots[i].className = "msa-dot" +
+        (i < msaStageIdx ? " msa-dot-done" : "") +
+        (i === msaStageIdx ? " msa-dot-active" : "");
+    }
+  }
+
+  /* ============ TEXT UPDATE ============ */
+  function msaApplyLangUI(){
+    var t = msaTXT[msaLang];
+    elAppTitle.textContent = t.appTitle;
+    elCoverTextUpdate();
+    elStartBtn.textContent = t.startBtn;
+    elRestartBtn.textContent = t.restartBtn;
+    elNextBtn.textContent = t.nextBtn;
+    elEndTitle.textContent = t.endTitle;
+    elEndText.textContent = t.endText;
+    elFooter.innerHTML = '📖 <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a> \u2014 ' + t.footer;
+    elLangId.className = "msa-btn-small" + (msaLang === "id" ? " msa-active" : "");
+    elLangEn.className = "msa-btn-small" + (msaLang === "en" ? " msa-active" : "");
+    document.documentElement.lang = msaLang;
+    if (msaStageIdx >= 0 && !msaFinished){
+      msaRenderStageText();
+    }
+  }
+  function elCoverTextUpdate(){
+    var t = msaTXT[msaLang];
+    elTitle.textContent = t.coverTitle;
+    elSubtitle.textContent = t.coverSubtitle;
+  }
+
+  function msaRenderStageText(){
+    var st = msaStages[msaStageIdx];
+    if (!st) return;
+    var txt = st[msaLang];
+    elCaptionText.textContent = txt;
+    if (st.type === "caption"){
+      elNextBtn.classList.remove("msa-hidden");
+      elHoldWrap.classList.add("msa-hidden");
+    } else if (st.type === "hold"){
+      elNextBtn.classList.add("msa-hidden");
+      elHoldWrap.classList.remove("msa-hidden");
+      var t = msaTXT[msaLang];
+      elHoldBtn.textContent = st.target === "wind" ? t.holdBtnWind : t.holdBtnSun;
+    }
+  }
+
+  /* ============ SPEECH ============ */
+  var msaVoices = [];
+  function msaLoadVoices(){
+    try { msaVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; } catch(e){ msaVoices = []; }
+  }
+  if (window.speechSynthesis){
+    msaLoadVoices();
+    window.speechSynthesis.onvoiceschanged = msaLoadVoices;
+  }
+  function msaPickVoice(lang){
+    var wanted = lang === "id" ? "id-ID" : "en-US";
+    var v = null;
+    for (var i=0; i<msaVoices.length; i++){
+      if (msaVoices[i].lang === wanted){ v = msaVoices[i]; break; }
+    }
+    if (!v){
+      for (var j=0; j<msaVoices.length; j++){
+        if (msaVoices[j].lang && msaVoices[j].lang.indexOf(lang) === 0){ v = msaVoices[j]; break; }
+      }
+    }
+    return v;
+  }
+  function msaSpeak(text){
+    if (msaMuted) return;
+    if (!window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = msaLang === "id" ? "id-ID" : "en-US";
+      var v = msaPickVoice(msaLang);
+      if (v) u.voice = v;
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch(e){ /* ignore speech errors */ }
+  }
+  function msaStopSpeech(){
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
+  }
+  function msaSpeakCurrentStage(){
+    if (msaStageIdx < 0 || msaFinished) return;
+    var st = msaStages[msaStageIdx];
+    if (st) msaSpeak(st[msaLang]);
+  }
+
+  /* ============ MUTE ============ */
+  function msaApplyMuteUI(){
+    elMuteBtn.textContent = msaMuted ? "🔇" : "🔊";
+  }
+  elMuteBtn.addEventListener("click", function(){
+    msaMuted = !msaMuted;
+    try { localStorage.setItem("msaMuted", msaMuted ? "1" : "0"); } catch(e){}
+    msaApplyMuteUI();
+    if (msaMuted){ msaStopSpeech(); } else { msaSpeakCurrentStage(); }
+  });
+
+  /* ============ LANG BUTTONS ============ */
+  function msaSetLang(l){
+    if (l === msaLang) return;
+    msaLang = l;
+    msaApplyLangUI();
+    msaSpeakCurrentStage();
+  }
+  elLangId.addEventListener("click", function(){ msaSetLang("id"); });
+  elLangEn.addEventListener("click", function(){ msaSetLang("en"); });
+
+  /* ============ FLOW CONTROL ============ */
+  function msaStart(){
+    msaStarted = true;
+    msaFinished = false;
+    elCover.classList.add("msa-hidden");
+    elEnd.classList.add("msa-hidden");
+    msaStageIdx = 0;
+    scene.jacketOn = false;
+    scene.intensity = 0;
+    scene.targetIntensity = 0;
+    scene.holdProgress = 0;
+    scene.holding = false;
+    msaBuildDots();
+    msaGotoStage(0);
+  }
+  function msaGotoStage(idx){
+    msaStageIdx = idx;
+    var st = msaStages[idx];
+    scene.mood = st.mood;
+    scene.holdProgress = 0;
+    scene.holding = false;
+    msaUpdateDots();
+    msaRenderStageText();
+    msaSpeakCurrentStage();
+  }
+  function msaNextStage(){
+    if (msaStageIdx + 1 >= msaStages.length){
+      msaEnd();
+    } else {
+      msaGotoStage(msaStageIdx + 1);
+    }
+  }
+  function msaEnd(){
+    msaFinished = true;
+    msaStopSpeech();
+    elEnd.classList.remove("msa-hidden");
+    var t = msaTXT[msaLang];
+    if (!msaMuted) msaSpeak(t.endText);
+    scene.mood = "end";
+  }
+  function msaRestart(){
+    elEnd.classList.add("msa-hidden");
+    msaStart();
+  }
+
+  elStartBtn.addEventListener("click", function(){ msaStart(); msaResizeNotify(); });
+  elRestartBtn.addEventListener("click", function(){ msaRestart(); });
+  elNextBtn.addEventListener("click", function(){ msaNextStage(); });
+
+  /* ============ HOLD BUTTON MECHANIC ============ */
+  var HOLD_DURATION = 2200; // ms to fill
+  var HOLD_DECAY = 0.0022; // per ms decay when released
+
+  function msaHoldStart(ev){
+    ev.preventDefault();
+    scene.holding = true;
+  }
+  function msaHoldEnd(ev){
+    if (ev) ev.preventDefault();
+    scene.holding = false;
+  }
+  elHoldBtn.addEventListener("mousedown", msaHoldStart);
+  elHoldBtn.addEventListener("touchstart", msaHoldStart, {passive:false});
+  elHoldBtn.addEventListener("mouseup", msaHoldEnd);
+  elHoldBtn.addEventListener("mouseleave", msaHoldEnd);
+  elHoldBtn.addEventListener("touchend", msaHoldEnd);
+  elHoldBtn.addEventListener("touchcancel", msaHoldEnd);
+
+  function msaHandleHoldProgress(dt){
+    var st = msaStages[msaStageIdx];
+    if (!st || st.type !== "hold") return;
+    if (scene.holding){
+      scene.holdProgress += dt / HOLD_DURATION;
+    } else {
+      scene.holdProgress -= dt * HOLD_DECAY;
+    }
+    if (scene.holdProgress < 0) scene.holdProgress = 0;
+    if (scene.holdProgress > 1){
+      scene.holdProgress = 1;
+      msaCompleteHold(st.target);
+    }
+    elHoldFill.style.width = (scene.holdProgress * 100).toFixed(1) + "%";
+    scene.targetIntensity = scene.holdProgress;
+  }
+
+  var msaHoldCompleted = false;
+  function msaCompleteHold(target){
+    if (msaHoldCompleted) return;
+    msaHoldCompleted = true;
+    scene.holding = false;
+    if (target === "wind"){
+      scene.jacketOn = true;
+    } else if (target === "sun"){
+      scene.jacketOn = false;
+    }
+    scene.resolvedPulse = 1;
+    setTimeout(function(){
+      msaHoldCompleted = false;
+      msaNextStage();
+    }, 900);
+  }
+
+  /* ============ CANVAS RENDERING ============ */
+  var W = 800, H = 450;
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  function drawSky(){
+    var grad = ctx.createLinearGradient(0,0,0,H);
+    if (scene.mood === "sun-shine" || scene.mood === "sun-result" || scene.mood === "sun-idea"){
+      grad.addColorStop(0,"#ffe9b0");
+      grad.addColorStop(1,"#fff6e0");
+    } else if (scene.mood === "wind-blow" || scene.mood === "wind-result"){
+      grad.addColorStop(0,"#bfe3f2");
+      grad.addColorStop(1,"#e8f6fa");
+    } else {
+      grad.addColorStop(0,"#8fd3f4");
+      grad.addColorStop(1,"#e9f7fd");
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawGround(){
+    ctx.fillStyle = "#a7cf7c";
+    ctx.beginPath();
+    ctx.moveTo(0,H-70);
+    ctx.quadraticCurveTo(W/2,H-100,W,H-70);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#8fbf66";
+    ctx.beginPath();
+    ctx.moveTo(0,H-40);
+    ctx.quadraticCurveTo(W/2,H-60,W,H-40);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+
+    // tiny village huts silhouette
+    ctx.fillStyle = "rgba(120,95,70,0.35)";
+    drawHut(90,H-58,34);
+    drawHut(140,H-52,26);
+    drawHut(660,H-56,30);
+    drawHut(705,H-50,24);
+  }
+  function drawHut(x,y,size){
+    ctx.beginPath();
+    ctx.moveTo(x-size/2,y);
+    ctx.lineTo(x,y-size*0.7);
+    ctx.lineTo(x+size/2,y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(x-size/3,y,size*0.66,size*0.35);
+  }
+
+  function drawCloudPuff(cx,cy,r){
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawWind(){
+    var active = (scene.mood === "wind-idea" || scene.mood === "wind-blow" || scene.mood === "wind-result");
+    var blowing = scene.mood === "wind-blow";
+    var cx = 150, cy = 120;
+    var bob = Math.sin(scene.time/450) * 6;
+    cy += bob;
+
+    ctx.save();
+    ctx.fillStyle = "#ffffff";
+    ctx.globalAlpha = active ? 1 : 0.55;
+    drawCloudPuff(cx-30,cy+10,30);
+    drawCloudPuff(cx,cy-10,38);
+    drawCloudPuff(cx+35,cy+8,28);
+    drawCloudPuff(cx+5,cy+22,26);
+    ctx.globalAlpha = 1;
+
+    // face
+    var mood = active ? (blowing ? "blow" : "smug") : "neutral";
+    drawFace(cx, cy, mood, active);
+    ctx.restore();
+
+    // wind streak lines
+    var strength = blowing ? scene.intensity : (active ? 0.15 : 0);
+    if (strength > 0.02){
+      ctx.save();
+      ctx.strokeStyle = "rgba(90,150,190,0.55)";
+      ctx.lineWidth = 3;
+      var lines = 3 + Math.floor(strength * 6);
+      for (var i=0;i<lines;i++){
+        var ly = cy + 55 + i*14 + Math.sin(scene.time/120 + i)*4;
+        var lx0 = cx + 40 + (i%3)*10;
+        var speedOffset = (scene.time/6 * (0.5+strength)) % 220;
+        var lx = lx0 + speedOffset;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.quadraticCurveTo(lx+35,ly-6,lx+70,ly);
+        ctx.globalAlpha = 0.4 + strength*0.5;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawSun(){
+    var active = (scene.mood === "sun-idea" || scene.mood === "sun-shine" || scene.mood === "sun-result" || scene.mood === "argue2");
+    var shining = scene.mood === "sun-shine";
+    var cx = 650, cy = 110;
+    var bob = Math.sin(scene.time/500 + 2) * 5;
+    cy += bob;
+
+    var strength = shining ? scene.intensity : (active ? 0.2 : 0.05);
+    var baseR = 46 + strength*14;
+
+    ctx.save();
+    // glow
+    var glowR = baseR + 30 + strength*40;
+    var glow = ctx.createRadialGradient(cx,cy,baseR*0.6,cx,cy,glowR);
+    glow.addColorStop(0,"rgba(255,210,90,"+(0.55+strength*0.3)+")");
+    glow.addColorStop(1,"rgba(255,210,90,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx,cy,glowR,0,Math.PI*2);
+    ctx.fill();
+
+    // rays
+    var rayCount = 12;
+    ctx.strokeStyle = "#ffb833";
+    ctx.lineWidth = 5;
+    for (var i=0;i<rayCount;i++){
+      var ang = (Math.PI*2/rayCount)*i + scene.time/2000 * (shining?3:1);
+      var r1 = baseR + 8;
+      var r2 = baseR + 8 + 18 + strength*22 + Math.sin(scene.time/150+i)*3;
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(ang)*r1, cy+Math.sin(ang)*r1);
+      ctx.lineTo(cx+Math.cos(ang)*r2, cy+Math.sin(ang)*r2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // body
+    ctx.fillStyle = "#ffcb3d";
+    ctx.beginPath();
+    ctx.arc(cx,cy,baseR,0,Math.PI*2);
+    ctx.fill();
+
+    var mood = active ? (shining ? "shine" : "smug") : "neutral";
+    drawFace(cx, cy, mood, active, true);
+    ctx.restore();
+  }
+
+  function drawFace(cx,cy,mood,active,isSun){
+    ctx.save();
+    ctx.fillStyle = "#4a3a2c";
+    var eyeDX = isSun ? 13 : 12;
+    var eyeDY = isSun ? -4 : -2;
+
+    if (mood === "blow"){
+      // squinting effortful eyes, puffed cheeks via mouth
+      ctx.beginPath();
+      ctx.moveTo(cx-eyeDX-6, cy+eyeDY);
+      ctx.lineTo(cx-eyeDX+6, cy+eyeDY-2);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#4a3a2c";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx+eyeDX-6, cy+eyeDY-2);
+      ctx.lineTo(cx+eyeDX+6, cy+eyeDY);
+      ctx.stroke();
+      // O mouth (blowing)
+      ctx.beginPath();
+      ctx.ellipse(cx, cy+eyeDY+16, 8, 10, 0, 0, Math.PI*2);
+      ctx.fillStyle = "#7a5a40";
+      ctx.fill();
+    } else if (mood === "shine"){
+      ctx.beginPath();
+      ctx.arc(cx-eyeDX, cy+eyeDY, 3.4, 0, Math.PI*2);
+      ctx.arc(cx+eyeDX, cy+eyeDY, 3.4, 0, Math.PI*2);
+      ctx.fill();
+      // wide happy/effort mouth
+      ctx.beginPath();
+      ctx.arc(cx, cy+eyeDY+8, 12, 0.15*Math.PI, 0.85*Math.PI);
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "#4a3a2c";
+      ctx.stroke();
+    } else if (mood === "smug"){
+      ctx.beginPath();
+      ctx.arc(cx-eyeDX, cy+eyeDY, 3, 0, Math.PI*2);
+      ctx.arc(cx+eyeDX, cy+eyeDY, 3, 0, Math.PI*2);
+      ctx.fill();
+      // smirk
+      ctx.beginPath();
+      ctx.moveTo(cx-9, cy+eyeDY+11);
+      ctx.quadraticCurveTo(cx, cy+eyeDY+16, cx+11, cy+eyeDY+8);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#4a3a2c";
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(cx-eyeDX, cy+eyeDY, 3, 0, Math.PI*2);
+      ctx.arc(cx+eyeDX, cy+eyeDY, 3, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy+eyeDY+9, 8, 0.1*Math.PI, 0.9*Math.PI);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#4a3a2c";
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawMan(){
+    var cx = 400, cy = 340;
+
+    // shiver / sweat targets
+    var wantShiver = scene.mood === "wind-blow" ? scene.intensity : (scene.mood === "wind-result" ? 0.5 : 0);
+    var wantSweat = scene.mood === "sun-shine" ? scene.intensity : (scene.mood === "sun-result" ? 0.5 : 0);
+    scene.manShiver = lerp(scene.manShiver, wantShiver, 0.08);
+    scene.manSweat = lerp(scene.manSweat, wantSweat, 0.08);
+
+    var shiverOffset = scene.manShiver > 0.02 ? Math.sin(scene.time/40) * scene.manShiver * 4 : 0;
+    var bob = Math.sin(scene.time/700) * 3;
+
+    ctx.save();
+    ctx.translate(cx + shiverOffset, cy + bob);
+
+    // ground shadow
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(0, 78, 34, 8, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // legs
+    ctx.strokeStyle = "#5a4632";
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-8,40); ctx.lineTo(-14,76);
+    ctx.moveTo(8,40); ctx.lineTo(14,76);
+    ctx.stroke();
+
+    // body / torso
+    ctx.fillStyle = "#7a5cff";
+    roundRect(-18,0,36,44,12);
+    ctx.fill();
+
+    // jacket overlay (toggle)
+    if (scene.jacketOn){
+      ctx.fillStyle = "#3a4a6b";
+      roundRect(-21,-4,42,50,13);
+      ctx.fill();
+      ctx.strokeStyle = "#28324a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0,-2); ctx.lineTo(0,44);
+      ctx.stroke();
+    }
+
+    // arms
+    ctx.strokeStyle = scene.jacketOn ? "#3a4a6b" : "#7a5cff";
+    ctx.lineWidth = 9;
+    var armSwing = Math.sin(scene.time/300) * 4;
+    ctx.beginPath();
+    ctx.moveTo(-18,8); ctx.lineTo(-30, 34+armSwing);
+    ctx.moveTo(18,8); ctx.lineTo(30, 34-armSwing);
+    ctx.stroke();
+
+    // head
+    ctx.fillStyle = "#e8b98a";
+    ctx.beginPath();
+    ctx.arc(0,-16,17,0,Math.PI*2);
+    ctx.fill();
+
+    // hair
+    ctx.fillStyle = "#3a2c22";
+    ctx.beginPath();
+    ctx.arc(0,-22,17,Math.PI,Math.PI*2);
+    ctx.fill();
+
+    // face
+    ctx.fillStyle = "#3a2c22";
+    ctx.beginPath();
+    ctx.arc(-6,-16,2,0,Math.PI*2);
+    ctx.arc(6,-16,2,0,Math.PI*2);
+    ctx.fill();
+
+    if (scene.manSweat > 0.3){
+      ctx.beginPath();
+      ctx.arc(0,-10,4,0.15*Math.PI,0.85*Math.PI);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#3a2c22";
+      ctx.stroke();
+    } else if (scene.manShiver > 0.3){
+      ctx.beginPath();
+      ctx.moveTo(-4,-8); ctx.lineTo(4,-6);
+      ctx.moveTo(-4,-6); ctx.lineTo(4,-8);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#3a2c22";
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0,-10,4,0.1*Math.PI,0.9*Math.PI);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#3a2c22";
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // sweat drops
+    if (scene.manSweat > 0.35){
+      ctx.save();
+      ctx.fillStyle = "rgba(100,180,230,0.85)";
+      for (var i=0;i<3;i++){
+        var dy = ((scene.time/6 + i*60) % 180);
+        ctx.globalAlpha = 1 - dy/180;
+        ctx.beginPath();
+        ctx.ellipse(cx+shiverOffset+14+i*6, cy+bob-30+dy*0.3, 3, 5, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    // shiver ice-blue lines
+    if (scene.manShiver > 0.35){
+      ctx.save();
+      ctx.strokeStyle = "rgba(150,210,240,0.7)";
+      ctx.lineWidth = 2;
+      for (var j=0;j<3;j++){
+        var ang = scene.time/200 + j*2;
+        var lx = cx+shiverOffset + Math.cos(ang)*24;
+        var ly = cy+bob-10 + Math.sin(ang)*14;
+        ctx.beginPath();
+        ctx.moveTo(lx-4,ly);
+        ctx.lineTo(lx+4,ly);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawSpeechHint(){
+    // subtle sparkle when a hold completes
+    if (scene.resolvedPulse > 0.02){
+      ctx.save();
+      ctx.globalAlpha = scene.resolvedPulse;
+      ctx.fillStyle = "#fff6c8";
+      ctx.beginPath();
+      ctx.arc(400,180,90*(1-scene.resolvedPulse)+20,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+      scene.resolvedPulse -= 0.04;
+    }
+  }
+
+  var msaLastTs = null;
+  function msaRenderLoop(ts){
+    if (msaLastTs === null) msaLastTs = ts;
+    var dt = ts - msaLastTs;
+    msaLastTs = ts;
+    scene.time += dt;
+
+    msaHandleHoldProgress(dt);
+    scene.intensity = lerp(scene.intensity, scene.targetIntensity, 0.12);
+    if (!scene.holding && (scene.mood !== "wind-blow" && scene.mood !== "sun-shine")){
+      scene.targetIntensity = 0;
+    }
+
+    ctx.clearRect(0,0,W,H);
+    drawSky();
+    drawGround();
+    drawWind();
+    drawSun();
+    drawMan();
+    drawSpeechHint();
+
+    requestAnimationFrame(msaRenderLoop);
+  }
+
+  /* ============ RESIZE / IFRAME POSTMESSAGE ============ */
+  function msaResizeNotify(){
+    try {
+      var h = elApp.getBoundingClientRect().height;
+      window.parent.postMessage({ type:"msaGameHeight", height: Math.ceil(h) + 12 }, "*");
+    } catch(e){}
+  }
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ msaResizeNotify(); });
+    ro.observe(elApp);
+  } else {
+    window.addEventListener("resize", msaResizeNotify);
+    setInterval(msaResizeNotify, 1200);
+  }
+  window.addEventListener("load", msaResizeNotify);
+
+  /* ============ INIT ============ */
+  msaBuildDots();
+  msaApplyMuteUI();
+  msaApplyLangUI();
+  requestAnimationFrame(msaRenderLoop);
+  setTimeout(msaResizeNotify, 300);
+
+})();
+</script>
+</body>
+</html>
