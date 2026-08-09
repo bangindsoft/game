@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Cianjur - Cerita Rakyat Interaktif</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', 'Trebuchet MS', Tahoma, sans-serif;
+    background: transparent;
+    overflow: hidden;
+  }
+  #acj-root {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #eaf3e0 0%, #dcebd0 100%);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(30,50,20,0.18);
+    position: relative;
+    border: 1px solid #c7dcb7;
+  }
+  .acj-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #3d6b35;
+    color: #fff;
+  }
+  .acj-title {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .acj-controls {
+    display: flex;
+    gap: 6px;
+  }
+  .acj-iconbtn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    width: 34px; height: 30px;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s ease;
+  }
+  .acj-iconbtn:hover { background: rgba(255,255,255,0.3); }
+  .acj-iconbtn.acj-lang { width: auto; padding: 0 10px; font-size: 12px; font-weight: 700; }
+
+  .acj-stage {
+    position: relative;
+    width: 100%;
+    background: #cfe7ff;
+  }
+  #acj-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .acj-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    background: rgba(20, 40, 15, 0.55);
+    color: #fff;
+  }
+  .acj-hidden { display: none !important; }
+
+  .acj-cover-title {
+    font-size: clamp(20px, 5vw, 30px);
+    font-weight: 800;
+    margin: 6px 0 4px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .acj-cover-sub {
+    font-size: clamp(12px, 3vw, 15px);
+    opacity: 0.9;
+    margin-bottom: 18px;
+    max-width: 480px;
+  }
+
+  .acj-btn {
+    background: #e0a13e;
+    color: #3a2400;
+    border: none;
+    padding: 12px 26px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #a5701c;
+    transition: transform 0.08s ease;
+    margin: 4px;
+  }
+  .acj-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #a5701c; }
+  .acj-btn.acj-secondary {
+    background: #f0f0f0;
+    color: #333;
+    box-shadow: 0 3px 0 #b7b7b7;
+  }
+  .acj-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .acj-narration {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 14px 16px 12px;
+    background: linear-gradient(180deg, rgba(20,20,10,0) 0%, rgba(15,20,10,0.82) 30%, rgba(10,15,8,0.9) 100%);
+    color: #fff;
+    font-size: clamp(13px, 3vw, 15.5px);
+    line-height: 1.45;
+    min-height: 60px;
+  }
+  .acj-narration-text { text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+
+  .acj-interact {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 84px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 12px;
+  }
+
+  .acj-nextwrap {
+    position: absolute;
+    right: 12px; bottom: 12px;
+  }
+  .acj-nextbtn {
+    background: #e0a13e;
+    color: #3a2400;
+    border: none;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #a5701c;
+  }
+  .acj-nextbtn:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+
+  .acj-plate {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: #fff8e6;
+    border: 3px solid #caa15a;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: transform 0.12s ease;
+  }
+  .acj-plate:hover { transform: scale(1.08); }
+  .acj-plate.acj-filled { background: #f6d98a; cursor: default; }
+  .acj-plate.acj-disabled { opacity: 0.35; cursor: default; }
+
+  .acj-plateswrap {
+    position: absolute;
+    left: 0; right: 0; top: 10px;
+    display: flex; justify-content: center; gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 10px;
+  }
+
+  .acj-progressbar {
+    width: min(320px, 80%);
+    height: 18px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.6);
+    margin: 0 auto 8px;
+  }
+  .acj-progressfill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #7fd858, #3d9e2a);
+    transition: width 0.12s ease;
+  }
+  .acj-progressfill.acj-danger {
+    background: linear-gradient(90deg, #ffb84d, #e0483e);
+  }
+
+  .acj-dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 8px;
+    background: #f4ead4;
+  }
+  .acj-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #d3c6a0;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .acj-dot.acj-active {
+    background: #3d6b35;
+    transform: scale(1.25);
+  }
+  .acj-dot.acj-done { background: #8fae74; }
+
+  .acj-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #6b6b6b;
+    padding: 6px 10px 10px;
+    background: #f4ead4;
+  }
+  .acj-footer a { color: #3d6b35; text-decoration: none; font-weight: 600; }
+
+  .acj-hint {
+    font-size: 11px;
+    opacity: 0.85;
+    margin-top: 4px;
+  }
+
+  .acj-label-pill {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20,30,15,0.7);
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+<div id="acj-root">
+  <div class="acj-topbar">
+    <div class="acj-title" id="acj-topbar-title">Asal Mula Cianjur</div>
+    <div class="acj-controls">
+      <button class="acj-iconbtn acj-lang" id="acj-lang-btn" title="Switch language">EN</button>
+      <button class="acj-iconbtn" id="acj-mute-btn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div class="acj-stage" id="acj-stage">
+    <canvas id="acj-canvas" width="800" height="500"></canvas>
+
+    <div class="acj-label-pill acj-hidden" id="acj-scene-label"></div>
+
+    <div class="acj-plateswrap acj-hidden" id="acj-plates"></div>
+
+    <div class="acj-interact" id="acj-interact"></div>
+
+    <div class="acj-narration acj-hidden" id="acj-narration">
+      <div class="acj-narration-text" id="acj-narration-text"></div>
+    </div>
+
+    <div class="acj-nextwrap acj-hidden" id="acj-nextwrap">
+      <button class="acj-nextbtn" id="acj-nextbtn">▶</button>
+    </div>
+
+    <!-- Cover / start overlay -->
+    <div class="acj-overlay" id="acj-cover">
+      <div style="font-size:40px;">🏞️</div>
+      <div class="acj-cover-title" id="acj-cover-title">Asal Mula Cianjur</div>
+      <div class="acj-cover-sub" id="acj-cover-sub">Cerita rakyat dari Jawa Barat tentang seorang saudagar kikir, sebuah kutukan, dan banjir besar yang melahirkan sebuah kota.</div>
+      <button class="acj-btn" id="acj-start-btn">▶ Mulai Cerita</button>
+      <div class="acj-hint" id="acj-cover-hint">Aktifkan suara untuk pengalaman terbaik 🔊</div>
+    </div>
+
+    <!-- End overlay -->
+    <div class="acj-overlay acj-hidden" id="acj-end">
+      <div style="font-size:40px;">🌾</div>
+      <div class="acj-cover-title" id="acj-end-title">Cerita Selesai</div>
+      <div class="acj-cover-sub" id="acj-end-sub"></div>
+      <div>
+        <button class="acj-btn" id="acj-replay-btn">↺ Ulangi Cerita</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="acj-dots" id="acj-dots"></div>
+  <div class="acj-footer" id="acj-footer">Kisah rakyat Jawa Barat • <a href="https://caritasato.blogspot.com" target="_blank" rel="noopener">caritasato.blogspot.com</a></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== CONFIG ===================== */
+  var RESIZE_KEY = "asalMulaCianjurGame";
+  var STORAGE_MUTE = "acj-muted";
+  var STORAGE_LANG = "acj-lang";
+
+  /* ===================== TEXT DATA ===================== */
+  var T = {
+    id: {
+      topbarTitle: "Asal Mula Cianjur",
+      coverTitle: "Asal Mula Cianjur",
+      coverSub: "Cerita rakyat dari Jawa Barat tentang seorang saudagar kikir, sebuah kutukan, dan banjir besar yang melahirkan sebuah kota.",
+      coverHint: "Aktifkan suara untuk pengalaman terbaik 🔊",
+      startBtn: "▶ Mulai Cerita",
+      replayBtn: "↺ Ulangi Cerita",
+      endTitle: "Cerita Selesai",
+      endSub: "Itulah asal mula nama Cianjur — dari kata \"Anjuran\" sang pemimpin desa yang bijaksana, dan \"Ci\" yang berarti air. Terima kasih sudah menyimak!",
+      muteOn: "🔊", muteOff: "🔇",
+      langSwitch: "EN",
+      scenes: [
+        {
+          label: "Bagian 1",
+          narration: "Dahulu kala di Jawa Barat, hiduplah seorang lelaki kaya raya pemilik semua sawah dan ladang di desanya. Namun ia sangat kikir, sehingga warga memanggilnya Pak Kikir. Untunglah anak lelaki satu-satunya berwatak baik hati.",
+          interact: "tap"
+        },
+        {
+          label: "Bagian 2 - Pesta Syukuran",
+          narration: "Takut panennya gagal, Pak Kikir terpaksa mengadakan pesta syukuran dan mengundang seluruh warga desa. Bagikan makanan kepada para tamu, tapi hidangan yang disediakan sangat terbatas...",
+          interact: "feed",
+          feedGood: 3, feedTotal: 8,
+          afterNarration: "Ternyata hidangan yang disediakan Pak Kikir hanya sedikit, jauh dari cukup untuk semua tamu. Banyak warga pulang dengan perut kosong dan hati kecewa."
+        },
+        {
+          label: "Bagian 3 - Nenek Peminta Sedekah",
+          narration: "Di tengah pesta, seorang nenek tua renta datang meminta sedekah walau hanya sesuap nasi. Namun Pak Kikir membentaknya dan mengusirnya dengan kasar.",
+          interact: "give",
+          giveLabel: "🍚 Anak Beri Makanannya",
+          afterNarration: "Melihat nenek itu menangis, putra Pak Kikir diam-diam mengejarnya dan memberikan jatah makan siangnya sendiri. \"Terima kasih nak, semoga hidupmu kelak mulia,\" kata si nenek."
+        },
+        {
+          label: "Bagian 4 - Kutukan di Bukit",
+          narration: "Nenek itu melanjutkan perjalanan hingga tiba di sebuah bukit. Dari sana terlihat rumah Pak Kikir yang paling megah, sementara rumah warga lain kumuh. Nenek marah dan menancapkan tongkatnya ke tanah. Tekan tongkat untuk menancapkannya.",
+          interact: "plant",
+          plantLabel: "🪄 Tancapkan Tongkat",
+          afterNarration: "\"Ingatlah Pak Kikir, keserakahan dan kekikiranmu akan menenggelamkan dirimu sendiri!\" Dari lubang bekas tongkat itu, air memancar sangat deras."
+        },
+        {
+          label: "Bagian 5 - Banjir Besar",
+          narration: "Air terus meluap hingga membanjiri desa! Bantu putra Pak Kikir menyuruh warga berlari ke atas bukit sebelum terlambat. Tekan tombol berulang kali secepat mungkin!",
+          interact: "run",
+          runLabel: "🏃 Lari ke Bukit!",
+          afterNarration: "\"Kalian pilih harta atau jiwa? Sudah tidak ada waktu lagi!\" teriak putra Pak Kikir. Sebagian besar warga desa berhasil selamat sampai ke atas bukit."
+        },
+        {
+          label: "Bagian 6 - Peti Harta",
+          narration: "Sementara warga menyelamatkan diri, Pak Kikir malah sibuk mencoba menggali peti hartanya yang terkubur di dalam tanah, tak menghiraukan air yang terus naik. Tahan tombol untuk menggali, tapi hati-hati air makin tinggi...",
+          interact: "treasure",
+          treasureLabel: "⛏️ Gali Harta",
+          afterNarration: "Karena terlambat menyelamatkan diri, Pak Kikir akhirnya tenggelam oleh air bah bersama seluruh harta yang begitu ia cintai."
+        },
+        {
+          label: "Bagian 7 - Desa Baru",
+          narration: "Warga desa yang selamat, termasuk putra Pak Kikir, mencari daerah baru untuk tinggal. Mereka mengangkatnya sebagai pemimpin. Bagikan tanah kepada warga secara adil dengan menyentuh setiap petak.",
+          interact: "land",
+          landTotal: 6,
+          afterNarration: "Sang pemimpin baru mengajari warganya cara mengolah sawah dan mengairi ladang dengan baik. Karena warga selalu mematuhi anjurannya, desa itu disebut desa Anjuran."
+        }
+      ],
+      finalReveal: "Lama kelamaan, desa Anjuran berkembang menjadi kota kecil bernama Cianjur — \"Ci\" berarti air, pertanda daerah yang subur dan cukup air. Hingga kini, beras Cianjur dikenal sangat enak dan gurih."
+    },
+    en: {
+      topbarTitle: "The Origin of Cianjur",
+      coverTitle: "The Origin of Cianjur",
+      coverSub: "A folktale from West Java about a wealthy but miserly landlord, a curse, and a great flood that gave birth to a town.",
+      coverHint: "Turn on sound for the best experience 🔊",
+      startBtn: "▶ Start Story",
+      replayBtn: "↺ Replay Story",
+      endTitle: "The End",
+      endSub: "That is how the name Cianjur came to be — from \"Anjuran\" (guidance) of the wise village leader, and \"Ci\" meaning water. Thanks for reading!",
+      muteOn: "🔊", muteOff: "🔇",
+      langSwitch: "ID",
+      scenes: [
+        {
+          label: "Part 1",
+          narration: "Long ago in West Java, there lived a wealthy man who owned every rice field in his village. But he was so stingy that people called him Mr. Miser. Fortunately, his only son had a kind heart.",
+          interact: "tap"
+        },
+        {
+          label: "Part 2 - The Feast",
+          narration: "Fearing a failed harvest, Mr. Miser was forced to hold a thanksgiving feast and invited the whole village. Serve food to the guests, but the dishes prepared are very limited...",
+          interact: "feed",
+          feedGood: 3, feedTotal: 8,
+          afterNarration: "As it turned out, Mr. Miser had prepared far too little food for everyone. Many villagers went home hungry and disappointed."
+        },
+        {
+          label: "Part 3 - The Beggar Woman",
+          narration: "In the middle of the feast, a frail old woman came asking for alms, even just a mouthful of rice. But Mr. Miser snapped at her and drove her away harshly.",
+          interact: "give",
+          giveLabel: "🍚 Son Gives His Food",
+          afterNarration: "Seeing the old woman cry, Mr. Miser's son secretly followed her and gave her his own lunch. \"Thank you, child. May your life be a noble one,\" she said."
+        },
+        {
+          label: "Part 4 - The Curse on the Hill",
+          narration: "The old woman continued on until she reached a hill overlooking the village. From there she saw Mr. Miser's grand house among the villagers' humble homes. Furious, she raised her cane to strike the ground. Tap to plant the cane.",
+          interact: "plant",
+          plantLabel: "🪄 Plant the Cane",
+          afterNarration: "\"Remember this, Mr. Miser: your greed and stinginess will drown you!\" From the hole left by her cane, water gushed out with tremendous force."
+        },
+        {
+          label: "Part 5 - The Great Flood",
+          narration: "The water kept rising and soon flooded the village! Help the son urge everyone to run to the hill before it's too late. Tap the button as fast as you can!",
+          interact: "run",
+          runLabel: "🏃 Run to the Hill!",
+          afterNarration: "\"Would you choose wealth or your lives? There's no time left!\" the son shouted. Most of the villagers made it safely up the hill."
+        },
+        {
+          label: "Part 6 - The Treasure Chest",
+          narration: "While everyone fled, Mr. Miser stayed behind, desperately trying to dig up his buried treasure chest, ignoring the rising water. Hold the button to dig, but watch out — the water keeps rising...",
+          interact: "treasure",
+          treasureLabel: "⛏️ Dig for Treasure",
+          afterNarration: "Too slow to escape, Mr. Miser was swept away by the flood, along with all the wealth he loved so dearly."
+        },
+        {
+          label: "Part 7 - A New Village",
+          narration: "The surviving villagers, including Mr. Miser's son, searched for a new place to live and chose him as their leader. Distribute the land fairly by touching each plot.",
+          interact: "land",
+          landTotal: 6,
+          afterNarration: "The new leader taught the villagers how to farm and irrigate their fields properly. Because they always followed his guidance (anjuran), the village became known as Anjuran."
+        }
+      ],
+      finalReveal: "Over time, the village of Anjuran grew into a small town called Cianjur — \"Ci\" means water, a sign of its fertile, well-watered land. To this day, Cianjur rice is known for being especially delicious."
+    }
+  };
+
+  /* ===================== STATE ===================== */
+  var state = {
+    lang: "id",
+    muted: false,
+    sceneIndex: -1, // -1 = cover
+    plates: { good: 0, filled: [] },
+    landDone: 0,
+    running: false,
+    flood: 0, // 0..1 for treasure scene
+    digProgress: 0,
+    treasureTimer: null,
+    animRaf: null,
+    animT: 0
+  };
+
+  /* ===================== DOM ===================== */
+  var $ = function(id){ return document.getElementById(id); };
+  var canvas = $("acj-canvas");
+  var ctx = canvas.getContext("2d");
+  var elCover = $("acj-cover");
+  var elEnd = $("acj-end");
+  var elNarrationWrap = $("acj-narration");
+  var elNarrationText = $("acj-narration-text");
+  var elInteract = $("acj-interact");
+  var elPlatesWrap = $("acj-plates");
+  var elNextWrap = $("acj-nextwrap");
+  var elNextBtn = $("acj-nextbtn");
+  var elDots = $("acj-dots");
+  var elSceneLabel = $("acj-scene-label");
+
+  /* ===================== INIT LANG / MUTE ===================== */
+  function getUrlLang(){
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var l = p.get("lang");
+      if (l === "en" || l === "id") return l;
+    } catch(e){}
+    return null;
+  }
+
+  (function initPrefs(){
+    var urlLang = getUrlLang();
+    var storedLang = null, storedMute = null;
+    try { storedLang = localStorage.getItem(STORAGE_LANG); } catch(e){}
+    try { storedMute = localStorage.getItem(STORAGE_MUTE); } catch(e){}
+    state.lang = urlLang || storedLang || "id";
+    state.muted = storedMute === "1";
+  })();
+
+  function tr(){ return T[state.lang]; }
+
+  /* ===================== NARRATION (SPEECH) ===================== */
+  var synth = window.speechSynthesis;
+  var currentUtterance = null;
+
+  function speak(text){
+    if (!synth || state.muted || !text) return;
+    try {
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === "id" ? "id-ID" : "en-US";
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      currentUtterance = u;
+      synth.speak(u);
+    } catch(e){}
+  }
+
+  function stopSpeak(){
+    if (synth) { try { synth.cancel(); } catch(e){} }
+  }
+
+  /* ===================== RESIZE (postMessage to parent) ===================== */
+  function sendHeight(){
+    var root = document.getElementById("acj-root");
+    var h = root.getBoundingClientRect().height;
+    try {
+      window.parent.postMessage({ type: "iframeResize", key: RESIZE_KEY, height: Math.ceil(h) }, "*");
+    } catch(e){}
+  }
+  window.addEventListener("load", function(){ setTimeout(sendHeight, 60); });
+  window.addEventListener("resize", function(){ sizeCanvas(); sendHeight(); });
+
+  /* ===================== CANVAS SIZING ===================== */
+  var CW = 800, CH = 500;
+  function sizeCanvas(){
+    var stage = $("acj-stage");
+    var w = stage.clientWidth;
+    var ratio = CH / CW;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.style.width = w + "px";
+    canvas.style.height = Math.round(w * ratio) + "px";
+    canvas.width = Math.round(CW * dpr);
+    canvas.height = Math.round(CH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawCurrentScene();
+  }
+
+  /* ===================== UI TEXT APPLY ===================== */
+  function applyStaticText(){
+    var t = tr();
+    $("acj-topbar-title").textContent = t.topbarTitle;
+    $("acj-cover-title").textContent = t.coverTitle;
+    $("acj-cover-sub").textContent = t.coverSub;
+    $("acj-cover-hint").textContent = t.coverHint;
+    $("acj-start-btn").textContent = t.startBtn;
+    $("acj-replay-btn").textContent = t.replayBtn;
+    $("acj-end-title").textContent = t.endTitle;
+    $("acj-end-sub").textContent = t.endSub;
+    $("acj-lang-btn").textContent = t.langSwitch;
+    $("acj-mute-btn").textContent = state.muted ? t.muteOff : t.muteOn;
+    document.documentElement.lang = state.lang;
+  }
+  applyStaticText();
+
+  /* ===================== DOTS ===================== */
+  function buildDots(){
+    elDots.innerHTML = "";
+    var scenes = tr().scenes;
+    for (var i = 0; i < scenes.length; i++){
+      var d = document.createElement("div");
+      d.className = "acj-dot";
+      d.dataset.idx = i;
+      elDots.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = elDots.querySelectorAll(".acj-dot");
+    dots.forEach(function(d, i){
+      d.classList.remove("acj-active", "acj-done");
+      if (i < state.sceneIndex) d.classList.add("acj-done");
+      else if (i === state.sceneIndex) d.classList.add("acj-active");
+    });
+  }
+  buildDots();
+
+  /* ===================== DRAWING HELPERS ===================== */
+  function grad(x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+    return g;
+  }
+
+  function drawSky(floodT){
+    ctx.fillStyle = grad(0,0,0,CH*0.6,[[0,"#bfe3ff"],[1,"#e8f5e0"]]);
+    ctx.fillRect(0,0,CW,CH);
+    // sun
+    ctx.save();
+    ctx.fillStyle = "#ffe9a8";
+    ctx.beginPath();
+    ctx.arc(680, 70, 42, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    // clouds
+    drawCloud(120, 70, 1);
+    drawCloud(320, 50, 0.75);
+  }
+
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.arc(0,0,20,0,Math.PI*2);
+    ctx.arc(22,-6,16,0,Math.PI*2);
+    ctx.arc(-20,4,15,0,Math.PI*2);
+    ctx.arc(10,8,18,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHills(){
+    ctx.fillStyle = "#8fbf6a";
+    ctx.beginPath();
+    ctx.moveTo(0, 260);
+    ctx.quadraticCurveTo(150, 190, 320, 240);
+    ctx.quadraticCurveTo(520, 290, 800, 220);
+    ctx.lineTo(800, 320);
+    ctx.lineTo(0, 320);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#79ac57";
+    ctx.beginPath();
+    ctx.moveTo(0, 300);
+    ctx.quadraticCurveTo(200, 260, 400, 300);
+    ctx.quadraticCurveTo(600, 340, 800, 290);
+    ctx.lineTo(800, 340);
+    ctx.lineTo(0, 340);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawRicePaddy(x, y, w, h, rows){
+    ctx.save();
+    ctx.translate(x, y);
+    var rh = h / rows;
+    for (var r = 0; r < rows; r++){
+      ctx.fillStyle = r % 2 === 0 ? "#bfe6a0" : "#a9d986";
+      ctx.fillRect(0, r*rh, w, rh - 2);
+    }
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0,0,w,h);
+    ctx.restore();
+  }
+
+  function drawGroundBase(){
+    ctx.fillStyle = "#d7c48a";
+    ctx.fillRect(0, 320, CW, CH-320);
+  }
+
+  function drawHouse(x, y, w, h, roofColor, wallColor, big){
+    ctx.save();
+    ctx.translate(x,y);
+    // walls
+    ctx.fillStyle = wallColor;
+    ctx.fillRect(0, h*0.4, w, h*0.6);
+    // roof
+    ctx.fillStyle = roofColor;
+    ctx.beginPath();
+    ctx.moveTo(-w*0.12, h*0.42);
+    ctx.lineTo(w*0.5, -h*0.15);
+    ctx.lineTo(w*1.12, h*0.42);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = "#5a3b22";
+    var dw = w*0.18, dh = h*0.34;
+    ctx.fillRect(w*0.5 - dw/2, h - dh, dw, dh);
+    if (big){
+      ctx.fillStyle = "#e8d27a";
+      ctx.fillRect(w*0.15, h*0.55, w*0.15, w*0.15);
+      ctx.fillRect(w*0.68, h*0.55, w*0.15, w*0.15);
+    }
+    ctx.restore();
+  }
+
+  function drawPerson(x, y, opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    var skin = opts.skin || "#e3a76f";
+    var shirt = opts.shirt || "#7a4a2d";
+    var bent = opts.bent || false;
+    var arm = opts.armUp || false;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    if (bent) ctx.rotate(0.18);
+    // legs
+    ctx.strokeStyle = "#3c2b1e";
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(-6,40); ctx.lineTo(-9,66); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,40); ctx.lineTo(9,66); ctx.stroke();
+    // body
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-14, 10);
+    ctx.quadraticCurveTo(0, 0, 14, 10);
+    ctx.lineTo(12, 42);
+    ctx.lineTo(-12, 42);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt;
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    if (arm) {
+      ctx.beginPath(); ctx.moveTo(12,16); ctx.lineTo(26,-4); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(12,16); ctx.lineTo(20,36); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-12,16); ctx.lineTo(-20,36); ctx.stroke();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0, -6, 13, 0, Math.PI*2);
+    ctx.fill();
+    if (opts.hat) {
+      ctx.fillStyle = opts.hatColor || "#d9c184";
+      ctx.beginPath();
+      ctx.ellipse(0,-14, 18, 6, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-14,-14); ctx.lineTo(0,-30); ctx.lineTo(14,-14);
+      ctx.closePath();
+      ctx.fill();
+    }
+    if (opts.gray) {
+      ctx.strokeStyle = "#ddd";
+      ctx.lineWidth = 2;
+    }
+    ctx.restore();
+  }
+
+  function drawWaterOverlay(level){
+    // level: 0 (none) .. 1 (full stage)
+    if (level <= 0) return;
+    var h = CH * level;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = grad(0, CH-h, 0, CH, [[0,"#7fc7e8"],[1,"#3f8fc0"]]);
+    ctx.fillRect(0, CH-h, CW, h);
+    // waves
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    var waveY = CH - h;
+    ctx.beginPath();
+    for (var x = 0; x <= CW; x += 20){
+      var yy = waveY + Math.sin((x/40) + state.animT/8) * 4;
+      if (x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function clearCanvas(){
+    ctx.clearRect(0,0,CW,CH);
+  }
+
+  /* ===================== SCENE DRAW FUNCTIONS ===================== */
+  function sceneIntro(){
+    clearCanvas();
+    drawSky();
+    drawHills();
+    drawGroundBase();
+    drawRicePaddy(40, 330, 220, 90, 4);
+    drawRicePaddy(540, 330, 220, 90, 4);
+    // big fancy house (pak kikir)
+    drawHouse(320, 250, 160, 110, "#8a3d2b", "#d9b878", true);
+    // small huts
+    drawHouse(70, 300, 70, 60, "#6b4226", "#c9a878", false);
+    drawHouse(650, 300, 70, 60, "#6b4226", "#c9a878", false);
+    // pak kikir standing proud with coin bag
+    drawPerson(400, 380, { scale: 1.3, shirt: "#4b2e17" });
+    ctx.save();
+    ctx.fillStyle = "#d9a63e";
+    ctx.beginPath();
+    ctx.arc(430, 420, 10, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    // son nearby, kind
+    drawPerson(470, 400, { scale: 1.0, shirt: "#4d7a4a" });
+  }
+
+  function sceneFeast(){
+    clearCanvas();
+    drawSky();
+    drawHills();
+    drawGroundBase();
+    drawHouse(310, 230, 180, 110, "#8a3d2b", "#d9b878", true);
+    // long table
+    ctx.save();
+    ctx.fillStyle = "#7a5230";
+    ctx.fillRect(180, 400, 440, 16);
+    ctx.fillStyle = "#5c3b1e";
+    ctx.fillRect(190, 416, 10, 30);
+    ctx.fillRect(600, 416, 10, 30);
+    ctx.restore();
+    // guests around
+    var gx = [150, 220, 660, 720, 260, 560, 200, 690];
+    for (var i=0;i<gx.length;i++){
+      drawPerson(gx[i], 445, { scale: 0.85, shirt: i%2? "#375a8c":"#8c6a37" });
+    }
+    // pak kikir watching stingily
+    drawPerson(400, 350, { scale: 1.1, shirt: "#4b2e17", armUp:false });
+  }
+
+  function sceneBeggar(){
+    clearCanvas();
+    drawSky();
+    drawHills();
+    drawGroundBase();
+    drawHouse(500, 240, 170, 110, "#8a3d2b", "#d9b878", true);
+    // pak kikir angry pointing
+    drawPerson(560, 400, { scale: 1.15, shirt: "#4b2e17", armUp:true });
+    // old woman kneeling/bent
+    drawPerson(300, 420, { scale: 1.0, shirt: "#8c8c8c", bent:true, gray:true, skin:"#d8b48c" });
+    // son with food, off to the side
+    drawPerson(180, 400, { scale: 1.0, shirt: "#4d7a4a" });
+    ctx.save();
+    ctx.fillStyle = "#f4e2a0";
+    ctx.beginPath();
+    ctx.ellipse(195, 375, 12, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function sceneCurse(plantState){
+    clearCanvas();
+    drawSky();
+    // hill scene, elevated view
+    ctx.fillStyle = "#8fbf6a";
+    ctx.beginPath();
+    ctx.moveTo(0, 340);
+    ctx.quadraticCurveTo(400, 150, 800, 320);
+    ctx.lineTo(800, 500);
+    ctx.lineTo(0,500);
+    ctx.closePath();
+    ctx.fill();
+    // distant village small
+    drawHouse(560, 300, 70, 45, "#8a3d2b", "#d9b878", true);
+    drawHouse(630, 315, 45, 32, "#6b4226", "#c9a878", false);
+    drawHouse(500, 320, 45, 32, "#6b4226", "#c9a878", false);
+    // old woman on hill with cane
+    drawPerson(230, 280, { scale: 1.3, shirt: "#8c8c8c", gray:true, skin:"#d8b48c" });
+    // cane
+    ctx.save();
+    ctx.strokeStyle = "#6b4a2a";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    if (!plantState || plantState < 1){
+      ctx.beginPath();
+      ctx.moveTo(255, 250);
+      ctx.lineTo(268, 305);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(258, 300);
+      ctx.lineTo(258, 330);
+      ctx.stroke();
+      // water spurt
+      var t = state.animT;
+      ctx.strokeStyle = "rgba(120,190,230,0.85)";
+      ctx.lineWidth = 3;
+      for (var i=0;i<6;i++){
+        var ang = -Math.PI/2 + (i-2.5)*0.28;
+        var len = 30 + Math.sin(t/5+i)*10;
+        ctx.beginPath();
+        ctx.moveTo(258,325);
+        ctx.lineTo(258 + Math.cos(ang)*len, 325 + Math.sin(ang)*len);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function sceneFlood(progress){
+    clearCanvas();
+    drawSky();
+    drawHills();
+    drawGroundBase();
+    drawHouse(310, 230, 180, 110, "#8a3d2b", "#d9b878", true);
+    drawHouse(70, 280, 70, 60, "#6b4226", "#c9a878", false);
+    drawHouse(650, 280, 70, 60, "#6b4226", "#c9a878", false);
+    // villagers running toward hill (right side elevated)
+    var n = 6;
+    for (var i=0;i<n;i++){
+      var pr = Math.max(0, Math.min(1, progress - i*0.08));
+      var sx = 120 + i*70;
+      var sy = 420 - pr*110;
+      drawPerson(sx + pr*90, sy, { scale: 0.8, shirt: i%2 ? "#375a8c" : "#8c6a37", armUp: true });
+    }
+    // son urging
+    drawPerson(430, 400, { scale: 1.05, shirt: "#4d7a4a", armUp:true });
+    drawWaterOverlay(Math.min(0.28, progress*0.3));
+  }
+
+  function sceneTreasure(dig, flood){
+    clearCanvas();
+    drawSky();
+    drawHills();
+    drawGroundBase();
+    drawHouse(300, 230, 180, 110, "#8a3d2b", "#d9b878", true);
+    // pak kikir digging (bent)
+    drawPerson(400, 400, { scale: 1.15, shirt: "#4b2e17", bent:true });
+    // hole/chest
+    ctx.save();
+    ctx.fillStyle = "#4a3520";
+    ctx.beginPath();
+    ctx.ellipse(430, 445, 24, 8, 0, 0, Math.PI*2);
+    ctx.fill();
+    if (dig > 0.5){
+      ctx.fillStyle = "#caa23e";
+      ctx.fillRect(415, 430, 30, 14);
+      ctx.strokeStyle = "#7a5a1e";
+      ctx.strokeRect(415,430,30,14);
+    }
+    ctx.restore();
+    drawWaterOverlay(0.15 + flood*0.75);
+  }
+
+  function sceneNewVillage(landDone, landTotal){
+    clearCanvas();
+    drawSky();
+    drawHills();
+    drawGroundBase();
+    // plots
+    var cols = 3, rows = 2;
+    var pw = 180, ph = 70, gx0 = 90, gy0 = 340, gapx = 40, gapy = 20;
+    for (var i=0;i<landTotal;i++){
+      var cx = i % cols, cy = Math.floor(i/cols);
+      var x = gx0 + cx*(pw+gapx);
+      var y = gy0 + cy*(ph+gapy);
+      var done = i < landDone;
+      ctx.save();
+      ctx.fillStyle = done ? "#a9d986" : "#e0d3a0";
+      ctx.fillRect(x, y, pw, ph);
+      ctx.strokeStyle = "#7a5230";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x,y,pw,ph);
+      if (done){
+        ctx.fillStyle = "#5c8a3a";
+        for (var r=0;r<3;r++){
+          ctx.fillRect(x+10, y+10+r*18, pw-20, 8);
+        }
+      }
+      ctx.restore();
+    }
+    // leader figure at top
+    drawPerson(400, 240, { scale: 1.15, shirt: "#4d7a4a", armUp:true });
+  }
+
+  /* ===================== SCENE CONTROLLER ===================== */
+  function drawCurrentScene(){
+    var idx = state.sceneIndex;
+    if (idx < 0) return;
+    switch(idx){
+      case 0: sceneIntro(); break;
+      case 1: sceneFeast(); break;
+      case 2: sceneBeggar(); break;
+      case 3: sceneCurse(sceneRuntime.planted ? 1 : 0); break;
+      case 4: sceneFlood(sceneRuntime.runProgress); break;
+      case 5: sceneTreasure(sceneRuntime.digProgress, sceneRuntime.floodLevel); break;
+      case 6: sceneNewVillage(sceneRuntime.landDone, tr().scenes[6].landTotal); break;
+    }
+  }
+
+  var sceneRuntime = {
+    planted: false,
+    runProgress: 0,
+    digProgress: 0,
+    floodLevel: 0,
+    landDone: 0,
+    plateFilled: 0
+  };
+
+  function animLoop(){
+    state.animT += 1;
+    drawCurrentScene();
+    state.animRaf = requestAnimationFrame(animLoop);
+  }
+  function startAnim(){
+    if (state.animRaf) cancelAnimationFrame(state.animRaf);
+    animLoop();
+  }
+  function stopAnim(){
+    if (state.animRaf) cancelAnimationFrame(state.animRaf);
+    state.animRaf = null;
+  }
+
+  /* ===================== SCENE FLOW ===================== */
+  function resetRuntimeForScene(idx){
+    sceneRuntime.planted = false;
+    sceneRuntime.runProgress = 0;
+    sceneRuntime.digProgress = 0;
+    sceneRuntime.floodLevel = 0;
+    sceneRuntime.landDone = 0;
+    sceneRuntime.plateFilled = 0;
+    if (state.treasureTimer) { clearInterval(state.treasureTimer); state.treasureTimer = null; }
+  }
+
+  function goToScene(idx){
+    var scenes = tr().scenes;
+    if (idx >= scenes.length){
+      showEnd();
+      return;
+    }
+    state.sceneIndex = idx;
+    resetRuntimeForScene(idx);
+    updateDots();
+    elCover.classList.add("acj-hidden");
+    elEnd.classList.add("acj-hidden");
+    elSceneLabel.classList.remove("acj-hidden");
+    elSceneLabel.textContent = scenes[idx].label;
+    elNarrationWrap.classList.remove("acj-hidden");
+    elNextWrap.classList.add("acj-hidden");
+    elPlatesWrap.classList.add("acj-hidden");
+    elPlatesWrap.innerHTML = "";
+    elInteract.innerHTML = "";
+
+    var sc = scenes[idx];
+    setNarrationText(sc.narration);
+    speak(sc.narration);
+    drawCurrentScene();
+    sendHeight();
+
+    setupInteraction(sc, idx);
+  }
+
+  function setNarrationText(text){
+    elNarrationText.textContent = text;
+  }
+
+  function setupInteraction(sc, idx){
+    elInteract.innerHTML = "";
+    if (sc.interact === "tap"){
+      showNextButton(function(){ advanceAfterNarration(sc, idx); });
+    } else if (sc.interact === "feed"){
+      buildPlates(sc);
+    } else if (sc.interact === "give"){
+      var btn = document.createElement("button");
+      btn.className = "acj-btn";
+      btn.textContent = sc.giveLabel;
+      btn.onclick = function(){
+        btn.disabled = true;
+        elInteract.innerHTML = "";
+        advanceAfterNarration(sc, idx);
+      };
+      elInteract.appendChild(btn);
+    } else if (sc.interact === "plant"){
+      var btn2 = document.createElement("button");
+      btn2.className = "acj-btn";
+      btn2.textContent = sc.plantLabel;
+      btn2.onclick = function(){
+        sceneRuntime.planted = true;
+        btn2.disabled = true;
+        startAnim();
+        setTimeout(function(){
+          stopAnim();
+          drawCurrentScene();
+          elInteract.innerHTML = "";
+          advanceAfterNarration(sc, idx);
+        }, 1600);
+      };
+      elInteract.appendChild(btn2);
+    } else if (sc.interact === "run"){
+      buildRunChallenge(sc, idx);
+    } else if (sc.interact === "treasure"){
+      buildTreasureChallenge(sc, idx);
+    } else if (sc.interact === "land"){
+      buildLandDistribution(sc, idx);
+    }
+  }
+
+  function showNextButton(cb){
+    elNextWrap.classList.remove("acj-hidden");
+    elNextBtn.onclick = function(){
+      elNextWrap.classList.add("acj-hidden");
+      cb();
+    };
+  }
+
+  function advanceAfterNarration(sc, idx){
+    if (sc.afterNarration){
+      setNarrationText(sc.afterNarration);
+      speak(sc.afterNarration);
+      showNextButton(function(){ goToScene(idx+1); });
+    } else {
+      goToScene(idx+1);
+    }
+  }
+
+  /* ---------- Feed mechanic ---------- */
+  function buildPlates(sc){
+    elPlatesWrap.classList.remove("acj-hidden");
+    elPlatesWrap.innerHTML = "";
+    var total = sc.feedTotal, good = sc.feedGood;
+    sceneRuntime.plateFilled = 0;
+    for (var i=0;i<total;i++){
+      (function(i){
+        var p = document.createElement("div");
+        p.className = "acj-plate";
+        p.textContent = "🍽️";
+        p.onclick = function(){
+          if (p.classList.contains("acj-filled")) return;
+          if (sceneRuntime.plateFilled >= good){
+            p.classList.add("acj-disabled");
+            return;
+          }
+          p.classList.add("acj-filled");
+          p.textContent = "🍚";
+          sceneRuntime.plateFilled++;
+          if (sceneRuntime.plateFilled >= good){
+            var plates = elPlatesWrap.querySelectorAll(".acj-plate:not(.acj-filled)");
+            plates.forEach(function(pp){ pp.classList.add("acj-disabled"); });
+            setTimeout(function(){
+              elPlatesWrap.classList.add("acj-hidden");
+              advanceAfterNarration(sc, state.sceneIndex);
+            }, 700);
+          }
+        };
+        elPlatesWrap.appendChild(p);
+      })(i);
+    }
+  }
+
+  /* ---------- Run mechanic (mash) ---------- */
+  function buildRunChallenge(sc, idx){
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    var bar = document.createElement("div");
+    bar.className = "acj-progressbar";
+    var fill = document.createElement("div");
+    fill.className = "acj-progressfill";
+    bar.appendChild(fill);
+    var btn = document.createElement("button");
+    btn.className = "acj-btn";
+    btn.textContent = sc.runLabel;
+    wrap.appendChild(bar);
+    wrap.appendChild(btn);
+    elInteract.appendChild(wrap);
+
+    startAnim();
+    var decayInterval = setInterval(function(){
+      sceneRuntime.runProgress = Math.max(0, sceneRuntime.runProgress - 0.015);
+      fill.style.width = (sceneRuntime.runProgress*100) + "%";
+    }, 120);
+
+    btn.onclick = function(){
+      sceneRuntime.runProgress = Math.min(1, sceneRuntime.runProgress + 0.09);
+      fill.style.width = (sceneRuntime.runProgress*100) + "%";
+      if (sceneRuntime.runProgress >= 1){
+        clearInterval(decayInterval);
+        btn.disabled = true;
+        stopAnim();
+        drawCurrentScene();
+        elInteract.innerHTML = "";
+        advanceAfterNarration(sc, idx);
+      }
+    };
+  }
+
+  /* ---------- Treasure mechanic (hold vs rising flood) ---------- */
+  function buildTreasureChallenge(sc, idx){
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    var bar = document.createElement("div");
+    bar.className = "acj-progressbar";
+    var fill = document.createElement("div");
+    fill.className = "acj-progressfill acj-danger";
+    bar.appendChild(fill);
+    var btn = document.createElement("button");
+    btn.className = "acj-btn";
+    btn.textContent = sc.treasureLabel;
+    wrap.appendChild(bar);
+    wrap.appendChild(btn);
+    elInteract.appendChild(wrap);
+
+    startAnim();
+    var holding = false;
+    var finished = false;
+
+    function tick(){
+      if (finished) return;
+      sceneRuntime.floodLevel = Math.min(1, sceneRuntime.floodLevel + 0.018);
+      if (holding){
+        sceneRuntime.digProgress = Math.min(1, sceneRuntime.digProgress + 0.012);
+      }
+      fill.style.width = (sceneRuntime.floodLevel*100) + "%";
+      drawCurrentScene();
+      if (sceneRuntime.floodLevel >= 1){
+        finished = true;
+        clearInterval(state.treasureTimer);
+        stopAnim();
+        elInteract.innerHTML = "";
+        advanceAfterNarration(sc, idx);
+      }
+    }
+    state.treasureTimer = setInterval(tick, 100);
+
+    btn.addEventListener("mousedown", function(){ holding = true; });
+    btn.addEventListener("touchstart", function(e){ holding = true; }, {passive:true});
+    ["mouseup","mouseleave","touchend","touchcancel"].forEach(function(ev){
+      btn.addEventListener(ev, function(){ holding = false; });
+    });
+  }
+
+  /* ---------- Land distribution mechanic ---------- */
+  function buildLandDistribution(sc, idx){
+    var hint = document.createElement("div");
+    hint.style.color = "#fff";
+    hint.style.fontSize = "12px";
+    hint.style.textShadow = "0 1px 3px rgba(0,0,0,0.6)";
+    hint.textContent = state.lang === "id" ? "Sentuh setiap petak sawah untuk membagikannya" : "Tap each rice plot to distribute it";
+    elInteract.appendChild(hint);
+
+    canvas.style.cursor = "pointer";
+    var total = sc.landTotal;
+    function handleClick(evt){
+      if (sceneRuntime.landDone >= total) return;
+      var rect = canvas.getBoundingClientRect();
+      var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      var xr = (clientX - rect.left) / rect.width;
+      var yr = (clientY - rect.top) / rect.height;
+      var x = xr * CW, y = yr * CH;
+      var cols = 3, pw = 180, ph = 70, gx0 = 90, gy0 = 340, gapx = 40, gapy = 20;
+      for (var i=0;i<total;i++){
+        var cx = i % cols, cy = Math.floor(i/cols);
+        var px = gx0 + cx*(pw+gapx);
+        var py = gy0 + cy*(ph+gapy);
+        if (x >= px && x <= px+pw && y >= py && y <= py+ph){
+          if (i === sceneRuntime.landDone){
+            sceneRuntime.landDone++;
+            drawCurrentScene();
+            if (sceneRuntime.landDone >= total){
+              canvas.removeEventListener("click", handleClick);
+              canvas.removeEventListener("touchstart", handleClick);
+              canvas.style.cursor = "default";
+              elInteract.innerHTML = "";
+              setTimeout(function(){ advanceAfterNarration(sc, idx); }, 500);
+            }
+          }
+          break;
+        }
+      }
+    }
+    canvas.addEventListener("click", handleClick);
+    canvas.addEventListener("touchstart", handleClick, {passive:true});
+  }
+
+  /* ===================== START / END ===================== */
+  function startStory(){
+    stopSpeak();
+    goToScene(0);
+  }
+
+  function showEnd(){
+    state.sceneIndex = tr().scenes.length;
+    updateDots();
+    elSceneLabel.classList.add("acj-hidden");
+    elNarrationWrap.classList.add("acj-hidden");
+    elInteract.innerHTML = "";
+    elPlatesWrap.classList.add("acj-hidden");
+    elNextWrap.classList.add("acj-hidden");
+    stopAnim();
+    if (state.treasureTimer) clearInterval(state.treasureTimer);
+    $("acj-end-sub").textContent = tr().endSub;
+    speak(tr().finalReveal);
+    elEnd.classList.remove("acj-hidden");
+    sendHeight();
+  }
+
+  function replay(){
+    stopSpeak();
+    elEnd.classList.add("acj-hidden");
+    startStory();
+  }
+
+  /* ===================== CONTROLS ===================== */
+  $("acj-start-btn").addEventListener("click", startStory);
+  $("acj-replay-btn").addEventListener("click", replay);
+
+  $("acj-mute-btn").addEventListener("click", function(){
+    state.muted = !state.muted;
+    try { localStorage.setItem(STORAGE_MUTE, state.muted ? "1" : "0"); } catch(e){}
+    $("acj-mute-btn").textContent = state.muted ? tr().muteOff : tr().muteOn;
+    if (state.muted) stopSpeak();
+  });
+
+  $("acj-lang-btn").addEventListener("click", function(){
+    state.lang = state.lang === "id" ? "en" : "id";
+    try { localStorage.setItem(STORAGE_LANG, state.lang); } catch(e){}
+    applyStaticText();
+    buildDots();
+    if (state.sceneIndex >= 0 && state.sceneIndex < tr().scenes.length){
+      goToScene(state.sceneIndex);
+    } else if (!elEnd.classList.contains("acj-hidden")) {
+      showEnd();
+    } else {
+      updateDots();
+    }
+    sendHeight();
+  });
+
+  /* ===================== BOOT ===================== */
+  sizeCanvas();
+  clearCanvas();
+  drawSky();
+  drawHills();
+  drawGroundBase();
+  sendHeight();
+
+})();
+</script>
+</body>
+</html>
