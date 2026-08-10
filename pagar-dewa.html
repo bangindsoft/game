@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Pagar Dewa</title>
+<style>
+  :root{
+    --pgd-navy1:#0b1230;
+    --pgd-navy2:#1b2a5e;
+    --pgd-gold:#f4c95d;
+    --pgd-cream:#fdf6e3;
+    --pgd-panel:#12193a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:transparent;
+  }
+  .pgd-wrap{
+    max-width:800px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--pgd-navy1),var(--pgd-navy2));
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 6px 24px rgba(0,0,0,0.35);
+    color:var(--pgd-cream);
+  }
+  .pgd-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:rgba(0,0,0,0.25);
+  }
+  .pgd-dots{display:flex;gap:8px;}
+  .pgd-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(253,246,227,0.25);
+    transition:background .3s, transform .3s;
+  }
+  .pgd-dot.pgd-active{background:var(--pgd-gold);transform:scale(1.25);}
+  .pgd-dot.pgd-done{background:#8fd19e;}
+  .pgd-controls{display:flex;gap:8px;}
+  .pgd-btn-icon{
+    background:rgba(253,246,227,0.12);
+    border:1px solid rgba(253,246,227,0.3);
+    color:var(--pgd-cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .pgd-btn-icon:hover{background:rgba(253,246,227,0.22);}
+  .pgd-canvasWrap{position:relative;width:100%;}
+  canvas#pgdCanvas{display:block;width:100%;height:auto;}
+  .pgd-startOverlay, .pgd-endOverlay{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    background:rgba(6,9,25,0.72);
+    padding:24px;
+  }
+  .pgd-startOverlay h1{
+    font-size:clamp(20px,4vw,30px);
+    margin:0 0 10px 0;
+    color:var(--pgd-gold);
+  }
+  .pgd-startOverlay p, .pgd-endOverlay p{
+    max-width:520px;
+    font-size:15px;
+    line-height:1.5;
+    margin:0 0 18px 0;
+    color:var(--pgd-cream);
+  }
+  .pgd-mainBtn{
+    background:var(--pgd-gold);
+    color:#241a06;
+    border:none;
+    border-radius:999px;
+    padding:12px 26px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(244,201,93,0.35);
+    transition:transform .15s;
+  }
+  .pgd-mainBtn:hover{transform:translateY(-2px);}
+  .pgd-mainBtn:active{transform:translateY(0);}
+  .pgd-caption{
+    min-height:52px;
+    padding:14px 18px 4px 18px;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--pgd-cream);
+  }
+  .pgd-controlsArea{
+    padding:6px 18px 18px 18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .pgd-holdBar, .pgd-timingBar{
+    width:100%;
+    max-width:420px;
+    height:16px;
+    background:rgba(253,246,227,0.15);
+    border-radius:999px;
+    overflow:hidden;
+    position:relative;
+  }
+  .pgd-holdFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#f4c95d,#e08e3e);
+    transition:width .05s linear;
+  }
+  .pgd-timingZone{
+    position:absolute;
+    top:0;bottom:0;
+    background:rgba(143,209,158,0.55);
+  }
+  .pgd-timingMarker{
+    position:absolute;
+    top:-4px;
+    width:6px;height:24px;
+    background:var(--pgd-cream);
+    border-radius:3px;
+    box-shadow:0 0 6px rgba(255,255,255,0.7);
+  }
+  .pgd-hint{font-size:12.5px;opacity:.75;}
+  .pgd-footer{
+    text-align:center;
+    font-size:12px;
+    padding:10px;
+    opacity:0.55;
+    letter-spacing:.5px;
+  }
+  .pgd-peekBtn{
+    background:rgba(253,246,227,0.12);
+    border:2px solid var(--pgd-gold);
+    color:var(--pgd-cream);
+    border-radius:10px;
+    padding:10px 22px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .pgd-peekBtn.pgd-glow{
+    animation:pgdPulse 0.9s infinite;
+  }
+  @keyframes pgdPulse{
+    0%{box-shadow:0 0 0 0 rgba(244,201,93,0.6);}
+    70%{box-shadow:0 0 0 14px rgba(244,201,93,0);}
+    100%{box-shadow:0 0 0 0 rgba(244,201,93,0);}
+  }
+  .pgd-progressLabel{font-size:13px;opacity:.8;}
+</style>
+</head>
+<body>
+<div class="pgd-wrap" id="pgdWrap">
+
+  <div class="pgd-topbar">
+    <div class="pgd-dots" id="pgdDots"></div>
+    <div class="pgd-controls">
+      <button class="pgd-btn-icon" id="pgdLangBtn" title="Ganti Bahasa">EN</button>
+      <button class="pgd-btn-icon" id="pgdMuteBtn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div class="pgd-canvasWrap">
+    <canvas id="pgdCanvas" width="800" height="450"></canvas>
+    <div class="pgd-startOverlay" id="pgdStartOverlay">
+      <h1 id="pgdTitle">Asal Usul Pagar Dewa</h1>
+      <p id="pgdSubtitle">Cerita Rakyat dari Bengkulu</p>
+      <button class="pgd-mainBtn" id="pgdStartBtn">Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div class="pgd-caption" id="pgdCaption"></div>
+  <div class="pgd-controlsArea" id="pgdControlsArea"></div>
+
+  <div class="pgd-footer" id="pgdFooter">🏮 Cerita Rakyat Nusantara</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- language & text ---------------- */
+  var params = new URLSearchParams(location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var T = {
+    id:{
+      title:"Asal Usul Pagar Dewa",
+      subtitle:"Cerita Rakyat dari Bengkulu",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      next:"Lanjut",
+      footer:"🏮 Cerita Rakyat Nusantara",
+      peek:"Intip",
+      peekHint:"Ketuk tombol saat berkilau agar tidak ketahuan",
+      peekProgress:"Bidadari terlihat: ",
+      build:"Tahan untuk Membangun Pagar",
+      buildHint:"Tekan dan tahan tombol sampai pagar selesai dibangun",
+      steal:"Curi!",
+      stealHint:"Ketuk saat penanda berada di area hijau",
+      stages:[
+        {
+          caption:"Di sebuah desa di Bengkulu, hiduplah seorang bujang tua yang berharap segera mendapat jodoh. Ia tak percaya cerita masyarakat tentang telaga Dewa, tempat para bidadari turun dari kahyangan saat bulan purnama. Ia pun bertekad membuktikannya sendiri."
+        },
+        {
+          caption:"Saat bulan purnama tiba, si bujang tua bersembunyi di balik semak-semak. Tak lama, tujuh bidadari kahyangan turun dan mandi di telaga. Ia mengintip diam-diam agar tidak ketahuan."
+        },
+        {
+          caption:"Sepeninggal para bidadari, bujang tua berpikir keras. Ia pun membangun pagar mengelilingi telaga, berharap para bidadari akan menggantungkan selendang mereka di sana saat mandi berikutnya."
+        },
+        {
+          caption:"Bulan purnama berikutnya tiba. Para bidadari kembali turun dan menggantungkan selendang mereka di pagar sebelum mandi. Bujang tua menunggu saat yang tepat untuk mencuri salah satu selendang."
+        },
+        {
+          caption:"Selesai mandi, para bidadari kembali memakai selendang mereka. Namun sang dewi bungsu tak menemukan selendangnya. Ia pun tertinggal sendirian, tak bisa kembali ke kahyangan. Dengan sedih, ia menghilang entah ke mana. Hingga kini, tak seorang pun tahu ke mana perginya. Dari kisah inilah, telaga itu dikenal dengan nama telaga Pagar Dewa."
+        }
+      ]
+    },
+    en:{
+      title:"The Origin of Pagar Dewa",
+      subtitle:"A Folktale from Bengkulu",
+      start:"Start the Story",
+      replay:"Replay Story",
+      next:"Continue",
+      footer:"🏮 Indonesian Folklore",
+      peek:"Peek",
+      peekHint:"Tap the button when it glows so you're not seen",
+      peekProgress:"Maidens seen: ",
+      build:"Hold to Build the Fence",
+      buildHint:"Press and hold the button until the fence is finished",
+      steal:"Steal!",
+      stealHint:"Tap when the marker is in the green zone",
+      stages:[
+        {
+          caption:"In a village in Bengkulu lived an old bachelor eager to find a wife. He didn't believe the villagers' tales about Telaga Dewa, a lake where celestial maidens were said to descend from the heavens on full-moon nights. He resolved to see for himself."
+        },
+        {
+          caption:"When the full moon rose, the old bachelor hid behind the bushes. Soon, seven celestial maidens descended and bathed in the lake. He peeked quietly, careful not to be seen."
+        },
+        {
+          caption:"After the maidens left, the old bachelor thought hard. He built a fence around the lake, hoping the maidens would hang their scarves on it the next time they came to bathe."
+        },
+        {
+          caption:"The next full moon arrived. The maidens returned and hung their scarves on the fence before bathing. The old bachelor waited for the right moment to steal one."
+        },
+        {
+          caption:"After bathing, the maidens put their scarves back on. But the youngest could not find hers. Left behind, unable to return to the heavens, she wandered away in sorrow. To this day, no one knows where she went. From this tale, the lake became known as Telaga Pagar Dewa."
+        }
+      ]
+    }
+  };
+
+  /* ---------------- state ---------------- */
+  var STAGE_COUNT = 5;
+  var state = {
+    started:false,
+    stage:0,          // 0..4
+    peekCount:0,       // 0..7
+    peekTargetShown:false,
+    peekTimer:null,
+    buildProgress:0,   // 0..100
+    building:false,
+    stealMarker:0,     // 0..1 position
+    stealDir:1,
+    stealSpeed:0.012,
+    stealRunning:false,
+    stealDone:false,
+    finished:false
+  };
+
+  var muted = localStorage.getItem('pgdMuted') === 'true';
+
+  /* ---------------- dom refs ---------------- */
+  var canvas = document.getElementById('pgdCanvas');
+  var ctx = canvas.getContext('2d');
+  var startOverlay = document.getElementById('pgdStartOverlay');
+  var startBtn = document.getElementById('pgdStartBtn');
+  var titleEl = document.getElementById('pgdTitle');
+  var subtitleEl = document.getElementById('pgdSubtitle');
+  var captionEl = document.getElementById('pgdCaption');
+  var controlsArea = document.getElementById('pgdControlsArea');
+  var dotsWrap = document.getElementById('pgdDots');
+  var footerEl = document.getElementById('pgdFooter');
+  var langBtn = document.getElementById('pgdLangBtn');
+  var muteBtn = document.getElementById('pgdMuteBtn');
+
+  /* ---------------- dots ---------------- */
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<STAGE_COUNT;i++){
+      var d = document.createElement('div');
+      d.className = 'pgd-dot';
+      d.setAttribute('data-i', i);
+      dotsWrap.appendChild(d);
+    }
+  }
+  function refreshDots(){
+    var dots = dotsWrap.querySelectorAll('.pgd-dot');
+    dots.forEach(function(d,i){
+      d.classList.remove('pgd-active','pgd-done');
+      if(!state.started) return;
+      if(i < state.stage) d.classList.add('pgd-done');
+      else if(i === state.stage) d.classList.add('pgd-active');
+    });
+  }
+
+  /* ---------------- narration (speech) ---------------- */
+  function speak(text){
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      var voices = window.speechSynthesis.getVoices();
+      var match = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(u.lang.toLowerCase()) === 0; });
+      if(match) u.voice = match;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
+  }
+
+  /* ---------------- mute / lang buttons ---------------- */
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('pgdMuted', muted ? 'true' : 'false');
+    updateMuteBtn();
+    if(muted) stopSpeak();
+  });
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    applyLangTexts();
+    if(state.started){ renderCaptionAndControls(); }
+  });
+
+  function applyLangTexts(){
+    var t = T[lang];
+    titleEl.textContent = t.title;
+    subtitleEl.textContent = t.subtitle;
+    startBtn.textContent = t.start;
+    footerEl.textContent = t.footer;
+  }
+
+  /* ---------------- canvas drawing helpers ---------------- */
+  var W = 800, H = 450;
+  var stars = [];
+  (function initStars(){
+    for(var i=0;i<70;i++){
+      stars.push({x:Math.random()*W, y:Math.random()*(H*0.55), r:Math.random()*1.4+0.3, phase:Math.random()*Math.PI*2});
+    }
+  })();
+
+  function drawSky(t){
+    var grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,'#0b1230');
+    grad.addColorStop(1,'#233266');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+
+    // stars
+    stars.forEach(function(s){
+      var tw = 0.5 + 0.5*Math.sin(t/600 + s.phase);
+      ctx.globalAlpha = 0.3 + 0.7*tw;
+      ctx.fillStyle = '#fdf6e3';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // moon
+    ctx.save();
+    ctx.shadowColor = 'rgba(244,201,93,0.8)';
+    ctx.shadowBlur = 30;
+    ctx.fillStyle = '#f4e6b0';
+    ctx.beginPath();
+    ctx.arc(680,75,42,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGroundAndLake(){
+    // far hills
+    ctx.fillStyle = '#16204a';
+    ctx.beginPath();
+    ctx.moveTo(0,300);
+    ctx.quadraticCurveTo(200,260,400,290);
+    ctx.quadraticCurveTo(600,320,800,280);
+    ctx.lineTo(800,450);
+    ctx.lineTo(0,450);
+    ctx.closePath();
+    ctx.fill();
+
+    // ground
+    ctx.fillStyle = '#1c2b4a';
+    ctx.fillRect(0,340,W,110);
+
+    // lake
+    ctx.save();
+    ctx.fillStyle = '#3a5a8f';
+    ctx.beginPath();
+    ctx.ellipse(400,380,230,52,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(244,201,93,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(430,372,110,20,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTreeCluster(x,y,scale,flip){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(flip?-scale:scale, scale);
+    ctx.fillStyle = '#101a38';
+    ctx.beginPath();
+    ctx.ellipse(0,0,55,70,0,0,Math.PI*2);
+    ctx.ellipse(-35,20,40,55,0,0,Math.PI*2);
+    ctx.ellipse(35,15,45,60,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBushes(){
+    drawTreeCluster(60,360,1,false);
+    drawTreeCluster(740,365,1,true);
+  }
+
+  function drawBujang(x,y,hidden){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.globalAlpha = hidden ? 0.85 : 1;
+    // body
+    ctx.fillStyle = '#5a3d2b';
+    ctx.beginPath();
+    ctx.moveTo(-14,10);
+    ctx.quadraticCurveTo(0,-28,14,10);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = '#d8a878';
+    ctx.beginPath();
+    ctx.arc(0,-34,11,0,Math.PI*2);
+    ctx.fill();
+    // simple headwrap
+    ctx.fillStyle = '#8a5a2b';
+    ctx.beginPath();
+    ctx.arc(0,-38,11.5,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMaiden(x,y,color,visible,bobT,hasScarf){
+    if(!visible) return;
+    var bob = Math.sin((bobT||0)/300 + x) * 3;
+    ctx.save();
+    ctx.translate(x, y+bob);
+    // robe
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-13,26);
+    ctx.quadraticCurveTo(0,-24,13,26);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = '#f0cfa0';
+    ctx.beginPath();
+    ctx.arc(0,-30,9,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = '#2a1c12';
+    ctx.beginPath();
+    ctx.arc(0,-34,9.5,Math.PI,Math.PI*2);
+    ctx.fill();
+    // scarf (selendang) if present
+    if(hasScarf){
+      ctx.strokeStyle = '#fdf6e3';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-10,-6);
+      ctx.quadraticCurveTo(-24,4,-16,20);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function maidenPositions(){
+    // arc around lake
+    var pos = [];
+    var cx = 400, cy = 372, rx = 190, ry = 26;
+    for(var i=0;i<7;i++){
+      var a = Math.PI*0.15 + (Math.PI*0.7) * (i/6);
+      pos.push({x: cx - Math.cos(a)*rx, y: cy - Math.sin(a)*ry - 18, color: MAIDEN_COLORS[i]});
+    }
+    return pos;
+  }
+  var MAIDEN_COLORS = ['#e0483e','#4e8fd1','#e6b84e','#7fbf7f','#c77fd1','#e88fb0','#f4e6b0'];
+
+  function drawFence(progress){
+    // progress 0..1, posts around lake ellipse
+    var cx = 400, cy = 380, rx = 240, ry = 58;
+    var totalPosts = 22;
+    var count = Math.round(totalPosts * progress);
+    ctx.strokeStyle = '#7a5230';
+    ctx.fillStyle = '#8a6238';
+    ctx.lineWidth = 3;
+    for(var i=0;i<count;i++){
+      var a = Math.PI*0.05 + (Math.PI*0.9) * (i/(totalPosts-1));
+      var x = cx - Math.cos(a)*rx;
+      var y = cy - Math.sin(a)*ry + 6;
+      ctx.beginPath();
+      ctx.rect(x-2.5,y-24,5,28);
+      ctx.fill();
+    }
+    // rail
+    if(count > 1){
+      ctx.beginPath();
+      for(var j=0;j<count;j++){
+        var a2 = Math.PI*0.05 + (Math.PI*0.9) * (j/(totalPosts-1));
+        var x2 = cx - Math.cos(a2)*rx;
+        var y2 = cy - Math.sin(a2)*ry - 12;
+        if(j===0) ctx.moveTo(x2,y2); else ctx.lineTo(x2,y2);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawFlyingDot(x,y,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#fdf6e3';
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------- main render loop ---------------- */
+  var startTime = performance.now();
+
+  function render(now){
+    var t = now - startTime;
+    drawSky(t);
+    drawGroundAndLake();
+    drawBushes();
+
+    if(state.started){
+      switch(state.stage){
+        case 0:
+          drawBujang(400,352,false);
+          break;
+        case 1:
+          drawBujang(95,345,true);
+          var positions = maidenPositions();
+          for(var i=0;i<state.peekCount;i++){
+            drawMaiden(positions[i].x, positions[i].y, positions[i].color, true, t, false);
+          }
+          if(state.peekTargetShown){
+            // subtle glow cue near bush already handled by button pulse
+          }
+          break;
+        case 2:
+          drawFence(state.buildProgress/100);
+          break;
+        case 3:
+          drawFence(1);
+          var pos2 = maidenPositions();
+          pos2.forEach(function(p,i){
+            var hasScarf = !(state.stealDone && i===6);
+            drawMaiden(p.x,p.y,p.color,true,t,hasScarf);
+          });
+          drawBujang(95,345,true);
+          break;
+        case 4:
+          drawFence(1);
+          // lone youngest maiden, sad, others gone (flying dots fading toward moon)
+          drawMaiden(400,360,MAIDEN_COLORS[6],true,t,false);
+          for(var k=0;k<6;k++){
+            var p = 0.3 + k*0.1;
+            drawFlyingDot(400 + (680-400)*p, 360 - (360-75)*p, 0.5);
+          }
+          break;
+      }
+    }
+
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function sendHeight(){
+    var h = document.getElementById('pgdWrap').offsetHeight;
+    try{
+      window.parent.postMessage({ pagarDewaGameHeight: h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setInterval(sendHeight, 800);
+
+  /* ---------------- stage flow ---------------- */
+  function goStage(n){
+    state.stage = n;
+    refreshDots();
+    renderCaptionAndControls();
+  }
+
+  function renderCaptionAndControls(){
+    var t = T[lang];
+    var stageData = t.stages[state.stage];
+    captionEl.textContent = stageData.caption;
+    speak(stageData.caption);
+    controlsArea.innerHTML = '';
+
+    if(state.stage === 0){
+      controlsArea.appendChild(makeMainBtn(t.next, function(){ goStage(1); }));
+    } else if(state.stage === 1){
+      renderPeekControls();
+    } else if(state.stage === 2){
+      renderBuildControls();
+    } else if(state.stage === 3){
+      renderStealControls();
+    } else if(state.stage === 4){
+      var replayBtn = makeMainBtn(t.replay, function(){ resetGame(); });
+      controlsArea.appendChild(replayBtn);
+    }
+  }
+
+  function makeMainBtn(label, onClick){
+    var b = document.createElement('button');
+    b.className = 'pgd-mainBtn';
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  /* ---- stage 1: peek mini-game ---- */
+  function renderPeekControls(){
+    var t = T[lang];
+    state.peekCount = 0;
+    var progLabel = document.createElement('div');
+    progLabel.className = 'pgd-progressLabel';
+    progLabel.id = 'pgdPeekProgress';
+    progLabel.textContent = t.peekProgress + '0 / 7';
+    controlsArea.appendChild(progLabel);
+
+    var btn = document.createElement('button');
+    btn.className = 'pgd-peekBtn';
+    btn.textContent = t.peek;
+    controlsArea.appendChild(btn);
+
+    var hint = document.createElement('div');
+    hint.className = 'pgd-hint';
+    hint.textContent = t.peekHint;
+    controlsArea.appendChild(hint);
+
+    function scheduleGlow(){
+      state.peekTargetShown = false;
+      btn.classList.remove('pgd-glow');
+      var delay = 700 + Math.random()*1200;
+      state.peekTimer = setTimeout(function(){
+        state.peekTargetShown = true;
+        btn.classList.add('pgd-glow');
+      }, delay);
+    }
+
+    btn.addEventListener('click', function(){
+      if(!state.peekTargetShown) return; // must wait for glow
+      clearTimeout(state.peekTimer);
+      state.peekTargetShown = false;
+      btn.classList.remove('pgd-glow');
+      state.peekCount = Math.min(7, state.peekCount+1);
+      progLabel.textContent = t.peekProgress + state.peekCount + ' / 7';
+      if(state.peekCount >= 7){
+        setTimeout(function(){ goStage(2); }, 500);
+      } else {
+        scheduleGlow();
+      }
+    });
+
+    scheduleGlow();
+  }
+
+  /* ---- stage 2: hold to build fence ---- */
+  function renderBuildControls(){
+    var t = T[lang];
+    state.buildProgress = 0;
+    var barWrap = document.createElement('div');
+    barWrap.className = 'pgd-holdBar';
+    var fill = document.createElement('div');
+    fill.className = 'pgd-holdFill';
+    barWrap.appendChild(fill);
+    controlsArea.appendChild(barWrap);
+
+    var btn = document.createElement('button');
+    btn.className = 'pgd-peekBtn';
+    btn.textContent = t.build;
+    controlsArea.appendChild(btn);
+
+    var hint = document.createElement('div');
+    hint.className = 'pgd-hint';
+    hint.textContent = t.buildHint;
+    controlsArea.appendChild(hint);
+
+    var holding = false;
+    var raf = null;
+    function tick(){
+      if(holding && state.buildProgress < 100){
+        state.buildProgress = Math.min(100, state.buildProgress + 1.1);
+        fill.style.width = state.buildProgress + '%';
+        if(state.buildProgress >= 100){
+          holding = false;
+          setTimeout(function(){ goStage(3); }, 500);
+          return;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    function startHold(e){
+      e.preventDefault();
+      holding = true;
+    }
+    function stopHold(){
+      holding = false;
+    }
+    btn.addEventListener('mousedown', startHold);
+    btn.addEventListener('touchstart', startHold, {passive:false});
+    btn.addEventListener('mouseup', stopHold);
+    btn.addEventListener('mouseleave', stopHold);
+    btn.addEventListener('touchend', stopHold);
+    raf = requestAnimationFrame(tick);
+  }
+
+  /* ---- stage 3: timing steal ---- */
+  function renderStealControls(){
+    var t = T[lang];
+    state.stealDone = false;
+    state.stealMarker = 0;
+    state.stealDir = 1;
+
+    var barWrap = document.createElement('div');
+    barWrap.className = 'pgd-timingBar';
+    var zone = document.createElement('div');
+    zone.className = 'pgd-timingZone';
+    zone.style.left = '38%';
+    zone.style.width = '24%';
+    var marker = document.createElement('div');
+    marker.className = 'pgd-timingMarker';
+    barWrap.appendChild(zone);
+    barWrap.appendChild(marker);
+    controlsArea.appendChild(barWrap);
+
+    var btn = document.createElement('button');
+    btn.className = 'pgd-peekBtn';
+    btn.textContent = t.steal;
+    controlsArea.appendChild(btn);
+
+    var hint = document.createElement('div');
+    hint.className = 'pgd-hint';
+    hint.textContent = t.stealHint;
+    controlsArea.appendChild(hint);
+
+    var running = true;
+    function tick(){
+      if(!running) return;
+      state.stealMarker += state.stealDir * state.stealSpeed;
+      if(state.stealMarker >= 1){ state.stealMarker = 1; state.stealDir = -1; }
+      if(state.stealMarker <= 0){ state.stealMarker = 0; state.stealDir = 1; }
+      marker.style.left = (state.stealMarker*100) + '%';
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    btn.addEventListener('click', function(){
+      var pos = state.stealMarker;
+      if(pos >= 0.38 && pos <= 0.62){
+        running = false;
+        state.stealDone = true;
+        btn.disabled = true;
+        setTimeout(function(){ goStage(4); }, 700);
+      }
+      // miss: just keep trying, no penalty
+    });
+  }
+
+  /* ---------------- init / reset ---------------- */
+  function resetGame(){
+    state.started = true;
+    state.stage = 0;
+    state.peekCount = 0;
+    state.buildProgress = 0;
+    state.stealDone = false;
+    goStage(0);
+  }
+
+  startBtn.addEventListener('click', function(){
+    state.started = true;
+    startOverlay.style.display = 'none';
+    buildDots();
+    goStage(0);
+  });
+
+  /* ---------------- boot ---------------- */
+  buildDots();
+  applyLangTexts();
+  langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+  updateMuteBtn();
+
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
+
+})();
+</script>
+</body>
+</html>
