@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Putri Gading Cempaka</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: transparent;
+    overflow: hidden;
+  }
+  .pgc-wrap {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    background: linear-gradient(180deg,#2b1a3d 0%,#4a2c5e 45%,#7a4a6e 100%);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    position: relative;
+    color: #fff3e6;
+  }
+  .pgc-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(0,0,0,.22);
+  }
+  .pgc-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    color: #ffe9c7;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .pgc-controls { display: flex; gap: 8px; }
+  .pgc-btn-icon {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.25);
+    color: #fff3e6;
+    border-radius: 8px;
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .pgc-btn-icon:hover { background: rgba(255,255,255,.24); }
+  .pgc-btn-icon.active { background: #d0703c; border-color: #f0a86a; }
+
+  .pgc-stage-area {
+    position: relative;
+    width: 100%;
+  }
+  .pgc-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: transparent;
+  }
+
+  .pgc-caption {
+    padding: 12px 18px 4px 18px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    min-height: 62px;
+    color: #fff3e6;
+    text-align: center;
+  }
+
+  .pgc-dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    padding: 6px 0 4px 0;
+  }
+  .pgc-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.28);
+    transition: all .25s ease;
+  }
+  .pgc-dot.pgc-active { background: #f0a86a; transform: scale(1.3); }
+  .pgc-dot.pgc-done { background: #e0483e; }
+
+  .pgc-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 16px 18px 16px;
+    flex-wrap: wrap;
+  }
+  .pgc-btn {
+    background: linear-gradient(180deg,#e0a24a,#c9752c);
+    color: #2b1a3d;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #8a5220;
+    transition: transform .08s ease;
+  }
+  .pgc-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #8a5220; }
+  .pgc-btn.pgc-secondary {
+    background: rgba(255,255,255,.14);
+    color: #fff3e6;
+    box-shadow: 0 3px 0 rgba(0,0,0,.25);
+  }
+  .pgc-hidden { display: none !important; }
+
+  .pgc-qte-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px 14px 16px;
+  }
+  .pgc-bar-track {
+    width: 90%;
+    max-width: 420px;
+    height: 16px;
+    background: rgba(0,0,0,.3);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.2);
+  }
+  .pgc-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg,#e0483e,#f0a86a);
+    transition: width .08s linear;
+  }
+  .pgc-tap-btn {
+    background: radial-gradient(circle at 35% 30%, #f5c98a, #c9752c);
+    color: #2b1a3d;
+    border: none;
+    border-radius: 50%;
+    width: 96px; height: 96px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #8a5220;
+    user-select: none;
+  }
+  .pgc-tap-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a5220; }
+
+  .pgc-footer {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,243,230,.55);
+    padding: 6px 10px 12px 10px;
+  }
+
+  @keyframes pgc-shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .pgc-shake { animation: pgc-shake .25s ease; }
+</style>
+</head>
+<body>
+<div class="pgc-wrap" id="pgcWrap">
+  <div class="pgc-topbar">
+    <div class="pgc-title" id="pgcTitle">Putri Gading Cempaka</div>
+    <div class="pgc-controls">
+      <button class="pgc-btn-icon" id="pgcLangBtn" title="EN/ID">ID</button>
+      <button class="pgc-btn-icon" id="pgcMuteBtn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div class="pgc-stage-area">
+    <canvas class="pgc-canvas" id="pgcCanvas" width="720" height="400"></canvas>
+  </div>
+
+  <div class="pgc-caption" id="pgcCaption"></div>
+
+  <div class="pgc-qte-wrap pgc-hidden" id="pgcQteWrap">
+    <div class="pgc-bar-track"><div class="pgc-bar-fill" id="pgcBarFill"></div></div>
+    <button class="pgc-tap-btn" id="pgcTapBtn"></button>
+  </div>
+
+  <div class="pgc-dots" id="pgcDots"></div>
+
+  <div class="pgc-actions" id="pgcActions">
+    <button class="pgc-btn" id="pgcStartBtn">Mulai Cerita</button>
+    <button class="pgc-btn pgc-secondary pgc-hidden" id="pgcNextBtn">Lanjut</button>
+    <button class="pgc-btn pgc-secondary pgc-hidden" id="pgcReplayBtn">Ulangi Cerita</button>
+  </div>
+
+  <div class="pgc-footer" id="pgcFooter">Dongeng Rakyat Bengkulu · Putri Gading Cempaka</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- i18n ----------
+  var LANGS = {
+    id: {
+      title: "Putri Gading Cempaka",
+      startBtn: "Mulai Cerita",
+      nextBtn: "Lanjut",
+      replayBtn: "Ulangi Cerita",
+      footer: "Dongeng Rakyat Bengkulu · Putri Gading Cempaka",
+      qteInstruction: "Ketuk tombol perisai berulang kali untuk bertahan!",
+      findInstruction: "Ketuk bidadari yang sedang menari di tengah hujan!",
+      wrongTap: "Bukan itu, coba lagi...",
+      stages: [
+        {
+          title: "Kerajaan Sungai Serut",
+          text: "Di daerah Bengkulu Tinggi, berdirilah Kerajaan Sungai Serut yang dipimpin oleh Ratu Agung, seorang pangeran dari Majapahit. Ia memiliki enam putra dan seorang putri bungsu bernama Putri Gading Cempaka yang terkenal akan kecantikannya."
+        },
+        {
+          title: "Wasiat Sang Raja",
+          text: "Ratu Agung jatuh sakit keras. Ia mengumpulkan ketujuh anaknya dan berpesan, \u201cJika Kerajaan Sungai Serut ditimpa musibah besar, menyingkirlah ke Gunung Bungkuk. Kelak akan datang seorang raja yang berjodoh dengan Putri Gading Cempaka.\u201d Tak lama kemudian, Ratu Agung pun mangkat."
+        },
+        {
+          title: "Perang Melawan Aceh",
+          text: "Pangeran Raja Muda Aceh datang melamar Putri Gading Cempaka, namun ditolak oleh Raja Anak Dalam. Murka, sang Pangeran menyerang Kerajaan Sungai Serut. Bantu para prajurit bertahan dari serangan!"
+        },
+        {
+          title: "Mengungsi ke Gunung Bungkuk",
+          text: "Setelah perang berkecamuk berhari-hari, Raja Anak Dalam bersama keenam saudaranya teringat wasiat ayahandanya. Mereka pun menyingkir ke Gunung Bungkuk, sementara Kerajaan Sungai Serut ditinggalkan tanpa raja."
+        },
+        {
+          title: "Mimpi Maharaja Sakti",
+          text: "Maharaja Sakti dari Pagaruyung dinobatkan menjadi raja baru. Namun badai datang tanpa henti. Malam itu ia bermimpi melihat seorang bidadari menari di tengah hujan tanpa basah sedikit pun, lalu pergi menuju Gunung Bungkuk."
+        },
+        {
+          title: "Pinangan dan Pernikahan",
+          text: "Seorang peramal menafsirkan bahwa bidadari itu adalah Putri Gading Cempaka. Maharaja Sakti pun mengutus para bangsawan untuk meminangnya. Raja Anak Dalam menerima pinangan sesuai wasiat ayahnya, dan pesta pernikahan pun digelar dengan meriah."
+        },
+        {
+          title: "Kerajaan Sungai Lemau",
+          text: "Setelah menikah, dibangunlah istana baru di Kuala Sungai Lemau. Kerajaan itu pun berganti nama menjadi Kerajaan Sungai Lemau. Maharaja Sakti dan Putri Gading Cempaka memimpin negeri dengan arif bijaksana hingga akhir hayat mereka."
+        }
+      ]
+    },
+    en: {
+      title: "Princess Gading Cempaka",
+      startBtn: "Start Story",
+      nextBtn: "Continue",
+      replayBtn: "Replay Story",
+      footer: "Folk Tale from Bengkulu · Princess Gading Cempaka",
+      qteInstruction: "Tap the shield button repeatedly to hold the line!",
+      findInstruction: "Tap the fairy dancing in the rain!",
+      wrongTap: "Not that one, try again...",
+      stages: [
+        {
+          title: "The Kingdom of Sungai Serut",
+          text: "In the highlands of Bengkulu once stood the Kingdom of Sungai Serut, ruled by Ratu Agung, a prince from Majapahit. He had six sons and one youngest daughter, Princess Gading Cempaka, renowned for her beauty."
+        },
+        {
+          title: "The King's Last Wish",
+          text: "Ratu Agung fell gravely ill. He gathered his seven children and said, \u201cIf great trouble ever befalls Sungai Serut, retreat to Mount Bungkuk. One day a king will come who is destined for Princess Gading Cempaka.\u201d Soon after, Ratu Agung passed away."
+        },
+        {
+          title: "War Against Aceh",
+          text: "The Crown Prince of Aceh came to propose to Princess Gading Cempaka, but King Anak Dalam refused. Enraged, the prince attacked the kingdom. Help the soldiers hold the line!"
+        },
+        {
+          title: "Retreat to Mount Bungkuk",
+          text: "After days of fierce fighting, King Anak Dalam and his six siblings remembered their father's wish. They withdrew to Mount Bungkuk, leaving the Kingdom of Sungai Serut without a ruler."
+        },
+        {
+          title: "Maharaja Sakti's Dream",
+          text: "Maharaja Sakti of Pagaruyung was crowned the new king. But a storm raged without end. That night he dreamed of a fairy dancing in the rain, untouched by a single drop, who then walked toward Mount Bungkuk."
+        },
+        {
+          title: "The Proposal and the Wedding",
+          text: "A fortune teller revealed that the fairy was Princess Gading Cempaka. Maharaja Sakti sent nobles to ask for her hand. King Anak Dalam accepted, honoring his father's wish, and a grand wedding was held."
+        },
+        {
+          title: "The Kingdom of Sungai Lemau",
+          text: "After the wedding, a new palace was built by the Sungai Lemau estuary, and the kingdom was renamed the Kingdom of Sungai Lemau. Maharaja Sakti and Princess Gading Cempaka ruled wisely for the rest of their lives."
+        }
+      ]
+    }
+  };
+
+  var lang = "id";
+  var qp = new URLSearchParams(window.location.search);
+  if (qp.get("lang") === "en") lang = "en";
+
+  var muted = false;
+  try { muted = localStorage.getItem("pgcMuted") === "1"; } catch(e){}
+
+  var STAGE_COUNT = 7;
+  var current = 0;
+  var qteActive = false;
+  var qteProgress = 0;
+  var qteTimer = null;
+  var qteDecayTimer = null;
+  var findActive = false;
+  var findTarget = null;
+  var animFrame = null;
+
+  // ---------- DOM ----------
+  var canvas = document.getElementById("pgcCanvas");
+  var ctx = canvas.getContext("2d");
+  var caption = document.getElementById("pgcCaption");
+  var dotsEl = document.getElementById("pgcDots");
+  var titleEl = document.getElementById("pgcTitle");
+  var footerEl = document.getElementById("pgcFooter");
+  var startBtn = document.getElementById("pgcStartBtn");
+  var nextBtn = document.getElementById("pgcNextBtn");
+  var replayBtn = document.getElementById("pgcReplayBtn");
+  var langBtn = document.getElementById("pgcLangBtn");
+  var muteBtn = document.getElementById("pgcMuteBtn");
+  var qteWrap = document.getElementById("pgcQteWrap");
+  var barFill = document.getElementById("pgcBarFill");
+  var tapBtn = document.getElementById("pgcTapBtn");
+
+  function t(){ return LANGS[lang]; }
+
+  // ---------- narration ----------
+  function speak(text){
+    if (muted) return;
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === "id" ? "id-ID" : "en-US";
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      var voices = window.speechSynthesis.getVoices();
+      var match = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(u.lang.toLowerCase().slice(0,2)) === 0; });
+      if (match) u.voice = match;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function stopSpeak(){
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch(e){}
+    }
+  }
+
+  // ---------- resize (postMessage for Blogger iframe) ----------
+  function reportHeight(){
+    var h = document.getElementById("pgcWrap").offsetHeight;
+    try {
+      window.parent.postMessage({ pgcGameHeight: h }, "*");
+    } catch(e){}
+  }
+
+  // ---------- dots ----------
+  function renderDots(){
+    dotsEl.innerHTML = "";
+    for (var i = 0; i < STAGE_COUNT; i++){
+      var d = document.createElement("div");
+      d.className = "pgc-dot" + (i === current ? " pgc-active" : (i < current ? " pgc-done" : ""));
+      dotsEl.appendChild(d);
+    }
+  }
+
+  // ---------- background helpers ----------
+  var t0 = Date.now();
+  function bgSky(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  function drawMountainSilhouette(){
+    ctx.fillStyle = "rgba(20,10,30,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(0, 330);
+    ctx.lineTo(120, 240);
+    ctx.lineTo(220, 300);
+    ctx.lineTo(340, 200);
+    ctx.lineTo(460, 290);
+    ctx.lineTo(600, 220);
+    ctx.lineTo(720, 300);
+    ctx.lineTo(720, 400);
+    ctx.lineTo(0, 400);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawPalace(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = "#caa06a";
+    ctx.fillRect(-70,-10,140,70);
+    ctx.fillStyle = "#a97e4a";
+    ctx.beginPath();
+    ctx.moveTo(-85,-10); ctx.lineTo(0,-70); ctx.lineTo(85,-10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#7a5a34";
+    for (var i=-2;i<=2;i++){
+      ctx.fillRect(-8 + i*28, 5, 16, 40);
+    }
+    ctx.fillStyle = "#e0483e";
+    ctx.beginPath();
+    ctx.moveTo(-10,-70); ctx.lineTo(0,-92); ctx.lineTo(10,-70);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawFigure(x,y,scale,color,crown){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(-26,50,-14,90);
+    ctx.lineTo(14,90);
+    ctx.quadraticCurveTo(26,50,0,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-18,18,0,Math.PI*2);
+    ctx.fillStyle = "#f0c090";
+    ctx.fill();
+    if (crown){
+      ctx.fillStyle = "#f0a86a";
+      ctx.beginPath();
+      ctx.moveTo(-14,-34); ctx.lineTo(-14,-44); ctx.lineTo(-6,-36);
+      ctx.lineTo(0,-46); ctx.lineTo(6,-36); ctx.lineTo(14,-44);
+      ctx.lineTo(14,-34);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawStars(n){
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    var seed = 12345;
+    function rnd(){ seed = (seed*9301+49297)%233280; return seed/233280; }
+    for (var i=0;i<n;i++){
+      var x = rnd()*canvas.width;
+      var y = rnd()*canvas.height*0.6;
+      var r = 1 + rnd()*1.5;
+      ctx.beginPath();
+      ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // ---------- stage renderers ----------
+  function drawStage(index, elapsed){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    switch(index){
+      case 0: renderIntro(elapsed); break;
+      case 1: renderWasiat(elapsed); break;
+      case 2: renderWar(elapsed); break;
+      case 3: renderRetreat(elapsed); break;
+      case 4: renderDream(elapsed); break;
+      case 5: renderProposal(elapsed); break;
+      case 6: renderEnding(elapsed); break;
+    }
+  }
+
+  function renderIntro(el){
+    bgSky("#5a3a72","#c98a63");
+    drawStars(40);
+    drawMountainSilhouette();
+    drawPalace(360,300,1.1);
+    drawFigure(280,300,0.9,"#e0483e",true);
+    drawFigure(320,300,0.7,"#f0c9a0",false);
+    drawFigure(420,300,0.7,"#8a6fb0",false);
+  }
+
+  function renderWasiat(el){
+    bgSky("#2b1a3d","#5a3a72");
+    drawStars(50);
+    drawPalace(360,300,1.0);
+    // king lying, children around
+    ctx.save();
+    ctx.translate(320,330);
+    ctx.fillStyle = "#e0483e";
+    ctx.fillRect(-60,-6,120,14);
+    ctx.beginPath();
+    ctx.arc(-60,-6,14,0,Math.PI*2);
+    ctx.fillStyle = "#f0c090";
+    ctx.fill();
+    ctx.restore();
+    for (var i=0;i<5;i++){
+      drawFigure(420 + i*40, 300, 0.55, i%2===0 ? "#8a6fb0" : "#f0a86a", i===4);
+    }
+    // falling petals
+    var seed2 = 999 + Math.floor(el/50);
+    ctx.fillStyle = "rgba(240,200,160,0.7)";
+    for (var p=0;p<18;p++){
+      var px = (p*41 + el*0.02) % canvas.width;
+      var py = ((p*77 + el*0.08) % canvas.height);
+      ctx.beginPath();
+      ctx.ellipse(px,py,4,2,el*0.002+p,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function renderWar(el){
+    bgSky("#3a1c1c","#7a2c2c");
+    drawMountainSilhouette();
+    drawPalace(150,300,0.8);
+    // opposing armies
+    for (var i=0;i<4;i++){
+      drawFigure(60 + i*30, 320, 0.5, "#8a6fb0", false);
+    }
+    for (var j=0;j<4;j++){
+      drawFigure(550 + j*30, 320, 0.5, "#c9752c", false);
+    }
+    // clashing swords flicker
+    if (Math.floor(el/150)%2===0){
+      ctx.strokeStyle = "#f0e0a0";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(300,300); ctx.lineTo(340,260);
+      ctx.moveTo(340,300); ctx.lineTo(300,260);
+      ctx.stroke();
+    }
+  }
+
+  function renderRetreat(el){
+    bgSky("#4a2c5e","#8a6fb0");
+    drawMountainSilhouette();
+    ctx.save();
+    ctx.fillStyle = "#3a2a1a";
+    ctx.beginPath();
+    ctx.moveTo(80,400); ctx.lineTo(260,150); ctx.lineTo(440,400);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    for (var i=0;i<7;i++){
+      drawFigure(150 + i*20, 380 - i*3, 0.4, i%2===0 ? "#e0483e" : "#f0a86a", i===6);
+    }
+  }
+
+  function renderDream(el){
+    bgSky("#101025","#2b1a3d");
+    // rain
+    ctx.strokeStyle = "rgba(180,200,255,0.5)";
+    ctx.lineWidth = 1.5;
+    for (var r=0;r<40;r++){
+      var rx = (r*53 + (el*0.3)) % canvas.width;
+      var ry = (r*37 + (el*0.6)) % canvas.height;
+      ctx.beginPath();
+      ctx.moveTo(rx,ry);
+      ctx.lineTo(rx-6,ry+16);
+      ctx.stroke();
+    }
+    // dancing princess (glowing)
+    var cx = 360 + Math.sin(el*0.002)*60;
+    var cy = 220 + Math.cos(el*0.0015)*20;
+    ctx.save();
+    ctx.shadowColor = "#f0e0a0";
+    ctx.shadowBlur = 25;
+    drawFigure(cx,cy,0.9,"#f0e0a0",true);
+    ctx.restore();
+  }
+
+  function renderProposal(el){
+    bgSky("#5a3a72","#d19a5e");
+    drawStars(30);
+    drawPalace(360,300,1.2);
+    drawFigure(300,300,0.9,"#e0483e",true);
+    drawFigure(420,300,0.9,"#f0e0a0",true);
+    // sparkle hearts
+    ctx.fillStyle = "rgba(240,168,106,0.8)";
+    for (var i=0;i<6;i++){
+      var hx = 300 + i*24;
+      var hy = 250 - Math.abs(Math.sin(el*0.003+i))*20;
+      ctx.beginPath();
+      ctx.arc(hx,hy,3,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function renderEnding(el){
+    bgSky("#3a5a72","#e0b06a");
+    drawStars(20);
+    drawPalace(360,300,1.3);
+    drawFigure(320,300,1.0,"#e0483e",true);
+    drawFigure(400,300,1.0,"#f0e0a0",true);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "bold 20px Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(lang==="id" ? "~ Tamat ~" : "~ The End ~", canvas.width/2, 60);
+  }
+
+  function loop(){
+    var el = Date.now() - t0;
+    drawStage(current, el);
+    animFrame = requestAnimationFrame(loop);
+  }
+
+  // ---------- QTE (war stage) ----------
+  function startQte(){
+    qteActive = true;
+    qteProgress = 30;
+    qteWrap.classList.remove("pgc-hidden");
+    nextBtn.classList.add("pgc-hidden");
+    barFill.style.width = qteProgress + "%";
+    tapBtn.textContent = lang === "id" ? "BERTAHAN!" : "DEFEND!";
+    caption.textContent = t().qteInstruction;
+
+    clearInterval(qteDecayTimer);
+    qteDecayTimer = setInterval(function(){
+      qteProgress = Math.max(0, qteProgress - 2.2);
+      barFill.style.width = qteProgress + "%";
+      if (qteProgress >= 100){
+        finishQte();
+      }
+    }, 120);
+  }
+  function tapQte(){
+    if (!qteActive) return;
+    qteProgress = Math.min(100, qteProgress + 6);
+    barFill.style.width = qteProgress + "%";
+    if (qteProgress >= 100){
+      finishQte();
+    }
+  }
+  function finishQte(){
+    if (!qteActive) return;
+    qteActive = false;
+    clearInterval(qteDecayTimer);
+    qteWrap.classList.add("pgc-hidden");
+    caption.textContent = t().stages[2].text;
+    nextBtn.classList.remove("pgc-hidden");
+  }
+
+  // ---------- Find-target mini game (dream stage) ----------
+  function startFind(){
+    findActive = true;
+    nextBtn.classList.add("pgc-hidden");
+    caption.textContent = t().findInstruction;
+  }
+  function handleCanvasTap(evt){
+    if (!findActive) return;
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    var cx0 = evt.clientX !== undefined ? evt.clientX : (evt.touches && evt.touches[0].clientX);
+    var cy0 = evt.clientY !== undefined ? evt.clientY : (evt.touches && evt.touches[0].clientY);
+    if (cx0 === undefined) return;
+    var x = (cx0 - rect.left) * scaleX;
+    var y = (cy0 - rect.top) * scaleY;
+
+    var el = Date.now() - t0;
+    var cx = 360 + Math.sin(el*0.002)*60;
+    var cy = 220 + Math.cos(el*0.0015)*20;
+    var dist = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy));
+    if (dist < 45){
+      findActive = false;
+      caption.textContent = t().stages[4].text;
+      nextBtn.classList.remove("pgc-hidden");
+    } else {
+      document.getElementById("pgcWrap").classList.add("pgc-shake");
+      setTimeout(function(){ document.getElementById("pgcWrap").classList.remove("pgc-shake"); }, 250);
+    }
+  }
+  canvas.addEventListener("click", handleCanvasTap);
+  canvas.addEventListener("touchstart", function(e){ handleCanvasTap(e); }, {passive:true});
+
+  // ---------- flow ----------
+  function goToStage(i){
+    current = i;
+    renderDots();
+    var st = t().stages[i];
+    caption.textContent = st.text;
+    speak(st.text);
+    nextBtn.classList.remove("pgc-hidden");
+    replayBtn.classList.add("pgc-hidden");
+    qteWrap.classList.add("pgc-hidden");
+    qteActive = false;
+    findActive = false;
+    clearInterval(qteDecayTimer);
+
+    if (i === 2){
+      // war stage: show instruction then start QTE after brief pause
+      nextBtn.classList.add("pgc-hidden");
+      setTimeout(startQte, 1600);
+    } else if (i === 4){
+      nextBtn.classList.add("pgc-hidden");
+      setTimeout(startFind, 1800);
+    }
+
+    if (i === STAGE_COUNT - 1){
+      setTimeout(function(){
+        nextBtn.classList.add("pgc-hidden");
+        replayBtn.classList.remove("pgc-hidden");
+      }, 600);
+    }
+    setTimeout(reportHeight, 60);
+  }
+
+  function nextStage(){
+    if (current < STAGE_COUNT - 1){
+      goToStage(current + 1);
+    }
+  }
+
+  function startStory(){
+    startBtn.classList.add("pgc-hidden");
+    goToStage(0);
+  }
+
+  function replayStory(){
+    stopSpeak();
+    goToStage(0);
+  }
+
+  // ---------- UI events ----------
+  startBtn.addEventListener("click", startStory);
+  nextBtn.addEventListener("click", nextStage);
+  replayBtn.addEventListener("click", replayStory);
+  tapBtn.addEventListener("mousedown", tapQte);
+  tapBtn.addEventListener("touchstart", function(e){ e.preventDefault(); tapQte(); }, {passive:false});
+
+  muteBtn.addEventListener("click", function(){
+    muted = !muted;
+    try { localStorage.setItem("pgcMuted", muted ? "1" : "0"); } catch(e){}
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    muteBtn.classList.toggle("active", muted);
+    if (muted) stopSpeak();
+  });
+
+  langBtn.addEventListener("click", function(){
+    lang = lang === "id" ? "en" : "id";
+    applyLang();
+    if (current >= 0 && startBtn.classList.contains("pgc-hidden")){
+      var st = t().stages[current];
+      caption.textContent = (qteActive ? t().qteInstruction : (findActive ? t().findInstruction : st.text));
+      speak(caption.textContent);
+    }
+    setTimeout(reportHeight, 60);
+  });
+
+  function applyLang(){
+    document.documentElement.lang = lang;
+    langBtn.textContent = lang === "id" ? "ID" : "EN";
+    titleEl.textContent = t().title;
+    startBtn.textContent = t().startBtn;
+    nextBtn.textContent = t().nextBtn;
+    replayBtn.textContent = t().replayBtn;
+    footerEl.textContent = t().footer;
+    if (startBtn.classList.contains("pgc-hidden") === false){
+      caption.textContent = "";
+    }
+  }
+
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+  muteBtn.classList.toggle("active", muted);
+  applyLang();
+
+  window.addEventListener("resize", function(){ setTimeout(reportHeight, 60); });
+  window.addEventListener("load", function(){ setTimeout(reportHeight, 120); });
+  if ('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
+
+  loop();
+  setTimeout(reportHeight, 200);
+})();
+</script>
+</body>
+</html>
