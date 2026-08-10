@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ciung Wanara - Cerita Rakyat Jawa Barat</title>
+<style>
+  cw-root{all:initial}
+  .cw-wrap{
+    box-sizing:border-box; font-family:'Segoe UI',Verdana,sans-serif;
+    width:100%; max-width:720px; margin:0 auto; border-radius:18px; overflow:hidden;
+    background:#fbf3e2; box-shadow:0 6px 24px rgba(60,40,10,0.18); position:relative;
+  }
+  .cw-wrap *{box-sizing:border-box}
+  .cw-topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 12px; background:#4a2f1c; color:#ffe9c2; position:relative; z-index:5;
+  }
+  .cw-title{font-size:14px; font-weight:700; letter-spacing:.3px}
+  .cw-btnrow{display:flex; gap:6px}
+  .cw-iconbtn{
+    background:#79512c; border:none; color:#ffe9c2; border-radius:20px;
+    padding:6px 12px; font-size:13px; cursor:pointer; font-weight:600;
+    transition:transform .15s, background .15s;
+  }
+  .cw-iconbtn:hover{background:#916331; transform:translateY(-1px)}
+  .cw-iconbtn:active{transform:scale(.94)}
+  .cw-stage{position:relative; width:100%; aspect-ratio:4/3; background:#a9d6c8; overflow:hidden}
+  .cw-stage canvas{width:100%; height:100%; display:block}
+  .cw-dots{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px; padding:10px 8px 4px; background:#fbf3e2;
+  }
+  .cw-dot{width:9px; height:9px; border-radius:50%; background:#e6d3ac; transition:all .25s}
+  .cw-dot.cw-active{background:#c0392b; transform:scale(1.3)}
+  .cw-dot.cw-done{background:#c9972f}
+  .cw-panel{
+    padding:14px 18px 18px; background:#fbf3e2; min-height:64px;
+  }
+  .cw-dialogue{
+    background:#fffaf0; border:2px solid #e8d19f; border-radius:14px; padding:12px 14px;
+    font-size:14.5px; line-height:1.55; color:#3d2b18; min-height:28px;
+  }
+  .cw-dialogue b{color:#a2472f}
+  .cw-controls{display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap}
+  .cw-mainbtn{
+    background:linear-gradient(180deg,#e0645a,#c73c30); color:#fff; border:none;
+    padding:11px 26px; border-radius:26px; font-size:15px; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 0 #942a21; transition:transform .1s;
+  }
+  .cw-mainbtn:hover{filter:brightness(1.06)}
+  .cw-mainbtn:active{transform:translateY(3px); box-shadow:0 1px 0 #942a21}
+  .cw-mainbtn:disabled{opacity:.45; cursor:default; box-shadow:0 4px 0 #942a21}
+  .cw-hint{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    background:rgba(255,255,255,.92); color:#8a4a1e; padding:6px 14px; border-radius:20px;
+    font-size:12.5px; font-weight:700; pointer-events:none; animation:cw-bob 1.4s ease-in-out infinite;
+    white-space:nowrap;
+  }
+  @keyframes cw-bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+  .cw-progwrap{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    width:80%; max-width:320px; display:none;
+  }
+  .cw-progwrap.cw-show{display:block}
+  .cw-progbar{
+    height:14px; background:rgba(255,255,255,.55); border-radius:10px; overflow:hidden;
+    border:2px solid rgba(255,255,255,.8);
+  }
+  .cw-progfill{height:100%; width:0%; background:linear-gradient(90deg,#ffca3a,#e0483e); transition:width .12s}
+  .cw-proglabel{
+    text-align:center; margin-top:4px; font-size:11.5px; font-weight:700; color:#5c3d24;
+    background:rgba(255,255,255,.85); border-radius:10px; padding:2px 8px; display:inline-block;
+    position:relative; left:50%; transform:translateX(-50%);
+  }
+  .cw-cover{
+    position:absolute; inset:0; background:linear-gradient(180deg,#33200f,#4a2f1c 60%,#33200f);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    color:#ffe9c2; z-index:10; padding:24px;
+  }
+  .cw-cover h1{margin:10px 0 4px; font-size:25px; letter-spacing:.5px}
+  .cw-cover p{margin:0 0 20px; font-size:13.5px; opacity:.85; max-width:360px}
+  .cw-endpanel{
+    position:absolute; inset:0; background:rgba(35,22,10,.94);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; color:#ffe9c2; padding:26px; z-index:9;
+  }
+  .cw-endpanel.cw-show{display:flex}
+  .cw-endpanel h2{margin:8px 0 10px; font-size:22px}
+  .cw-endpanel p{font-size:13.5px; opacity:.9; max-width:380px; line-height:1.6; margin-bottom:20px}
+  .cw-footer{
+    text-align:center; font-size:11px; color:#a08a68; padding:8px 10px 12px; background:#fbf3e2;
+  }
+  @media (max-width:420px){
+    .cw-title{font-size:12.5px}
+    .cw-iconbtn{padding:5px 9px; font-size:12px}
+    .cw-dialogue{font-size:13.5px}
+  }
+</style>
+</head>
+<body>
+<cw-root>
+<div class="cw-wrap" id="cwWrap">
+  <div class="cw-topbar">
+    <div class="cw-title" id="cwTitle">🐓 Ciung Wanara</div>
+    <div class="cw-btnrow">
+      <button class="cw-iconbtn" id="cwMuteBtn" title="Bisukan narasi">🔊</button>
+      <button class="cw-iconbtn" id="cwLangBtn" title="Ganti bahasa">EN</button>
+    </div>
+  </div>
+
+  <div class="cw-stage" id="cwStage">
+    <canvas id="cwCanvas" width="800" height="600"></canvas>
+    <div class="cw-hint" id="cwHint" style="display:none">👆 Ketuk untuk melanjutkan</div>
+    <div class="cw-progwrap" id="cwProgWrap">
+      <div class="cw-progbar"><div class="cw-progfill" id="cwProgFill"></div></div>
+      <div class="cw-proglabel" id="cwProgLabel">0%</div>
+    </div>
+
+    <div class="cw-cover" id="cwCover">
+      <div style="font-size:52px">🐓</div>
+      <h1 id="cwCoverTitle">Ciung Wanara</h1>
+      <p id="cwCoverDesc">Cerita rakyat dari Jawa Barat tentang seorang pangeran yang dihanyutkan sungai sejak bayi, dibesarkan nelayan tua, dan kembali merebut haknya lewat ayam jago ajaib.</p>
+      <button class="cw-mainbtn" id="cwStartBtn">▶ Mulai Cerita</button>
+    </div>
+
+    <div class="cw-endpanel" id="cwEndPanel">
+      <div style="font-size:44px">🕊️</div>
+      <h2 id="cwEndTitle">Damai di Kerajaan Galuh</h2>
+      <p id="cwEndDesc">Pamali berperang melawan saudara sendiri. Sungai Brebes pun berganti nama menjadi Sungai Pamali, penanda perdamaian dua bersaudara.</p>
+      <button class="cw-mainbtn" id="cwReplayBtn">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="cw-dots" id="cwDots"></div>
+
+  <div class="cw-panel">
+    <div class="cw-dialogue" id="cwDialogue">Ketuk "Mulai Cerita" untuk memulai.</div>
+    <div class="cw-controls">
+      <button class="cw-mainbtn" id="cwNextBtn" style="display:none">Lanjutkan ▸</button>
+    </div>
+  </div>
+
+  <div class="cw-footer">Kisah rakyat Nusantara &middot; Jawa Barat</div>
+</div>
+</cw-root>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ CONFIG ============ */
+var RESIZE_KEY = "ciungWanaraResize";
+var MUTE_KEY = "caritasato_muted";
+var qs = new URLSearchParams(location.search);
+var lang = (qs.get("lang") === "en") ? "en" : "id";
+var muted = localStorage.getItem(MUTE_KEY) === "1";
+
+var T = {
+  id:{
+    coverTitle:"Ciung Wanara", langBtn:"EN",
+    coverDesc:"Cerita rakyat dari Jawa Barat tentang seorang pangeran yang dihanyutkan sungai sejak bayi, dibesarkan nelayan tua, dan kembali merebut haknya lewat ayam jago ajaib.",
+    start:"▶ Mulai Cerita", next:"Lanjutkan ▸", replay:"↺ Ulangi Cerita",
+    endTitle:"Damai di Kerajaan Galuh",
+    endDesc:"Pamali berperang melawan saudara sendiri. Sungai Brebes pun berganti nama menjadi Sungai Pamali, penanda perdamaian dua bersaudara.",
+    hint:"👆 Ketuk untuk melanjutkan", title:"🐓 Ciung Wanara",
+    duelHint:"👆 Ketuk berkali-kali untuk menyemangati ayam jago!"
+  },
+  en:{
+    coverTitle:"Ciung Wanara", langBtn:"ID",
+    coverDesc:"A folktale from West Java about a prince set adrift on a river as a baby, raised by an old fisherman couple, who returns to claim his birthright through a magical rooster.",
+    start:"▶ Start Story", next:"Continue ▸", replay:"↺ Replay Story",
+    endTitle:"Peace in the Kingdom of Galuh",
+    endDesc:"It is forbidden to war against one's own sibling. The Brebes River was renamed the Pamali River, a symbol of peace between two brothers.",
+    hint:"👆 Tap to continue", title:"🐓 Ciung Wanara",
+    duelHint:"👆 Tap repeatedly to cheer on the rooster!"
+  }
+};
+
+/* ============ STORY DATA ============ */
+// type: "narrative" (lines shown/spoken in sequence) or "duel" (tap-to-fill mini game)
+var STORY = [
+  { id:"awal", type:"narrative", bg:"palace",
+    lines:{
+      id:["Alkisah di Jawa Barat berdirilah Kerajaan Galuh, dipimpin raja bijaksana Prabu Permana Di Kusumah.",
+          "Sang raja memiliki dua permaisuri, Dewi Naganingrum dan Dewi Pangrenyep, dan hidup damai memerintah rakyatnya."],
+      en:["Long ago in West Java stood the Kingdom of Galuh, ruled by a wise king, Prabu Permana Di Kusumah.",
+          "The king had two queens, Dewi Naganingrum and Dewi Pangrenyep, and ruled his people peacefully."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"palace");
+      drawPalace(ctx,w,h);
+      drawRoyal(ctx,w*0.5,h*0.72,1.05,t,{crown:true,robe:"#c9972f"});
+      drawRoyal(ctx,w*0.3,h*0.76,0.85,t,{robe:"#a2472f",female:true});
+      drawRoyal(ctx,w*0.7,h*0.76,0.85,t,{robe:"#4a7a5c",female:true});
+    }
+  },
+  { id:"pertapa", type:"narrative", bg:"forest-day",
+    lines:{
+      id:["Setelah lama memerintah, sang raja ingin bertapa. Ia menitipkan takhta pada menterinya, Aria Kebonan, dengan nama samaran Prabu Barma Wijaya.",
+          "\u201cJagalah kerajaan dan kedua istriku dengan baik,\u201d pesan sang raja sebelum pergi mengasingkan diri ke hutan."],
+      en:["After ruling for a long time, the king wished to meditate. He entrusted the throne to his minister, Aria Kebonan, under the disguise name Prabu Barma Wijaya.",
+          "\u201cTake good care of the kingdom and my two wives,\u201d the king said before retreating into the forest."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-day");
+      drawRoyal(ctx,w*0.3,h*0.76,1,t,{crown:true,robe:"#c9972f"});
+      drawRoyal(ctx,w*0.62,h*0.74,1,t,{crown:true,robe:"#7a3b2e",bow:true});
+    }
+  },
+  { id:"sombong", type:"narrative", bg:"throne",
+    lines:{
+      id:["Sayangnya, kekuasaan membuat Prabu Barma Wijaya sombong dan bertindak sewenang-wenang, memperlakukan kedua permaisuri dengan kasar.",
+          "Uwa Batara Lengser, orang kepercayaan istana, hanya bisa menahan diri melihat kelakuan raja baru itu."],
+      en:["Sadly, power made Prabu Barma Wijaya arrogant and unjust, treating both queens harshly.",
+          "Uwa Batara Lengser, a trusted palace elder, could only watch in restraint at the new king's behavior."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"throne");
+      drawThroneDais(ctx,w,h);
+      drawRoyal(ctx,w*0.5,h*0.62,1.1,t,{crown:true,robe:"#7a3b2e",proud:true});
+      drawRoyal(ctx,w*0.28,h*0.78,0.8,t,{robe:"#a2472f",female:true,sad:true});
+      drawRoyal(ctx,w*0.74,h*0.8,0.75,t,{robe:"#5c4a30",elder:true});
+    }
+  },
+  { id:"mimpi", type:"narrative", bg:"cloud",
+    lines:{
+      id:["Suatu malam, kedua permaisuri bermimpi bulan jatuh menimpa mereka \u2014 pertanda mereka akan mengandung.",
+          "Seorang pertapa sakti menjelaskan bahwa keduanya akan melahirkan putra. Mendengar itu, raja murka dan mengibaskan kerisnya \u2014 namun keris itu bengkok, tak mampu melukainya.",
+          "Sang pertapa pun lenyap secara gaib, menghilang ke dalam hutan sebagai penjaga sungai yang tak tampak."],
+      en:["One night, both queens dreamed the moon fell upon them \u2014 a sign they would soon bear children.",
+          "A powerful hermit explained they would each have a son. Hearing this, the king grew furious and swung his keris \u2014 but the blade bent, unable to harm him.",
+          "The hermit then vanished mysteriously into the forest, becoming an unseen guardian of the river."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"cloud");
+      drawMoon(ctx,w*0.5,h*0.32,60,t);
+      drawRoyal(ctx,w*0.3,h*0.8,0.8,t,{robe:"#a2472f",female:true,sleep:true});
+      drawRoyal(ctx,w*0.68,h*0.8,0.8,t,{robe:"#4a7a5c",female:true,sleep:true});
+    }
+  },
+  { id:"lahir1", type:"narrative", bg:"palace",
+    lines:{
+      id:["Beberapa bulan kemudian, Dewi Pangrenyep melahirkan seorang putra yang diberi nama Hariang Banga.",
+          "Ketika Barma Wijaya mengunjungi Dewi Naganingrum yang tengah hamil besar, ajaib \u2014 sang janin berbicara memperingatkannya agar berhenti berbuat kejam."],
+      en:["A few months later, Dewi Pangrenyep gave birth to a son named Hariang Banga.",
+          "When Barma Wijaya visited Dewi Naganingrum, heavily pregnant, something magical happened \u2014 the unborn child spoke, warning him to stop his cruelty."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"palace");
+      drawRoyal(ctx,w*0.3,h*0.76,0.9,t,{robe:"#4a7a5c",female:true,baby:true});
+      drawRoyal(ctx,w*0.68,h*0.76,0.9,t,{robe:"#a2472f",female:true,belly:true});
+    }
+  },
+  { id:"tukar", type:"narrative", bg:"river",
+    lines:{
+      id:["Tak lama, Dewi Naganingrum melahirkan bayi laki-laki yang tampan. Namun diam-diam, Dewi Pangrenyep menukarnya dengan seekor anak anjing.",
+          "Bayi yang sebenarnya dimasukkan ke dalam keranjang, lalu dihanyutkan ke Sungai Citanduy tanpa sepengetahuan siapa pun."],
+      en:["Soon after, Dewi Naganingrum gave birth to a handsome baby boy. But secretly, Dewi Pangrenyep swapped him for a puppy.",
+          "The real baby was placed inside a basket and set adrift on the Citanduy River, unknown to anyone."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"river");
+      drawRiver(ctx,w,h,t);
+      drawBasket(ctx,w*(0.3+((t*0.05)%0.5)),h*0.52,1,t);
+    }
+  },
+  { id:"ditemukan", type:"narrative", bg:"forest-day",
+    lines:{
+      id:["Di Desa Geger Sunten, sepasang suami istri tua penangkap ikan menemukan keranjang berisi bayi mungil tersangkut di bubu mereka.",
+          "Mereka merawatnya penuh kasih. Karena pernah melihat burung ciung dan monyet wanara, bayi itu mereka namai Ciung Wanara."],
+      en:["In Geger Sunten village, an old fisherman couple found the basket with the tiny baby caught in their fish trap.",
+          "They raised him with love. Having once seen a ciung bird and a wanara monkey, they named him Ciung Wanara."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-day");
+      drawHut(ctx,w*0.72,h*0.58,0.9);
+      drawElder(ctx,w*0.28,h*0.78,0.9,t,{male:true});
+      drawElder(ctx,w*0.42,h*0.8,0.85,t,{male:false,baby:true});
+    }
+  },
+  { id:"remaja", type:"narrative", bg:"forest-day",
+    lines:{
+      id:["Ciung Wanara tumbuh menjadi pemuda tampan, cerdas, dan pemberani. Ia ingin merantau ke ibu kota Kerajaan Galuh.",
+          "\u201cAyahmu adalah raja Galuh, dan ibumu diasingkan di tengah hutan. Pergilah mencarinya,\u201d kata ayah angkatnya.",
+          "Dengan membawa ayam jantan kesayangannya, Ciung Wanara pun berangkat menuju ibu kota."],
+      en:["Ciung Wanara grew into a handsome, clever, and brave young man. He wished to travel to the capital of Galuh.",
+          "\u201cYour father is the king of Galuh, and your mother lives in exile deep in the forest. Go find her,\u201d said his adoptive father.",
+          "Carrying his beloved rooster, Ciung Wanara set off toward the capital city."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-day");
+      drawYouth(ctx,w*0.5+Math.sin(t*1.4)*6,h*0.72,1,t);
+    }
+  },
+  { id:"sabung1", type:"duel", bg:"alunalun", taps:14,
+    intro:{id:["Di alun-alun kota, dua patih kerajaan, Purawesi dan Puragading, tertarik pada ayam jago Ciung Wanara dan menantangnya adu ayam."],
+           en:["In the town square, two royal officials, Purawesi and Puragading, were intrigued by Ciung Wanara's rooster and challenged him to a cockfight."]},
+    prompt:{id:"👆 Ketuk berkali-kali untuk menyemangati ayam jago Ciung Wanara!", en:"👆 Tap repeatedly to cheer on Ciung Wanara's rooster!"},
+    resultWin:{id:"Nasib baik berpihak pada Ciung Wanara! Ayam jantannya menang telak, dan kabar kemenangan itu tersebar ke seluruh kerajaan hingga terdengar oleh sang raja.",
+               en:"Fortune favored Ciung Wanara! His rooster won decisively, and news of the victory spread throughout the kingdom, eventually reaching the king."},
+    draw:function(ctx,w,h,t,p){ drawSkyGround(ctx,w,h,"alunalun");
+      drawYouth(ctx,w*0.28,h*0.78,0.95,t);
+      drawRooster(ctx,w*0.44,h*0.78,1,t,{fighting:true,energy:p});
+      drawRooster(ctx,w*0.66,h*0.8,0.95,t,{fighting:true,rival:true,energy:1-p*0.6});
+      drawRoyal(ctx,w*0.85,h*0.76,0.7,t,{robe:"#5c4a30",elder:true});
+    }
+  },
+  { id:"istana", type:"narrative", bg:"throne",
+    lines:{
+      id:["Ciung Wanara dipanggil menghadap raja. Ia bercerita bahwa ayamnya sangat aneh \u2014 telurnya pernah hanyut di sungai sebelum menetas.",
+          "Sang raja teringat pada Naganingrum. Ia pun menantang: \u201cAdukan ayammu dengan ayamku, Si Jeling. Jika kau menang, separuh Kerajaan Galuh menjadi milikmu.\u201d",
+          "\u201cJika ayam hamba kalah, hamba serahkan nyawa hamba,\u201d jawab Ciung Wanara tegas menerima taruhan itu."],
+      en:["Ciung Wanara was summoned before the king. He told of his strange rooster \u2014 its egg had once drifted down the river before hatching.",
+          "The king was reminded of Naganingrum. He proposed a challenge: \u201cPit your rooster against mine, Si Jeling. If you win, half the Kingdom of Galuh is yours.\u201d",
+          "\u201cIf my rooster loses, I will give up my life,\u201d Ciung Wanara answered boldly, accepting the wager."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"throne");
+      drawThroneDais(ctx,w,h);
+      drawRoyal(ctx,w*0.34,h*0.62,1.05,t,{crown:true,robe:"#7a3b2e",proud:true});
+      drawYouth(ctx,w*0.68,h*0.78,0.95,t);
+    }
+  },
+  { id:"sabung2", type:"duel", bg:"alunalun", taps:20, final:true,
+    intro:{id:["Pertandingan puncak pun dimulai di halaman istana \u2014 ayam Ciung Wanara melawan Si Jeling, jago kebanggaan sang raja!"],
+           en:["The climactic match began in the palace courtyard \u2014 Ciung Wanara's rooster against Si Jeling, the king's prized champion!"]},
+    prompt:{id:"👆 Ketuk cepat! Pertaruhan separuh kerajaan ada di tangan ayam ini!", en:"👆 Tap fast! Half the kingdom is at stake!"},
+    resultWin:{id:"Ayam Ciung Wanara sempat terdesak, namun tiba-tiba bangkit dengan kekuatan penuh dan mengalahkan Si Jeling dengan mudah!",
+               en:"Ciung Wanara's rooster faltered at first, but suddenly surged back with full strength and easily defeated Si Jeling!"},
+    draw:function(ctx,w,h,t,p){ drawSkyGround(ctx,w,h,"alunalun");
+      drawThroneDais(ctx,w,h*0.4);
+      drawRooster(ctx,w*0.36,h*0.8,1.1,t,{fighting:true,energy:p});
+      drawRooster(ctx,w*0.64,h*0.8,1.1,t,{fighting:true,rival:true,royal:true,energy:1-p*0.7});
+    }
+  },
+  { id:"terbagi", type:"narrative", bg:"map",
+    lines:{
+      id:["Sesuai janji, Kerajaan Galuh pun dibagi dua. Ciung Wanara memerintah wilayah barat, sedangkan Hariang Banga wilayah timur.",
+          "Masing-masing kini bergelar Prabu, memerintah negerinya sendiri."],
+      en:["True to his word, the Kingdom of Galuh was split in two. Ciung Wanara ruled the western realm, while Hariang Banga ruled the east.",
+          "Each now bore the title Prabu, ruling their own land."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"map");
+      drawMapSplit(ctx,w,h,t);
+    }
+  },
+  { id:"terbongkar", type:"narrative", bg:"forest-day",
+    lines:{
+      id:["Uwa Batara Lengser lalu membongkar semua kejahatan Barma Wijaya dan Dewi Pangrenyep terhadap Ciung Wanara dan ibunya.",
+          "Ciung Wanara segera menjemput ibu kandungnya, Dewi Naganingrum, dari pengasingannya di hutan, dan menangkap kedua pelaku kejahatan itu."],
+      en:["Uwa Batara Lengser then revealed all the wrongs Barma Wijaya and Dewi Pangrenyep had done to Ciung Wanara and his mother.",
+          "Ciung Wanara rushed to bring his birth mother, Dewi Naganingrum, home from her forest exile, and had the two wrongdoers arrested."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-day");
+      drawYouth(ctx,w*0.38,h*0.76,1,t);
+      drawRoyal(ctx,w*0.62,h*0.78,0.9,t,{robe:"#4a7a5c",female:true,reunite:true});
+    }
+  },
+  { id:"perang", type:"narrative", bg:"river-sunset",
+    lines:{
+      id:["Mendengar ibunya ditangkap, Hariang Banga murka. Ia mengumpulkan pasukan dan menyerang Ciung Wanara di tepi Sungai Brebes.",
+          "Kedua bersaudara sama-sama sakti dalam pencak silat. Pertarungan berlangsung sengit tanpa ada yang kalah maupun menang."],
+      en:["Upon hearing his mother had been captured, Hariang Banga grew furious. He gathered his troops and attacked Ciung Wanara by the Brebes River.",
+          "Both brothers were equally skilled in the martial art of pencak silat. The battle raged fiercely, with neither side winning."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"river-sunset");
+      drawRiver(ctx,w,h,t);
+      drawDuelists(ctx,w,h,t);
+    }
+  },
+  { id:"damai", type:"narrative", bg:"river-sunset",
+    lines:{
+      id:["Tiba-tiba muncullah Prabu Permana Di Kusumah bersama Dewi Naganingrum dan Uwa Batara Lengser melerai pertempuran.",
+          "\u201cHentikan! Pamali berperang melawan saudara sendiri. Kalian berdua adalah anak-anakku,\u201d kata sang raja tegas.",
+          "Sungai Brebes pun diberi nama baru, Sungai Pamali (Cipamali), sebagai pengingat abadi akan perdamaian dua bersaudara."],
+      en:["Suddenly, Prabu Permana Di Kusumah appeared with Dewi Naganingrum and Uwa Batara Lengser, stopping the battle.",
+          "\u201cStop! It is forbidden to war against your own sibling. You are both my sons,\u201d the king declared firmly.",
+          "The Brebes River was given a new name, the Pamali River (Cipamali), as an eternal reminder of the peace between two brothers."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"river-sunset");
+      drawRiver(ctx,w,h,t);
+      drawRoyal(ctx,w*0.5,h*0.62,1,t,{crown:true,robe:"#c9972f"});
+      drawYouth(ctx,w*0.28,h*0.78,0.85,t);
+      drawYouth(ctx,w*0.72,h*0.78,0.85,t,{robeColor:"#4a5a8f"});
+    }
+  }
+];
+
+/* ============ CANVAS DRAWING HELPERS ============ */
+var canvas=document.getElementById("cwCanvas"), ctx=canvas.getContext("2d");
+var W=canvas.width, H=canvas.height;
+
+function lerp(a,b,x){return a+(b-a)*x;}
+
+function drawSkyGround(ctx,w,h,scene){
+  var skies = {
+    "palace":["#ffe3a3","#fff6dc"],
+    "forest-day":["#bfe3d6","#e9f3d8"],
+    "throne":["#f0d090","#fbe9c4"],
+    "cloud":["#3a3560","#6f6a9a"],
+    "river":["#bcd9f0","#eaf4fb"],
+    "alunalun":["#ffe3a3","#fdf1cf"],
+    "map":["#cfe8ea","#f2f8ea"],
+    "river-sunset":["#f3a35f","#fbd7a0"]
+  };
+  var c = skies[scene]||skies["forest-day"];
+  var g = ctx.createLinearGradient(0,0,0,h*0.7);
+  g.addColorStop(0,c[0]); g.addColorStop(1,c[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+  var gg = ctx.createLinearGradient(0,h*0.66,0,h);
+  if(scene==="river"||scene==="river-sunset"){ gg.addColorStop(0,"#8bc48f"); gg.addColorStop(1,"#5fa66a"); }
+  else if(scene==="map"){ gg.addColorStop(0,"#d7c99a"); gg.addColorStop(1,"#b8a774"); }
+  else { gg.addColorStop(0,"#c9a860"); gg.addColorStop(1,"#a3813f"); }
+  ctx.fillStyle=gg; ctx.fillRect(0,h*0.66,w,h*0.34);
+  if(scene==="forest-day"){
+    ctx.fillStyle="rgba(50,90,55,0.3)";
+    for(var i=0;i<5;i++){
+      var tx=w*(0.05+i*0.22), ty=h*0.64, tr=44+((i%3)*10);
+      ctx.beginPath(); ctx.ellipse(tx,ty,tr,tr*0.7,0,0,Math.PI*2); ctx.fill();
+      ctx.fillRect(tx-4,ty,8,h*0.06);
+    }
+  }
+  if(scene==="cloud"){
+    ctx.fillStyle="rgba(255,255,255,0.06)";
+    for(var s=0;s<40;s++){
+      var sx=(s*137)%w, sy=(s*79)%(h*0.5);
+      ctx.beginPath(); ctx.arc(sx,sy,1.4,0,Math.PI*2); ctx.fill();
+    }
+  }
+}
+
+function drawPalace(ctx,w,h){
+  ctx.fillStyle="#7a5535";
+  ctx.beginPath(); ctx.moveTo(w*0.5,h*0.28); ctx.lineTo(w*0.68,h*0.44); ctx.lineTo(w*0.32,h*0.44); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#c9972f";
+  ctx.fillRect(w*0.36,h*0.44,w*0.28,h*0.2);
+  ctx.strokeStyle="#7a5535"; ctx.lineWidth=3;
+  for(var i=0;i<4;i++){
+    ctx.beginPath(); ctx.moveTo(w*0.38+i*(w*0.08),h*0.44); ctx.lineTo(w*0.38+i*(w*0.08),h*0.64); ctx.stroke();
+  }
+}
+
+function drawThroneDais(ctx,w,h){
+  ctx.fillStyle="#a3813f";
+  ctx.fillRect(w*0.28,h*0.58,w*0.44,h*0.1);
+  ctx.fillStyle="#c9972f";
+  ctx.beginPath(); ctx.moveTo(w*0.42,h*0.3); ctx.lineTo(w*0.58,h*0.3); ctx.lineTo(w*0.62,h*0.58); ctx.lineTo(w*0.38,h*0.58); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="#7a5535"; ctx.lineWidth=4; ctx.strokeRect(w*0.4,h*0.32,w*0.2,h*0.02);
+}
+
+function drawMoon(ctx,x,y,r,t){
+  var grd=ctx.createRadialGradient(x-10,y-10,6,x,y,r);
+  grd.addColorStop(0,"#fffef0"); grd.addColorStop(1,"#f0e6b0");
+  ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="rgba(200,190,150,0.4)";
+  ctx.beginPath(); ctx.arc(x-14,y-6,7,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+10,y+12,5,0,Math.PI*2); ctx.fill();
+}
+
+function drawRiver(ctx,w,h,t){
+  ctx.fillStyle="rgba(100,170,210,0.55)";
+  ctx.beginPath();
+  ctx.moveTo(0,h*0.62);
+  ctx.quadraticCurveTo(w*0.5,h*0.72,w,h*0.6);
+  ctx.lineTo(w,h*0.82);
+  ctx.quadraticCurveTo(w*0.5,h*0.9,0,h*0.8);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,0.5)"; ctx.lineWidth=2;
+  for(var i=0;i<4;i++){
+    var yy=h*(0.66+i*0.05);
+    var off=(t*40+i*40)%(w+120)-120;
+    ctx.beginPath(); ctx.moveTo(off,yy); ctx.quadraticCurveTo(off+60,yy-6,off+120,yy); ctx.stroke();
+  }
+}
+
+function drawBasket(ctx,x,y,scale,t){
+  ctx.save(); ctx.translate(x,y+Math.sin(t*2)*3); ctx.scale(scale,scale);
+  ctx.fillStyle="#a9825a";
+  ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(22,0); ctx.lineTo(16,16); ctx.lineTo(-16,16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="#7d6238"; ctx.lineWidth=1.5;
+  for(var i=-16;i<=16;i+=8){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i*0.75,16); ctx.stroke(); }
+  ctx.fillStyle="#e8a05c";
+  ctx.beginPath(); ctx.arc(0,-4,7,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#3d2b18";
+  ctx.beginPath(); ctx.arc(-2.5,-5,1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(2.5,-5,1,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawHut(ctx,x,y,scale){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle="#8a6642";
+  ctx.beginPath(); ctx.moveTo(-50,0); ctx.lineTo(0,-40); ctx.lineTo(50,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#c9a15f";
+  ctx.fillRect(-36,0,72,44);
+  ctx.fillStyle="#5c4a30";
+  ctx.fillRect(-10,18,20,26);
+  ctx.restore();
+}
+
+function drawMapSplit(ctx,w,h,t){
+  ctx.fillStyle="#7cae6e";
+  ctx.fillRect(w*0.12,h*0.32,w*0.34,h*0.4);
+  ctx.fillStyle="#6f9dd6";
+  ctx.fillRect(w*0.54,h*0.32,w*0.34,h*0.4);
+  ctx.strokeStyle="#3d2b18"; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(w*0.5,h*0.3); ctx.lineTo(w*0.5,h*0.74); ctx.stroke();
+  ctx.fillStyle="#3d2b18"; ctx.font="bold 20px sans-serif"; ctx.textAlign="center";
+  ctx.fillText("W", w*0.29, h*0.5);
+  ctx.fillText("E", w*0.71, h*0.5);
+  drawYouth(ctx,w*0.29,h*0.6,0.55,t);
+  drawYouth(ctx,w*0.71,h*0.6,0.55,t,{robeColor:"#4a5a8f"});
+  ctx.textAlign="start";
+}
+
+function drawDuelists(ctx,w,h,t){
+  var shift = Math.sin(t*6)*6;
+  drawYouth(ctx,w*0.38+shift,h*0.72,0.95,t,{action:true});
+  drawYouth(ctx,w*0.62-shift,h*0.72,0.95,t,{action:true,robeColor:"#4a5a8f"});
+}
+
+function drawRoyal(ctx,x,y,scale,t,opts){
+  opts=opts||{};
+  var bob = Math.sin(t*2+ (opts.sleep?0:1))*(opts.sleep?1:2.2);
+  ctx.save(); ctx.translate(x,y+bob); ctx.scale(scale,scale);
+  // robe/body
+  ctx.fillStyle = opts.robe || "#c9972f";
+  ctx.beginPath();
+  ctx.moveTo(-26,60); ctx.quadraticCurveTo(-30,-10,0,-14); ctx.quadraticCurveTo(30,-10,26,60);
+  ctx.closePath(); ctx.fill();
+  // sash
+  ctx.fillStyle="rgba(255,255,255,0.25)";
+  ctx.fillRect(-6,-6,12,60);
+  // head
+  ctx.fillStyle="#f0c69a";
+  ctx.beginPath(); ctx.arc(0,-30,20,0,Math.PI*2); ctx.fill();
+  // hair (simple)
+  if(opts.female){
+    ctx.fillStyle="#2b2018";
+    ctx.beginPath(); ctx.arc(0,-38,21,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillRect(-21,-38,6,26); ctx.fillRect(15,-38,6,26);
+  }
+  // crown
+  if(opts.crown){
+    ctx.fillStyle="#ffd766";
+    ctx.beginPath();
+    ctx.moveTo(-16,-46); ctx.lineTo(-16,-58); ctx.lineTo(-6,-48); ctx.lineTo(0,-60); ctx.lineTo(6,-48); ctx.lineTo(16,-58); ctx.lineTo(16,-46);
+    ctx.closePath(); ctx.fill();
+  }
+  // face
+  ctx.fillStyle="#2b2018";
+  if(opts.sleep){
+    ctx.beginPath(); ctx.moveTo(-9,-30); ctx.lineTo(-3,-30); ctx.lineWidth=2; ctx.strokeStyle="#2b2018"; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(3,-30); ctx.lineTo(9,-30); ctx.stroke();
+  } else if(opts.sad){
+    ctx.beginPath(); ctx.arc(-6,-31,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-31,2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#2b2018"; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.arc(0,-16,6,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(-6,-31,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-31,2,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle="#c0685a";
+  ctx.beginPath(); ctx.moveTo(-4,-20); ctx.lineTo(4,-20); ctx.lineTo(0,-16); ctx.closePath(); ctx.fill();
+  if(opts.proud){
+    ctx.strokeStyle="#2b2018"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-9,-38); ctx.lineTo(-14,-42); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9,-38); ctx.lineTo(14,-42); ctx.stroke();
+  }
+  // baby / belly indicator
+  if(opts.baby){
+    ctx.fillStyle="#e8a05c";
+    ctx.beginPath(); ctx.arc(30,20,10,0,Math.PI*2); ctx.fill();
+  }
+  if(opts.belly){
+    ctx.fillStyle=opts.robe;
+    ctx.beginPath(); ctx.ellipse(0,26,20,16,0,0,Math.PI*2); ctx.fill();
+  }
+  if(opts.reunite){
+    ctx.fillStyle="rgba(255,255,255,.5)";
+    ctx.beginPath(); ctx.arc(0,-30,26,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawElder(ctx,x,y,scale,t,opts){
+  opts=opts||{};
+  var bob=Math.sin(t*2)*2;
+  ctx.save(); ctx.translate(x,y+bob); ctx.scale(scale,scale);
+  ctx.fillStyle = opts.male ? "#8a6642" : "#a2472f";
+  ctx.beginPath(); ctx.moveTo(-22,54); ctx.quadraticCurveTo(-24,-6,0,-10); ctx.quadraticCurveTo(24,-6,22,54); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#f0c69a";
+  ctx.beginPath(); ctx.arc(0,-26,17,0,Math.PI*2); ctx.fill();
+  if(opts.male){
+    ctx.fillStyle="#e6e6e6";
+    ctx.beginPath(); ctx.moveTo(-17,-16); ctx.quadraticCurveTo(0,-4,17,-16); ctx.quadraticCurveTo(0,-2,-17,-16); ctx.fill();
+    ctx.fillStyle="#3a2c1c"; ctx.fillRect(-20,-42,40,8);
+  } else {
+    ctx.fillStyle="#e6e6e6";
+    ctx.beginPath(); ctx.arc(0,-32,19,Math.PI,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle="#2b2018";
+  ctx.beginPath(); ctx.arc(-6,-26,1.8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6,-26,1.8,0,Math.PI*2); ctx.fill();
+  if(opts.baby){
+    ctx.fillStyle="#e8a05c";
+    ctx.beginPath(); ctx.arc(20,14,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#3d2b18";
+    ctx.beginPath(); ctx.arc(17,12,1,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(23,12,1,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawYouth(ctx,x,y,scale,t,opts){
+  opts=opts||{};
+  var bob=Math.sin(t*2.4)*3;
+  ctx.save(); ctx.translate(x,y+bob); ctx.scale(scale,scale);
+  ctx.fillStyle = opts.robeColor || "#c0392b";
+  ctx.beginPath(); ctx.moveTo(-20,54); ctx.quadraticCurveTo(-22,-6,0,-10); ctx.quadraticCurveTo(22,-6,20,54); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.2)"; ctx.fillRect(-4,-4,8,50);
+  ctx.fillStyle="#f0c69a";
+  ctx.beginPath(); ctx.arc(0,-28,16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#2b2018";
+  ctx.beginPath(); ctx.arc(0,-36,17,Math.PI,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-5,-29,1.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,-29,1.6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#c0685a";
+  ctx.beginPath(); ctx.arc(0,-19,2.4,0,Math.PI); ctx.fill();
+  if(opts.action){
+    ctx.strokeStyle="#f0c69a"; ctx.lineWidth=8; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-16,-4); ctx.lineTo(-34,-14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(16,-4); ctx.lineTo(34,-14); ctx.stroke();
+  }
+  if(!opts.noRooster){
+    drawRooster(ctx,26,30,0.5,t,{});
+  }
+  ctx.restore();
+}
+
+function drawRooster(ctx,x,y,scale,t,opts){
+  opts=opts||{};
+  var wobble = opts.fighting ? Math.sin(t*10)*4 : Math.sin(t*3)*2;
+  var lift = opts.energy!==undefined ? -opts.energy*14 : 0;
+  ctx.save(); ctx.translate(x,y+wobble+lift); ctx.scale(scale,scale);
+  var body = opts.royal ? "#3d5a80" : (opts.rival ? "#5c4a30" : "#c0392b");
+  var tail = opts.royal ? "#1c2e42" : (opts.rival ? "#3a2c1c" : "#7a2318");
+  // tail feathers
+  ctx.fillStyle=tail;
+  ctx.beginPath();
+  ctx.moveTo(-14,0); ctx.quadraticCurveTo(-46,-10,-40,-34); ctx.quadraticCurveTo(-24,-14,-14,0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-14,4); ctx.quadraticCurveTo(-42,10,-38,-10); ctx.quadraticCurveTo(-22,-2,-14,4);
+  ctx.fill();
+  // body
+  ctx.fillStyle=body;
+  ctx.beginPath(); ctx.ellipse(0,0,22,17,0,0,Math.PI*2); ctx.fill();
+  // wing
+  ctx.fillStyle="rgba(0,0,0,0.15)";
+  ctx.beginPath(); ctx.ellipse(-2,4,12,8,0,0,Math.PI*2); ctx.fill();
+  // legs
+  ctx.strokeStyle="#e0a83a"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-4,14); ctx.lineTo(-6,26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(6,14); ctx.lineTo(8,26); ctx.stroke();
+  // head/neck
+  ctx.fillStyle=body;
+  ctx.beginPath(); ctx.moveTo(16,-8); ctx.quadraticCurveTo(26,-22,20,-30); ctx.quadraticCurveTo(30,-30,26,-16); ctx.quadraticCurveTo(24,-4,16,-8); ctx.fill();
+  ctx.beginPath(); ctx.arc(24,-28,8,0,Math.PI*2); ctx.fill();
+  // comb
+  ctx.fillStyle="#e0483e";
+  ctx.beginPath(); ctx.moveTo(20,-34); ctx.lineTo(24,-40); ctx.lineTo(27,-34); ctx.lineTo(30,-39); ctx.lineTo(32,-32); ctx.closePath(); ctx.fill();
+  // beak
+  ctx.fillStyle="#ffca3a";
+  ctx.beginPath(); ctx.moveTo(32,-28); ctx.lineTo(38,-26); ctx.lineTo(32,-24); ctx.closePath(); ctx.fill();
+  // eye
+  ctx.fillStyle="#2b2018"; ctx.beginPath(); ctx.arc(27,-29,1.6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+/* ============ NARRATION ============ */
+function stopSpeech(){
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+}
+function speak(text, done){
+  if(muted || !("speechSynthesis" in window)){
+    var estMs = Math.max(1400, text.length*55);
+    setTimeout(done, estMs);
+    return;
+  }
+  stopSpeech();
+  try{
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang==="id" ? "id-ID" : "en-US";
+    u.rate = 0.95; u.pitch = 1.02;
+    var finished=false;
+    var fallback=setTimeout(function(){ if(!finished){finished=true; done();} }, Math.max(1800,text.length*90));
+    u.onend=function(){ if(!finished){finished=true; clearTimeout(fallback); done();} };
+    u.onerror=function(){ if(!finished){finished=true; clearTimeout(fallback); done();} };
+    window.speechSynthesis.speak(u);
+  }catch(e){
+    setTimeout(done, Math.max(1400,text.length*55));
+  }
+}
+
+/* ============ GAME STATE ============ */
+var state = { sceneIndex:0, phase:"idle", duelTaps:0, duelTarget:0, duelProgress:0 };
+var dialogueEl = document.getElementById("cwDialogue");
+var nextBtn = document.getElementById("cwNextBtn");
+var hintEl = document.getElementById("cwHint");
+var progWrap = document.getElementById("cwProgWrap");
+var progFill = document.getElementById("cwProgFill");
+var progLabel = document.getElementById("cwProgLabel");
+var dotsEl = document.getElementById("cwDots");
+var coverEl = document.getElementById("cwCover");
+var endPanel = document.getElementById("cwEndPanel");
+
+function buildDots(){
+  dotsEl.innerHTML="";
+  for(var i=0;i<STORY.length;i++){
+    var d=document.createElement("div"); d.className="cw-dot"; d.id="cwDot"+i;
+    dotsEl.appendChild(d);
+  }
+}
+function updateDots(){
+  for(var i=0;i<STORY.length;i++){
+    var d=document.getElementById("cwDot"+i);
+    d.className = "cw-dot" + (i<state.sceneIndex?" cw-done":"") + (i===state.sceneIndex?" cw-active":"");
+  }
+}
+
+function setDialogue(html){ dialogueEl.innerHTML = html; }
+
+function goScene(i){
+  stopSpeech();
+  state.sceneIndex = i;
+  state.phase = "narr";
+  nextBtn.style.display="none";
+  hintEl.style.display="none";
+  progWrap.classList.remove("cw-show");
+  updateDots();
+  var scene = STORY[i];
+  if(scene.type==="narrative"){
+    playLines(scene.lines[lang].slice(), function(){
+      nextBtn.style.display="inline-block";
+      nextBtn.textContent = T[lang].next;
+      state.phase="done";
+    });
+  } else if(scene.type==="duel"){
+    state.duelTaps = 0;
+    state.duelTarget = scene.taps || 14;
+    state.duelProgress = 0;
+    playLines(scene.intro[lang].slice(), function(){
+      setDialogue(scene.prompt[lang]);
+      hintEl.textContent = T[lang].duelHint;
+      hintEl.style.display="block";
+      progWrap.classList.add("cw-show");
+      progFill.style.width="0%";
+      progLabel.textContent="0%";
+      state.phase="duel";
+    });
+  }
+}
+
+function playLines(lines, done){
+  if(lines.length===0){ done(); return; }
+  var line = lines.shift();
+  setDialogue(line);
+  speak(line, function(){ playLines(lines, done); });
+}
+
+function onDuelTap(){
+  if(state.phase!=="duel") return;
+  state.duelTaps++;
+  state.duelProgress = Math.min(1, state.duelTaps/state.duelTarget);
+  var pct = Math.round(state.duelProgress*100);
+  progFill.style.width = pct+"%";
+  progLabel.textContent = pct+"%";
+  if(state.duelProgress>=1){
+    state.phase="duelwin";
+    hintEl.style.display="none";
+    progWrap.classList.remove("cw-show");
+    var scene = STORY[state.sceneIndex];
+    setDialogue(scene.resultWin[lang]);
+    speak(scene.resultWin[lang], function(){
+      nextBtn.style.display="inline-block";
+      state.phase="done";
+    });
+  }
+}
+
+function advance(){
+  if(state.phase!=="done") return;
+  var next = state.sceneIndex+1;
+  if(next>=STORY.length){
+    showEnd();
+  } else {
+    goScene(next);
+  }
+}
+
+function showEnd(){
+  stopSpeech();
+  updateDots();
+  endPanel.classList.add("cw-show");
+}
+
+function startGame(){
+  coverEl.style.display="none";
+  endPanel.classList.remove("cw-show");
+  goScene(0);
+}
+
+function restartGame(){
+  endPanel.classList.remove("cw-show");
+  goScene(0);
+}
+
+/* ============ CANVAS TAP HANDLING ============ */
+canvas.addEventListener("click", function(e){
+  if(state.phase==="duel"){ onDuelTap(); }
+});
+canvas.style.cursor="pointer";
+
+/* ============ RENDER LOOP ============ */
+function render(ts){
+  var t = ts/1000;
+  var scene = STORY[state.sceneIndex];
+  ctx.clearRect(0,0,W,H);
+  if(scene && (coverEl.style.display==="none")){
+    if(scene.type==="duel"){
+      // decay progress slightly so player must keep tapping, but keep floor at reached level between renders (simple visual only)
+      scene.draw(ctx,W,H,t,state.duelProgress);
+    } else {
+      scene.draw(ctx,W,H,t);
+    }
+  }
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+/* ============ UI WIRES ============ */
+document.getElementById("cwStartBtn").addEventListener("click", startGame);
+document.getElementById("cwReplayBtn").addEventListener("click", restartGame);
+document.getElementById("cwNextBtn").addEventListener("click", advance);
+
+var muteBtn = document.getElementById("cwMuteBtn");
+function applyMuteUI(){
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+}
+muteBtn.addEventListener("click", function(){
+  muted = !muted;
+  localStorage.setItem(MUTE_KEY, muted?"1":"0");
+  applyMuteUI();
+  if(muted) stopSpeech();
+});
+applyMuteUI();
+
+var langBtn = document.getElementById("cwLangBtn");
+function applyLangUI(){
+  document.documentElement.lang = lang;
+  document.getElementById("cwTitle").textContent = T[lang].title;
+  document.getElementById("cwCoverTitle").textContent = T[lang].coverTitle;
+  document.getElementById("cwCoverDesc").textContent = T[lang].coverDesc;
+  document.getElementById("cwStartBtn").textContent = T[lang].start;
+  document.getElementById("cwReplayBtn").textContent = T[lang].replay;
+  document.getElementById("cwEndTitle").textContent = T[lang].endTitle;
+  document.getElementById("cwEndDesc").textContent = T[lang].endDesc;
+  nextBtn.textContent = T[lang].next;
+  hintEl.textContent = state.phase==="duel" ? T[lang].duelHint : T[lang].hint;
+  langBtn.textContent = T[lang].langBtn;
+}
+langBtn.addEventListener("click", function(){
+  lang = lang==="id" ? "en" : "id";
+  applyLangUI();
+  stopSpeech();
+  if(coverEl.style.display==="none" && !endPanel.classList.contains("cw-show")){
+    goScene(state.sceneIndex);
+  }
+});
+applyLangUI();
+buildDots();
+
+/* ============ IFRAME AUTO-RESIZE ============ */
+function sendHeight(){
+  var h = document.getElementById("cwWrap").offsetHeight;
+  try{
+    window.parent.postMessage({ key:RESIZE_KEY, height:h }, "*");
+  }catch(e){}
+}
+window.addEventListener("load", sendHeight);
+window.addEventListener("resize", sendHeight);
+if("ResizeObserver" in window){
+  new ResizeObserver(sendHeight).observe(document.getElementById("cwWrap"));
+} else {
+  setInterval(sendHeight, 800);
+}
+setTimeout(sendHeight, 300);
+
+})();
+</script>
+</body>
+</html>
