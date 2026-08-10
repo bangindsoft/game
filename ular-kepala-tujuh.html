@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Ular Kepala Tujuh</title>
+<style>
+  :root{
+    --ukt7-bg1:#0b2440; --ukt7-bg2:#123a5e; --ukt7-gold:#e8b84b; --ukt7-cream:#f5ecd9;
+    --ukt7-green:#2f6b3a; --ukt7-red:#b8402f; --ukt7-panel:#0e1f33ee;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:'Segoe UI',Verdana,sans-serif;overflow:hidden;}
+  #ukt7-wrap{position:relative;width:100%;max-width:720px;margin:0 auto;background:linear-gradient(180deg,var(--ukt7-bg1),var(--ukt7-bg2));border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.35);}
+  #ukt7-canvas{display:block;width:100%;height:auto;}
+  .ukt7-topbar{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;z-index:5;}
+  .ukt7-btn{background:var(--ukt7-panel);color:var(--ukt7-cream);border:1px solid #e8b84b55;border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;user-select:none;}
+  .ukt7-btn:active{transform:scale(.96);}
+  .ukt7-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  #ukt7-dots{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;}
+  .ukt7-dot{width:8px;height:8px;border-radius:50%;background:#ffffff55;transition:.25s;}
+  .ukt7-dot.active{background:var(--ukt7-gold);width:20px;border-radius:6px;}
+  .ukt7-dot.done{background:var(--ukt7-cream);}
+  #ukt7-textbox{position:absolute;left:12px;right:12px;bottom:78px;background:var(--ukt7-panel);color:var(--ukt7-cream);padding:12px 14px;border-radius:10px;font-size:14px;line-height:1.45;min-height:40px;border:1px solid #e8b84b33;z-index:5;}
+  #ukt7-action{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:12px;z-index:6;}
+  .ukt7-main-btn{background:var(--ukt7-gold);color:#25190a;font-weight:700;border:none;border-radius:24px;padding:11px 26px;font-size:15px;cursor:pointer;box-shadow:0 3px 0 #a9791c;}
+  .ukt7-main-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #a9791c;}
+  .ukt7-secondary-btn{background:var(--ukt7-red);color:#fff;font-weight:700;border:none;border-radius:24px;padding:11px 22px;font-size:15px;cursor:pointer;box-shadow:0 3px 0 #7c2a1e;}
+  .ukt7-secondary-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #7c2a1e;}
+  .ukt7-bar-wrap{width:70%;max-width:320px;height:16px;background:#00000055;border-radius:10px;overflow:hidden;border:1px solid #e8b84b55;margin:0 auto;}
+  .ukt7-bar-fill{height:100%;background:linear-gradient(90deg,#e8b84b,#f2d27c);width:0%;transition:width .08s linear;}
+  #ukt7-cover{position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,#1a3b60,#08182b 80%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:10;padding:20px;}
+  #ukt7-cover h1{color:var(--ukt7-gold);font-size:22px;margin:6px 0 4px;text-shadow:0 2px 4px #000;}
+  #ukt7-cover p{color:var(--ukt7-cream);font-size:13px;max-width:340px;margin:0 0 18px;opacity:.9;}
+  #ukt7-footer{position:absolute;bottom:2px;right:10px;color:#ffffff55;font-size:10px;z-index:4;}
+  .ukt7-hidden{display:none !important;}
+  .ukt7-hotspot{position:absolute;border-radius:50%;background:radial-gradient(circle,#ffe89988,transparent 70%);border:2px solid #ffe899aa;cursor:pointer;}
+  .ukt7-tapzone{position:absolute;inset:0;z-index:3;cursor:pointer;}
+  #ukt7-subrow{position:absolute;bottom:56px;left:0;right:0;text-align:center;color:var(--ukt7-cream);font-size:12px;z-index:5;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+<div id="ukt7-wrap">
+  <canvas id="ukt7-canvas" width="720" height="440"></canvas>
+
+  <div class="ukt7-topbar">
+    <div class="ukt7-icon ukt7-btn" id="ukt7-mute">🔊</div>
+    <div class="ukt7-icon ukt7-btn" id="ukt7-lang">EN</div>
+  </div>
+
+  <div id="ukt7-dots"></div>
+  <div id="ukt7-hotspots"></div>
+  <div id="ukt7-subrow"></div>
+  <div id="ukt7-textbox"></div>
+  <div id="ukt7-action"></div>
+
+  <div id="ukt7-cover">
+    <h1 id="ukt7-cover-title">🐍 Legenda Ular Kepala Tujuh</h1>
+    <p id="ukt7-cover-desc">Cerita rakyat dari Bengkulu tentang keberanian Gajah Merik melawan Raja Ular berkepala tujuh.</p>
+    <button class="ukt7-main-btn" id="ukt7-start-btn">▶ Mulai Cerita</button>
+  </div>
+
+  <div id="ukt7-footer">Cerita Rakyat Nusantara · Bengkulu</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- STRINGS ---------- */
+  var STR = {
+    id:{
+      coverTitle:"🐍 Legenda Ular Kepala Tujuh",
+      coverDesc:"Cerita rakyat dari Bengkulu tentang keberanian Gajah Merik melawan Raja Ular berkepala tujuh.",
+      start:"▶ Mulai Cerita",
+      replay:"↻ Ulangi Cerita",
+      cont:"Lanjutkan ▶",
+      hold:"Tahan untuk Bertapa",
+      mash:"Tekan Cepat!",
+      dodge:"Kelit",
+      attack:"Serang!",
+      searchHint:"Ketuk cahaya untuk mencari mereka",
+      reviveHint:"Ketuk setiap ular untuk menghidupkannya kembali",
+      gate:"Gerbang",
+      scenes:[
+        "Di Kerajaan Kutei Rukam, Raja Bikau Bermano tengah menyiapkan pernikahan megah untuk putranya, Pangeran Gajah Meram, dengan Putri Jinggai dari Kerajaan Suka Negeri. Seluruh istana bersuka cita menyambut hari bahagia itu.",
+        "Saat prosesi mandi bersama di tepi Danau Tes, tiba-tiba Gajah Meram dan Putri Jinggai lenyap tanpa jejak. Para hulubalang mencari ke segala penjuru danau, namun mereka tak juga ditemukan.",
+        "Seorang orang tua berkata, 'Ampun, Baginda. Putra mahkota diculik oleh Raja Ular berkepala tujuh yang bertahta di dasar Danau Tes.' Gajah Merik, putra bungsu raja yang baru berusia 13 tahun, memberanikan diri untuk pergi menyelamatkan mereka.",
+        "Raja mengizinkan dengan syarat: Gajah Merik harus bertapa lebih dulu di Tepat Topos untuk memperoleh senjata pusaka. Selama tujuh hari tujuh malam ia bertapa tanpa makan dan minum.",
+        "Pertapaan berhasil! Gajah Merik memperoleh keris pusaka yang dapat membelah air, dan selendang sakti yang bisa berubah menjadi pedang. Ia pun menyelam ke Danau Tes menuju istana Raja Ular.",
+        "Di lorong gua bawah danau, setiap pintu dijaga oleh dua ekor ular besar. Gajah Merik harus bertarung melewati tujuh gerbang penjagaan sebelum sampai ke ruang tahta Raja Ular.",
+        "Sang Raja Ular Kepala Tujuh menantang: bangkitkan kembali ular-ular yang telah dikalahkan, lalu kalahkan aku! Pertarungan sengit berlangsung lima hari lima malam hingga akhirnya Gajah Merik menusukkan selendang saktinya dan Raja Ular pun mengaku kalah.",
+        "Gajah Merik membebaskan Gajah Meram dan Putri Jinggai, lalu menghidupkan kembali para ular penjaga sesuai janjinya. Mereka bertiga kembali ke istana disambut sukacita seluruh negeri.",
+        "Sang Raja menyerahkan tahta pada Gajah Meram, namun ia menolak dan meminta agar Gajah Merik yang naik takhta. Gajah Merik pun menjadi Raja Kutei Rukam, dengan Raja Ular dan para pengikutnya diangkat menjadi hulubalang setia kerajaan."
+      ],
+      end:{
+        title:"🎉 Tamat",
+        text:"Gajah Merik dinobatkan menjadi Raja Kerajaan Kutei Rukam berkat keberanian dan kebijaksanaannya mengalahkan Ular Kepala Tujuh."
+      }
+    },
+    en:{
+      coverTitle:"🐍 Legend of the Seven-Headed Serpent",
+      coverDesc:"A folktale from Bengkulu about the courage of Prince Gajah Merik against the seven-headed Serpent King.",
+      start:"▶ Start Story",
+      replay:"↻ Replay Story",
+      cont:"Continue ▶",
+      hold:"Hold to Meditate",
+      mash:"Tap Fast!",
+      dodge:"Dodge",
+      attack:"Attack!",
+      searchHint:"Tap the glowing spots to search for them",
+      reviveHint:"Tap each serpent to bring it back to life",
+      gate:"Gate",
+      scenes:[
+        "In the kingdom of Kutei Rukam, King Bikau Bermano was preparing a grand wedding for his son, Prince Gajah Meram, and Princess Jinggai of Suka Negeri. The whole palace rejoiced for the happy day.",
+        "During a bathing ceremony at the shore of Lake Tes, Gajah Meram and Princess Jinggai suddenly vanished without a trace. The royal guards searched every corner of the lake, but found nothing.",
+        "An elder spoke up, 'Forgive me, Your Majesty. The crown prince was taken by the seven-headed Serpent King who rules beneath Lake Tes.' Gajah Merik, the king's youngest son, only thirteen years old, bravely offered to rescue them.",
+        "The king allowed it on one condition: Gajah Merik must first meditate at Tepat Topos to gain a sacred weapon. For seven days and seven nights he meditated without food or water.",
+        "The meditation succeeded! Gajah Merik received a magic dagger that could part water, and an enchanted sash that could turn into a sword. He dove into Lake Tes toward the Serpent King's palace.",
+        "In the underwater cave tunnel, every door was guarded by two giant serpents. Gajah Merik had to fight his way through seven guarded gates before reaching the Serpent King's throne room.",
+        "The Seven-Headed Serpent King challenged him: bring back to life the serpents you defeated, then defeat me! A fierce battle raged for five days and five nights until Gajah Merik struck with his enchanted sword, and the Serpent King admitted defeat.",
+        "Gajah Merik freed Gajah Meram and Princess Jinggai, then revived the guardian serpents as he had promised. The three of them returned to the palace, welcomed with joy by the whole kingdom.",
+        "The king offered the throne to Gajah Meram, but he declined and asked that Gajah Merik become king instead. Gajah Merik was crowned King of Kutei Rukam, with the Serpent King and his followers appointed as loyal royal guards."
+      ],
+      end:{
+        title:"🎉 The End",
+        text:"Gajah Merik was crowned King of Kutei Rukam, honored for his courage and wisdom in defeating the Seven-Headed Serpent."
+      }
+    }
+  };
+
+  /* ---------- STATE ---------- */
+  var state = {
+    scene: 0,
+    totalScenes: 8,
+    lang: (function(){
+      try{
+        var p = new URLSearchParams(location.search);
+        if(p.get('lang')==='en') return 'en';
+      }catch(e){}
+      return 'id';
+    })(),
+    muted: (localStorage.getItem('ukt7_muted')==='1'),
+    searchFound: 0, searchTotal: 3,
+    holdProgress: 0, holding:false, holdTimer:null,
+    gateIndex: 0, gateTotal: 7, mashCount:0, mashNeeded:8, mashTimer:null, mashTimeLeft:0,
+    qteRound: 0, qteTotal: 6, qteExpected:null, qteTimer:null,
+    reviveCount: 0, reviveTotal: 7, revivedFlags:[false,false,false,false,false,false,false],
+    started:false
+  };
+
+  var canvas = document.getElementById('ukt7-canvas');
+  var ctx = canvas.getContext('2d');
+  var wrap = document.getElementById('ukt7-wrap');
+  var textbox = document.getElementById('ukt7-textbox');
+  var actionBox = document.getElementById('ukt7-action');
+  var subrow = document.getElementById('ukt7-subrow');
+  var hotspotsLayer = document.getElementById('ukt7-hotspots');
+  var dotsWrap = document.getElementById('ukt7-dots');
+  var muteBtn = document.getElementById('ukt7-mute');
+  var langBtn = document.getElementById('ukt7-lang');
+  var cover = document.getElementById('ukt7-cover');
+
+  var W = 720, H = 440;
+
+  function T(){ return STR[state.lang]; }
+
+  /* ---------- RESIZE / POSTMESSAGE ---------- */
+  function resizeCanvas(){
+    var cssW = wrap.clientWidth;
+    W = 720; H = 440;
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = (cssW * (H/W)) + 'px';
+    sendResizeMessage();
+  }
+  function sendResizeMessage(){
+    try{
+      var h = wrap.getBoundingClientRect().height;
+      window.parent.postMessage({ ukt7ResizeKey: 'ularKepalaTujuhResize', height: Math.ceil(h) + 4 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('load', resizeCanvas);
+
+  /* ---------- NARRATION ---------- */
+  var currentUtterance = null;
+  function speak(text){
+    if(state.muted) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95; u.pitch = 1.0;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    try{ window.speechSynthesis.cancel(); }catch(e){}
+  }
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('ukt7_muted', state.muted ? '1':'0');
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    if(state.muted) stopSpeak();
+  });
+  muteBtn.textContent = state.muted ? '🔇' : '🔊';
+
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    refreshCover();
+    renderScene(true);
+  });
+  langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+
+  function refreshCover(){
+    document.getElementById('ukt7-cover-title').textContent = T().coverTitle;
+    document.getElementById('ukt7-cover-desc').textContent = T().coverDesc;
+    document.getElementById('ukt7-start-btn').textContent = T().start;
+  }
+  refreshCover();
+
+  /* ---------- DOTS ---------- */
+  function renderDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<state.totalScenes;i++){
+      var d = document.createElement('div');
+      d.className = 'ukt7-dot' + (i===state.scene?' active':(i<state.scene?' done':''));
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  /* ---------- BACKGROUND HELPERS ---------- */
+  function bgSky(topColor,bottomColor){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, topColor); g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+  function drawClouds(seedOffset){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    for(var i=0;i<4;i++){
+      var x = ((i*180 + seedOffset*0.02) % (W+150)) - 75;
+      var y = 40 + i*18;
+      ctx.beginPath();
+      ctx.ellipse(x,y,45,16,0,0,Math.PI*2);
+      ctx.ellipse(x+30,y+6,32,13,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawWater(y, seedOffset, colorTop, colorBottom){
+    var g = ctx.createLinearGradient(0,y,0,H);
+    g.addColorStop(0,colorTop); g.addColorStop(1,colorBottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,y,W,H-y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 2;
+    for(var i=0;i<5;i++){
+      var wy = y + 20 + i*22;
+      ctx.beginPath();
+      for(var x=0;x<=W;x+=20){
+        var yy = wy + Math.sin((x+seedOffset*0.05+i*30)*0.03)*5;
+        if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawPalaceSilhouette(cx, baseY, scale){
+    ctx.save();
+    ctx.translate(cx, baseY);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#0d2a44';
+    // main roof (traditional Bengkulu-ish tiered roof)
+    ctx.beginPath();
+    ctx.moveTo(-90,0); ctx.lineTo(0,-70); ctx.lineTo(90,0); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-60,-30); ctx.lineTo(0,-95); ctx.lineTo(60,-30); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#123a5e';
+    ctx.fillRect(-70,0,140,55);
+    ctx.fillStyle = '#e8b84b';
+    for(var i=-2;i<=2;i++){
+      ctx.fillRect(-6+i*24, 8, 12, 47);
+    }
+    ctx.restore();
+  }
+  function drawFigure(x,y,scale,color,armUp){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = color||'#f2d27c';
+    ctx.beginPath(); ctx.arc(0,-38,10,0,Math.PI*2); ctx.fill(); // head
+    ctx.fillRect(-8,-28,16,32); // body
+    ctx.strokeStyle = color||'#f2d27c'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-8,-20); ctx.lineTo(armUp?-22:-16, armUp?-40:2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,-20); ctx.lineTo(armUp?22:16, armUp?-40:2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-5,4); ctx.lineTo(-9,26); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(5,4); ctx.lineTo(9,26); ctx.stroke();
+    ctx.restore();
+  }
+  function drawSnakeHead(x,y,scale,angle,color){
+    ctx.save();
+    ctx.translate(x,y); ctx.rotate(angle||0); ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#2f6b3a';
+    ctx.beginPath();
+    ctx.ellipse(0,0,22,14,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#ffe066';
+    ctx.beginPath(); ctx.arc(-8,-4,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8,-4,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1c1c1c';
+    ctx.beginPath(); ctx.arc(-8,-4,1.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8,-4,1.4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#b8402f'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,10); ctx.lineTo(-6,20); ctx.moveTo(0,10); ctx.lineTo(6,20); ctx.stroke();
+    ctx.restore();
+  }
+  function drawSevenHeadedSnake(cx,cy,t){
+    ctx.save();
+    for(var i=0;i<7;i++){
+      var ang = (i-3)*0.28;
+      var bob = Math.sin(t*0.003+i)*6;
+      ctx.strokeStyle = '#2f6b3a'; ctx.lineWidth = 10; ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(cx,cy+40);
+      ctx.quadraticCurveTo(cx + Math.sin(ang)*40, cy-20+bob, cx + Math.sin(ang)*70, cy-70+bob);
+      ctx.stroke();
+      drawSnakeHead(cx + Math.sin(ang)*70, cy-70+bob, 1.1, ang*0.5, '#2f6b3a');
+    }
+    ctx.fillStyle = '#1c4a2a';
+    ctx.beginPath(); ctx.ellipse(cx,cy+55,60,26,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------- SCENE DRAW ---------- */
+  var animT = 0;
+  function drawSceneArt(){
+    switch(state.scene){
+      case 0: // Palace / wedding
+        bgSky('#274b7a','#4d7fae'); drawClouds(animT);
+        drawPalaceSilhouette(W/2, 300, 1.3);
+        drawFigure(W/2-70, 340, 1, '#f2d27c', false);
+        drawFigure(W/2+70, 340, 1, '#e0b4d8', true);
+        ctx.fillStyle='rgba(232,184,75,.5)';
+        for(var i=0;i<10;i++){
+          var x = (i*70 + animT*0.03)%W;
+          ctx.beginPath(); ctx.arc(x, 100+Math.sin(animT*0.002+i)*20, 2,0,Math.PI*2); ctx.fill();
+        }
+        break;
+      case 1: // lake, disappearance / search
+        bgSky('#1b3350','#2c5478'); drawClouds(animT);
+        drawWater(230, animT, '#3a6f95', '#123a5e');
+        drawPalaceSilhouette(120, 260, 0.7);
+        break;
+      case 2: // dialogue / revelation
+        bgSky('#20263a','#3a3550');
+        drawPalaceSilhouette(W/2, 300, 1.1);
+        drawFigure(W/2-100, 330, 0.9, '#e8b84b', false);
+        drawFigure(W/2, 330, 0.95, '#f2d27c', true);
+        drawFigure(W/2+100, 330, 0.9, '#c9c9c9', false);
+        break;
+      case 3: // meditation
+        bgSky('#2c1f3d','#4a2f57');
+        ctx.fillStyle='rgba(232,184,75,.25)';
+        ctx.beginPath(); ctx.arc(W/2, 210, 90+Math.sin(animT*0.004)*10, 0, Math.PI*2); ctx.fill();
+        drawFigure(W/2, 300, 1.6, '#f2d27c', false);
+        break;
+      case 4: // swim to lake
+        bgSky('#0c2438','#123a5e');
+        drawWater(0, animT, '#1c5b82', '#08182b');
+        drawFigure(W/2, 220 + Math.sin(animT*0.003)*20, 1.1, '#f2d27c', true);
+        ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1;
+        for(var b=0;b<10;b++){
+          var by = (H - ((animT*0.05 + b*40) % H));
+          ctx.beginPath(); ctx.arc(100+b*55, by, 4,0,Math.PI*2); ctx.stroke();
+        }
+        break;
+      case 5: // gate battle
+        bgSky('#160f1c','#2a1a26');
+        ctx.fillStyle='#1f1420';
+        ctx.beginPath(); ctx.ellipse(W/2,H-40,300,90,0,Math.PI,Math.PI*2); ctx.fill();
+        drawFigure(W/2-130, 300, 1.1, '#f2d27c', false);
+        drawSnakeHead(W/2+60, 260, 1.6, -0.3, '#2f6b3a');
+        drawSnakeHead(W/2+140, 280, 1.6, 0.3, '#3a7d46');
+        ctx.fillStyle='#e8b84b';
+        ctx.font='bold 16px sans-serif'; ctx.textAlign='center';
+        ctx.fillText((T().gate)+' '+(state.gateIndex+1)+'/'+state.gateTotal, W/2, 60);
+        break;
+      case 6: // final duel
+        bgSky('#160a1c','#341129');
+        drawSevenHeadedSnake(W/2+90, 220, animT);
+        drawFigure(W/2-140, 300, 1.2, '#f2d27c', true);
+        break;
+      case 7: // revive + reunion
+        bgSky('#123a2e','#1c5b45');
+        for(var r=0;r<7;r++){
+          var rx = 90 + r*80;
+          drawSnakeHead(rx, 180, 1.2, 0, state.revivedFlags[r] ? '#3fae5a' : '#2a2a2a');
+        }
+        drawFigure(W/2-40, 320, 1, '#f2d27c', false);
+        drawFigure(W/2+20, 320, 1, '#e0b4d8', false);
+        drawFigure(W/2+80, 320, 0.9, '#c9c9c9', false);
+        break;
+      case 8: // ending / crowned king
+        bgSky('#1b2a4d','#3a5f95'); drawClouds(animT);
+        drawPalaceSilhouette(W/2, 300, 1.4);
+        drawFigure(W/2, 300, 1.3, '#e8b84b', true);
+        ctx.fillStyle='#e8b84b';
+        ctx.beginPath(); ctx.moveTo(W/2-10,258); ctx.lineTo(W/2,244); ctx.lineTo(W/2+10,258); ctx.closePath(); ctx.fill();
+        break;
+    }
+  }
+
+  function loop(ts){
+    animT = ts || 0;
+    ctx.clearRect(0,0,W,H);
+    drawSceneArt();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ---------- SCENE FLOW ---------- */
+  function clearAction(){ actionBox.innerHTML=''; subrow.textContent=''; hotspotsLayer.innerHTML=''; }
+
+  function renderScene(skipNarration){
+    renderDots();
+    clearAction();
+    var idx = state.scene;
+    var isEnd = idx === state.totalScenes; // 8 => ending screen (index 8 beyond scenes array of 8 -> handled separately)
+    if(idx < T().scenes.length){
+      textbox.textContent = T().scenes[idx];
+      if(!skipNarration) speak(T().scenes[idx]);
+    }
+
+    if(idx === 0){ renderContinueButton(); }
+    else if(idx === 1){ renderSearchScene(); }
+    else if(idx === 2){ renderContinueButton(); }
+    else if(idx === 3){ renderHoldScene(); }
+    else if(idx === 4){ renderContinueButton(); }
+    else if(idx === 5){ renderMashScene(); }
+    else if(idx === 6){ renderQteScene(); }
+    else if(idx === 7){ renderReviveScene(); }
+    else if(idx === 8){ renderEnding(skipNarration); }
+  }
+
+  function goNext(){
+    stopSpeak();
+    state.scene++;
+    if(state.scene > 8) state.scene = 8;
+    renderScene(false);
+  }
+
+  function renderContinueButton(){
+    var btn = document.createElement('button');
+    btn.className = 'ukt7-main-btn';
+    btn.textContent = T().cont;
+    btn.addEventListener('click', goNext);
+    actionBox.appendChild(btn);
+  }
+
+  /* Scene 1: search hotspots */
+  var searchSpots = [ {x:0.25,y:0.55}, {x:0.55,y:0.4}, {x:0.75,y:0.6} ];
+  function renderSearchScene(){
+    state.searchFound = 0;
+    subrow.textContent = T().searchHint;
+    hotspotsLayer.innerHTML = '';
+    searchSpots.forEach(function(sp, i){
+      var el = document.createElement('div');
+      el.className = 'ukt7-hotspot';
+      el.style.width = '46px'; el.style.height='46px';
+      el.style.left = (sp.x*100)+'%'; el.style.top = (sp.y*100)+'%';
+      el.style.transform = 'translate(-50%,-50%)';
+      el.dataset.found = '0';
+      el.addEventListener('click', function(){
+        if(el.dataset.found==='1') return;
+        el.dataset.found='1';
+        el.style.opacity = '0.15';
+        state.searchFound++;
+        if(state.searchFound >= state.searchTotal){
+          setTimeout(function(){ renderContinueButton(); }, 300);
+        }
+      });
+      hotspotsLayer.appendChild(el);
+    });
+  }
+
+  /* Scene 3: hold to meditate */
+  function renderHoldScene(){
+    state.holdProgress = 0;
+    var wrapBar = document.createElement('div');
+    wrapBar.className = 'ukt7-bar-wrap';
+    var fill = document.createElement('div');
+    fill.className = 'ukt7-bar-fill';
+    wrapBar.appendChild(fill);
+
+    var btn = document.createElement('button');
+    btn.className = 'ukt7-main-btn';
+    btn.textContent = T().hold;
+
+    function startHold(e){
+      e.preventDefault();
+      state.holding = true;
+      if(state.holdTimer) clearInterval(state.holdTimer);
+      state.holdTimer = setInterval(function(){
+        if(!state.holding) return;
+        state.holdProgress += 2.2;
+        if(state.holdProgress > 100) state.holdProgress = 100;
+        fill.style.width = state.holdProgress + '%';
+        if(state.holdProgress >= 100){
+          clearInterval(state.holdTimer);
+          setTimeout(goNext, 400);
+        }
+      }, 60);
+    }
+    function stopHold(){ state.holding = false; }
+    btn.addEventListener('mousedown', startHold);
+    btn.addEventListener('touchstart', startHold, {passive:false});
+    btn.addEventListener('mouseup', stopHold);
+    btn.addEventListener('mouseleave', stopHold);
+    btn.addEventListener('touchend', stopHold);
+
+    actionBox.appendChild(wrapBar);
+    actionBox.appendChild(btn);
+  }
+
+  /* Scene 5: mash battle through 7 gates */
+  function renderMashScene(){
+    state.gateIndex = 0;
+    startGateRound();
+  }
+  function startGateRound(){
+    clearAction();
+    state.mashCount = 0;
+    state.mashTimeLeft = 4.5;
+    subrow.textContent = (T().gate) + ' ' + (state.gateIndex+1) + '/' + state.gateTotal;
+
+    var wrapBar = document.createElement('div');
+    wrapBar.className = 'ukt7-bar-wrap';
+    var fill = document.createElement('div');
+    fill.className = 'ukt7-bar-fill';
+    wrapBar.appendChild(fill);
+
+    var btn = document.createElement('button');
+    btn.className = 'ukt7-secondary-btn';
+    btn.textContent = T().mash;
+    btn.addEventListener('click', function(){
+      state.mashCount++;
+      var pct = Math.min(100, (state.mashCount/state.mashNeeded)*100);
+      fill.style.width = pct+'%';
+      if(state.mashCount >= state.mashNeeded){
+        clearInterval(state.mashTimer);
+        state.gateIndex++;
+        if(state.gateIndex >= state.gateTotal){
+          setTimeout(goNext, 300);
+        } else {
+          setTimeout(startGateRound, 300);
+        }
+      }
+    });
+
+    actionBox.appendChild(wrapBar);
+    actionBox.appendChild(btn);
+
+    if(state.mashTimer) clearInterval(state.mashTimer);
+    function tickTimer(){
+      state.mashTimeLeft -= 0.1;
+      if(state.mashTimeLeft <= 0){
+        clearInterval(state.mashTimer);
+        fill.style.width='0%';
+        state.mashCount = 0;
+        state.mashTimeLeft = 4.5;
+        state.mashTimer = setInterval(tickTimer, 100);
+      }
+    }
+    state.mashTimer = setInterval(tickTimer, 100);
+  }
+
+  /* Scene 6: QTE dodge/attack duel */
+  function renderQteScene(){
+    state.qteRound = 0;
+    startQteRound();
+  }
+  function startQteRound(){
+    clearAction();
+    subrow.textContent = (state.qteRound+1) + '/' + state.qteTotal;
+    state.qteExpected = Math.random() < 0.5 ? 'dodge' : 'attack';
+
+    var promptEl = document.createElement('div');
+    promptEl.style.color = '#e8b84b';
+    promptEl.style.fontWeight = '700';
+    promptEl.style.fontSize = '15px';
+    promptEl.style.marginBottom = '6px';
+    promptEl.textContent = state.qteExpected === 'dodge' ? '⚡ ' + T().dodge + '!' : '⚡ ' + T().attack;
+
+    var row = document.createElement('div');
+    row.style.display = 'flex'; row.style.gap='12px'; row.style.justifyContent='center';
+
+    var dodgeBtn = document.createElement('button');
+    dodgeBtn.className = 'ukt7-main-btn';
+    dodgeBtn.textContent = T().dodge;
+    var atkBtn = document.createElement('button');
+    atkBtn.className = 'ukt7-secondary-btn';
+    atkBtn.textContent = T().attack;
+
+    function resolve(choice){
+      clearTimeout(state.qteTimer);
+      state.qteRound++;
+      if(state.qteRound >= state.qteTotal){
+        setTimeout(goNext, 300);
+      } else {
+        setTimeout(startQteRound, 250);
+      }
+    }
+    dodgeBtn.addEventListener('click', function(){ resolve('dodge'); });
+    atkBtn.addEventListener('click', function(){ resolve('attack'); });
+
+    row.appendChild(dodgeBtn); row.appendChild(atkBtn);
+    var col = document.createElement('div');
+    col.style.display='flex'; col.style.flexDirection='column'; col.style.alignItems='center';
+    col.appendChild(promptEl); col.appendChild(row);
+    actionBox.appendChild(col);
+
+    state.qteTimer = setTimeout(function(){ startQteRound(); }, 3000);
+  }
+
+  /* Scene 7: revive snakes */
+  function renderReviveScene(){
+    state.reviveCount = 0;
+    state.revivedFlags = [false,false,false,false,false,false,false];
+    subrow.textContent = T().reviveHint;
+    hotspotsLayer.innerHTML = '';
+    for(var i=0;i<7;i++){
+      (function(i){
+        var el = document.createElement('div');
+        el.className = 'ukt7-hotspot';
+        el.style.width='40px'; el.style.height='40px';
+        el.style.left = ((90 + i*80)/W*100)+'%';
+        el.style.top = (180/H*100)+'%';
+        el.style.transform = 'translate(-50%,-50%)';
+        el.addEventListener('click', function(){
+          if(state.revivedFlags[i]) return;
+          state.revivedFlags[i] = true;
+          el.style.opacity = '0.1';
+          state.reviveCount++;
+          if(state.reviveCount >= 7){
+            setTimeout(renderContinueButton, 300);
+          }
+        });
+        hotspotsLayer.appendChild(el);
+      })(i);
+    }
+  }
+
+  /* Scene 8: ending */
+  function renderEnding(skipNarration){
+    textbox.textContent = T().end.text;
+    if(!skipNarration) speak(T().end.text);
+    var btn = document.createElement('button');
+    btn.className = 'ukt7-main-btn';
+    btn.textContent = T().replay;
+    btn.addEventListener('click', function(){
+      state.scene = 0;
+      renderScene(false);
+    });
+    actionBox.appendChild(btn);
+  }
+
+  /* ---------- START ---------- */
+  document.getElementById('ukt7-start-btn').addEventListener('click', function(){
+    cover.classList.add('ukt7-hidden');
+    state.started = true;
+    state.scene = 0;
+    renderScene(false);
+    setTimeout(sendResizeMessage, 60);
+  });
+
+  renderDots();
+  resizeCanvas();
+  setInterval(sendResizeMessage, 1500);
+})();
+</script>
+</body>
+</html>
