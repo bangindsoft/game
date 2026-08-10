@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bunda Sejati - Cerita Rakyat Bengkulu</title>
+<style>
+  bs-root{all:initial}
+  .bs-wrap{
+    box-sizing:border-box; font-family:'Segoe UI',Verdana,sans-serif;
+    width:100%; max-width:720px; margin:0 auto; border-radius:18px; overflow:hidden;
+    background:#fdf6ea; box-shadow:0 6px 24px rgba(60,40,10,0.18); position:relative;
+  }
+  .bs-wrap *{box-sizing:border-box}
+  .bs-topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 12px; background:#5c3d24; color:#fff2dc; position:relative; z-index:5;
+  }
+  .bs-title{font-size:14px; font-weight:700; letter-spacing:.3px}
+  .bs-btnrow{display:flex; gap:6px}
+  .bs-iconbtn{
+    background:#7a5535; border:none; color:#fff2dc; border-radius:20px;
+    padding:6px 12px; font-size:13px; cursor:pointer; font-weight:600;
+    transition:transform .15s, background .15s;
+  }
+  .bs-iconbtn:hover{background:#8f6540; transform:translateY(-1px)}
+  .bs-iconbtn:active{transform:scale(.94)}
+  .bs-stage{position:relative; width:100%; aspect-ratio:4/3; background:#a9d6c8; overflow:hidden}
+  .bs-stage canvas{width:100%; height:100%; display:block}
+  .bs-dots{
+    display:flex; justify-content:center; gap:6px; padding:10px 8px 4px; background:#fdf6ea;
+  }
+  .bs-dot{width:9px; height:9px; border-radius:50%; background:#e3d3b5; transition:all .25s}
+  .bs-dot.bs-active{background:#e0483e; transform:scale(1.3)}
+  .bs-dot.bs-done{background:#c68b3f}
+  .bs-panel{
+    padding:14px 18px 18px; background:#fdf6ea; min-height:64px;
+  }
+  .bs-dialogue{
+    background:#fffaf0; border:2px solid #e6d3ad; border-radius:14px; padding:12px 14px;
+    font-size:14.5px; line-height:1.55; color:#3d2b18; min-height:28px;
+  }
+  .bs-dialogue b{color:#a2472f}
+  .bs-controls{display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap}
+  .bs-mainbtn{
+    background:linear-gradient(180deg,#e0645a,#c73c30); color:#fff; border:none;
+    padding:11px 26px; border-radius:26px; font-size:15px; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 0 #942a21; transition:transform .1s;
+  }
+  .bs-mainbtn:hover{filter:brightness(1.06)}
+  .bs-mainbtn:active{transform:translateY(3px); box-shadow:0 1px 0 #942a21}
+  .bs-mainbtn:disabled{opacity:.45; cursor:default; box-shadow:0 4px 0 #942a21}
+  .bs-hint{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    background:rgba(255,255,255,.92); color:#8a4a1e; padding:6px 14px; border-radius:20px;
+    font-size:12.5px; font-weight:700; pointer-events:none; animation:bs-bob 1.4s ease-in-out infinite;
+    white-space:nowrap;
+  }
+  @keyframes bs-bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+  .bs-cover{
+    position:absolute; inset:0; background:linear-gradient(180deg,#3a2414,#5c3d24 60%,#3a2414);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    color:#fff2dc; z-index:10; padding:24px;
+  }
+  .bs-cover h1{margin:10px 0 4px; font-size:26px; letter-spacing:.5px}
+  .bs-cover p{margin:0 0 20px; font-size:13.5px; opacity:.85; max-width:340px}
+  .bs-endpanel{
+    position:absolute; inset:0; background:rgba(40,25,12,.94);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; color:#fff2dc; padding:26px; z-index:9;
+  }
+  .bs-endpanel.bs-show{display:flex}
+  .bs-endpanel h2{margin:8px 0 10px; font-size:22px}
+  .bs-endpanel p{font-size:13.5px; opacity:.9; max-width:360px; line-height:1.6; margin-bottom:20px}
+  .bs-footer{
+    text-align:center; font-size:11px; color:#9a8266; padding:8px 10px 12px; background:#fdf6ea;
+  }
+  @media (max-width:420px){
+    .bs-title{font-size:12.5px}
+    .bs-iconbtn{padding:5px 9px; font-size:12px}
+    .bs-dialogue{font-size:13.5px}
+  }
+</style>
+</head>
+<body>
+<bs-root>
+<div class="bs-wrap" id="bsWrap">
+  <div class="bs-topbar">
+    <div class="bs-title" id="bsTitle">🐾 Bunda Sejati</div>
+    <div class="bs-btnrow">
+      <button class="bs-iconbtn" id="bsMuteBtn" title="Bisukan narasi">🔊</button>
+      <button class="bs-iconbtn" id="bsLangBtn" title="Ganti bahasa">EN</button>
+    </div>
+  </div>
+
+  <div class="bs-stage" id="bsStage">
+    <canvas id="bsCanvas" width="800" height="600"></canvas>
+    <div class="bs-hint" id="bsHint" style="display:none">👆 Ketuk untuk bertanya</div>
+
+    <div class="bs-cover" id="bsCover">
+      <div style="font-size:52px">🐱</div>
+      <h1 id="bsCoverTitle">Bunda Sejati</h1>
+      <p id="bsCoverDesc">Cerita rakyat dari Bengkulu tentang seekor anak kucing pemalas yang mencari induk yang lebih hebat, hingga ia sadar tak ada yang mengalahkan kasih ibunya sendiri.</p>
+      <button class="bs-mainbtn" id="bsStartBtn">▶ Mulai Cerita</button>
+    </div>
+
+    <div class="bs-endpanel" id="bsEndPanel">
+      <div style="font-size:44px">💛</div>
+      <h2 id="bsEndTitle">Tamat</h2>
+      <p id="bsEndDesc">Tak ada kasih di dunia ini yang mampu mengalahkan kasih seorang bunda sejati.</p>
+      <button class="bs-mainbtn" id="bsReplayBtn">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="bs-dots" id="bsDots"></div>
+
+  <div class="bs-panel">
+    <div class="bs-dialogue" id="bsDialogue">Ketuk "Mulai Cerita" untuk memulai.</div>
+    <div class="bs-controls">
+      <button class="bs-mainbtn" id="bsNextBtn" style="display:none">Lanjutkan ▸</button>
+    </div>
+  </div>
+
+  <div class="bs-footer">Kisah rakyat Nusantara &middot; Bengkulu</div>
+</div>
+</bs-root>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ CONFIG ============ */
+var RESIZE_KEY = "bundaSejatiResize";
+var MUTE_KEY = "caritasato_muted";
+var qs = new URLSearchParams(location.search);
+var lang = (qs.get("lang") === "en") ? "en" : "id";
+var muted = localStorage.getItem(MUTE_KEY) === "1";
+
+var T = {
+  id:{
+    coverTitle:"Bunda Sejati", langBtn:"EN",
+    coverDesc:"Cerita rakyat dari Bengkulu tentang seekor anak kucing pemalas yang mencari induk yang lebih hebat, hingga ia sadar tak ada yang mengalahkan kasih ibunya sendiri.",
+    start:"▶ Mulai Cerita", next:"Lanjutkan ▸", replay:"↺ Ulangi Cerita",
+    endTitle:"Tamat", endDesc:"Tak ada kasih di dunia ini yang mampu mengalahkan kasih seorang bunda sejati.",
+    hint:"👆 Ketuk untuk bertanya", title:"🐾 Bunda Sejati"
+  },
+  en:{
+    coverTitle:"The True Mother", langBtn:"ID",
+    coverDesc:"A folktale from Bengkulu about a lazy kitten who searched for a mightier mother, until he realized nothing beats the love of his own.",
+    start:"▶ Start Story", next:"Continue ▸", replay:"↺ Replay Story",
+    endTitle:"The End", endDesc:"No love in this world can ever surpass the love of one's true mother.",
+    hint:"👆 Tap to ask", title:"🐾 The True Mother"
+  }
+};
+
+/* ============ STORY DATA ============ */
+// type: "narrative" (lines shown/spoken in sequence) or "quest" (ask -> answer)
+var STORY = [
+  { id:"sakit", type:"narrative", bg:"forest",
+    lines:{
+      id:["Di dalam hutan yang rimbun, hiduplah seekor induk kucing bersama anak semata wayangnya.",
+          "Induk kucing sangat menyayangi anaknya, sehingga setiap hari ia bekerja keras mencari makan, hingga tubuhnya menjadi lemah dan sakit.",
+          "\u201cAnakku, engkau sudah besar sekarang. Belajarlah mencari makan sendiri, sebab Ibu sedang sakit dan tak sanggup lagi merawatmu,\u201d kata induk kucing lirih."],
+      en:["In a lush forest lived a mother cat and her only child.",
+          "The mother cat loved her kitten so much that she worked hard every day to find food, until her body grew weak and sick.",
+          "\u201cMy child, you have grown up now. Learn to find your own food, for Mother is ill and can no longer care for you,\u201d said the mother cat softly."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-day");
+      drawMotherCat(ctx,w*0.32,h*0.72,1.05,{sick:true});
+      drawKitten(ctx,w*0.62,h*0.68,0.95,t,{mood:"listen"});
+    }
+  },
+  { id:"pergi", type:"narrative", bg:"forest",
+    lines:{
+      id:["Anak kucing yang terbiasa dimanja itu salah paham. Ia mengira ibunya sudah tak menyayanginya lagi.",
+          "\u201cKalau begitu, Ibu sudah tak mencintaiku lagi. Baiklah, aku akan pergi!\u201d serunya kesal.",
+          "Tanpa berpikir panjang, ia pun pergi meninggalkan ibunya yang tua dan sakit, berjalan tanpa arah tujuan."],
+      en:["The kitten, used to being pampered, misunderstood. He thought his mother no longer loved him.",
+          "\u201cThen Mother doesn\u2019t love me anymore! Fine, I\u2019ll leave!\u201d he said angrily.",
+          "Without thinking twice, he left his old, sick mother behind and wandered off with no destination."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-day");
+      drawMotherCat(ctx,w*0.24,h*0.74,0.9,{sick:true});
+      drawKitten(ctx,w*0.66+Math.sin(t*1.4)*6,h*0.66,1,t,{mood:"walk"});
+    }
+  },
+  { id:"matahari", type:"quest", bg:"sun", who:{id:"Matahari",en:"the Sun"},
+    q:{id:"Wahai Matahari yang perkasa, maukah engkau menjadi ibuku?",
+       en:"O mighty Sun, will you become my mother?"},
+    a:{id:"Aku tak selalu perkasa, anak kucing. Awan sering menutupi cahayaku hingga aku tak tampak.",
+       en:"I am not always mighty, little kitten. The Clouds often cover my light so I cannot be seen."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"sun");
+      drawSun(ctx,w*0.5,h*0.36,70,t);
+      drawKitten(ctx,w*0.5,h*0.82,1,t,{mood:"ask"});
+    }
+  },
+  { id:"awan", type:"quest", bg:"cloud", who:{id:"Awan",en:"the Cloud"},
+    q:{id:"Wahai Awan, kata Matahari engkau lebih hebat darinya. Maukah engkau menjadi ibuku?",
+       en:"O Cloud, the Sun said you are mightier than him. Will you become my mother?"},
+    a:{id:"Aku pun tak sehebat itu. Bila Angin datang menyerang, tubuhku tercerai-berai menjadi hujan.",
+       en:"I am not that mighty either. When the Wind attacks, my body scatters into rain."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"cloud");
+      drawCloud(ctx,w*0.5,h*0.32,1.3,t);
+      drawKitten(ctx,w*0.5,h*0.82,1,t,{mood:"ask"});
+    }
+  },
+  { id:"angin", type:"quest", bg:"wind", who:{id:"Angin",en:"the Wind"},
+    q:{id:"Wahai Angin, maukah engkau menjadi ibuku? Agar aku bisa bebas terbang kesana kemari.",
+       en:"O Wind, will you become my mother? So I can fly freely everywhere."},
+    a:{id:"Aku memang bebas bertiup, tapi jika di depanku ada Bukit yang menjulang, aku tak sanggup melewatinya.",
+       en:"I do blow freely, but when a tall Hill stands before me, I cannot pass through it."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"wind");
+      drawWind(ctx,w,h,t);
+      drawKitten(ctx,w*0.5,h*0.82,1,t,{mood:"ask"});
+    }
+  },
+  { id:"bukit", type:"quest", bg:"hill", who:{id:"Bukit",en:"the Hill"},
+    q:{id:"Wahai Bukit yang gagah, maukah engkau mengangkatku sebagai anakmu?",
+       en:"O mighty Hill, will you take me as your child?"},
+    a:{id:"Hidupku pun tak tenang. Kerbau sering menanduk tubuhku hingga longsor rata dengan tanah.",
+       en:"My life is not peaceful either. The Buffalo often rams into me until I crumble to the ground."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"hill");
+      drawHill(ctx,w,h,t);
+      drawKitten(ctx,w*0.5,h*0.84,1,t,{mood:"ask"});
+    }
+  },
+  { id:"kerbau", type:"quest", bg:"pasture", who:{id:"Kerbau",en:"the Buffalo"},
+    q:{id:"Wahai Kerbau yang kuat, maukah engkau menjadi ibuku?",
+       en:"O strong Buffalo, will you become my mother?"},
+    a:{id:"Aku pun tak sebebas itu, sebab hidungku selalu diikat tali Rotan yang menuntunku kemana saja.",
+       en:"I am not that free either, for my nose is always tied by a Rattan rope that leads me wherever it wants."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"pasture");
+      drawBuffalo(ctx,w*0.36,h*0.68,1,t);
+      drawKitten(ctx,w*0.7,h*0.82,0.95,t,{mood:"ask"});
+    }
+  },
+  { id:"rotan", type:"quest", bg:"rattan", who:{id:"Rotan",en:"the Rattan"},
+    q:{id:"Wahai Rotan, maukah engkau menjadi ibuku? Katanya engkau bisa mengalahkan Kerbau yang kuat.",
+       en:"O Rattan, will you become my mother? They say you can control even the strong Buffalo."},
+    a:{id:"Aku pun lemah, anak kucing. Tubuhku sering digerogoti gigi-gigi tajam para Tikus hingga terputus.",
+       en:"I am weak too, little kitten. My body is often gnawed by the sharp teeth of the Mice until I snap."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"rattan");
+      drawRattan(ctx,w*0.5,h*0.5,1,t);
+      drawKitten(ctx,w*0.5,h*0.86,1,t,{mood:"ask"});
+    }
+  },
+  { id:"tikus", type:"quest", bg:"burrow", who:{id:"Tikus",en:"the Mice"}, reveal:true,
+    q:{id:"Wahai Tikus, maukah engkau menjadi ibuku? Katanya kalian paling hebat di antara semua.",
+       en:"O Mice, will you become my mother? They say you are the mightiest of all."},
+    a:{id:"Induk tikus curiga. \u201cBukankah selama ini kucing adalah musuh kami? Tapi belakangan ini anak-anakku berani bermain di luar, sebab kucing tua yang biasa memangsa kami sedang sakit keras, dan anaknya sendiri malah pergi meninggalkannya.\u201d",
+       en:"The mother mouse was suspicious. \u201cAren\u2019t cats our enemy? But lately my children dare to play outside, because the old cat who used to hunt us is gravely ill, and her own child has left her.\u201d"},
+    revealText:{id:"Mendengar cerita itu, anak kucing terduduk lemas. Ia sadar, kucing tua yang sakit itu adalah ibunya sendiri \u2014 sang bunda sejati.",
+                en:"Hearing this, the kitten sat down, weak with shock. He realized the sick old cat was his own mother \u2014 his one true mother."},
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"burrow");
+      drawMouseHole(ctx,w*0.62,h*0.78,1,t);
+      drawKitten(ctx,w*0.32,h*0.82,1,t,{mood:"ask"});
+    }
+  },
+  { id:"pulang", type:"narrative", bg:"forest-sunset",
+    lines:{
+      id:["Air mata anak kucing menetes deras. Ia merasa sangat berdosa telah meninggalkan ibunya yang sedang sakit.",
+          "Tanpa menunggu lagi, ia berlari sekencang mungkin pulang ke hutan, kembali ke pelukan ibunya.",
+          "Sejak hari itu, ia tak pernah lagi menjadi anak yang malas dan manja, dan ia merawat ibunya dengan sepenuh hati.",
+          "Sebab di dunia ini, tak ada kasih yang mengalahkan kasih seorang bunda sejati."],
+      en:["Tears streamed down the kitten\u2019s face. He felt terribly guilty for leaving his sick mother behind.",
+          "Without waiting any longer, he ran as fast as he could back to the forest, back into his mother\u2019s arms.",
+          "From that day on, he was never lazy or spoiled again, and he cared for his mother with all his heart.",
+          "For in this world, no love can ever surpass the love of one\u2019s true mother."]
+    },
+    draw:function(ctx,w,h,t){ drawSkyGround(ctx,w,h,"forest-sunset");
+      drawMotherCat(ctx,w*0.42,h*0.74,1,{sick:true,hugged:true});
+      drawKitten(ctx,w*0.56,h*0.7,0.95,t,{mood:"hug"});
+    }
+  }
+];
+
+/* ============ CANVAS DRAWING HELPERS ============ */
+var canvas=document.getElementById("bsCanvas"), ctx=canvas.getContext("2d");
+var W=canvas.width, H=canvas.height;
+
+function lerp(a,b,x){return a+(b-a)*x;}
+
+function drawSkyGround(ctx,w,h,scene){
+  var skies = {
+    "forest":["#bfe3d6","#e9f3d8"],
+    "sun":["#ffe08a","#fff3d0"],
+    "cloud":["#bcd9f0","#eaf4fb"],
+    "wind":["#a9d3e6","#dff0f2"],
+    "hill":["#bfe6c9","#f1f7dc"],
+    "pasture":["#cdeccb","#f3f7d9"],
+    "rattan":["#e8dcb8","#f5eed4"],
+    "burrow":["#7a6a52","#c9b48a"],
+    "forest-sunset":["#f3b673","#fbe0a8"],
+    "forest-day":["#bfe3d6","#e9f3d8"]
+  };
+  var c = skies[scene]||skies["forest"];
+  var g = ctx.createLinearGradient(0,0,0,h*0.72);
+  g.addColorStop(0,c[0]); g.addColorStop(1,c[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+  // ground
+  var gg = ctx.createLinearGradient(0,h*0.68,0,h);
+  if(scene==="burrow"){ gg.addColorStop(0,"#5a4630"); gg.addColorStop(1,"#3a2c1c"); }
+  else if(scene==="rattan"){ gg.addColorStop(0,"#a98a52"); gg.addColorStop(1,"#7d6238"); }
+  else { gg.addColorStop(0,"#8bc48f"); gg.addColorStop(1,"#5fa66a"); }
+  ctx.fillStyle=gg; ctx.fillRect(0,h*0.68,w,h*0.32);
+  // simple tree silhouettes for forest scenes
+  if(scene==="forest"||scene==="forest-day"||scene==="forest-sunset"){
+    ctx.fillStyle="rgba(50,90,55,0.35)";
+    for(var i=0;i<5;i++){
+      var tx=w*(0.05+i*0.22), ty=h*0.66, tr=46+((i%3)*10);
+      ctx.beginPath(); ctx.ellipse(tx,ty,tr,tr*0.7,0,0,Math.PI*2); ctx.fill();
+      ctx.fillRect(tx-4,ty,8,h*0.06);
+    }
+  }
+}
+
+function drawSun(ctx,x,y,r,t){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(t*0.15);
+  ctx.strokeStyle="#ffb703"; ctx.lineWidth=8; ctx.lineCap="round";
+  for(var i=0;i<12;i++){
+    var a=i*(Math.PI/6);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*(r+8),Math.sin(a)*(r+8));
+    ctx.lineTo(Math.cos(a)*(r+28),Math.sin(a)*(r+28));
+    ctx.stroke();
+  }
+  ctx.restore();
+  var grd=ctx.createRadialGradient(x-15,y-15,10,x,y,r);
+  grd.addColorStop(0,"#fff3b0"); grd.addColorStop(1,"#ffca3a");
+  ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  // face
+  ctx.fillStyle="#a2472f";
+  ctx.beginPath(); ctx.arc(x-18,y-8,5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+18,y-8,5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x,y+12,14,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+}
+
+function puff(ctx,x,y,r){ ctx.beginPath(); ctx.ellipse(x,y,r,r*0.72,0,0,Math.PI*2); ctx.fill(); }
+function drawCloud(ctx,x,y,scale,t){
+  ctx.save(); ctx.translate(x+Math.sin(t*0.6)*8,y); ctx.scale(scale,scale);
+  ctx.fillStyle="#ffffff";
+  puff(ctx,-50,10,34); puff(ctx,-10,-10,44); puff(ctx,40,5,38); puff(ctx,0,20,40);
+  ctx.fillStyle="#3d2b18";
+  ctx.beginPath(); ctx.arc(-8,4,4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(14,4,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle="#3d2b18"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(2,14,8,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawWind(ctx,w,h,t){
+  ctx.strokeStyle="rgba(255,255,255,0.75)"; ctx.lineWidth=5; ctx.lineCap="round";
+  for(var i=0;i<6;i++){
+    var yy = h*0.18 + i*38 + Math.sin(t*2+i)*6;
+    var xoff = (t*140 + i*70)%(w+200) - 200;
+    ctx.beginPath();
+    ctx.moveTo(xoff,yy);
+    ctx.quadraticCurveTo(xoff+60,yy-14,xoff+120,yy);
+    ctx.stroke();
+  }
+  // grass bending
+  ctx.strokeStyle="#3f7d4a"; ctx.lineWidth=4;
+  for(var g=0;g<14;g++){
+    var gx = w*0.05+g*(w*0.9/14);
+    var bend = Math.sin(t*3+g)*10;
+    ctx.beginPath(); ctx.moveTo(gx,h*0.7); ctx.quadraticCurveTo(gx+bend,h*0.6,gx+bend*1.6,h*0.5); ctx.stroke();
+  }
+}
+
+function drawHill(ctx,w,h,t){
+  ctx.fillStyle="#6fb56f";
+  ctx.beginPath(); ctx.moveTo(0,h*0.72);
+  ctx.quadraticCurveTo(w*0.5,h*0.28,w,h*0.72);
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#5a9c5c";
+  ctx.beginPath(); ctx.moveTo(0,h*0.75);
+  ctx.quadraticCurveTo(w*0.5,h*0.42,w,h*0.75);
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
+}
+
+function drawBuffalo(ctx,x,y,scale,t){
+  ctx.save(); ctx.translate(x,y+Math.sin(t*2)*2); ctx.scale(scale,scale);
+  ctx.fillStyle="#5c5c5c";
+  ctx.beginPath(); ctx.ellipse(0,0,58,34,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-58,-6,26,22,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#4a4a4a";
+  for(var l=0;l<4;l++){ ctx.fillRect(-40+l*26,26,10,22); }
+  ctx.fillStyle="#e8dcc8";
+  ctx.beginPath(); ctx.moveTo(-70,-22); ctx.quadraticCurveTo(-92,-38,-84,-10); ctx.quadraticCurveTo(-78,-24,-70,-18); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-46,-22); ctx.quadraticCurveTo(-24,-38,-32,-10); ctx.quadraticCurveTo(-38,-24,-46,-18); ctx.fill();
+  ctx.fillStyle="#3d3d3d";
+  ctx.beginPath(); ctx.arc(-64,-8,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle="#3a3a3a"; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(56,4); ctx.quadraticCurveTo(80,20,72,40); ctx.stroke();
+  ctx.restore();
+}
+
+function drawRattan(ctx,x,y,scale,t){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.strokeStyle="#8a6642"; ctx.lineWidth=10; ctx.lineCap="round";
+  for(var i=0;i<4;i++){
+    var ox=-90+i*60;
+    ctx.beginPath();
+    ctx.moveTo(ox,-170);
+    ctx.bezierCurveTo(ox+30+Math.sin(t+i)*8,-90,ox-30,-30,ox+10,80);
+    ctx.stroke();
+  }
+  ctx.strokeStyle="#a9825a"; ctx.lineWidth=4;
+  for(var k=0;k<4;k++){
+    var ox2=-90+k*60;
+    ctx.beginPath();
+    ctx.moveTo(ox2,-170);
+    ctx.bezierCurveTo(ox2+30+Math.sin(t+k)*8,-90,ox2-30,-30,ox2+10,80);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawMouseHole(ctx,x,y,scale,t){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle="#3a2c1c";
+  ctx.beginPath(); ctx.ellipse(0,0,46,30,0,0,Math.PI*2); ctx.fill();
+  var bob = Math.sin(t*3)*3;
+  ctx.fillStyle="#9c8b7a";
+  ctx.beginPath(); ctx.ellipse(-4,-6+bob,16,12,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-16,-16+bob,7,9,-0.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(6,-18+bob,7,9,0.4,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#5c4a3a";
+  ctx.beginPath(); ctx.arc(-16,-16+bob,4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6,-18+bob,4,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#1c140c";
+  ctx.beginPath(); ctx.arc(-8,-8+bob,1.8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-9+bob,1.8,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle="#c9b8a0"; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(-2,-4+bob); ctx.lineTo(-22,-2+bob); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-2,-2+bob); ctx.lineTo(-22,4+bob); ctx.stroke();
+  ctx.restore();
+}
+
+function drawCatBase(ctx,x,y,scale,fur,belly,opts){
+  opts=opts||{};
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  // tail
+  ctx.strokeStyle=fur; ctx.lineWidth=11; ctx.lineCap="round";
+  ctx.beginPath();
+  if(opts.tailWag){
+    ctx.moveTo(26,10); ctx.quadraticCurveTo(58,-10+Math.sin(opts.t*4)*8,48,-40);
+  } else {
+    ctx.moveTo(26,10); ctx.quadraticCurveTo(52,4,44,-30);
+  }
+  ctx.stroke();
+  // body
+  ctx.fillStyle=fur;
+  ctx.beginPath(); ctx.ellipse(0,10,32,26,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=belly;
+  ctx.beginPath(); ctx.ellipse(0,20,18,14,0,0,Math.PI*2); ctx.fill();
+  // legs
+  ctx.fillStyle=fur;
+  ctx.beginPath(); ctx.ellipse(-16,34,8,10,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(16,34,8,10,0,0,Math.PI*2); ctx.fill();
+  // head
+  var headY = opts.headY!==undefined?opts.headY:-28;
+  ctx.fillStyle=fur;
+  ctx.beginPath(); ctx.arc(0,headY,24,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-22,headY-14); ctx.lineTo(-10,headY-32); ctx.lineTo(-2,headY-12); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(22,headY-14); ctx.lineTo(10,headY-32); ctx.lineTo(2,headY-12); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#f3c9a0";
+  ctx.beginPath(); ctx.moveTo(-16,headY-14); ctx.lineTo(-9,headY-26); ctx.lineTo(-4,headY-13); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(16,headY-14); ctx.lineTo(9,headY-26); ctx.lineTo(4,headY-13); ctx.closePath(); ctx.fill();
+  // face
+  ctx.fillStyle="#2b2018";
+  if(opts.sick){
+    ctx.beginPath(); ctx.moveTo(-14,headY-2); ctx.lineTo(-4,headY-2); ctx.lineWidth=2.5; ctx.strokeStyle="#2b2018"; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4,headY-2); ctx.lineTo(14,headY-2); ctx.stroke();
+  } else if(opts.cry){
+    ctx.beginPath(); ctx.arc(-9,headY,3.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(9,headY,3.4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#5fb0e6"; ctx.lineWidth=3; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-9,headY+4); ctx.lineTo(-11,headY+16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9,headY+4); ctx.lineTo(11,headY+16); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(-9,headY,3.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(9,headY,3.4,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle="#c0685a";
+  ctx.beginPath(); ctx.moveTo(-4,headY+8); ctx.lineTo(4,headY+8); ctx.lineTo(0,headY+13); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="#2b2018"; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(-18,headY+8); ctx.lineTo(-32,headY+4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-18,headY+12); ctx.lineTo(-32,headY+14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(18,headY+8); ctx.lineTo(32,headY+4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(18,headY+12); ctx.lineTo(32,headY+14); ctx.stroke();
+  ctx.restore();
+}
+
+function drawKitten(ctx,x,y,scale,t,opts){
+  opts=opts||{};
+  var bob = (opts.mood==="walk")? Math.sin(t*8)*4 : Math.sin(t*2.2)*2;
+  var isCry = opts.mood==="hug"||opts.mood==="cry_reveal";
+  drawCatBase(ctx,x,y+bob,scale*0.85,"#e8a05c","#fff3e0",{tailWag:true,t:t,cry:isCry});
+}
+
+function drawMotherCat(ctx,x,y,scale,opts){
+  opts=opts||{};
+  drawCatBase(ctx,x,y,scale*1.05,"#a98878","#f2e6d8",{sick:true,headY:-16});
+  if(opts.hugged){
+    ctx.save(); ctx.globalAlpha=0.9;
+    ctx.font="20px sans-serif"; ctx.fillText("",0,0);
+    ctx.restore();
+  }
+}
+
+/* ============ NARRATION ============ */
+var currentUtterances = [];
+function stopSpeech(){
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+}
+function speak(text, done){
+  if(muted || !("speechSynthesis" in window)){
+    var estMs = Math.max(1400, text.length*55);
+    setTimeout(done, estMs);
+    return;
+  }
+  stopSpeech();
+  try{
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang==="id" ? "id-ID" : "en-US";
+    u.rate = 0.95; u.pitch = 1.05;
+    var finished=false;
+    var fallback=setTimeout(function(){ if(!finished){finished=true; done();} }, Math.max(1800,text.length*90));
+    u.onend=function(){ if(!finished){finished=true; clearTimeout(fallback); done();} };
+    u.onerror=function(){ if(!finished){finished=true; clearTimeout(fallback); done();} };
+    window.speechSynthesis.speak(u);
+  }catch(e){
+    setTimeout(done, Math.max(1400,text.length*55));
+  }
+}
+
+/* ============ GAME STATE ============ */
+var state = { sceneIndex:0, phase:"idle", tAnim:0, awaitingTap:false };
+var dialogueEl = document.getElementById("bsDialogue");
+var nextBtn = document.getElementById("bsNextBtn");
+var hintEl = document.getElementById("bsHint");
+var dotsEl = document.getElementById("bsDots");
+var coverEl = document.getElementById("bsCover");
+var endPanel = document.getElementById("bsEndPanel");
+
+function buildDots(){
+  dotsEl.innerHTML="";
+  for(var i=0;i<STORY.length;i++){
+    var d=document.createElement("div"); d.className="bs-dot"; d.id="bsDot"+i;
+    dotsEl.appendChild(d);
+  }
+}
+function updateDots(){
+  for(var i=0;i<STORY.length;i++){
+    var d=document.getElementById("bsDot"+i);
+    d.className = "bs-dot" + (i<state.sceneIndex?" bs-done":"") + (i===state.sceneIndex?" bs-active":"");
+  }
+}
+
+function setDialogue(html){ dialogueEl.innerHTML = html; }
+
+function goScene(i){
+  stopSpeech();
+  state.sceneIndex = i;
+  state.phase = "narr";
+  nextBtn.style.display="none";
+  hintEl.style.display="none";
+  updateDots();
+  var scene = STORY[i];
+  if(scene.type==="narrative"){
+    playLines(scene.lines[lang].slice(), function(){
+      nextBtn.style.display="inline-block";
+      nextBtn.textContent = (i===STORY.length-1) ? T[lang].next : T[lang].next;
+      state.phase="done";
+    });
+  } else {
+    // quest scene: show question first automatically, then wait for tap on character
+    setDialogue("<b>"+kittenName()+":</b> \u201c"+scene.q[lang]+"\u201d");
+    speak(scene.q[lang], function(){
+      hintEl.textContent = T[lang].hint;
+      hintEl.style.display="block";
+      state.awaitingTap = true;
+    });
+  }
+}
+
+function kittenName(){ return lang==="id" ? "Anak Kucing" : "Kitten"; }
+
+function playLines(lines, done){
+  if(lines.length===0){ done(); return; }
+  var line = lines.shift();
+  setDialogue(line);
+  speak(line, function(){ playLines(lines, done); });
+}
+
+function onCharacterTap(){
+  if(!state.awaitingTap) return;
+  state.awaitingTap = false;
+  hintEl.style.display="none";
+  var scene = STORY[state.sceneIndex];
+  var who = scene.who[lang];
+  setDialogue("<b>"+who+":</b> \u201c"+scene.a[lang]+"\u201d");
+  speak(scene.a[lang], function(){
+    if(scene.reveal){
+      setDialogue(scene.revealText[lang]);
+      speak(scene.revealText[lang], function(){
+        nextBtn.style.display="inline-block";
+        state.phase="done";
+      });
+    } else {
+      nextBtn.style.display="inline-block";
+      state.phase="done";
+    }
+  });
+}
+
+function advance(){
+  if(state.phase!=="done") return;
+  var next = state.sceneIndex+1;
+  if(next>=STORY.length){
+    showEnd();
+  } else {
+    goScene(next);
+  }
+}
+
+function showEnd(){
+  stopSpeech();
+  updateDots();
+  endPanel.classList.add("bs-show");
+}
+
+function startGame(){
+  coverEl.style.display="none";
+  endPanel.classList.remove("bs-show");
+  goScene(0);
+}
+
+function restartGame(){
+  endPanel.classList.remove("bs-show");
+  goScene(0);
+}
+
+/* ============ CANVAS TAP HANDLING ============ */
+canvas.addEventListener("click", function(e){
+  var scene = STORY[state.sceneIndex];
+  if(scene && scene.type==="quest" && state.awaitingTap){
+    onCharacterTap();
+  }
+});
+canvas.style.cursor="pointer";
+
+/* ============ RENDER LOOP ============ */
+function render(ts){
+  var t = ts/1000;
+  var scene = STORY[state.sceneIndex];
+  ctx.clearRect(0,0,W,H);
+  if(scene && (coverEl.style.display==="none")){
+    scene.draw(ctx,W,H,t);
+    if(scene.type==="quest" && state.awaitingTap){
+      // pulsing glow hint near center-top
+      ctx.save();
+      var pr = 8+Math.sin(t*4)*3;
+      ctx.strokeStyle="rgba(224,72,62,0.55)";
+      ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(W*0.5,H*0.4,60+pr,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+/* ============ UI WIRES ============ */
+document.getElementById("bsStartBtn").addEventListener("click", startGame);
+document.getElementById("bsReplayBtn").addEventListener("click", restartGame);
+document.getElementById("bsNextBtn").addEventListener("click", advance);
+
+var muteBtn = document.getElementById("bsMuteBtn");
+function applyMuteUI(){
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+}
+muteBtn.addEventListener("click", function(){
+  muted = !muted;
+  localStorage.setItem(MUTE_KEY, muted?"1":"0");
+  applyMuteUI();
+  if(muted) stopSpeech();
+});
+applyMuteUI();
+
+var langBtn = document.getElementById("bsLangBtn");
+function applyLangUI(){
+  document.documentElement.lang = lang;
+  document.getElementById("bsTitle").textContent = T[lang].title;
+  document.getElementById("bsCoverTitle").textContent = T[lang].coverTitle;
+  document.getElementById("bsCoverDesc").textContent = T[lang].coverDesc;
+  document.getElementById("bsStartBtn").textContent = T[lang].start;
+  document.getElementById("bsReplayBtn").textContent = T[lang].replay;
+  document.getElementById("bsEndTitle").textContent = T[lang].endTitle;
+  document.getElementById("bsEndDesc").textContent = T[lang].endDesc;
+  nextBtn.textContent = T[lang].next;
+  hintEl.textContent = T[lang].hint;
+  langBtn.textContent = T[lang].langBtn;
+}
+langBtn.addEventListener("click", function(){
+  lang = lang==="id" ? "en" : "id";
+  applyLangUI();
+  stopSpeech();
+  if(coverEl.style.display==="none" && !endPanel.classList.contains("bs-show")){
+    // re-render current scene's dialogue in new language, restart current step for clarity
+    goScene(state.sceneIndex);
+  }
+});
+applyLangUI();
+buildDots();
+
+/* ============ IFRAME AUTO-RESIZE ============ */
+function sendHeight(){
+  var h = document.getElementById("bsWrap").offsetHeight;
+  try{
+    window.parent.postMessage({ key:RESIZE_KEY, height:h }, "*");
+  }catch(e){}
+}
+window.addEventListener("load", sendHeight);
+window.addEventListener("resize", sendHeight);
+if("ResizeObserver" in window){
+  new ResizeObserver(sendHeight).observe(document.getElementById("bsWrap"));
+} else {
+  setInterval(sendHeight, 800);
+}
+setTimeout(sendHeight, 300);
+
+})();
+</script>
+</body>
+</html>
