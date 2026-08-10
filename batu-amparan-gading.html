@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batu Amparan Gading - Cerita Interaktif</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: transparent;
+    overflow: hidden;
+  }
+  #bag-root {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #fff7e0 0%, #ffe9b8 55%, #f6d896 100%);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(120,80,10,0.25);
+    border: 3px solid #c8932f;
+  }
+  #bag-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, #8a4a1e, #6e3814);
+  }
+  .bag-title {
+    color: #ffe9c2;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+  }
+  .bag-btn-group { display: flex; gap: 6px; }
+  .bag-icon-btn {
+    background: #ffe9c2;
+    border: none;
+    border-radius: 8px;
+    width: 34px; height: 30px;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.25);
+  }
+  .bag-icon-btn:active { transform: scale(0.94); }
+  .bag-lang-btn {
+    background: #ffe9c2;
+    border: none;
+    border-radius: 8px;
+    padding: 0 10px;
+    height: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #6e3814;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.25);
+  }
+  #bag-stage-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #cfe9ff;
+  }
+  #bag-canvas {
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #bag-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .bag-hotspot {
+    position: absolute;
+    pointer-events: all;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+  #bag-caption {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 10px 14px 12px;
+    background: linear-gradient(0deg, rgba(35,20,5,0.88), rgba(35,20,5,0.0));
+    color: #fff6e2;
+    font-size: 14px;
+    line-height: 1.45;
+    min-height: 46px;
+    pointer-events: none;
+  }
+  #bag-controls {
+    padding: 10px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: #fff3d6;
+  }
+  #bag-dots {
+    display: flex; gap: 7px;
+  }
+  .bag-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #e2c491;
+    transition: background 0.25s, transform 0.25s;
+  }
+  .bag-dot.bag-active {
+    background: #b9581a;
+    transform: scale(1.25);
+  }
+  .bag-dot.bag-done {
+    background: #c8932f;
+  }
+  #bag-action-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+  }
+  .bag-main-btn {
+    background: linear-gradient(180deg, #e0793e, #b9581a);
+    color: #fff;
+    border: none;
+    padding: 11px 26px;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(120,50,0,0.35);
+  }
+  .bag-main-btn:active { transform: translateY(1px); }
+  .bag-hold-btn {
+    background: linear-gradient(180deg, #4d8a5c, #336640);
+    color: #fff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 3px 6px rgba(0,50,10,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .bag-hold-btn .bag-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: rgba(255,255,255,0.35);
+  }
+  .bag-progress-track {
+    width: 82%;
+    height: 12px;
+    background: #e2c491;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #c8932f;
+  }
+  .bag-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #e0793e, #b9581a);
+    transition: width 0.12s linear;
+  }
+  .bag-hint {
+    font-size: 12.5px;
+    color: #7a4c1b;
+    text-align: center;
+  }
+  .bag-counter {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6e3814;
+  }
+  #bag-footer {
+    text-align: center;
+    font-size: 10.5px;
+    color: #a9793a;
+    padding: 4px 0 8px;
+    background: #fff3d6;
+  }
+</style>
+</head>
+<body>
+<div id="bag-root">
+  <div id="bag-topbar">
+    <div class="bag-title" id="bag-title-text">Batu Amparan Gading</div>
+    <div class="bag-btn-group">
+      <button class="bag-lang-btn" id="bag-lang-btn" title="Ganti Bahasa">EN</button>
+      <button class="bag-icon-btn" id="bag-mute-btn" title="Mute/Unmute">🔊</button>
+    </div>
+  </div>
+
+  <div id="bag-stage-wrap">
+    <canvas id="bag-canvas" width="800" height="600"></canvas>
+    <div id="bag-overlay"></div>
+    <div id="bag-caption"></div>
+  </div>
+
+  <div id="bag-controls">
+    <div id="bag-dots"></div>
+    <div id="bag-action-area"></div>
+  </div>
+
+  <div id="bag-footer">Cerita Rakyat Bengkulu &middot; Folktale from Bengkulu, Indonesia</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Basic setup ----------
+  var canvas = document.getElementById('bag-canvas');
+  var ctx = canvas.getContext('2d');
+  var overlay = document.getElementById('bag-overlay');
+  var captionEl = document.getElementById('bag-caption');
+  var actionArea = document.getElementById('bag-action-area');
+  var dotsEl = document.getElementById('bag-dots');
+  var muteBtn = document.getElementById('bag-mute-btn');
+  var langBtn = document.getElementById('bag-lang-btn');
+  var titleText = document.getElementById('bag-title-text');
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var lang = urlParams.get('lang') === 'en' ? 'en' : 'id';
+  var muted = localStorage.getItem('bag_muted') === '1';
+
+  function updateMuteBtn(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
+  updateMuteBtn();
+
+  function updateLangBtn(){
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    titleText.textContent = lang === 'id' ? 'Batu Amparan Gading' : 'The Rising Ivory Stone';
+    document.documentElement.lang = lang;
+  }
+  updateLangBtn();
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('bag_muted', muted ? '1' : '0');
+    updateMuteBtn();
+    if (muted) window.speechSynthesis.cancel();
+    else speakCurrent();
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    updateLangBtn();
+    renderStage(true);
+  });
+
+  // ---------- Speech ----------
+  var voicesReady = false;
+  function loadVoices(){ voicesReady = true; }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text){
+    if (muted) return;
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    utter.rate = 0.95;
+    utter.pitch = 1.02;
+    window.speechSynthesis.speak(utter);
+  }
+  function speakCurrent(){
+    var s = STAGES[state.stageIndex];
+    if (s) speak(s.narration[lang]);
+  }
+
+  // ---------- Resize / iframe auto-resize ----------
+  var RESIZE_KEY = 'bag-amparan-gading-resize';
+  function sendHeight(){
+    var h = document.getElementById('bag-root').offsetHeight;
+    try {
+      window.parent.postMessage({ key: RESIZE_KEY, height: h }, '*');
+    } catch(e) {}
+  }
+  window.addEventListener('load', function(){ setTimeout(sendHeight, 150); });
+  window.addEventListener('resize', sendHeight);
+
+  // ---------- Canvas scaling helper ----------
+  function fitCanvas(){
+    var wrap = document.getElementById('bag-stage-wrap');
+    var rect = wrap.getBoundingClientRect();
+    canvas.width = 800;
+    canvas.height = 600;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+  }
+  window.addEventListener('resize', fitCanvas);
+
+  // ---------- Drawing helpers ----------
+  function clear(){
+    ctx.clearRect(0,0,800,600);
+  }
+  function skyBg(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,600);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,800,600);
+  }
+  function drawGround(y, color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0, y, 800, 600 - y);
+  }
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.arc(0,0,26,0,Math.PI*2);
+    ctx.arc(28,-8,20,0,Math.PI*2);
+    ctx.arc(-26,-4,18,0,Math.PI*2);
+    ctx.arc(10,8,22,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawPalace(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // base
+    ctx.fillStyle = '#e8d3a0';
+    ctx.fillRect(-140,-10,280,110);
+    // roof
+    ctx.fillStyle = '#b23a2e';
+    ctx.beginPath();
+    ctx.moveTo(-160,-10);
+    ctx.lineTo(0,-90);
+    ctx.lineTo(160,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#8c2c22';
+    ctx.beginPath();
+    ctx.moveTo(-100,-10);
+    ctx.lineTo(0,-60);
+    ctx.lineTo(100,-10);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = '#5c3a1e';
+    ctx.fillRect(-24,30,48,70);
+    ctx.beginPath();
+    ctx.arc(0,30,24,Math.PI,0);
+    ctx.fill();
+    // windows
+    ctx.fillStyle = '#4a2c14';
+    ctx.fillRect(-110,20,34,44);
+    ctx.fillRect(76,20,34,44);
+    // gold trim
+    ctx.strokeStyle = '#d9a441';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(-140,-10,280,110);
+    ctx.restore();
+  }
+  function drawFlowerbed(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var colors = ['#e05a5a','#f0b23e','#f2f2f2','#e28fd0'];
+    for (var i=0;i<6;i++){
+      var fx = (i-2.5)*22;
+      ctx.fillStyle = '#4d8a4a';
+      ctx.beginPath();
+      ctx.ellipse(fx,10,10,6,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = colors[i%colors.length];
+      ctx.beginPath();
+      ctx.arc(fx,0,7,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  // stone: base y, height factor 0..1 controls how tall it rises
+  function drawStone(x, baseY, widthScale, heightFactor){
+    var w = 190 * widthScale;
+    var hBase = 34;
+    var extra = 380 * heightFactor;
+    var topY = baseY - hBase - extra;
+    ctx.save();
+    var grad = ctx.createLinearGradient(0, topY, 0, baseY);
+    grad.addColorStop(0, '#fff3d0');
+    grad.addColorStop(1, '#d9a441');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(x - w/2, baseY);
+    ctx.quadraticCurveTo(x - w/2 - 10, baseY - (hBase+extra)/2, x - w/2 + 14, topY + 6);
+    ctx.quadraticCurveTo(x, topY - 6, x + w/2 - 14, topY + 6);
+    ctx.quadraticCurveTo(x + w/2 + 10, baseY - (hBase+extra)/2, x + w/2, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#a97a26';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // flat top surface
+    ctx.fillStyle = '#f5deae';
+    ctx.beginPath();
+    ctx.ellipse(x, topY + 6, w/2 - 12, 12, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#a97a26';
+    ctx.stroke();
+    ctx.restore();
+    return topY + 6;
+  }
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    var skin = opts.skin || '#e8b487';
+    var outfit = opts.outfit || '#4d7a9e';
+    var accent = opts.accent || '#2f5673';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = accent;
+    ctx.fillRect(-12,40,10,26);
+    ctx.fillRect(2,40,10,26);
+    // body
+    ctx.fillStyle = outfit;
+    ctx.beginPath();
+    ctx.moveTo(-18,10);
+    ctx.quadraticCurveTo(0,0,18,10);
+    ctx.lineTo(15,44);
+    ctx.lineTo(-15,44);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = outfit;
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    if (opts.armsUp) {
+      ctx.beginPath(); ctx.moveTo(-14,14); ctx.lineTo(-26,-6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,14); ctx.lineTo(26,-6); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-14,14); ctx.lineTo(-20,34); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,14); ctx.lineTo(20,34); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-8,15,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = opts.hair || '#2b1c10';
+    ctx.beginPath();
+    if (opts.longHair){
+      ctx.arc(0,-10,16,Math.PI,0);
+      ctx.fill();
+      ctx.fillRect(-15,-10,6,26);
+      ctx.fillRect(9,-10,6,26);
+    } else {
+      ctx.arc(0,-12,15,Math.PI,0);
+      ctx.fill();
+    }
+    // face
+    ctx.fillStyle = '#2b1c10';
+    ctx.beginPath(); ctx.arc(-5,-8,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-8,1.6,0,Math.PI*2); ctx.fill();
+    if (opts.sad) {
+      ctx.beginPath();
+      ctx.arc(0,-1,4,Math.PI*0.15,Math.PI*0.85);
+      ctx.strokeStyle = '#2b1c10';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    } else if (opts.angry) {
+      ctx.strokeStyle = '#2b1c10';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-9,-14); ctx.lineTo(-2,-12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(9,-14); ctx.lineTo(2,-12); ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0,-4,4,0.15*Math.PI,0.85*Math.PI);
+      ctx.strokeStyle = '#2b1c10';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    }
+    // crown if royal
+    if (opts.crown) {
+      ctx.fillStyle = '#e8c23e';
+      ctx.beginPath();
+      ctx.moveTo(-13,-20); ctx.lineTo(-13,-27); ctx.lineTo(-6,-20);
+      ctx.lineTo(0,-29); ctx.lineTo(6,-20); ctx.lineTo(13,-27);
+      ctx.lineTo(13,-20);
+      ctx.closePath();
+      ctx.fill();
+    }
+    if (opts.tears) {
+      ctx.strokeStyle = '#7cc0e8';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-5,-5); ctx.lineTo(-6,2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(5,-5); ctx.lineTo(6,2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawGaruda(x,y,scale,wingFlap){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a4a20';
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,16,0,0,Math.PI*2);
+    ctx.fill();
+    // wings
+    ctx.fillStyle = '#5c3616';
+    var flap = wingFlap ? -18 : 6;
+    ctx.beginPath();
+    ctx.moveTo(-10,-4);
+    ctx.quadraticCurveTo(-60,flap,-70,-30);
+    ctx.quadraticCurveTo(-40,-6,-10,4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(10,-4);
+    ctx.quadraticCurveTo(60,flap,70,-30);
+    ctx.quadraticCurveTo(40,-6,10,4);
+    ctx.fill();
+    // head
+    ctx.fillStyle = '#a5672c';
+    ctx.beginPath();
+    ctx.arc(26,-8,10,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#e8b23e';
+    ctx.beginPath();
+    ctx.moveTo(34,-8); ctx.lineTo(46,-5); ctx.lineTo(34,-2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawSkyDoor(x,y,scale,openAmt){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#d9c9e8';
+    ctx.fillRect(-50,-70,100,140);
+    ctx.strokeStyle = '#8a6ea8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(-50,-70,100,140);
+    var gap = openAmt * 46;
+    ctx.fillStyle = '#fdf6ff';
+    ctx.fillRect(-gap/2-4,-66,8,132);
+    ctx.fillRect(gap/2-4,-66,8,132);
+    ctx.strokeStyle = '#b89ed0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-46,-66,42-gap/2,132);
+    ctx.strokeRect(4+gap/2,-66,42-gap/2,132);
+    ctx.restore();
+  }
+  function drawBumbung(x,y,scale,fill){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a5a2e';
+    ctx.fillRect(-8,-24,16,48);
+    ctx.fillStyle = '#c8a35c';
+    ctx.fillRect(-8,-24,16,48*fill*-1+48);
+    ctx.strokeStyle = '#4a3616';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-8,-24,16,48);
+    ctx.restore();
+  }
+
+  // ---------- Stage state ----------
+  var state = {
+    stageIndex: 0,
+    started: false,
+    foodCollected: { rice:false, lizard:false, flower:false },
+    accusationProgress: 0,
+    poemCount: 0,
+    villagersProgress: 0,
+    doorOpen: 0
+  };
+
+  var TOTAL_STAGES; // set after STAGES defined
+
+  var STAGES = [
+    {
+      id: 'intro',
+      narration: {
+        id: 'Pada zaman dahulu, hiduplah seorang Raja Muda bersama istrinya, Putri Gani, dan kedua anak mereka di sebuah istana yang megah. Di halaman istana terdapat batu besar berwarna kuning gading bernama Batu Amparan Gading, tempat keluarga itu biasa duduk bersantai.',
+        en: 'Long ago, a young King lived with his wife, Princess Gani, and their two children in a magnificent palace. In the palace yard stood a large ivory-colored stone called the Amparan Gading Stone, where the family loved to sit together.'
+      },
+      caption: {
+        id: 'Keluarga bahagia di istana, dekat Batu Amparan Gading.',
+        en: 'A happy family in the palace, beside the Amparan Gading Stone.'
+      },
+      draw: function(){
+        skyBg('#bfe6ff','#eaf7ff');
+        drawCloud(120,80,1);
+        drawCloud(650,60,0.8);
+        drawGround(430,'#8fc76a');
+        drawPalace(400,300,1.05);
+        drawFlowerbed(180,460,1);
+        drawFlowerbed(600,460,1);
+        drawStone(400,540,1,0);
+        drawPerson(340,470,1,{outfit:'#3a5a86',crown:true});
+        drawPerson(460,470,1,{outfit:'#a8547a',longHair:true});
+        drawPerson(370,500,0.6,{outfit:'#5f9e6c'});
+        drawPerson(430,500,0.6,{outfit:'#d98fae',longHair:true});
+      },
+      action: function(){ showStartButton(); }
+    },
+    {
+      id: 'stepmother',
+      narration: {
+        id: 'Suatu hari, Putri Gani jatuh sakit dan meninggal dunia. Raja Muda sangat sedih. Karena kedua anaknya masih kecil dan butuh kasih sayang seorang ibu, ia pun menikah lagi dengan seorang putri dari Raja Hulu Sungai.',
+        en: 'One day, Princess Gani fell ill and passed away. The young King was heartbroken. Since his children were still small and needed a mother\u2019s care, he married again, this time to a princess from the King of Hulu Sungai.'
+      },
+      caption: {
+        id: 'Sang Ratu wafat. Raja Muda menikah kembali.',
+        en: 'The Queen passes away. The King remarries.'
+      },
+      draw: function(){
+        skyBg('#cbd6e6','#eef0f2');
+        drawGround(430,'#8fc76a');
+        drawPalace(400,300,1.05);
+        drawPerson(360,470,1,{outfit:'#3a5a86',crown:true,sad:true,tears:true});
+        drawPerson(470,460,0.95,{outfit:'#8a4d9e',longHair:true,crown:true});
+      },
+      action: function(){ showContinueButton(); }
+    },
+    {
+      id: 'cruelty',
+      narration: {
+        id: 'Pada awalnya ibu tiri itu penyayang, namun lama-kelamaan ia sering marah kepada kedua anak tirinya dan membiarkan mereka kelaparan setiap kali Raja Muda pergi dari istana.',
+        en: 'At first the stepmother was loving, but over time she often grew angry with her stepchildren and let them go hungry whenever the young King was away from the palace.'
+      },
+      caption: {
+        id: 'Ibu tiri sering marah dan membiarkan anak-anak kelaparan.',
+        en: 'The stepmother often scolds them and leaves the children hungry.'
+      },
+      draw: function(){
+        skyBg('#cbd6e6','#eef0f2');
+        drawGround(430,'#8fc76a');
+        drawPalace(400,300,1.05);
+        drawPerson(470,460,0.95,{outfit:'#8a4d9e',longHair:true,angry:true,armsUp:true});
+        drawPerson(340,500,0.55,{outfit:'#5f9e6c',sad:true});
+        drawPerson(400,505,0.5,{outfit:'#d98fae',longHair:true,sad:true});
+      },
+      action: function(){ showContinueButton(); }
+    },
+    {
+      id: 'foodquest',
+      narration: {
+        id: 'Karena lapar, sang kakak pergi mencari makanan sambil membawa bumbung. Ia meminta serpihan beras, menangkap seekor bengkarung untuk mainan, dan memungut bunga dadap yang berguguran. Bantu ia mengumpulkan ketiganya!',
+        en: 'Hungry, the older brother went out to find food, carrying a small bamboo tube. He asked for scraps of rice, caught a little lizard to play with, and picked up fallen coral flowers. Help him gather all three!'
+      },
+      caption: {
+        id: 'Ketuk beras, bengkarung, dan bunga dadap untuk mengumpulkannya.',
+        en: 'Tap the rice, the lizard, and the flowers to collect them.'
+      },
+      draw: function(){
+        skyBg('#bfe6ff','#eaf7ff');
+        drawGround(430,'#8fc76a');
+        drawPerson(150,480,0.85,{outfit:'#5f9e6c'});
+        drawBumbung(190,480,0.9,0.15 + 0.28*countCollected());
+        // rice pile
+        if (!state.foodCollected.rice) {
+          ctx.save();
+          ctx.fillStyle = '#f5efe0';
+          ctx.beginPath();
+          ctx.ellipse(360,470,26,12,0,0,Math.PI*2);
+          ctx.fill();
+          ctx.strokeStyle = '#c8b98a';
+          ctx.stroke();
+          ctx.restore();
+        }
+        // lizard
+        if (!state.foodCollected.lizard) {
+          ctx.save();
+          ctx.translate(520,475);
+          ctx.fillStyle = '#6a9e5a';
+          ctx.beginPath();
+          ctx.ellipse(0,0,20,7,0.3,0,Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(16,4); ctx.quadraticCurveTo(34,-6,42,6);
+          ctx.strokeStyle = '#6a9e5a';
+          ctx.lineWidth = 5;
+          ctx.stroke();
+          ctx.restore();
+        }
+        // flowers
+        if (!state.foodCollected.flower) {
+          ctx.save();
+          ctx.fillStyle = '#e05a5a';
+          for (var i=0;i<3;i++){
+            ctx.beginPath();
+            ctx.arc(660 + i*16, 460 - (i%2)*10, 8, 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      },
+      afterDraw: function(){
+        placeHotspot('rice', 335,450,55,45, function(){
+          if (state.foodCollected.rice) return;
+          state.foodCollected.rice = true;
+          renderStage();
+          checkFoodDone();
+        });
+        placeHotspot('lizard', 495,450,70,50, function(){
+          if (state.foodCollected.lizard) return;
+          state.foodCollected.lizard = true;
+          renderStage();
+          checkFoodDone();
+        });
+        placeHotspot('flower', 635,435,60,50, function(){
+          if (state.foodCollected.flower) return;
+          state.foodCollected.flower = true;
+          renderStage();
+          checkFoodDone();
+        });
+      },
+      action: function(){ showFoodCounter(); }
+    },
+    {
+      id: 'accusation',
+      narration: {
+        id: 'Kedua anak bermain di atas Batu Amparan Gading. Melihat remah-remah makanan berserakan, ibu tiri salah paham dan mengira mereka mencuri. Ia memarahi dan memukuli mereka tanpa ampun. Tekan tombol untuk membantu mereka bertahan.',
+        en: 'The two children played on top of the Amparan Gading Stone. Seeing scraps scattered about, the stepmother mistakenly thought they had stolen food. She scolded and struck them without mercy. Tap the button to help them stay strong.'
+      },
+      caption: {
+        id: 'Ibu tiri marah dan menuduh mereka mencuri makanan.',
+        en: 'The stepmother is furious and accuses them of stealing food.'
+      },
+      draw: function(){
+        skyBg('#cbd6e6','#eef0f2');
+        drawGround(430,'#8fc76a');
+        drawStone(400,540,1,0);
+        drawPerson(370,500,0.55,{outfit:'#5f9e6c',sad:true,tears:true});
+        drawPerson(430,505,0.5,{outfit:'#d98fae',longHair:true,sad:true,tears:true});
+        drawPerson(400,430,0.95,{outfit:'#8a4d9e',longHair:true,angry:true,armsUp:true});
+      },
+      action: function(){ showAccusationQTE(); }
+    },
+    {
+      id: 'poem',
+      narration: {
+        id: 'Kedua anak tertidur di atas batu karena kelelahan. Saat terbangun, sang kakak teringat kekejaman ibu tirinya. Dengan air mata berlinang, ia melantunkan puisi sedih. Setiap kali diucapkan, Batu Amparan Gading pun semakin meninggi. Tekan dan tahan tombol untuk melantunkan puisi.',
+        en: 'Exhausted, the two children fell asleep on the stone. When the older brother woke, he remembered his stepmother\u2019s cruelty. With tears falling, he recited a sorrowful poem. Each time he spoke it, the Amparan Gading Stone grew taller. Press and hold the button to recite the poem.'
+      },
+      caption: {
+        id: 'Puisi ajaib membuat Batu Amparan Gading semakin tinggi.',
+        en: 'The magic poem makes the Amparan Gading Stone rise higher.'
+      },
+      draw: function(){
+        skyBg('#bfe6ff','#eaf7ff');
+        drawCloud(120,90,1);
+        drawCloud(660,70,0.7);
+        drawGround(560,'#8fc76a');
+        var hf = state.poemCount / 4;
+        var topY = drawStone(400,540,1,hf);
+        drawPerson(370, topY - 34, 0.55, {outfit:'#5f9e6c',sad:(state.poemCount<4),tears:true,armsUp:(state.poemCount>0)});
+        drawPerson(430, topY - 30, 0.5, {outfit:'#d98fae',longHair:true,sad:true});
+      },
+      action: function(){ showPoemHold(); }
+    },
+    {
+      id: 'villagers',
+      narration: {
+        id: 'Sang Raja pulang dan sangat terkejut melihat Batu Amparan Gading telah menjulang tinggi, lebih tinggi dari puncak istana, dengan kedua anaknya di atasnya. Ia memanggil semua orang untuk membantu, namun batu itu tetap kokoh dan terus meninggi.',
+        en: 'The King returned and was astonished to see the Amparan Gading Stone towering higher than the palace roof, with his children atop it. He called everyone to help, but the stone stood firm and kept rising higher still.'
+      },
+      caption: {
+        id: 'Warga berusaha menghentikan batu, namun sia-sia.',
+        en: 'The villagers try to stop the stone, but it is no use.'
+      },
+      draw: function(){
+        skyBg('#a9d4ff','#eaf7ff');
+        drawCloud(150,60,0.9);
+        drawGround(560,'#8fc76a');
+        var topY = drawStone(400,540,1,1);
+        drawPerson(370, topY - 34, 0.5, {outfit:'#5f9e6c',sad:true});
+        drawPerson(430, topY - 30, 0.45, {outfit:'#d98fae',longHair:true,sad:true});
+        drawPerson(260,500,0.7,{outfit:'#3a5a86',crown:true,armsUp:true,sad:true});
+        drawPerson(560,505,0.55,{outfit:'#a06a3a',armsUp:true});
+        drawPerson(610,505,0.55,{outfit:'#6a8a3a',armsUp:true});
+        drawPerson(180,500,0.5,{outfit:'#9e6a4a',armsUp:true});
+      },
+      action: function(){ showVillagersQTE(); }
+    },
+    {
+      id: 'sky',
+      narration: {
+        id: 'Kedua anak akhirnya sampai di pintu langit, namun pintu itu tertutup. Seekor burung Garuda lewat, dan mereka meminta tolong agar dibukakan pintu. Ketuk gambar Garuda untuk membuka pintu langit.',
+        en: 'The two children finally reached the door of the sky, but it was shut. A great Garuda bird passed by, and they asked for its help to open the door. Tap the Garuda to open the sky door.'
+      },
+      caption: {
+        id: 'Garuda mematuk pintu langit hingga terbuka.',
+        en: 'The Garuda pecks the sky door until it opens.'
+      },
+      draw: function(){
+        skyBg('#8fc0ea','#dceeff');
+        drawCloud(560,120,1);
+        drawCloud(200,180,0.7);
+        drawSkyDoor(400,300,1.3, state.doorOpen);
+        drawPerson(320,420,0.6,{outfit:'#5f9e6c'});
+        drawPerson(360,425,0.55,{outfit:'#d98fae',longHair:true});
+        drawGaruda(160,220,1.1, Math.floor(Date.now()/220)%2===0);
+      },
+      afterDraw: function(){
+        placeHotspot('garuda', 60,120,220,190, function(){
+          if (state.doorOpen >= 1) return;
+          state.doorOpen = Math.min(1, state.doorOpen + 0.34);
+          renderStage();
+          if (state.doorOpen >= 1) {
+            setTimeout(function(){ goToStage(state.stageIndex + 1); }, 700);
+          }
+        });
+      },
+      action: function(){ showDoorHint(); }
+    },
+    {
+      id: 'ending',
+      narration: {
+        id: 'Pintu langit terbuka. Kedua anak Raja melangkah masuk ke negeri langit yang indah dan tenteram. Batu Amparan Gading pun kembali merendah seperti semula. Kini batu itu menjadi saksi bisu kisah kesabaran dua anak yang teraniaya, sebuah cerita rakyat dari Bengkulu.',
+        en: 'The sky door opened. The King\u2019s two children stepped into the beautiful, peaceful realm above. The Amparan Gading Stone slowly sank back to its original height. To this day, the stone stands as a silent witness to the patience of two mistreated children \u2014 a folktale from Bengkulu, Indonesia.'
+      },
+      caption: {
+        id: 'Tamat. Kedua anak masuk ke langit; Batu Amparan Gading kembali seperti semula.',
+        en: 'The End. The children enter the sky; the stone returns to its original size.'
+      },
+      draw: function(){
+        skyBg('#8fc0ea','#dceeff');
+        drawCloud(400,100,1.2);
+        drawCloud(180,180,0.8);
+        drawCloud(620,170,0.8);
+        drawSkyDoor(400,300,1.3,1);
+        drawGround(560,'#8fc76a');
+        drawStone(660,560,0.35,0);
+      },
+      action: function(){ showReplayButton(); }
+    }
+  ];
+  TOTAL_STAGES = STAGES.length;
+
+  function countCollected(){
+    var c = 0;
+    if (state.foodCollected.rice) c++;
+    if (state.foodCollected.lizard) c++;
+    if (state.foodCollected.flower) c++;
+    return c;
+  }
+  function checkFoodDone(){
+    if (countCollected() === 3) {
+      showFoodCounter(true);
+    }
+  }
+
+  // ---------- Hotspot helper ----------
+  function clearHotspots(){ overlay.innerHTML = ''; }
+  function placeHotspot(id, x, y, w, h, onClick){
+    var btn = document.createElement('button');
+    btn.className = 'bag-hotspot';
+    btn.style.left = (x/800*100) + '%';
+    btn.style.top = (y/600*100) + '%';
+    btn.style.width = (w/800*100) + '%';
+    btn.style.height = (h/600*100) + '%';
+    btn.style.pointerEvents = 'all';
+    btn.addEventListener('click', onClick);
+    overlay.appendChild(btn);
+  }
+
+  // ---------- Dots ----------
+  function renderDots(){
+    dotsEl.innerHTML = '';
+    for (var i=0;i<TOTAL_STAGES;i++){
+      var d = document.createElement('div');
+      d.className = 'bag-dot' + (i===state.stageIndex ? ' bag-active' : (i<state.stageIndex ? ' bag-done' : ''));
+      dotsEl.appendChild(d);
+    }
+  }
+
+  // ---------- Action area builders ----------
+  function clearAction(){ actionArea.innerHTML = ''; }
+
+  function showStartButton(){
+    clearAction();
+    var btn = document.createElement('button');
+    btn.className = 'bag-main-btn';
+    btn.textContent = lang === 'id' ? 'Mulai Cerita' : 'Start Story';
+    btn.addEventListener('click', function(){ goToStage(1); });
+    actionArea.appendChild(btn);
+  }
+
+  function showContinueButton(){
+    clearAction();
+    var btn = document.createElement('button');
+    btn.className = 'bag-main-btn';
+    btn.textContent = lang === 'id' ? 'Lanjutkan' : 'Continue';
+    btn.addEventListener('click', function(){ goToStage(state.stageIndex + 1); });
+    actionArea.appendChild(btn);
+  }
+
+  function showFoodCounter(done){
+    clearAction();
+    var counter = document.createElement('div');
+    counter.className = 'bag-counter';
+    counter.textContent = (lang==='id' ? 'Terkumpul: ' : 'Collected: ') + countCollected() + ' / 3';
+    actionArea.appendChild(counter);
+    var hint = document.createElement('div');
+    hint.className = 'bag-hint';
+    hint.textContent = lang==='id' ? 'Ketuk beras, bengkarung, dan bunga dadap di layar.' : 'Tap the rice, lizard, and flowers on the screen.';
+    actionArea.appendChild(hint);
+    if (done) {
+      var btn = document.createElement('button');
+      btn.className = 'bag-main-btn';
+      btn.textContent = lang === 'id' ? 'Lanjutkan' : 'Continue';
+      btn.style.marginTop = '4px';
+      btn.addEventListener('click', function(){ goToStage(state.stageIndex + 1); });
+      actionArea.appendChild(btn);
+    }
+  }
+
+  function showAccusationQTE(){
+    clearAction();
+    var track = document.createElement('div');
+    track.className = 'bag-progress-track';
+    var fill = document.createElement('div');
+    fill.className = 'bag-progress-fill';
+    track.appendChild(fill);
+    var btn = document.createElement('button');
+    btn.className = 'bag-main-btn';
+    btn.textContent = lang === 'id' ? 'Bersabar' : 'Stay Strong';
+    var hint = document.createElement('div');
+    hint.className = 'bag-hint';
+    hint.textContent = lang === 'id' ? 'Ketuk berkali-kali untuk membantu mereka bertahan.' : 'Tap repeatedly to help them endure.';
+    var needed = 14;
+    btn.addEventListener('click', function(){
+      state.accusationProgress = Math.min(needed, state.accusationProgress + 1);
+      fill.style.width = (state.accusationProgress/needed*100) + '%';
+      if (state.accusationProgress >= needed) {
+        btn.disabled = true;
+        setTimeout(function(){ goToStage(state.stageIndex + 1); }, 500);
+      }
+    });
+    actionArea.appendChild(track);
+    actionArea.appendChild(btn);
+    actionArea.appendChild(hint);
+  }
+
+  function showPoemHold(){
+    clearAction();
+    var counter = document.createElement('div');
+    counter.className = 'bag-counter';
+    counter.textContent = (lang==='id' ? 'Batu meninggi: ' : 'Stone rising: ') + state.poemCount + ' / 4';
+    var btn = document.createElement('button');
+    btn.className = 'bag-hold-btn';
+    var fillDiv = document.createElement('div');
+    fillDiv.className = 'bag-fill';
+    btn.appendChild(fillDiv);
+    var label = document.createElement('span');
+    label.style.position = 'relative';
+    label.textContent = lang === 'id' ? 'Tahan untuk Ucapkan Puisi' : 'Hold to Recite the Poem';
+    btn.appendChild(label);
+    var hint = document.createElement('div');
+    hint.className = 'bag-hint';
+    hint.textContent = lang === 'id'
+      ? '"Entak-entak bumbung seruas, meninggilah Batu Amparan Gading..."'
+      : '"Rise, rise, O stone of ivory hue..."';
+
+    var holdTimer = null;
+    var progress = 0;
+    function reset(){
+      progress = 0;
+      fillDiv.style.width = '0%';
+      if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+    }
+    function startHold(){
+      if (state.poemCount >= 4) return;
+      if (holdTimer) return;
+      holdTimer = setInterval(function(){
+        progress += 4;
+        fillDiv.style.width = Math.min(100,progress) + '%';
+        if (progress >= 100) {
+          clearInterval(holdTimer); holdTimer = null;
+          state.poemCount = Math.min(4, state.poemCount + 1);
+          reset();
+          renderStage();
+          if (state.poemCount >= 4) {
+            setTimeout(function(){ goToStage(state.stageIndex + 1); }, 600);
+          }
+        }
+      }, 40);
+    }
+    function stopHold(){ if (progress < 100) reset(); }
+
+    btn.addEventListener('mousedown', startHold);
+    btn.addEventListener('touchstart', function(e){ e.preventDefault(); startHold(); }, {passive:false});
+    btn.addEventListener('mouseup', stopHold);
+    btn.addEventListener('mouseleave', stopHold);
+    btn.addEventListener('touchend', stopHold);
+
+    actionArea.appendChild(counter);
+    actionArea.appendChild(btn);
+    actionArea.appendChild(hint);
+  }
+
+  function showVillagersQTE(){
+    clearAction();
+    var track = document.createElement('div');
+    track.className = 'bag-progress-track';
+    var fill = document.createElement('div');
+    fill.className = 'bag-progress-fill';
+    track.appendChild(fill);
+    var btn = document.createElement('button');
+    btn.className = 'bag-main-btn';
+    btn.textContent = lang === 'id' ? 'Coba Hentikan Batu' : 'Try to Stop the Stone';
+    var hint = document.createElement('div');
+    hint.className = 'bag-hint';
+    hint.textContent = lang === 'id' ? 'Warga mencoba, namun batu tetap kokoh...' : 'The villagers try, but the stone will not budge...';
+    var needed = 12;
+    btn.addEventListener('click', function(){
+      state.villagersProgress = Math.min(needed, state.villagersProgress + 1);
+      fill.style.width = (state.villagersProgress/needed*100) + '%';
+      if (state.villagersProgress >= needed) {
+        btn.disabled = true;
+        hint.textContent = lang === 'id' ? 'Usaha mereka sia-sia. Batu tetap tinggi.' : 'Their efforts are in vain. The stone remains tall.';
+        var contBtn = document.createElement('button');
+        contBtn.className = 'bag-main-btn';
+        contBtn.style.marginTop = '6px';
+        contBtn.textContent = lang === 'id' ? 'Lanjutkan' : 'Continue';
+        contBtn.addEventListener('click', function(){ goToStage(state.stageIndex + 1); });
+        actionArea.appendChild(contBtn);
+      }
+    });
+    actionArea.appendChild(track);
+    actionArea.appendChild(btn);
+    actionArea.appendChild(hint);
+  }
+
+  function showDoorHint(){
+    clearAction();
+    var hint = document.createElement('div');
+    hint.className = 'bag-hint';
+    hint.textContent = lang === 'id' ? 'Ketuk burung Garuda untuk membuka pintu langit.' : 'Tap the Garuda bird to open the sky door.';
+    actionArea.appendChild(hint);
+  }
+
+  function showReplayButton(){
+    clearAction();
+    var btn = document.createElement('button');
+    btn.className = 'bag-main-btn';
+    btn.textContent = lang === 'id' ? 'Ulangi Cerita' : 'Replay Story';
+    btn.addEventListener('click', function(){
+      state = { stageIndex:0, started:false, foodCollected:{rice:false,lizard:false,flower:false}, accusationProgress:0, poemCount:0, villagersProgress:0, doorOpen:0 };
+      renderStage(true);
+    });
+    actionArea.appendChild(btn);
+  }
+
+  // ---------- Main render ----------
+  function renderStage(fromLangSwitchOrReset){
+    fitCanvas();
+    var s = STAGES[state.stageIndex];
+    clear();
+    s.draw();
+    clearHotspots();
+    if (s.afterDraw) s.afterDraw();
+    captionEl.textContent = s.caption[lang];
+    renderDots();
+    s.action();
+    if (!fromLangSwitchOrReset || fromLangSwitchOrReset === true) {
+      // speak on stage change or explicit language switch / reset
+      speakCurrent();
+    }
+    sendHeight();
+  }
+
+  function goToStage(index){
+    if (index < 0 || index >= TOTAL_STAGES) return;
+    state.stageIndex = index;
+    renderStage();
+  }
+
+  // ---------- Animation loop for subtle effects (garuda flap, sky stage) ----------
+  function loop(){
+    var s = STAGES[state.stageIndex];
+    if (s && (s.id === 'sky')) {
+      clear();
+      s.draw();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Init ----------
+  fitCanvas();
+  renderStage(true);
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
