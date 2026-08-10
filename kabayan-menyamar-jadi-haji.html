@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Kabayan Menyamar Jadi Haji</title>
+<style>
+  :root{
+    --sky-top:#f7d896;
+    --sky-bottom:#f4b860;
+    --earth:#8a5a34;
+    --earth-dark:#6b4423;
+    --bamboo:#6f8f4e;
+    --bamboo-dark:#4f6b34;
+    --batik-red:#a83232;
+    --batik-gold:#d9a441;
+    --cream:#fbf1de;
+    --ink:#3a2a1c;
+    --panel:#fffaf0;
+    --shadow:rgba(58,42,28,.25);
+    --white-fabric:#f5efe0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', 'Trebuchet MS', Tahoma, sans-serif;
+    background:transparent;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:700px;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 10px 30px var(--shadow);
+    position:relative;
+    border:4px solid var(--batik-gold);
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:rgba(58,42,28,.15);
+  }
+  .topbar h1{
+    font-size:15px;
+    margin:0;
+    color:var(--ink);
+    font-weight:700;
+    letter-spacing:.3px;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+  }
+  .icon-btn{
+    background:var(--panel);
+    border:2px solid var(--earth-dark);
+    color:var(--ink);
+    border-radius:10px;
+    width:34px;
+    height:34px;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{transform:translateY(-1px);background:#fff;}
+  .icon-btn.active{background:var(--batik-gold);color:#fff;}
+
+  .stage-wrap{
+    position:relative;
+    padding:10px 14px 0 14px;
+  }
+  canvas#scene{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:12px;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));
+    box-shadow:inset 0 0 0 3px rgba(58,42,28,.2);
+  }
+  .overlay-layer{
+    position:absolute;
+    top:10px;left:14px;right:14px;
+    height:calc(100% - 10px);
+    pointer-events:none;
+  }
+  .overlay-layer .hit{
+    position:absolute;
+    pointer-events:auto;
+    cursor:pointer;
+  }
+
+  .textbox{
+    margin:12px 14px 6px 14px;
+    background:var(--panel);
+    border:2px solid var(--earth-dark);
+    border-radius:14px;
+    padding:14px 16px;
+    min-height:64px;
+    font-size:15.5px;
+    line-height:1.5;
+    box-shadow:0 3px 0 rgba(58,42,28,.15);
+  }
+  .hint{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--earth-dark);
+    opacity:.85;
+    margin:0 14px 8px 14px;
+    min-height:16px;
+  }
+  .btn-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:4px 14px 14px 14px;
+  }
+  button.action{
+    background:var(--batik-red);
+    color:#fff;
+    border:none;
+    border-radius:24px;
+    padding:11px 22px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #6e1f1f;
+    transition:transform .1s ease;
+  }
+  button.action:active{transform:translateY(2px);box-shadow:0 1px 0 #6e1f1f;}
+  button.action.secondary{
+    background:var(--bamboo);
+    box-shadow:0 3px 0 var(--bamboo-dark);
+  }
+  button.action.secondary:active{box-shadow:0 1px 0 var(--bamboo-dark);}
+  button.action:disabled{opacity:.5;cursor:default;}
+
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding-bottom:12px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(58,42,28,.25);
+    transition:all .2s ease;
+  }
+  .dot.done{background:var(--bamboo-dark);}
+  .dot.now{background:var(--batik-red);transform:scale(1.3);}
+
+  .cover, .end{
+    padding:26px 22px 22px 22px;
+    text-align:center;
+  }
+  .cover h2, .end h2{
+    font-size:23px;
+    margin:6px 0 4px 0;
+    color:var(--ink);
+  }
+  .cover p, .end p{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--ink);
+    max-width:480px;
+    margin:8px auto 16px auto;
+  }
+  .badge{
+    display:inline-block;
+    background:var(--batik-gold);
+    color:#fff;
+    font-size:11.5px;
+    font-weight:700;
+    padding:4px 12px;
+    border-radius:14px;
+    letter-spacing:.5px;
+    margin-bottom:10px;
+  }
+  .footer-credit{
+    text-align:center;
+    font-size:11px;
+    color:var(--earth-dark);
+    opacity:.7;
+    padding:6px 10px 12px 10px;
+  }
+  .progress-fill-wrap{
+    width:220px;height:16px;background:rgba(58,42,28,.15);
+    border-radius:10px;overflow:hidden;margin:10px auto 2px auto;
+    border:1px solid rgba(58,42,28,.3);
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--batik-gold),var(--batik-red));
+    width:0%;
+    transition:width .12s linear;
+  }
+  .qte-label{
+    text-align:center;font-size:12.5px;font-weight:700;color:var(--earth-dark);
+  }
+  .dialog-choice{
+    display:flex;flex-direction:column;gap:8px;margin:8px 14px 4px 14px;
+  }
+  .dialog-choice button{
+    background:var(--panel);border:2px solid var(--earth-dark);
+    border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer;text-align:left;
+  }
+  .dialog-choice button:hover{background:#fff;}
+  .lang-pop{
+    position:absolute;top:48px;right:12px;background:var(--panel);
+    border:2px solid var(--earth-dark);border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,.2);display:none;overflow:hidden;z-index:5;
+  }
+  .lang-pop.show{display:block;}
+  .lang-pop button{
+    display:block;width:100%;border:none;background:none;padding:9px 16px;
+    font-size:13.5px;cursor:pointer;text-align:left;
+  }
+  .lang-pop button:hover{background:var(--cream);}
+  @media (max-width:420px){
+    .topbar h1{font-size:13px;}
+    .textbox{font-size:14.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <h1 id="gameTitle">Si Kabayan Menyamar Jadi Haji</h1>
+    <div class="controls">
+      <button class="icon-btn" id="muteBtn" title="Mute">🔊</button>
+      <div style="position:relative;">
+        <button class="icon-btn" id="langBtn" title="Language">🌐</button>
+        <div class="lang-pop" id="langPop">
+          <button data-lang="id">Bahasa Indonesia</button>
+          <button data-lang="en">English</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="coverScreen" class="cover">
+    <div class="badge" id="coverBadge">CERITA RAKYAT · JAWA BARAT</div>
+    <h2 id="coverTitle">Si Kabayan Menyamar Jadi Haji</h2>
+    <p id="coverDesc">Si Kabayan lapar dan bosan dengan masakan Iteung. Ia punya ide licik: menyamar jadi haji supaya dijamu makanan enak di rumah mertuanya! Bantu Kabayan menjalankan aksi nakalnya sampai akhir cerita.</p>
+    <button class="action" id="startBtn">▶ Mulai Cerita</button>
+  </div>
+
+  <div id="gameScreen" style="display:none;">
+    <div class="stage-wrap">
+      <canvas id="scene" width="700" height="420"></canvas>
+      <div class="overlay-layer" id="overlayLayer"></div>
+    </div>
+    <div class="qte-label" id="qteLabel" style="display:none;"></div>
+    <div class="progress-fill-wrap" id="progWrap" style="display:none;">
+      <div class="progress-fill" id="progFill"></div>
+    </div>
+    <div class="textbox" id="textbox">...</div>
+    <div class="dialog-choice" id="dialogChoice" style="display:none;"></div>
+    <div class="hint" id="hint"></div>
+    <div class="btn-row" id="btnRow">
+      <button class="action" id="nextBtn">Lanjut ▶</button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div id="endScreen" class="end" style="display:none;">
+    <div class="badge">TAMAT</div>
+    <h2 id="endTitle">Akal Bulus Si Kabayan</h2>
+    <p id="endDesc">Mertua Kabayan lari pulang menahan malu, bersumpah suatu saat akan membalas kejahilan menantunya. Begitulah kelakuan Si Kabayan yang licik namun selalu mengundang tawa.</p>
+    <button class="action secondary" id="replayBtn">↺ Ulangi Cerita</button>
+  </div>
+
+  <div class="footer-credit" id="footerCredit">Cerita Rakyat Jawa Barat · Caritasato</div>
+</div>
+
+<script>
+(function(){
+
+// ---------- i18n ----------
+const I18N = {
+  id: {
+    title:"Si Kabayan Menyamar Jadi Haji",
+    coverBadge:"CERITA RAKYAT · JAWA BARAT",
+    coverTitle:"Si Kabayan Menyamar Jadi Haji",
+    coverDesc:"Si Kabayan lapar dan bosan dengan masakan Iteung. Ia punya ide licik: menyamar jadi haji supaya dijamu makanan enak di rumah mertuanya! Bantu Kabayan menjalankan aksi nakalnya sampai akhir cerita.",
+    start:"▶ Mulai Cerita",
+    next:"Lanjut ▶",
+    replay:"↺ Ulangi Cerita",
+    endTitle:"Akal Bulus Si Kabayan",
+    endDesc:"Mertua Kabayan lari pulang menahan malu, bersumpah suatu saat akan membalas kejahilan menantunya. Begitulah kelakuan Si Kabayan yang licik namun selalu mengundang tawa.",
+    footer:"Cerita Rakyat Jawa Barat · Caritasato",
+    tapDress:"Ketuk jubah, lalu ketuk sorban untuk memakaikannya pada Kabayan",
+    tapWalk:"Ketuk layar berkali-kali supaya Kabayan berjalan gagah seperti haji!",
+    tapEat:"Ketuk piring berulang-ulang, bantu Kabayan makan sampai kenyang!",
+    tapHide:"Cepat! Ketuk jubah untuk menyembunyikannya sebelum ketahuan!",
+    tapDress2:"Ketuk jubah, lalu ketuk sorban untuk memakaikannya pada mertua",
+    tapReveal:"Ketuk wajah tamu untuk memperhatikan ciri-cirinya baik-baik",
+    chooseCut:"Kabayan berteriak. Pilih apa yang akan dikatakannya:",
+    steps:[
+      {
+        // 1
+        text:"Suatu pagi, perut Si Kabayan keroncongan. Ia bosan dengan masakan Iteung, istrinya, dan sangat ingin makan makanan yang enak.",
+        hint:"Ketuk 'Lanjut' untuk melanjutkan cerita"
+      },
+      {
+        // 2 dress up
+        text:"Kabayan tahu, mertuanya sangat menghormati seorang haji dan akan menyajikan makanan lezat bila ada haji bertamu. Muncullah ide gilanya: menyamar jadi haji!",
+        hint:"tapDress"
+      },
+      {
+        // 3 walk qte
+        text:"Kabayan mengenakan jubah dan sorban, lalu melangkah gagah menuju rumah mertuanya, meniru gaya seorang haji.",
+        hint:"tapWalk"
+      },
+      {
+        // 4
+        text:"\"Alhamdulillah, Pak Haji! Mari masuk, senang sekali Tuan Haji berkenan mampir ke gubuk sederhana kami,\" sambut mertua Kabayan dengan gembira, lalu menyuruh istrinya menyiapkan makanan enak.",
+        hint:"Ketuk 'Lanjut' untuk melanjutkan cerita"
+      },
+      {
+        // 5 eat qte
+        text:"Mata Kabayan berbinar melihat daging ayam dan hidangan lezat di meja. Dengan lahap ia menyantap semuanya sampai perutnya kenyang.",
+        hint:"tapEat"
+      },
+      {
+        // 6 hide timing
+        text:"Setelah kenyang, Kabayan segera pamit pulang. Sesampainya di rumah, ia harus buru-buru menyembunyikan jubah dan sorbannya sebelum ada yang curiga!",
+        hint:"tapHide"
+      },
+      {
+        // 7
+        text:"Namun mertua Kabayan merasa ada yang aneh. Ia merasa mengenali gerak-gerik Pak Haji tadi. Akhirnya ia sadar: menantunya telah menipunya dengan menyamar jadi haji!",
+        hint:"Ketuk 'Lanjut' untuk melanjutkan cerita"
+      },
+      {
+        // 8 dressup mertua
+        text:"Geram dan dongkol, mertua Kabayan ingin membalas. Keesokan harinya, ia pun menyamar sebagai seorang haji dan melangkah menuju rumah Kabayan.",
+        hint:"tapDress2"
+      },
+      {
+        // 9 reveal click
+        text:"Kabayan membuka pintu untuk sang tamu. Matanya terbelalak memperhatikan wajah tamu itu baik-baik...",
+        hint:"tapReveal"
+      },
+      {
+        // 10 dialog choice
+        text:"Kabayan langsung punya akal bulus untuk mengerjai mertuanya. \"Iteung! Ada tamu agung, Tuan Haji keluarga dekatmu. Cepat masak makanan enak, potong kambing!\" teriak Kabayan.",
+        hint:"chooseCut"
+      },
+      {
+        // 11
+        text:"\"Jangan, Iteung! Jangan! Itu kambing bapak satu-satunya!\" teriak si haji gadungan, tak tahan mendengar kambingnya akan disembelih. \"Eh... jadi ini Abah? Kenapa menyamar jadi haji, Abah?\" seru Iteung kaget.",
+        hint:"Ketuk 'Lanjut' untuk melanjutkan cerita"
+      },
+      {
+        // 12
+        text:"Tanpa menjawab, mertua Kabayan segera berlari pulang menahan malu. Ia dongkol dengan kelakuan menantunya, dan bersumpah suatu saat akan membalasnya.",
+        hint:"Ketuk 'Lanjut' untuk melihat akhir cerita"
+      }
+    ]
+  },
+  en: {
+    title:"Kabayan Disguises as a Haji",
+    coverBadge:"FOLKTALE · WEST JAVA",
+    coverTitle:"Kabayan Disguises as a Haji",
+    coverDesc:"Kabayan is hungry and bored of his wife Iteung's cooking. He hatches a cheeky plan: disguise himself as a haji so his father-in-law will serve him a delicious feast! Help Kabayan carry out his mischief to the very end.",
+    start:"▶ Start Story",
+    next:"Continue ▶",
+    replay:"↺ Replay Story",
+    endTitle:"Kabayan's Clever Trick",
+    endDesc:"Kabayan's father-in-law runs home in embarrassment, vowing to get his revenge one day. That's Kabayan for you — mischievous, but always good for a laugh.",
+    footer:"West Javanese Folktale · Caritasato",
+    tapDress:"Tap the robe, then tap the turban to dress Kabayan up",
+    tapWalk:"Tap the screen repeatedly to make Kabayan strut like a haji!",
+    tapEat:"Tap the plate again and again, help Kabayan eat his fill!",
+    tapHide:"Quick! Tap the robe to hide it before he's caught!",
+    tapDress2:"Tap the robe, then tap the turban to dress up the father-in-law",
+    tapReveal:"Tap the guest's face to study his features closely",
+    chooseCut:"Kabayan shouts out. Choose what he says:",
+    steps:[
+      {
+        text:"One morning, Kabayan's stomach growled with hunger. Bored of his wife Iteung's cooking, he was desperate for a truly delicious meal.",
+        hint:"Tap 'Continue' to proceed"
+      },
+      {
+        text:"Kabayan knew his father-in-law deeply respected haji pilgrims and always served fine food to one who visited. A mischievous idea struck him: disguise himself as a haji!",
+        hint:"tapDress"
+      },
+      {
+        text:"Kabayan put on a robe and turban, then strode confidently toward his father-in-law's house, imitating the manner of a haji.",
+        hint:"tapWalk"
+      },
+      {
+        text:"\"Praise be, Pak Haji! Please, come in — what an honor to have you visit our humble home,\" his father-in-law welcomed him warmly, and told his wife to prepare a delicious meal at once.",
+        hint:"Tap 'Continue' to proceed"
+      },
+      {
+        text:"Kabayan's eyes lit up at the sight of chicken and other tasty dishes on the table. He ate heartily until his stomach was full.",
+        hint:"tapEat"
+      },
+      {
+        text:"Once full, Kabayan quickly took his leave. Back home, he had to rush to hide the robe and turban before anyone grew suspicious!",
+        hint:"tapHide"
+      },
+      {
+        text:"But something felt off to his father-in-law. He recognized the guest's mannerisms all too well. At last it dawned on him: his own son-in-law had tricked him with a haji disguise!",
+        hint:"Tap 'Continue' to proceed"
+      },
+      {
+        text:"Furious and annoyed, the father-in-law wanted payback. The next day, he disguised himself as a haji too, and walked straight to Kabayan's house.",
+        hint:"tapDress2"
+      },
+      {
+        text:"Kabayan opened the door for his guest. His eyes went wide as he studied the visitor's face closely...",
+        hint:"tapReveal"
+      },
+      {
+        text:"Kabayan instantly hatched a clever trick to prank his father-in-law. \"Iteung! We have a noble guest, a Haji from your own family. Cook something delicious, slaughter the goat!\" Kabayan shouted.",
+        hint:"chooseCut"
+      },
+      {
+        text:"\"No, Iteung! Don't! That's my only goat!\" the fake haji blurted out, unable to bear hearing his goat would be slaughtered. \"Wait... Abah, is that you? Why are you disguised as a haji?\" Iteung cried in surprise.",
+        hint:"Tap 'Continue' to proceed"
+      },
+      {
+        text:"Without a word, Kabayan's father-in-law ran straight home in embarrassment. Furious at his son-in-law's antics, he vowed that one day he would get his revenge.",
+        hint:"Tap 'Continue' to see the ending"
+      }
+    ]
+  }
+};
+
+const DIALOG_OPTIONS = {
+  id:[
+    "\"Potong saja kambing ayah mertua yang diikat di pohon jambu belakang rumah!\"",
+    "\"Cepat, Iteung! Jangan sampai Tuan Haji menunggu terlalu lama!\""
+  ],
+  en:[
+    "\"Just slaughter the father-in-law's goat tied behind the house!\"",
+    "\"Hurry, Iteung! Don't keep the Haji waiting too long!\""
+  ]
+};
+
+// ---------- state ----------
+let lang = "id";
+let muted = false;
+let stepIndex = -1; // -1 = cover
+const TOTAL_STEPS = I18N.id.steps.length;
+let qteActive=false, qteCount=0, qteNeeded=14;
+let eatActive=false, eatCount=0, eatNeeded=12;
+let hideTimer=null, hideDone=false, hideFailed=false, hideTimeLeft=0;
+let dressState={item1:false,item2:false};
+let revealState={a:false,b:false};
+
+const params = new URLSearchParams(location.search);
+if(params.get('lang')==='en') lang='en';
+
+// ---------- DOM refs ----------
+const gameTitle=document.getElementById('gameTitle');
+const coverBadge=document.getElementById('coverBadge');
+const coverTitle=document.getElementById('coverTitle');
+const coverDesc=document.getElementById('coverDesc');
+const startBtn=document.getElementById('startBtn');
+const coverScreen=document.getElementById('coverScreen');
+const gameScreen=document.getElementById('gameScreen');
+const endScreen=document.getElementById('endScreen');
+const textbox=document.getElementById('textbox');
+const hint=document.getElementById('hint');
+const nextBtn=document.getElementById('nextBtn');
+const btnRow=document.getElementById('btnRow');
+const dotsEl=document.getElementById('dots');
+const endTitle=document.getElementById('endTitle');
+const endDesc=document.getElementById('endDesc');
+const replayBtn=document.getElementById('replayBtn');
+const footerCredit=document.getElementById('footerCredit');
+const muteBtn=document.getElementById('muteBtn');
+const langBtn=document.getElementById('langBtn');
+const langPop=document.getElementById('langPop');
+const overlayLayer=document.getElementById('overlayLayer');
+const qteLabel=document.getElementById('qteLabel');
+const progWrap=document.getElementById('progWrap');
+const progFill=document.getElementById('progFill');
+const dialogChoice=document.getElementById('dialogChoice');
+const canvas=document.getElementById('scene');
+const ctx=canvas.getContext('2d');
+
+// ---------- dots ----------
+function buildDots(){
+  dotsEl.innerHTML="";
+  for(let i=0;i<TOTAL_STEPS;i++){
+    const d=document.createElement('div');
+    d.className='dot';
+    d.id='dot'+i;
+    dotsEl.appendChild(d);
+  }
+}
+function updateDots(){
+  for(let i=0;i<TOTAL_STEPS;i++){
+    const d=document.getElementById('dot'+i);
+    if(!d) continue;
+    d.className='dot'+(i<stepIndex?' done':'')+(i===stepIndex?' now':'');
+  }
+}
+
+// ---------- speech ----------
+let voices=[];
+function loadVoices(){ voices=window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged=loadVoices;
+}
+function pickVoice(targetLang){
+  if(!voices || !voices.length) return null;
+  const code = targetLang==='en' ? 'en' : 'id';
+  let v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(code));
+  if(!v && code==='id') v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('ms'));
+  return v || null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if(muted) return;
+  const cleaned = text.replace(/["""]/g,'');
+  const utt = new SpeechSynthesisUtterance(cleaned);
+  utt.lang = lang==='en' ? 'en-US' : 'id-ID';
+  const v = pickVoice(lang);
+  if(v) utt.voice = v;
+  utt.rate = 0.95;
+  utt.pitch = 1.0;
+  window.speechSynthesis.speak(utt);
+}
+function stopSpeak(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+
+muteBtn.addEventListener('click',()=>{
+  muted=!muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('active',muted);
+  if(muted) stopSpeak();
+});
+
+langBtn.addEventListener('click',()=>{
+  langPop.classList.toggle('show');
+});
+document.addEventListener('click',(e)=>{
+  if(!langBtn.contains(e.target) && !langPop.contains(e.target)) langPop.classList.remove('show');
+});
+langPop.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    lang=b.getAttribute('data-lang');
+    langPop.classList.remove('show');
+    applyStaticText();
+    if(stepIndex===-1){ /* cover, nothing else */ }
+    else if(stepIndex>=TOTAL_STEPS){ renderEnd(); }
+    else { renderStep(false); }
+  });
+});
+
+// ---------- static text ----------
+function applyStaticText(){
+  const t=I18N[lang];
+  gameTitle.textContent=t.title;
+  coverBadge.textContent=t.coverBadge;
+  coverTitle.textContent=t.coverTitle;
+  coverDesc.textContent=t.coverDesc;
+  startBtn.textContent=t.start;
+  nextBtn.textContent=t.next;
+  replayBtn.textContent=t.replay;
+  endTitle.textContent=t.endTitle;
+  endDesc.textContent=t.endDesc;
+  footerCredit.textContent=t.footer;
+  document.title=t.title;
+  document.documentElement.lang=lang;
+}
+applyStaticText();
+buildDots();
+
+// ---------- resize messaging ----------
+function sendHeight(){
+  const h = document.getElementById('app').offsetHeight;
+  try{
+    window.parent.postMessage({type:'caritasatoResize', height:h}, '*');
+    window.parent.postMessage({caritasatoHeight:h}, '*');
+  }catch(e){}
+}
+window.addEventListener('load',sendHeight);
+window.addEventListener('resize',sendHeight);
+if(window.ResizeObserver){
+  new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+}
+setInterval(sendHeight,900);
+
+// ================= CANVAS DRAWING HELPERS =================
+function clear(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+function drawSky(groundColor){
+  const g = ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0,'#f9dfa0');
+  g.addColorStop(1,'#f2b563');
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // sun
+  ctx.fillStyle='rgba(255,244,214,0.9)';
+  ctx.beginPath(); ctx.arc(590,70,46,0,Math.PI*2); ctx.fill();
+  // clouds
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  drawCloud(120,60,1);
+  drawCloud(320,40,0.7);
+  // ground
+  ctx.fillStyle=groundColor||'#7a9e56';
+  ctx.beginPath();
+  ctx.moveTo(0,330);
+  ctx.quadraticCurveTo(350,300,700,335);
+  ctx.lineTo(700,420);
+  ctx.lineTo(0,420);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawCloud(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.beginPath();
+  ctx.arc(0,0,18,0,Math.PI*2);
+  ctx.arc(22,-8,22,0,Math.PI*2);
+  ctx.arc(46,0,16,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHouse(x,y,scale,doorOpen){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  // stilts
+  ctx.fillStyle='#5a3d22';
+  ctx.fillRect(-58,40,10,50);
+  ctx.fillRect(48,40,10,50);
+  // wall
+  ctx.fillStyle='#c99a5b';
+  ctx.fillRect(-70,-30,140,75);
+  // roof
+  ctx.fillStyle='#7a4a26';
+  ctx.beginPath();
+  ctx.moveTo(-88,-30);
+  ctx.lineTo(0,-92);
+  ctx.lineTo(88,-30);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle='#5f3719';
+  ctx.beginPath();
+  ctx.moveTo(-88,-30); ctx.lineTo(88,-30); ctx.lineTo(78,-22); ctx.lineTo(-78,-22);
+  ctx.closePath(); ctx.fill();
+  // door
+  ctx.fillStyle= doorOpen ? '#2c1c10' : '#8a5a2f';
+  ctx.fillRect(-16,5,32,40);
+  // window
+  ctx.fillStyle='#3a5c78';
+  ctx.fillRect(-52,-10,22,22);
+  ctx.fillRect(30,-10,22,22);
+  ctx.restore();
+}
+
+function drawTree(x,y,scale){
+  scale=scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle='#6b4423';
+  ctx.fillRect(-6,-10,12,60);
+  ctx.fillStyle='#4f7a3a';
+  ctx.beginPath(); ctx.arc(0,-40,34,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-22,-20,22,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(22,-20,22,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawGoat(x,y,scale){
+  scale=scale||1;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle='#eee7d8';
+  ctx.beginPath(); ctx.ellipse(0,0,26,16,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(28,-6,12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#3a2a1c';
+  ctx.beginPath(); ctx.arc(33,-9,2,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#eee7d8'; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.moveTo(-14,12); ctx.lineTo(-14,28); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(14,12); ctx.lineTo(14,28); ctx.stroke();
+  // rope
+  ctx.strokeStyle='#8a5a34'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(-20,-4); ctx.lineTo(-60,-40); ctx.stroke();
+  ctx.restore();
+}
+
+// person: options {robe, turban, blush, mouthOpen, pesekNose, ompongTeeth, faceDir, armsUp, bald}
+function drawPerson(x,y,scale,opts){
+  opts = opts||{};
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  const skin='#d9a06b';
+  // legs / sarong base
+  ctx.fillStyle = opts.robe ? '#f5efe0' : '#3a5c78';
+  ctx.beginPath();
+  ctx.moveTo(-20,20); ctx.lineTo(20,20); ctx.lineTo(26,85); ctx.lineTo(-26,85);
+  ctx.closePath(); ctx.fill();
+  // body/shirt
+  ctx.fillStyle = opts.robe ? '#fbf6ea' : '#a83232';
+  ctx.beginPath();
+  ctx.moveTo(-22,-30); ctx.lineTo(22,-30); ctx.lineTo(20,22); ctx.lineTo(-20,22);
+  ctx.closePath(); ctx.fill();
+  // arms
+  ctx.strokeStyle = opts.robe ? '#fbf6ea' : '#a83232';
+  ctx.lineWidth=14; ctx.lineCap='round';
+  if(opts.armsUp){
+    ctx.beginPath(); ctx.moveTo(-18,-22); ctx.lineTo(-40,-55); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(18,-22); ctx.lineTo(40,-55); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-18,-20); ctx.lineTo(-30,15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(18,-20); ctx.lineTo(30,15); ctx.stroke();
+  }
+  // hands
+  ctx.fillStyle=skin;
+  if(opts.armsUp){
+    ctx.beginPath(); ctx.arc(-40,-58,8,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(40,-58,8,0,Math.PI*2); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(-30,18,8,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(30,18,8,0,Math.PI*2); ctx.fill();
+  }
+  // neck
+  ctx.fillStyle=skin;
+  ctx.fillRect(-8,-38,16,12);
+  // head
+  ctx.beginPath(); ctx.arc(0,-56,26,0,Math.PI*2); ctx.fill();
+  // ears
+  ctx.beginPath(); ctx.arc(-25,-56,5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(25,-56,5,0,Math.PI*2); ctx.fill();
+
+  // nose
+  ctx.fillStyle='#c98d58';
+  if(opts.pesekNose){
+    ctx.beginPath(); ctx.ellipse(0,-50,7,4,0,0,Math.PI*2); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-3,-58); ctx.lineTo(-5,-46); ctx.lineTo(5,-46); ctx.closePath(); ctx.fill();
+  }
+  // eyes
+  ctx.fillStyle='#2c1c10';
+  ctx.beginPath(); ctx.arc(-9,-60,2.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-60,2.6,0,Math.PI*2); ctx.fill();
+  // eyebrows
+  ctx.strokeStyle='#2c1c10'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(-14,-66); ctx.lineTo(-4,-64); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(4,-64); ctx.lineTo(14,-66); ctx.stroke();
+  // blush
+  if(opts.blush){
+    ctx.fillStyle='rgba(200,80,80,0.35)';
+    ctx.beginPath(); ctx.arc(-16,-48,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16,-48,5,0,Math.PI*2); ctx.fill();
+  }
+  // mouth
+  ctx.strokeStyle='#5c2c1c'; ctx.lineWidth=2.4; ctx.lineCap='round';
+  if(opts.mouthOpen){
+    ctx.fillStyle= opts.ompongTeeth ? '#7a4a30' : '#5c2c1c';
+    ctx.beginPath(); ctx.ellipse(0,-42,7,6,0,0,Math.PI*2); ctx.fill();
+    if(!opts.ompongTeeth){
+      ctx.fillStyle='#fff';
+      ctx.fillRect(-5,-46,10,3);
+    }
+  } else {
+    ctx.beginPath(); ctx.moveTo(-8,-42); ctx.quadraticCurveTo(0,-36,8,-42); ctx.stroke();
+  }
+  // moustache
+  if(opts.mustache){
+    ctx.fillStyle='#2c1c10';
+    ctx.beginPath();
+    ctx.ellipse(-6,-47,6,2.4,0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(6,-47,6,2.4,-0.3,0,Math.PI*2); ctx.fill();
+  }
+
+  // hair (if not turban/peci)
+  if(!opts.turban && !opts.peci && !opts.bald){
+    ctx.fillStyle='#2c1c10';
+    ctx.beginPath(); ctx.arc(0,-64,25,Math.PI,Math.PI*2); ctx.fill();
+  }
+  if(opts.bald){
+    ctx.strokeStyle='#8a6a4a'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(0,-70,20,0.2,Math.PI-0.2); ctx.stroke();
+  }
+
+  // peci (kopiah) — dark cap, worn under turban or alone
+  if(opts.peci){
+    ctx.fillStyle='#2c2418';
+    ctx.beginPath();
+    ctx.moveTo(-22,-72); ctx.lineTo(22,-72); ctx.lineTo(20,-84); ctx.lineTo(-20,-84);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // turban
+  if(opts.turban){
+    ctx.fillStyle='#f5efe0';
+    ctx.beginPath(); ctx.ellipse(0,-78,25,15,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-6,-86,17,11,0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(8,-84,15,10,-0.2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#d8cfb8'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(-20,-76); ctx.lineTo(20,-80); ctx.stroke();
+    // tail
+    ctx.fillStyle='#f5efe0';
+    ctx.beginPath();
+    ctx.moveTo(20,-72); ctx.lineTo(34,-50); ctx.lineTo(26,-48); ctx.lineTo(14,-68);
+    ctx.closePath(); ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawTable(x,y,scale,foodLevel){
+  scale=scale||1;
+  foodLevel = foodLevel===undefined?1:foodLevel;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle='#7a4a26';
+  ctx.fillRect(-70,0,140,14);
+  ctx.fillRect(-60,14,10,34);
+  ctx.fillRect(50,14,10,34);
+  // plates
+  const plates=[[-38,-6],[0,-10],[38,-6]];
+  plates.forEach((p,i)=>{
+    ctx.fillStyle='#fbf1de';
+    ctx.beginPath(); ctx.ellipse(p[0],p[1],16,7,0,0,Math.PI*2); ctx.fill();
+    if(foodLevel>i/3){
+      ctx.fillStyle = i===0 ? '#c9862f' : (i===1? '#a83232':'#7a9e3a');
+      ctx.beginPath(); ctx.ellipse(p[0],p[1]-2,10,4.5,0,0,Math.PI*2); ctx.fill();
+    }
+  });
+  ctx.restore();
+}
+
+function drawGarment(x,y,label,taken,scale){
+  scale=scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.globalAlpha = taken? 0.25:1;
+  if(label==='robe'){
+    ctx.fillStyle='#f5efe0';
+    ctx.beginPath();
+    ctx.moveTo(-22,-30); ctx.lineTo(22,-30); ctx.lineTo(28,40); ctx.lineTo(-28,40);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#d8cfb8'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,-30); ctx.lineTo(0,40); ctx.stroke();
+  } else {
+    ctx.fillStyle='#f5efe0';
+    ctx.beginPath(); ctx.ellipse(0,0,26,15,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-8,-9,18,11,0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9,-7,16,10,-0.2,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ================= SCENE RENDER PER STEP =================
+function renderScene(){
+  clear();
+  drawSky();
+  switch(stepIndex){
+    case 0:
+      drawTree(70,300,1);
+      drawHouse(500,270,0.9,false);
+      drawPerson(280,340,1.15,{armsUp:false});
+      break;
+    case 1:
+      drawHouse(560,260,0.75,false);
+      drawTree(80,290,0.9);
+      drawPerson(280,340,1.2,{});
+      if(!dressState.item1) drawGarment(150,300,'robe',false,0.75);
+      if(!dressState.item2) drawGarment(430,300,'turban',false,0.9);
+      drawPerson(280,340,1.2,{robe:dressState.item1, turban:dressState.item2, blush:true});
+      break;
+    case 2:
+      drawTree(70,300,0.8);
+      drawHouse(600,255,0.6,false);
+      drawPerson(walkX,340,1.15,{robe:true,turban:true,armsUp:(qteCount%2===0)});
+      break;
+    case 3:
+      drawHouse(350,260,1.15,true);
+      drawPerson(220,350,1.0,{robe:false,peci:true,mustache:true,blush:true,armsUp:true});
+      drawPerson(470,350,0.95,{robe:true,turban:true});
+      break;
+    case 4:
+      drawHouse(560,250,0.65,true);
+      drawTable(300,320,1.15,1-Math.min(1,eatCount/eatNeeded));
+      drawPerson(300,260,1.0,{robe:true,turban:true,mouthOpen:(eatCount%2===0),blush:true});
+      break;
+    case 5:
+      drawHouse(350,255,1.2,false);
+      if(!hideDone){
+        drawGarment(500,300,'robe',false,0.85);
+      }
+      drawPerson(230,350,1.05,{robe:!hideDone, turban:false, blush:true});
+      break;
+    case 6:
+      drawHouse(500,255,0.9,false);
+      drawPerson(230,340,1.05,{peci:true,mustache:true,blush:false});
+      break;
+    case 7:
+      drawTree(600,290,0.8);
+      drawHouse(350,260,0.9,false);
+      drawPerson(280,340,1.15,{});
+      if(!dressState.item1) drawGarment(150,300,'robe',false,0.75);
+      if(!dressState.item2) drawGarment(430,300,'turban',false,0.9);
+      drawPerson(280,340,1.15,{robe:dressState.item1, turban:dressState.item2, mustache:true});
+      break;
+    case 8:
+      drawHouse(500,260,0.85,true);
+      drawPerson(300,345,1.2,{robe:true,turban:true,pesekNose:!revealState.a, ompongTeeth:!revealState.b, mouthOpen:true, mustache:true});
+      break;
+    case 9:
+      drawHouse(560,250,0.65,true);
+      drawGoat(120,360,1.1);
+      drawPerson(300,340,1.05,{peci:true,armsUp:true,mouthOpen:true});
+      drawPerson(460,345,0.9,{});
+      break;
+    case 10:
+      drawGoat(120,360,1.1);
+      drawPerson(300,340,1.05,{robe:true,turban:true,mouthOpen:true,armsUp:true});
+      drawPerson(470,340,1.0,{peci:false,blush:true});
+      break;
+    case 11:
+      drawHouse(180,260,0.75,true);
+      drawTree(600,300,0.9);
+      drawPerson(430,340,1.05,{robe:true,turban:true,armsUp:true,mouthOpen:true});
+      break;
+  }
+  ctx.font='11px sans-serif';
+}
+
+let walkX=220;
+
+// ================= OVERLAY HITBOXES =================
+function clearOverlay(){ overlayLayer.innerHTML=""; }
+function addHit(xPct,yPct,wPct,hPct,onClick){
+  const d=document.createElement('div');
+  d.className='hit';
+  d.style.left=xPct+'%'; d.style.top=yPct+'%';
+  d.style.width=wPct+'%'; d.style.height=hPct+'%';
+  d.addEventListener('click',onClick);
+  overlayLayer.appendChild(d);
+  return d;
+}
+
+// ================= STEP LOGIC =================
+function renderStep(doSpeak){
+  clearOverlay();
+  qteActive=false; eatActive=false;
+  qteLabel.style.display='none';
+  progWrap.style.display='none';
+  dialogChoice.style.display='none';
+  hint.textContent='';
+  btnRow.style.display='flex';
+  nextBtn.style.display='inline-block';
+  nextBtn.disabled=false;
+
+  const step = I18N[lang].steps[stepIndex];
+  textbox.textContent = step.text;
+  updateDots();
+  renderScene();
+
+  const hintKey = step.hint;
+  if(hintKey==='tapDress' || hintKey==='tapDress2'){
+    hint.textContent = I18N[lang][hintKey];
+    nextBtn.style.display='none';
+    setupDressUp();
+  } else if(hintKey==='tapWalk'){
+    hint.textContent = I18N[lang].tapWalk;
+    nextBtn.style.display='none';
+    setupWalkQTE();
+  } else if(hintKey==='tapEat'){
+    hint.textContent = I18N[lang].tapEat;
+    nextBtn.style.display='none';
+    setupEatQTE();
+  } else if(hintKey==='tapHide'){
+    hint.textContent = I18N[lang].tapHide;
+    nextBtn.style.display='none';
+    setupHideTiming();
+  } else if(hintKey==='tapReveal'){
+    hint.textContent = I18N[lang].tapReveal;
+    nextBtn.style.display='none';
+    setupReveal();
+  } else if(hintKey==='chooseCut'){
+    hint.textContent='';
+    nextBtn.style.display='none';
+    setupDialogChoice();
+  } else {
+    hint.textContent = step.hint;
+  }
+
+  if(doSpeak!==false) speak(step.text);
+  sendHeight();
+}
+
+function goNext(){
+  stopSpeak();
+  stepIndex++;
+  if(stepIndex>=TOTAL_STEPS){
+    renderEnd();
+  } else {
+    renderStep(true);
+  }
+}
+nextBtn.addEventListener('click',goNext);
+
+// ---- Dress up (works for both Kabayan step1 and mertua step7) ----
+function setupDressUp(){
+  dressState={item1:false,item2:false};
+  renderScene();
+  placeDressHits();
+}
+function placeDressHits(){
+  clearOverlay();
+  if(!dressState.item1){
+    addHit(18,68,14,16,()=>{ dressState.item1=true; renderScene(); placeDressHits(); checkDressDone(); });
+  }
+  if(!dressState.item2){
+    addHit(56,68,14,16,()=>{ dressState.item2=true; renderScene(); placeDressHits(); checkDressDone(); });
+  }
+}
+function checkDressDone(){
+  if(dressState.item1 && dressState.item2){
+    setTimeout(()=>{ clearOverlay(); btnRow.style.display='flex'; nextBtn.style.display='inline-block'; hint.textContent=''; },350);
+  }
+}
+
+// ---- Walk QTE ----
+function setupWalkQTE(){
+  qteActive=true; qteCount=0; walkX=220;
+  qteLabel.style.display='block';
+  progWrap.style.display='block';
+  qteLabel.textContent = lang==='id' ? 'Semangat!' : 'Keep going!';
+  progFill.style.width='0%';
+  clearOverlay();
+  addHit(0,0,100,100,()=>{
+    if(!qteActive) return;
+    qteCount++;
+    walkX = 220 + (qteCount/qteNeeded)*230;
+    progFill.style.width = Math.min(100,(qteCount/qteNeeded)*100)+'%';
+    renderScene();
+    if(qteCount>=qteNeeded){
+      qteActive=false;
+      qteLabel.textContent = lang==='id' ? 'Sampai!' : 'Arrived!';
+      clearOverlay();
+      setTimeout(()=>{ btnRow.style.display='flex'; nextBtn.style.display='inline-block'; hint.textContent=''; qteLabel.style.display='none'; progWrap.style.display='none'; },500);
+    }
+  });
+}
+
+// ---- Eat QTE ----
+function bindEatHit(){
+  clearOverlay();
+  addHit(30,55,40,35,handleEatTap);
+}
+function handleEatTap(){
+  if(!eatActive) return;
+  eatCount++;
+  progFill.style.width = Math.min(100,(eatCount/eatNeeded)*100)+'%';
+  renderScene();
+  if(eatCount>=eatNeeded){
+    eatActive=false;
+    qteLabel.textContent = lang==='id' ? 'Kenyang!' : 'Full!';
+    clearOverlay();
+    setTimeout(()=>{ btnRow.style.display='flex'; nextBtn.style.display='inline-block'; hint.textContent=''; qteLabel.style.display='none'; progWrap.style.display='none'; },500);
+  } else {
+    bindEatHit();
+  }
+}
+// override setupEatQTE to use robust binder
+function setupEatQTE(){
+  eatActive=true; eatCount=0;
+  qteLabel.style.display='block';
+  progWrap.style.display='block';
+  qteLabel.textContent = lang==='id' ? 'Nyam nyam!' : 'Yum yum!';
+  progFill.style.width='0%';
+  renderScene();
+  bindEatHit();
+}
+
+// ---- Hide timing ----
+function setupHideTiming(){
+  hideDone=false; hideFailed=false; hideTimeLeft=3.5;
+  qteLabel.style.display='block';
+  progWrap.style.display='block';
+  progFill.style.width='100%';
+  qteLabel.textContent = lang==='id' ? 'Waktu terbatas!' : 'Time is short!';
+  clearOverlay();
+  addHit(55,55,30,35,()=>{
+    if(hideDone||hideFailed) return;
+    hideDone=true;
+    clearInterval(hideTimer);
+    renderScene();
+    qteLabel.textContent = lang==='id' ? 'Berhasil sembunyi!' : 'Hidden just in time!';
+    clearOverlay();
+    setTimeout(()=>{ btnRow.style.display='flex'; nextBtn.style.display='inline-block'; hint.textContent=''; qteLabel.style.display='none'; progWrap.style.display='none'; },500);
+  });
+  hideTimer = setInterval(()=>{
+    hideTimeLeft -= 0.1;
+    progFill.style.width = Math.max(0,(hideTimeLeft/3.5)*100)+'%';
+    if(hideTimeLeft<=0 && !hideDone){
+      hideFailed=true;
+      clearInterval(hideTimer);
+      hideDone=true; // reveal anyway, story continues
+      renderScene();
+      qteLabel.textContent = lang==='id' ? 'Hampir ketahuan!' : 'Almost caught!';
+      clearOverlay();
+      setTimeout(()=>{ btnRow.style.display='flex'; nextBtn.style.display='inline-block'; hint.textContent=''; qteLabel.style.display='none'; progWrap.style.display='none'; },600);
+    }
+  },100);
+}
+
+// ---- Reveal click (identify face features) ----
+function setupReveal(){
+  revealState={a:false,b:false};
+  renderScene();
+  placeRevealHits();
+}
+function placeRevealHits(){
+  clearOverlay();
+  if(!revealState.a){
+    addHit(60,72,10,8,()=>{ revealState.a=true; renderScene(); placeRevealHits(); checkRevealDone(); });
+  }
+  if(!revealState.b){
+    addHit(58,80,10,8,()=>{ revealState.b=true; renderScene(); placeRevealHits(); checkRevealDone(); });
+  }
+}
+function checkRevealDone(){
+  if(revealState.a && revealState.b){
+    clearOverlay();
+    setTimeout(()=>{ btnRow.style.display='flex'; nextBtn.style.display='inline-block'; hint.textContent=''; },350);
+  }
+}
+
+// ---- Dialog choice ----
+function setupDialogChoice(){
+  dialogChoice.style.display='flex';
+  dialogChoice.innerHTML='';
+  const label=document.createElement('div');
+  label.style.fontWeight='700';
+  label.style.fontSize='13px';
+  label.style.color='var(--earth-dark)';
+  label.textContent = I18N[lang].chooseCut;
+  dialogChoice.appendChild(label);
+  DIALOG_OPTIONS[lang].forEach((opt)=>{
+    const b=document.createElement('button');
+    b.textContent=opt;
+    b.addEventListener('click',()=>{
+      dialogChoice.style.display='none';
+      btnRow.style.display='flex';
+      nextBtn.style.display='inline-block';
+      speak(opt.replace(/["""]/g,''));
+    });
+    dialogChoice.appendChild(b);
+  });
+}
+
+// ---------- start / end / replay ----------
+function startGame(){
+  coverScreen.style.display='none';
+  endScreen.style.display='none';
+  gameScreen.style.display='block';
+  buildDots();
+  stepIndex=0;
+  renderStep(true);
+}
+startBtn.addEventListener('click',startGame);
+
+function renderEnd(){
+  stopSpeak();
+  gameScreen.style.display='none';
+  endScreen.style.display='block';
+  applyStaticText();
+  sendHeight();
+  speak(I18N[lang].endDesc);
+}
+replayBtn.addEventListener('click',()=>{
+  endScreen.style.display='none';
+  coverScreen.style.display='block';
+  stepIndex=-1;
+  applyStaticText();
+  sendHeight();
+});
+
+// initial paint of canvas (cover background feel not needed, canvas hidden until game starts)
+sendHeight();
+
+})();
+</script>
+</body>
+</html>
