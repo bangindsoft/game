@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Ayam Hutan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;1,9..144,500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-dark:#1b130c;
+    --bg-panel:#241a10;
+    --panel-line:#3a2c1c;
+    --comb:#d1492f;
+    --comb-dark:#a83a25;
+    --gold:#e8b34f;
+    --gold-soft:#f0cf8a;
+    --forest:#4a6b3e;
+    --forest-dark:#233d1f;
+    --forest-deep:#152a13;
+    --cream:#f5ead2;
+    --muted:#c2a878;
+    --success:#7fae5c;
+    --sky-top:#3a2a3d;
+    --sky-bottom:#e8955a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:transparent;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,var(--bg-dark) 0%,#150f09 100%);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.45);
+    position:relative;
+    border:1px solid var(--panel-line);
+  }
+  /* top bar */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--panel-line);
+  }
+  .brand{
+    font-family:'Fraunces',serif;
+    font-weight:650;
+    font-size:15px;
+    color:var(--gold-soft);
+    letter-spacing:.02em;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .brand svg{flex:none;}
+  .topbar-actions{display:flex;gap:8px;}
+  .icon-btn{
+    background:#2c2013;
+    border:1px solid var(--panel-line);
+    color:var(--cream);
+    width:34px;height:34px;
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:background .15s, transform .15s;
+    font-size:15px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    padding:0;
+  }
+  .icon-btn:hover{background:#3a2b17;}
+  .icon-btn:active{transform:scale(.94);}
+  .icon-btn.lang{width:auto;padding:0 12px;font-size:12.5px;letter-spacing:.03em;}
+  .icon-btn[aria-pressed="true"]{border-color:var(--comb);color:var(--gold-soft);}
+
+  /* stage */
+  .stage-wrap{position:relative;width:100%;background:var(--forest-deep);}
+  canvas#scene{display:block;width:100%;height:auto;}
+
+  .caption-bubble{
+    position:absolute;
+    left:10px;right:10px;bottom:10px;
+    background:rgba(20,14,8,.82);
+    backdrop-filter:blur(2px);
+    border:1px solid rgba(232,179,79,.35);
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:14.5px;
+    line-height:1.5;
+    color:var(--cream);
+    min-height:20px;
+  }
+  .caption-bubble .who{
+    display:block;
+    font-family:'Fraunces',serif;
+    font-weight:650;
+    color:var(--gold-soft);
+    font-size:12.5px;
+    margin-bottom:3px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+  }
+
+  /* control panel below stage */
+  .panel{
+    padding:16px 18px 18px;
+  }
+  h1.story-title{
+    font-family:'Fraunces',serif;
+    font-weight:650;
+    font-size:20px;
+    margin:0 0 6px;
+    color:var(--gold-soft);
+  }
+  p.story-sub{
+    margin:0 0 14px;
+    font-size:13.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  .dots{
+    display:flex;
+    gap:7px;
+    justify-content:center;
+    margin:14px 0 16px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#4a3a24;
+    transition:all .25s;
+  }
+  .dot.active{background:var(--comb);width:22px;border-radius:5px;}
+  .dot.done{background:var(--gold);}
+
+  .controls-row{
+    display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;
+  }
+  button.btn{
+    font-family:'Nunito',sans-serif;
+    font-weight:800;
+    font-size:14.5px;
+    padding:12px 22px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+    background:var(--comb);
+    color:#fff8ee;
+    transition:transform .15s, background .15s, box-shadow .15s;
+    box-shadow:0 3px 0 var(--comb-dark);
+  }
+  button.btn:hover{background:#e05539;}
+  button.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--comb-dark);}
+  button.btn.secondary{
+    background:transparent;
+    color:var(--gold-soft);
+    border:1.5px solid var(--panel-line);
+    box-shadow:none;
+  }
+  button.btn.secondary:hover{border-color:var(--gold);}
+  button.btn.forest{background:var(--forest);box-shadow:0 3px 0 var(--forest-dark);}
+  button.btn.forest:hover{background:#557548;}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none;}
+
+  .choice-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+
+  .forage-counter{
+    text-align:center;
+    font-family:'Fraunces',serif;
+    font-weight:650;
+    color:var(--gold-soft);
+    font-size:14px;
+    margin-top:8px;
+  }
+
+  footer.credit{
+    text-align:center;
+    font-size:11px;
+    color:#6b5a3f;
+    padding:8px 10px 14px;
+    letter-spacing:.02em;
+  }
+
+  /* cover + end screens */
+  .cover, .ending{
+    position:relative;
+    text-align:center;
+  }
+  .cover h1, .ending h1{
+    font-family:'Fraunces',serif;
+    font-size:26px;
+    font-weight:650;
+    margin:14px 0 6px;
+    color:var(--gold-soft);
+  }
+  .cover p, .ending p{
+    color:var(--muted);
+    font-size:14px;
+    max-width:440px;
+    margin:0 auto 18px;
+    line-height:1.6;
+  }
+  .moral{
+    background:rgba(74,107,62,.18);
+    border:1px solid rgba(127,174,92,.35);
+    border-radius:12px;
+    padding:12px 16px;
+    font-size:13.5px;
+    color:var(--cream);
+    margin:0 auto 18px;
+    max-width:440px;
+    line-height:1.55;
+  }
+  .moral b{color:var(--gold-soft);}
+
+  @media (max-width:420px){
+    h1.story-title{font-size:18px;}
+    .cover h1, .ending h1{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3c-3 0-4 2-4 4 0 1.3.5 2.2 1.2 3.1C6.6 11 4 13.4 4 17c0 2.2 1.8 4 4 4h8c2.2 0 4-1.8 4-4 0-3.6-2.6-6-5.2-6.9.7-.9 1.2-1.8 1.2-3.1 0-2-1-4-4-4z" fill="#e8b34f"/><path d="M14 5.5c1 .3 1.6 1.2 1.6 2.3" stroke="#d1492f" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <span data-i18n="brand">Asal Mula Ayam Hutan</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn lang" id="langBtn" title="Ganti bahasa / Change language">EN</button>
+      <button class="icon-btn" id="muteBtn" title="Mute / unmute narasi">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="scene" width="700" height="420"></canvas>
+    <div class="caption-bubble" id="captionBubble" style="display:none;">
+      <span class="who" id="captionWho"></span>
+      <span id="captionText"></span>
+    </div>
+  </div>
+
+  <div class="panel" id="panel">
+    <!-- dynamic content injected here -->
+  </div>
+
+  <footer class="credit" data-i18n="footer">Cerita rakyat Jawa Timur • diceritakan ulang secara interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     I18N STRINGS
+  --------------------------------------------------------- */
+  const STR = {
+    id: {
+      brand: "Asal Mula Ayam Hutan",
+      footer: "Cerita rakyat Jawa Timur • diceritakan ulang secara interaktif",
+      cover: {
+        title: "Asal Mula Ayam Hutan",
+        sub: "Sebuah cerita rakyat dari Jawa Timur, tentang seekor induk ayam dan keputusan besar keluarganya untuk hidup bebas di hutan.",
+        start: "Mulai Cerita"
+      },
+      steps: [
+        {
+          title: "Kampung yang Damai",
+          who: "Narator",
+          text: "Sudah sejak zaman dahulu, ayam hidup berdampingan dengan manusia di sebuah perkampungan. Di sana tinggal seekor ayam betina bersama anak-anaknya yang banyak sekali. Namun semua anaknya adalah ayam jantan.",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Ibu yang Bersedih",
+          who: "Narator",
+          text: "Meski memiliki begitu banyak anak yang tampan, si ayam betina selalu tampak sedih. Anak-anaknya merasa heran. Ketuk salah satu anak ayam untuk mendengar pertanyaan mereka.",
+          tapHint: "Ketuk anak ayam",
+          bubble: "\u201cBu, mengapa Ibu selalu bersedih hati? Bukankah Ibu senang memiliki kami?\u201d",
+          bubbleWho: "Anak Ayam",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Nasib Ayam Aduan",
+          who: "Induk Ayam",
+          text: "\u201cAku sayang kalian semua. Tapi kelak jika kalian tumbuh dewasa dan rupawan, manusia akan menjadikan kalian ayam aduan. Taji kalian akan dipasangi mata pisau tajam, untuk diadu sampai salah satu mati.\u201d",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Nasib Ayam Potong",
+          who: "Induk Ayam",
+          text: "\u201cLalu bagaimana dengan yang tidak rupawan, Bu?\u201d tanya salah satu anaknya. Sang ibu menghela napas, \u201cMereka akan dijadikan ayam potong, untuk disembelih sebagai makanan. Begitulah manusia, anak-anakku. Saat mereka bersuka-cita, kitalah yang menjadi santapan.\u201d",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Sebuah Usul",
+          who: "Anak Ayam",
+          text: "\u201cTidak enak ikut manusia, Bu. Mereka serakah dan hanya mementingkan diri sendiri. Bagaimana kalau kita lari saja ke hutan, menjauh dari perkampungan?\u201d",
+          isChoice: true,
+          choiceA: "Lari ke Hutan",
+          choiceB: "Tetap di Kampung",
+          stayReply: "\u201cTapi anakku, jika kita tetap di sini, nasib kalian akan seperti yang tadi Ibu ceritakan\u2026\u201d Induk ayam mengingatkan kembali. Anak-anaknya pun berpikir ulang.",
+          stayReplyWho: "Induk Ayam",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Kekhawatiran",
+          who: "Anak Ayam",
+          text: "\u201cTapi Bu, kalau kita ke hutan, nanti kita makan apa? Selama ini manusialah yang selalu memberi kita makanan,\u201d kata salah satu anak ayam cemas. \u201cKita cari sendiri saja,\u201d jawab yang lain. \u201cDi hutan banyak makanan, asal kita mau bersusah payah mencarinya. Walau sedikit, yang penting bebas dari manusia.\u201d",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Mencari Makan di Hutan",
+          who: "Narator",
+          text: "Induk ayam pun setuju, dan mereka semua berlari menuju hutan. Di sana mereka harus belajar mencari makan sendiri. Bantu keluarga ayam ini mematuk biji-bijian dan serangga yang tersebar di tanah hutan!",
+          minigame: true,
+          target: 8,
+          progress: "Terkumpul: {n} / {t}",
+          success: "Keluarga ayam berhasil menemukan cukup makanan hari itu!",
+          next: "Lanjutkan"
+        },
+        {
+          title: "Asal Mula Ayam Hutan",
+          who: "Narator",
+          text: "Sejak saat itu, keluarga ayam tadi hidup bebas di hutan, jauh dari kesewenang-wenangan manusia. Merekalah nenek moyang ayam hutan. Meski kini jumlah ayam hutan semakin sedikit karena semakin banyak hutan berubah menjadi perkampungan, kisah mereka tetap dikenang sebagai asal mula ayam hutan dari Jawa Timur.",
+          next: "Lihat Pesan Cerita"
+        }
+      ],
+      ending: {
+        title: "Tamat",
+        sub: "Asal Mula Ayam Hutan — Cerita Rakyat Jawa Timur",
+        moralLabel: "Pesan Cerita",
+        moral: "Kebebasan kadang berarti berani meninggalkan zona nyaman dan berjuang mencari jalan sendiri, walau harus bersusah payah.",
+        replay: "Ulangi Cerita"
+      }
+    },
+    en: {
+      brand: "Origin of the Jungle Fowl",
+      footer: "East Javanese folktale • retold as an interactive story",
+      cover: {
+        title: "Origin of the Jungle Fowl",
+        sub: "A folktale from East Java, about a mother hen and her family's big decision to live free in the forest.",
+        start: "Start Story"
+      },
+      steps: [
+        {
+          title: "A Peaceful Village",
+          who: "Narrator",
+          text: "Since ancient times, chickens have lived side by side with humans in a small village. There lived a hen with many children, but every single one of them was a rooster.",
+          next: "Continue"
+        },
+        {
+          title: "A Sorrowful Mother",
+          who: "Narrator",
+          text: "Even with so many handsome sons, the hen always looked sad. Her children were puzzled. Tap one of the chicks to hear what they ask.",
+          tapHint: "Tap a chick",
+          bubble: "\u201cMother, why are you always so sad? Aren't you happy to have us?\u201d",
+          bubbleWho: "The Chicks",
+          next: "Continue"
+        },
+        {
+          title: "The Fate of Fighting Cocks",
+          who: "The Hen",
+          text: "\u201cI love you all dearly. But when you grow up handsome, humans will turn you into fighting cocks. Sharp blades will be tied to your spurs, and you'll be forced to fight until one of you dies.\u201d",
+          next: "Continue"
+        },
+        {
+          title: "The Fate of the Others",
+          who: "The Hen",
+          text: "\u201cWhat about the ones who aren't so handsome, Mother?\u201d one son asked. The hen sighed, \u201cThey'll become food, taken for the table. That is how humans are, my children. When they celebrate, it is us who become the feast.\u201d",
+          next: "Continue"
+        },
+        {
+          title: "A Proposal",
+          who: "One of the Chicks",
+          text: "\u201cIt's not good living with humans, Mother. They are greedy and only think of themselves. What if we just run away to the forest, far from the village?\u201d",
+          isChoice: true,
+          choiceA: "Flee to the Forest",
+          choiceB: "Stay in the Village",
+          stayReply: "\u201cBut my child, if we stay here, your fate will be just as I described\u2026\u201d the hen reminded them again. Her children thought it over once more.",
+          stayReplyWho: "The Hen",
+          next: "Continue"
+        },
+        {
+          title: "A Worry",
+          who: "One of the Chicks",
+          text: "\u201cBut Mother, if we go to the forest, what will we eat? All this time it's humans who have fed us,\u201d one chick worried. \u201cWe'll find our own,\u201d another answered. \u201cThere's plenty of food in the forest if we're willing to search for it. Even if it's little, at least we'll be free from humans.\u201d",
+          next: "Continue"
+        },
+        {
+          title: "Foraging in the Forest",
+          who: "Narrator",
+          text: "The hen agreed, and together they ran into the forest. There, they had to learn to forage for themselves. Help this chicken family peck for seeds and insects scattered across the forest floor!",
+          minigame: true,
+          target: 8,
+          progress: "Collected: {n} / {t}",
+          success: "The chicken family found enough food for the day!",
+          next: "Continue"
+        },
+        {
+          title: "Origin of the Jungle Fowl",
+          who: "Narrator",
+          text: "From that day on, the chicken family lived freely in the forest, far from human control. They became the ancestors of the jungle fowl. Though jungle fowl are fewer today, as more forests turn into villages, their story lives on as the origin of the jungle fowl from East Java.",
+          next: "See the Story's Message"
+        }
+      ],
+      ending: {
+        title: "The End",
+        sub: "Origin of the Jungle Fowl — an East Javanese Folktale",
+        moralLabel: "Moral of the Story",
+        moral: "Freedom sometimes means daring to leave your comfort zone and working hard to find your own path, however difficult.",
+        replay: "Replay Story"
+      }
+    }
+  };
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  const params = new URLSearchParams(location.search);
+  let lang = (params.get('lang') === 'en') ? 'en' : 'id';
+  let muted = false;
+  let step = -1; // -1 = cover, 0..7 = steps, 8 = ending
+  let chickTapped = false;
+  let stayCount = 0;
+  let forageItems = [];
+  let forageCollected = 0;
+  const FORAGE_TARGET = 8;
+  let animId = null;
+  let t0 = performance.now();
+
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  const panel = document.getElementById('panel');
+  const captionBubble = document.getElementById('captionBubble');
+  const captionWho = document.getElementById('captionWho');
+  const captionText = document.getElementById('captionText');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+
+  /* ---------------------------------------------------------
+     SPEECH
+  --------------------------------------------------------- */
+  let voices = [];
+  function loadVoices(){ voices = speechSynthesis.getVoices ? speechSynthesis.getVoices() : []; }
+  if ('speechSynthesis' in window){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(l){
+    const code = l === 'en' ? 'en' : 'id';
+    let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(code));
+    if (!v && code === 'id') v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+    return v || null;
+  }
+  function speak(text){
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    if (muted || !text) return;
+    const clean = text.replace(/[\u201c\u201d]/g,'"');
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    const v = pickVoice(lang);
+    if (v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.05;
+    speechSynthesis.speak(utter);
+  }
+  function stopSpeak(){ if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+  /* ---------------------------------------------------------
+     RESIZE / POSTMESSAGE
+  --------------------------------------------------------- */
+  function reportHeight(){
+    const h = document.getElementById('app').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'ayamhutanHeight', height: Math.ceil(h) + 4 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+
+  /* ---------------------------------------------------------
+     CANVAS DRAWING HELPERS
+  --------------------------------------------------------- */
+  function resizeCanvas(){
+    const cssW = canvas.clientWidth || 700;
+    const ratio = 420/700;
+    canvas.width = cssW * (window.devicePixelRatio || 1);
+    canvas.height = cssW * ratio * (window.devicePixelRatio || 1);
+    ctx.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0);
+    canvas._w = cssW;
+    canvas._h = cssW * ratio;
+  }
+
+  function sky(w,h, top, bottom){
+    const g = ctx.createLinearGradient(0,0,0,h*0.7);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+  }
+
+  function ground(w,h,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,h*0.72);
+    ctx.quadraticCurveTo(w*0.5,h*0.66,w,h*0.74);
+    ctx.lineTo(w,h);
+    ctx.lineTo(0,h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.globalAlpha = .9;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale,dark){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = dark ? '#20301c' : '#3c5a34';
+    ctx.beginPath();
+    ctx.moveTo(-6,0); ctx.lineTo(6,0); ctx.lineTo(4,-30); ctx.lineTo(-4,-30); ctx.closePath();
+    ctx.fillStyle = '#4a3222';
+    ctx.fill();
+    ctx.fillStyle = dark ? '#233d1f' : '#4a6b3e';
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.ellipse(0,-30-i*16, 34-i*7, 24-i*5, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFern(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = color || '#4a6b3e';
+    ctx.lineWidth = 2;
+    for(let i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.quadraticCurveTo(i*4, -14, i*9, -22);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3a2a1c';
+    ctx.fillRect(-30,-30,60,32);
+    ctx.fillStyle = '#c2a878';
+    ctx.fillRect(-27,-27,10,26);
+    ctx.beginPath();
+    ctx.moveTo(-38,-30);
+    ctx.lineTo(0,-58);
+    ctx.lineTo(38,-30);
+    ctx.closePath();
+    ctx.fillStyle = '#8a5a34';
+    ctx.fill();
+    ctx.fillStyle = 'rgba(232,179,79,.5)';
+    ctx.beginPath(); ctx.rect(8,-18,10,10); ctx.fill();
+    ctx.restore();
+  }
+
+  // bird: hen or rooster, procedural
+  function drawBird(x,y,scale,opts){
+    opts = opts || {};
+    const bob = opts.bob || 0;
+    const flip = opts.flip ? -1 : 1;
+    const rooster = !!opts.rooster;
+    const bodyColor = opts.bodyColor || (rooster ? '#c2793f' : '#d9b06a');
+    const highlight = opts.highlight || false;
+    ctx.save();
+    ctx.translate(x, y + Math.sin(bob)*3);
+    ctx.scale(scale*flip, scale);
+
+    // tail feathers
+    ctx.save();
+    ctx.translate(-14,-6);
+    const tailColors = rooster ? ['#2f4a2e','#d1492f','#e8b34f'] : [bodyColor];
+    for(let i=0;i<tailColors.length;i++){
+      ctx.rotate(-0.12);
+      ctx.fillStyle = tailColors[i];
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.quadraticCurveTo(-16-i*4, -10-i*6, -6-i*2, -26-i*5);
+      ctx.quadraticCurveTo(2, -14, 2, 0);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // legs
+    ctx.strokeStyle = '#c98a3d';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(-4, 14); ctx.lineTo(-6+Math.sin(bob*2)*2, 22);
+    ctx.moveTo(4, 14); ctx.lineTo(6-Math.sin(bob*2)*2, 22);
+    ctx.stroke();
+
+    // body
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.ellipse(0,0,15,12,0,0,Math.PI*2);
+    ctx.fill();
+
+    // wing
+    ctx.fillStyle = 'rgba(0,0,0,.12)';
+    ctx.beginPath();
+    ctx.ellipse(-2,1,8,6,0.3,0,Math.PI*2);
+    ctx.fill();
+
+    // head
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(13,-9,7,0,Math.PI*2);
+    ctx.fill();
+
+    // comb
+    ctx.fillStyle = highlight ? '#ff6b4a' : '#d1492f';
+    ctx.beginPath();
+    ctx.moveTo(9,-15);
+    ctx.quadraticCurveTo(11,-22,14,-16);
+    ctx.quadraticCurveTo(16,-23,18,-16);
+    ctx.quadraticCurveTo(20,-14,17,-12);
+    ctx.lineTo(10,-13);
+    ctx.closePath();
+    ctx.fill();
+
+    // wattle
+    ctx.fillStyle = '#c2402b';
+    ctx.beginPath();
+    ctx.arc(16,-4,2.4,0,Math.PI*2);
+    ctx.fill();
+
+    // beak
+    ctx.fillStyle = '#e8b34f';
+    ctx.beginPath();
+    ctx.moveTo(19,-9); ctx.lineTo(25,-8); ctx.lineTo(19,-6);
+    ctx.closePath();
+    ctx.fill();
+
+    // eye
+    ctx.fillStyle = '#1b130c';
+    ctx.beginPath(); ctx.arc(14,-10,1.3,0,Math.PI*2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawFeather(x,y,rot,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rot);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(-6,-10,0,-22);
+    ctx.quadraticCurveTo(6,-10,0,0);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.15)';
+    ctx.lineWidth=.6;
+    ctx.beginPath(); ctx.moveTo(0,-1); ctx.lineTo(0,-21); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSpeechDot(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = .85;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------
+     SCENE RENDER PER STEP
+  --------------------------------------------------------- */
+  let chickHitboxes = []; // for step 1 tap interaction
+  let forageHitboxes = []; // for minigame
+
+  function clear(w,h){ ctx.clearRect(0,0,w,h); }
+
+  function renderScene(time){
+    if (!canvas._w) resizeCanvas();
+    const w = canvas._w, h = canvas._h;
+    clear(w,h);
+    const bob = time*0.003;
+    chickHitboxes = [];
+    forageHitboxes = [];
+
+    if (step === -1){
+      // cover: village silhouette dusk
+      sky(w,h,'#3a2a3d','#e8955a');
+      drawSun(w*0.78,h*0.28,40,'#f2c879');
+      ground(w,h,'#2a1f14');
+      drawTree(w*0.12,h*0.72,1.3,true);
+      drawHut(w*0.62,h*0.72,1.6);
+      drawTree(w*0.88,h*0.7,1.1,true);
+      drawBird(w*0.32,h*0.78,2.0,{bob:bob, rooster:false});
+      drawBird(w*0.42,h*0.82,1.3,{bob:bob+1, rooster:true});
+      drawBird(w*0.24,h*0.83,1.2,{bob:bob+2, rooster:true, flip:true});
+    } else if (step === 0){
+      sky(w,h,'#3a2a3d','#e8955a');
+      drawSun(w*0.8,h*0.25,36,'#f2c879');
+      ground(w,h,'#2a1f14');
+      drawTree(w*0.1,h*0.7,1.1,true);
+      drawHut(w*0.75,h*0.68,1.4);
+      drawBird(w*0.42,h*0.8,2.1,{bob:bob});
+      const chicks = [[0.3,0.86,1.05],[0.5,0.88,1.0],[0.58,0.84,1.1],[0.66,0.9,0.95]];
+      chicks.forEach((c,i)=>{
+        drawBird(w*c[0], h*c[1], c[2], {bob:bob+i, rooster:true, flip: i%2===0});
+      });
+    } else if (step === 1){
+      sky(w,h,'#3a2a3d','#e8955a');
+      ground(w,h,'#2a1f14');
+      drawHut(w*0.8,h*0.68,1.3);
+      drawBird(w*0.38,h*0.78,2.2,{bob:bob*0.5});
+      const chicks = [[0.2,0.86,1.05],[0.55,0.87,1.0],[0.68,0.83,1.05]];
+      chicks.forEach((c,i)=>{
+        const px = w*c[0], py = h*c[1];
+        drawBird(px, py, c[2], {bob:bob+i*1.5, rooster:true, flip:i%2===1, highlight: chickTapped===i});
+        chickHitboxes.push({x:px,y:py,r:40*c[2],idx:i});
+      });
+      if (!chickTapped && chickTapped!==0){
+        // pulsing hint ring on first chick
+        const c = chicks[0];
+        const px=w*c[0], py=h*c[1];
+        const pr = 26 + Math.sin(time*0.006)*4;
+        ctx.save();
+        ctx.strokeStyle='rgba(232,179,79,.6)';
+        ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(px,py-8,pr,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+    } else if (step === 2){
+      sky(w,h,'#2c2032','#c76a4a');
+      ground(w,h,'#241a10');
+      drawBird(w*0.38,h*0.75,2.3,{bob:bob*0.4});
+      drawBird(w*0.62,h*0.72,1.7,{bob:bob*0.4+1, rooster:true, flip:true});
+      // spark tension lines between rooster & imagined blade glint
+      ctx.save();
+      ctx.strokeStyle='rgba(209,73,47,.5)';
+      ctx.lineWidth=1.5;
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        const gx = w*0.5+i*6, gy = h*0.68-i*4;
+        ctx.moveTo(gx-6,gy-6); ctx.lineTo(gx+6,gy+6);
+        ctx.moveTo(gx+6,gy-6); ctx.lineTo(gx-6,gy+6);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (step === 3){
+      sky(w,h,'#241a26','#8a5040');
+      ground(w,h,'#1e150c');
+      drawHut(w*0.5,h*0.7,1.6);
+      drawBird(w*0.28,h*0.82,1.8,{bob:bob*0.4});
+      // basket silhouette (implied harvesting, non-graphic)
+      ctx.save();
+      ctx.fillStyle='#4a3222';
+      ctx.beginPath();
+      ctx.ellipse(w*0.72,h*0.78,26,14,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle='#6b4a2e'; ctx.lineWidth=2;
+      for(let i=-2;i<=2;i++){
+        ctx.beginPath(); ctx.moveTo(w*0.72+i*9,h*0.78-12); ctx.lineTo(w*0.72+i*9,h*0.78+12); ctx.stroke();
+      }
+      ctx.restore();
+      // moon
+      drawSun(w*0.85,h*0.2,22,'rgba(245,234,210,.85)');
+    } else if (step === 4){
+      // crossroad choice scene
+      sky(w,h,'#3a2a3d','#c76a4a');
+      ground(w,h,'#241a10');
+      drawHut(w*0.16,h*0.68,1.1);
+      drawTree(w*0.82,h*0.66,1.2,true);
+      drawTree(w*0.92,h*0.72,0.9,true);
+      // fork path
+      ctx.save();
+      ctx.strokeStyle='rgba(194,168,120,.35)';
+      ctx.lineWidth=10;
+      ctx.beginPath();
+      ctx.moveTo(w*0.5,h*0.95);
+      ctx.lineTo(w*0.3,h*0.7);
+      ctx.moveTo(w*0.5,h*0.95);
+      ctx.lineTo(w*0.72,h*0.68);
+      ctx.stroke();
+      ctx.restore();
+      drawBird(w*0.5,h*0.85,2.0,{bob:bob*0.4});
+      drawBird(w*0.44,h*0.9,1.2,{bob:bob*0.4+1, rooster:true});
+      drawBird(w*0.58,h*0.9,1.2,{bob:bob*0.4+2, rooster:true, flip:true});
+    } else if (step === 5){
+      sky(w,h,'#26333f','#7d8a58');
+      ground(w,h,'#25301f');
+      drawTree(w*0.14,h*0.68,1.2,true);
+      drawTree(w*0.86,h*0.66,1.0,true);
+      drawFern(w*0.3,h*0.86,1.4,'#4a6b3e');
+      drawFern(w*0.7,h*0.88,1.2,'#3c5a34');
+      drawBird(w*0.44,h*0.8,1.9,{bob:bob*0.4});
+      drawBird(w*0.34,h*0.86,1.1,{bob:bob*0.4+1, rooster:true});
+      drawBird(w*0.56,h*0.86,1.1,{bob:bob*0.4+2, rooster:true, flip:true});
+    } else if (step === 6){
+      // forage minigame ground
+      sky(w,h,'#1f2c22','#4a6b3e');
+      ground(w,h,'#2a3a22');
+      drawTree(w*0.08,h*0.62,1.3,true);
+      drawTree(w*0.94,h*0.6,1.0,true);
+      drawFern(w*0.5,h*0.94,1.6,'#5a7d4a');
+      // family idle at edges
+      drawBird(w*0.1,h*0.9,1.1,{bob:bob*0.3});
+      drawBird(w*0.9,h*0.9,1.0,{bob:bob*0.3+1, rooster:true, flip:true});
+      // forage items
+      forageItems.forEach((it,i)=>{
+        if (it.collected) return;
+        const px = w*it.x, py = h*it.y;
+        const wobble = Math.sin(time*0.004 + i)*2;
+        if (it.type==='seed'){
+          ctx.save();
+          ctx.fillStyle='#e8b34f';
+          ctx.beginPath(); ctx.ellipse(px, py+wobble, 6,4,0.4,0,Math.PI*2); ctx.fill();
+          ctx.restore();
+        } else {
+          ctx.save();
+          ctx.fillStyle='#6b4a2e';
+          ctx.beginPath(); ctx.ellipse(px, py+wobble, 5,3.5,0,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle='#3a2a1c'; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(px-6,py+wobble); ctx.lineTo(px+6,py+wobble); ctx.stroke();
+          ctx.restore();
+        }
+        forageHitboxes.push({x:px,y:py,r:22,idx:i});
+      });
+    } else if (step === 7){
+      sky(w,h,'#1a2a1c','#3c5a34');
+      drawSun(w*0.7,h*0.22,50,'rgba(232,179,79,.35)');
+      ground(w,h,'#1f3320');
+      drawTree(w*0.08,h*0.55,1.5,true);
+      drawTree(w*0.85,h*0.5,1.7,true);
+      drawFern(w*0.25,h*0.92,1.6,'#5a7d4a');
+      drawFern(w*0.65,h*0.94,1.8,'#4a6b3e');
+      drawBird(w*0.45,h*0.82,2.1,{bob:bob*0.4});
+      drawBird(w*0.32,h*0.88,1.2,{bob:bob*0.4+1, rooster:true});
+      drawBird(w*0.58,h*0.88,1.2,{bob:bob*0.4+2, rooster:true, flip:true});
+      drawBird(w*0.68,h*0.84,1.0,{bob:bob*0.4+3, rooster:true});
+      // floating feathers
+      for(let i=0;i<4;i++){
+        const fx = (w*0.15 + i*w*0.22 + Math.sin(time*0.001+i)*10);
+        const fy = (h*0.15 + ((time*0.02 + i*40) % (h*0.5)));
+        drawFeather(fx,fy, Math.sin(time*0.002+i)*0.5, 0.7, i%2? '#e8b34f':'#d1492f');
+      }
+    } else if (step === 8){
+      sky(w,h,'#1a2a1c','#3c5a34');
+      drawSun(w*0.5,h*0.2,55,'rgba(232,179,79,.4)');
+      ground(w,h,'#1f3320');
+      drawTree(w*0.05,h*0.5,1.6,true);
+      drawTree(w*0.9,h*0.48,1.8,true);
+      drawFern(w*0.2,h*0.9,1.6,'#5a7d4a');
+      drawFern(w*0.75,h*0.92,1.7,'#4a6b3e');
+      drawBird(w*0.5,h*0.78,2.3,{bob:bob*0.3});
+      drawBird(w*0.36,h*0.85,1.3,{bob:bob*0.3+1, rooster:true});
+      drawBird(w*0.64,h*0.85,1.3,{bob:bob*0.3+2, rooster:true, flip:true});
+      drawBird(w*0.72,h*0.8,1.0,{bob:bob*0.3+3, rooster:true});
+      drawBird(w*0.28,h*0.8,1.0,{bob:bob*0.3+4, rooster:true, flip:true});
+    }
+
+    animId = requestAnimationFrame(renderScene);
+  }
+
+  /* ---------------------------------------------------------
+     CAPTION HELPERS
+  --------------------------------------------------------- */
+  function showCaption(who, text){
+    if (!text){ captionBubble.style.display='none'; return; }
+    captionWho.textContent = who || '';
+    captionText.textContent = text;
+    captionBubble.style.display = 'block';
+  }
+
+  /* ---------------------------------------------------------
+     PANEL RENDER (per step, incl cover/end)
+  --------------------------------------------------------- */
+  function dotsHtml(activeIdx){
+    const S = STR[lang];
+    let html = '<div class="dots">';
+    for (let i=0;i<S.steps.length;i++){
+      let cls = 'dot';
+      if (i===activeIdx) cls += ' active';
+      else if (i<activeIdx) cls += ' done';
+      html += `<div class="${cls}"></div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function render(){
+    const S = STR[lang];
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    document.title = S.brand;
+    document.querySelectorAll('[data-i18n="brand"]').forEach(el=>el.textContent = S.brand);
+    document.querySelectorAll('[data-i18n="footer"]').forEach(el=>el.textContent = S.footer);
+
+    if (step === -1){
+      showCaption(null,null);
+      panel.innerHTML = `
+        <div class="cover">
+          <h1>${S.cover.title}</h1>
+          <p>${S.cover.sub}</p>
+          <div class="controls-row">
+            <button class="btn" id="startBtn">${S.cover.start}</button>
+          </div>
+        </div>`;
+      document.getElementById('startBtn').onclick = () => goTo(0);
+      reportHeight();
+      return;
+    }
+
+    if (step === 8){
+      const E = S.ending;
+      stopSpeak();
+      showCaption(null,null);
+      panel.innerHTML = `
+        <div class="ending">
+          <h1>${E.title}</h1>
+          <p>${E.sub}</p>
+          <div class="moral"><b>${E.moralLabel}:</b> ${E.moral}</div>
+          <div class="controls-row">
+            <button class="btn" id="replayBtn">${E.replay}</button>
+          </div>
+        </div>`;
+      document.getElementById('replayBtn').onclick = () => {
+        chickTapped = false; stayCount = 0; forageCollected = 0; forageItems=[];
+        goTo(-1);
+      };
+      reportHeight();
+      return;
+    }
+
+    // normal step 0..7
+    const s = S.steps[step];
+    let bodyHtml = `<h1 class="story-title">${s.title}</h1>`;
+    bodyHtml += dotsHtml(step);
+
+    if (s.isChoice){
+      bodyHtml += `<p class="story-sub">${s.text}</p>`;
+      bodyHtml += `<div class="choice-row">
+          <button class="btn forest" id="choiceA">${s.choiceA}</button>
+          <button class="btn secondary" id="choiceB">${s.choiceB}</button>
+        </div>`;
+      panel.innerHTML = bodyHtml;
+      showCaption(null,null);
+      document.getElementById('choiceA').onclick = () => { showCaption(null,null); goTo(step+1); };
+      document.getElementById('choiceB').onclick = () => {
+        stayCount++;
+        showCaption(s.stayReplyWho, s.stayReply);
+        speak(s.stayReply);
+      };
+    } else if (s.minigame){
+      bodyHtml += `<p class="story-sub">${s.text}</p>`;
+      bodyHtml += `<div class="forage-counter" id="forageCounter"></div>`;
+      bodyHtml += `<div class="controls-row"><button class="btn" id="nextBtn" ${forageCollected<FORAGE_TARGET?'disabled':''}>${s.next}</button></div>`;
+      panel.innerHTML = bodyHtml;
+      updateForageCounter();
+      document.getElementById('nextBtn').onclick = () => goTo(step+1);
+      showCaption(null,null);
+      if (forageItems.length===0) spawnForage();
+    } else {
+      bodyHtml += `<p class="story-sub">${s.text}</p>`;
+      if (s.tapHint){
+        bodyHtml += `<p style="text-align:center;font-size:12.5px;color:var(--gold-soft);margin-top:-6px;">👆 ${s.tapHint}</p>`;
+      }
+      bodyHtml += `<div class="controls-row"><button class="btn" id="nextBtn">${s.next}</button></div>`;
+      panel.innerHTML = bodyHtml;
+      document.getElementById('nextBtn').onclick = () => { showCaption(null,null); goTo(step+1); };
+      showCaption(null,null);
+    }
+
+    speak(s.text);
+    reportHeight();
+  }
+
+  function updateForageCounter(){
+    const S = STR[lang];
+    const s = S.steps[6];
+    const el = document.getElementById('forageCounter');
+    if (!el) return;
+    if (forageCollected >= FORAGE_TARGET){
+      el.textContent = s.success;
+    } else {
+      el.textContent = s.progress.replace('{n}', forageCollected).replace('{t}', FORAGE_TARGET);
+    }
+  }
+
+  function spawnForage(){
+    forageItems = [];
+    const positions = [
+      [0.15,0.85],[0.28,0.9],[0.4,0.82],[0.5,0.92],
+      [0.6,0.84],[0.7,0.9],[0.8,0.83],[0.35,0.95]
+    ];
+    positions.forEach((p,i)=>{
+      forageItems.push({x:p[0]+ (Math.random()-0.5)*0.03, y:p[1], type: i%2===0?'seed':'bug', collected:false});
+    });
+  }
+
+  /* ---------------------------------------------------------
+     NAVIGATION
+  --------------------------------------------------------- */
+  function goTo(n){
+    stopSpeak();
+    step = n;
+    render();
+  }
+
+  /* ---------------------------------------------------------
+     INPUT HANDLING (click/tap on canvas)
+  --------------------------------------------------------- */
+  function getCanvasPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return { x: (clientX-rect.left) * (canvas._w/rect.width), y: (clientY-rect.top) * (canvas._h/rect.height) };
+  }
+
+  function handleCanvasTap(evt){
+    const pos = getCanvasPos(evt);
+
+    if (step === 1){
+      for (const hb of chickHitboxes){
+        const dx = pos.x-hb.x, dy = pos.y-(hb.y-10);
+        if (Math.sqrt(dx*dx+dy*dy) < hb.r){
+          chickTapped = hb.idx;
+          const S = STR[lang];
+          const s = S.steps[1];
+          showCaption(s.bubbleWho, s.bubble);
+          speak(s.bubble);
+          return;
+        }
+      }
+    } else if (step === 6){
+      for (const hb of forageHitboxes){
+        const dx = pos.x-hb.x, dy = pos.y-hb.y;
+        if (Math.sqrt(dx*dx+dy*dy) < hb.r){
+          if (!forageItems[hb.idx].collected){
+            forageItems[hb.idx].collected = true;
+            forageCollected++;
+            updateForageCounter();
+            const nb = document.getElementById('nextBtn');
+            if (forageCollected >= FORAGE_TARGET && nb){
+              nb.disabled = false;
+              const S = STR[lang];
+              showCaption(S.steps[6].who, S.steps[6].success);
+              speak(S.steps[6].success);
+            }
+          }
+          return;
+        }
+      }
+    }
+  }
+  canvas.addEventListener('click', handleCanvasTap);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); handleCanvasTap(e); }, {passive:false});
+
+  /* ---------------------------------------------------------
+     TOP BAR CONTROLS
+  --------------------------------------------------------- */
+  langBtn.addEventListener('click', () => {
+    lang = lang === 'id' ? 'en' : 'id';
+    chickTapped = false;
+    render();
+  });
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    if (muted) stopSpeak(); else speak(currentStepText());
+    render();
+  });
+  function currentStepText(){
+    if (step<0 || step>7) return '';
+    return STR[lang].steps[step].text;
+  }
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  window.addEventListener('DOMContentLoaded', () => {
+    resizeCanvas();
+    render();
+    renderScene(performance.now());
+    setTimeout(reportHeight, 300);
+  });
+  window.addEventListener('resize', () => { resizeCanvas(); });
+})();
+</script>
+</body>
+</html>
