@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orang Desa Tanggungan Tidak Boleh Makan Ikan Tageh</title>
+<style>
+  :root{
+    --bg-sky-top:#cfe8d8;
+    --bg-sky-bottom:#f4ecd8;
+    --brown-dark:#3b2a1e;
+    --brown:#6b4a30;
+    --brown-light:#a9784f;
+    --green-dark:#2f4a2f;
+    --green:#4c7a4c;
+    --green-light:#8fb37a;
+    --water:#3d7ea6;
+    --water-light:#6fb3d2;
+    --gold:#c99a3c;
+    --red-kompeni:#7a2323;
+    --cream:#f7f1e1;
+    --ink:#2a2018;
+    --panel-bg:rgba(247,241,225,0.94);
+    --accent:#8a5a2b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,var(--bg-sky-top),var(--bg-sky-bottom));
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  /* Top bar */
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--brown-dark);
+    color:var(--cream);
+  }
+  #title{
+    font-size:15px;
+    font-weight:600;
+    letter-spacing:.3px;
+  }
+  #controls{
+    display:flex;
+    gap:8px;
+  }
+  .ctrl-btn{
+    background:var(--brown);
+    color:var(--cream);
+    border:1px solid var(--brown-light);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .ctrl-btn:hover{background:var(--brown-light);}
+  .ctrl-btn.active{background:var(--gold);color:var(--brown-dark);}
+
+  /* dots */
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:10px 0 4px;
+    background:var(--cream);
+  }
+  .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:#d8cba9;
+    border:1px solid var(--brown-light);
+    transition:all .25s;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.3);}
+  .dot.done{background:var(--green);}
+
+  /* stage */
+  #stage-wrap{
+    position:relative;
+    background:var(--cream);
+    padding:0 0 6px;
+  }
+  canvas#scene{
+    display:block;
+    width:100%;
+    height:auto;
+    background:linear-gradient(180deg,var(--bg-sky-top),var(--green-light) 70%);
+  }
+  #narration-box{
+    margin:10px 14px 0;
+    background:var(--panel-bg);
+    border:1px solid var(--brown-light);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:15px;
+    line-height:1.55;
+    min-height:56px;
+  }
+  #minigame-area{
+    margin:10px 14px 0;
+    min-height:52px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .action-btn{
+    background:var(--accent);
+    color:var(--cream);
+    border:none;
+    border-radius:10px;
+    padding:11px 22px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--brown-dark);
+    user-select:none;
+    touch-action:none;
+  }
+  .action-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--brown-dark);}
+  .action-btn:disabled{opacity:.5;cursor:default;}
+  .choice-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .choice-btn{
+    background:var(--panel-bg);
+    border:2px solid var(--accent);
+    color:var(--brown-dark);
+    border-radius:10px;
+    padding:10px 16px;
+    font-size:14px;
+    cursor:pointer;
+    max-width:280px;
+  }
+  .choice-btn:hover{background:var(--gold);}
+
+  .bar-wrap{
+    width:90%;
+    max-width:360px;
+    height:16px;
+    background:#e0d6bb;
+    border:1px solid var(--brown-light);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--green));
+    transition:width .06s linear;
+  }
+  .hint{font-size:12.5px;color:#5a4a37;text-align:center;}
+
+  #bottom-actions{
+    display:flex;
+    justify-content:center;
+    padding:14px;
+    gap:10px;
+  }
+  #footer{
+    text-align:center;
+    font-size:11.5px;
+    color:#7a6c55;
+    padding:6px 10px 16px;
+  }
+
+  /* overlay */
+  .overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(28,20,12,0.88);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:var(--cream);
+    padding:24px;
+    z-index:10;
+    gap:14px;
+  }
+  .overlay h1{font-size:20px;margin:0 0 4px;line-height:1.3;}
+  .overlay p{font-size:14px;line-height:1.5;max-width:440px;color:#e9dfc7;}
+  .big-btn{
+    background:var(--gold);
+    color:var(--brown-dark);
+    border:none;
+    border-radius:12px;
+    padding:14px 30px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 #7a5a1f;
+  }
+  .big-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7a5a1f;}
+  .hidden{display:none !important;}
+
+  .fish-emoji{font-size:22px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbar">
+    <div id="title">Cerita Rakyat: Ikan Tageh</div>
+    <div id="controls">
+      <button class="ctrl-btn" id="langBtn" title="Ganti bahasa">🌐 <span id="langLabel">ID</span></button>
+      <button class="ctrl-btn" id="muteBtn" title="Mute/unmute narasi">🔊</button>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="stage-wrap">
+    <canvas id="scene" width="700" height="420"></canvas>
+  </div>
+
+  <div id="narration-box">...</div>
+
+  <div id="minigame-area"></div>
+
+  <div id="bottom-actions"></div>
+
+  <div id="footer"></div>
+
+  <div class="overlay" id="startOverlay">
+    <h1 id="startTitle">Orang Desa Tanggungan Tidak Boleh Makan Ikan Tageh</h1>
+    <p id="startDesc">Cerita rakyat dari Jawa Timur tentang Sura Alap Alap dan pasukannya.</p>
+    <button class="big-btn" id="startBtn">Mulai Cerita</button>
+  </div>
+
+  <div class="overlay hidden" id="endOverlay">
+    <h1 id="endTitle">Tamat</h1>
+    <p id="endDesc"></p>
+    <button class="big-btn" id="replayBtn">Ulangi Cerita</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+/* ============ STRINGS ============ */
+const STR = {
+  id:{
+    gameTitle:"Orang Desa Tanggungan Tidak Boleh Makan Ikan Tageh",
+    startTitle:"Orang Desa Tanggungan Tidak Boleh Makan Ikan Tageh",
+    startDesc:"Cerita rakyat dari Jawa Timur tentang Sura Alap Alap beserta pasukannya pada masa perang melawan Kompeni Belanda. Ikuti kisahnya lewat permainan singkat di setiap babak.",
+    startBtn:"Mulai Cerita",
+    replayBtn:"Ulangi Cerita",
+    lanjut:"Lanjut",
+    endTitle:"Tamat",
+    scenes:[
+      {
+        title:"Perang Melawan Kompeni",
+        narr:"Pada masa perang perjuangan melawan Kompeni Belanda, Sura Alap Alap diberi tugas sebagai pimpinan Rajekwesi di sebelah timur. Perang antara pejuang pribumi melawan Kompeni berlangsung tidak seimbang karena persenjataan pasukan pribumi yang tidak memadai.",
+        hint:"Ketuk tombol untuk melanjutkan kisah."
+      },
+      {
+        title:"Perintah Mengungsi",
+        narr:"Khawatir akan jatuhnya banyak korban jiwa, Sura Alap Alap lantas memerintahkan seluruh pasukannya, yang merupakan penduduk dusun itu juga, untuk pergi meninggalkan dusun tersebut.",
+        hint:"Ketuk setiap penduduk untuk mengajak mereka mengungsi sebelum waktu habis!",
+        gameWin:"Seluruh penduduk berhasil diajak mengungsi dengan selamat.",
+        gameLose:"Coba lagi, kumpulkan semua penduduk sebelum waktu habis!"
+      },
+      {
+        title:"Dusun Berubah Menjadi Telaga",
+        narr:"Sepeninggal Sura Alap Alap beserta pasukannya, ajaib, dusun tersebut berubah menjadi sebuah telaga yang dipenuhi ikan Tageh.",
+        hint:"Tahan tombol untuk merapal doa hingga dusun berubah menjadi telaga.",
+      },
+      {
+        title:"Kompeni Kebingungan",
+        narr:"Saat pasukan Kompeni mendatangi dusun tersebut untuk memerangi pasukan Sura Alap Alap, mereka kebingungan karena tidak menemukan seorang penduduk pun. Kompeni juga tidak bisa melanjutkan perjalanan karena terhalang oleh telaga.",
+        hint:"Ketuk 'Amati' tepat saat penunjuk berada di area hijau.",
+        gameWin:"Pasukan Kompeni menyerah dan akhirnya meninggalkan telaga tersebut.",
+        gameLose:"Coba lagi, ketuk tepat saat penunjuk berada di area hijau."
+      },
+      {
+        title:"Telaga Mengering",
+        narr:"Setelah pasukan Kompeni pergi, telaga itu pun mengering dan kembali menjadi dusun seperti semula. Merasa keadaan telah aman, Sura Alap Alap beserta pasukannya kembali ke dusun tempat tinggal mereka.",
+        hint:"Seret matahari melintasi langit untuk mengeringkan telaga."
+      },
+      {
+        title:"Pesan Sura Alap Alap",
+        narr:"Sura Alap Alap membuat sebuah kuburan sepanjang kurang lebih 3 meter di sebelah timur desa Tanggungan. Sejak saat itu, ia memberi peringatan kepada seluruh penduduk desa agar mereka tidak memakan ikan Tageh, sebab ikan-ikan itu telah berjasa menyelamatkan seluruh penduduk desa selama masa peperangan.",
+        hint:"Pilih jawabanmu sebagai penduduk desa yang mendengar pesan Sura Alap Alap.",
+        choiceA:"\"Baik, kami akan menjaga pesan ini turun-temurun.\"",
+        choiceB:"\"Kami berjanji tidak akan pernah memakan ikan Tageh.\"",
+        respA:"Penduduk desa mengangguk khidmat dan berjanji akan menceritakan pesan ini kepada anak cucu mereka.",
+        respB:"Sejak saat itu, seluruh penduduk desa Tanggungan menaati pesan Sura Alap Alap dan tidak pernah lagi memakan ikan Tageh."
+      }
+    ],
+    moralTitle:"Pesan Cerita",
+    moral:"Begitulah cerita rakyat Jawa Timur mengenai asal usul larangan bagi orang desa Tanggungan untuk memakan ikan Tageh — sebagai wujud rasa terima kasih kepada ikan yang telah menyelamatkan nyawa mereka.",
+    quote:"“Jangan hendaknya ada anak cucuku dan penduduk desa disini yang memakan ikan Tageh, karena ikan-ikan Tageh telah berjasa dalam menyelamatkan seluruh penduduk desa selama masa peperangan dengan Kompeni.” — Sura Alap Alap"
+  },
+  en:{
+    gameTitle:"Why the People of Tanggungan Never Eat Tageh Fish",
+    startTitle:"Why the People of Tanggungan Never Eat Tageh Fish",
+    startDesc:"A folktale from East Java about Sura Alap Alap and his troops during the war against the Dutch Company. Follow the story through a short mini-game in every chapter.",
+    startBtn:"Start Story",
+    replayBtn:"Replay Story",
+    lanjut:"Continue",
+    endTitle:"The End",
+    scenes:[
+      {
+        title:"War Against the Company",
+        narr:"During the struggle against the Dutch Company, Sura Alap Alap was given command of Rajekwesi in the east. The war between native fighters and the Company was uneven, for the native troops' weapons were far from adequate.",
+        hint:"Tap the button to continue the story."
+      },
+      {
+        title:"The Order to Flee",
+        narr:"Fearing heavy loss of life, Sura Alap Alap ordered all his troops — who were also the villagers of that very hamlet — to leave the settlement at once.",
+        hint:"Tap each villager to lead them to safety before time runs out!",
+        gameWin:"Every villager was safely led away in time.",
+        gameLose:"Try again — gather all the villagers before time runs out!"
+      },
+      {
+        title:"The Village Becomes a Lake",
+        narr:"After Sura Alap Alap and his troops departed, miraculously the village transformed into a lake teeming with Tageh fish.",
+        hint:"Hold the button to chant the prayer until the village becomes a lake."
+      },
+      {
+        title:"The Company's Confusion",
+        narr:"When the Company's soldiers arrived to fight Sura Alap Alap's troops, they found the place bewilderingly empty — not a single villager in sight. The Company could not continue on either, for a lake now blocked their path.",
+        hint:"Tap 'Watch' right when the marker is in the green zone.",
+        gameWin:"The Company's soldiers gave up and finally left the lake behind.",
+        gameLose:"Try again — tap right when the marker is in the green zone."
+      },
+      {
+        title:"The Lake Dries Up",
+        narr:"Once the Company's soldiers had gone, the lake dried up and turned back into the village as before. Feeling it was safe again, Sura Alap Alap and his troops returned to their home village.",
+        hint:"Drag the sun across the sky to dry up the lake."
+      },
+      {
+        title:"Sura Alap Alap's Message",
+        narr:"Sura Alap Alap built a grave about three meters long, east of Tanggungan village. From that day on, he warned all the villagers never to eat Tageh fish, for those fish had saved the entire village during the war.",
+        hint:"Choose your answer as a villager hearing Sura Alap Alap's message.",
+        choiceA:"\"Yes, we will keep this promise for generations to come.\"",
+        choiceB:"\"We vow to never eat Tageh fish.\"",
+        respA:"The villagers bowed solemnly, promising to pass this message down to their children and grandchildren.",
+        respB:"From that day forward, every villager of Tanggungan honored Sura Alap Alap's message and never again ate Tageh fish."
+      }
+    ],
+    moralTitle:"Moral of the Story",
+    moral:"So goes the East Javanese folktale of why the people of Tanggungan village are forbidden to eat Tageh fish — a lasting gesture of gratitude to the fish that once saved their lives.",
+    quote:"\"Let none of my descendants, nor the people of this village, ever eat Tageh fish — for these fish saved the entire village during the war with the Company.\" — Sura Alap Alap"
+  }
+};
+
+/* ============ STATE ============ */
+let lang = (new URLSearchParams(location.search).get('lang') === 'en') ? 'en' : 'id';
+let muted = localStorage.getItem('tageh_muted') === '1';
+let sceneIdx = 0;
+const TOTAL_SCENES = STR.id.scenes.length;
+let voices = [];
+let sceneLocked = false; // true while a minigame must be completed
+
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+const narrationBox = document.getElementById('narration-box');
+const minigameArea = document.getElementById('minigame-area');
+const bottomActions = document.getElementById('bottom-actions');
+const dotsEl = document.getElementById('dots');
+const langBtn = document.getElementById('langBtn');
+const langLabel = document.getElementById('langLabel');
+const muteBtn = document.getElementById('muteBtn');
+
+/* ============ SPEECH ============ */
+function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if(window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(){
+  if(!voices || !voices.length) return null;
+  const want = lang === 'en' ? 'en' : 'id';
+  let v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(want));
+  if(!v && want==='id') v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('ms'));
+  if(!v) v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+  return v || null;
+}
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  if(muted) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice();
+  if(v) u.voice = v;
+  u.lang = lang==='en' ? 'en-US' : 'id-ID';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeak(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+/* ============ UI: lang / mute ============ */
+function updateLangUI(){
+  langLabel.textContent = lang.toUpperCase();
+}
+function updateMuteUI(){
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('active', muted);
+}
+langBtn.addEventListener('click', ()=>{
+  lang = lang === 'id' ? 'en' : 'id';
+  const url = new URL(location.href);
+  url.searchParams.set('lang', lang);
+  history.replaceState(null,'',url.toString());
+  updateLangUI();
+  renderStartOverlay();
+  renderScene(true);
+});
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('tageh_muted', muted ? '1':'0');
+  updateMuteUI();
+  if(muted) stopSpeak();
+  else speak(currentT().narr);
+});
+
+/* ============ DOTS ============ */
+function renderDots(){
+  dotsEl.innerHTML = '';
+  for(let i=0;i<TOTAL_SCENES;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===sceneIdx?' active':(i<sceneIdx?' done':''));
+    dotsEl.appendChild(d);
+  }
+}
+
+function currentT(){ return STR[lang].scenes[sceneIdx]; }
+
+/* ============ CANVAS DRAW HELPERS ============ */
+function clear(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function sky(topColor,botColor){
+  const g = ctx.createLinearGradient(0,0,0,canvas.height*0.65);
+  g.addColorStop(0, topColor);
+  g.addColorStop(1, botColor);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,canvas.width,canvas.height*0.7);
+}
+function hills(color, baseY){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, baseY);
+  ctx.bezierCurveTo(150, baseY-60, 250, baseY-10, 400, baseY-40);
+  ctx.bezierCurveTo(550, baseY-70, 650, baseY-20, 700, baseY-45);
+  ctx.lineTo(700,canvas.height);
+  ctx.lineTo(0,canvas.height);
+  ctx.closePath();
+  ctx.fill();
+}
+function ground(color, y){
+  ctx.fillStyle = color;
+  ctx.fillRect(0,y,canvas.width,canvas.height-y);
+}
+function drawSun(x,y,r){
+  ctx.fillStyle = '#f4c95d';
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = 'rgba(244,201,93,0.5)';
+  ctx.lineWidth = 4;
+  for(let i=0;i<8;i++){
+    const a = i/8*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(x+Math.cos(a)*(r+6), y+Math.sin(a)*(r+6));
+    ctx.lineTo(x+Math.cos(a)*(r+16), y+Math.sin(a)*(r+16));
+    ctx.stroke();
+  }
+}
+function drawTree(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#5b3a22';
+  ctx.fillRect(-4,-10,8,30);
+  ctx.fillStyle = '#3f6b3a';
+  ctx.beginPath(); ctx.arc(0,-28,22,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4f7d46';
+  ctx.beginPath(); ctx.arc(-12,-16,15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(14,-14,15,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawHut(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#8a6a45';
+  ctx.fillRect(-24,-4,48,34);
+  ctx.fillStyle = '#5a3d22';
+  ctx.beginPath();
+  ctx.moveTo(-32,-4); ctx.lineTo(0,-38); ctx.lineTo(32,-4); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3a2a18';
+  ctx.fillRect(-7,10,14,20);
+  ctx.restore();
+}
+function drawPerson(x,y,scale,shirt){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  // legs
+  ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-3,18); ctx.lineTo(-5,30); ctx.moveTo(3,18); ctx.lineTo(5,30); ctx.stroke();
+  // body
+  ctx.fillStyle = shirt || '#b5502e';
+  ctx.beginPath(); ctx.moveTo(-8,18); ctx.lineTo(-9,2); ctx.quadraticCurveTo(0,-4,9,2); ctx.lineTo(8,18); ctx.closePath(); ctx.fill();
+  // head
+  ctx.fillStyle = '#c98d5e';
+  ctx.beginPath(); ctx.arc(0,-8,7,0,Math.PI*2); ctx.fill();
+  // headband
+  ctx.strokeStyle = '#7a2323'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(0,-9,7.3,Math.PI*1.15,Math.PI*1.95); ctx.stroke();
+  ctx.restore();
+}
+function drawKompeni(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.strokeStyle = '#1c1c1c'; ctx.lineWidth = 3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-3,18); ctx.lineTo(-5,30); ctx.moveTo(3,18); ctx.lineTo(5,30); ctx.stroke();
+  ctx.fillStyle = '#294a2e';
+  ctx.beginPath(); ctx.moveTo(-9,18); ctx.lineTo(-9,1); ctx.quadraticCurveTo(0,-5,9,1); ctx.lineTo(9,18); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#d9a56b';
+  ctx.beginPath(); ctx.arc(0,-9,7,0,Math.PI*2); ctx.fill();
+  // tricorn hat
+  ctx.fillStyle = '#1c1c1c';
+  ctx.beginPath();
+  ctx.moveTo(-11,-13); ctx.lineTo(11,-13); ctx.lineTo(6,-20); ctx.lineTo(-6,-20); ctx.closePath(); ctx.fill();
+  // musket
+  ctx.strokeStyle = '#4a3320'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(9,0); ctx.lineTo(20,-14); ctx.stroke();
+  ctx.restore();
+}
+function drawWater(x,y,w,h,alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha===undefined?1:alpha;
+  const g = ctx.createLinearGradient(0,y,0,y+h);
+  g.addColorStop(0,'#6fb3d2');
+  g.addColorStop(1,'#2f6f92');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(x+w/2, y+h/2, w/2, h/2, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 2;
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.ellipse(x+w/2, y+h*0.35+i*10, w*0.32-i*8, 5, 0, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawFish(x,y,scale,t){
+  ctx.save();
+  ctx.translate(x,y);
+  const wig = Math.sin(t*4+x)*4;
+  ctx.rotate(wig*0.02);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#e07a3e';
+  ctx.beginPath();
+  ctx.ellipse(0,0,12,6,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-11,0); ctx.lineTo(-19,-6); ctx.lineTo(-19,6); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(7,-1,1.4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawGrave(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#8a8272';
+  ctx.beginPath(); ctx.ellipse(0,6,42,10,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#9d9686';
+  ctx.beginPath(); ctx.ellipse(0,0,40,9,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#6f6858';
+  ctx.fillRect(-6,-34,12,32);
+  ctx.beginPath(); ctx.moveTo(-6,-34); ctx.lineTo(0,-44); ctx.lineTo(6,-34); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+let animT = 0;
+let rafId = null;
+function loopAnim(fn){
+  cancelAnimationFrame(rafId);
+  function step(){
+    animT += 0.03;
+    fn(animT);
+    rafId = requestAnimationFrame(step);
+  }
+  step();
+}
+function stopAnim(){ cancelAnimationFrame(rafId); }
+
+/* ============ SCENE RENDERERS ============ */
+const sceneRenderers = [
+  renderScene0, renderScene1, renderScene2, renderScene3, renderScene4, renderScene5
+];
+
+function renderScene0(){ // war scene - static-ish w/ smoke drift
+  loopAnim((t)=>{
+    clear();
+    sky('#d9c9a3','#e9dfc0');
+    hills('#7a6a4a', 300);
+    ground('#6b5a3a', 340);
+    // smoke
+    for(let i=0;i<3;i++){
+      const sx = 120+i*220 + Math.sin(t+i)*10;
+      const sy = 250 - (t*8+i*40)%160;
+      ctx.fillStyle = `rgba(120,110,100,${0.25 - ((t*8+i*40)%160)/700})`;
+      ctx.beginPath(); ctx.arc(sx,sy,18,0,Math.PI*2); ctx.fill();
+    }
+    drawPerson(150,300,1.6,'#8a4a2a');
+    drawPerson(190,310,1.5,'#7a3a20');
+    drawKompeni(520,300,1.6);
+    drawKompeni(570,315,1.5);
+    drawTree(60,340,1.4);
+    drawTree(650,335,1.3);
+  });
+}
+function renderScene1(){ // gather villagers minigame drawn separately; background static
+  clear();
+  sky('#cfe8d8','#eee6c8');
+  hills('#5f7a4f', 300);
+  ground('#8a6a45', 340);
+  drawHut(120,300,1.1);
+  drawHut(300,310,1.0);
+  drawHut(500,300,1.1);
+  drawTree(60,330,1.2);
+  drawTree(650,330,1.2);
+  drawTree(390,335,1.0);
+}
+function renderScene2(){ // transformation - handled by minigame progress
+  clear();
+  sky('#cfe8d8','#eee6c8');
+  hills('#5f7a4f', 300);
+  ground('#8a6a45', 340);
+  drawHut(150,300,1.1);
+  drawHut(340,305,1.0);
+  drawHut(520,300,1.05);
+  drawTree(60,335,1.2);
+  drawTree(650,335,1.2);
+}
+function renderScene3(){ // kompeni confused at lake
+  loopAnim((t)=>{
+    clear();
+    sky('#cfe8d8','#eee6c8');
+    hills('#5f7a4f', 300);
+    drawWater(60,260,580,120,1);
+    for(let i=0;i<5;i++){
+      drawFish(140+i*90, 320+Math.sin(t*2+i)*6, 1, t+i);
+    }
+    ground('#8a6a45', 380);
+    const patrolX = 350 + Math.sin(t*0.9)*220;
+    drawKompeni(patrolX, 340, 1.3);
+    drawKompeni(patrolX-40, 350, 1.2);
+    window.__patrolX = patrolX;
+  });
+}
+function renderScene4(){ // lake dries up, drag sun
+  clear();
+  sky('#cfe8d8','#eee6c8');
+  hills('#5f7a4f', 300);
+  drawWater(60,260,580,120,1);
+  ground('#8a6a45', 380);
+}
+function renderScene5(){ // ending, grave + villagers + fish swimming safe
+  loopAnim((t)=>{
+    clear();
+    sky('#cfe8d8','#eee6c8');
+    hills('#5f7a4f', 300);
+    ground('#8a6a45', 340);
+    drawGrave(560,330,0.9);
+    drawPerson(120,300,1.3,'#8a4a2a');
+    drawPerson(170,310,1.2,'#6a3a20');
+    drawPerson(220,305,1.25,'#7a5030');
+    drawWater(40,300,110,70,0.85);
+    for(let i=0;i<2;i++) drawFish(70+i*30, 330+Math.sin(t*2+i)*4, 0.7, t+i);
+  });
+}
+
+/* ============ MINIGAMES ============ */
+function clearMinigame(){ minigameArea.innerHTML=''; stopAnim(); }
+
+function setupMinigame(){
+  clearMinigame();
+  bottomActions.innerHTML = '';
+  const t = STR[lang];
+  sceneLocked = false;
+
+  if(sceneIdx===0){
+    sceneRenderers[0]();
+    addContinueButton();
+  }
+  else if(sceneIdx===1){
+    sceneRenderers[1]();
+    setupGatherGame(t);
+  }
+  else if(sceneIdx===2){
+    sceneRenderers[2]();
+    setupHoldGame(t);
+  }
+  else if(sceneIdx===3){
+    sceneRenderers[3]();
+    setupTimingGame(t);
+  }
+  else if(sceneIdx===4){
+    sceneRenderers[4]();
+    setupDragSunGame(t);
+  }
+  else if(sceneIdx===5){
+    sceneRenderers[5]();
+    setupChoiceGame(t);
+  }
+}
+
+function addContinueButton(){
+  const btn = document.createElement('button');
+  btn.className = 'action-btn';
+  btn.textContent = STR[lang].lanjut;
+  btn.onclick = goNext;
+  bottomActions.appendChild(btn);
+}
+
+// --- Scene 2: gather villagers (tap-to-collect) ---
+function setupGatherGame(t){
+  const sc = t.scenes[1];
+  const hint = document.createElement('div');
+  hint.className = 'hint';
+  hint.textContent = sc.hint;
+  minigameArea.appendChild(hint);
+
+  const barWrap = document.createElement('div');
+  barWrap.className = 'bar-wrap';
+  const barFill = document.createElement('div');
+  barFill.className = 'bar-fill';
+  barWrap.appendChild(barFill);
+  minigameArea.appendChild(barWrap);
+
+  const villagers = [];
+  const total = 5;
+  let collected = 0;
+  let timeLeft = 12;
+  let finished = false;
+
+  for(let i=0;i<total;i++){
+    villagers.push({
+      x: 90 + Math.random()*520,
+      y: 300 + Math.random()*30,
+      got:false,
+      scale: 1
+    });
+  }
+
+  function draw(){
+    renderScene1();
+    villagers.forEach(v=>{
+      if(!v.got) drawPerson(v.x, v.y, 1.15, '#8a4a2a');
+    });
+  }
+  draw();
+
+  function onCanvasClick(ev){
+    if(finished) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+    const cx = (ev.clientX - rect.left)*scaleX;
+    const cy = (ev.clientY - rect.top)*scaleY;
+    villagers.forEach(v=>{
+      if(!v.got){
+        const d = Math.hypot(cx-v.x, cy-(v.y-8));
+        if(d<26){
+          v.got = true;
+          collected++;
+          barFill.style.width = (collected/total*100)+'%';
+        }
+      }
+    });
+    draw();
+    if(collected>=total){ win(); }
+  }
+  canvas.addEventListener('click', onCanvasClick);
+
+  const timerLabel = document.createElement('div');
+  timerLabel.className='hint';
+  minigameArea.appendChild(timerLabel);
+  timerLabel.textContent = (lang==='en'?'Time left: ':'Sisa waktu: ') + timeLeft + 's';
+
+  const timer = setInterval(()=>{
+    timeLeft--;
+    timerLabel.textContent = (lang==='en'?'Time left: ':'Sisa waktu: ') + Math.max(timeLeft,0) + 's';
+    if(timeLeft<=0){
+      clearInterval(timer);
+      if(collected<total) lose();
+    }
+  },1000);
+
+  function cleanup(){
+    canvas.removeEventListener('click', onCanvasClick);
+    clearInterval(timer);
+  }
+
+  function win(){
+    if(finished) return;
+    finished = true;
+    cleanup();
+    const msg = document.createElement('div');
+    msg.className='hint';
+    msg.style.color = '#2f6b2f';
+    msg.style.fontWeight = '600';
+    msg.textContent = sc.gameWin;
+    minigameArea.appendChild(msg);
+    addContinueButton();
+  }
+  function lose(){
+    if(finished) return;
+    finished = true;
+    cleanup();
+    const msg = document.createElement('div');
+    msg.className='hint';
+    msg.style.color = '#a33';
+    msg.textContent = sc.gameLose;
+    minigameArea.appendChild(msg);
+    const retry = document.createElement('button');
+    retry.className='action-btn';
+    retry.textContent = lang==='en'?'Try Again':'Coba Lagi';
+    retry.onclick = ()=> setupMinigame();
+    minigameArea.appendChild(retry);
+  }
+}
+
+// --- Scene 3: hold to charge transformation ---
+function setupHoldGame(t){
+  const sc = t.scenes[2];
+  const hint = document.createElement('div');
+  hint.className='hint';
+  hint.textContent = sc.hint;
+  minigameArea.appendChild(hint);
+
+  const barWrap = document.createElement('div');
+  barWrap.className='bar-wrap';
+  const barFill = document.createElement('div');
+  barFill.className='bar-fill';
+  barWrap.appendChild(barFill);
+  minigameArea.appendChild(barWrap);
+
+  const btn = document.createElement('button');
+  btn.className='action-btn';
+  btn.textContent = lang==='en' ? 'Hold: Chant Prayer' : 'Tahan: Ucapkan Mantra';
+  minigameArea.appendChild(btn);
+
+  let progress = 0;
+  let holding = false;
+  let done = false;
+  let raf;
+
+  function frame(){
+    if(holding && !done){
+      progress = Math.min(100, progress + 1.1);
+    } else if(!done){
+      progress = Math.max(0, progress - 0.6);
+    }
+    barFill.style.width = progress+'%';
+    drawTransformFrame(progress/100);
+    if(progress>=100 && !done){
+      done = true;
+      finishTransform();
+      return;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function drawTransformFrame(p){
+    clear();
+    sky('#cfe8d8','#eee6c8');
+    hills('#5f7a4f', 300);
+    if(p<1){
+      ground('#8a6a45', 340);
+      ctx.save(); ctx.globalAlpha = 1-p;
+      drawHut(150,300,1.1); drawHut(340,305,1.0); drawHut(520,300,1.05);
+      ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = p;
+    drawWater(60,260,580,150,1);
+    for(let i=0;i<4;i++) drawFish(150+i*110, 330, 0.9, animT+i);
+    ctx.restore();
+    drawTree(60,335,1.2); drawTree(650,335,1.2);
+    // sparkle
+    if(p>0 && p<1){
+      ctx.fillStyle = `rgba(255,240,180,${0.5})`;
+      for(let i=0;i<6;i++){
+        const a = (animT*3+i)*1.3;
+        ctx.beginPath();
+        ctx.arc(360+Math.cos(a)*100, 260+Math.sin(a)*60, 2.5, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+  drawTransformFrame(0);
+
+  const start = (e)=>{ e.preventDefault(); holding = true; };
+  const end = (e)=>{ holding = false; };
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('touchstart', start);
+  window.addEventListener('mouseup', end);
+  btn.addEventListener('touchend', end);
+
+  animT = 0;
+  raf = requestAnimationFrame(function tick(){
+    animT += 0.03;
+    frame();
+  });
+  // override frame's own raf scheduling since we already loop above; simplify:
+  cancelAnimationFrame(raf);
+  function loop(){
+    animT += 0.03;
+    if(holding && !done){ progress = Math.min(100, progress+1.1); }
+    else if(!done){ progress = Math.max(0, progress-0.6); }
+    barFill.style.width = progress+'%';
+    drawTransformFrame(progress/100);
+    if(progress>=100 && !done){ done = true; finishTransform(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+  raf = requestAnimationFrame(loop);
+
+  function finishTransform(){
+    cancelAnimationFrame(raf);
+    btn.disabled = true;
+    addContinueButton();
+  }
+}
+
+// --- Scene 4: timing bar ---
+function setupTimingGame(t){
+  const sc = t.scenes[3];
+  const hint = document.createElement('div');
+  hint.className='hint';
+  hint.textContent = sc.hint;
+  minigameArea.appendChild(hint);
+
+  const track = document.createElement('div');
+  track.style.position='relative';
+  track.style.width='90%';
+  track.style.maxWidth='360px';
+  track.style.height='18px';
+  track.style.background='#e0d6bb';
+  track.style.border='1px solid var(--brown-light)';
+  track.style.borderRadius='9px';
+  track.style.overflow='hidden';
+  minigameArea.appendChild(track);
+
+  const zone = document.createElement('div');
+  zone.style.position='absolute';
+  zone.style.left='40%';
+  zone.style.width='20%';
+  zone.style.height='100%';
+  zone.style.background='rgba(76,122,76,0.55)';
+  track.appendChild(zone);
+
+  const marker = document.createElement('div');
+  marker.style.position='absolute';
+  marker.style.top='0';
+  marker.style.width='4px';
+  marker.style.height='100%';
+  marker.style.background='#7a2323';
+  track.appendChild(marker);
+
+  const btn = document.createElement('button');
+  btn.className='action-btn';
+  btn.textContent = lang==='en' ? 'Watch' : 'Amati';
+  minigameArea.appendChild(btn);
+
+  const scoreLabel = document.createElement('div');
+  scoreLabel.className='hint';
+  minigameArea.appendChild(scoreLabel);
+
+  let hits = 0, need = 3, misses=0, finished=false;
+  scoreLabel.textContent = (lang==='en'?'Successes: ':'Berhasil: ')+hits+'/'+need;
+
+  let raf;
+  function loop(){
+    if(finished) return;
+    const pos = (Math.sin(animT*1.8)+1)/2 * 96;
+    marker.style.left = pos+'%';
+    animT += 0.05;
+    raf = requestAnimationFrame(loop);
+  }
+  animT = 0;
+  raf = requestAnimationFrame(loop);
+
+  btn.addEventListener('click', ()=>{
+    if(finished) return;
+    const markerLeft = parseFloat(marker.style.left||'0');
+    if(markerLeft>=38 && markerLeft<=62){
+      hits++;
+      scoreLabel.textContent = (lang==='en'?'Successes: ':'Berhasil: ')+hits+'/'+need;
+      if(hits>=need) win();
+    } else {
+      misses++;
+      if(misses>=4) lose();
+    }
+  });
+
+  function cleanup(){ cancelAnimationFrame(raf); finished = true; }
+  function win(){
+    cleanup();
+    const msg = document.createElement('div');
+    msg.className='hint'; msg.style.color='#2f6b2f'; msg.style.fontWeight='600';
+    msg.textContent = sc.gameWin;
+    minigameArea.appendChild(msg);
+    addContinueButton();
+  }
+  function lose(){
+    cleanup();
+    const msg = document.createElement('div');
+    msg.className='hint'; msg.style.color='#a33';
+    msg.textContent = sc.gameLose;
+    minigameArea.appendChild(msg);
+    const retry = document.createElement('button');
+    retry.className='action-btn';
+    retry.textContent = lang==='en'?'Try Again':'Coba Lagi';
+    retry.onclick = ()=> setupMinigame();
+    minigameArea.appendChild(retry);
+  }
+}
+
+// --- Scene 5: drag sun to dry lake ---
+function setupDragSunGame(t){
+  const sc = t.scenes[4];
+  const hint = document.createElement('div');
+  hint.className='hint';
+  hint.textContent = sc.hint;
+  minigameArea.appendChild(hint);
+
+  let sunX = 90, sunY = 70;
+  let dragging = false;
+  let progress = 0; // 0..1
+  let done = false;
+
+  function draw(){
+    clear();
+    sky('#cfe8d8','#eee6c8');
+    hills('#5f7a4f', 300);
+    drawWater(60,260,580,120*(1-progress*0.85), 1-progress*0.15);
+    if(progress>0.15){
+      ground('#8a6a45', 340);
+    }
+    if(progress>0.5){
+      drawHut(150,300,1.0*Math.min(1,(progress-0.5)*2.4));
+      drawHut(340,305,1.0*Math.min(1,(progress-0.5)*2.4));
+      drawHut(520,300,1.0*Math.min(1,(progress-0.5)*2.4));
+    }
+    drawTree(60,335,1.2); drawTree(650,335,1.2);
+    drawSun(sunX, sunY, 26);
+  }
+  draw();
+
+  function getPos(ev){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+    const p = ev.touches ? ev.touches[0] : ev;
+    return { x:(p.clientX-rect.left)*scaleX, y:(p.clientY-rect.top)*scaleY };
+  }
+  function down(ev){
+    const pos = getPos(ev);
+    if(Math.hypot(pos.x-sunX,pos.y-sunY)<40){ dragging = true; }
+  }
+  function move(ev){
+    if(!dragging || done) return;
+    ev.preventDefault();
+    const pos = getPos(ev);
+    sunX = Math.max(50, Math.min(650, pos.x));
+    sunY = 60 + Math.sin((sunX-50)/600*Math.PI)*10;
+    progress = Math.min(1, (sunX-50)/560);
+    draw();
+    if(progress>=1 && !done){
+      done = true;
+      finish();
+    }
+  }
+  function up(){ dragging = false; }
+
+  canvas.addEventListener('mousedown', down);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', up);
+  canvas.addEventListener('touchstart', down, {passive:true});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', up);
+
+  function cleanup(){
+    canvas.removeEventListener('mousedown', down);
+    canvas.removeEventListener('mousemove', move);
+    window.removeEventListener('mouseup', up);
+    canvas.removeEventListener('touchstart', down);
+    canvas.removeEventListener('touchmove', move);
+    canvas.removeEventListener('touchend', up);
+  }
+  function finish(){
+    cleanup();
+    addContinueButton();
+  }
+}
+
+// --- Scene 6: choice ---
+function setupChoiceGame(t){
+  const sc = t.scenes[5];
+  const hint = document.createElement('div');
+  hint.className='hint';
+  hint.textContent = sc.hint;
+  minigameArea.appendChild(hint);
+
+  const row = document.createElement('div');
+  row.className='choice-row';
+  minigameArea.appendChild(row);
+
+  const btnA = document.createElement('button');
+  btnA.className='choice-btn'; btnA.textContent = sc.choiceA;
+  const btnB = document.createElement('button');
+  btnB.className='choice-btn'; btnB.textContent = sc.choiceB;
+  row.appendChild(btnA); row.appendChild(btnB);
+
+  function choose(resp){
+    row.remove();
+    hint.remove();
+    const respBox = document.createElement('div');
+    respBox.className='hint';
+    respBox.style.fontStyle='italic';
+    respBox.textContent = resp;
+    minigameArea.appendChild(respBox);
+    speak(resp);
+    const finishBtn = document.createElement('button');
+    finishBtn.className='action-btn';
+    finishBtn.textContent = lang==='en' ? 'Finish the Story' : 'Selesaikan Cerita';
+    finishBtn.onclick = showEnding;
+    minigameArea.appendChild(finishBtn);
+  }
+  btnA.onclick = ()=>choose(sc.respA);
+  btnB.onclick = ()=>choose(sc.respB);
+}
+
+/* ============ FLOW ============ */
+function renderScene(skipSpeak){
+  renderDots();
+  const t = STR[lang];
+  const sc = t.scenes[sceneIdx];
+  narrationBox.innerHTML = '<strong>'+sc.title+'</strong><br>'+sc.narr;
+  setupMinigame();
+  if(!skipSpeak) speak(sc.narr);
+  else if(!muted) speak(sc.narr);
+  resizeNotify();
+}
+
+function goNext(){
+  stopSpeak();
+  if(sceneIdx < TOTAL_SCENES-1){
+    sceneIdx++;
+    renderScene();
+  }
+}
+
+function showEnding(){
+  stopSpeak();
+  stopAnim();
+  const t = STR[lang];
+  document.getElementById('endTitle').textContent = t.endTitle;
+  document.getElementById('endDesc').innerHTML =
+    '<strong>'+t.moralTitle+'</strong><br>'+t.moral+
+    '<br><br><em>'+t.quote+'</em>';
+  document.getElementById('replayBtn').textContent = t.replayBtn;
+  document.getElementById('endOverlay').classList.remove('hidden');
+  resizeNotify();
+}
+
+/* ============ START / END OVERLAY ============ */
+function renderStartOverlay(){
+  const t = STR[lang];
+  document.getElementById('startTitle').textContent = t.startTitle;
+  document.getElementById('startDesc').textContent = t.startDesc;
+  document.getElementById('startBtn').textContent = t.startBtn;
+  document.title = t.gameTitle;
+}
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  document.getElementById('startOverlay').classList.add('hidden');
+  sceneIdx = 0;
+  renderScene();
+});
+document.getElementById('replayBtn').addEventListener('click', ()=>{
+  document.getElementById('endOverlay').classList.add('hidden');
+  sceneIdx = 0;
+  renderScene();
+});
+
+/* ============ RESIZE / POSTMESSAGE ============ */
+function resizeNotify(){
+  requestAnimationFrame(()=>{
+    const h = document.getElementById('app').scrollHeight;
+    try{
+      window.parent.postMessage({ type:'tageh-game-resize', height:h }, '*');
+    }catch(e){}
+  });
+}
+new ResizeObserver(resizeNotify).observe(document.getElementById('app'));
+window.addEventListener('load', resizeNotify);
+
+/* ============ INIT ============ */
+updateLangUI();
+updateMuteUI();
+renderStartOverlay();
+sceneRenderers[0]();
+renderDots();
+
+})();
+</script>
+</body>
+</html>
