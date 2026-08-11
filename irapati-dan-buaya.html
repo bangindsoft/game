@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Irapati dan Seekor Buaya</title>
+<style>
+  :root{
+    --river:#3d7d9e;
+    --river-dark:#2a5c78;
+    --sand:#e3c288;
+    --sand-dark:#c9a563;
+    --leaf:#4c7a3f;
+    --leaf-dark:#325427;
+    --ink:#2c2418;
+    --paper:#fbf3e1;
+    --accent:#b5502f;
+    --accent-dark:#8a3b21;
+    --gold:#d3a441;
+    --crocgreen:#5c7a4a;
+    --crocgreen-dark:#3f5a32;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,#f6ead0,#ecd8ac);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:12px;
+  }
+  #game-root{
+    width:100%;
+    max-width:720px;
+    background:var(--paper);
+    border-radius:18px;
+    box-shadow:0 6px 24px rgba(60,40,10,0.18);
+    overflow:hidden;
+    border:1px solid #d9c69a;
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:linear-gradient(180deg,#5a3c26,#432c1c);
+    color:#f5e9cf;
+  }
+  #topbar .title{
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.3px;
+  }
+  #topbar .controls{
+    display:flex;
+    gap:8px;
+  }
+  .ctrl-btn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.28);
+    color:#f5e9cf;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background .15s ease;
+  }
+  .ctrl-btn:hover{background:rgba(255,255,255,0.22);}
+  .ctrl-btn.active{background:var(--accent);border-color:var(--accent-dark);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    background:linear-gradient(180deg,#bfe3ef 0%,#bfe3ef 45%,var(--river) 45%,var(--river-dark) 100%);
+    overflow:hidden;
+  }
+  canvas#stage{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  #overlay-ui{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  #overlay-ui .clickable{pointer-events:auto;}
+
+  #caption-box{
+    position:relative;
+    padding:12px 16px;
+    background:#3a2a1a;
+    color:#fbf3e1;
+    font-size:14px;
+    line-height:1.55;
+    min-height:20px;
+    display:flex;
+    align-items:center;
+    border-top:1px solid #5a3c26;
+  }
+  #caption-text{max-width:100%;}
+
+  #start-overlay, #end-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,rgba(20,14,8,0.72),rgba(20,14,8,0.86));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:#fbf3e1;
+    padding:20px;
+    pointer-events:auto;
+    z-index:5;
+  }
+  #start-overlay h1{
+    font-size:22px;
+    margin:0 0 8px;
+    color:var(--gold);
+  }
+  #start-overlay p, #end-overlay p{
+    font-size:13.5px;
+    line-height:1.55;
+    max-width:480px;
+    margin:0 0 18px;
+    color:#f0e3c6;
+  }
+  .big-btn{
+    background:var(--accent);
+    border:none;
+    color:#fff8ec;
+    padding:12px 26px;
+    font-size:15px;
+    font-weight:700;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--accent-dark);
+    transition:transform .08s ease;
+  }
+  .big-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent-dark);}
+  .big-btn:hover{filter:brightness(1.06);}
+
+  #hidden{display:none !important;}
+
+  #bottombar{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px 16px;
+    background:#f4e6c4;
+  }
+  #dots{
+    display:flex;
+    gap:8px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#cbb684;
+    transition:all .2s ease;
+  }
+  .dot.active{
+    background:var(--accent);
+    width:22px;
+    border-radius:6px;
+  }
+  .dot.done{background:var(--leaf);}
+
+  #action-row{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    min-height:44px;
+  }
+  #next-btn{
+    background:var(--leaf);
+    border:none;
+    color:#fff8ec;
+    padding:10px 22px;
+    font-size:14px;
+    font-weight:700;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--leaf-dark);
+  }
+  #next-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--leaf-dark);}
+  #next-btn[disabled]{opacity:0.35;cursor:not-allowed;box-shadow:none;}
+
+  #hold-btn{
+    position:relative;
+    background:var(--accent);
+    border:none;
+    color:#fff8ec;
+    padding:12px 26px;
+    font-size:14px;
+    font-weight:700;
+    border-radius:999px;
+    cursor:pointer;
+    overflow:hidden;
+    user-select:none;
+    touch-action:none;
+    box-shadow:0 3px 0 var(--accent-dark);
+  }
+  #hold-btn .fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:rgba(255,255,255,0.32);
+  }
+  #hold-btn span{position:relative;}
+
+  footer.game-footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7550;
+    padding:8px 10px 12px;
+    background:#f4e6c4;
+  }
+
+  .crumb{
+    position:absolute;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:auto;
+  }
+
+  @media (max-width:480px){
+    #topbar .title{font-size:12px;}
+    .ctrl-btn{font-size:11px;padding:5px 8px;}
+    #caption-box{font-size:13px;}
+  }
+</style>
+</head>
+<body>
+<div id="game-root">
+  <div id="topbar">
+    <div class="title" id="ui-title">Irapati dan Seekor Buaya</div>
+    <div class="controls">
+      <button class="ctrl-btn" id="lang-btn" type="button">🌐 EN</button>
+      <button class="ctrl-btn" id="mute-btn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="600"></canvas>
+    <div id="overlay-ui"></div>
+
+    <div id="start-overlay">
+      <h1 id="start-title">Irapati dan Seekor Buaya</h1>
+      <p id="start-desc">Sebuah dongeng dari Jawa Timur tentang kasih sayang seorang ibu dan buaya-buaya sungai Kuning.</p>
+      <button class="big-btn" id="start-btn" type="button">▶ Mulai Cerita</button>
+    </div>
+
+    <div id="end-overlay" style="display:none;">
+      <h1 id="end-title">Selesai</h1>
+      <p id="end-desc"></p>
+      <button class="big-btn" id="replay-btn" type="button">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="caption-box"><div id="caption-text"></div></div>
+
+  <div id="bottombar">
+    <div id="dots"></div>
+    <div id="action-row"></div>
+  </div>
+
+  <footer class="game-footer" id="ui-footer">Kisah rakyat Jawa Timur · Kasih sayang seorang ibu</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     TEXT / i18n
+  --------------------------------------------------------- */
+  const T = {
+    id:{
+      gameTitle:"Irapati dan Seekor Buaya",
+      footer:"Kisah rakyat Jawa Timur · Kasih sayang seorang ibu",
+      startTitle:"Irapati dan Seekor Buaya",
+      startDesc:"Sebuah dongeng dari Jawa Timur tentang kasih sayang seorang ibu dan buaya-buaya sungai Kuning.",
+      startBtn:"▶ Mulai Cerita",
+      replayBtn:"↺ Ulangi Cerita",
+      next:"Lanjut ▶",
+      endTitle:"Tamat",
+      endDesc:"Sungai Kuning kembali tenang. Kasih sayang seorang ibu mampu meluluhkan kemarahan, dan para buaya menepati janji untuk tidak lagi mengganggu penduduk.",
+      muteOn:"🔇",
+      muteOff:"🔊",
+      langBtn:"🌐 EN",
+      scenes:[
+        {
+          caption:"Alkisah, di tepi sungai Kuning hiduplah Mbah Irapati, seorang ibu yang disegani karena kesaktiannya. Ia memiliki seorang anak yang sangat disayanginya.",
+          action:"next"
+        },
+        {
+          caption:"Suatu hari, sang anak bermain dan mandi riang di tepi sungai. Ketuk air untuk membantunya bermain — tetapi hati-hati, ada yang mengintai dari kedalaman sungai...",
+          action:"minigame-splash",
+          gameLabel:"Ketuk riak air!"
+        },
+        {
+          caption:"Secepat kilat, seekor buaya lapar menyambar sang anak hingga tak terlihat lagi. Sungai Kuning kembali sunyi.",
+          action:"next"
+        },
+        {
+          caption:"Anaknya tak kunjung pulang. Mbah Irapati gelisah dan menyusuri sungai untuk mencarinya. Ketuk jejak-jejak yang tertinggal di tepian sungai.",
+          action:"minigame-collect",
+          gameLabel:"Kumpulkan semua jejak"
+        },
+        {
+          caption:"Dari bekas-bekas yang ditemukannya, Mbah Irapati sadar: anaknya telah dibawa oleh seekor buaya. Amarah dan kesedihan bercampur di hatinya.",
+          action:"next"
+        },
+        {
+          caption:"“Wahai seluruh buaya yang hidup di sungai Kuning! Keluarlah kalian semua!” Tahan tombol untuk membantu Mbah Irapati memanggil semua buaya keluar dari sungai.",
+          action:"minigame-hold",
+          holdLabel:"Tahan untuk Berteriak"
+        },
+        {
+          caption:"Satu demi satu, para buaya keluar dari sungai dan berkumpul dengan gelisah di hadapan Mbah Irapati.",
+          action:"next"
+        },
+        {
+          caption:"Namun ada seekor buaya yang datang dengan terpaksa, didorong oleh buaya-buaya lain. “Pastilah buaya itu yang telah menyambar anakku,” pikir Mbah Irapati. Ketuk buaya yang terlihat gelisah dan didorong dari belakang.",
+          action:"minigame-choose",
+          wrongMsg:"Bukan buaya ini... coba perhatikan lagi.",
+          correctMsg:"Buaya inilah yang terlihat gelisah dan terdorong maju!"
+        },
+        {
+          caption:"“Maaf Mbah, mohon ampun, memang benar saya yang telah menyambar anak Mbah.” Buaya itu pun mengaku dan membawa kembali sang anak ke hadapan Mbah Irapati.",
+          action:"next"
+        },
+        {
+          caption:"Dengan penuh kasih sayang, Mbah Irapati menyentuh anaknya. Tahan tombol untuk membantunya menghidupkan kembali sang anak.",
+          action:"minigame-hold2",
+          holdLabel:"Tahan untuk Menghidupkan"
+        },
+        {
+          caption:"Sang anak pun terbangun kembali! Mbah Irapati mengalungkan seutas kalung ijuk pada leher buaya sebagai tanda peringatan, lalu memaafkannya.",
+          action:"next"
+        },
+        {
+          caption:"Sejak saat itu, seluruh buaya sungai Kuning berjanji untuk tidak lagi mengganggu penduduk di sepanjang sungai. Demikianlah akhir kisah Mbah Irapati dan seekor buaya.",
+          action:"end"
+        }
+      ]
+    },
+    en:{
+      gameTitle:"Irapati and the Crocodile",
+      footer:"A folktale from East Java · A mother's love",
+      startTitle:"Irapati and the Crocodile",
+      startDesc:"A folktale from East Java about a mother's love and the crocodiles of the Kuning River.",
+      startBtn:"▶ Start the Story",
+      replayBtn:"↺ Replay Story",
+      next:"Continue ▶",
+      endTitle:"The End",
+      endDesc:"The Kuning River grew calm once more. A mother's love was strong enough to soften anger, and the crocodiles kept their promise never to trouble the villagers again.",
+      muteOn:"🔇",
+      muteOff:"🔊",
+      langBtn:"🌐 ID",
+      scenes:[
+        {
+          caption:"Long ago, on the banks of the Kuning River lived Mbah Irapati, a mother respected for her great powers. She had a beloved child whom she cherished dearly.",
+          action:"next"
+        },
+        {
+          caption:"One day, her child played and bathed happily by the riverside. Tap the ripples to help him play — but be careful, something is lurking beneath the water...",
+          action:"minigame-splash",
+          gameLabel:"Tap the ripples!"
+        },
+        {
+          caption:"In a flash, a hungry crocodile snatched the child away, and he disappeared beneath the water. The river fell silent once more.",
+          action:"next"
+        },
+        {
+          caption:"Her child never came home. Worried, Mbah Irapati searched along the river for him. Tap the traces left behind on the riverbank.",
+          action:"minigame-collect",
+          gameLabel:"Collect all the clues"
+        },
+        {
+          caption:"From the traces she found, Mbah Irapati realized: a crocodile had taken her child. Anger and grief filled her heart.",
+          action:"next"
+        },
+        {
+          caption:"\"All you crocodiles who live in the Kuning River! Come out, all of you!\" Hold the button to help Mbah Irapati call every crocodile out of the river.",
+          action:"minigame-hold",
+          holdLabel:"Hold to Call Out"
+        },
+        {
+          caption:"One by one, the crocodiles emerged from the river and gathered nervously before Mbah Irapati.",
+          action:"next"
+        },
+        {
+          caption:"But one crocodile came reluctantly, pushed forward by the others. \"That must be the one who took my child,\" thought Mbah Irapati. Tap the crocodile that looks nervous and pushed from behind.",
+          action:"minigame-choose",
+          wrongMsg:"Not this one... look again.",
+          correctMsg:"This is the crocodile who looked nervous, pushed to the front!"
+        },
+        {
+          caption:"\"Forgive me, Mbah, I beg your mercy — it was truly I who took your child.\" The crocodile confessed and brought the child back before Mbah Irapati.",
+          action:"next"
+        },
+        {
+          caption:"With great tenderness, Mbah Irapati touched her child. Hold the button to help her bring him back to life.",
+          action:"minigame-hold2",
+          holdLabel:"Hold to Revive"
+        },
+        {
+          caption:"The child awoke once more! Mbah Irapati placed a fiber necklace around the crocodile's neck as a warning, then forgave him.",
+          action:"next"
+        },
+        {
+          caption:"From that day on, every crocodile of the Kuning River vowed never to trouble the villagers again. Thus ends the tale of Mbah Irapati and the crocodile.",
+          action:"end"
+        }
+      ]
+    }
+  };
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+  let muted = localStorage.getItem('caritasato_narration_muted') === '1';
+  let sceneIdx = 0;
+  const totalScenes = T.id.scenes.length;
+  let started = false;
+  let voicesReady = false;
+  let currentUtterance = null;
+
+  /* ---------------------------------------------------------
+     DOM REFS
+  --------------------------------------------------------- */
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay-ui');
+  const captionText = document.getElementById('caption-text');
+  const dotsWrap = document.getElementById('dots');
+  const actionRow = document.getElementById('action-row');
+  const startOverlay = document.getElementById('start-overlay');
+  const endOverlay = document.getElementById('end-overlay');
+  const langBtn = document.getElementById('lang-btn');
+  const muteBtn = document.getElementById('mute-btn');
+
+  /* ---------------------------------------------------------
+     SPEECH
+  --------------------------------------------------------- */
+  function pickVoice(targetLang){
+    if(!('speechSynthesis' in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if(!voices || !voices.length) return null;
+    const prefix = targetLang === 'en' ? 'en' : 'id';
+    let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(prefix));
+    if(!v && prefix === 'id'){
+      v = voices.find(v => /indones/i.test(v.name));
+    }
+    return v || null;
+  }
+
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if(muted || !text) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    const v = pickVoice(lang);
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    currentUtterance = utter;
+    window.speechSynthesis.speak(utter);
+  }
+
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = () => { voicesReady = true; };
+  }
+
+  /* ---------------------------------------------------------
+     RESIZE (postMessage to parent for iframe auto-resize)
+  --------------------------------------------------------- */
+  function reportSize(){
+    const h = document.getElementById('game-root').offsetHeight;
+    try{
+      window.parent.postMessage({ type:'irapati-buaya-resize', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportSize);
+  window.addEventListener('resize', reportSize);
+  if(window.ResizeObserver){
+    new ResizeObserver(reportSize).observe(document.getElementById('game-root'));
+  }
+
+  /* ---------------------------------------------------------
+     CANVAS DRAW HELPERS
+  --------------------------------------------------------- */
+  const W = canvas.width, H = canvas.height;
+
+  function clear(){
+    ctx.clearRect(0,0,W,H);
+  }
+
+  function drawSky(){
+    const g = ctx.createLinearGradient(0,0,0,H*0.42);
+    g.addColorStop(0,'#cdeaf3');
+    g.addColorStop(1,'#e9f4e0');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.42);
+    // sun
+    ctx.fillStyle = 'rgba(255,236,170,0.85)';
+    ctx.beginPath();
+    ctx.arc(W*0.82, H*0.14, 46, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawHills(){
+    ctx.fillStyle = '#7fa870';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.40);
+    ctx.quadraticCurveTo(W*0.2,H*0.30,W*0.42,H*0.40);
+    ctx.quadraticCurveTo(W*0.65,H*0.48,W,H*0.36);
+    ctx.lineTo(W,H*0.44);
+    ctx.lineTo(0,H*0.44);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawRiver(){
+    const g = ctx.createLinearGradient(0,H*0.40,0,H);
+    g.addColorStop(0,'#6fb2cf');
+    g.addColorStop(0.5,'#3d7d9e');
+    g.addColorStop(1,'#215065');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,H*0.40,W,H*0.60);
+    // ripples
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 2;
+    for(let i=0;i<6;i++){
+      const y = H*0.48 + i*38;
+      ctx.beginPath();
+      for(let x=0;x<=W;x+=20){
+        const yy = y + Math.sin((x/60)+i)*4;
+        if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawBank(side){
+    ctx.fillStyle = '#d8bd82';
+    ctx.beginPath();
+    if(side==='left'){
+      ctx.moveTo(0,H*0.42);
+      ctx.quadraticCurveTo(W*0.10,H*0.50,0,H*0.60);
+      ctx.lineTo(0,H*0.42);
+    } else {
+      ctx.moveTo(W,H*0.42);
+      ctx.quadraticCurveTo(W*0.92,H*0.50,W,H*0.60);
+      ctx.lineTo(W,H*0.42);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawTree(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.fillRect(-6,0,12,42);
+    ctx.fillStyle = '#3f6a34';
+    ctx.beginPath();
+    ctx.ellipse(0,-18,34,30,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#4c7a3f';
+    ctx.beginPath();
+    ctx.ellipse(-14,-30,20,18,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(16,-32,20,18,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBackground(withBank){
+    drawSky();
+    drawHills();
+    drawRiver();
+    if(withBank !== false){
+      drawBank('left');
+      drawTree(56,H*0.40,0.9);
+      drawTree(W-70,H*0.38,1.05);
+    }
+  }
+
+  // --- Mbah Irapati ---
+  function drawIrapati(x,y,scale,mood){
+    // mood: 'calm' | 'worried' | 'angry' | 'tender'
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(0,86,34,9,0,0,Math.PI*2);
+    ctx.fill();
+    // kain/skirt
+    ctx.fillStyle = mood==='angry' ? '#7a2f2f' : '#6b3f2a';
+    ctx.beginPath();
+    ctx.moveTo(-30,40); ctx.lineTo(30,40); ctx.lineTo(20,84); ctx.lineTo(-20,84);
+    ctx.closePath(); ctx.fill();
+    // body/kebaya
+    ctx.fillStyle = mood==='angry' ? '#a8503a' : '#c98b52';
+    ctx.beginPath();
+    ctx.moveTo(-24,-4); ctx.lineTo(24,-4); ctx.lineTo(30,42); ctx.lineTo(-30,42);
+    ctx.closePath(); ctx.fill();
+    // arms
+    ctx.strokeStyle = '#c98b52';
+    ctx.lineWidth = 10; ctx.lineCap='round';
+    if(mood==='angry'){
+      ctx.beginPath(); ctx.moveTo(-22,4); ctx.lineTo(-42,-18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(22,4); ctx.lineTo(42,-18); ctx.stroke();
+    } else if(mood==='tender'){
+      ctx.beginPath(); ctx.moveTo(-22,6); ctx.lineTo(-8,26); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(22,6); ctx.lineTo(8,26); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-22,6); ctx.lineTo(-30,32); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(22,6); ctx.lineTo(30,32); ctx.stroke();
+    }
+    // neck+head
+    ctx.fillStyle = '#a8734a';
+    ctx.fillRect(-6,-14,12,14);
+    ctx.beginPath();
+    ctx.arc(0,-28,20,0,Math.PI*2);
+    ctx.fillStyle = '#c98b52';
+    ctx.fill();
+    // hair bun
+    ctx.fillStyle = '#2a2015';
+    ctx.beginPath();
+    ctx.arc(0,-40,15,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-46,7,0,Math.PI*2);
+    ctx.fill();
+    // face
+    ctx.fillStyle = '#2c2418';
+    if(mood==='angry'){
+      ctx.beginPath(); ctx.moveTo(-9,-32); ctx.lineTo(-2,-30); ctx.stroke();
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-10,-31); ctx.lineTo(-3,-29); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10,-31); ctx.lineTo(3,-29); ctx.stroke();
+      ctx.fillRect(-6,-26,3,3); ctx.fillRect(3,-26,3,3);
+      ctx.beginPath(); ctx.arc(0,-16,5,0,Math.PI,false); ctx.stroke();
+    } else if(mood==='worried'){
+      ctx.fillRect(-6,-26,3,3); ctx.fillRect(3,-26,3,3);
+      ctx.beginPath(); ctx.arc(0,-14,4,Math.PI,Math.PI*2); ctx.stroke();
+    } else {
+      ctx.fillRect(-6,-26,3,3); ctx.fillRect(3,-26,3,3);
+      ctx.beginPath(); ctx.arc(0,-18,5,0,Math.PI,false); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // --- Child ---
+  function drawChild(x,y,scale,pose){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle='rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(0,46,18,6,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e0a860';
+    if(pose==='sleep'){
+      ctx.beginPath(); ctx.ellipse(0,30,20,10,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(-16,26,10,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillRect(-10,0,20,30);
+      ctx.beginPath(); ctx.arc(0,-8,12,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#2a2015';
+      ctx.beginPath(); ctx.arc(0,-14,10,Math.PI,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#2c2418';
+      ctx.fillRect(-4,-10,2,2); ctx.fillRect(2,-10,2,2);
+      if(pose==='happy'){
+        ctx.beginPath(); ctx.arc(0,-4,4,0,Math.PI,false); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // --- Crocodile ---
+  function drawCroc(x,y,scale,facing,mood,neckband){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*(facing||1),scale);
+    ctx.fillStyle='rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(0,30,44,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = mood==='guilty' ? '#6f8a55' : '#5c7a4a';
+    // body
+    ctx.beginPath();
+    ctx.ellipse(-4,14,34,16,0,0,Math.PI*2);
+    ctx.fill();
+    // tail
+    ctx.beginPath();
+    ctx.moveTo(-34,14); ctx.quadraticCurveTo(-64,4,-58,-8); ctx.quadraticCurveTo(-46,6,-30,18);
+    ctx.closePath(); ctx.fill();
+    // head/snout
+    ctx.beginPath();
+    ctx.moveTo(20,14);
+    ctx.quadraticCurveTo(48,10,54,4);
+    ctx.quadraticCurveTo(48,18,20,26);
+    ctx.closePath();
+    ctx.fill();
+    // jaw line
+    ctx.strokeStyle = '#3f5a32'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(22,16); ctx.lineTo(50,10); ctx.stroke();
+    // teeth
+    ctx.fillStyle='#f4ecd8';
+    for(let i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.moveTo(26+i*7,17); ctx.lineTo(29+i*7,17); ctx.lineTo(27.5+i*7,22);
+      ctx.closePath(); ctx.fill();
+    }
+    // eye bumps
+    ctx.fillStyle = mood==='guilty' ? '#6f8a55' : '#5c7a4a';
+    ctx.beginPath(); ctx.arc(30,4,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#e9d24a';
+    ctx.beginPath(); ctx.arc(31,3,2.4,0,Math.PI*2); ctx.fill();
+    // back ridges
+    ctx.fillStyle = '#3f5a32';
+    for(let i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.moveTo(-18+i*9,2);
+      ctx.lineTo(-14+i*9,-6);
+      ctx.lineTo(-10+i*9,2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    if(neckband){
+      ctx.strokeStyle = '#3a2a16';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(14,10); ctx.lineTo(14,22);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWaterSurfaceOverlay(){
+    ctx.fillStyle='rgba(255,255,255,0.08)';
+    ctx.fillRect(0,H*0.40,W,6);
+  }
+
+  /* ---------------------------------------------------------
+     SCENE RENDER LOGIC
+  --------------------------------------------------------- */
+  let rafId = null;
+  function cancelRaf(){ if(rafId){ cancelAnimationFrame(rafId); rafId = null; } }
+
+  const chooseTargets = []; // for click hit-testing in choose minigame
+  const collectTargets = [];
+  const splashTargets = [];
+
+  function clearOverlay(){
+    overlay.innerHTML = '';
+  }
+
+  function renderStaticScene(idx){
+    clear();
+    switch(idx){
+      case 0: // intro
+        drawBackground();
+        drawIrapati(W*0.36,H*0.72,1.15,'calm');
+        drawChild(W*0.58,H*0.78,1.0,'happy');
+        break;
+      case 1: // splash minigame - drawn per-frame elsewhere
+        drawBackground();
+        break;
+      case 2: // attack aftermath
+        drawBackground();
+        drawCroc(W*0.55,H*0.80,1.1,1,'normal',false);
+        break;
+      case 3: // searching
+        drawBackground();
+        drawIrapati(W*0.30,H*0.68,1.0,'worried');
+        break;
+      case 4: // realization
+        drawBackground();
+        drawIrapati(W*0.5,H*0.70,1.15,'worried');
+        break;
+      case 5: // calling crocodiles - hold minigame drawn elsewhere
+        drawBackground(false);
+        drawIrapati(W*0.5,H*0.78,1.2,'angry');
+        break;
+      case 6: // crocodiles emerge
+        drawBackground(false);
+        drawIrapati(W*0.5,H*0.80,1.15,'angry');
+        drawCroc(W*0.18,H*0.72,0.9,1,'normal',false);
+        drawCroc(W*0.38,H*0.66,0.8,-1,'normal',false);
+        drawCroc(W*0.65,H*0.68,0.85,1,'normal',false);
+        drawCroc(W*0.82,H*0.74,0.9,-1,'normal',false);
+        break;
+      case 7: // choose guilty crocodile - drawn elsewhere
+        drawBackground(false);
+        drawIrapati(W*0.5,H*0.86,1.1,'angry');
+        break;
+      case 8: // confession
+        drawBackground(false);
+        drawIrapati(W*0.34,H*0.78,1.1,'worried');
+        drawCroc(W*0.62,H*0.76,1.0,1,'guilty',false);
+        drawChild(W*0.62,H*0.56,0.85,'sleep');
+        break;
+      case 9: // revive minigame drawn elsewhere
+        drawBackground(false);
+        break;
+      case 10: // ending happy + necklace
+        drawBackground(false);
+        drawIrapati(W*0.32,H*0.76,1.1,'tender');
+        drawChild(W*0.46,H*0.80,0.95,'happy');
+        drawCroc(W*0.68,H*0.78,1.0,1,'guilty',true);
+        break;
+      case 11: // final moral
+        drawBackground();
+        drawIrapati(W*0.32,H*0.74,1.05,'calm');
+        drawChild(W*0.5,H*0.80,0.9,'happy');
+        drawCroc(W*0.72,H*0.80,0.9,1,'guilty',true);
+        drawCroc(W*0.86,H*0.86,0.6,1,'normal',false);
+        break;
+      default:
+        drawBackground();
+    }
+  }
+
+  /* ---- Minigame: Splash (tap-to-collect ripples) scene idx 1 ---- */
+  let splashState = null;
+  function startSplashGame(){
+    clearOverlay();
+    splashState = { taps:0, needed:8, done:false, spawnTimer:0 };
+    const label = document.createElement('div');
+    label.className='clickable';
+    label.style.cssText='position:absolute;top:10px;left:10px;right:10px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.6);pointer-events:none;';
+    label.id='splash-label';
+    overlay.appendChild(label);
+    updateSplashLabel();
+
+    function spawnRipple(){
+      const el = document.createElement('div');
+      el.className='clickable crumb';
+      const size = 46;
+      const x = 15 + Math.random()*70;
+      const y = 55 + Math.random()*35;
+      el.style.cssText = `width:${size}px;height:${size}px;left:${x}%;top:${y}%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,255,255,0.85),rgba(255,255,255,0.15) 70%);border:2px solid rgba(255,255,255,0.7);`;
+      el.addEventListener('click', ()=>{
+        if(splashState.done) return;
+        el.remove();
+        splashState.taps++;
+        updateSplashLabel();
+        if(splashState.taps >= splashState.needed){
+          finishSplash();
+        }
+      });
+      overlay.appendChild(el);
+      setTimeout(()=>{ if(el.parentNode) el.remove(); }, 1800);
+    }
+
+    let spawnCount = 0;
+    const spawner = setInterval(()=>{
+      if(splashState.done){ clearInterval(spawner); return; }
+      spawnRipple();
+      spawnCount++;
+      if(spawnCount > 20){ clearInterval(spawner); }
+    }, 550);
+    splashState.spawner = spawner;
+
+    // safety auto-advance after 14s regardless
+    splashState.timeout = setTimeout(()=>{
+      if(!splashState.done) finishSplash();
+    }, 14000);
+
+    setActionButtons([]);
+  }
+  function updateSplashLabel(){
+    const el = document.getElementById('splash-label');
+    if(!el) return;
+    const txt = T[lang].scenes[1].gameLabel + `  (${splashState.taps}/${splashState.needed})`;
+    el.textContent = txt;
+  }
+  function finishSplash(){
+    if(!splashState || splashState.done) return;
+    splashState.done = true;
+    clearInterval(splashState.spawner);
+    clearTimeout(splashState.timeout);
+    clearOverlay();
+    goToScene(2);
+  }
+
+  /* ---- Minigame: Collect clues, scene idx 3 ---- */
+  let collectState = null;
+  function startCollectGame(){
+    clearOverlay();
+    drawBackground();
+    drawIrapati(W*0.5,H*0.42,0.0,'worried'); // placeholder not used
+    renderStaticScene(3);
+    const spots = [
+      {x:18,y:66},{x:34,y:78},{x:52,y:70},{x:68,y:82},{x:84,y:64}
+    ];
+    collectState = { found:0, needed:spots.length, done:false };
+    const label = document.createElement('div');
+    label.id='collect-label';
+    label.style.cssText='position:absolute;top:10px;left:10px;right:10px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.6);pointer-events:none;';
+    overlay.appendChild(label);
+    updateCollectLabel();
+
+    spots.forEach((s,i)=>{
+      const el = document.createElement('div');
+      el.className='clickable crumb';
+      el.style.cssText = `width:34px;height:34px;left:${s.x}%;top:${s.y}%;transform:translate(-50%,-50%);background:rgba(90,60,30,0.85);border:2px solid #fff8ec;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
+      el.innerHTML = '<span style="font-size:16px;">👣</span>';
+      el.style.display='flex'; el.style.alignItems='center'; el.style.justifyContent='center';
+      el.addEventListener('click', ()=>{
+        if(el.dataset.done) return;
+        el.dataset.done='1';
+        el.style.opacity='0.15';
+        el.style.pointerEvents='none';
+        collectState.found++;
+        updateCollectLabel();
+        if(collectState.found >= collectState.needed){
+          finishCollect();
+        }
+      });
+      overlay.appendChild(el);
+    });
+    setActionButtons([]);
+  }
+  function updateCollectLabel(){
+    const el = document.getElementById('collect-label');
+    if(!el) return;
+    el.textContent = T[lang].scenes[3].gameLabel + ` (${collectState.found}/${collectState.needed})`;
+  }
+  function finishCollect(){
+    if(!collectState || collectState.done) return;
+    collectState.done = true;
+    setTimeout(()=>{
+      clearOverlay();
+      goToScene(4);
+    }, 500);
+  }
+
+  /* ---- Minigame: Hold button (calling crocodiles), scene idx 5 ---- */
+  function startHoldGame(nextIdx, holdKey){
+    clearOverlay();
+    let holding = false;
+    let progress = 0;
+    let raf = null;
+    const btn = document.createElement('button');
+    btn.type='button';
+    btn.id='hold-btn';
+    btn.innerHTML = `<div class="fill" id="hold-fill"></div><span id="hold-span"></span>`;
+    btn.style.cssText='position:absolute;left:50%;bottom:14px;transform:translateX(-50%);pointer-events:auto;';
+    overlay.appendChild(btn);
+    document.getElementById('hold-span').textContent = T[lang].scenes[holdKey].holdLabel;
+
+    function loop(){
+      if(holding){
+        progress = Math.min(100, progress + 1.6);
+      } else {
+        progress = Math.max(0, progress - 2.2);
+      }
+      const fill = document.getElementById('hold-fill');
+      if(fill) fill.style.width = progress + '%';
+      if(progress >= 100){
+        cancelAnimationFrame(raf);
+        btn.remove();
+        goToScene(nextIdx);
+        return;
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    const start = (e)=>{ e.preventDefault(); holding = true; };
+    const stop = ()=>{ holding = false; };
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('touchstart', start, {passive:false});
+    window.addEventListener('mouseup', stop);
+    window.addEventListener('touchend', stop);
+    raf = requestAnimationFrame(loop);
+    setActionButtons([]);
+  }
+
+  /* ---- Minigame: Choose guilty crocodile, scene idx 7 ---- */
+  function startChooseGame(){
+    clearOverlay();
+    drawBackground(false);
+    drawIrapati(W*0.5,H*0.88,1.05,'angry');
+    const positions = [
+      {x:12,y:70,guilty:false,facing:1},
+      {x:30,y:60,guilty:false,facing:1},
+      {x:50,y:72,guilty:true,facing:-1,pushed:true},
+      {x:68,y:58,guilty:false,facing:-1},
+      {x:86,y:70,guilty:false,facing:-1}
+    ];
+    const feedback = document.createElement('div');
+    feedback.id='choose-feedback';
+    feedback.style.cssText='position:absolute;top:10px;left:10px;right:10px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.6);pointer-events:none;min-height:20px;';
+    overlay.appendChild(feedback);
+
+    positions.forEach((p)=>{
+      const el = document.createElement('div');
+      el.className='clickable';
+      const w = 90, h=60;
+      el.style.cssText = `position:absolute;left:${p.x}%;top:${p.y}%;width:${w}px;height:${h}px;transform:translate(-50%,-50%) ${p.pushed?'translateY(-6px)':''};cursor:pointer;`;
+      overlay.appendChild(el);
+      // draw croc onto its own mini canvas for interactivity
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.style.cssText='width:100%;height:100%;';
+      el.appendChild(c);
+      const cctx = c.getContext('2d');
+      drawMiniCroc(cctx, w/2, h/2+10, 0.55, p.facing, p.pushed?'nervous':'normal');
+
+      el.addEventListener('click', ()=>{
+        if(p.guilty){
+          feedback.textContent = T[lang].scenes[7].correctMsg;
+          feedback.style.color = '#c8f5c0';
+          document.querySelectorAll('#overlay-ui .clickable').forEach(n=>n.style.pointerEvents='none');
+          setTimeout(()=>{ clearOverlay(); goToScene(8); }, 1100);
+        } else {
+          feedback.textContent = T[lang].scenes[7].wrongMsg;
+          feedback.style.color = '#f5c0c0';
+          el.animate([{transform:el.style.transform+' translateX(0)'},{transform:el.style.transform+' translateX(-6px)'},{transform:el.style.transform+' translateX(6px)'},{transform:el.style.transform+' translateX(0)'}],{duration:260});
+        }
+      });
+    });
+    setActionButtons([]);
+  }
+  function drawMiniCroc(cctx,x,y,scale,facing,mood){
+    cctx.save();
+    cctx.translate(x,y);
+    cctx.scale(scale*(facing||1),scale);
+    cctx.fillStyle = mood==='nervous' ? '#729159' : '#5c7a4a';
+    cctx.beginPath(); cctx.ellipse(-4,14,34,16,0,0,Math.PI*2); cctx.fill();
+    cctx.beginPath();
+    cctx.moveTo(-34,14); cctx.quadraticCurveTo(-64,4,-58,-8); cctx.quadraticCurveTo(-46,6,-30,18);
+    cctx.closePath(); cctx.fill();
+    cctx.beginPath();
+    cctx.moveTo(20,14); cctx.quadraticCurveTo(48,10,54,4); cctx.quadraticCurveTo(48,18,20,26);
+    cctx.closePath(); cctx.fill();
+    cctx.fillStyle='#f4ecd8';
+    for(let i=0;i<4;i++){
+      cctx.beginPath();
+      cctx.moveTo(26+i*7,17); cctx.lineTo(29+i*7,17); cctx.lineTo(27.5+i*7,22);
+      cctx.closePath(); cctx.fill();
+    }
+    cctx.fillStyle = mood==='nervous' ? '#729159' : '#5c7a4a';
+    cctx.beginPath(); cctx.arc(30,4,5,0,Math.PI*2); cctx.fill();
+    cctx.fillStyle='#e9d24a';
+    cctx.beginPath(); cctx.arc(31,3,2.4,0,Math.PI*2); cctx.fill();
+    cctx.restore();
+  }
+
+  /* ---------------------------------------------------------
+     SCENE NAVIGATION
+  --------------------------------------------------------- */
+  function setActionButtons(kind){
+    actionRow.innerHTML = '';
+    if(kind === 'next'){
+      const btn = document.createElement('button');
+      btn.id='next-btn'; btn.type='button';
+      btn.textContent = T[lang].next;
+      btn.addEventListener('click', ()=> goToScene(sceneIdx+1));
+      actionRow.appendChild(btn);
+    } else if(kind === 'end'){
+      const btn = document.createElement('button');
+      btn.id='next-btn'; btn.type='button';
+      btn.textContent = T[lang].next;
+      btn.addEventListener('click', showEnding);
+      actionRow.appendChild(btn);
+    }
+    // else [] -> empty, minigame controls live in overlay
+  }
+
+  function updateDots(){
+    dotsWrap.innerHTML = '';
+    for(let i=0;i<totalScenes;i++){
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIdx ? ' active' : (i<sceneIdx ? ' done':''));
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function goToScene(idx){
+    cancelRaf();
+    clearOverlay();
+    if(idx >= totalScenes){ showEnding(); return; }
+    sceneIdx = idx;
+    updateDots();
+    const scene = T[lang].scenes[idx];
+    captionText.textContent = scene.caption;
+    speak(scene.caption);
+
+    renderStaticScene(idx);
+
+    switch(scene.action){
+      case 'next':
+        setActionButtons('next');
+        break;
+      case 'end':
+        setActionButtons('end');
+        break;
+      case 'minigame-splash':
+        startSplashGame();
+        break;
+      case 'minigame-collect':
+        startCollectGame();
+        break;
+      case 'minigame-hold':
+        startHoldGame(6,5);
+        break;
+      case 'minigame-choose':
+        startChooseGame();
+        break;
+      case 'minigame-hold2':
+        startHoldGame(10,9);
+        break;
+      default:
+        setActionButtons('next');
+    }
+    reportSize();
+  }
+
+  function showEnding(){
+    cancelRaf();
+    clearOverlay();
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    document.getElementById('end-title').textContent = T[lang].endTitle;
+    document.getElementById('end-desc').textContent = T[lang].endDesc;
+    endOverlay.style.display = 'flex';
+    reportSize();
+  }
+
+  /* ---------------------------------------------------------
+     UI TEXT REFRESH (language switch)
+  --------------------------------------------------------- */
+  function refreshStaticText(){
+    document.getElementById('ui-title').textContent = T[lang].gameTitle;
+    document.getElementById('ui-footer').textContent = T[lang].footer;
+    document.getElementById('start-title').textContent = T[lang].startTitle;
+    document.getElementById('start-desc').textContent = T[lang].startDesc;
+    document.getElementById('start-btn').textContent = T[lang].startBtn;
+    document.getElementById('replay-btn').textContent = T[lang].replayBtn;
+    document.getElementById('end-title').textContent = T[lang].endTitle;
+    document.getElementById('end-desc').textContent = T[lang].endDesc;
+    langBtn.textContent = T[lang].langBtn;
+    muteBtn.textContent = muted ? T[lang].muteOn : T[lang].muteOff;
+    document.title = T[lang].gameTitle;
+  }
+
+  /* ---------------------------------------------------------
+     EVENT WIRING
+  --------------------------------------------------------- */
+  document.getElementById('start-btn').addEventListener('click', ()=>{
+    started = true;
+    startOverlay.style.display = 'none';
+    goToScene(0);
+  });
+
+  document.getElementById('replay-btn').addEventListener('click', ()=>{
+    endOverlay.style.display = 'none';
+    goToScene(0);
+  });
+
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    refreshStaticText();
+    if(started && endOverlay.style.display === 'none'){
+      const scene = T[lang].scenes[sceneIdx];
+      captionText.textContent = scene.caption;
+      speak(scene.caption);
+      // refresh any in-progress minigame labels
+      const sLabel = document.getElementById('splash-label');
+      if(sLabel && splashState) updateSplashLabel();
+      const cLabel = document.getElementById('collect-label');
+      if(cLabel && collectState) updateCollectLabel();
+      const holdSpan = document.getElementById('hold-span');
+      if(holdSpan){
+        const holdKey = sceneIdx === 5 ? 5 : 9;
+        holdSpan.textContent = T[lang].scenes[holdKey].holdLabel;
+      }
+    } else if(endOverlay.style.display === 'flex'){
+      speak(T[lang].endDesc);
+    }
+  });
+
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem('caritasato_narration_muted', muted ? '1':'0');
+    muteBtn.textContent = muted ? T[lang].muteOn : T[lang].muteOff;
+    if(muted){
+      window.speechSynthesis && window.speechSynthesis.cancel();
+    } else {
+      // re-speak current caption
+      if(started){
+        if(endOverlay.style.display === 'flex'){
+          speak(T[lang].endDesc);
+        } else {
+          speak(captionText.textContent);
+        }
+      }
+    }
+  });
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  refreshStaticText();
+  updateDots();
+  reportSize();
+})();
+</script>
+</body>
+</html>
