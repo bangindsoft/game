@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kyai Bonten dan Ki Jalono</title>
+<style>
+  :root{
+    --ink:#2b1c12;
+    --paper:#f6ecd6;
+    --paper2:#efe0bd;
+    --wood:#6b4226;
+    --wood-dark:#4a2c17;
+    --gold:#c8952e;
+    --gold-light:#e6b754;
+    --red:#a5342a;
+    --green:#4c6b3f;
+    --sky-day1:#a9d6e5;
+    --sky-day2:#f6ecd6;
+    --sky-night1:#1b1730;
+    --sky-night2:#3a2d55;
+    --shadow: rgba(43,28,18,0.35);
+    --radius: 14px;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;color:var(--ink);}
+  #app{
+    max-width:760px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--paper),var(--paper2));
+    border:3px solid var(--wood);
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 6px 24px var(--shadow);
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:var(--wood-dark);
+    color:var(--paper);
+  }
+  .topbar h1{
+    font-size:15px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.3px;
+    flex:1;
+    padding-right:8px;
+  }
+  .topbtn{
+    display:flex;
+    gap:6px;
+  }
+  .iconbtn{
+    background:var(--gold);
+    color:var(--wood-dark);
+    border:none;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .iconbtn:hover{background:var(--gold-light);}
+  .iconbtn.active{outline:2px solid #fff;}
+
+  .stagewrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  #stage{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  .caption{
+    padding:14px 18px 4px 18px;
+    font-size:15px;
+    line-height:1.5;
+    min-height:64px;
+    color:var(--ink);
+  }
+  .caption b{color:var(--red);}
+
+  .controls{
+    padding:6px 18px 16px 18px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    min-height:56px;
+  }
+  .btn{
+    background:var(--red);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:12px 22px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a251d;
+    user-select:none;
+    touch-action:manipulation;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #7a251d;}
+  .btn.secondary{
+    background:var(--gold);
+    color:var(--wood-dark);
+    box-shadow:0 3px 0 #93701f;
+  }
+  .btn.secondary:active{box-shadow:0 1px 0 #93701f;}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn.hold{
+    position:relative;
+    overflow:hidden;
+  }
+  .btn.hold .fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:rgba(255,255,255,.35);
+    pointer-events:none;
+  }
+
+  .progressbar{
+    width:100%;
+    max-width:420px;
+    height:16px;
+    background:#00000022;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--wood);
+  }
+  .progressbar .fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--gold-light));
+  }
+
+  .timingbar{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    height:22px;
+    background:#00000022;
+    border-radius:8px;
+    border:1px solid var(--wood);
+    overflow:hidden;
+  }
+  .timingbar .zone{
+    position:absolute;top:0;bottom:0;
+    background:rgba(76,107,63,.55);
+  }
+  .timingbar .cursor{
+    position:absolute;top:0;bottom:0;
+    width:4px;
+    background:var(--red);
+  }
+
+  .dots{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    padding:4px 10px 14px 10px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#00000030;
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--red);transform:scale(1.3);}
+  .dot.done{background:var(--gold);}
+
+  .choices{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--wood);
+    padding:6px 10px 14px 10px;
+    opacity:.75;
+  }
+
+  .langhint{
+    font-size:11px;
+    opacity:.8;
+    margin-top:2px;
+  }
+
+  @media (max-width:480px){
+    .topbar h1{font-size:13px;}
+    .btn{padding:10px 16px;font-size:14px;}
+    .caption{font-size:14px;padding:12px 14px 2px 14px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1 id="gameTitle">Kyai Bonten dan Ki Jalono</h1>
+    <div class="topbtn">
+      <button class="iconbtn" id="langBtn" type="button">EN</button>
+      <button class="iconbtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div class="stagewrap">
+    <canvas id="stage" width="700" height="420"></canvas>
+  </div>
+
+  <div class="caption" id="caption"></div>
+  <div class="controls" id="controls"></div>
+  <div class="dots" id="dots"></div>
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     CONFIG
+  --------------------------------------------------------- */
+  var GAME_ID = "kyai-bonten-dan-ki-jalono";
+  var params = new URLSearchParams(window.location.search);
+  var lang = (params.get("lang") === "en") ? "en" : "id";
+
+  var STORAGE_MUTE = "cts_" + GAME_ID + "_muted";
+  var muted = false;
+  try{ muted = localStorage.getItem(STORAGE_MUTE) === "1"; }catch(e){}
+
+  /* ---------------------------------------------------------
+     TEXT (bilingual)
+  --------------------------------------------------------- */
+  var T = {
+    id:{
+      title:"Kyai Bonten dan Ki Jalono",
+      footer:"Cerita Rakyat Jawa Timur — Legenda Kudur",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      next:"Lanjut",
+      hold:"Tahan untuk Bekerja",
+      tapfast:"Tekan Cepat!",
+      release:"Lepaskan tepat waktu!",
+      tapnow:"Ketuk Sekarang!",
+      dragpieces:"Seret pecahan ke tempatnya",
+      choiceA:"Kabulkan permintaan",
+      choiceB:"Pikirkan dahulu",
+      scenes:{
+        title:{
+          cap:"Sebuah legenda dari dusun Kudur, Jawa Timur, tentang asal usul kematian yang selalu datang berpasangan."
+        },
+        intro:{
+          cap:"Di dusun <b>Kudur</b>, hiduplah seorang kyai yang termasyhur bernama <b>Kyai Bonten</b>. Selain dikenal karena kepandaiannya, ia juga memiliki sawah yang sangat luas. Kyai Bonten dikaruniai seorang anak perempuan semata wayang.",
+          narr:"Di dusun Kudur, hiduplah seorang kyai yang termasyhur bernama Kyai Bonten. Selain dikenal karena kepandaiannya, ia juga memiliki sawah yang sangat luas. Kyai Bonten dikaruniai seorang anak perempuan."
+        },
+        jalono:{
+          cap:"Suatu hari, datanglah seorang laki-laki dari Sedayu bernama <b>Jalono</b>. Ia memiliki seorang anak laki-laki, dan bermaksud menyantrik atau mengabdi kepada Kyai Bonten. Kyai Bonten pun mengabulkan permintaannya dan memberinya tugas mengolah sawah.",
+          narr:"Suatu hari, datanglah seorang laki-laki dari Sedayu bernama Jalono. Ia bermaksud menyantrik dan mengabdi kepada Kyai Bonten. Kyai Bonten pun mengabulkan permintaannya, dan memberinya tugas untuk mengolah sawahnya."
+        },
+        sawah:{
+          cap:"Ki Jalono tidak menyia-nyiakan kepercayaan itu. Ia bekerja keras setiap hari, bahkan jarang pulang. <b>Tahan tombol di bawah</b> untuk membantu Ki Jalono menuai padi.",
+          narr:"Ki Jalono bekerja sangat keras setiap hari mengurus sawah Kyai Bonten. Bahkan, setiap kali dituai, sawah itu akan seketika berbuah kembali.",
+          done:"Ajaib! Setiap kali dituai, sawah itu seketika berbuah kembali. Hasil kerja Jalono membuat Kyai Bonten sangat senang."
+        },
+        sumur:{
+          cap:"Untuk memenuhi kebutuhannya selama bekerja, Ki Jalono membuat sebuah sumur besar. <b>Ketuk cepat</b> tombol di bawah untuk membantu menggali sumur itu!",
+          narr:"Untuk memenuhi kebutuhannya selama bekerja di sawah, Ki Jalono membuat sebuah sumur besar. Masyarakat kelak menyebutnya sumur gedhe.",
+          done:"Sumur besar itu selesai digali. Masyarakat kemudian menyebutnya <b>Sumur Gedhe</b>."
+        },
+        nikah:{
+          cap:"Kyai Bonten sangat senang dengan hasil kerja Ki Jalono. Akhirnya, ia menjadikan Ki Jalono sebagai besan dengan menikahkan anak perempuannya dengan anak laki-laki Jalono.",
+          narr:"Karena sangat senang dengan hasil kerja Ki Jalono, Kyai Bonten menjadikannya besan. Anak perempuan Kyai Bonten dinikahkan dengan anak laki-laki Ki Jalono."
+        },
+        menantu:{
+          cap:"Namun berbeda dengan ayahnya yang rajin, sang menantu sangat pemalas. Ia tahu betul kesaktian ayahnya dalam mengurus sawah, sehingga ia sendiri hanya menanak nasi dan berjaga sepanjang hari — tanpa pernah tidur.",
+          narr:"Berbeda dengan ayahnya yang pekerja keras, menantu Kyai Bonten sangat malas. Ia hanya menanak nasi dan berjaga saja, dan tidak pernah tidur."
+        },
+        jaga:{
+          cap:"Kyai Bonten kesal melihat kelakuan menantunya. <b>Ketuk tepat saat penanda berada di area hijau</b> agar sang menantu tetap terjaga sepanjang malam.",
+          narr:"Kyai Bonten sangat kesal dengan kelakuan menantunya yang malas itu, dan sering memarahinya agar mau bekerja.",
+          done:"Malam demi malam berlalu, dan sang menantu tetap terjaga tanpa pernah tidur sedikit pun."
+        },
+        kuali:{
+          cap:"Suatu hari, Kyai Bonten memarahi menantunya hingga ia terpaksa pergi ke sawah. Saat itulah Kyai Bonten diam-diam menghancurkan kuali tempat menanak nasi milik menantunya. <b>Seret pecahan kuali</b> untuk melihat apa yang terjadi selanjutnya.",
+          narr:"Kyai Bonten memarahi menantunya karena malas-malasan, dan menantunya pun terpaksa pergi ke sawah. Saat itulah, Kyai Bonten menghancurkan kuali tempat menanak nasi milik menantunya.",
+          done:"Sepulang dari sawah, sang menantu mendapati kualinya hancur berkeping-keping. Namun dengan mudahnya, ia memulihkan kuali itu seperti sedia kala. Kyai Bonten yang menyaksikannya terheran-heran, dan akhirnya mengakui kesaktian menantunya."
+        },
+        permintaan:{
+          cap:"Merasa di atas angin, sang menantu meminta separuh dari harta kekayaan dan warisan Kyai Bonten. Ia juga meminta, jika kelak meninggal, agar dimakamkan berdampingan dan ditaburi bunga-bunga.",
+          narr:"Merasa di atas angin, sang menantu meminta separuh dari harta kekayaan dan warisan Kyai Bonten, serta meminta agar kelak dimakamkan berdampingan dengannya.",
+          resultA:"Kyai Bonten pun menuruti seluruh permintaan menantunya itu.",
+          resultB:"Kyai Bonten termenung sejenak, namun akhirnya tetap menuruti permintaan menantunya itu."
+        },
+        penutup:{
+          cap:"Sejak saat itu, konon di dusun Kudur, setiap kali ada kematian, pasti dua orang meninggal bersamaan waktunya. Ki Jalono dimakamkan di dekat sumur gedhe, yang kini menjadi tempat keramat atau <b>punden</b> bagi warga setempat.",
+          narr:"Sejak saat itu, di dusun Kudur, jika ada kematian, pasti dua orang meninggal bersamaan waktunya. Ki Jalono dimakamkan di dekat sumur gedhe, yang kini menjadi tempat keramat atau punden."
+        }
+      }
+    },
+    en:{
+      title:"Kyai Bonten and Ki Jalono",
+      footer:"East Java Folktale — The Legend of Kudur",
+      start:"Start Story",
+      replay:"Replay Story",
+      next:"Continue",
+      hold:"Hold to Work",
+      tapfast:"Tap Fast!",
+      release:"Let go at the right time!",
+      tapnow:"Tap Now!",
+      dragpieces:"Drag the pieces into place",
+      choiceA:"Grant the request",
+      choiceB:"Think it over",
+      scenes:{
+        title:{
+          cap:"A legend from the hamlet of Kudur, East Java, about why death always comes in pairs there."
+        },
+        intro:{
+          cap:"In the hamlet of <b>Kudur</b> lived a well-known kyai (Islamic teacher) named <b>Kyai Bonten</b>. Besides being famed for his wisdom, he also owned a vast rice field. Kyai Bonten had one beloved daughter.",
+          narr:"In the hamlet of Kudur lived a well-known kyai named Kyai Bonten. Besides being famed for his wisdom, he also owned a vast rice field. Kyai Bonten had one daughter."
+        },
+        jalono:{
+          cap:"One day, a man from Sedayu named <b>Jalono</b> arrived. He had a son of his own, and wished to become a servant and student of Kyai Bonten. Kyai Bonten agreed, and gave him the task of tending his rice field.",
+          narr:"One day, a man from Sedayu named Jalono arrived, wishing to serve and study under Kyai Bonten. Kyai Bonten agreed, and gave him the task of tending his rice field."
+        },
+        sawah:{
+          cap:"Ki Jalono did not waste the trust given to him. He worked hard every single day, rarely returning home. <b>Hold the button below</b> to help Ki Jalono harvest the rice.",
+          narr:"Ki Jalono worked extremely hard every day tending Kyai Bonten's field. Remarkably, each time it was harvested, the field would instantly bear fruit again.",
+          done:"Amazing! Every time it was harvested, the field bore fruit again instantly. Jalono's work made Kyai Bonten very happy."
+        },
+        sumur:{
+          cap:"To meet his needs while working, Ki Jalono dug a great well. <b>Tap quickly</b> on the button below to help dig the well!",
+          narr:"To meet his needs while working the field, Ki Jalono dug a great well. People would later call it the Sumur Gedhe, the great well.",
+          done:"The great well was finished. People came to call it the <b>Sumur Gedhe</b>."
+        },
+        nikah:{
+          cap:"Kyai Bonten was overjoyed with Ki Jalono's work. In the end, he made Ki Jalono his in-law by marrying his daughter to Jalono's son.",
+          narr:"Delighted with Ki Jalono's work, Kyai Bonten made him his in-law. His daughter was married to Ki Jalono's son."
+        },
+        menantu:{
+          cap:"But unlike his hardworking father, the son-in-law was extremely lazy. Knowing his father's magical skill with the field, he spent his days only cooking rice and standing guard — never sleeping at all.",
+          narr:"Unlike his hardworking father, Kyai Bonten's son-in-law was very lazy. He only cooked rice and kept watch, and he never slept."
+        },
+        jaga:{
+          cap:"Kyai Bonten grew annoyed watching his son-in-law. <b>Tap right when the marker is in the green zone</b> to help him stay awake through the night.",
+          narr:"Kyai Bonten grew very annoyed at his son-in-law's laziness, and often scolded him to get to work.",
+          done:"Night after night passed, and the son-in-law remained awake, never sleeping even for a moment."
+        },
+        kuali:{
+          cap:"One day, Kyai Bonten scolded his son-in-law until he was forced to go to the field. That was when Kyai Bonten secretly smashed the cooking pot belonging to his son-in-law. <b>Drag the broken pieces</b> to see what happens next.",
+          narr:"Kyai Bonten scolded his son-in-law for his laziness, forcing him to go to the field. That was when Kyai Bonten smashed his son-in-law's cooking pot.",
+          done:"Returning from the field, the son-in-law found his pot shattered. Yet he restored it with ease, as if it had never broken. Kyai Bonten, astonished, finally recognized his son-in-law's hidden power."
+        },
+        permintaan:{
+          cap:"Feeling he had the upper hand, the son-in-law asked for half of Kyai Bonten's wealth and inheritance. He also asked that, when he died, he be buried side by side with Kyai Bonten and covered with flowers.",
+          narr:"Feeling he had the upper hand, the son-in-law asked for half of Kyai Bonten's wealth and inheritance, and asked to be buried side by side with him.",
+          resultA:"Kyai Bonten agreed to all of his son-in-law's requests.",
+          resultB:"Kyai Bonten paused to think for a moment, but in the end still agreed to his son-in-law's requests."
+        },
+        penutup:{
+          cap:"From that day on, it is said that in the hamlet of Kudur, whenever someone dies, another person always dies at the very same time. Ki Jalono was buried near the great well, which is now regarded as a sacred site, or <b>punden</b>, by the local people.",
+          narr:"From that day on, in the hamlet of Kudur, whenever there is a death, two people always die at the same time. Ki Jalono was buried near the great well, now regarded as a sacred site, a punden."
+        }
+      }
+    }
+  };
+
+  function tr(){ return T[lang]; }
+  function scn(id){ return T[lang].scenes[id]; }
+
+  /* ---------------------------------------------------------
+     SCENE FLOW
+  --------------------------------------------------------- */
+  var FLOW = ["title","intro","jalono","sawah","sumur","nikah","menantu","jaga","kuali","permintaan","penutup"];
+  var DOT_SCENES = FLOW.slice(1); // exclude title from dots
+  var current = 0;
+
+  /* ---------------------------------------------------------
+     DOM refs
+  --------------------------------------------------------- */
+  var canvas = document.getElementById("stage");
+  var ctx = canvas.getContext("2d");
+  var captionEl = document.getElementById("caption");
+  var controlsEl = document.getElementById("controls");
+  var dotsEl = document.getElementById("dots");
+  var footerEl = document.getElementById("footer");
+  var titleEl = document.getElementById("gameTitle");
+  var langBtn = document.getElementById("langBtn");
+  var muteBtn = document.getElementById("muteBtn");
+
+  function applyStaticText(){
+    titleEl.textContent = tr().title;
+    footerEl.textContent = tr().footer;
+    langBtn.textContent = (lang === "id") ? "EN" : "ID";
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    muteBtn.classList.toggle("active", muted);
+  }
+
+  /* ---------------------------------------------------------
+     Narration (Web Speech API)
+  --------------------------------------------------------- */
+  var synth = window.speechSynthesis;
+  var voices = [];
+  function loadVoices(){
+    if(!synth) return;
+    voices = synth.getVoices();
+  }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice(){
+    if(!voices || !voices.length) return null;
+    var want = (lang === "id") ? "id" : "en";
+    var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(want) === 0; });
+    return v || null;
+  }
+
+  function speak(text){
+    if(!synth || muted || !text) return;
+    try{
+      synth.cancel();
+      var plain = text.replace(/<[^>]+>/g,"");
+      var u = new SpeechSynthesisUtterance(plain);
+      var v = pickVoice();
+      if(v) u.voice = v;
+      u.lang = (lang === "id") ? "id-ID" : "en-US";
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      synth.speak(u);
+    }catch(e){}
+  }
+
+  muteBtn.addEventListener("click", function(){
+    muted = !muted;
+    try{ localStorage.setItem(STORAGE_MUTE, muted ? "1" : "0"); }catch(e){}
+    if(muted && synth) synth.cancel();
+    applyStaticText();
+    if(!muted){
+      var s = scn(FLOW[current]);
+      speak(s.narr || s.cap);
+    }
+  });
+
+  langBtn.addEventListener("click", function(){
+    lang = (lang === "id") ? "en" : "id";
+    var url = new URL(window.location.href);
+    url.searchParams.set("lang", lang);
+    window.history.replaceState(null, "", url.toString());
+    applyStaticText();
+    render();
+  });
+
+  /* ---------------------------------------------------------
+     Canvas drawing helpers
+  --------------------------------------------------------- */
+  function resizeCanvasBacking(){
+    var ratio = window.devicePixelRatio || 1;
+    var cssW = canvas.clientWidth || 700;
+    var cssH = 420;
+    canvas.width = cssW * ratio;
+    canvas.height = cssH * ratio;
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+  }
+
+  function W(){ return canvas.clientWidth || 700; }
+  var H = 420;
+
+  function drawSky(night, glow){
+    var w = W();
+    var g = ctx.createLinearGradient(0,0,0,H*0.62);
+    if(night){
+      g.addColorStop(0,"#181433");
+      g.addColorStop(1,"#3a2d5a");
+    } else {
+      g.addColorStop(0,"#bfe3ee");
+      g.addColorStop(1,"#f3ecd2");
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,H*0.62);
+
+    if(night){
+      ctx.fillStyle = "#f4e7b8";
+      for(var i=0;i<40;i++){
+        var sx = (i*97 % w);
+        var sy = (i*53 % (H*0.4));
+        ctx.globalAlpha = 0.4 + (i%5)/10;
+        ctx.beginPath();
+        ctx.arc(sx, sy+10, 1.4, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(w*0.82, H*0.16, 22, 0, Math.PI*2);
+      ctx.fillStyle = "#f2eccb";
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(w*0.85, H*0.14, 28, 0, Math.PI*2);
+      ctx.fillStyle = "#f6d675";
+      ctx.fill();
+    }
+
+    // distant hills
+    ctx.fillStyle = night ? "#241f45" : "#8fae7d";
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.5);
+    ctx.quadraticCurveTo(w*0.2,H*0.38,w*0.42,H*0.5);
+    ctx.quadraticCurveTo(w*0.65,H*0.6,w*0.85,H*0.46);
+    ctx.quadraticCurveTo(w*0.95,H*0.42,w,H*0.5);
+    ctx.lineTo(w,H*0.62);
+    ctx.lineTo(0,H*0.62);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawGround(color){
+    var w = W();
+    ctx.fillStyle = color || "#c9a25a";
+    ctx.fillRect(0,H*0.6,w,H*0.4);
+  }
+
+  function drawRiceField(x0,y0,w,h,ripe){
+    ctx.save();
+    ctx.translate(x0,y0);
+    ctx.fillStyle = ripe ? "#d9b64f" : "#7fae4e";
+    ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle = ripe ? "#b8901f" : "#5c8236";
+    ctx.lineWidth = 2;
+    var rows = 8;
+    for(var i=0;i<rows;i++){
+      var yy = (h/rows)*i + 6;
+      ctx.beginPath();
+      for(var xx=4; xx<w; xx+=14){
+        ctx.moveTo(xx, yy);
+        ctx.lineTo(xx-4, yy-14);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHouse(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // walls
+    ctx.fillStyle = "#8a5a34";
+    ctx.fillRect(-45,-10,90,60);
+    // roof
+    ctx.fillStyle = "#4a2c17";
+    ctx.beginPath();
+    ctx.moveTo(-60,-10);
+    ctx.lineTo(0,-55);
+    ctx.lineTo(60,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#6b4226";
+    ctx.fillRect(-58,-14,116,8);
+    // door
+    ctx.fillStyle = "#3a2412";
+    ctx.fillRect(-12,20,24,30);
+    // windows
+    ctx.fillStyle = "#c8952e";
+    ctx.fillRect(-36,2,14,14);
+    ctx.fillRect(22,2,14,14);
+    ctx.restore();
+  }
+
+  function drawWell(x,y,scale, water){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#8f8f8f";
+    ctx.beginPath();
+    ctx.ellipse(0,10,34,12,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "#6f6f6f";
+    ctx.fillRect(-34,-18,68,28);
+    ctx.beginPath();
+    ctx.ellipse(0,-18,34,10,0,0,Math.PI*2);
+    ctx.fillStyle = water ? "#3d6b8a" : "#4a4a4a";
+    ctx.fill();
+    // posts + roof
+    ctx.strokeStyle = "#5a3a1e";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(-30,-18); ctx.lineTo(-30,-64);
+    ctx.moveTo(30,-18); ctx.lineTo(30,-64);
+    ctx.stroke();
+    ctx.fillStyle = "#4a2c17";
+    ctx.beginPath();
+    ctx.moveTo(-42,-64);
+    ctx.lineTo(0,-86);
+    ctx.lineTo(42,-64);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    var shirt = opts.shirt || "#a5342a";
+    var pants = opts.pants || "#2b1c12";
+    var skin = "#c98a55";
+    var headwear = opts.headwear;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(0,62,26,7,0,0,Math.PI*2);
+    ctx.fill();
+    // legs
+    ctx.fillStyle = pants;
+    ctx.fillRect(-14,20,11,38);
+    ctx.fillRect(3,20,11,38);
+    // body
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-18,-10);
+    ctx.quadraticCurveTo(0,-18,18,-10);
+    ctx.lineTo(16,26);
+    ctx.quadraticCurveTo(0,32,-16,26);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.fillStyle = shirt;
+    var armSwing = opts.armSwing || 0;
+    ctx.save();
+    ctx.translate(-18,-4);
+    ctx.rotate(armSwing);
+    ctx.fillRect(-6,0,10,32);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(18,-4);
+    ctx.rotate(-armSwing);
+    ctx.fillRect(-4,0,10,32);
+    ctx.restore();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-30,16,0,Math.PI*2);
+    ctx.fill();
+    // headwear (peci / iket)
+    if(headwear === "peci"){
+      ctx.fillStyle = "#2b1c12";
+      ctx.beginPath();
+      ctx.arc(0,-40,14,Math.PI,0);
+      ctx.fill();
+      ctx.fillRect(-14,-40,28,6);
+    } else if(headwear === "iket"){
+      ctx.fillStyle = "#a5342a";
+      ctx.beginPath();
+      ctx.arc(0,-38,15,Math.PI*0.9,Math.PI*2.15);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPot(x,y,scale,broken){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(!broken){
+      ctx.fillStyle = "#5a4632";
+      ctx.beginPath();
+      ctx.moveTo(-26,-4);
+      ctx.quadraticCurveTo(-30,26,0,30);
+      ctx.quadraticCurveTo(30,26,26,-4);
+      ctx.quadraticCurveTo(0,10,-26,-4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#3d2f21";
+      ctx.beginPath();
+      ctx.ellipse(0,-4,26,7,0,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = "#5a4632";
+      var pieces = [[-18,-6,0.4],[6,4,-0.3],[-4,20,0.2],[18,10,-0.5]];
+      pieces.forEach(function(p){
+        ctx.save();
+        ctx.translate(p[0],p[1]);
+        ctx.rotate(p[2]);
+        ctx.beginPath();
+        ctx.moveTo(-10,-8);
+        ctx.lineTo(10,-4);
+        ctx.lineTo(6,10);
+        ctx.lineTo(-8,8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+  }
+
+  function drawStars_placeholder(){}
+
+  /* ---------------------------------------------------------
+     Per-scene canvas rendering
+  --------------------------------------------------------- */
+  var animT = 0;
+  var rafId = null;
+
+  function frame(id, t){
+    var w = W();
+    ctx.clearRect(0,0,w,H);
+
+    switch(id){
+      case "title":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawRiceField(w*0.05, H*0.6, w*0.9, H*0.35, true);
+        drawHouse(w*0.5, H*0.66, 1.3);
+        drawPerson(w*0.22, H*0.9, 1.0, {shirt:"#a5342a", headwear:"peci"});
+        drawPerson(w*0.78, H*0.9, 1.0, {shirt:"#4c6b3f", headwear:"iket"});
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.fillRect(0,0,w,H);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#f6ecd6";
+        ctx.font = "bold 28px Georgia, serif";
+        ctx.fillText(tr().title, w/2, H*0.44);
+        ctx.font = "14px sans-serif";
+        ctx.fillText(tr().footer, w/2, H*0.52);
+        break;
+
+      case "intro":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawRiceField(w*0.06, H*0.62, w*0.5, H*0.3, true);
+        drawHouse(w*0.78, H*0.62, 1.1);
+        drawPerson(w*0.3, H*0.86, 1.15, {shirt:"#c8952e", pants:"#3a2412", headwear:"peci"});
+        drawPerson(w*0.42, H*0.9, 0.85, {shirt:"#e6b754", pants:"#6b4226"});
+        break;
+
+      case "jalono":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawHouse(w*0.75, H*0.62, 1.1);
+        var walk = Math.sin(t/260)*10;
+        drawPerson(w*0.22 + walk, H*0.88, 1.0, {shirt:"#4c6b3f", pants:"#2b1c12", headwear:"iket", armSwing: Math.sin(t/220)*0.4});
+        drawPerson(w*0.6, H*0.86, 1.15, {shirt:"#c8952e", pants:"#3a2412", headwear:"peci"});
+        break;
+
+      case "sawah":
+        drawSky(false);
+        drawGround("#c9a25a");
+        var ripe = (window.__minigameProgress || 0) > 0.5;
+        drawRiceField(w*0.06, H*0.55, w*0.88, H*0.32, ripe);
+        var bend = Math.sin(t/150)*0.25;
+        ctx.save();
+        drawPerson(w*0.5 + Math.sin(t/300)*40, H*0.92, 0.95, {shirt:"#4c6b3f", pants:"#2b1c12", headwear:"iket", armSwing: 0.6+bend});
+        ctx.restore();
+        break;
+
+      case "sumur":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawWell(w*0.5, H*0.62, 1.1, (window.__minigameProgress||0) > 0.5);
+        var dig = Math.sin(t/120)*0.5;
+        drawPerson(w*0.5 - 70, H*0.92, 0.95, {shirt:"#4c6b3f", pants:"#2b1c12", headwear:"iket", armSwing: 0.8+dig});
+        break;
+
+      case "nikah":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawHouse(w*0.5, H*0.6, 1.3);
+        drawPerson(w*0.38, H*0.9, 1.05, {shirt:"#a5342a", pants:"#2b1c12", headwear:"peci"});
+        drawPerson(w*0.62, H*0.9, 1.0, {shirt:"#e6b754", pants:"#6b4226"});
+        // simple flower petals falling
+        ctx.fillStyle = "#e07b6b";
+        for(var i=0;i<10;i++){
+          var px = (w*0.3 + i*30 + (t/40)) % w;
+          var py = (H*0.3 + (i*47 + t/6) % (H*0.4));
+          ctx.beginPath();
+          ctx.arc(px,py,3,0,Math.PI*2);
+          ctx.fill();
+        }
+        break;
+
+      case "menantu":
+        drawSky(true);
+        drawGround("#8a6a3e");
+        drawHouse(w*0.7, H*0.6, 1.1);
+        drawPot(w*0.35, H*0.85, 1.2, false);
+        drawPerson(w*0.35, H*0.7, 0.95, {shirt:"#6b4226", pants:"#2b1c12"});
+        break;
+
+      case "jaga":
+        drawSky(true);
+        drawGround("#8a6a3e");
+        drawHouse(w*0.72, H*0.6, 1.05);
+        drawPot(w*0.32, H*0.86, 1.15, false);
+        drawPerson(w*0.32, H*0.72, 0.95, {shirt:"#6b4226", pants:"#2b1c12"});
+        break;
+
+      case "kuali":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawHouse(w*0.72, H*0.6, 1.05);
+        var broken = !!window.__kualiBroken;
+        drawPot(w*0.4, H*0.86, 1.25, broken);
+        drawPerson(w*0.62, H*0.88, 1.0, {shirt:"#a5342a", pants:"#2b1c12", headwear:"peci"});
+        break;
+
+      case "permintaan":
+        drawSky(false);
+        drawGround("#c9a25a");
+        drawHouse(w*0.5, H*0.6, 1.25);
+        drawPerson(w*0.38, H*0.9, 1.05, {shirt:"#a5342a", pants:"#2b1c12", headwear:"peci"});
+        drawPerson(w*0.62, H*0.9, 1.0, {shirt:"#6b4226", pants:"#2b1c12"});
+        break;
+
+      case "penutup":
+        drawSky(true);
+        drawGround("#7c8f6a");
+        drawWell(w*0.5, H*0.62, 1.15, false);
+        ctx.fillStyle = "#e8dfb8";
+        ctx.font = "italic 13px Georgia, serif";
+        ctx.textAlign = "center";
+        break;
+    }
+  }
+
+  function loop(ts){
+    animT = ts;
+    frame(FLOW[current], ts);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ---------------------------------------------------------
+     UI builders for controls
+  --------------------------------------------------------- */
+  function clearControls(){ controlsEl.innerHTML = ""; }
+
+  function makeBtn(label, cls, onClick){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn" + (cls ? (" "+cls) : "");
+    b.textContent = label;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function goto(index){
+    current = index;
+    render();
+  }
+
+  function next(){
+    if(current < FLOW.length - 1){
+      goto(current+1);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     Mini-game: hold-to-work (sawah)
+  --------------------------------------------------------- */
+  function setupHoldGame(onComplete){
+    window.__minigameProgress = 0;
+    var progress = 0;
+    var holding = false;
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "10px";
+    wrap.style.width = "100%";
+
+    var bar = document.createElement("div");
+    bar.className = "progressbar";
+    var fill = document.createElement("div");
+    fill.className = "fill";
+    bar.appendChild(fill);
+
+    var btn = makeBtn(tr().hold, "hold", function(){});
+    var innerFill = document.createElement("span");
+    btn.appendChild(innerFill);
+
+    var timer = null;
+    function startHold(e){
+      e.preventDefault();
+      if(holding) return;
+      holding = true;
+      timer = setInterval(function(){
+        progress = Math.min(1, progress + 0.045);
+        window.__minigameProgress = progress;
+        fill.style.width = (progress*100)+"%";
+        if(progress >= 1){
+          clearInterval(timer);
+          holding = false;
+          btn.disabled = true;
+          setTimeout(onComplete, 250);
+        }
+      }, 60);
+    }
+    function stopHold(){
+      holding = false;
+      if(timer) clearInterval(timer);
+    }
+    btn.addEventListener("mousedown", startHold);
+    btn.addEventListener("touchstart", startHold, {passive:false});
+    btn.addEventListener("mouseup", stopHold);
+    btn.addEventListener("mouseleave", stopHold);
+    btn.addEventListener("touchend", stopHold);
+
+    wrap.appendChild(bar);
+    wrap.appendChild(btn);
+    controlsEl.appendChild(wrap);
+  }
+
+  /* ---------------------------------------------------------
+     Mini-game: tap fast (sumur)
+  --------------------------------------------------------- */
+  function setupTapGame(onComplete){
+    window.__minigameProgress = 0;
+    var progress = 0;
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "10px";
+    wrap.style.width = "100%";
+
+    var bar = document.createElement("div");
+    bar.className = "progressbar";
+    var fill = document.createElement("div");
+    fill.className = "fill";
+    bar.appendChild(fill);
+
+    var btn = makeBtn(tr().tapfast, null, function(){
+      progress = Math.min(1, progress + 0.13);
+      window.__minigameProgress = progress;
+      fill.style.width = (progress*100)+"%";
+      if(progress >= 1){
+        btn.disabled = true;
+        setTimeout(onComplete, 250);
+      }
+    });
+
+    var decay = setInterval(function(){
+      progress = Math.max(0, progress - 0.02);
+      window.__minigameProgress = progress;
+      fill.style.width = (progress*100)+"%";
+      if(btn.disabled) clearInterval(decay);
+    }, 200);
+
+    wrap.appendChild(bar);
+    wrap.appendChild(btn);
+    controlsEl.appendChild(wrap);
+  }
+
+  /* ---------------------------------------------------------
+     Mini-game: timing bar (jaga - stay awake)
+  --------------------------------------------------------- */
+  function setupTimingGame(onComplete){
+    var rounds = 0;
+    var needed = 4;
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "10px";
+    wrap.style.width = "100%";
+
+    var barWrap = document.createElement("div");
+    barWrap.className = "timingbar";
+    var zone = document.createElement("div");
+    zone.className = "zone";
+    var zoneStart = 35 + Math.random()*20;
+    var zoneW = 22;
+    zone.style.left = zoneStart+"%";
+    zone.style.width = zoneW+"%";
+    var cursor = document.createElement("div");
+    cursor.className = "cursor";
+    barWrap.appendChild(zone);
+    barWrap.appendChild(cursor);
+
+    var label = document.createElement("div");
+    label.style.fontSize = "13px";
+    label.style.opacity = "0.85";
+    label.textContent = tr().release + "  (" + rounds + "/" + needed + ")";
+
+    var pos = 0, dir = 1;
+    var raf;
+    function tick(){
+      pos += dir * 1.8;
+      if(pos >= 100){ pos = 100; dir = -1; }
+      if(pos <= 0){ pos = 0; dir = 1; }
+      cursor.style.left = pos+"%";
+      raf = requestAnimationFrame(tick);
+    }
+    tick();
+
+    var btn = makeBtn(tr().tapnow, null, function(){
+      var hit = pos >= zoneStart && pos <= (zoneStart+zoneW);
+      if(hit){
+        rounds++;
+        zoneStart = 20 + Math.random()*45;
+        zone.style.left = zoneStart+"%";
+        label.textContent = tr().release + "  (" + rounds + "/" + needed + ")";
+        if(rounds >= needed){
+          cancelAnimationFrame(raf);
+          btn.disabled = true;
+          setTimeout(onComplete, 250);
+        }
+      } else {
+        zone.style.background = "rgba(165,52,42,.5)";
+        setTimeout(function(){ zone.style.background = "rgba(76,107,63,.55)"; }, 180);
+      }
+    });
+
+    wrap.appendChild(barWrap);
+    wrap.appendChild(label);
+    wrap.appendChild(btn);
+    controlsEl.appendChild(wrap);
+  }
+
+  /* ---------------------------------------------------------
+     Mini-game: restore pot (kuali) - simple click-to-mend sequence
+  --------------------------------------------------------- */
+  function setupMendGame(onComplete){
+    window.__kualiBroken = true;
+    var clicks = 0;
+    var needed = 4;
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "10px";
+    wrap.style.width = "100%";
+
+    var bar = document.createElement("div");
+    bar.className = "progressbar";
+    var fill = document.createElement("div");
+    fill.className = "fill";
+    bar.appendChild(fill);
+
+    var label = document.createElement("div");
+    label.style.fontSize = "13px";
+    label.style.opacity = "0.85";
+    label.textContent = tr().dragpieces;
+
+    var btn = makeBtn(tr().dragpieces, null, function(){
+      clicks++;
+      fill.style.width = ((clicks/needed)*100)+"%";
+      if(clicks >= needed){
+        window.__kualiBroken = false;
+        btn.disabled = true;
+        setTimeout(onComplete, 350);
+      }
+    });
+
+    wrap.appendChild(bar);
+    wrap.appendChild(label);
+    wrap.appendChild(btn);
+    controlsEl.appendChild(wrap);
+  }
+
+  /* ---------------------------------------------------------
+     Render scene
+  --------------------------------------------------------- */
+  function renderDots(){
+    dotsEl.innerHTML = "";
+    var curId = FLOW[current];
+    var idx = DOT_SCENES.indexOf(curId);
+    DOT_SCENES.forEach(function(id, i){
+      var d = document.createElement("div");
+      d.className = "dot" + (i === idx ? " active" : (i < idx ? " done" : ""));
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function setCaption(html){
+    captionEl.innerHTML = html;
+  }
+
+  function render(){
+    var id = FLOW[current];
+    var s = scn(id);
+    clearControls();
+    renderDots();
+    setCaption(s.cap);
+
+    if(!muted){
+      speak(s.narr || s.cap);
+    }
+
+    switch(id){
+      case "title":
+        controlsEl.appendChild(makeBtn(tr().start, null, function(){ next(); }));
+        break;
+
+      case "sawah":
+        window.__minigameProgress = 0;
+        setupHoldGame(function(){
+          setCaption(s.done);
+          if(!muted) speak(s.done);
+          clearControls();
+          controlsEl.appendChild(makeBtn(tr().next, "secondary", next));
+        });
+        break;
+
+      case "sumur":
+        window.__minigameProgress = 0;
+        setupTapGame(function(){
+          setCaption(s.done);
+          if(!muted) speak(s.done);
+          clearControls();
+          controlsEl.appendChild(makeBtn(tr().next, "secondary", next));
+        });
+        break;
+
+      case "jaga":
+        setupTimingGame(function(){
+          setCaption(s.done);
+          if(!muted) speak(s.done);
+          clearControls();
+          controlsEl.appendChild(makeBtn(tr().next, "secondary", next));
+        });
+        break;
+
+      case "kuali":
+        setupMendGame(function(){
+          setCaption(s.done);
+          if(!muted) speak(s.done);
+          clearControls();
+          controlsEl.appendChild(makeBtn(tr().next, "secondary", next));
+        });
+        break;
+
+      case "permintaan":
+        var choices = document.createElement("div");
+        choices.className = "choices";
+        choices.appendChild(makeBtn(tr().choiceA, null, function(){
+          setCaption(s.cap + "<br><br>" + s.resultA);
+          if(!muted) speak(s.resultA);
+          clearControls();
+          controlsEl.appendChild(makeBtn(tr().next, "secondary", next));
+        }));
+        choices.appendChild(makeBtn(tr().choiceB, "secondary", function(){
+          setCaption(s.cap + "<br><br>" + s.resultB);
+          if(!muted) speak(s.resultB);
+          clearControls();
+          controlsEl.appendChild(makeBtn(tr().next, "secondary", next));
+        }));
+        controlsEl.appendChild(choices);
+        break;
+
+      case "penutup":
+        controlsEl.appendChild(makeBtn(tr().replay, null, function(){
+          current = 0;
+          render();
+        }));
+        break;
+
+      default:
+        controlsEl.appendChild(makeBtn(tr().next, null, next));
+        break;
+    }
+
+    postResize();
+  }
+
+  /* ---------------------------------------------------------
+     Auto-resize via postMessage
+  --------------------------------------------------------- */
+  function postResize(){
+    requestAnimationFrame(function(){
+      var h = document.getElementById("app").offsetHeight + 4;
+      try{
+        window.parent.postMessage({ type: "cts-game-resize", game: GAME_ID, height: h }, "*");
+      }catch(e){}
+    });
+  }
+
+  window.addEventListener("resize", function(){
+    resizeCanvasBacking();
+    postResize();
+  });
+
+  /* ---------------------------------------------------------
+     Init
+  --------------------------------------------------------- */
+  applyStaticText();
+  resizeCanvasBacking();
+  render();
+  rafId = requestAnimationFrame(loop);
+
+  window.addEventListener("load", postResize);
+  setTimeout(postResize, 400);
+  setTimeout(postResize, 1200);
+
+})();
+</script>
+</body>
+</html>
