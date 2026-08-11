@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Kata Babah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6ead4;
+    --paper-dark:#eddcb8;
+    --ink:#4a2f1f;
+    --brown:#6b4226;
+    --brown-dark:#4a2c17;
+    --gold:#c8942f;
+    --gold-light:#e3b458;
+    --red:#a13f2f;
+    --shadow: 0 6px 18px rgba(74,47,31,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Merriweather', Georgia, serif;
+    background:var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    padding:14px 14px 20px;
+    position:relative;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .brand{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--brown-dark);
+    letter-spacing:0.3px;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+  }
+  .icon-btn{
+    background:var(--paper-dark);
+    border:1.5px solid var(--gold);
+    color:var(--brown-dark);
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-family:'Merriweather',serif;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:transform .15s ease, background .15s ease;
+    white-space:nowrap;
+  }
+  .icon-btn:hover{ background:var(--gold-light); transform:translateY(-1px); }
+  .icon-btn:active{ transform:translateY(0px) scale(0.97); }
+
+  .stage{
+    background:linear-gradient(180deg,#fffaf0,var(--paper-dark));
+    border:2px solid var(--gold);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:14px;
+    position:relative;
+    overflow:hidden;
+  }
+  .stage::before{
+    content:"";
+    position:absolute; inset:6px;
+    border:1px solid rgba(200,148,47,0.4);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  .canvas-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4 / 2.55;
+    border-radius:10px;
+    overflow:hidden;
+    background:#1a1f33;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    touch-action: manipulation;
+  }
+
+  .scene-title{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:20px;
+    color:var(--brown-dark);
+    margin:14px 0 6px;
+    text-align:center;
+  }
+  .scene-text{
+    font-size:15px;
+    line-height:1.65;
+    color:var(--ink);
+    text-align:center;
+    margin:0 6px 14px;
+    min-height:48px;
+  }
+  .hint{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--brown);
+    font-style:italic;
+    margin:-6px 0 12px;
+    opacity:0.85;
+  }
+
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:9px;
+    margin:4px 0 14px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d8c39a;
+    border:1.5px solid var(--gold);
+    transition:all .25s ease;
+  }
+  .dot.active{
+    background:var(--red);
+    border-color:var(--red);
+    transform:scale(1.25);
+  }
+  .dot.done{
+    background:var(--gold);
+  }
+
+  .btn-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:15px;
+    background:linear-gradient(180deg,var(--gold-light),var(--gold));
+    color:var(--brown-dark);
+    border:none;
+    border-radius:30px;
+    padding:11px 26px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(107,66,38,0.35);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 6px 14px rgba(107,66,38,0.4); }
+  .btn:active{ transform:translateY(0); }
+  .btn.secondary{
+    background:var(--paper-dark);
+    border:1.5px solid var(--brown);
+  }
+  .btn[disabled]{
+    opacity:0.4;
+    cursor:default;
+    transform:none;
+    box-shadow:none;
+  }
+
+  .cover{
+    text-align:center;
+    padding:10px 6px 4px;
+  }
+  .cover h1{
+    font-family:'Playfair Display', serif;
+    font-size:26px;
+    color:var(--brown-dark);
+    margin:10px 0 4px;
+  }
+  .cover p{
+    font-size:14px;
+    color:var(--brown);
+    margin:0 0 18px;
+  }
+
+  .footer{
+    text-align:center;
+    font-size:11.5px;
+    color:#a08b6a;
+    margin-top:16px;
+    letter-spacing:0.2px;
+  }
+
+  .progress-pill{
+    position:absolute;
+    top:10px; left:50%;
+    transform:translateX(-50%);
+    background:rgba(26,31,51,0.55);
+    border:1px solid rgba(227,180,88,0.6);
+    border-radius:20px;
+    padding:5px 14px;
+    font-size:12px;
+    color:#f6ead4;
+    font-family:'Merriweather',serif;
+    display:none;
+    align-items:center;
+    gap:8px;
+    z-index:5;
+  }
+  .progress-pill .bar{
+    width:90px;height:6px;border-radius:4px;
+    background:rgba(255,255,255,0.25);
+    overflow:hidden;
+  }
+  .progress-pill .fill{
+    height:100%;
+    width:0%;
+    background:var(--gold-light);
+    transition:width .25s ease;
+  }
+
+  @media (max-width:420px){
+    .scene-title{font-size:18px;}
+    .scene-text{font-size:14px;}
+    .cover h1{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand" id="brandTitle">Asal Mula Kata Babah</div>
+    <div class="controls">
+      <button class="icon-btn" id="langBtn" type="button" aria-label="Switch language">🌐 <span id="langLabel">English</span></button>
+      <button class="icon-btn" id="muteBtn" type="button" aria-label="Toggle sound">🔊 <span id="muteLabel">Suara</span></button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="gameCanvas"></canvas>
+      <div class="progress-pill" id="progressPill">
+        <span id="progressLabel">Cahaya ditemukan</span>
+        <div class="bar"><div class="fill" id="progressFill"></div></div>
+        <span id="progressCount">0/8</span>
+      </div>
+    </div>
+
+    <div id="coverBlock" class="cover">
+      <h1 id="coverTitle">Asal Mula Kata Babah</h1>
+      <p id="coverSubtitle">Cerita Rakyat Jawa Timur</p>
+      <div class="btn-row">
+        <button class="btn" id="startBtn" type="button">Mulai Cerita</button>
+      </div>
+    </div>
+
+    <div id="sceneBlock" style="display:none;">
+      <div class="scene-title" id="sceneTitle"></div>
+      <p class="scene-text" id="sceneText"></p>
+      <p class="hint" id="sceneHint" style="display:none;"></p>
+      <div class="dots" id="dots"></div>
+      <div class="btn-row" id="btnRow">
+        <button class="btn secondary" id="replayBtn" type="button" style="display:none;">Ulangi Cerita</button>
+        <button class="btn" id="nextBtn" type="button">Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Dongeng &amp; Permainan Interaktif</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     CONTENT
+  --------------------------------------------------------- */
+  var TEXT = {
+    id: {
+      brand: "Asal Mula Kata Babah",
+      coverTitle: "Asal Mula Kata Babah",
+      coverSubtitle: "Cerita Rakyat Jawa Timur",
+      startBtn: "Mulai Cerita",
+      nextBtn: "Lanjutkan",
+      replayBtn: "Ulangi Cerita",
+      muteOn: "Suara",
+      muteOff: "Bisu",
+      langLabel: "English",
+      progressLabel: "Cahaya ditemukan",
+      scenes: [
+        {
+          title: "Keluarga Nabi Adam",
+          text: "Konon, pada zaman dahulu kala, Nabi Adam, sang nenek moyang manusia, dikaruniai empat orang anak. Dua putra dan dua putri. Salah satu putranya berparas tampan rupawan, sementara yang seorang lagi berwajah biasa saja. Begitu pula kedua putrinya — satu jelita bagai bidadari, satunya lagi berwajah sederhana."
+        },
+        {
+          title: "Rencana Pernikahan yang Adil",
+          text: "Ketika keempat anaknya beranjak dewasa, Nabi Adam bermaksud menikahkan mereka dengan cara yang adil. Putranya yang tampan akan dijodohkan dengan putrinya yang berwajah sederhana, sementara putranya yang berwajah sederhana akan dijodohkan dengan putrinya yang jelita."
+        },
+        {
+          title: "Penolakan Sang Putra dan Putri",
+          text: "Namun putra yang tampan dan putri yang jelita menolak keras rencana itu. Menurut mereka, yang rupawan sepatutnya berjodoh dengan yang rupawan pula. Berkali-kali mereka memohon, namun Nabi Adam tetap teguh pada keputusannya."
+        },
+        {
+          title: "Mbabah, Mencari Jalan di Hutan",
+          text: "Pada suatu malam yang gelap, putra yang tampan dan putri yang jelita nekat melarikan diri bersama. Mereka menerobos hutan belantara, meraba-raba mencari jalan. Dalam bahasa Jawa, mencari jalan disebut 'mbabah'. Bantu mereka menemukan jalan dengan menyentuh cahaya kunang-kunang yang muncul!",
+          minigame:true
+        },
+        {
+          title: "Asal Mula Kata Babah",
+          text: "Setelah melewati hutan, mereka pun selamat dan memulai kehidupan baru. Menurut orang Tionghoa, dari kata 'mbabah' itulah lahir sebutan 'Babah'. Konon, pasangan tampan dan jelita itu dipercaya menjadi nenek moyang orang Tionghoa — itulah sebabnya, menurut dongeng ini, banyak orang Tionghoa berparas rupawan."
+        },
+        {
+          title: "Sebuah Dongeng Semata",
+          text: "Begitulah dongeng asal mula kata Babah, sebutan yang biasa digunakan orang Jawa untuk memanggil orang Tionghoa. Namun ingatlah, ini hanyalah sebuah dongeng dan tidak perlu dipercaya sepenuhnya. Pada kenyataannya, wajah rupawan bisa ditemui di suku bangsa mana saja, dan kasih sayang tidak pernah memandang asal keturunan."
+        }
+      ]
+    },
+    en: {
+      brand: "The Origin of the Word Babah",
+      coverTitle: "The Origin of the Word Babah",
+      coverSubtitle: "A Folktale from East Java",
+      startBtn: "Start Story",
+      nextBtn: "Continue",
+      replayBtn: "Replay Story",
+      muteOn: "Sound",
+      muteOff: "Muted",
+      langLabel: "Indonesia",
+      progressLabel: "Lights found",
+      scenes: [
+        {
+          title: "The Family of Prophet Adam",
+          text: "Long, long ago, Prophet Adam, the ancestor of all mankind, was blessed with four children — two sons and two daughters. One son was remarkably handsome, while the other had a plain appearance. The same was true of his daughters — one was breathtakingly beautiful, the other quite ordinary looking."
+        },
+        {
+          title: "A Fair Marriage Plan",
+          text: "When the four children came of age, Prophet Adam wished to marry them off fairly. His handsome son would be paired with his plain-looking daughter, while his plain-looking son would be paired with his beautiful daughter."
+        },
+        {
+          title: "The Protest",
+          text: "But the handsome son and the beautiful daughter strongly refused the plan. They believed the fair-faced should only marry the fair-faced. They pleaded again and again, but Prophet Adam remained firm in his decision."
+        },
+        {
+          title: "Mbabah — Searching for a Path",
+          text: "One dark night, the handsome son and the beautiful daughter decided to run away together. They pushed deep into the wild forest, feeling their way, searching for a path. In Javanese, searching for a path is called 'mbabah'. Help them find the way by touching the fireflies that appear!",
+          minigame:true
+        },
+        {
+          title: "The Origin of the Word Babah",
+          text: "After making it through the forest, the pair survived and began a new life. According to Chinese-Indonesian tradition, the word 'Babah' was born from that word 'mbabah'. It's said that pair became the ancestors of the Chinese-Indonesian people — which, according to this legend, is why so many are considered good-looking."
+        },
+        {
+          title: "Just a Folktale",
+          text: "And that is the legend of the origin of the word 'Babah', a term Javanese people traditionally use to address Chinese-Indonesians. But remember — this is only a folktale and shouldn't be taken as fact. In reality, beauty can be found in people of every background, and love never depends on ancestry."
+        }
+      ]
+    }
+  };
+
+  var MINIGAME_TARGET = 8;
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var params = new URLSearchParams(window.location.search);
+  var state = {
+    lang: params.get('lang') === 'en' ? 'en' : 'id',
+    scene: -1, // -1 = cover
+    muted: (localStorage.getItem('babahMuted') === '1'),
+    mg: { active:false, found:0, fireflies:[], done:false, timer:null }
+  };
+
+  /* ---------------------------------------------------------
+     DOM
+  --------------------------------------------------------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var canvas = $('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var canvasWrap = $('canvasWrap');
+  var coverBlock = $('coverBlock');
+  var sceneBlock = $('sceneBlock');
+  var dotsEl = $('dots');
+  var progressPill = $('progressPill');
+  var progressFill = $('progressFill');
+  var progressCount = $('progressCount');
+
+  /* ---------------------------------------------------------
+     RESIZE / POSTMESSAGE
+  --------------------------------------------------------- */
+  function fitCanvas(){
+    var rect = canvasWrap.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    render();
+  }
+
+  function sendHeight(){
+    try{
+      var h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ source:'caritasato-game', type:'resize', height:h }, '*');
+    }catch(e){}
+  }
+
+  window.addEventListener('resize', function(){ fitCanvas(); sendHeight(); });
+  window.addEventListener('load', function(){ fitCanvas(); sendHeight(); setTimeout(sendHeight, 300); });
+
+  /* ---------------------------------------------------------
+     SPEECH
+  --------------------------------------------------------- */
+  var voicesCache = [];
+  function loadVoices(){ voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if(state.muted || !text) return;
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+    utter.rate = 0.96;
+    utter.pitch = 1.02;
+    var voices = voicesCache.length ? voicesCache : (window.speechSynthesis.getVoices()||[]);
+    var wanted = state.lang;
+    var match = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(wanted) === 0; });
+    if(match) utter.voice = match;
+    window.speechSynthesis.speak(utter);
+  }
+  function stopSpeech(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------------------------------------------------
+     UI TEXT SYNC
+  --------------------------------------------------------- */
+  function syncStaticText(){
+    var T = TEXT[state.lang];
+    $('brandTitle').textContent = T.brand;
+    $('coverTitle').textContent = T.coverTitle;
+    $('coverSubtitle').textContent = T.coverSubtitle;
+    $('startBtn').textContent = T.startBtn;
+    $('nextBtn').textContent = T.nextBtn;
+    $('replayBtn').textContent = T.replayBtn;
+    $('langLabel').textContent = T.langLabel;
+    $('muteLabel').textContent = state.muted ? T.muteOff : T.muteOn;
+    $('muteBtn').firstChild.textContent = state.muted ? "🔇 " : "🔊 ";
+    $('progressLabel').textContent = T.progressLabel;
+    document.title = T.coverTitle;
+    document.documentElement.lang = state.lang;
+  }
+
+  function renderSceneText(){
+    var T = TEXT[state.lang];
+    if(state.scene < 0) return;
+    var sc = T.scenes[state.scene];
+    $('sceneTitle').textContent = sc.title;
+    $('sceneText').textContent = sc.text;
+    var hint = $('sceneHint');
+    if(sc.minigame && !state.mg.done){
+      hint.style.display = 'block';
+      hint.textContent = state.lang === 'id' ? 'Sentuh titik cahaya yang muncul di hutan!' : 'Tap the glowing lights that appear in the forest!';
+    } else {
+      hint.style.display = 'none';
+    }
+  }
+
+  function renderDots(){
+    dotsEl.innerHTML = '';
+    var total = TEXT[state.lang].scenes.length;
+    for(var i=0;i<total;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i === state.scene ? ' active' : (i < state.scene ? ' done' : ''));
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function updateNextButtonState(){
+    var T = TEXT[state.lang];
+    var sc = T.scenes[state.scene];
+    var nextBtn = $('nextBtn');
+    var replayBtn = $('replayBtn');
+    var isLast = state.scene === T.scenes.length - 1;
+
+    if(sc.minigame && !state.mg.done){
+      nextBtn.style.display = 'none';
+    } else {
+      nextBtn.style.display = 'inline-block';
+    }
+
+    if(isLast){
+      nextBtn.style.display = 'none';
+      replayBtn.style.display = 'inline-block';
+    } else {
+      replayBtn.style.display = 'none';
+    }
+  }
+
+  /* ---------------------------------------------------------
+     SCENE FLOW
+  --------------------------------------------------------- */
+  function startStory(){
+    coverBlock.style.display = 'none';
+    sceneBlock.style.display = 'block';
+    goToScene(0);
+  }
+
+  function goToScene(idx){
+    stopMiniGame();
+    state.scene = idx;
+    var T = TEXT[state.lang];
+    var sc = T.scenes[idx];
+    renderSceneText();
+    renderDots();
+    updateNextButtonState();
+    fitCanvas();
+    render();
+    speak(sc.title + '. ' + sc.text);
+    if(sc.minigame){
+      startMiniGame();
+    }
+    setTimeout(sendHeight, 80);
+  }
+
+  function nextScene(){
+    var T = TEXT[state.lang];
+    if(state.scene < T.scenes.length - 1){
+      goToScene(state.scene + 1);
+    }
+  }
+
+  function replayStory(){
+    state.mg = { active:false, found:0, fireflies:[], done:false, timer:null };
+    sceneBlock.style.display = 'none';
+    coverBlock.style.display = 'block';
+    state.scene = -1;
+    stopSpeech();
+    render();
+    setTimeout(sendHeight, 80);
+  }
+
+  /* ---------------------------------------------------------
+     CANVAS DRAW HELPERS
+  --------------------------------------------------------- */
+  function cw(){ return canvasWrap.getBoundingClientRect().width; }
+  function ch(){ return canvasWrap.getBoundingClientRect().height; }
+
+  function drawSkyGradient(colors){
+    var w = cw(), h = ch();
+    var g = ctx.createLinearGradient(0,0,0,h);
+    colors.forEach(function(c){ g.addColorStop(c[0], c[1]); });
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+  }
+
+  function drawMoon(x,y,r){
+    ctx.save();
+    var g = ctx.createRadialGradient(x,y,r*0.2,x,y,r*1.6);
+    g.addColorStop(0,'rgba(255,248,220,0.9)');
+    g.addColorStop(1,'rgba(255,248,220,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x,y,r*1.6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fdf3d0';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGroundHill(color, baseY, amp){
+    var w = cw(), h = ch();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,h);
+    ctx.lineTo(0, baseY);
+    for(var x=0;x<=w;x+=20){
+      ctx.lineTo(x, baseY - Math.sin(x/60)*amp);
+    }
+    ctx.lineTo(w,h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawTree(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#2c3b2a';
+    ctx.beginPath();
+    ctx.moveTo(0,-70); ctx.lineTo(28,-10); ctx.lineTo(-28,-10); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,-50); ctx.lineTo(22,4); ctx.lineTo(-22,4); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,-30); ctx.lineTo(16,16); ctx.lineTo(-16,16); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4a3220';
+    ctx.fillRect(-4,14,8,14);
+    ctx.restore();
+  }
+
+  // simple stylized person: head + robe. pretty=true adds a soft glow/sparkle
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    var robe = opts.robe || '#8a5a34';
+    var skin = opts.skin || '#e8b98a';
+    var pretty = !!opts.pretty;
+    var female = !!opts.female;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+
+    if(pretty){
+      var g = ctx.createRadialGradient(0,-58,4,0,-58,46);
+      g.addColorStop(0,'rgba(255,232,160,0.55)');
+      g.addColorStop(1,'rgba(255,232,160,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-58,46,0,Math.PI*2); ctx.fill();
+    }
+
+    // robe (body)
+    ctx.fillStyle = robe;
+    ctx.beginPath();
+    ctx.moveTo(-24,40);
+    ctx.quadraticCurveTo(-30,-6,-14,-18);
+    ctx.lineTo(14,-18);
+    ctx.quadraticCurveTo(30,-6,24,40);
+    ctx.closePath();
+    ctx.fill();
+
+    // sash
+    ctx.fillStyle = pretty ? '#c8942f' : '#5c4126';
+    ctx.fillRect(-24,10,48,7);
+
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-30,16,0,Math.PI*2);
+    ctx.fill();
+
+    // hair
+    ctx.fillStyle = '#241a12';
+    if(female){
+      ctx.beginPath();
+      ctx.arc(0,-30,17.5,Math.PI*0.95,Math.PI*2.1);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-16,-26); ctx.quadraticCurveTo(-20,4,-10,10); ctx.quadraticCurveTo(-16,-10,-14,-28);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(16,-26); ctx.quadraticCurveTo(20,4,10,10); ctx.quadraticCurveTo(16,-10,14,-28);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0,-33,16.5,Math.PI*1.02,Math.PI*1.98);
+      ctx.fill();
+    }
+
+    // simple face
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.arc(-5,-29,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-29,1.6,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#3a2a1c';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    if(pretty){ ctx.arc(0,-24,4,0.15*Math.PI,0.85*Math.PI); }
+    else{ ctx.moveTo(-4,-23); ctx.lineTo(4,-23); }
+    ctx.stroke();
+
+    if(pretty){
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      [[-30,-64],[26,-58],[6,-72]].forEach(function(p){
+        ctx.save();
+        ctx.translate(p[0],p[1]);
+        sparkle(6);
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+  }
+
+  function sparkle(r){
+    ctx.beginPath();
+    ctx.moveTo(0,-r); ctx.lineTo(r*0.25,-r*0.25);
+    ctx.lineTo(r,0); ctx.lineTo(r*0.25,r*0.25);
+    ctx.lineTo(0,r); ctx.lineTo(-r*0.25,r*0.25);
+    ctx.lineTo(-r,0); ctx.lineTo(-r*0.25,-r*0.25);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawAdam(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b3a24';
+    ctx.beginPath();
+    ctx.moveTo(-30,50);
+    ctx.quadraticCurveTo(-36,-10,-16,-22);
+    ctx.lineTo(16,-22);
+    ctx.quadraticCurveTo(36,-10,30,50);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#c8942f';
+    ctx.fillRect(-30,12,60,8);
+    ctx.fillStyle = '#e0b98a';
+    ctx.beginPath(); ctx.arc(0,-36,17,0,Math.PI*2); ctx.fill();
+    // beard
+    ctx.fillStyle = '#efe8dc';
+    ctx.beginPath();
+    ctx.moveTo(-14,-30); ctx.quadraticCurveTo(0,10,14,-30);
+    ctx.quadraticCurveTo(0,-20,-14,-30);
+    ctx.closePath(); ctx.fill();
+    // turban
+    ctx.fillStyle = '#efe8dc';
+    ctx.beginPath();
+    ctx.ellipse(0,-46,19,13,0,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.arc(-5,-35,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-35,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function speechBubble(x,y,text,align){
+    ctx.save();
+    ctx.font = '600 12px Merriweather, serif';
+    var w = ctx.measureText(text).width + 20;
+    var h = 26;
+    var bx = align === 'right' ? x - w : x;
+    ctx.fillStyle = 'rgba(255,250,235,0.95)';
+    ctx.strokeStyle = '#6b4226';
+    ctx.lineWidth = 1.4;
+    roundRect(bx,y,w,h,8);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    var tipX = align === 'right' ? bx + w - 14 : bx + 14;
+    ctx.moveTo(tipX-6,y+h); ctx.lineTo(tipX+6,y+h); ctx.lineTo(tipX,y+h+8);
+    ctx.closePath(); ctx.fillStyle = 'rgba(255,250,235,0.95)'; ctx.fill(); ctx.strokeStyle='#6b4226'; ctx.stroke();
+    ctx.fillStyle = '#4a2f1f';
+    ctx.fillText(text, bx+10, y+17);
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawVillageSilhouette(baseY,color){
+    var w = cw();
+    ctx.fillStyle = color;
+    for(var i=0;i<6;i++){
+      var x = (w/6)*i + 20;
+      var hh = 30 + (i%3)*14;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x+18, baseY - hh);
+      ctx.lineTo(x+36, baseY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(x+10,baseY-hh+10,16,hh-10);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     SCENE RENDERERS
+  --------------------------------------------------------- */
+  var renderers = [
+    // 0: family intro
+    function(){
+      var w=cw(), h=ch();
+      drawSkyGradient([[0,'#f4e2b0'],[1,'#f6c9a0']]);
+      drawGroundHill('#d9c194', h*0.78, 8);
+      drawTree(w*0.08,h*0.82,0.55,'#7a8f5c');
+      drawTree(w*0.94,h*0.82,0.5,'#7a8f5c');
+      drawAdam(w*0.5,h*0.62,0.85);
+      drawPerson(w*0.22,h*0.72,0.62,{pretty:true, female:false, robe:'#8a5a34'});
+      drawPerson(w*0.37,h*0.76,0.58,{pretty:false, female:false, robe:'#6b5638'});
+      drawPerson(w*0.63,h*0.76,0.58,{pretty:false, female:true, robe:'#9c6b46'});
+      drawPerson(w*0.78,h*0.72,0.62,{pretty:true, female:true, robe:'#b2794c'});
+    },
+    // 1: marriage plan (arrows)
+    function(){
+      var w=cw(), h=ch();
+      drawSkyGradient([[0,'#f4e2b0'],[1,'#f6c9a0']]);
+      drawGroundHill('#d9c194', h*0.8, 6);
+      drawAdam(w*0.5,h*0.3,0.6);
+      drawPerson(w*0.2,h*0.75,0.62,{pretty:true, female:false});
+      drawPerson(w*0.42,h*0.78,0.55,{pretty:false, female:true});
+      drawPerson(w*0.58,h*0.78,0.55,{pretty:false, female:false});
+      drawPerson(w*0.8,h*0.75,0.62,{pretty:true, female:true});
+      ctx.strokeStyle = '#a13f2f'; ctx.lineWidth = 2.4; ctx.setLineDash([6,5]);
+      ctx.beginPath(); ctx.moveTo(w*0.24,h*0.7); ctx.quadraticCurveTo(w*0.32,h*0.55,w*0.4,h*0.68); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w*0.6,h*0.68); ctx.quadraticCurveTo(w*0.68,h*0.55,w*0.76,h*0.7); ctx.stroke();
+      ctx.setLineDash([]);
+    },
+    // 2: protest
+    function(){
+      var w=cw(), h=ch();
+      drawSkyGradient([[0,'#e7cf9f'],[1,'#e9b28b']]);
+      drawGroundHill('#cdb181', h*0.8, 6);
+      drawAdam(w*0.5,h*0.62,0.9);
+      drawPerson(w*0.25,h*0.72,0.68,{pretty:true, female:false});
+      drawPerson(w*0.75,h*0.72,0.68,{pretty:true, female:true});
+      speechBubble(w*0.14,h*0.28, state.lang==='id' ? 'Tidak mau!' : 'We refuse!', 'left');
+      speechBubble(w*0.62,h*0.24, state.lang==='id' ? 'Ini keputusanku.' : 'This is my decision.', 'left');
+    },
+    // 3: minigame forest (base scene, fireflies drawn separately)
+    function(){
+      renderForestBase();
+    },
+    // 4: origin reveal (sunrise + village)
+    function(){
+      var w=cw(), h=ch();
+      drawSkyGradient([[0,'#ffdca0'],[0.6,'#ffb997'],[1,'#f2946f']]);
+      drawMoon(w*0.78,h*0.28,26); // acts as sun glow
+      drawVillageSilhouette(h*0.78,'rgba(74,44,23,0.55)');
+      drawGroundHill('#c99a3d', h*0.86, 5);
+      drawPerson(w*0.38,h*0.72,0.7,{pretty:true, female:false});
+      drawPerson(w*0.6,h*0.72,0.7,{pretty:true, female:true});
+    },
+    // 5: closing / moral
+    function(){
+      var w=cw(), h=ch();
+      drawSkyGradient([[0,'#fbe6b8'],[1,'#f3caa0']]);
+      drawVillageSilhouette(h*0.82,'rgba(107,66,38,0.35)');
+      drawGroundHill('#e3c98d', h*0.88, 4);
+      drawPerson(w*0.3,h*0.76,0.6,{pretty:false, female:false});
+      drawPerson(w*0.44,h*0.78,0.55,{pretty:true, female:true});
+      drawPerson(w*0.56,h*0.78,0.55,{pretty:true, female:false});
+      drawPerson(w*0.7,h*0.76,0.6,{pretty:false, female:true});
+      ctx.fillStyle = 'rgba(200,148,47,0.9)';
+      ctx.font = 'italic 13px Merriweather, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(state.lang==='id' ? '"Hanya sebuah dongeng..."' : '"Just a folktale..."', w/2, h*0.2);
+      ctx.textAlign = 'left';
+    }
+  ];
+
+  function render(){
+    var w = cw(), h = ch();
+    if(!w || !h) return;
+    ctx.clearRect(0,0,w,h);
+    if(state.scene < 0){
+      renderCoverArt();
+      return;
+    }
+    renderers[state.scene]();
+  }
+
+  function renderCoverArt(){
+    var w=cw(), h=ch();
+    drawSkyGradient([[0,'#232a45'],[1,'#3a3253']]);
+    drawMoon(w*0.78,h*0.24,30);
+    drawGroundHill('#241c33', h*0.86, 10);
+    drawTree(w*0.15,h*0.86,0.7,'#1c2a20');
+    drawTree(w*0.32,h*0.9,0.55,'#1c2a20');
+    drawTree(w*0.88,h*0.88,0.6,'#1c2a20');
+    ctx.fillStyle='rgba(255,232,160,0.9)';
+    for(var i=0;i<10;i++){
+      var fx = (w*0.15)+((i*73)%(w*0.7));
+      var fy = (h*0.35)+((i*37)%(h*0.4));
+      ctx.beginPath(); ctx.arc(fx,fy,1.6,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  /* ---------------------------------------------------------
+     MINI-GAME: forest firefly path
+  --------------------------------------------------------- */
+  function renderForestBase(){
+    var w=cw(), h=ch();
+    drawSkyGradient([[0,'#151a2c'],[0.6,'#1f2740'],[1,'#2a2140']]);
+    drawMoon(w*0.85,h*0.2,22);
+    drawGroundHill('#161c28', h*0.88, 10);
+    drawTree(w*0.06,h*0.9,0.75,'#101a12');
+    drawTree(w*0.2,h*0.94,0.55,'#101a12');
+    drawTree(w*0.9,h*0.92,0.7,'#101a12');
+    drawTree(w*0.75,h*0.96,0.5,'#101a12');
+
+    var progress = Math.min(1, state.mg.found / MINIGAME_TARGET);
+    var startX = w*0.1, endX = w*0.86, y = h*0.82;
+    var px = startX + (endX-startX)*progress;
+    drawPerson(px-14, y, 0.5, {pretty:true, female:false});
+    drawPerson(px+14, y+4, 0.46, {pretty:true, female:true});
+
+    // draw fireflies
+    state.mg.fireflies.forEach(function(f){
+      var g = ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*3);
+      g.addColorStop(0,'rgba(255,240,170,0.95)');
+      g.addColorStop(1,'rgba(255,240,170,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r*3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff6d0';
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
+    });
+  }
+
+  function spawnFirefly(){
+    if(!state.mg.active) return;
+    var w = cw(), h = ch();
+    if(w < 10 || h < 10) return;
+    var f = {
+      x: w*0.15 + Math.random()*w*0.7,
+      y: h*0.25 + Math.random()*h*0.45,
+      r: 5 + Math.random()*3,
+      born: Date.now()
+    };
+    state.mg.fireflies.push(f);
+    render();
+    setTimeout(function(){
+      var idx = state.mg.fireflies.indexOf(f);
+      if(idx > -1){
+        state.mg.fireflies.splice(idx,1);
+        render();
+      }
+    }, 2600);
+  }
+
+  function startMiniGame(){
+    state.mg.active = true;
+    state.mg.found = 0;
+    state.mg.fireflies = [];
+    state.mg.done = false;
+    progressPill.style.display = 'flex';
+    progressCount.textContent = '0/' + MINIGAME_TARGET;
+    progressFill.style.width = '0%';
+    updateNextButtonState();
+    spawnFirefly();
+    state.mg.timer = setInterval(spawnFirefly, 1000);
+  }
+
+  function stopMiniGame(){
+    state.mg.active = false;
+    if(state.mg.timer){ clearInterval(state.mg.timer); state.mg.timer = null; }
+    progressPill.style.display = 'none';
+  }
+
+  function handleCanvasTap(clientX, clientY){
+    if(!state.mg.active || state.mg.done) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = clientX - rect.left;
+    var y = clientY - rect.top;
+    for(var i=state.mg.fireflies.length-1;i>=0;i--){
+      var f = state.mg.fireflies[i];
+      var d = Math.hypot(f.x-x, f.y-y);
+      if(d < Math.max(18, f.r*3)){
+        state.mg.fireflies.splice(i,1);
+        state.mg.found++;
+        progressCount.textContent = Math.min(state.mg.found,MINIGAME_TARGET) + '/' + MINIGAME_TARGET;
+        progressFill.style.width = Math.min(100,(state.mg.found/MINIGAME_TARGET)*100) + '%';
+        render();
+        if(state.mg.found >= MINIGAME_TARGET){
+          completeMiniGame();
+        }
+        break;
+      }
+    }
+  }
+
+  function completeMiniGame(){
+    state.mg.done = true;
+    state.mg.active = false;
+    if(state.mg.timer){ clearInterval(state.mg.timer); state.mg.timer = null; }
+    state.mg.fireflies = [];
+    render();
+    updateNextButtonState();
+  }
+
+  canvas.addEventListener('click', function(e){
+    handleCanvasTap(e.clientX, e.clientY);
+  });
+  canvas.addEventListener('touchstart', function(e){
+    if(e.touches && e.touches.length){
+      var t = e.touches[0];
+      handleCanvasTap(t.clientX, t.clientY);
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  /* ---------------------------------------------------------
+     EVENTS
+  --------------------------------------------------------- */
+  $('startBtn').addEventListener('click', startStory);
+  $('nextBtn').addEventListener('click', nextScene);
+  $('replayBtn').addEventListener('click', replayStory);
+
+  $('muteBtn').addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('babahMuted', state.muted ? '1' : '0');
+    syncStaticText();
+    if(state.muted){ stopSpeech(); }
+    else if(state.scene >= 0){
+      var sc = TEXT[state.lang].scenes[state.scene];
+      speak(sc.title + '. ' + sc.text);
+    }
+  });
+
+  $('langBtn').addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    syncStaticText();
+    if(state.scene >= 0){
+      renderSceneText();
+      renderDots();
+      updateNextButtonState();
+      render();
+      var sc = TEXT[state.lang].scenes[state.scene];
+      speak(sc.title + '. ' + sc.text);
+    } else {
+      render();
+    }
+    setTimeout(sendHeight, 80);
+  });
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  syncStaticText();
+  fitCanvas();
+  render();
+  setTimeout(sendHeight, 200);
+
+})();
+</script>
+</body>
+</html>
