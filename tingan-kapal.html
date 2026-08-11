@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orang Desa Tingan dan Desa Kapal</title>
+<style>
+  :root{
+    --cream:#f7edd8;
+    --brown-dark:#5a3a22;
+    --brown:#8a5a34;
+    --gold:#d9a441;
+    --green:#4c6b3d;
+    --green-dark:#324a28;
+    --red:#a63a2d;
+    --sky1:#fbe4b0;
+    --sky2:#f2c879;
+    --ink:#3a2a1c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,#fffaf0,var(--cream));
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 2px 18px rgba(90,58,34,0.18);
+    position:relative;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:var(--green-dark);
+    color:#fdf3e0;
+  }
+  .topbar .title{
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.3px;
+    opacity:.95;
+  }
+  .topbar .controls{
+    display:flex;
+    gap:8px;
+  }
+  .ctrl-btn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fdf3e0;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background .15s;
+  }
+  .ctrl-btn:hover{background:rgba(255,255,255,0.24);}
+  .ctrl-btn.active{background:var(--gold);color:var(--brown-dark);border-color:var(--gold);}
+
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+  }
+  canvas#scene{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .choice-overlay{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    padding:12px;
+    background:linear-gradient(0deg,rgba(0,0,0,0.28),transparent);
+  }
+  .choice-btn{
+    background:#fdf3e0;
+    border:2px solid var(--brown);
+    color:var(--brown-dark);
+    border-radius:10px;
+    padding:10px 16px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--brown);
+  }
+  .choice-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--brown);}
+  .choice-btn.secondary{background:transparent;color:#fdf3e0;border-color:#fdf3e0;box-shadow:0 3px 0 rgba(255,255,255,.4);}
+
+  .hold-btn{
+    background:var(--gold);
+    border:2px solid var(--brown-dark);
+    color:var(--brown-dark);
+    border-radius:12px;
+    padding:12px 22px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--brown-dark);
+    user-select:none;
+    touch-action:none;
+  }
+  .hold-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--brown-dark);}
+
+  .narration-box{
+    padding:16px 18px 6px;
+    font-size:15px;
+    line-height:1.55;
+    min-height:64px;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:6px 0 4px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(90,58,34,0.25);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--brown);transform:scale(1.3);}
+  .dot.done{background:var(--green);}
+
+  .bottombar{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    padding:8px 16px 18px;
+  }
+  .primary-btn{
+    background:var(--red);
+    color:#fff8ec;
+    border:none;
+    border-radius:24px;
+    padding:12px 26px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a2a20;
+    letter-spacing:.3px;
+  }
+  .primary-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #7a2a20;}
+  .primary-btn.ghost{
+    background:transparent;
+    color:var(--brown-dark);
+    border:2px solid var(--brown);
+    box-shadow:none;
+  }
+  .footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--brown);
+    opacity:.7;
+    padding:6px 0 12px;
+  }
+  .progress-track{
+    height:14px;
+    background:rgba(90,58,34,0.15);
+    border-radius:8px;
+    margin:0 18px;
+    overflow:hidden;
+    border:1px solid rgba(90,58,34,0.3);
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--gold),var(--green));
+    width:0%;
+    transition:width .12s linear;
+  }
+  .mg-label{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--brown-dark);
+    padding:6px 0 0;
+    font-weight:600;
+  }
+  .hint{
+    text-align:center;
+    font-size:12px;
+    color:var(--brown);
+    padding-top:2px;
+    min-height:16px;
+  }
+  @media (max-width:420px){
+    .narration-box{font-size:13.5px;}
+    .topbar .title{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title" id="gameTitle">Orang Desa Tingan &amp; Desa Kapal</div>
+    <div class="controls">
+      <button class="ctrl-btn" id="langBtn" type="button">🌐 <span id="langLabel">EN</span></button>
+      <button class="ctrl-btn" id="muteBtn" type="button">🔊 <span id="muteLabel">Suara</span></button>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="scene" width="700" height="440"></canvas>
+    <div class="choice-overlay" id="choiceOverlay" style="display:none;"></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+  <div class="narration-box" id="narrationBox"></div>
+
+  <div id="mgArea"></div>
+
+  <div class="bottombar" id="bottomBar"></div>
+  <div class="footer" id="footerText">Cerita Rakyat Nusantara</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- language & text data ---------------- */
+  const params = new URLSearchParams(window.location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+  let muted = localStorage.getItem('tingan_muted') === '1';
+
+  const T = {
+    id:{
+      gameTitle:"Orang Desa Tingan & Desa Kapal",
+      footer:"Cerita Rakyat Jawa Timur",
+      startBtn:"Mulai Cerita",
+      replayBtn:"Ulangi Cerita",
+      nextBtn:"Lanjut",
+      continueBtn:"Lanjutkan",
+      muteOn:"Suara",
+      muteOff:"Bisu",
+      coverTitle:"Orang Desa Tingan tidak boleh berjodohan dengan orang desa Kapal",
+      coverSub:"Sebuah legenda dari Jawa Timur",
+      scenes:[
+        {
+          narration:"Di desa Tingan, hiduplah seorang Begedhe bernama Kyai Tapiogo yang berasal dari Sendang Darajat. Suatu hari ia mengadakan sedekah bumi dan mengundang Begedhe dari desa Kapal untuk hadir."
+        },
+        {
+          narration:"Obrolan santai keduanya lama-lama berubah menjadi perdebatan yang sengit. Bantu Kyai Tapiogo mengumpulkan kata-kata bijak untuk memenangkan perdebatan itu!",
+          mg:"debate",
+          mgLabel:"Ketuk tombol untuk membalas perdebatan!",
+          mgBtn:"Balas!"
+        },
+        {
+          narration:"Begedhe desa Kapal, yang kaya raya dan berbadan tinggi besar, kalah dalam perdebatan. Karena tak terima, ia menantang Kyai Tapiogo yang bertubuh kecil untuk menggendongnya sampai ke desa Kapal. Jika berhasil, seluruh kekayaannya akan diserahkan."
+        },
+        {
+          narration:"Kyai Tapiogo menerima tantangan itu. Ia lalu merapal mantra sirep untuk menidurkan Begedhe Kapal. Ketuk tombol saat penunjuk berada di area hijau!",
+          mg:"spell",
+          mgLabel:"Rapal mantra tepat waktu!",
+          mgBtn:"Rapal Mantra"
+        },
+        {
+          narration:"Begedhe Kapal pun tertidur pulas. Kyai Tapiogo menggendongnya menempuh perjalanan panjang menuju desa Kapal. Tahan tombol untuk terus melangkah!",
+          mg:"carry",
+          mgLabel:"Tahan tombol untuk menggendong dan melangkah",
+          mgBtn:"Gendong & Melangkah",
+          restNarration:"Di tengah sawah, Kyai Tapiogo beristirahat sejenak. Begedhe Kapal masih tertidur nyenyak, dalam bahasa Jawa disebut 'ngeringkel'. Sejak itu, sawah ini dikenal sebagai sawah blok Ringkel.",
+          restBtn:"Lanjutkan Perjalanan"
+        },
+        {
+          narration:"Setibanya di rumah Begedhe Kapal, Kyai Tapiogo membaringkannya di ranjang lalu membangunkannya. Begedhe Kapal tersadar bahwa ia telah berhasil digendong sampai ke rumahnya sendiri."
+        },
+        {
+          narration:"Begedhe Kapal mengakui kekalahannya dan hendak menyerahkan seluruh hartanya. Menurutmu, apa yang sebaiknya diminta Kyai Tapiogo?",
+          choice:true,
+          options:[
+            {label:"Terima seluruh kekayaan", feedback:"Kyai Tapiogo tersenyum dan menggeleng. Ia bukan orang yang tamak akan harta."},
+            {label:"Minta sebidang tanah saja", feedback:"Kyai Tapiogo mengangguk. Itulah permintaan sederhana yang akan ia ajukan."}
+          ]
+        },
+        {
+          narration:"Kyai Tapiogo menolak seluruh kekayaan itu. Ia hanya meminta sebidang tanah di utara desa Kapal sebagai tempat pembuangan kotoran. Tanah itu kemudian dinamai Ngodok."
+        },
+        {
+          narration:"Sejak saat itu, kedua desa membuat sebuah perjanjian: orang desa Tingan tidak boleh berjodohan dengan orang desa Kapal. Siapa pun yang melanggar dipercaya tidak akan selamat. Namun warga kedua desa tetap saling mengunjungi setiap kali mengadakan sedekah bumi."
+        }
+      ],
+      endTitle:"Selesai",
+      endText:"Kisah ini mengajarkan kita untuk menghormati kesepakatan leluhur, serta meneladani kesederhanaan Kyai Tapiogo yang tidak tamak akan harta benda."
+    },
+    en:{
+      gameTitle:"Tingan Village & Kapal Village",
+      footer:"Folklore from East Java",
+      startBtn:"Start Story",
+      replayBtn:"Replay Story",
+      nextBtn:"Next",
+      continueBtn:"Continue",
+      muteOn:"Sound",
+      muteOff:"Muted",
+      coverTitle:"Villagers of Tingan may not marry villagers of Kapal",
+      coverSub:"A legend from East Java",
+      scenes:[
+        {
+          narration:"In Tingan village lived a village chief named Kyai Tapiogo, who came from Sendang Darajat. One day he held an earth-thanksgiving feast and invited the chief of Kapal village to attend."
+        },
+        {
+          narration:"Their casual chat slowly turned into a heated debate. Help Kyai Tapiogo gather wise words to win the argument!",
+          mg:"debate",
+          mgLabel:"Tap the button to fire back in the debate!",
+          mgBtn:"Reply!"
+        },
+        {
+          narration:"The wealthy, tall and mighty chief of Kapal lost the debate. Refusing to accept defeat, he challenged the small-statured Kyai Tapiogo to carry him all the way to Kapal village. If he succeeded, all his wealth would be handed over.",
+        },
+        {
+          narration:"Kyai Tapiogo accepted the challenge. He then chanted a sleeping spell to put the Kapal chief to sleep. Tap the button when the pointer is in the green zone!",
+          mg:"spell",
+          mgLabel:"Cast the spell at the right moment!",
+          mgBtn:"Cast Spell"
+        },
+        {
+          narration:"The Kapal chief fell into a deep sleep. Kyai Tapiogo carried him on a long journey toward Kapal village. Hold the button to keep walking!",
+          mg:"carry",
+          mgLabel:"Hold the button to carry him and keep walking",
+          mgBtn:"Carry & Walk",
+          restNarration:"In the middle of a rice field, Kyai Tapiogo paused to rest. The Kapal chief was still sound asleep - the Javanese call this 'ngeringkel'. Ever since, this field has been known as Ringkel field.",
+          restBtn:"Continue the Journey"
+        },
+        {
+          narration:"Upon arriving at the Kapal chief's house, Kyai Tapiogo laid him on his bed and woke him up. The chief realized he had indeed been carried all the way home."
+        },
+        {
+          narration:"The Kapal chief admitted defeat and was ready to hand over all his wealth. What do you think Kyai Tapiogo should ask for instead?",
+          choice:true,
+          options:[
+            {label:"Accept all the wealth", feedback:"Kyai Tapiogo smiled and shook his head. He was never a man of greed."},
+            {label:"Ask for a plot of land", feedback:"Kyai Tapiogo nodded. That simple request was what he would make."}
+          ]
+        },
+        {
+          narration:"Kyai Tapiogo declined all the riches. He asked only for a plot of land north of Kapal village, to be used as a waste disposal site. That land became known as Ngodok."
+        },
+        {
+          narration:"From then on, the two villages made an agreement: people of Tingan may not marry people of Kapal. Whoever broke the pact was believed to meet misfortune. Yet the villagers still visited one another whenever they held their earth-thanksgiving feasts."
+        }
+      ],
+      endTitle:"The End",
+      endText:"This story teaches us to honor the agreements of our ancestors, and to follow the humble example of Kyai Tapiogo, who never coveted wealth."
+    }
+  };
+
+  const TOTAL_SCENES = T.id.scenes.length; // 9 content scenes
+
+  /* ---------------- state ---------------- */
+  let sceneIndex = -1; // -1 = cover, 0..TOTAL-1 = scenes, TOTAL = end
+  let mgState = {};
+
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  const narrationBox = document.getElementById('narrationBox');
+  const dotsWrap = document.getElementById('dots');
+  const bottomBar = document.getElementById('bottomBar');
+  const mgArea = document.getElementById('mgArea');
+  const choiceOverlay = document.getElementById('choiceOverlay');
+  const footerText = document.getElementById('footerText');
+  const gameTitleEl = document.getElementById('gameTitle');
+  const langBtn = document.getElementById('langBtn');
+  const langLabel = document.getElementById('langLabel');
+  const muteBtn = document.getElementById('muteBtn');
+  const muteLabel = document.getElementById('muteLabel');
+
+  function tr(){ return T[lang]; }
+
+  /* ---------------- speech ---------------- */
+  let voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(targetLang){
+    const prefix = targetLang === 'en' ? 'en' : 'id';
+    let v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(prefix));
+    if(!v && prefix==='id') v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+    return v;
+  }
+  function speak(text){
+    if(!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    if(muted || !text) return;
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(lang);
+    if(v) u.voice = v;
+    u.lang = lang==='en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if(window.speechSynthesis) speechSynthesis.cancel(); }
+
+  /* ---------------- resize / postMessage ---------------- */
+  function sendHeight(){
+    const h = document.getElementById('app').offsetHeight;
+    try{ window.parent.postMessage({ type:'tingan-kapal-resize', height:h }, '*'); }catch(e){}
+  }
+  window.addEventListener('load', ()=>{ sendHeight(); setTimeout(sendHeight,300); });
+  window.addEventListener('resize', sendHeight);
+
+  /* ---------------- drawing helpers ---------------- */
+  function clear(){
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0,'#fbe4b0');
+    g.addColorStop(1,'#f2c879');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  function drawSun(x,y,r){
+    ctx.fillStyle = 'rgba(255,238,190,0.9)';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff3cf';
+    ctx.beginPath(); ctx.arc(x,y,r*0.6,0,Math.PI*2); ctx.fill();
+  }
+  function drawHills(baseY){
+    ctx.fillStyle = '#7a9a5c';
+    ctx.beginPath();
+    ctx.moveTo(0, baseY);
+    ctx.quadraticCurveTo(150, baseY-70, 350, baseY-20);
+    ctx.quadraticCurveTo(560, baseY+30, 700, baseY-40);
+    ctx.lineTo(700, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawRiceField(y0,y1){
+    ctx.fillStyle = '#8fae5f';
+    ctx.fillRect(0,y0,canvas.width,y1-y0);
+    ctx.strokeStyle = 'rgba(76,107,61,0.4)';
+    ctx.lineWidth = 1;
+    for(let i=0;i<14;i++){
+      const yy = y0 + (i+0.5)*((y1-y0)/14);
+      ctx.beginPath();
+      ctx.moveTo(0,yy);
+      for(let x=0;x<=canvas.width;x+=20){
+        ctx.lineTo(x, yy + Math.sin(x*0.05+i)*3);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawGround(y0){
+    ctx.fillStyle = '#c9a15e';
+    ctx.fillRect(0,y0,canvas.width,canvas.height-y0);
+  }
+  function drawHut(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // walls
+    ctx.fillStyle = '#caa15a';
+    ctx.fillRect(-40,-10,80,55);
+    // roof
+    ctx.fillStyle = '#6b4326';
+    ctx.beginPath();
+    ctx.moveTo(-55,-10);
+    ctx.lineTo(0,-65);
+    ctx.lineTo(55,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5a3a22';
+    ctx.beginPath();
+    ctx.moveTo(-55,-10);
+    ctx.lineTo(0,-65);
+    ctx.lineTo(0,-58);
+    ctx.lineTo(-48,-10);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = '#3a2a1c';
+    ctx.fillRect(-10,15,20,30);
+    ctx.restore();
+  }
+  function drawGrandHouse(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#d9c08a';
+    ctx.fillRect(-70,-5,140,60);
+    ctx.fillStyle = '#7a3b28';
+    ctx.beginPath();
+    ctx.moveTo(-90,-5);
+    ctx.lineTo(0,-80);
+    ctx.lineTo(90,-5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#a63a2d';
+    ctx.fillRect(-92,-10,184,10);
+    ctx.fillStyle = '#3a2a1c';
+    ctx.fillRect(-15,20,30,35);
+    ctx.fillStyle='#f2c879';
+    ctx.fillRect(-55,10,18,18);
+    ctx.fillRect(38,10,18,18);
+    ctx.restore();
+  }
+  // Character: small = Kyai Tapiogo (simple robe, blangkon headwear), big = Begedhe Kapal (tall, fancy)
+  function drawCharacter(x,y,opts){
+    opts = opts||{};
+    const big = !!opts.big;
+    const asleep = !!opts.asleep;
+    const scale = opts.scale || 1;
+    const armUp = !!opts.armUp;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    const bodyW = big?46:30;
+    const bodyH = big?110:75;
+    const headR = big?24:17;
+
+    if(asleep){
+      ctx.rotate(-Math.PI/2);
+    }
+
+    // legs
+    ctx.fillStyle = big ? '#d9a441' : '#8a5a34';
+    ctx.fillRect(-bodyW*0.35,bodyH*0.55,bodyW*0.28,bodyH*0.5);
+    ctx.fillRect(bodyW*0.08,bodyH*0.55,bodyW*0.28,bodyH*0.5);
+
+    // body/robe
+    ctx.fillStyle = big ? '#a63a2d' : '#4c6b3d';
+    ctx.beginPath();
+    ctx.moveTo(-bodyW/2, bodyH*0.6);
+    ctx.lineTo(-bodyW*0.62, -bodyH*0.15);
+    ctx.quadraticCurveTo(0,-bodyH*0.32, bodyW*0.62, -bodyH*0.15);
+    ctx.lineTo(bodyW/2, bodyH*0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    // sash
+    ctx.fillStyle = big ? '#d9a441' : '#d9a441';
+    ctx.fillRect(-bodyW/2, bodyH*0.12, bodyW, 8);
+
+    // arms
+    ctx.strokeStyle = big?'#a63a2d':'#4c6b3d';
+    ctx.lineWidth = big?12:9;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(-bodyW*0.55,-bodyH*0.1);
+    if(armUp){ ctx.quadraticCurveTo(-bodyW*0.9,-bodyH*0.55,-bodyW*0.6,-bodyH*0.85); }
+    else { ctx.quadraticCurveTo(-bodyW*0.85,bodyH*0.15,-bodyW*0.7,bodyH*0.4); }
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bodyW*0.55,-bodyH*0.1);
+    if(armUp){ ctx.quadraticCurveTo(bodyW*0.9,-bodyH*0.55,bodyW*0.6,-bodyH*0.85); }
+    else { ctx.quadraticCurveTo(bodyW*0.85,bodyH*0.15,bodyW*0.7,bodyH*0.4); }
+    ctx.stroke();
+
+    // neck/head
+    ctx.fillStyle = '#e8b98a';
+    ctx.beginPath();
+    ctx.arc(0,-bodyH*0.28-headR*0.5,headR,0,Math.PI*2);
+    ctx.fill();
+
+    // headwear
+    if(big){
+      ctx.fillStyle = '#3a2a1c';
+      ctx.beginPath();
+      ctx.ellipse(0,-bodyH*0.28-headR*0.9, headR*1.05, headR*0.55,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#d9a441';
+      ctx.beginPath();
+      ctx.arc(0,-bodyH*0.28-headR*1.15, headR*0.35,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#5a3a22';
+      ctx.beginPath();
+      ctx.moveTo(-headR*0.9,-bodyH*0.28-headR*0.35);
+      ctx.quadraticCurveTo(0,-bodyH*0.28-headR*1.55,headR*0.9,-bodyH*0.28-headR*0.35);
+      ctx.quadraticCurveTo(0,-bodyH*0.28-headR*0.1,-headR*0.9,-bodyH*0.28-headR*0.35);
+      ctx.fill();
+    }
+
+    // face (only if not asleep-rotated weirdly; keep simple dot eyes)
+    ctx.fillStyle = '#3a2a1c';
+    if(!asleep){
+      ctx.beginPath(); ctx.arc(-headR*0.35,-bodyH*0.28-headR*0.5,1.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(headR*0.35,-bodyH*0.28-headR*0.5,1.6,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(-headR*0.45,-bodyH*0.28-headR*0.5);
+      ctx.lineTo(-headR*0.15,-bodyH*0.28-headR*0.5);
+      ctx.moveTo(headR*0.15,-bodyH*0.28-headR*0.5);
+      ctx.lineTo(headR*0.45,-bodyH*0.28-headR*0.5);
+      ctx.lineWidth=1.6;
+      ctx.strokeStyle='#3a2a1c';
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+  function drawCarried(x,y,walkPhase){
+    // Kyai Tapiogo carrying sleeping Begedhe Kapal on his back
+    ctx.save();
+    ctx.translate(x,y);
+    // sleeping big figure draped over back
+    ctx.save();
+    ctx.translate(6, -46);
+    ctx.rotate(0.28);
+    drawCharacter(0,0,{big:true, scale:0.62, asleep:false});
+    ctx.restore();
+    // small figure walking
+    const bob = Math.sin(walkPhase)*3;
+    ctx.save();
+    ctx.translate(0,bob);
+    drawCharacter(0,0,{big:false, scale:0.85});
+    ctx.restore();
+    ctx.restore();
+  }
+  function drawLandPlot(){
+    clear();
+    drawHills(150);
+    drawGround(230);
+    ctx.strokeStyle = '#5a3a22';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8,6]);
+    ctx.strokeRect(120,255,300,140);
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(90,58,34,0.7)';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang==='en' ? '"Ngodok" land' : 'Tanah "Ngodok"', 270, 340);
+  }
+
+  const sceneRenderers = [
+    // 0: sedekah bumi, undangan
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      drawHut(150,240,1.1);
+      drawGrandHouse(520,235,0.9);
+      drawCharacter(280,300,{big:false, scale:1.05});
+      drawCharacter(400,300,{big:true, scale:1.0});
+      // simple offering basket
+      ctx.fillStyle = '#8a5a34';
+      ctx.beginPath(); ctx.ellipse(280,340,22,10,0,0,Math.PI*2); ctx.fill();
+    },
+    // 1: perdebatan (minigame draws separately, base bg only)
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      const bump = (mgState.pulse||0);
+      drawCharacter(270-bump,300,{big:false, scale:1.05, armUp:true});
+      drawCharacter(410+bump,300,{big:true, scale:1.0});
+    },
+    // 2: tantangan
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      drawCharacter(280,300,{big:false, scale:1.0});
+      drawCharacter(410,290,{big:true, scale:1.05, armUp:true});
+    },
+    // 3: mantra sirep (minigame)
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      drawCharacter(280,300,{big:false, scale:1.0, armUp:true});
+      const dozing = (mgState.hits||0) >= 3;
+      drawCharacter(420,300,{big:true, scale:1.0});
+      if(!dozing){
+        ctx.fillStyle='rgba(150,110,220,0.6)';
+        for(let i=0;i<3;i++){
+          ctx.beginPath();
+          ctx.arc(360-i*14, 220-i*10, 6-i,0,Math.PI*2);
+          ctx.fill();
+        }
+      }
+    },
+    // 4: menggendong (minigame)
+    function(){
+      clear(); drawHills(170);
+      const t = mgState.progress || 0;
+      if(t < 0.5){
+        drawRiceField(230,300); drawGround(300);
+      } else {
+        drawGround(230);
+        drawGrandHouse(560,220,0.85);
+      }
+      const px = 90 + (mgState.progress||0) * 470;
+      drawCarried(px, 300, (mgState.walkPhase||0));
+    },
+    // 5: tiba & bangun
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      drawGrandHouse(500,230,0.9);
+      drawCharacter(300,300,{big:false, scale:1.0, armUp:true});
+      drawCharacter(400,300,{big:true, scale:1.0});
+    },
+    // 6: choice - tawaran kekayaan
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      drawGrandHouse(500,230,0.9);
+      drawCharacter(300,300,{big:false, scale:1.0});
+      drawCharacter(410,290,{big:true, scale:1.05, armUp:true});
+      ctx.fillStyle='#d9a441';
+      ctx.beginPath(); ctx.arc(440,250,10,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(458,258,8,0,Math.PI*2); ctx.fill();
+    },
+    // 7: tanah Ngodok
+    function(){ drawLandPlot(); drawCharacter(270,320,{big:false, scale:0.95}); },
+    // 8: perjanjian
+    function(){
+      clear(); drawHills(190); drawGround(260);
+      drawHut(150,240,1.0);
+      drawGrandHouse(520,235,0.85);
+      drawCharacter(280,300,{big:false, scale:1.0});
+      drawCharacter(400,300,{big:true, scale:1.0});
+      ctx.strokeStyle='rgba(90,58,34,0.5)';
+      ctx.lineWidth=2;
+      ctx.setLineDash([5,5]);
+      ctx.beginPath(); ctx.moveTo(340,150); ctx.lineTo(340,360); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  ];
+
+  function drawCover(){
+    clear(); drawHills(200); drawGround(270);
+    drawHut(140,250,1.0);
+    drawGrandHouse(540,245,0.85);
+    drawCharacter(280,320,{big:false, scale:1.0});
+    drawCharacter(420,320,{big:true, scale:1.0});
+    ctx.fillStyle='rgba(58,42,28,0.55)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#fdf3e0';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 26px Georgia, serif';
+    wrapText(tr().coverTitle, canvas.width/2, 170, 560, 32);
+    ctx.font = '15px sans-serif';
+    ctx.fillStyle = '#f2c879';
+    ctx.fillText(tr().coverSub, canvas.width/2, 260);
+  }
+  function drawEnd(){
+    clear(); drawHills(200); drawGround(270);
+    drawHut(150,250,1.0);
+    drawGrandHouse(540,245,0.85);
+    drawCharacter(280,320,{big:false, scale:1.0, armUp:true});
+    drawCharacter(420,320,{big:true, scale:1.0, armUp:true});
+    ctx.fillStyle='rgba(58,42,28,0.5)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#fdf3e0';
+    ctx.textAlign='center';
+    ctx.font = 'bold 30px Georgia, serif';
+    ctx.fillText(tr().endTitle, canvas.width/2, 120);
+  }
+  function wrapText(text,x,y,maxWidth,lineHeight){
+    const words = text.split(' ');
+    let line = '';
+    let yy = y;
+    for(let n=0;n<words.length;n++){
+      const test = line + words[n] + ' ';
+      if(ctx.measureText(test).width > maxWidth && n>0){
+        ctx.fillText(line, x, yy);
+        line = words[n] + ' ';
+        yy += lineHeight;
+      } else { line = test; }
+    }
+    ctx.fillText(line, x, yy);
+  }
+
+  /* ---------------- dots ---------------- */
+  function renderDots(){
+    dotsWrap.innerHTML = '';
+    if(sceneIndex < 0 || sceneIndex >= TOTAL_SCENES){ return; }
+    for(let i=0;i<TOTAL_SCENES;i++){
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIndex?' active':(i<sceneIndex?' done':''));
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  /* ---------------- main render ---------------- */
+  function render(){
+    mgArea.innerHTML = '';
+    choiceOverlay.style.display = 'none';
+    choiceOverlay.innerHTML = '';
+    bottomBar.innerHTML = '';
+    gameTitleEl.textContent = tr().gameTitle;
+    footerText.textContent = tr().footer;
+    langLabel.textContent = lang==='en' ? 'ID' : 'EN';
+    muteLabel.textContent = muted ? tr().muteOff : tr().muteOn;
+    muteBtn.innerHTML = (muted? '🔇 ' : '🔊 ') + '<span id="muteLabel">' + (muted?tr().muteOff:tr().muteOn) + '</span>';
+
+    if(sceneIndex === -1){
+      drawCover();
+      narrationBox.textContent = '';
+      renderDots();
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = tr().startBtn;
+      btn.onclick = ()=>{ sceneIndex = 0; enterScene(); };
+      bottomBar.appendChild(btn);
+      return;
+    }
+    if(sceneIndex === TOTAL_SCENES){
+      drawEnd();
+      narrationBox.textContent = tr().endText;
+      renderDots();
+      speak(tr().endText);
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = tr().replayBtn;
+      btn.onclick = ()=>{ sceneIndex = -1; mgState = {}; render(); };
+      bottomBar.appendChild(btn);
+      return;
+    }
+
+    const scData = tr().scenes[sceneIndex];
+    sceneRenderers[sceneIndex]();
+    narrationBox.textContent = scData.narration;
+    renderDots();
+
+    if(scData.mg === 'debate'){
+      setupDebate(scData);
+    } else if(scData.mg === 'spell'){
+      setupSpell(scData);
+    } else if(scData.mg === 'carry'){
+      setupCarry(scData);
+    } else if(scData.choice){
+      setupChoice(scData);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = tr().nextBtn;
+      btn.onclick = ()=>{ sceneIndex++; enterScene(); };
+      bottomBar.appendChild(btn);
+    }
+  }
+  function enterScene(){
+    mgState = {};
+    render();
+    const scData = sceneIndex < TOTAL_SCENES ? tr().scenes[sceneIndex] : null;
+    if(scData) speak(scData.narration);
+  }
+
+  /* ---------------- minigame: debate ---------------- */
+  function setupDebate(scData){
+    mgState.count = mgState.count || 0;
+    mgState.pulse = 0;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = '<div class="mg-label">'+scData.mgLabel+'</div>' +
+      '<div class="progress-track"><div class="progress-fill" id="debateFill"></div></div>' +
+      '<div class="hint" id="debateHint"></div>';
+    mgArea.appendChild(wrap);
+    const fill = wrap.querySelector('#debateFill');
+    const hint = wrap.querySelector('#debateHint');
+    const NEEDED = 12;
+    function updateFill(){ fill.style.width = Math.min(100, (mgState.count/NEEDED)*100) + '%'; }
+    updateFill();
+
+    const btn = document.createElement('button');
+    btn.className = 'hold-btn';
+    btn.textContent = scData.mgBtn;
+    btn.onclick = ()=>{
+      if(mgState.count >= NEEDED) return;
+      mgState.count++;
+      mgState.pulse = 10;
+      updateFill();
+      sceneRenderers[sceneIndex]();
+      setTimeout(()=>{ mgState.pulse = 0; sceneRenderers[sceneIndex](); }, 120);
+      if(mgState.count >= NEEDED){
+        hint.textContent = lang==='en' ? 'Kyai Tapiogo wins the debate!' : 'Kyai Tapiogo memenangkan perdebatan!';
+        setTimeout(()=>{ sceneIndex++; enterScene(); }, 900);
+      }
+    };
+    bottomBar.appendChild(btn);
+  }
+
+  /* ---------------- minigame: spell timing ---------------- */
+  function setupSpell(scData){
+    mgState.hits = mgState.hits || 0;
+    mgState.pos = 0;
+    mgState.dir = 1;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = '<div class="mg-label">'+scData.mgLabel+'</div>' +
+      '<div style="margin:0 18px;height:20px;position:relative;background:rgba(90,58,34,0.12);border-radius:10px;overflow:hidden;border:1px solid rgba(90,58,34,0.3);">' +
+      '<div style="position:absolute;left:40%;width:20%;top:0;bottom:0;background:rgba(76,107,61,0.5);"></div>' +
+      '<div id="spellPointer" style="position:absolute;top:1px;bottom:1px;width:6px;background:#a63a2d;border-radius:3px;"></div>' +
+      '</div><div class="hint" id="spellHint"></div>';
+    mgArea.appendChild(wrap);
+    const pointerEl = wrap.querySelector('#spellPointer');
+    const hint = wrap.querySelector('#spellHint');
+
+    let raf;
+    function tick(){
+      mgState.pos += mgState.dir * 1.6;
+      if(mgState.pos >= 100){ mgState.pos = 100; mgState.dir = -1; }
+      if(mgState.pos <= 0){ mgState.pos = 0; mgState.dir = 1; }
+      pointerEl.style.left = mgState.pos + '%';
+      raf = requestAnimationFrame(tick);
+    }
+    tick();
+
+    const btn = document.createElement('button');
+    btn.className = 'hold-btn';
+    btn.textContent = scData.mgBtn;
+    btn.onclick = ()=>{
+      const inZone = mgState.pos >= 40 && mgState.pos <= 60;
+      if(inZone){
+        mgState.hits++;
+        hint.textContent = lang==='en' ? ('Nice! ('+mgState.hits+'/3)') : ('Bagus! ('+mgState.hits+'/3)');
+        sceneRenderers[sceneIndex]();
+        if(mgState.hits >= 3){
+          cancelAnimationFrame(raf);
+          hint.textContent = lang==='en' ? 'The spell works!' : 'Mantra berhasil!';
+          setTimeout(()=>{ sceneIndex++; enterScene(); }, 800);
+        }
+      } else {
+        hint.textContent = lang==='en' ? 'Try again!' : 'Coba lagi!';
+      }
+    };
+    bottomBar.appendChild(btn);
+  }
+
+  /* ---------------- minigame: carry (hold) ---------------- */
+  function setupCarry(scData){
+    mgState.progress = mgState.progress || 0;
+    mgState.walkPhase = 0;
+    mgState.rested = mgState.rested || false;
+    mgState.holding = false;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = '<div class="mg-label" id="carryLabel">'+scData.mgLabel+'</div>' +
+      '<div class="progress-track"><div class="progress-fill" id="carryFill"></div></div>';
+    mgArea.appendChild(wrap);
+    const fill = wrap.querySelector('#carryFill');
+    const label = wrap.querySelector('#carryLabel');
+    fill.style.width = (mgState.progress*100) + '%';
+
+    const btn = document.createElement('button');
+    btn.className = 'hold-btn';
+    btn.textContent = scData.mgBtn;
+    bottomBar.appendChild(btn);
+
+    let raf;
+    function loop(){
+      if(mgState.holding && !restPause){
+        mgState.progress = Math.min(1, mgState.progress + 0.006);
+        mgState.walkPhase += 0.35;
+        fill.style.width = (mgState.progress*100)+'%';
+        sceneRenderers[sceneIndex]();
+        if(!mgState.rested && mgState.progress >= 0.5){
+          mgState.rested = true;
+          restPause = true;
+          mgState.holding = false;
+          showRest();
+        } else if(mgState.progress >= 1){
+          finishCarry();
+          return;
+        }
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    let restPause = false;
+    function startHold(e){ e.preventDefault(); mgState.holding = true; }
+    function endHold(){ mgState.holding = false; }
+    btn.addEventListener('mousedown', startHold);
+    btn.addEventListener('touchstart', startHold, {passive:false});
+    window.addEventListener('mouseup', endHold);
+    btn.addEventListener('touchend', endHold);
+
+    function showRest(){
+      label.textContent = scData.restNarration;
+      narrationBox.textContent = scData.restNarration;
+      speak(scData.restNarration);
+      btn.style.display = 'none';
+      const resumeBtn = document.createElement('button');
+      resumeBtn.className = 'primary-btn';
+      resumeBtn.textContent = scData.restBtn;
+      resumeBtn.onclick = ()=>{
+        restPause = false;
+        narrationBox.textContent = scData.narration;
+        speak(scData.narration);
+        label.textContent = scData.mgLabel;
+        resumeBtn.remove();
+        btn.style.display = '';
+      };
+      bottomBar.appendChild(resumeBtn);
+    }
+    function finishCarry(){
+      cancelAnimationFrame(raf);
+      label.textContent = lang==='en' ? 'Arrived!' : 'Sampai tujuan!';
+      setTimeout(()=>{ sceneIndex++; enterScene(); }, 700);
+    }
+    loop();
+  }
+
+  /* ---------------- choice scene ---------------- */
+  function setupChoice(scData){
+    choiceOverlay.style.display = 'flex';
+    scData.options.forEach((opt,i)=>{
+      const b = document.createElement('button');
+      b.className = 'choice-btn' + (i===1?'':' secondary');
+      b.textContent = opt.label;
+      b.onclick = ()=>{
+        choiceOverlay.innerHTML = '';
+        choiceOverlay.style.display = 'none';
+        narrationBox.textContent = opt.feedback;
+        speak(opt.feedback);
+        const cont = document.createElement('button');
+        cont.className = 'primary-btn';
+        cont.textContent = tr().continueBtn;
+        cont.onclick = ()=>{ sceneIndex++; enterScene(); };
+        bottomBar.innerHTML = '';
+        bottomBar.appendChild(cont);
+      };
+      choiceOverlay.appendChild(b);
+    });
+  }
+
+  /* ---------------- top bar handlers ---------------- */
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    stopSpeak();
+    render();
+    if(sceneIndex>=0 && sceneIndex<TOTAL_SCENES){
+      speak(tr().scenes[sceneIndex].narration);
+    }
+  });
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem('tingan_muted', muted ? '1':'0');
+    if(muted) stopSpeak();
+    render();
+  });
+
+  /* ---------------- init ---------------- */
+  render();
+  setTimeout(sendHeight, 200);
+  const ro = new ResizeObserver(sendHeight);
+  ro.observe(document.getElementById('app'));
+})();
+</script>
+</body>
+</html>
