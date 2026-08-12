@@ -186,6 +186,7 @@
 
   <div id="controls-row">
     <button class="btn" id="next-btn" style="display:none;">Lanjut ▶</button>
+    <button class="btn secondary" id="retry-btn" style="display:none;">↻ Coba Lagi</button>
     <button class="btn secondary" id="replay-btn" style="display:none;">↻ Ulangi Cerita</button>
   </div>
 
@@ -224,6 +225,8 @@ var T = {
     startBtn: "▶ Mulai Cerita",
     replayBtn: "↻ Ulangi Cerita",
     nextBtn: "Lanjut ▶",
+    retryBtn: "↻ Coba Lagi",
+    stuckMsg: "Yah, belum cukup terkumpul. Coba lagi, yuk!",
     scenes: [
       {
         label: "Para Ular Bertapa",
@@ -268,6 +271,8 @@ var T = {
     startBtn: "▶ Start Story",
     replayBtn: "↻ Replay Story",
     nextBtn: "Next ▶",
+    retryBtn: "↻ Try Again",
+    stuckMsg: "Not quite enough collected. Let's try again!",
     scenes: [
       {
         label: "The Meditating Snakes",
@@ -357,6 +362,7 @@ var elCaption = document.getElementById('caption-text');
 var elSceneLabel = document.getElementById('scene-label');
 var elDots = document.getElementById('dots');
 var elNextBtn = document.getElementById('next-btn');
+var elRetryBtn = document.getElementById('retry-btn');
 var elReplayBtn = document.getElementById('replay-btn');
 var elHoldWrap = document.getElementById('hold-wrap');
 var elHoldFill = document.getElementById('hold-fill');
@@ -376,6 +382,7 @@ function applyStaticText(){
   elStartBtn.textContent = t.startBtn;
   elReplayBtn.textContent = t.replayBtn;
   elNextBtn.textContent = t.nextBtn;
+  elRetryBtn.textContent = t.retryBtn;
   elLangBtn.textContent = LANG==='id' ? 'EN' : 'ID';
   document.documentElement.lang = LANG;
 }
@@ -939,6 +946,7 @@ var s5 = { drops:[], collected:0, target:8, spawned:0, maxSpawn:14, active:true,
 function scene5(){
   s5.drops=[]; s5.collected=0; s5.spawned=0; s5.active=true; s5.flap=0;
   elCollectWrap.style.display='block';
+  elRetryBtn.style.display='none';
   elCollectWrap.textContent = T[LANG].collectScore(0,s5.target) + ' — ' + T[LANG].hint_collect;
 
   var spawnTimer = setInterval(function(){
@@ -947,6 +955,20 @@ function scene5(){
     s5.spawned++;
     s5.drops.push({ x: W*0.3+Math.random()*W*0.4, y: H*0.22, vy: 1.4+Math.random()*0.8 });
   }, 650);
+
+  // Watchdog: if every droplet has been spawned and none remain on screen
+  // but the target wasn't reached, the scene would otherwise stall forever.
+  // Detect that and offer a retry instead of leaving the user stuck.
+  var stuckTimer = setInterval(function(){
+    if(!s5.active) return;
+    if(s5.spawned >= s5.maxSpawn && s5.drops.length === 0 && s5.collected < s5.target){
+      s5.active = false;
+      clearInterval(spawnTimer);
+      clearInterval(stuckTimer);
+      elCollectWrap.textContent = T[LANG].stuckMsg;
+      elRetryBtn.style.display = 'inline-block';
+    }
+  }, 500);
 
   function draw(){
     clearC();
@@ -984,6 +1006,7 @@ function scene5(){
         if(s5.collected>=s5.target){
           s5.active=false;
           clearInterval(spawnTimer);
+          clearInterval(stuckTimer);
           finishScene5();
         }
         break;
@@ -995,13 +1018,21 @@ function scene5(){
 
   scene5.cleanup = function(){
     clearInterval(spawnTimer);
+    clearInterval(stuckTimer);
     canvas.removeEventListener('mousedown', onClick);
     elCollectWrap.style.display='none';
+    elRetryBtn.style.display='none';
   };
 }
 function finishScene5(){
   scene5.cleanup && scene5.cleanup();
   setTimeout(function(){ showNext(); }, 400);
+}
+function retryScene5(){
+  elRetryBtn.style.display='none';
+  scene5.cleanup && scene5.cleanup();
+  stopAnim();
+  scene5();
 }
 
 /* ---------------------------------------------------------
@@ -1073,6 +1104,7 @@ function renderScene(n, skipNarrationDelay){
   elCaption.textContent = sc.text;
   elCaption.classList.remove('fade-in'); void elCaption.offsetWidth; elCaption.classList.add('fade-in');
   hideNext();
+  elRetryBtn.style.display = 'none';
   elReplayBtn.style.display = (n===TOTAL_SCENES) ? 'inline-block' : 'none';
 
   speak(sc.text);
@@ -1094,6 +1126,13 @@ elNextBtn.addEventListener('click', function(){
 });
 elReplayBtn.addEventListener('click', function(){
   renderScene(1);
+});
+elRetryBtn.addEventListener('click', function(){
+  if(currentScene === 5){
+    retryScene5();
+  } else {
+    renderScene(currentScene);
+  }
 });
 elStartBtn.addEventListener('click', function(){
   elTitleScreen.style.display='none';
