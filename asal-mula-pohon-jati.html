@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Pohon Jati Besar-Besar</title>
+<style>
+  :root{
+    --bg-dark:#1c1408;
+    --bg-panel:#2b1e10;
+    --wood:#7a4a26;
+    --wood-dark:#4e2f18;
+    --gold:#d9a441;
+    --gold-light:#f2c766;
+    --cream:#f6ecd9;
+    --leaf:#3f6b3a;
+    --leaf-dark:#274a26;
+    --red:#a5382c;
+    --sky1:#f4d9a0;
+    --sky2:#e08a4c;
+    --night1:#101427;
+    --night2:#2b2f52;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:var(--bg-dark);
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    overflow:hidden;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,#241809,#150e06);
+    border-radius:0;
+    overflow:hidden;
+    position:relative;
+  }
+  /* Top bar */
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:rgba(0,0,0,0.35);
+    border-bottom:1px solid rgba(217,164,65,0.25);
+  }
+  #topbar .title{
+    font-size:13px;
+    letter-spacing:0.5px;
+    color:var(--gold-light);
+    font-weight:600;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:55%;
+  }
+  .icon-btn{
+    background:rgba(217,164,65,0.12);
+    border:1px solid rgba(217,164,65,0.4);
+    color:var(--gold-light);
+    border-radius:8px;
+    width:36px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:background .15s;
+  }
+  .icon-btn:hover{background:rgba(217,164,65,0.25);}
+  .lang-btn{
+    font-size:12px;
+    font-weight:700;
+    width:auto;
+    padding:0 10px;
+  }
+  #topbar-right{display:flex;gap:8px;}
+
+  /* Stage */
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4/3;
+    background:linear-gradient(180deg,var(--night1),var(--night2));
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  /* Progress dots */
+  #dots{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:6px;
+    z-index:5;
+    background:rgba(0,0,0,0.3);
+    padding:5px 9px;
+    border-radius:20px;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    transition:background .3s, transform .3s;
+  }
+  .dot.active{background:var(--gold-light); transform:scale(1.3);}
+  .dot.done{background:var(--gold);}
+
+  /* Narration box */
+  #narration-box{
+    padding:14px 16px 10px;
+    background:var(--bg-panel);
+    min-height:74px;
+    border-top:2px solid var(--wood-dark);
+  }
+  #narration-text{
+    font-size:15px;
+    line-height:1.5;
+    color:var(--cream);
+    min-height:44px;
+  }
+  #narration-text .speaking{color:var(--gold-light);}
+
+  /* Controls */
+  #controls{
+    padding:10px 16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background:var(--bg-panel);
+  }
+  .btn-row{display:flex; gap:10px; justify-content:center;}
+  .main-btn{
+    background:linear-gradient(180deg,var(--gold-light),var(--gold));
+    color:#3a2504;
+    border:none;
+    padding:11px 24px;
+    border-radius:24px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #96701f;
+    transition:transform .1s;
+  }
+  .main-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #96701f;}
+  .main-btn.secondary{
+    background:transparent;
+    color:var(--gold-light);
+    border:1.5px solid var(--gold);
+    box-shadow:none;
+  }
+  .main-btn:disabled{opacity:0.5; cursor:default;}
+
+  /* Minigame prompt */
+  #minigame-prompt{
+    text-align:center;
+    font-size:13px;
+    color:var(--gold-light);
+    min-height:16px;
+    font-style:italic;
+  }
+  #hold-btn{
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  #progress-bar-wrap{
+    width:100%;
+    height:14px;
+    background:rgba(255,255,255,0.12);
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid rgba(217,164,65,0.3);
+  }
+  #progress-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--gold-light));
+    transition:width .05s linear;
+  }
+
+  /* Footer */
+  #footer{
+    text-align:center;
+    font-size:11px;
+    color:rgba(246,236,217,0.45);
+    padding:8px 10px 12px;
+    background:var(--bg-panel);
+  }
+
+  /* Start overlay */
+  #start-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(16,20,39,0.65), rgba(28,20,8,0.92));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    z-index:10;
+  }
+  #start-overlay h1{
+    font-size:22px;
+    color:var(--gold-light);
+    margin:0 0 8px;
+    text-shadow:0 2px 6px rgba(0,0,0,0.6);
+  }
+  #start-overlay p{
+    font-size:13px;
+    color:var(--cream);
+    max-width:320px;
+    margin:0 0 20px;
+    opacity:0.85;
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="topbar-title">Asal Mula Pohon Jati Besar-Besar</div>
+    <div id="topbar-right">
+      <button class="icon-btn lang-btn" id="lang-toggle">EN</button>
+      <button class="icon-btn" id="mute-toggle" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <div id="dots"></div>
+    <canvas id="stage" width="800" height="600"></canvas>
+    <div id="start-overlay">
+      <h1 id="start-title">Asal Mula Pohon Jati Besar-Besar</h1>
+      <p id="start-desc">Cerita rakyat dari Jawa Timur tentang seorang raja, sebuah rahasia, dan pohon jati yang tumbuh raksasa.</p>
+      <button class="main-btn" id="start-btn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="narration-box">
+    <div id="narration-text"></div>
+  </div>
+
+  <div id="controls">
+    <div id="minigame-prompt"></div>
+    <div id="progress-bar-wrap" class="hidden"><div id="progress-bar-fill"></div></div>
+    <div class="btn-row" id="btn-row">
+      <button class="main-btn hidden" id="next-btn">Lanjut ▶</button>
+      <button class="main-btn hidden" id="action-btn">Gali ⛏️</button>
+      <button class="main-btn secondary hidden" id="replay-btn">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="footer">Cerita Rakyat Nusantara — Dongeng Interaktif</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============== I18N STRINGS ============== */
+const STR = {
+  id: {
+    title: "Asal Mula Pohon Jati Besar-Besar",
+    startDesc: "Cerita rakyat dari Jawa Timur tentang seorang raja, sebuah rahasia, dan pohon jati yang tumbuh raksasa.",
+    startBtn: "▶ Mulai Cerita",
+    next: "Lanjut ▶",
+    replay: "↺ Ulangi Cerita",
+    holdToDig: "Tahan tombol untuk menggali",
+    dig: "Gali ⛏️",
+    holdWhisper: "Tahan tombol untuk berbisik",
+    whisper: "Bisikkan Rahasia 🌳",
+    tapWalk: "Ketuk berkali-kali agar Sulang terus berjalan",
+    walk: "Melangkah 👣",
+    tapDrum: "Ketuk berkali-kali untuk menabuh bedug",
+    drum: "Tabuh Bedug 🥁",
+    footer: "Cerita Rakyat Nusantara — Dongeng Interaktif"
+  },
+  en: {
+    title: "The Origin of the Giant Teak Trees",
+    startDesc: "A folktale from East Java about a king, a secret, and a teak tree that grew into a giant.",
+    startBtn: "▶ Start Story",
+    next: "Next ▶",
+    replay: "↺ Replay Story",
+    holdToDig: "Hold the button to dig",
+    dig: "Dig ⛏️",
+    holdWhisper: "Hold the button to whisper",
+    whisper: "Whisper the Secret 🌳",
+    tapWalk: "Tap repeatedly to keep Sulang walking",
+    walk: "Step 👣",
+    tapDrum: "Tap repeatedly to beat the drum",
+    drum: "Beat the Drum 🥁",
+    footer: "Nusantara Folktales — Interactive Story"
+  }
+};
+
+/* ============== SCENES ============== */
+const SCENES = [
+{
+  id:"intro",
+  type:"narration",
+  bg:"palaceNight",
+  narr:{
+    id:"Dahulu kala di Medang Kamulan, hiduplah seorang raja yang telah tua namun belum juga memiliki putra. Dengan hati sedih, ia pergi bertapa ke tengah hutan, memohon kepada dewata agar dikaruniai seorang anak.",
+    en:"Long ago in Medang Kamulan, there lived an aging king who had no children. With a heavy heart, he went into the forest to meditate, praying to the gods for a child of his own."
+  },
+  draw: drawIntro
+},
+{
+  id:"blessing",
+  type:"narration",
+  bg:"palaceNight",
+  narr:{
+    id:"Dalam tapanya, raja mendapat petunjuk dari dewata melalui mimpi: tak lama lagi permaisuri akan mengandung. Raja pulang dengan hati gembira, dan benar saja, tak lama kemudian permaisuri dinyatakan hamil.",
+    en:"During his meditation, the gods sent him a dream: soon the queen would conceive. The king returned home overjoyed, and not long after, the queen was indeed expecting a child."
+  },
+  draw: drawBlessing
+},
+{
+  id:"birth",
+  type:"narration",
+  bg:"palaceDay",
+  narr:{
+    id:"Sembilan bulan berlalu. Namun yang lahir bukanlah bayi manusia, melainkan seekor bayi kijang mungil. Raja terkejut—perasaan kecewa, marah, dan malu bercampur menjadi satu.",
+    en:"Nine months passed. But what was born was not a human baby—it was a tiny fawn. The king was stunned, feeling disappointment, anger, and shame all at once."
+  },
+  draw: drawBirth
+},
+{
+  id:"bury",
+  type:"hold",
+  bg:"forestNight",
+  duration:2600,
+  narr:{
+    id:"Tanpa berpikir panjang, raja membawa bayi kijang itu jauh ke tengah hutan. Agar rahasianya tak diketahui siapa pun, ia menguburkannya hidup-hidup di bawah tanah.",
+    en:"Without thinking twice, the king carried the fawn deep into the forest. To keep his secret hidden from everyone, he buried it alive beneath the earth."
+  },
+  promptKey:"holdToDig",
+  actionKey:"dig",
+  draw: drawBury
+},
+{
+  id:"illness",
+  type:"narration",
+  bg:"palaceNight",
+  narr:{
+    id:"Sesampainya di istana, raja tiba-tiba jatuh sakit. Tubuhnya membengkak dan sulit digerakkan. Banyak tabib datang mengobati, namun tak satu pun sanggup menyembuhkannya.",
+    en:"Back at the palace, the king suddenly fell gravely ill. His body swelled up and he could barely move. Many healers came, but none could cure him."
+  },
+  draw: drawIllness
+},
+{
+  id:"secret",
+  type:"narration",
+  bg:"palaceNight",
+  narr:{
+    id:"Raja memanggil hamba kesayangannya, Sulang, dan membisikkan rahasianya: bahwa permaisuri melahirkan seekor kijang yang telah ia kubur hidup-hidup. Setelah bercerita, ajaib—raja pun sembuh seketika. Namun kini giliran Sulang yang jatuh sakit, tubuhnya membengkak, sebab menyimpan rahasia yang berat.",
+    en:"The king summoned his trusted servant, Sulang, and whispered his secret: that the queen had given birth to a fawn he had buried alive. The moment he confessed, the king was miraculously healed. But now it was Sulang who fell ill, his body swelling under the weight of the secret."
+  },
+  draw: drawSecretToSulang
+},
+{
+  id:"walk",
+  type:"tap",
+  bg:"forestDay",
+  duration:8,
+  narr:{
+    id:"Dengan tubuh yang membengkak dan berat melangkah, Sulang memaksakan diri berjalan jauh ke tengah hutan belantara, mencari tempat untuk melepaskan rahasia yang menyiksanya.",
+    en:"With his body swollen and every step heavy, Sulang forced himself deep into the wild forest, searching for a place to release the secret that tormented him."
+  },
+  promptKey:"tapWalk",
+  actionKey:"walk",
+  draw: drawWalk
+},
+{
+  id:"whisper",
+  type:"hold",
+  bg:"forestDay",
+  duration:2600,
+  narr:{
+    id:"Di tengah hutan, Sulang duduk di bawah sebatang pohon jati kecil. \"Hai pohon jati,\" katanya, \"sesungguhnya permaisuri telah melahirkan seekor kijang, dan raja menguburnya hidup-hidup karena malu.\" Seketika, tubuh Sulang pulih seperti sedia kala.",
+    en:"In the forest, Sulang sat beneath a small teak tree. \"O teak tree,\" he said, \"the queen truly gave birth to a fawn, and the king buried it alive out of shame.\" At once, Sulang's body was healed."
+  },
+  promptKey:"holdWhisper",
+  actionKey:"whisper",
+  draw: drawWhisper
+},
+{
+  id:"treeGrows",
+  type:"narration",
+  bg:"forestDay",
+  narr:{
+    id:"Sepeninggal Sulang, keajaiban terjadi. Batang dan ranting pohon jati itu tiba-tiba membengkak, membesar, terus membesar. Sejak hari itulah pohon-pohon jati di bumi tumbuh besar seperti yang kita kenal sekarang.",
+    en:"After Sulang left, something magical happened. The teak tree's trunk and branches began to swell, growing larger and larger. From that day on, teak trees across the land grew as large as we know them today."
+  },
+  draw: drawTreeGrows
+},
+{
+  id:"bedug",
+  type:"tap",
+  bg:"villageDay",
+  duration:8,
+  narr:{
+    id:"Karena ukurannya yang besar, rakyat menebang pohon jati itu dan menjadikannya bedug. Ketika ditabuh, bedug itu berbunyi aneh, seolah bercerita tentang rahasia sang raja kepada seluruh negeri.",
+    en:"Because of its enormous size, the villagers cut down the teak tree and made it into a great drum. When beaten, the drum made a strange sound—as if telling the king's secret to the whole kingdom."
+  },
+  promptKey:"tapDrum",
+  actionKey:"drum",
+  draw: drawBedug
+},
+{
+  id:"ending",
+  type:"narration",
+  bg:"forestDawn",
+  narr:{
+    id:"\"Dang... dang... dang... Raja Medang berputra seekor kijang, dikuburnya hidup-hidup, lalu diceritakan kepada Sulang...\" Begitulah bunyi bedug itu, hingga seluruh rakyat mengetahui rahasia sang raja. Dan sejak itu, pohon jati tumbuh besar di seluruh negeri.",
+    en:"\"Dang... dang... dang... King Medang's son was a fawn, buried alive, then told to Sulang...\" So sang the drum, until the whole kingdom learned the king's secret. And from that day, teak trees grew tall and mighty across the land."
+  },
+  draw: drawEnding
+}
+];
+
+/* ============== STATE ============== */
+let lang = (function(){
+  const p = new URLSearchParams(location.search);
+  if(p.get('lang')==='en') return 'en';
+  return 'id';
+})();
+let muted = localStorage.getItem('jati_muted') === '1';
+let sceneIndex = 0;
+let started = false;
+let holdActive = false;
+let holdStart = 0;
+let holdRAF = null;
+let tapCount = 0;
+let tapTarget = 0;
+let animRAF = null;
+let animStartTime = 0;
+let voices = [];
+
+/* ============== DOM ============== */
+const dotsEl = document.getElementById('dots');
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const narrTextEl = document.getElementById('narration-text');
+const nextBtn = document.getElementById('next-btn');
+const actionBtn = document.getElementById('action-btn');
+const replayBtn = document.getElementById('replay-btn');
+const promptEl = document.getElementById('minigame-prompt');
+const progWrap = document.getElementById('progress-bar-wrap');
+const progFill = document.getElementById('progress-bar-fill');
+const startOverlay = document.getElementById('start-overlay');
+const startBtn = document.getElementById('start-btn');
+const langToggle = document.getElementById('lang-toggle');
+const muteToggle = document.getElementById('mute-toggle');
+const topbarTitle = document.getElementById('topbar-title');
+const startTitle = document.getElementById('start-title');
+const startDesc = document.getElementById('start-desc');
+const footerEl = document.getElementById('footer');
+
+/* ============== SETUP DOTS ============== */
+function buildDots(){
+  dotsEl.innerHTML = '';
+  SCENES.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.i = i;
+    dotsEl.appendChild(d);
+  });
+}
+function updateDots(){
+  [...dotsEl.children].forEach((d,i)=>{
+    d.classList.toggle('active', i===sceneIndex);
+    d.classList.toggle('done', i<sceneIndex);
+  });
+}
+
+/* ============== I18N APPLY ============== */
+function applyLang(){
+  const t = STR[lang];
+  topbarTitle.textContent = t.title;
+  startTitle.textContent = t.title;
+  startDesc.textContent = t.startDesc;
+  startBtn.textContent = t.startBtn;
+  nextBtn.textContent = t.next;
+  replayBtn.textContent = t.replay;
+  footerEl.textContent = t.footer;
+  langToggle.textContent = lang === 'id' ? 'EN' : 'ID';
+  document.documentElement.lang = lang;
+}
+
+/* ============== SPEECH ============== */
+function loadVoices(){
+  voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(){
+  if(!voices || !voices.length) return null;
+  const wantLang = lang === 'id' ? 'id' : 'en';
+  let v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(wantLang));
+  if(!v && wantLang==='id') v = voices.find(v=>/indones/i.test(v.name));
+  return v || voices[0];
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if(muted) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice();
+  if(v) u.voice = v;
+  u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  u.rate = 0.92;
+  u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeak(){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+/* ============== TYPEWRITER NARRATION ============== */
+let typeTimer = null;
+function showNarration(text){
+  narrTextEl.textContent = '';
+  if(typeTimer) clearInterval(typeTimer);
+  let i = 0;
+  typeTimer = setInterval(()=>{
+    narrTextEl.textContent = text.slice(0,i);
+    i++;
+    if(i > text.length){ clearInterval(typeTimer); }
+  }, 14);
+}
+
+/* ============== RESIZE / POSTMESSAGE ============== */
+function notifyResize(){
+  const h = document.getElementById('app').getBoundingClientRect().height;
+  try{
+    window.parent.postMessage({ type:'jati-resize', height: Math.ceil(h) }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', notifyResize);
+window.addEventListener('resize', notifyResize);
+
+/* ============== MUTE ============== */
+function applyMuteUI(){
+  muteToggle.textContent = muted ? '🔇' : '🔊';
+}
+muteToggle.addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('jati_muted', muted ? '1':'0');
+  applyMuteUI();
+  if(muted) stopSpeak();
+});
+applyMuteUI();
+
+langToggle.addEventListener('click', ()=>{
+  lang = lang === 'id' ? 'en' : 'id';
+  applyLang();
+  if(started){
+    renderScene(true);
+  }
+});
+applyLang();
+
+/* ============== CANVAS SIZE ============== */
+function fitCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 800 * dpr;
+  canvas.height = 600 * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+
+/* ============== BACKGROUND HELPERS ============== */
+function drawBackground(kind, t){
+  const W=800,H=600;
+  let sky1,sky2,ground1,ground2;
+  switch(kind){
+    case 'palaceNight':
+      sky1='#141a33'; sky2='#2c2f57'; ground1='#3a2510'; ground2='#241608'; break;
+    case 'palaceDay':
+      sky1='#f7dfa8'; sky2='#e39a5a'; ground1='#8a5a2a'; ground2='#5c3a18'; break;
+    case 'forestNight':
+      sky1='#0d1220'; sky2='#1c2440'; ground1='#182a17'; ground2='#0e1a0d'; break;
+    case 'forestDay':
+      sky1='#bfe3d6'; sky2='#8fc9a6'; ground1='#3f6b3a'; ground2='#274a26'; break;
+    case 'villageDay':
+      sky1='#fbe7bd'; sky2='#eab074'; ground1='#8a6a3a'; ground2='#5c4520'; break;
+    case 'forestDawn':
+      sky1='#ffd9a0'; sky2='#f2966b'; ground1='#4a6b3a'; ground2='#2a4a26'; break;
+    default:
+      sky1='#222'; sky2='#111'; ground1='#333'; ground2='#111';
+  }
+  const g = ctx.createLinearGradient(0,0,0,H*0.62);
+  g.addColorStop(0,sky1); g.addColorStop(1,sky2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H*0.62);
+
+  const gg = ctx.createLinearGradient(0,H*0.55,0,H);
+  gg.addColorStop(0,ground1); gg.addColorStop(1,ground2);
+  ctx.fillStyle = gg;
+  ctx.fillRect(0,H*0.55,W,H*0.45);
+
+  // stars for night scenes
+  if(kind==='palaceNight' || kind==='forestNight'){
+    ctx.fillStyle='rgba(255,255,255,0.8)';
+    for(let i=0;i<40;i++){
+      const sx = (i*97 + 31) % W;
+      const sy = (i*53 + 12) % (H*0.5);
+      const tw = 0.5 + 0.5*Math.sin(t/500 + i);
+      ctx.globalAlpha = 0.3 + 0.5*tw;
+      ctx.beginPath();
+      ctx.arc(sx,sy,1.4,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    // moon
+    ctx.fillStyle = '#f4edd6';
+    ctx.beginPath(); ctx.arc(W-100,90,34,0,Math.PI*2); ctx.fill();
+  }
+  if(kind==='palaceDay' || kind==='villageDay'){
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.beginPath(); ctx.arc(120,80,36,0,Math.PI*2); ctx.fill();
+  }
+  if(kind==='forestDay'){
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.beginPath(); ctx.arc(W-110,70,30,0,Math.PI*2); ctx.fill();
+  }
+  if(kind==='forestDawn'){
+    ctx.fillStyle='rgba(255,240,210,0.9)';
+    ctx.beginPath(); ctx.arc(W/2,H*0.55,60,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function drawGroundLine(H, color){
+  ctx.strokeStyle = color || 'rgba(0,0,0,0.3)';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(0,H*0.55);
+  ctx.lineTo(800,H*0.55);
+  ctx.stroke();
+}
+
+function drawSimpleTree(x,y,scale,leafColor,trunkColor){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = trunkColor || '#5c3a1e';
+  ctx.fillRect(-8,-70,16,70);
+  ctx.fillStyle = leafColor || '#3f6b3a';
+  ctx.beginPath(); ctx.arc(0,-95,38,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-28,-75,26,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(28,-75,26,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawKingFigure(x,y,scale,swollen){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const bodyW = swollen ? 46 : 30;
+  // robe
+  ctx.fillStyle = '#7a2020';
+  ctx.beginPath();
+  ctx.moveTo(-bodyW/2,10);
+  ctx.quadraticCurveTo(0,-70,bodyW/2,10);
+  ctx.closePath();
+  ctx.fill();
+  // sash
+  ctx.fillStyle = '#d9a441';
+  ctx.fillRect(-bodyW/2, -10, bodyW, 8);
+  // head
+  ctx.fillStyle = '#e8b98a';
+  ctx.beginPath(); ctx.arc(0,-78,16,0,Math.PI*2); ctx.fill();
+  // crown
+  ctx.fillStyle = '#f2c766';
+  ctx.beginPath();
+  ctx.moveTo(-14,-92); ctx.lineTo(-14,-104); ctx.lineTo(-6,-94);
+  ctx.lineTo(0,-108); ctx.lineTo(6,-94); ctx.lineTo(14,-104);
+  ctx.lineTo(14,-92); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawFawn(x,y,scale,buried){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle='#c98a4b';
+  // body
+  ctx.beginPath();
+  ctx.ellipse(0,0,20,13,0,0,Math.PI*2);
+  ctx.fill();
+  if(!buried){
+    // legs
+    ctx.fillRect(-14,10,4,14);
+    ctx.fillRect(10,10,4,14);
+    // head
+    ctx.beginPath();
+    ctx.ellipse(-20,-6,9,8,0,0,Math.PI*2);
+    ctx.fill();
+    // ears
+    ctx.beginPath();
+    ctx.ellipse(-26,-14,4,7,-0.4,0,Math.PI*2);
+    ctx.fill();
+  }
+  // spots
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(4,-3,2.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-4,4,2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawServant(x,y,scale,swollen){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const bodyW = swollen ? 40 : 26;
+  ctx.fillStyle = '#8a6a3a';
+  ctx.beginPath();
+  ctx.moveTo(-bodyW/2,10);
+  ctx.quadraticCurveTo(0,-60,bodyW/2,10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle='#e8b98a';
+  ctx.beginPath(); ctx.arc(0,-68,14,0,Math.PI*2); ctx.fill();
+  // headband
+  ctx.fillStyle='#c94f3e';
+  ctx.fillRect(-14,-78,28,5);
+  ctx.restore();
+}
+
+function drawQueen(x,y,scale){
+  scale = scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#7a3f6a';
+  ctx.beginPath();
+  ctx.moveTo(-26,10);
+  ctx.quadraticCurveTo(0,-68,26,10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#f2c766';
+  ctx.fillRect(-26,-8,52,7);
+  ctx.fillStyle = '#e8b98a';
+  ctx.beginPath(); ctx.arc(0,-76,15,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#f2c766';
+  ctx.beginPath(); ctx.arc(0,-96,6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+/* ============== SCENE DRAW FUNCTIONS ============== */
+function drawIntro(t){
+  drawBackground('palaceNight', t);
+  drawSimpleTree(160,470,1.1,'#274a26','#3a2510');
+  drawSimpleTree(650,480,0.9,'#1e3a1e','#2c1c0a');
+  drawKingFigure(400,470,1.2,false);
+  // glow around king (meditating)
+  const glow = 0.3 + 0.15*Math.sin(t/400);
+  ctx.fillStyle = `rgba(217,164,65,${glow})`;
+  ctx.beginPath(); ctx.arc(400,430,70,0,Math.PI*2); ctx.fill();
+  drawGroundLine(600);
+}
+
+function drawBlessing(t){
+  drawBackground('palaceNight', t);
+  drawKingFigure(400,480,1.2,false);
+  // dream sparkles above
+  for(let i=0;i<6;i++){
+    const ang = t/700 + i*(Math.PI*2/6);
+    const r = 60 + 10*Math.sin(t/300+i);
+    const sx = 400 + Math.cos(ang)*r;
+    const sy = 300 + Math.sin(ang)*r*0.6;
+    ctx.fillStyle = 'rgba(242,199,102,0.85)';
+    ctx.beginPath(); ctx.arc(sx,sy,3,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='28px serif';
+  ctx.textAlign='center';
+  ctx.fillText('✧', 400, 240 + 6*Math.sin(t/300));
+  drawGroundLine(600);
+}
+
+function drawBirth(t){
+  drawBackground('palaceDay', t);
+  drawQueen(280,480,1.1);
+  drawKingFigure(520,480,1.1,false);
+  // cradle with fawn between them
+  ctx.save();
+  ctx.translate(400,510);
+  ctx.strokeStyle='#5c3a1e'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.arc(0,0,40,Math.PI,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  const bob = Math.sin(t/250)*2;
+  drawFawn(400,478+bob,0.9,false);
+  drawGroundLine(600,'rgba(0,0,0,0.15)');
+}
+
+let buryHoleDepth = 0;
+function drawBury(t, progress){
+  drawBackground('forestNight', t);
+  for(let i=0;i<3;i++){
+    drawSimpleTree(90+i*70, 500-10*i, 0.8+0.1*i, '#152e13', '#1e130a');
+  }
+  for(let i=0;i<3;i++){
+    drawSimpleTree(760-i*70, 500-10*i, 0.8+0.1*i, '#152e13', '#1e130a');
+  }
+  const p = progress||0;
+  buryHoleDepth = p;
+  // hole
+  ctx.save();
+  ctx.translate(400,540);
+  ctx.fillStyle='#0d0904';
+  ctx.beginPath();
+  ctx.ellipse(0,0, 55, 16 + p*14, 0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  // fawn sinking into hole
+  const sink = p*24;
+  ctx.save();
+  ctx.globalAlpha = 1 - p*0.7;
+  drawFawn(400, 528 + sink, 0.75, true);
+  ctx.restore();
+  // king kneeling digging
+  ctx.save();
+  ctx.translate(330,520);
+  ctx.fillStyle='#7a2020';
+  ctx.beginPath();
+  ctx.ellipse(0,0,22,26,0.3,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#e8b98a';
+  ctx.beginPath(); ctx.arc(-14,-20,13,0,Math.PI*2); ctx.fill();
+  // arm with shovel, animated
+  const swing = Math.sin(t/150)*0.5;
+  ctx.save();
+  ctx.translate(0,-6);
+  ctx.rotate(swing*0.6);
+  ctx.strokeStyle='#e8b98a'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(28,-14); ctx.stroke();
+  ctx.strokeStyle='#7a4a26'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(28,-14); ctx.lineTo(46,-30); ctx.stroke();
+  ctx.fillStyle='#9aa0a6';
+  ctx.beginPath(); ctx.moveTo(42,-38); ctx.lineTo(58,-30); ctx.lineTo(46,-18); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+  drawGroundLine(600,'rgba(0,0,0,0.4)');
+}
+
+function drawIllness(t){
+  drawBackground('palaceNight', t);
+  // bed
+  ctx.fillStyle='#4e2f18';
+  ctx.fillRect(280,470,240,20);
+  ctx.fillStyle='#7a4a26';
+  ctx.fillRect(270,485,20,60);
+  ctx.fillRect(510,485,20,60);
+  // king lying, swollen, pulsing
+  const pulse = 1 + 0.04*Math.sin(t/300);
+  ctx.save();
+  ctx.translate(400,460);
+  ctx.scale(pulse,pulse);
+  ctx.fillStyle='#c94f3e';
+  ctx.beginPath(); ctx.ellipse(0,0,90,34,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e8b98a';
+  ctx.beginPath(); ctx.arc(-80,0,18,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f2c766';
+  ctx.beginPath(); ctx.arc(-80,-16,7,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  drawGroundLine(600,'rgba(0,0,0,0.2)');
+}
+
+function drawSecretToSulang(t){
+  drawBackground('palaceNight', t);
+  drawKingFigure(300,480,1.1,false);
+  drawServant(520,480,1.05,false);
+  // whisper wave lines from king to sulang
+  ctx.strokeStyle='rgba(242,199,102,0.6)';
+  ctx.lineWidth=1.5;
+  for(let i=0;i<3;i++){
+    const off = (t/600 + i*0.33) % 1;
+    ctx.globalAlpha = 1-off;
+    ctx.beginPath();
+    ctx.arc(340,420,20+off*60,-0.6,0.6);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  drawGroundLine(600,'rgba(0,0,0,0.25)');
+}
+
+let sulangX = 150;
+function drawWalk(t, progress){
+  drawBackground('forestDay', t);
+  for(let i=0;i<4;i++){
+    drawSimpleTree(60+i*230, 500, 1, '#2f5a2c', '#3a2510');
+  }
+  const p = progress||0;
+  sulangX = 120 + p*(560);
+  const bob = Math.abs(Math.sin(t/120))*8;
+  drawServant(sulangX, 500 - bob*0.3, 1, true);
+  drawGroundLine(600,'rgba(0,0,0,0.2)');
+}
+
+function drawWhisper(t, progress){
+  drawBackground('forestDay', t);
+  drawSimpleTree(720,470,0.9,'#2f5a2c','#3a2510');
+  drawSimpleTree(80,480,0.8,'#2f5a2c','#3a2510');
+  // small teak tree center
+  const p = progress||0;
+  ctx.save();
+  ctx.translate(460,540);
+  ctx.fillStyle='#5c3a1e';
+  ctx.fillRect(-6,-50,12,50);
+  ctx.fillStyle='#3f6b3a';
+  ctx.beginPath(); ctx.arc(0,-65,26,0,Math.PI*2); ctx.fill();
+  const glow = p*0.6;
+  ctx.fillStyle = `rgba(217,164,65,${glow})`;
+  ctx.beginPath(); ctx.arc(0,-65,34,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // Sulang sitting
+  ctx.save();
+  ctx.translate(360,530);
+  ctx.fillStyle='#8a6a3a';
+  ctx.beginPath(); ctx.ellipse(0,0,24,20,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e8b98a';
+  ctx.beginPath(); ctx.arc(0,-24,13,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // whisper waves toward tree
+  for(let i=0;i<3;i++){
+    const off = (t/500 + i*0.33) % 1;
+    ctx.globalAlpha = (1-off) * (0.3+p*0.7);
+    ctx.strokeStyle = 'rgba(242,199,102,0.7)';
+    ctx.beginPath();
+    ctx.arc(390,505,15+off*50,-0.5,0.5);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  drawGroundLine(600,'rgba(0,0,0,0.15)');
+}
+
+function drawTreeGrows(t){
+  drawBackground('forestDay', t);
+  drawSimpleTree(120,480,0.8,'#2f5a2c','#3a2510');
+  drawSimpleTree(700,470,0.9,'#2f5a2c','#3a2510');
+  // growing tree animation loop 0-1 over ~4s
+  const cycle = (t/4000) % 1;
+  const scale = 1 + cycle*2.2;
+  ctx.save();
+  ctx.translate(430, 545);
+  ctx.fillStyle = 'rgba(217,164,65,0.25)';
+  ctx.beginPath(); ctx.arc(0,-40*scale, 45*scale*0.5, 0, Math.PI*2); ctx.fill();
+  drawSimpleTree(0,0,scale*0.85,'#3f6b3a','#5c3a1e');
+  ctx.restore();
+  drawGroundLine(600,'rgba(0,0,0,0.15)');
+}
+
+let bedugHits = 0;
+function drawBedug(t, progress){
+  drawBackground('villageDay', t);
+  // village huts silhouette
+  ctx.fillStyle='#5c4520';
+  ctx.beginPath(); ctx.moveTo(80,470); ctx.lineTo(120,430); ctx.lineTo(160,470); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#8a6a3a'; ctx.fillRect(90,470,60,40);
+  ctx.fillStyle='#5c4520';
+  ctx.beginPath(); ctx.moveTo(600,470); ctx.lineTo(650,425); ctx.lineTo(700,470); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#8a6a3a'; ctx.fillRect(615,470,70,40);
+
+  const p = progress||0;
+  bedugHits = Math.round(p*10);
+  // bedug stand
+  ctx.save();
+  ctx.translate(400,500);
+  ctx.fillStyle='#4e2f18';
+  ctx.fillRect(-70,60,20,40);
+  ctx.fillRect(50,60,20,40);
+  // drum body
+  const shake = Math.sin(t/60)* (p>0.02? 3:0);
+  ctx.save();
+  ctx.translate(shake,0);
+  ctx.fillStyle='#7a4a26';
+  ctx.beginPath();
+  ctx.moveTo(-90,-40); ctx.lineTo(90,-40);
+  ctx.lineTo(70,60); ctx.lineTo(-70,60);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#c9a06a';
+  ctx.beginPath(); ctx.ellipse(0,-40,90,20,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#4e2f18'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.ellipse(0,-40,90,20,0,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+
+  // villager striking
+  ctx.save();
+  ctx.translate(300,505);
+  ctx.fillStyle='#8a6a3a';
+  ctx.beginPath(); ctx.ellipse(0,20,20,26,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e8b98a';
+  ctx.beginPath(); ctx.arc(0,-8,13,0,Math.PI*2); ctx.fill();
+  const swing = Math.sin(t/100)*0.5;
+  ctx.save();
+  ctx.translate(10,0);
+  ctx.rotate(-0.4+swing*0.5);
+  ctx.strokeStyle='#5c3a1e'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-38); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+
+  // sound waves when hit recently
+  if(p>0.02){
+    for(let i=0;i<3;i++){
+      const off = (t/300 + i*0.3) % 1;
+      ctx.globalAlpha = (1-off)*0.5;
+      ctx.strokeStyle='rgba(217,164,65,0.8)';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.arc(400,470,40+off*90,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+  drawGroundLine(600,'rgba(0,0,0,0.15)');
+}
+
+function drawEnding(t){
+  drawBackground('forestDawn', t);
+  drawSimpleTree(180,500,1.6,'#4a7a3a','#5c3a1e');
+  drawSimpleTree(360,510,2.0,'#4a7a3a','#5c3a1e');
+  drawSimpleTree(560,500,1.7,'#4a7a3a','#5c3a1e');
+  drawSimpleTree(700,510,1.4,'#4a7a3a','#5c3a1e');
+  // sparkle
+  for(let i=0;i<10;i++){
+    const ang = t/900 + i*0.7;
+    const sx = 400 + Math.cos(ang)*220;
+    const sy = 300 + Math.sin(ang*1.3)*40;
+    ctx.fillStyle='rgba(255,240,210,0.6)';
+    ctx.beginPath(); ctx.arc(sx,sy,2,0,Math.PI*2); ctx.fill();
+  }
+  drawGroundLine(600,'rgba(0,0,0,0.1)');
+}
+
+/* ============== ANIMATION LOOP ============== */
+function animLoop(now){
+  if(!animStartTime) animStartTime = now;
+  const t = now - animStartTime;
+  const scene = SCENES[sceneIndex];
+  let progress = 0;
+  if(scene.type==='hold'){
+    progress = holdActive ? Math.min(1,(now - holdStart)/scene.duration) : currentHoldProgress;
+  } else if(scene.type==='tap'){
+    progress = Math.min(1, tapCount/tapTarget);
+  }
+  ctx.clearRect(0,0,800,600);
+  scene.draw(t, progress);
+  animRAF = requestAnimationFrame(animLoop);
+}
+
+/* ============== SCENE FLOW ============== */
+let currentHoldProgress = 0;
+
+function renderScene(skipTypewriter){
+  const scene = SCENES[sceneIndex];
+  updateDots();
+  tapCount = 0;
+  tapTarget = scene.type==='tap' ? scene.duration : 0;
+  currentHoldProgress = 0;
+  holdActive = false;
+  animStartTime = 0;
+
+  // narration
+  const text = scene.narr[lang];
+  if(skipTypewriter){
+    narrTextEl.textContent = text;
+  } else {
+    showNarration(text);
+  }
+  speak(text);
+
+  // buttons / minigame UI
+  nextBtn.classList.add('hidden');
+  actionBtn.classList.add('hidden');
+  progWrap.classList.add('hidden');
+  promptEl.textContent = '';
+
+  if(scene.type === 'narration'){
+    nextBtn.classList.remove('hidden');
+    nextBtn.disabled = false;
+  } else if(scene.type === 'hold'){
+    actionBtn.classList.remove('hidden');
+    actionBtn.textContent = STR[lang][scene.actionKey];
+    promptEl.textContent = STR[lang][scene.promptKey];
+    progWrap.classList.remove('hidden');
+    progFill.style.width = '0%';
+  } else if(scene.type === 'tap'){
+    actionBtn.classList.remove('hidden');
+    actionBtn.textContent = STR[lang][scene.actionKey];
+    promptEl.textContent = STR[lang][scene.promptKey];
+    progWrap.classList.remove('hidden');
+    progFill.style.width = '0%';
+  }
+
+  if(animRAF) cancelAnimationFrame(animRAF);
+  animRAF = requestAnimationFrame(animLoop);
+
+  setTimeout(notifyResize, 50);
+}
+
+function goNext(){
+  stopSpeak();
+  if(sceneIndex < SCENES.length-1){
+    sceneIndex++;
+    renderScene();
+  } else {
+    finishStory();
+  }
+}
+
+function finishStory(){
+  nextBtn.classList.add('hidden');
+  actionBtn.classList.add('hidden');
+  progWrap.classList.add('hidden');
+  promptEl.textContent='';
+  replayBtn.classList.remove('hidden');
+  setTimeout(notifyResize, 50);
+}
+
+/* ============== HOLD INTERACTION ============== */
+function startHold(){
+  const scene = SCENES[sceneIndex];
+  if(scene.type !== 'hold') return;
+  if(holdActive) return;
+  holdActive = true;
+  holdStart = performance.now();
+  actionBtn.disabled = true;
+  tickHold();
+}
+function tickHold(){
+  const scene = SCENES[sceneIndex];
+  if(!holdActive) return;
+  const now = performance.now();
+  const p = Math.min(1, (now-holdStart)/scene.duration);
+  currentHoldProgress = p;
+  progFill.style.width = (p*100)+'%';
+  if(p>=1){
+    holdActive = false;
+    completeMinigame();
+    return;
+  }
+  holdRAF = requestAnimationFrame(tickHold);
+}
+function cancelHold(){
+  const scene = SCENES[sceneIndex];
+  if(scene.type !== 'hold') return;
+  if(!holdActive) return;
+  holdActive = false;
+  actionBtn.disabled = false;
+  if(holdRAF) cancelAnimationFrame(holdRAF);
+  // decay progress a bit but keep some
+  currentHoldProgress = Math.max(0, currentHoldProgress - 0.15);
+  progFill.style.width = (currentHoldProgress*100)+'%';
+}
+
+/* ============== TAP INTERACTION ============== */
+function doTap(){
+  const scene = SCENES[sceneIndex];
+  if(scene.type !== 'tap') return;
+  tapCount++;
+  const p = Math.min(1, tapCount/tapTarget);
+  progFill.style.width = (p*100)+'%';
+  if(tapCount >= tapTarget){
+    completeMinigame();
+  }
+}
+
+function completeMinigame(){
+  actionBtn.classList.add('hidden');
+  progWrap.classList.add('hidden');
+  promptEl.textContent='';
+  nextBtn.classList.remove('hidden');
+}
+
+/* ============== EVENT WIRING ============== */
+actionBtn.addEventListener('mousedown', (e)=>{
+  const scene = SCENES[sceneIndex];
+  if(scene.type==='hold'){ startHold(); }
+  else if(scene.type==='tap'){ doTap(); }
+});
+actionBtn.addEventListener('touchstart', (e)=>{
+  e.preventDefault();
+  const scene = SCENES[sceneIndex];
+  if(scene.type==='hold'){ startHold(); }
+  else if(scene.type==='tap'){ doTap(); }
+}, {passive:false});
+['mouseup','mouseleave'].forEach(ev=>actionBtn.addEventListener(ev, cancelHold));
+actionBtn.addEventListener('touchend', cancelHold);
+actionBtn.addEventListener('touchcancel', cancelHold);
+
+nextBtn.addEventListener('click', goNext);
+replayBtn.addEventListener('click', ()=>{
+  sceneIndex = 0;
+  replayBtn.classList.add('hidden');
+  renderScene();
+});
+
+startBtn.addEventListener('click', ()=>{
+  started = true;
+  startOverlay.classList.add('hidden');
+  buildDots();
+  renderScene();
+});
+
+/* init */
+buildDots();
+notifyResize();
+
+})();
+</script>
+</body>
+</html>
