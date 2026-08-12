@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Mengapa Sungai Berkelok-Kelok</title>
+<style>
+  :root{
+    --sky1:#bfe3ff; --sky2:#eaf7ff;
+    --mtn1:#5b7a52; --mtn2:#3f5c3a; --mtn3:#2a3f27;
+    --river:#4aa3c9; --river-dark:#2c7a9e;
+    --sun:#ffd166; --gold:#c98a2b;
+    --panel:#fffaf0; --ink:#2b2013; --accent:#c1442a;
+    --card-radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', 'Trebuchet MS', sans-serif;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+    color:var(--ink);
+    display:flex; justify-content:center;
+  }
+  #app{
+    width:100%; max-width:700px; margin:0 auto;
+    background:var(--panel);
+    border-radius:var(--card-radius);
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,0.15);
+    position:relative;
+  }
+  #topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 12px;
+    background:linear-gradient(180deg,#3f5c3a,#2a3f27);
+    color:#fdf5e2;
+  }
+  #topbar .title{
+    font-size:13px; font-weight:600; letter-spacing:0.3px;
+    opacity:0.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #topbar .controls{display:flex; gap:6px; align-items:center;}
+  .iconbtn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    color:#fdf5e2;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s;
+  }
+  .iconbtn:hover{background:rgba(255,255,255,0.25);}
+  .iconbtn.active{background:var(--accent); border-color:var(--accent);}
+
+  #stage-wrap{position:relative; width:100%; background:#000;}
+  canvas#scene{display:block; width:100%; height:auto; background:linear-gradient(180deg,var(--sky1),var(--sky2));}
+
+  #overlay-ui{
+    position:absolute; inset:0; pointer-events:none;
+  }
+  #overlay-ui .clickable{pointer-events:auto;}
+
+  #caption-box{
+    padding:14px 18px 6px 18px;
+    min-height:70px;
+  }
+  #caption-text{
+    font-size:15.5px; line-height:1.55;
+    margin:0;
+  }
+  #scene-label{
+    font-size:12px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--gold); font-weight:700; margin-bottom:4px;
+  }
+
+  #dots{
+    display:flex; justify-content:center; gap:8px;
+    padding:6px 0 4px 0;
+  }
+  .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:#dcd3bd;
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--accent); transform:scale(1.25);}
+  .dot.done{background:var(--gold);}
+
+  #controls-row{
+    display:flex; justify-content:center; gap:10px;
+    padding:8px 16px 18px 16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    border:none; border-radius:999px;
+    padding:11px 22px;
+    font-size:14.5px; font-weight:700;
+    cursor:pointer;
+    background:var(--accent); color:#fff;
+    box-shadow:0 3px 0 #8f3220;
+    transition:transform .08s;
+  }
+  .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #8f3220;}
+  .btn.secondary{
+    background:#3f5c3a; box-shadow:0 3px 0 #24361f;
+  }
+  .btn:disabled{opacity:.45; cursor:default; box-shadow:none;}
+
+  #hold-wrap{
+    width:100%; max-width:280px; margin:0 auto 6px auto;
+    display:none;
+  }
+  #hold-track{
+    background:#e5dbc2; border-radius:999px; height:14px; overflow:hidden;
+    border:2px solid #c9b98d;
+  }
+  #hold-fill{
+    height:100%; width:0%; background:linear-gradient(90deg,#e0483e,#c98a2b);
+    transition:width .05s linear;
+  }
+  #hold-hint{text-align:center; font-size:12px; color:#6b5f45; margin-top:4px;}
+
+  #collect-wrap{
+    text-align:center; font-size:13px; color:#6b5f45; margin-top:-4px; margin-bottom:6px; display:none;
+  }
+
+  #footer{
+    text-align:center; font-size:11.5px; color:#9c8f74;
+    padding:8px 0 14px 0;
+  }
+
+  .fade-in{animation:fadeIn .5s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  #title-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,var(--sky1) 0%, var(--sky2) 55%, #d7c99b 100%);
+    text-align:center; padding:24px; z-index:5;
+  }
+  #title-screen h1{
+    font-size:22px; margin:14px 0 6px 0; color:#2a3f27;
+  }
+  #title-screen p{ font-size:13.5px; color:#5b503a; max-width:420px; margin:0 0 18px 0;}
+  #title-canvas{width:70%; max-width:260px; height:auto;}
+
+  #lang-toggle-title{ margin-bottom:14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbar">
+    <div class="title" id="topbar-title">Asal Mula Sungai Berkelok-Kelok</div>
+    <div class="controls">
+      <button class="iconbtn" id="lang-btn" title="Language">EN</button>
+      <button class="iconbtn" id="mute-btn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="scene" width="700" height="420"></canvas>
+    <div id="overlay-ui"></div>
+
+    <div id="title-screen">
+      <canvas id="title-canvas" width="300" height="200"></canvas>
+      <h1 id="title-h1">Asal Mula Mengapa Sungai Berkelok-Kelok</h1>
+      <p id="title-p">Sebuah dongeng dari Jawa Timur tentang ular-ular yang bertapa dan jejak mereka yang menjadi sungai.</p>
+      <button class="btn" id="start-btn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="caption-box">
+    <div id="scene-label"></div>
+    <p id="caption-text" class="fade-in"></p>
+  </div>
+
+  <div id="hold-wrap">
+    <div id="hold-track"><div id="hold-fill"></div></div>
+    <div id="hold-hint"></div>
+  </div>
+  <div id="collect-wrap"></div>
+
+  <div id="controls-row">
+    <button class="btn" id="next-btn" style="display:none;">Lanjut ▶</button>
+    <button class="btn secondary" id="replay-btn" style="display:none;">↻ Ulangi Cerita</button>
+  </div>
+
+  <div id="footer">🐍 Dongeng Nusantara — Cerita Rakyat Interaktif</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+var qs = new URLSearchParams(location.search);
+var LANG = (qs.get('lang')==='en') ? 'en' : (localStorage.getItem('caritasato_lang') || 'id');
+var MUTED = localStorage.getItem('caritasato_mute') === '1';
+var currentScene = 0; // 0 = title, 1..6 story scenes
+var TOTAL_SCENES = 6;
+var voices = [];
+
+var canvas = document.getElementById('scene');
+var ctx = canvas.getContext('2d');
+var W = canvas.width, H = canvas.height;
+
+var titleCanvas = document.getElementById('title-canvas');
+var tctx = titleCanvas.getContext('2d');
+
+/* ---------------------------------------------------------
+   TEXT CONTENT (ID / EN)
+--------------------------------------------------------- */
+var T = {
+  id: {
+    topTitle: "Asal Mula Sungai Berkelok-Kelok",
+    titleH1: "Asal Mula Mengapa Sungai Berkelok-Kelok",
+    titleP: "Sebuah dongeng dari Jawa Timur tentang ular-ular yang bertapa dan jejak mereka yang menjadi sungai.",
+    startBtn: "▶ Mulai Cerita",
+    replayBtn: "↻ Ulangi Cerita",
+    nextBtn: "Lanjut ▶",
+    scenes: [
+      {
+        label: "Para Ular Bertapa",
+        text: "Pada zaman dahulu, banyak sekali ular yang bertapa di gunung-gunung. Mereka bertapa dengan tekun, mengharapkan ilmu dan kesaktian dari sang penguasa lautan."
+      },
+      {
+        label: "Turun Menuju Raja Ular",
+        text: "Setiap tahun, semua ular yang bertapa turun dari gunung menuju dasar laut untuk menghadap Raja Ular bernama Ular Naga. Bantu ular-ular ini melata menuruni gunung — seret jarimu menyusuri titik-titik berkelok itu!",
+        after: "Bekas jalan yang dilalui ular-ular itu berubah menjadi sungai. Itulah sebabnya sungai berkelok-kelok, mengikuti jalan yang pernah dilalui para ular menuju sang raja."
+      },
+      {
+        label: "Anak Sungai",
+        text: "Di antara ular-ular itu, ada yang nakal dan ingin mendahului yang lain dengan mencari jalannya sendiri. Ketuk ular nakal yang berbeda dari yang lain!",
+        after: "Jalan yang dibuat ular-ular nakal itu menjadi anak-anak sungai, cabang kecil di luar jalur utama."
+      },
+      {
+        label: "Ilmu dan Ganjaran",
+        text: "Ular yang tekun bertapa akan mendapat ganjaran ilmu dari Raja Ular naga: ilmu mendatangkan hujan deras, halilintar, gempa, dan air bah. Tahan tombol di bawah untuk membantunya bertapa dengan khusyuk!",
+        after: "Jalan yang dilalui ular yang mendapat ganjaran itu biasanya dibarengi dengan air bah yang deras."
+      },
+      {
+        label: "Ular Bersayap dan Bermahkota",
+        text: "Karena hendak menghadap sang raja, ular-ular itu mempersembahkan keturunannya yang telah menjadi manusia sebagai upeti. Saat air bah datang, banyak yang hanyut — namun kelak mereka dihidupkan kembali sebagai ular besar, bersayap dan bermahkota. Kumpulkan tetesan keringat mereka yang jatuh dari langit!"
+      },
+      {
+        label: "Sungai yang Tak Pernah Kering",
+        text: "Karena terbang sangat dekat dengan matahari, ular-ular bersayap itu berkeringat banyak. Keringat itu jatuh ke bumi menjadi air hujan, membuat air Sungai Brantas tak pernah kering — mengalir berkelok dari Malang, Blitar, Kediri, hingga Surabaya. Itulah dongeng Asal Mula Mengapa Sungai Berkelok-Kelok. Cerita ini hanyalah dongeng yang tak perlu dipercaya kebenarannya."
+      }
+    ],
+    hint_drag: "Seret jarimu dari titik ke titik, ikuti jalur berkelok!",
+    hint_tap: "Ketuk ular yang nakal (berbeda warna)!",
+    hint_hold: "Tahan tombol untuk bertapa...",
+    holdBtn: "🧘 Tahan untuk Bertapa",
+    hint_collect: "Ketuk tetesan keringat sebelum jatuh!",
+    collectScore: function(n,total){ return "Terkumpul: " + n + " / " + total; },
+    round: function(n,total){ return "Ronde " + n + " / " + total; }
+  },
+  en: {
+    topTitle: "Why Rivers Wind and Bend",
+    titleH1: "Why Rivers Wind and Bend",
+    titleP: "A folktale from East Java about meditating snakes whose trail became a river.",
+    startBtn: "▶ Start Story",
+    replayBtn: "↻ Replay Story",
+    nextBtn: "Next ▶",
+    scenes: [
+      {
+        label: "The Meditating Snakes",
+        text: "Long ago, countless snakes meditated upon the mountains. They practiced diligently, hoping to gain wisdom and magical power from the ruler of the sea."
+      },
+      {
+        label: "Descending to the Snake King",
+        text: "Every year, all the meditating snakes descended from the mountains to the ocean floor to meet the Snake King, called the Naga. Help these snakes slither down the mountain — drag your finger along the winding dots!",
+        after: "The trail left behind by the snakes turned into a river. That is why rivers wind and bend, following the path the snakes once took to reach their king."
+      },
+      {
+        label: "The Tributaries",
+        text: "Among the snakes were mischievous ones who wanted to get ahead of the others by finding their own way. Tap the naughty snake that looks different from the rest!",
+        after: "The paths carved by these naughty snakes became tributaries — small branches off the main river."
+      },
+      {
+        label: "Knowledge and Reward",
+        text: "Snakes who meditated diligently were rewarded with knowledge from the Naga King: the power to summon heavy rain, thunder, earthquakes, and floods. Hold the button below to help it meditate deeply!",
+        after: "The path taken by a rewarded snake was usually accompanied by a great flood."
+      },
+      {
+        label: "Winged, Crowned Serpents",
+        text: "Before meeting the king, the snakes offered their human descendants as tribute. When the floods came, many were swept away — but they were later reborn as great winged, crowned serpents. Collect the sweat droplets falling from the sky!"
+      },
+      {
+        label: "The River That Never Runs Dry",
+        text: "Because they flew so close to the sun, these winged serpents sweated heavily. Their sweat fell to earth as rain, keeping the Brantas River flowing forever — winding from Malang, Blitar, Kediri, all the way to Surabaya. Thus ends the tale of why rivers wind and bend. It is, after all, only a legend."
+      }
+    ],
+    hint_drag: "Drag your finger dot to dot, follow the winding path!",
+    hint_tap: "Tap the naughty snake (different color)!",
+    hint_hold: "Hold the button to meditate...",
+    holdBtn: "🧘 Hold to Meditate",
+    hint_collect: "Tap the sweat droplets before they fall!",
+    collectScore: function(n,total){ return "Collected: " + n + " / " + total; },
+    round: function(n,total){ return "Round " + n + " / " + total; }
+  }
+};
+
+/* ---------------------------------------------------------
+   AUTO-RESIZE (postMessage)
+--------------------------------------------------------- */
+function sendHeight(){
+  var h = document.getElementById('app').scrollHeight;
+  try{
+    parent.postMessage({ type:'caritasato-resize', height:h }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', function(){ setTimeout(sendHeight,120); });
+window.addEventListener('resize', sendHeight);
+new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+
+/* ---------------------------------------------------------
+   NARRATION (Web Speech API)
+--------------------------------------------------------- */
+function loadVoices(){ voices = speechSynthesis.getVoices ? speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(lang){
+  var target = lang==='en' ? 'en' : 'id';
+  var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target)===0; });
+  return v || null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if(MUTED) return;
+  var u = new SpeechSynthesisUtterance(text);
+  var v = pickVoice(LANG);
+  if(v) u.voice = v;
+  u.lang = LANG==='en' ? 'en-US' : 'id-ID';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+/* ---------------------------------------------------------
+   UI ELEMENTS
+--------------------------------------------------------- */
+var elLangBtn = document.getElementById('lang-btn');
+var elMuteBtn = document.getElementById('mute-btn');
+var elTopTitle = document.getElementById('topbar-title');
+var elCaption = document.getElementById('caption-text');
+var elSceneLabel = document.getElementById('scene-label');
+var elDots = document.getElementById('dots');
+var elNextBtn = document.getElementById('next-btn');
+var elReplayBtn = document.getElementById('replay-btn');
+var elHoldWrap = document.getElementById('hold-wrap');
+var elHoldFill = document.getElementById('hold-fill');
+var elHoldHint = document.getElementById('hold-hint');
+var elCollectWrap = document.getElementById('collect-wrap');
+var elOverlay = document.getElementById('overlay-ui');
+var elTitleScreen = document.getElementById('title-screen');
+var elStartBtn = document.getElementById('start-btn');
+var elTitleH1 = document.getElementById('title-h1');
+var elTitleP = document.getElementById('title-p');
+
+function applyStaticText(){
+  var t = T[LANG];
+  elTopTitle.textContent = t.topTitle;
+  elTitleH1.textContent = t.titleH1;
+  elTitleP.textContent = t.titleP;
+  elStartBtn.textContent = t.startBtn;
+  elReplayBtn.textContent = t.replayBtn;
+  elNextBtn.textContent = t.nextBtn;
+  elLangBtn.textContent = LANG==='id' ? 'EN' : 'ID';
+  document.documentElement.lang = LANG;
+}
+
+function updateMuteBtn(){
+  elMuteBtn.textContent = MUTED ? '🔇' : '🔊';
+  elMuteBtn.classList.toggle('active', MUTED);
+}
+
+elLangBtn.addEventListener('click', function(){
+  LANG = (LANG==='id') ? 'en' : 'id';
+  localStorage.setItem('caritasato_lang', LANG);
+  applyStaticText();
+  if(currentScene>0) renderScene(currentScene, true);
+});
+elMuteBtn.addEventListener('click', function(){
+  MUTED = !MUTED;
+  localStorage.setItem('caritasato_mute', MUTED ? '1':'0');
+  updateMuteBtn();
+  if(MUTED) stopSpeak();
+});
+
+/* ---------------------------------------------------------
+   DOTS
+--------------------------------------------------------- */
+function buildDots(){
+  elDots.innerHTML = '';
+  for(var i=1;i<=TOTAL_SCENES;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.i = i;
+    elDots.appendChild(d);
+  }
+}
+function updateDots(){
+  var kids = elDots.children;
+  for(var i=0;i<kids.length;i++){
+    var n = i+1;
+    kids[i].classList.toggle('active', n===currentScene);
+    kids[i].classList.toggle('done', n<currentScene);
+  }
+}
+
+/* ---------------------------------------------------------
+   CANVAS DRAWING HELPERS
+--------------------------------------------------------- */
+function clearC(){
+  var grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#bfe3ff');
+  grad.addColorStop(1,'#eaf7ff');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+}
+function drawSun(x,y,r){
+  var g = ctx.createRadialGradient(x,y,0,x,y,r*2.2);
+  g.addColorStop(0,'rgba(255,209,102,0.9)');
+  g.addColorStop(1,'rgba(255,209,102,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(x,y,r*2.2,0,7); ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+}
+function drawMountains(baseY){
+  var layers = [
+    {c:'#7c9a6a', off:0, amp:70},
+    {c:'#5b7a52', off:40, amp:90},
+    {c:'#3f5c3a', off:80, amp:110}
+  ];
+  layers.forEach(function(l, li){
+    ctx.fillStyle = l.c;
+    ctx.beginPath();
+    ctx.moveTo(0, baseY);
+    var peaks = 4;
+    for(var i=0;i<=peaks;i++){
+      var x = (W/peaks)*i;
+      var y = baseY - l.amp - (li*10) + Math.sin(i*1.7+li)*22;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W, baseY);
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+function drawSea(topY){
+  var g = ctx.createLinearGradient(0,topY,0,H);
+  g.addColorStop(0,'#4aa3c9');
+  g.addColorStop(1,'#245a78');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,topY,W,H-topY);
+  // wave lines
+  ctx.strokeStyle='rgba(255,255,255,0.25)';
+  ctx.lineWidth=2;
+  for(var w=0; w<3; w++){
+    ctx.beginPath();
+    for(var x=0;x<=W;x+=10){
+      var y = topY+18+w*16 + Math.sin(x*0.05+w)*4;
+      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+}
+function drawSnakeBody(points, color, widthStart, widthEnd){
+  if(points.length<2) return;
+  ctx.save();
+  for(var i=0;i<points.length-1;i++){
+    var p0=points[i], p1=points[i+1];
+    var t = i/(points.length-1);
+    var wdt = widthStart + (widthEnd-widthStart)*t;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = wdt;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(p0.x,p0.y);
+    ctx.lineTo(p1.x,p1.y);
+    ctx.stroke();
+  }
+  // scale pattern dots
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  for(var i=0;i<points.length;i+=2){
+    ctx.beginPath();
+    ctx.arc(points[i].x, points[i].y, 2.2, 0, 7);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawSnakeHead(x,y,angle,color,crowned){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(0,0,14,10,0,0,7);
+  ctx.fill();
+  // eyes
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(6,-4,2.4,0,7); ctx.fill();
+  ctx.fillStyle='#222';
+  ctx.beginPath(); ctx.arc(6.8,-4,1.1,0,7); ctx.fill();
+  // tongue
+  ctx.strokeStyle='#c1442a'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(13,1); ctx.lineTo(19,1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(19,1); ctx.lineTo(22,-2); ctx.moveTo(19,1); ctx.lineTo(22,3); ctx.stroke();
+  if(crowned){
+    ctx.fillStyle='#c98a2b';
+    ctx.beginPath();
+    ctx.moveTo(-10,-9); ctx.lineTo(-6,-18); ctx.lineTo(-2,-9);
+    ctx.lineTo(2,-18); ctx.lineTo(6,-9); ctx.lineTo(10,-18); ctx.lineTo(12,-9);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawWings(x,y,flap){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle='rgba(240,230,210,0.85)';
+  [-1,1].forEach(function(side){
+    ctx.save();
+    ctx.scale(side,1);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(20, -20-flap, 46, -6-flap*1.4);
+    ctx.quadraticCurveTo(24, 4, 0, 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.restore();
+}
+function drawRainDrop(x,y,len){
+  ctx.strokeStyle='rgba(120,170,210,0.8)';
+  ctx.lineWidth=2.4;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x-3,y+len);
+  ctx.stroke();
+}
+
+/* ---------------------------------------------------------
+   TITLE SCREEN ART
+--------------------------------------------------------- */
+function drawTitleArt(){
+  var tw=titleCanvas.width, th=titleCanvas.height;
+  tctx.clearRect(0,0,tw,th);
+  var g = tctx.createLinearGradient(0,0,0,th);
+  g.addColorStop(0,'#bfe3ff'); g.addColorStop(1,'#eaf7ff');
+  tctx.fillStyle=g; tctx.fillRect(0,0,tw,th);
+  // mountain
+  tctx.fillStyle='#3f5c3a';
+  tctx.beginPath();
+  tctx.moveTo(0,th);
+  tctx.lineTo(tw*0.25, th*0.25);
+  tctx.lineTo(tw*0.55, th*0.55);
+  tctx.lineTo(tw*0.8, th*0.2);
+  tctx.lineTo(tw, th*0.5);
+  tctx.lineTo(tw,th);
+  tctx.closePath(); tctx.fill();
+  // sea
+  tctx.fillStyle='#4aa3c9';
+  tctx.fillRect(0, th*0.82, tw, th*0.18);
+  // winding snake/river
+  tctx.strokeStyle='#c1442a';
+  tctx.lineWidth=6;
+  tctx.lineCap='round';
+  tctx.beginPath();
+  tctx.moveTo(tw*0.28, th*0.18);
+  tctx.bezierCurveTo(tw*0.1, th*0.4, tw*0.5, th*0.45, tw*0.35, th*0.65);
+  tctx.bezierCurveTo(tw*0.2, th*0.8, tw*0.6, th*0.78, tw*0.65, th*0.9);
+  tctx.stroke();
+  // head
+  tctx.save();
+  tctx.translate(tw*0.65, th*0.9);
+  tctx.fillStyle='#c1442a';
+  tctx.beginPath(); tctx.ellipse(0,0,9,6,0,0,7); tctx.fill();
+  tctx.restore();
+}
+
+/* ---------------------------------------------------------
+   POINTER / TOUCH HELPERS
+--------------------------------------------------------- */
+function getPos(evt, rect){
+  var cx, cy;
+  if(evt.touches && evt.touches.length){ cx=evt.touches[0].clientX; cy=evt.touches[0].clientY; }
+  else { cx=evt.clientX; cy=evt.clientY; }
+  var scaleX = canvas.width / rect.width;
+  var scaleY = canvas.height / rect.height;
+  return { x:(cx-rect.left)*scaleX, y:(cy-rect.top)*scaleY };
+}
+
+/* ---------------------------------------------------------
+   SCENE ANIMATION LOOP HANDLE
+--------------------------------------------------------- */
+var rafId = null;
+function stopAnim(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } }
+
+/* ---------------------------------------------------------
+   SCENE 1: Meditating snakes on mountains
+--------------------------------------------------------- */
+function scene1(){
+  var t0 = Date.now();
+  function draw(){
+    clearC();
+    drawSun(W-80,70,26);
+    drawMountains(H-40);
+    // several coiled meditating snakes on mountain
+    var spots = [
+      {x:W*0.22,y:H*0.55},{x:W*0.4,y:H*0.42},{x:W*0.6,y:H*0.5},
+      {x:W*0.75,y:H*0.38},{x:W*0.5,y:H*0.62},{x:W*0.85,y:H*0.55}
+    ];
+    var bob = Math.sin((Date.now()-t0)/700)*2;
+    spots.forEach(function(s,i){
+      ctx.save();
+      ctx.translate(s.x, s.y+ (i%2===0?bob:-bob));
+      ctx.strokeStyle = i%2===0 ? '#7a9c50':'#5b7a52';
+      ctx.lineWidth=8; ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.arc(0,0,14,0.2,5.6);
+      ctx.stroke();
+      ctx.fillStyle='#2b2013';
+      ctx.beginPath(); ctx.arc(11,-6,3.5,0,7); ctx.fill();
+      ctx.fillStyle='#f4e9c8';
+      ctx.beginPath(); ctx.arc(12,-7,1.2,0,7); ctx.fill();
+      ctx.restore();
+    });
+    ground();
+    rafId = requestAnimationFrame(draw);
+  }
+  function ground(){
+    ctx.fillStyle='#3f5c3a';
+    ctx.fillRect(0,H-40,W,40);
+  }
+  draw();
+}
+
+/* ---------------------------------------------------------
+   SCENE 2: Drag-the-winding-path mini game
+--------------------------------------------------------- */
+var s2 = { points:[], reached:0, drawn:[], done:false, dragging:false };
+function scene2(){
+  s2.points = [
+    {x:W*0.5, y:H*0.12},
+    {x:W*0.28, y:H*0.24},
+    {x:W*0.62, y:H*0.34},
+    {x:W*0.22, y:H*0.46},
+    {x:W*0.58, y:H*0.58},
+    {x:W*0.3, y:H*0.7},
+    {x:W*0.55, y:H*0.82},
+    {x:W*0.42, y:H*0.94}
+  ];
+  s2.reached = 0; s2.drawn=[s2.points[0]]; s2.done=false; s2.dragging=false;
+
+  function draw(){
+    clearC();
+    drawSun(W-70,55,20);
+    drawMountains(H*0.18);
+    drawSea(H*0.9);
+
+    // guide dots
+    s2.points.forEach(function(p,i){
+      ctx.beginPath();
+      ctx.arc(p.x,p.y, i<=s2.reached?9:7, 0,7);
+      ctx.fillStyle = i<=s2.reached ? '#c1442a' : 'rgba(255,255,255,0.75)';
+      ctx.strokeStyle='#3f5c3a'; ctx.lineWidth=2;
+      ctx.fill(); ctx.stroke();
+    });
+    // drawn path (the river forming)
+    if(s2.drawn.length>1){
+      drawSnakeBody(s2.drawn, '#c1442a', 10, 5);
+      var last = s2.drawn[s2.drawn.length-1];
+      var prev = s2.drawn[s2.drawn.length-2] || last;
+      var ang = Math.atan2(last.y-prev.y, last.x-prev.x);
+      drawSnakeHead(last.x,last.y,ang,'#c1442a',false);
+    }
+    if(!s2.done){
+      rafId = requestAnimationFrame(draw);
+    }
+  }
+  draw();
+
+  function pointerDown(e){
+    e.preventDefault();
+    s2.dragging = true;
+    handleMove(e);
+  }
+  function pointerMove(e){
+    if(!s2.dragging || s2.done) return;
+    handleMove(e);
+  }
+  function pointerUp(){ s2.dragging=false; }
+  function handleMove(e){
+    var rect = canvas.getBoundingClientRect();
+    var pos = getPos(e, rect);
+    var nextIdx = s2.reached+1;
+    if(nextIdx>=s2.points.length) return;
+    var target = s2.points[nextIdx];
+    var dx=pos.x-target.x, dy=pos.y-target.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist < 40){
+      s2.reached = nextIdx;
+      s2.drawn.push(target);
+      if(s2.reached === s2.points.length-1){
+        s2.done = true;
+        finishScene2();
+      }
+    }
+  }
+  canvas.addEventListener('mousedown', pointerDown);
+  canvas.addEventListener('mousemove', pointerMove);
+  window.addEventListener('mouseup', pointerUp);
+  canvas.addEventListener('touchstart', pointerDown, {passive:false});
+  canvas.addEventListener('touchmove', pointerMove, {passive:false});
+  canvas.addEventListener('touchend', pointerUp);
+
+  scene2.cleanup = function(){
+    canvas.removeEventListener('mousedown', pointerDown);
+    canvas.removeEventListener('mousemove', pointerMove);
+    window.removeEventListener('mouseup', pointerUp);
+    canvas.removeEventListener('touchstart', pointerDown);
+    canvas.removeEventListener('touchmove', pointerMove);
+    canvas.removeEventListener('touchend', pointerUp);
+  };
+}
+function finishScene2(){
+  var t = T[LANG];
+  scene2.cleanup && scene2.cleanup();
+  setTimeout(function(){
+    elCaption.textContent = t.scenes[1].after;
+    speak(t.scenes[1].after);
+    showNext();
+  }, 500);
+}
+
+/* ---------------------------------------------------------
+   SCENE 3: Tap the naughty snake (3 rounds)
+--------------------------------------------------------- */
+var s3 = { round:0, totalRounds:3, snakes:[], branches:[] };
+function scene3(){
+  s3.round=0; s3.branches=[];
+  elCollectWrap.style.display='block';
+  nextRound3();
+
+  function draw(){
+    clearC();
+    drawMountains(H*0.2);
+    drawSea(H*0.88);
+    // main path
+    ctx.strokeStyle='#c1442a'; ctx.lineWidth=8; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(W*0.5,H*0.05);
+    ctx.bezierCurveTo(W*0.2,H*0.3, W*0.7,H*0.4, W*0.4,H*0.65);
+    ctx.bezierCurveTo(W*0.15,H*0.85, W*0.55,H*0.9, W*0.5,H*1.0);
+    ctx.stroke();
+    // branches already made
+    s3.branches.forEach(function(b){
+      ctx.strokeStyle='#7a9c50'; ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(b.x,b.y);
+      ctx.lineTo(b.x+b.dx, b.y+b.dy);
+      ctx.stroke();
+    });
+    // snakes for this round
+    s3.snakes.forEach(function(s){
+      drawSnakeHead(s.x,s.y,s.angle,s.color,false);
+    });
+    if(s3.round<=s3.totalRounds){
+      rafId = requestAnimationFrame(draw);
+    }
+  }
+  draw();
+
+  function onClick(e){
+    if(s3.round>s3.totalRounds) return;
+    var rect = canvas.getBoundingClientRect();
+    var pos = getPos(e, rect);
+    var hit = null;
+    s3.snakes.forEach(function(s){
+      var dx=pos.x-s.x, dy=pos.y-s.y;
+      if(Math.sqrt(dx*dx+dy*dy) < 26) hit = s;
+    });
+    if(hit && hit.naughty){
+      s3.branches.push({x:hit.x, y:hit.y, dx:(Math.random()>0.5?1:-1)*60, dy:40+Math.random()*30});
+      nextRound3();
+    } else if(hit){
+      // small shake feedback via label
+      hit.x += (Math.random()-0.5)*4;
+    }
+  }
+  canvas.addEventListener('mousedown', onClick);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); onClick(e); }, {passive:false});
+
+  scene3.cleanup = function(){
+    canvas.removeEventListener('mousedown', onClick);
+  };
+}
+function nextRound3(){
+  var t = T[LANG];
+  s3.round++;
+  if(s3.round > s3.totalRounds){
+    scene3.cleanup && scene3.cleanup();
+    elCollectWrap.style.display='none';
+    setTimeout(function(){
+      elCaption.textContent = t.scenes[2].after;
+      speak(t.scenes[2].after);
+      showNext();
+    },400);
+    return;
+  }
+  elCollectWrap.textContent = t.round(s3.round, s3.totalRounds) + ' — ' + t.hint_tap;
+  var n = 3 + Math.floor(Math.random()*2);
+  var naughtyIdx = Math.floor(Math.random()*n);
+  var arr = [];
+  for(var i=0;i<n;i++){
+    arr.push({
+      x: W*0.2 + (W*0.6)*(i/(n-1||1)) + (Math.random()-0.5)*20,
+      y: H*0.25 + Math.random()*H*0.35,
+      angle: Math.random()*6,
+      color: i===naughtyIdx ? '#e0483e' : '#5b7a52',
+      naughty: i===naughtyIdx
+    });
+  }
+  s3.snakes = arr;
+}
+
+/* ---------------------------------------------------------
+   SCENE 4: Hold-to-meditate mini game
+--------------------------------------------------------- */
+var s4 = { holding:false, progress:0, done:false, flood:0 };
+function scene4(){
+  s4.holding=false; s4.progress=0; s4.done=false; s4.flood=0;
+  elHoldWrap.style.display='block';
+  elHoldHint.textContent = T[LANG].hint_hold;
+
+  function draw(){
+    clearC();
+    drawMountains(H*0.35);
+    drawSea(H*0.85);
+    // meditating snake, glowing more as progress increases
+    var cx=W*0.5, cy=H*0.55;
+    var glow = 20 + s4.progress*0.6;
+    var g = ctx.createRadialGradient(cx,cy,0,cx,cy,glow);
+    g.addColorStop(0,'rgba(255,209,102,'+(0.15+s4.progress/200)+')');
+    g.addColorStop(1,'rgba(255,209,102,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(cx,cy,glow,0,7); ctx.fill();
+
+    ctx.strokeStyle='#7a9c50'; ctx.lineWidth=12; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(cx,cy,26,0.2,5.6); ctx.stroke();
+    ctx.fillStyle='#2b2013';
+    ctx.beginPath(); ctx.arc(cx+20,cy-12,4,0,7); ctx.fill();
+
+    if(s4.flood>0){
+      // rain + darken
+      ctx.fillStyle='rgba(20,30,40,'+Math.min(0.45,s4.flood/100*0.45)+')';
+      ctx.fillRect(0,0,W,H);
+      for(var i=0;i<40;i++){
+        var rx = (i*53+ (Date.now()/3)%53) % W;
+        var ry = (i*37 + Date.now()/2) % H;
+        drawRainDrop(rx,ry,14);
+      }
+    }
+    rafId = requestAnimationFrame(draw);
+  }
+  draw();
+
+  function down(e){ e.preventDefault(); s4.holding=true; }
+  function up(){ if(!s4.done){ s4.progress=Math.max(0,s4.progress-8); } s4.holding=false; }
+  var holdBtn = document.createElement('button');
+  holdBtn.className='btn clickable';
+  holdBtn.id='hold-action-btn';
+  holdBtn.textContent = T[LANG].holdBtn;
+  holdBtn.style.position='relative';
+  elHoldWrap.appendChild(holdBtn);
+  holdBtn.addEventListener('mousedown', down);
+  holdBtn.addEventListener('touchstart', down, {passive:false});
+  window.addEventListener('mouseup', up);
+  holdBtn.addEventListener('touchend', up);
+
+  var ticker = setInterval(function(){
+    if(s4.done) return;
+    if(s4.holding){
+      s4.progress = Math.min(100, s4.progress + 2.2);
+      elHoldFill.style.width = s4.progress + '%';
+      if(s4.progress>=100){
+        s4.done = true;
+        s4.flood = 1;
+        var floodTick = setInterval(function(){
+          s4.flood = Math.min(100, s4.flood+4);
+          if(s4.flood>=100){ clearInterval(floodTick); finishScene4(); }
+        }, 60);
+      }
+    } else {
+      s4.progress = Math.max(0, s4.progress - 1.2);
+      elHoldFill.style.width = s4.progress + '%';
+    }
+  }, 40);
+
+  scene4.cleanup = function(){
+    clearInterval(ticker);
+    holdBtn.removeEventListener('mousedown', down);
+    holdBtn.removeEventListener('touchstart', down);
+    window.removeEventListener('mouseup', up);
+    holdBtn.removeEventListener('touchend', up);
+    if(holdBtn.parentNode) holdBtn.parentNode.removeChild(holdBtn);
+    elHoldWrap.style.display='none';
+    elHoldFill.style.width='0%';
+  };
+}
+function finishScene4(){
+  var t = T[LANG];
+  scene4.cleanup && scene4.cleanup();
+  setTimeout(function(){
+    elCaption.textContent = t.scenes[3].after;
+    speak(t.scenes[3].after);
+    showNext();
+  }, 500);
+}
+
+/* ---------------------------------------------------------
+   SCENE 5: Tap-to-collect droplets
+--------------------------------------------------------- */
+var s5 = { drops:[], collected:0, target:8, spawned:0, maxSpawn:14, active:true, flap:0 };
+function scene5(){
+  s5.drops=[]; s5.collected=0; s5.spawned=0; s5.active=true; s5.flap=0;
+  elCollectWrap.style.display='block';
+  elCollectWrap.textContent = T[LANG].collectScore(0,s5.target) + ' — ' + T[LANG].hint_collect;
+
+  var spawnTimer = setInterval(function(){
+    if(!s5.active) return;
+    if(s5.spawned>=s5.maxSpawn){ clearInterval(spawnTimer); return; }
+    s5.spawned++;
+    s5.drops.push({ x: W*0.3+Math.random()*W*0.4, y: H*0.22, vy: 1.4+Math.random()*0.8 });
+  }, 650);
+
+  function draw(){
+    clearC();
+    drawSun(W*0.5, H*0.14, 22);
+    drawMountains(H*0.3);
+    drawSea(H*0.85);
+    s5.flap += 0.15;
+    var flapAmt = Math.sin(s5.flap)*6;
+    drawWings(W*0.5, H*0.18, flapAmt);
+    drawSnakeHead(W*0.5, H*0.18, Math.PI/2, '#c98a2b', true);
+
+    for(var i=s5.drops.length-1;i>=0;i--){
+      var d = s5.drops[i];
+      d.y += d.vy;
+      drawRainDrop(d.x,d.y,10);
+      if(d.y > H*0.9){ s5.drops.splice(i,1); }
+    }
+    if(s5.active){
+      rafId = requestAnimationFrame(draw);
+    }
+  }
+  draw();
+
+  function onClick(e){
+    if(!s5.active) return;
+    var rect = canvas.getBoundingClientRect();
+    var pos = getPos(e, rect);
+    for(var i=s5.drops.length-1;i>=0;i--){
+      var d = s5.drops[i];
+      var dx=pos.x-d.x, dy=pos.y-d.y;
+      if(Math.sqrt(dx*dx+dy*dy) < 30){
+        s5.drops.splice(i,1);
+        s5.collected++;
+        elCollectWrap.textContent = T[LANG].collectScore(s5.collected,s5.target) + ' — ' + T[LANG].hint_collect;
+        if(s5.collected>=s5.target){
+          s5.active=false;
+          clearInterval(spawnTimer);
+          finishScene5();
+        }
+        break;
+      }
+    }
+  }
+  canvas.addEventListener('mousedown', onClick);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); onClick(e); }, {passive:false});
+
+  scene5.cleanup = function(){
+    clearInterval(spawnTimer);
+    canvas.removeEventListener('mousedown', onClick);
+    elCollectWrap.style.display='none';
+  };
+}
+function finishScene5(){
+  scene5.cleanup && scene5.cleanup();
+  setTimeout(function(){ showNext(); }, 400);
+}
+
+/* ---------------------------------------------------------
+   SCENE 6: Ending
+--------------------------------------------------------- */
+function scene6(){
+  var t0=Date.now();
+  function draw(){
+    clearC();
+    drawSun(W*0.82,H*0.16,22);
+    drawMountains(H*0.25);
+    drawSea(H*0.82);
+    // full winding river with labels
+    ctx.strokeStyle='#4aa3c9'; ctx.lineWidth=12; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(W*0.5,H*0.06);
+    ctx.bezierCurveTo(W*0.2,H*0.25, W*0.7,H*0.35, W*0.3,H*0.5);
+    ctx.bezierCurveTo(W*0.0,H*0.62, W*0.55,H*0.68, W*0.35,H*0.8);
+    ctx.bezierCurveTo(W*0.2,H*0.9, W*0.55,H*0.92, W*0.5,H*1.0);
+    ctx.stroke();
+    ctx.fillStyle='#2a3f27';
+    ctx.font='12px Segoe UI, sans-serif';
+    var labels = [
+      {n:'Malang', x:W*0.5,y:H*0.05},
+      {n:'Blitar', x:W*0.28,y:H*0.5},
+      {n:'Kediri', x:W*0.32,y:H*0.79},
+      {n:'Surabaya', x:W*0.5,y:H*0.98}
+    ];
+    labels.forEach(function(l){
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(l.x,l.y,4,0,7); ctx.fill();
+      ctx.fillStyle='#2a3f27';
+      ctx.fillText(l.n, l.x+8, l.y+4);
+    });
+    rafId = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* ---------------------------------------------------------
+   SCENE DISPATCH
+--------------------------------------------------------- */
+function clearOverlayExtras(){
+  scene2.cleanup && scene2.cleanup();
+  scene3.cleanup && scene3.cleanup();
+  scene4.cleanup && scene4.cleanup();
+  scene5.cleanup && scene5.cleanup();
+  scene2.cleanup = scene3.cleanup = scene4.cleanup = scene5.cleanup = null;
+  elCollectWrap.style.display='none';
+  elHoldWrap.style.display='none';
+}
+
+function showNext(){
+  elNextBtn.style.display='inline-block';
+  elNextBtn.disabled=false;
+}
+function hideNext(){
+  elNextBtn.style.display='none';
+}
+
+function renderScene(n, skipNarrationDelay){
+  stopAnim();
+  clearOverlayExtras();
+  currentScene = n;
+  updateDots();
+  var t = T[LANG];
+  var sc = t.scenes[n-1];
+  elSceneLabel.textContent = sc.label;
+  elCaption.textContent = sc.text;
+  elCaption.classList.remove('fade-in'); void elCaption.offsetWidth; elCaption.classList.add('fade-in');
+  hideNext();
+  elReplayBtn.style.display = (n===TOTAL_SCENES) ? 'inline-block' : 'none';
+
+  speak(sc.text);
+
+  switch(n){
+    case 1: scene1(); setTimeout(showNext, 600); break;
+    case 2: scene2(); break; // next shown after mini-game done
+    case 3: scene3(); break;
+    case 4: scene4(); break;
+    case 5: scene5(); break;
+    case 6: scene6(); setTimeout(showNext, 300); break;
+  }
+}
+
+elNextBtn.addEventListener('click', function(){
+  if(currentScene < TOTAL_SCENES){
+    renderScene(currentScene+1);
+  }
+});
+elReplayBtn.addEventListener('click', function(){
+  renderScene(1);
+});
+elStartBtn.addEventListener('click', function(){
+  elTitleScreen.style.display='none';
+  renderScene(1);
+});
+
+/* ---------------------------------------------------------
+   INIT
+--------------------------------------------------------- */
+applyStaticText();
+updateMuteBtn();
+buildDots();
+drawTitleArt();
+clearC();
+setTimeout(sendHeight, 300);
+
+})();
+</script>
+</body>
+</html>
