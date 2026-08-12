@@ -29,14 +29,16 @@
     color:var(--cream);
     display:flex;
     justify-content:center;
-    overflow:hidden;
+    overflow-y:auto;
+    overflow-x:hidden;
+    min-height:100vh;
   }
   #app{
     width:100%;
     max-width:720px;
     background:linear-gradient(180deg,#241809,#150e06);
     border-radius:0;
-    overflow:hidden;
+    overflow:visible;
     position:relative;
   }
   /* Top bar */
@@ -435,7 +437,13 @@ let lang = (function(){
   if(p.get('lang')==='en') return 'en';
   return 'id';
 })();
-let muted = localStorage.getItem('jati_muted') === '1';
+function safeGetStorage(key){
+  try{ return window.localStorage.getItem(key); }catch(e){ return null; }
+}
+function safeSetStorage(key,val){
+  try{ window.localStorage.setItem(key,val); }catch(e){ /* storage blocked, e.g. sandboxed iframe */ }
+}
+let muted = safeGetStorage('jati_muted') === '1';
 let sceneIndex = 0;
 let started = false;
 let holdActive = false;
@@ -466,6 +474,57 @@ const topbarTitle = document.getElementById('topbar-title');
 const startTitle = document.getElementById('start-title');
 const startDesc = document.getElementById('start-desc');
 const footerEl = document.getElementById('footer');
+
+/* ============== CRITICAL EVENT WIRING (do this first, before any risky code) ============== */
+/* Wired immediately so buttons work even if a later feature (speech, storage,
+   canvas sizing) throws an error in a restrictive browser/iframe context. */
+actionBtn.addEventListener('mousedown', (e)=>{
+  const scene = SCENES[sceneIndex];
+  if(scene.type==='hold'){ startHold(); }
+  else if(scene.type==='tap'){ doTap(); }
+});
+actionBtn.addEventListener('touchstart', (e)=>{
+  e.preventDefault();
+  const scene = SCENES[sceneIndex];
+  if(scene.type==='hold'){ startHold(); }
+  else if(scene.type==='tap'){ doTap(); }
+}, {passive:false});
+['mouseup','mouseleave'].forEach(ev=>actionBtn.addEventListener(ev, cancelHold));
+actionBtn.addEventListener('touchend', cancelHold);
+actionBtn.addEventListener('touchcancel', cancelHold);
+
+nextBtn.addEventListener('click', goNext);
+replayBtn.addEventListener('click', ()=>{
+  sceneIndex = 0;
+  replayBtn.classList.add('hidden');
+  renderScene();
+});
+
+startBtn.addEventListener('click', ()=>{
+  started = true;
+  startOverlay.classList.add('hidden');
+  try{ buildDots(); }catch(e){ console.warn('dots build skipped:', e); }
+  renderScene();
+});
+
+muteToggle.addEventListener('click', ()=>{
+  muted = !muted;
+  safeSetStorage('jati_muted', muted ? '1':'0');
+  try{ applyMuteUI(); }catch(e){}
+  if(muted) stopSpeak();
+});
+
+langToggle.addEventListener('click', ()=>{
+  lang = lang === 'id' ? 'en' : 'id';
+  try{ applyLang(); }catch(e){}
+  if(started){
+    renderScene(true);
+  }
+});
+
+window.addEventListener('load', notifyResize);
+window.addEventListener('resize', notifyResize);
+window.addEventListener('resize', ()=>{ try{ fitCanvas(); }catch(e){} });
 
 /* ============== SETUP DOTS ============== */
 function buildDots(){
@@ -549,29 +608,10 @@ function notifyResize(){
     window.parent.postMessage({ type:'jati-resize', height: Math.ceil(h) }, '*');
   }catch(e){}
 }
-window.addEventListener('load', notifyResize);
-window.addEventListener('resize', notifyResize);
-
 /* ============== MUTE ============== */
 function applyMuteUI(){
   muteToggle.textContent = muted ? '🔇' : '🔊';
 }
-muteToggle.addEventListener('click', ()=>{
-  muted = !muted;
-  localStorage.setItem('jati_muted', muted ? '1':'0');
-  applyMuteUI();
-  if(muted) stopSpeak();
-});
-applyMuteUI();
-
-langToggle.addEventListener('click', ()=>{
-  lang = lang === 'id' ? 'en' : 'id';
-  applyLang();
-  if(started){
-    renderScene(true);
-  }
-});
-applyLang();
 
 /* ============== CANVAS SIZE ============== */
 function fitCanvas(){
@@ -581,8 +621,6 @@ function fitCanvas(){
   canvas.height = 600 * dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-fitCanvas();
-window.addEventListener('resize', fitCanvas);
 
 /* ============== BACKGROUND HELPERS ============== */
 function drawBackground(kind, t){
@@ -1194,39 +1232,19 @@ function completeMinigame(){
   nextBtn.classList.remove('hidden');
 }
 
-/* ============== EVENT WIRING ============== */
-actionBtn.addEventListener('mousedown', (e)=>{
-  const scene = SCENES[sceneIndex];
-  if(scene.type==='hold'){ startHold(); }
-  else if(scene.type==='tap'){ doTap(); }
-});
-actionBtn.addEventListener('touchstart', (e)=>{
-  e.preventDefault();
-  const scene = SCENES[sceneIndex];
-  if(scene.type==='hold'){ startHold(); }
-  else if(scene.type==='tap'){ doTap(); }
-}, {passive:false});
-['mouseup','mouseleave'].forEach(ev=>actionBtn.addEventListener(ev, cancelHold));
-actionBtn.addEventListener('touchend', cancelHold);
-actionBtn.addEventListener('touchcancel', cancelHold);
+/* ============== FINAL INIT (non-critical features, guarded) ============== */
+try{
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}catch(e){ console.warn('speech init skipped:', e); }
 
-nextBtn.addEventListener('click', goNext);
-replayBtn.addEventListener('click', ()=>{
-  sceneIndex = 0;
-  replayBtn.classList.add('hidden');
-  renderScene();
-});
-
-startBtn.addEventListener('click', ()=>{
-  started = true;
-  startOverlay.classList.add('hidden');
-  buildDots();
-  renderScene();
-});
-
-/* init */
-buildDots();
-notifyResize();
+try{ applyMuteUI(); }catch(e){ console.warn('mute UI skipped:', e); }
+try{ applyLang(); }catch(e){ console.warn('lang apply skipped:', e); }
+try{ fitCanvas(); }catch(e){ console.warn('canvas fit skipped:', e); }
+try{ buildDots(); }catch(e){ console.warn('dots build skipped:', e); }
+try{ notifyResize(); }catch(e){ console.warn('resize notify skipped:', e); }
 
 })();
 </script>
