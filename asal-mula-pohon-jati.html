@@ -152,6 +152,12 @@
     cursor:pointer;
     box-shadow:0 3px 0 #96701f;
     transition:transform .1s;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    position:relative;
+    z-index:20;
   }
   .main-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #96701f;}
   .main-btn.secondary{
@@ -174,6 +180,15 @@
     user-select:none;
     -webkit-user-select:none;
     touch-action:manipulation;
+  }
+  #controls{ position:relative; z-index:15; }
+  #debug-line{
+    font-size:10px;
+    color:#ff8a8a;
+    text-align:center;
+    min-height:0;
+    word-break:break-word;
+    padding:0 8px;
   }
   #progress-bar-wrap{
     width:100%;
@@ -263,11 +278,28 @@
   </div>
 
   <div id="footer">Cerita Rakyat Nusantara — Dongeng Interaktif</div>
+  <div id="debug-line"></div>
 </div>
 
 <script>
 (function(){
 "use strict";
+
+/* Global error visibility: shows any uncaught error directly on the page
+   so problems can be diagnosed from a screenshot without opening devtools. */
+window.addEventListener('error', function(e){
+  try{
+    const dbg = document.getElementById('debug-line');
+    if(dbg) dbg.textContent = 'Debug: ' + (e.message || 'unknown error') + ' (line ' + e.lineno + ')';
+  }catch(_e){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try{
+    const dbg = document.getElementById('debug-line');
+    if(dbg) dbg.textContent = 'Debug (promise): ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
+  }catch(_e){}
+});
+
 
 /* ============== I18N STRINGS ============== */
 const STR = {
@@ -481,17 +513,24 @@ const footerEl = document.getElementById('footer');
 actionBtn.addEventListener('mousedown', (e)=>{
   const scene = SCENES[sceneIndex];
   if(scene.type==='hold'){ startHold(); }
-  else if(scene.type==='tap'){ doTap(); }
 });
 actionBtn.addEventListener('touchstart', (e)=>{
-  e.preventDefault();
   const scene = SCENES[sceneIndex];
-  if(scene.type==='hold'){ startHold(); }
-  else if(scene.type==='tap'){ doTap(); }
+  if(scene.type==='hold'){
+    e.preventDefault();
+    startHold();
+  }
+  /* for 'tap' scenes we deliberately do NOT preventDefault here,
+     so the browser fires a normal 'click' afterward — the most
+     reliable cross-device event for repeated taps. */
 }, {passive:false});
 ['mouseup','mouseleave'].forEach(ev=>actionBtn.addEventListener(ev, cancelHold));
 actionBtn.addEventListener('touchend', cancelHold);
 actionBtn.addEventListener('touchcancel', cancelHold);
+actionBtn.addEventListener('click', ()=>{
+  const scene = SCENES[sceneIndex];
+  if(scene.type==='tap'){ doTap(); }
+});
 
 nextBtn.addEventListener('click', goNext);
 replayBtn.addEventListener('click', ()=>{
@@ -1134,10 +1173,11 @@ function renderScene(skipTypewriter){
   actionBtn.classList.add('hidden');
   progWrap.classList.add('hidden');
   promptEl.textContent = '';
+  nextBtn.disabled = false;
+  actionBtn.disabled = false;
 
   if(scene.type === 'narration'){
     nextBtn.classList.remove('hidden');
-    nextBtn.disabled = false;
   } else if(scene.type === 'hold'){
     actionBtn.classList.remove('hidden');
     actionBtn.textContent = STR[lang][scene.actionKey];
@@ -1196,6 +1236,7 @@ function tickHold(){
   progFill.style.width = (p*100)+'%';
   if(p>=1){
     holdActive = false;
+    actionBtn.disabled = false;
     completeMinigame();
     return;
   }
