@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sandhekala - Cerita Rakyat Jawa Timur</title>
+<style>
+  :root{
+    --sky-day-1:#8fc7e8; --sky-day-2:#eaf6ff;
+    --sky-dusk-1:#3a2350; --sky-dusk-2:#e0723a;
+    --sky-night-1:#0a0e2a; --sky-night-2:#1c2350;
+    --panel:#2a1e14; --panel-2:#3c2a1a; --accent:#e0793e;
+    --accent-2:#f2b33d; --text-light:#fbeedd; --text-dim:#cbb79c;
+    --danger:#c0392b; --ok:#4caf6d;
+    --font-head:'Georgia', 'Palatino Linotype', serif;
+    --font-body:'Segoe UI', Tahoma, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:var(--font-body);}
+  #sandhekala-root{
+    max-width:720px;margin:0 auto;background:linear-gradient(160deg,#1b120c,#2a1c12);
+    border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35);
+    color:var(--text-light);border:1px solid #4a3320;
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;background:var(--panel);border-bottom:1px solid #4a3320;
+  }
+  .topbar h1{font-family:var(--font-head);font-size:16px;margin:0;color:var(--accent-2);letter-spacing:.5px;}
+  .topbar .controls{display:flex;gap:8px;}
+  .icon-btn{
+    background:var(--panel-2);border:1px solid #5a3f26;color:var(--text-light);
+    border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:5px;transition:background .15s;
+  }
+  .icon-btn:hover{background:#4a3320;}
+  .stage-wrap{position:relative;width:100%;background:#000;}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:7/4.4;}
+  .overlay-ui{
+    position:absolute;left:0;right:0;bottom:0;padding:10px 14px 12px;
+    background:linear-gradient(0deg, rgba(10,6,3,.88) 10%, rgba(10,6,3,.55) 60%, transparent 100%);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .narration-box{
+    font-size:14px;line-height:1.45;color:var(--text-light);min-height:38px;
+    text-shadow:0 1px 3px rgba(0,0,0,.7);
+  }
+  .action-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .btn{
+    background:linear-gradient(180deg,var(--accent-2),var(--accent));
+    border:none;color:#2a1400;font-weight:700;padding:9px 18px;border-radius:24px;
+    cursor:pointer;font-size:14px;box-shadow:0 3px 8px rgba(0,0,0,.4);
+    transition:transform .1s;
+  }
+  .btn:active{transform:scale(.96);}
+  .btn.secondary{
+    background:transparent;border:1.5px solid var(--accent-2);color:var(--accent-2);
+  }
+  .btn:disabled{opacity:.4;cursor:default;}
+  .dots{display:flex;gap:6px;justify-content:center;padding:8px 0;background:var(--panel);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#5a4230;transition:all .2s;}
+  .dot.active{background:var(--accent-2);width:20px;border-radius:5px;}
+  .dot.done{background:var(--accent);}
+  .mini-hint{font-size:12px;color:var(--text-dim);text-align:center;padding:2px 0;}
+  .progressbar-wrap{
+    width:100%;height:10px;background:#2a1c12;border-radius:6px;overflow:hidden;
+    border:1px solid #5a3f26;
+  }
+  .progressbar-fill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));width:0%;transition:width .1s linear;}
+  footer.sk-foot{
+    text-align:center;font-size:11px;color:#8a7a68;padding:8px;background:var(--panel);
+  }
+  .lang-toggle{font-size:12px;}
+</style>
+</head>
+<body>
+<div id="sandhekala-root">
+  <div class="topbar">
+    <h1 id="sk-title">Sandhekala</h1>
+    <div class="controls">
+      <button class="icon-btn" id="sk-lang-btn">EN</button>
+      <button class="icon-btn" id="sk-mute-btn">🔊</button>
+    </div>
+  </div>
+  <div class="stage-wrap">
+    <canvas id="sk-canvas" width="700" height="440"></canvas>
+    <div class="overlay-ui">
+      <div class="narration-box" id="sk-narration"></div>
+      <div id="sk-mini-hint" class="mini-hint" style="display:none;"></div>
+      <div id="sk-progress-wrap" class="progressbar-wrap" style="display:none;">
+        <div id="sk-progress-fill" class="progressbar-fill"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn secondary" id="sk-replay-btn" style="display:none;">↺ <span id="sk-replay-label">Ulangi Cerita</span></button>
+        <div style="flex:1"></div>
+        <button class="btn" id="sk-action-btn">Mulai Cerita</button>
+      </div>
+    </div>
+  </div>
+  <div class="dots" id="sk-dots"></div>
+  <footer class="sk-foot" id="sk-foot">Kisah rakyat Jawa Timur • Sandhekala</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var canvas = document.getElementById('sk-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  // ---------- i18n ----------
+  var UI = {
+    id: {
+      title: "Sandhekala",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      muteOn: "🔊", muteOff: "🔇",
+      footer: "Kisah rakyat Jawa Timur • Sandhekala",
+      hintCollect: "Ketuk belalang untuk ditangkap!",
+      hintMash: "Ketuk cepat untuk berlari pulang!",
+      hintHold: "Tahan tombol untuk mengikat kuat-kuat!",
+      hintDrag: "Seret pikulan ke kanan untuk membawanya pulang!",
+      hintReveal: "Ketuk untuk menyalakan obor dan melihat lebih dekat!",
+      collectProgress: "Belalang tertangkap",
+      dusk: "Senja"
+    },
+    en: {
+      title: "Sandhekala",
+      start: "Start Story",
+      replay: "Replay Story",
+      next: "Next",
+      muteOn: "🔊", muteOff: "🔇",
+      footer: "A folktale from East Java • Sandhekala",
+      hintCollect: "Tap the grasshoppers to catch them!",
+      hintMash: "Tap rapidly to run home!",
+      hintHold: "Hold the button to tie it up tight!",
+      hintDrag: "Drag the pole to the right to carry it home!",
+      hintReveal: "Tap to light the torch and look closer!",
+      collectProgress: "Grasshoppers caught",
+      dusk: "Dusk"
+    }
+  };
+
+  // ---------- Scenes ----------
+  var SCENES = [
+    {
+      key:"intro", sky:"day", type:"narration",
+      title:{id:"Di Tepi Hutan", en:"By the Forest"},
+      text:{
+        id:"Di sebuah hutan di Jawa Timur, hiduplah seorang janda bernama Mbok Randha bersama anaknya, Sentot. Mereka memelihara banyak kambing yang gemuk-gemuk.",
+        en:"In a forest in East Java lived a widow named Mbok Randha and her son, Sentot. They raised many plump, healthy goats."
+      },
+      draw: drawIntroScene
+    },
+    {
+      key:"collect", sky:"day", type:"collect",
+      title:{id:"Sentot Bermain", en:"Sentot Plays"},
+      text:{
+        id:"Suatu sore, Sentot bermain di tepi hutan, menangkap belalang untuk pakan burung peliharaannya.",
+        en:"One afternoon, Sentot played at the edge of the forest, catching grasshoppers to feed his pet bird."
+      },
+      draw: drawCollectScene, target:6, duration:14000
+    },
+    {
+      key:"call", sky:"dusk", type:"narration",
+      title:{id:"Mbok Randha Memanggil", en:"Mbok Randha Calls"},
+      text:{
+        id:"\u201cSentot, pulanglah nak! Hari sudah mulai senja. Tidak baik anak-anak berada di luar rumah saat senja tiba,\u201d panggil Mbok Randha dari kejauhan.",
+        en:"\u201cSentot, come home! Dusk is falling. It's not safe for children to be outside when the sun sets,\u201d Mbok Randha called from afar."
+      },
+      draw: drawCallScene
+    },
+    {
+      key:"warn", sky:"dusk", type:"narration",
+      title:{id:"Peringatan tentang Sandhekala", en:"A Warning About Sandhekala"},
+      text:{
+        id:"\u201cPada saat senja begini, Den Bagus Sandhekala biasanya berjalan-jalan. Ia senang memakan kepala harimau, kepala maling, dan kepala anak-anak yang masih bermain di luar!\u201d kata Mbok Randha.",
+        en:"\u201cAt dusk like this, Den Bagus Sandhekala usually roams about. He loves eating the heads of tigers, thieves, and children who are still playing outside!\u201d said Mbok Randha."
+      },
+      draw: drawWarnScene
+    },
+    {
+      key:"run", sky:"dusk", type:"mash",
+      title:{id:"Sentot Berlari Pulang", en:"Sentot Runs Home"},
+      text:{
+        id:"Mendengar itu, Sentot ketakutan dan segera berlari pulang sebelum langit benar-benar gelap.",
+        en:"Hearing that, Sentot grew frightened and hurried to run home before the sky turned completely dark."
+      },
+      draw: drawRunScene, duration:6000
+    },
+    {
+      key:"lurk", sky:"night", type:"narration",
+      title:{id:"Sang Harimau dan Dua Maling", en:"The Tiger and Two Thieves"},
+      text:{
+        id:"Tanpa disadari, seekor harimau dan dua orang maling diam-diam mengintai kambing-kambing Mbok Randha yang gemuk-gemuk itu dari balik semak.",
+        en:"Unnoticed, a tiger and two thieves were secretly watching Mbok Randha's plump goats from behind the bushes."
+      },
+      draw: drawLurkScene
+    },
+    {
+      key:"pen", sky:"night", type:"narration",
+      title:{id:"Harimau Masuk Kandang", en:"The Tiger Enters the Pen"},
+      text:{
+        id:"Setelah Mbok Randha dan Sentot masuk rumah, harimau menyelinap ke kandang kambing. Namun ia ketakutan, teringat bahwa Sandhekala senang memakan kepala harimau.",
+        en:"Once Mbok Randha and Sentot were inside, the tiger crept into the goat pen. But it grew afraid, remembering that Sandhekala loved eating tiger heads."
+      },
+      draw: drawPenScene
+    },
+    {
+      key:"tie", sky:"night", type:"hold",
+      title:{id:"\u201cKambing\u201d Besar", en:"A Big \u201cGoat\u201d"},
+      text:{
+        id:"Kedua maling menyelinap masuk. \u201cAyo Kang, kita bawa yang besar ini!\u201d Mereka menangkap dan mengikat harimau kuat-kuat, mengiranya kambing raksasa. Harimau diam saja, mengira merekalah Sandhekala.",
+        en:"The two thieves crept in. \u201cCome on, let's take this big one!\u201d They caught and tied up the tiger tightly, thinking it was a giant goat. The tiger stayed silent, believing they were Sandhekala."
+      },
+      draw: drawTieScene, duration:2600
+    },
+    {
+      key:"carry", sky:"night", type:"drag",
+      title:{id:"Memikul Pulang", en:"Carrying It Home"},
+      text:{
+        id:"Kedua maling memikul \u201ckambing\u201d itu di atas sebatang bambu, membawanya pergi menembus kegelapan hutan.",
+        en:"The two thieves hoisted the \u201cgoat\u201d onto a bamboo pole and carried it away through the dark forest."
+      },
+      draw: drawCarryScene
+    },
+    {
+      key:"reveal", sky:"night", type:"reveal",
+      title:{id:"Loreng-loreng!", en:"Striped!"},
+      text:{
+        id:"Maling yang berjalan di belakang mengamati baik-baik. \u201cKang... kambingnya loreng-loreng. Ini bukan kambing, ini harimau!!\u201d",
+        en:"The thief walking behind took a closer look. \u201cBrother... this goat has stripes. This isn't a goat, it's a tiger!!\u201d"
+      },
+      draw: drawRevealScene
+    },
+    {
+      key:"panic", sky:"night", type:"narration",
+      title:{id:"Lari Tunggang Langgang", en:"Running for Their Lives"},
+      text:{
+        id:"Kedua maling panik, melempar pikulan dan lari kocar-kacir. Karena gelap, mereka bertabrakan. Satu jatuh ke kakus, satunya lagi tercebur ke sungai!",
+        en:"The two thieves panicked, threw down the pole, and fled in terror. In the darkness they collided. One fell into a latrine, the other splashed into the river!"
+      },
+      draw: drawPanicScene
+    },
+    {
+      key:"end", sky:"night", type:"end",
+      title:{id:"Harimau Kembali ke Hutan", en:"The Tiger Returns to the Forest"},
+      text:{
+        id:"Harimau tertegun melihat mereka lari. \u201cOalah, ternyata mereka bukan Sandhekala!\u201d Ia pun menggigit putus talinya dan kembali ke hutan, tanpa jadi mencuri kambing Mbok Randha. Tamat.",
+        en:"The tiger blinked in surprise as they fled. \u201cOh, so they weren't Sandhekala after all!\u201d It bit through its ropes and returned to the forest, never stealing Mbok Randha's goats. The end."
+      },
+      draw: drawEndScene
+    }
+  ];
+
+  // ---------- State ----------
+  var state = {
+    lang: getInitialLang(),
+    muted: localStorage.getItem('sandhekala_muted') === '1',
+    sceneIndex: 0,
+    frame: 0,
+    collected: 0,
+    collectTargets: [],
+    mashProgress: 0,
+    duskProgress: 0,
+    holdProgress: 0,
+    holding: false,
+    dragX: 0.12,
+    dragging: false,
+    revealed: false,
+    running: false
+  };
+
+  function getInitialLang(){
+    var params = new URLSearchParams(window.location.search);
+    var q = params.get('lang');
+    if(q === 'en' || q === 'id') return q;
+    var stored = localStorage.getItem('sandhekala_lang');
+    if(stored === 'en' || stored === 'id') return stored;
+    return 'id';
+  }
+
+  // ---------- DOM refs ----------
+  var elTitle = document.getElementById('sk-title');
+  var elNarration = document.getElementById('sk-narration');
+  var elActionBtn = document.getElementById('sk-action-btn');
+  var elReplayBtn = document.getElementById('sk-replay-btn');
+  var elReplayLabel = document.getElementById('sk-replay-label');
+  var elLangBtn = document.getElementById('sk-lang-btn');
+  var elMuteBtn = document.getElementById('sk-mute-btn');
+  var elDots = document.getElementById('sk-dots');
+  var elFoot = document.getElementById('sk-foot');
+  var elHint = document.getElementById('sk-mini-hint');
+  var elProgWrap = document.getElementById('sk-progress-wrap');
+  var elProgFill = document.getElementById('sk-progress-fill');
+
+  function t(key){ return UI[state.lang][key]; }
+
+  // ---------- Build dots ----------
+  function buildDots(){
+    elDots.innerHTML = '';
+    for(var i=0;i<SCENES.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      elDots.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = elDots.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].className = 'dot' + (i===state.sceneIndex ? ' active' : (i<state.sceneIndex ? ' done' : ''));
+    }
+  }
+
+  // ---------- Speech ----------
+  var synth = window.speechSynthesis;
+  var voices = [];
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if(!voices || !voices.length) return null;
+    var code = lang === 'en' ? 'en' : 'id';
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(code) === 0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(!synth) return;
+    synth.cancel();
+    if(state.muted) return;
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice(state.lang);
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    synth.speak(utter);
+  }
+  function stopSpeech(){ if(synth) synth.cancel(); }
+
+  // ---------- postMessage resize ----------
+  function reportSize(){
+    var h = document.getElementById('sandhekala-root').offsetHeight;
+    window.parent.postMessage({ type:'sandhekala-resize', height:h }, '*');
+  }
+
+  // ---------- Sky gradient ----------
+  function skyGradient(sky){
+    var g;
+    if(sky === 'day'){ g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#8fc7e8'); g.addColorStop(1,'#eaf6ff'); }
+    else if(sky === 'dusk'){ g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3a2350'); g.addColorStop(0.55,'#a8465a'); g.addColorStop(1,'#e0723a'); }
+    else { g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#05081c'); g.addColorStop(1,'#1c2350'); }
+    return g;
+  }
+
+  function groundGradient(sky){
+    var g = ctx.createLinearGradient(0,H*0.62,0,H);
+    if(sky === 'day'){ g.addColorStop(0,'#5a8f3e'); g.addColorStop(1,'#3c6b2a'); }
+    else if(sky === 'dusk'){ g.addColorStop(0,'#4a3a2a'); g.addColorStop(1,'#2a2018'); }
+    else { g.addColorStop(0,'#141b2e'); g.addColorStop(1,'#0a0f1e'); }
+    return g;
+  }
+
+  function drawBase(sky){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = skyGradient(sky);
+    ctx.fillRect(0,0,W,H*0.65);
+    ctx.fillStyle = groundGradient(sky);
+    ctx.fillRect(0,H*0.6,W,H*0.4);
+    if(sky === 'night'){
+      drawMoon(600,70,34);
+      drawStars();
+    } else if(sky === 'dusk'){
+      drawSun(560,90,38,'#f2b33d');
+    } else {
+      drawSun(600,70,36,'#fff6d6');
+    }
+  }
+
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 30;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawMoon(x,y,r){
+    ctx.save();
+    ctx.fillStyle = '#f4f1e0';
+    ctx.shadowColor = '#f4f1e0';
+    ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(30,20,50,0.9)';
+    ctx.beginPath(); ctx.arc(x+12,y-6,r*0.85,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  var starPositions = null;
+  function drawStars(){
+    if(!starPositions){
+      starPositions = [];
+      for(var i=0;i<40;i++){
+        starPositions.push({x:Math.random()*W, y:Math.random()*H*0.5, r:Math.random()*1.6+0.5, tw:Math.random()*6.28});
+      }
+    }
+    ctx.fillStyle = '#fff';
+    for(var i=0;i<starPositions.length;i++){
+      var s = starPositions[i];
+      var alpha = 0.4 + 0.6*Math.abs(Math.sin(state.frame*0.03 + s.tw));
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3c2a1a';
+    ctx.fillRect(-6,-10,12,50);
+    ctx.fillStyle = '#2f4a24';
+    ctx.beginPath(); ctx.ellipse(0,-40,36,44,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#37592c';
+    ctx.beginPath(); ctx.ellipse(-14,-55,22,26,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(16,-30,22,26,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawForestRow(sky){
+    var count = 7;
+    for(var i=0;i<count;i++){
+      var x = 20 + i*100 + (i%2===0?0:20);
+      drawTree(x, H*0.62, 0.8 + (i%3)*0.15);
+    }
+  }
+
+  function drawHut(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5a4230';
+    ctx.fillRect(-45,-10,90,60);
+    ctx.fillStyle = '#7a5a3a';
+    ctx.beginPath();
+    ctx.moveTo(-55,-10); ctx.lineTo(0,-55); ctx.lineTo(55,-10); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2a1c12';
+    ctx.fillRect(-12,15,24,35);
+    ctx.fillStyle = '#f2b33d';
+    ctx.fillRect(-35,5,15,15);
+    ctx.fillRect(20,5,15,15);
+    ctx.restore();
+  }
+
+  function drawFence(x,y,w){
+    ctx.save();
+    ctx.strokeStyle = '#6b4a2a';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(x,y); ctx.lineTo(x+w,y);
+    ctx.moveTo(x,y+14); ctx.lineTo(x+w,y+14);
+    ctx.stroke();
+    for(var i=0;i<=w;i+=22){
+      ctx.beginPath(); ctx.moveTo(x+i,y-10); ctx.lineTo(x+i,y+24); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGoat(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#e8dfc8';
+    ctx.beginPath(); ctx.ellipse(0,0,20,14,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(18,-8,9,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(-16,10,5,12); ctx.fillRect(10,10,5,12);
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,skin,shirt,label){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = shirt;
+    ctx.beginPath(); ctx.moveTo(-14,10); ctx.lineTo(14,10); ctx.lineTo(10,45); ctx.lineTo(-10,45); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-4,15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1c140c';
+    ctx.beginPath(); ctx.arc(0,-10,15,Math.PI,0); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTiger(x,y,scale,rotation){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    if(rotation) ctx.rotate(rotation);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#e08a3e';
+    ctx.beginPath(); ctx.ellipse(0,0,34,18,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(30,-6,14,12,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2a1c12';
+    for(var i=-24;i<24;i+=12){
+      ctx.beginPath(); ctx.moveTo(i,-16); ctx.lineTo(i+6,16); ctx.lineTo(i+2,16); ctx.lineTo(i-4,-16); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = '#f5ede0';
+    ctx.beginPath(); ctx.ellipse(34,-2,5,5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(37,-6,2,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGrasshopper(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#7bbf4a';
+    ctx.beginPath(); ctx.ellipse(0,0,10,5,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9,-2,4,3,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#5a9236'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-4,4); ctx.lineTo(-8,12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4,4); ctx.lineTo(8,12); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- Scene draw functions ----------
+  function drawIntroScene(fr){
+    drawBase('day');
+    drawForestRow('day');
+    drawHut(160,H*0.72,1.1);
+    for(var i=0;i<4;i++) drawGoat(320+i*30, H*0.85, 0.9);
+    drawPerson(140,H*0.78,1,'#c99a6a','#8a3a2a');
+    drawPerson(180,H*0.8,0.8,'#d9ab7a','#3a5a8a');
+  }
+
+  function drawCollectScene(fr){
+    drawBase('day');
+    drawForestRow('day');
+    drawPerson(W*0.5, H*0.8, 1.2, '#d9ab7a', '#3a5a8a');
+    var t = fr/1000;
+    state.collectTargets.forEach(function(g){
+      if(g.caught) return;
+      var bx = g.x + Math.sin(t*2+g.phase)*8;
+      var by = g.y + Math.sin(t*4+g.phase)*4;
+      g.sx = bx; g.sy = by;
+      drawGrasshopper(bx,by,1.3);
+    });
+  }
+
+  function drawCallScene(fr){
+    drawBase('dusk');
+    drawForestRow('dusk');
+    drawHut(180,H*0.7,1.15);
+    drawPerson(150,H*0.85,1,'#c99a6a','#8a3a2a');
+    drawPerson(430,H*0.82,1.1,'#d9ab7a','#3a5a8a');
+  }
+
+  function drawWarnScene(fr){
+    drawBase('dusk');
+    drawForestRow('dusk');
+    drawHut(160,H*0.7,1.15);
+    drawPerson(150,H*0.85,1,'#c99a6a','#8a3a2a');
+    drawPerson(360,H*0.85,1,'#d9ab7a','#3a5a8a');
+    ctx.save();
+    ctx.globalAlpha = 0.5 + 0.3*Math.sin(fr/200);
+    ctx.fillStyle = '#1a0f0a';
+    ctx.beginPath(); ctx.arc(560,120,26,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRunScene(fr){
+    drawBase('dusk');
+    drawForestRow('dusk');
+    var progress = state.mashProgress;
+    var px = 500 - progress*3.3;
+    drawHut(120,H*0.7,1.15);
+    drawPerson(px, H*0.83, 1, '#d9ab7a', '#3a5a8a');
+    var darkX = W - (state.duskProgress*W/100);
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    var grd = ctx.createLinearGradient(darkX-120,0,darkX+50,0);
+    grd.addColorStop(0,'rgba(5,5,20,0)');
+    grd.addColorStop(1,'rgba(5,5,20,0.9)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(darkX-120,0,W-(darkX-120),H);
+    ctx.restore();
+  }
+
+  function drawLurkScene(fr){
+    drawBase('night');
+    drawForestRow('night');
+    drawHut(140,H*0.68,1.1);
+    drawFence(280,H*0.85,180);
+    for(var i=0;i<4;i++) drawGoat(310+i*28, H*0.93, 0.85);
+    drawTiger(180,H*0.86,0.7);
+    drawPerson(560,H*0.86,0.75,'#8a6a4a','#3a2a1a');
+    drawPerson(600,H*0.9,0.75,'#8a6a4a','#4a3a2a');
+  }
+
+  function drawPenScene(fr){
+    drawBase('night');
+    drawFence(200,H*0.85,300);
+    for(var i=0;i<3;i++) drawGoat(240+i*40, H*0.92, 0.85);
+    var wobble = Math.sin(fr/250)*4;
+    drawTiger(350+wobble,H*0.83,0.95);
+  }
+
+  function drawTieScene(fr){
+    drawBase('night');
+    drawFence(190,H*0.85,320);
+    var p = state.holdProgress/100;
+    drawTiger(350,H*0.82,0.95);
+    ctx.save();
+    ctx.strokeStyle = '#c9a24a';
+    ctx.lineWidth = 4;
+    var wraps = Math.floor(p*5);
+    for(var i=0;i<wraps;i++){
+      ctx.beginPath();
+      ctx.ellipse(350,H*0.82,26-i*2,16-i,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+    drawPerson(430,H*0.86,0.85,'#8a6a4a','#3a2a1a');
+    drawPerson(280,H*0.9,0.8,'#8a6a4a','#4a3a2a');
+  }
+
+  function drawCarryScene(fr){
+    drawBase('night');
+    drawForestRow('night');
+    var x = 60 + state.dragX*(W-160);
+    ctx.save();
+    ctx.strokeStyle = '#8a5a2a';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(x-70,H*0.72); ctx.lineTo(x+70,H*0.72); ctx.stroke();
+    ctx.restore();
+    drawTiger(x, H*0.7, 0.75, Math.PI);
+    drawPerson(x-80,H*0.85,0.85,'#8a6a4a','#3a2a1a');
+    drawPerson(x+80,H*0.85,0.85,'#8a6a4a','#4a3a2a');
+  }
+
+  function drawRevealScene(fr){
+    drawBase('night');
+    drawForestRow('night');
+    var x = W*0.5;
+    ctx.save();
+    ctx.strokeStyle = '#8a5a2a';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(x-70,H*0.72); ctx.lineTo(x+70,H*0.72); ctx.stroke();
+    ctx.restore();
+    if(state.revealed){
+      drawTiger(x, H*0.7, 0.85, Math.PI);
+    } else {
+      ctx.save();
+      ctx.fillStyle = '#3a2a1a';
+      ctx.beginPath(); ctx.ellipse(x,H*0.7,34,18,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    drawPerson(x-80,H*0.85,0.85,'#8a6a4a','#3a2a1a');
+    drawPerson(x+80,H*0.85,0.85,'#8a6a4a','#4a3a2a');
+    if(!state.revealed){
+      ctx.save();
+      ctx.globalAlpha = 0.6 + 0.3*Math.sin(fr/150);
+      ctx.fillStyle = '#f2b33d';
+      ctx.beginPath(); ctx.arc(x+95,H*0.8,10,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawPanicScene(fr){
+    drawBase('night');
+    drawForestRow('night');
+    var t = fr/1000;
+    var m1x = 200 + Math.min(t*180, 300);
+    var m2x = 500 - Math.min(t*160, 260);
+    drawPerson(m1x, H*0.85, 0.85, '#8a6a4a','#3a2a1a');
+    drawPerson(m2x, H*0.85, 0.85, '#8a6a4a','#4a3a2a');
+    if(t>1.4){
+      ctx.save();
+      ctx.fillStyle = '#3a5a3a';
+      ctx.beginPath(); ctx.ellipse(m1x, H*0.95, 30, 8, 0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#3a5a9a';
+      ctx.beginPath(); ctx.ellipse(m2x, H*0.97, 34, 10, 0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawEndScene(fr){
+    drawBase('night');
+    drawForestRow('night');
+    var wobble = Math.sin(fr/300)*6;
+    drawTiger(W*0.5+wobble, H*0.75, 1.1);
+  }
+
+  // ---------- Interaction setup per scene ----------
+  function setupInteraction(scene){
+    elHint.style.display = 'none';
+    elProgWrap.style.display = 'none';
+    elActionBtn.style.display = 'inline-block';
+    elActionBtn.disabled = false;
+
+    if(scene.type === 'intro' || scene.type === 'narration'){
+      elActionBtn.textContent = t('next');
+    }
+    else if(scene.type === 'collect'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintCollect');
+      elProgWrap.style.display = 'block';
+      state.collected = 0;
+      state.collectTargets = [];
+      for(var i=0;i<scene.target;i++){
+        state.collectTargets.push({
+          x: 80+Math.random()*540, y: H*0.55+Math.random()*80,
+          phase: Math.random()*6, caught:false
+        });
+      }
+      state._collectStart = performance.now();
+      state._collectDone = false;
+    }
+    else if(scene.type === 'mash'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintMash');
+      elProgWrap.style.display = 'block';
+      state.mashProgress = 0;
+      state.duskProgress = 0;
+      state._mashDone = false;
+    }
+    else if(scene.type === 'hold'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintHold');
+      elProgWrap.style.display = 'block';
+      state.holdProgress = 0;
+      state._holdDone = false;
+    }
+    else if(scene.type === 'drag'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintDrag');
+      elProgWrap.style.display = 'block';
+      state.dragX = 0.08;
+      state._dragDone = false;
+    }
+    else if(scene.type === 'reveal'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintReveal');
+      state.revealed = false;
+    }
+    else if(scene.type === 'end'){
+      elActionBtn.style.display = 'none';
+      elReplayBtn.style.display = 'inline-block';
+    }
+  }
+
+  // ---------- Scene lifecycle ----------
+  function enterScene(index){
+    state.sceneIndex = index;
+    var scene = SCENES[index];
+    elNarration.textContent = scene.text[state.lang];
+    elReplayBtn.style.display = 'none';
+    updateDots();
+    setupInteraction(scene);
+    speak(scene.text[state.lang]);
+    reportSize();
+  }
+
+  function advance(){
+    if(state.sceneIndex < SCENES.length-1){
+      enterScene(state.sceneIndex+1);
+    }
+  }
+
+  elActionBtn.addEventListener('click', function(){
+    var scene = SCENES[state.sceneIndex];
+    if(scene.type === 'intro' || scene.type === 'narration'){
+      advance();
+    }
+  });
+
+  elReplayBtn.addEventListener('click', function(){
+    enterScene(0);
+    elActionBtn.style.display = 'inline-block';
+    elActionBtn.textContent = t('next');
+  });
+
+  elLangBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('sandhekala_lang', state.lang);
+    refreshLangUI();
+    var scene = SCENES[state.sceneIndex];
+    elNarration.textContent = scene.text[state.lang];
+    speak(scene.text[state.lang]);
+  });
+
+  elMuteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('sandhekala_muted', state.muted ? '1':'0');
+    elMuteBtn.textContent = state.muted ? t('muteOff') : t('muteOn');
+    if(state.muted) stopSpeech();
+    else speak(SCENES[state.sceneIndex].text[state.lang]);
+  });
+
+  function refreshLangUI(){
+    elLangBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    elTitle.textContent = t('title');
+    elFoot.textContent = t('footer');
+    elReplayLabel.textContent = t('replay');
+    elMuteBtn.textContent = state.muted ? t('muteOff') : t('muteOn');
+    if(elActionBtn.style.display !== 'none'){
+      var scene = SCENES[state.sceneIndex];
+      if(scene.type === 'intro'){ elActionBtn.textContent = t('start'); }
+      else { elActionBtn.textContent = t('next'); }
+    }
+  }
+
+  // ---------- Canvas pointer interactions ----------
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+    return { x: cx * (W/rect.width), y: cy * (H/rect.height) };
+  }
+
+  canvas.addEventListener('pointerdown', function(evt){
+    var scene = SCENES[state.sceneIndex];
+    var pos = getCanvasPos(evt);
+
+    if(scene.type === 'collect'){
+      state.collectTargets.forEach(function(g){
+        if(g.caught) return;
+        var dx = pos.x-(g.sx!==undefined?g.sx:g.x), dy = pos.y-(g.sy!==undefined?g.sy:g.y);
+        if(Math.sqrt(dx*dx+dy*dy) < 26){
+          g.caught = true;
+          state.collected++;
+        }
+      });
+    }
+    else if(scene.type === 'mash'){
+      state.mashProgress = Math.min(100, state.mashProgress+7);
+    }
+    else if(scene.type === 'hold'){
+      state.holding = true;
+    }
+    else if(scene.type === 'drag'){
+      state.dragging = true;
+    }
+    else if(scene.type === 'reveal'){
+      if(!state.revealed){
+        state.revealed = true;
+        setTimeout(function(){
+          elNarration.textContent = scene.text[state.lang];
+          setTimeout(advance, 2200);
+        }, 600);
+      }
+    }
+  });
+  window.addEventListener('pointerup', function(){
+    state.holding = false;
+    state.dragging = false;
+  });
+  window.addEventListener('pointermove', function(evt){
+    var scene = SCENES[state.sceneIndex];
+    if(scene && scene.type === 'drag' && state.dragging){
+      var pos = getCanvasPos(evt);
+      state.dragX = Math.max(0, Math.min(1, pos.x / W));
+    }
+  });
+
+  // ---------- Main loop ----------
+  var lastTime = performance.now();
+  function loop(now){
+    var dt = now - lastTime; lastTime = now;
+    state.frame = now;
+    var scene = SCENES[state.sceneIndex];
+
+    if(scene.type === 'collect'){
+      var elapsed = now - state._collectStart;
+      var pct = Math.min(100, (elapsed/scene.duration)*100);
+      elProgFill.style.width = pct + '%';
+      if(state.collected >= scene.target && !state._collectDone){
+        state._collectDone = true;
+        setTimeout(advance, 500);
+      } else if(elapsed >= scene.duration && !state._collectDone){
+        state._collectDone = true;
+        setTimeout(advance, 300);
+      }
+    }
+    else if(scene.type === 'mash'){
+      state.mashProgress = Math.max(0, state.mashProgress - dt*0.01);
+      state.duskProgress = Math.min(100, state.duskProgress + dt*0.012);
+      elProgFill.style.width = state.mashProgress + '%';
+      if(state.mashProgress >= 100 && !state._mashDone){
+        state._mashDone = true;
+        setTimeout(advance, 400);
+      } else if(state.duskProgress >= 100 && !state._mashDone){
+        state._mashDone = true;
+        setTimeout(advance, 400);
+      }
+    }
+    else if(scene.type === 'hold'){
+      if(state.holding){
+        state.holdProgress = Math.min(100, state.holdProgress + dt*0.045);
+      } else {
+        state.holdProgress = Math.max(0, state.holdProgress - dt*0.02);
+      }
+      elProgFill.style.width = state.holdProgress + '%';
+      if(state.holdProgress >= 100 && !state._holdDone){
+        state._holdDone = true;
+        setTimeout(advance, 500);
+      }
+    }
+    else if(scene.type === 'drag'){
+      elProgFill.style.width = (state.dragX*100) + '%';
+      if(state.dragX >= 0.94 && !state._dragDone){
+        state._dragDone = true;
+        setTimeout(advance, 400);
+      }
+    }
+    else if(scene.type === 'narration' && scene.key === 'panic'){
+      // auto-advance after fall animation
+      if(!state._panicTimer){
+        var thisIndex = state.sceneIndex;
+        state._panicTimer = setTimeout(function(){
+          if(state.sceneIndex === thisIndex) advance();
+        }, 4200);
+      }
+    }
+
+    scene.draw(now - (state._sceneStart||now));
+    requestAnimationFrame(loop);
+  }
+
+  var prevIndex = -1;
+  function drawWrapper(){
+    var scene = SCENES[state.sceneIndex];
+    if(state.sceneIndex !== prevIndex){
+      state._sceneStart = performance.now();
+      prevIndex = state.sceneIndex;
+      state._panicTimer = null;
+    }
+  }
+
+  // Patch loop to track scene start properly
+  var rawLoop = loop;
+  function mainLoop(now){
+    drawWrapper();
+    rawLoop(now);
+  }
+
+  // ---------- Init ----------
+  buildDots();
+  refreshLangUI();
+  elActionBtn.textContent = t('start');
+  enterSceneInit();
+
+  function enterSceneInit(){
+    state.sceneIndex = 0;
+    var scene = SCENES[0];
+    elNarration.textContent = scene.text[state.lang];
+    updateDots();
+    setupInteraction(scene);
+    elActionBtn.style.display = 'inline-block';
+    elActionBtn.textContent = t('start');
+    reportSize();
+  }
+
+  requestAnimationFrame(mainLoop);
+  window.addEventListener('resize', reportSize);
+  setTimeout(reportSize, 300);
+
+})();
+</script>
+</body>
+</html>
