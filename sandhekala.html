@@ -36,10 +36,9 @@
   .icon-btn:hover{background:#4a3320;}
   .stage-wrap{position:relative;width:100%;background:#000;}
   canvas{display:block;width:100%;height:auto;aspect-ratio:7/4.4;}
-  .overlay-ui{
-    position:absolute;left:0;right:0;bottom:0;padding:10px 14px 12px;
-    background:linear-gradient(0deg, rgba(10,6,3,.88) 10%, rgba(10,6,3,.55) 60%, transparent 100%);
-    display:flex;flex-direction:column;gap:8px;
+  .below-stage{
+    padding:12px 14px 14px;background:linear-gradient(180deg,#1f150e,#150e08);
+    display:flex;flex-direction:column;gap:8px;border-top:1px solid #4a3320;
   }
   .narration-box{
     font-size:14px;line-height:1.45;color:var(--text-light);min-height:38px;
@@ -57,6 +56,11 @@
     background:transparent;border:1.5px solid var(--accent-2);color:var(--accent-2);
   }
   .btn:disabled{opacity:.4;cursor:default;}
+  #sk-tap-btn{animation:sk-pulse 1s ease-in-out infinite;}
+  @keyframes sk-pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.08);}
+  }
   .dots{display:flex;gap:6px;justify-content:center;padding:8px 0;background:var(--panel);}
   .dot{width:8px;height:8px;border-radius:50%;background:#5a4230;transition:all .2s;}
   .dot.active{background:var(--accent-2);width:20px;border-radius:5px;}
@@ -84,17 +88,18 @@
   </div>
   <div class="stage-wrap">
     <canvas id="sk-canvas" width="700" height="440"></canvas>
-    <div class="overlay-ui">
-      <div class="narration-box" id="sk-narration"></div>
-      <div id="sk-mini-hint" class="mini-hint" style="display:none;"></div>
-      <div id="sk-progress-wrap" class="progressbar-wrap" style="display:none;">
-        <div id="sk-progress-fill" class="progressbar-fill"></div>
-      </div>
-      <div class="action-row">
-        <button class="btn secondary" id="sk-replay-btn" style="display:none;">↺ <span id="sk-replay-label">Ulangi Cerita</span></button>
-        <div style="flex:1"></div>
-        <button class="btn" id="sk-action-btn">Mulai Cerita</button>
-      </div>
+  </div>
+  <div class="below-stage">
+    <div class="narration-box" id="sk-narration"></div>
+    <div id="sk-mini-hint" class="mini-hint" style="display:none;"></div>
+    <div id="sk-progress-wrap" class="progressbar-wrap" style="display:none;">
+      <div id="sk-progress-fill" class="progressbar-fill"></div>
+    </div>
+    <div class="action-row">
+      <button class="btn secondary" id="sk-replay-btn" style="display:none;">↺ <span id="sk-replay-label">Ulangi Cerita</span></button>
+      <div style="flex:1"></div>
+      <button class="btn" id="sk-tap-btn" style="display:none;">Ketuk!</button>
+      <button class="btn" id="sk-action-btn">Mulai Cerita</button>
     </div>
   </div>
   <div class="dots" id="sk-dots"></div>
@@ -124,6 +129,9 @@
       hintDrag: "Seret pikulan ke kanan untuk membawanya pulang!",
       hintReveal: "Ketuk untuk menyalakan obor dan melihat lebih dekat!",
       collectProgress: "Belalang tertangkap",
+      mashBtn: "Ketuk Cepat!",
+      holdBtn: "Tahan di Sini!",
+      revealBtn: "🔦 Nyalakan Obor!",
       dusk: "Senja"
     },
     en: {
@@ -139,6 +147,9 @@
       hintDrag: "Drag the pole to the right to carry it home!",
       hintReveal: "Tap to light the torch and look closer!",
       collectProgress: "Grasshoppers caught",
+      mashBtn: "Tap Fast!",
+      holdBtn: "Hold Here!",
+      revealBtn: "🔦 Light the Torch!",
       dusk: "Dusk"
     }
   };
@@ -286,6 +297,7 @@
   var elTitle = document.getElementById('sk-title');
   var elNarration = document.getElementById('sk-narration');
   var elActionBtn = document.getElementById('sk-action-btn');
+  var elTapBtn = document.getElementById('sk-tap-btn');
   var elReplayBtn = document.getElementById('sk-replay-btn');
   var elReplayLabel = document.getElementById('sk-replay-label');
   var elLangBtn = document.getElementById('sk-lang-btn');
@@ -706,6 +718,7 @@
     elProgWrap.style.display = 'none';
     elActionBtn.style.display = 'inline-block';
     elActionBtn.disabled = false;
+    elTapBtn.style.display = 'none';
 
     if(scene.type === 'intro' || scene.type === 'narration'){
       elActionBtn.textContent = t('next');
@@ -731,6 +744,8 @@
       elHint.style.display = 'block';
       elHint.textContent = t('hintMash');
       elProgWrap.style.display = 'block';
+      elTapBtn.style.display = 'inline-block';
+      elTapBtn.textContent = t('mashBtn');
       state.mashProgress = 0;
       state.duskProgress = 0;
       state._mashDone = false;
@@ -740,6 +755,8 @@
       elHint.style.display = 'block';
       elHint.textContent = t('hintHold');
       elProgWrap.style.display = 'block';
+      elTapBtn.style.display = 'inline-block';
+      elTapBtn.textContent = t('holdBtn');
       state.holdProgress = 0;
       state._holdDone = false;
     }
@@ -755,6 +772,9 @@
       elActionBtn.style.display = 'none';
       elHint.style.display = 'block';
       elHint.textContent = t('hintReveal');
+      elTapBtn.style.display = 'inline-block';
+      elTapBtn.textContent = t('revealBtn');
+      elTapBtn.disabled = false;
       state.revealed = false;
     }
     else if(scene.type === 'end'){
@@ -794,6 +814,31 @@
     elActionBtn.textContent = t('next');
   });
 
+  elTapBtn.addEventListener('pointerdown', function(evt){
+    evt.preventDefault();
+    var scene = SCENES[state.sceneIndex];
+    if(scene.type === 'mash'){
+      state.mashProgress = Math.min(100, state.mashProgress+7);
+    } else if(scene.type === 'hold'){
+      state.holding = true;
+    } else if(scene.type === 'reveal'){
+      if(!state.revealed){
+        state.revealed = true;
+        elTapBtn.disabled = true;
+        setTimeout(function(){
+          elNarration.textContent = scene.text[state.lang];
+          setTimeout(advance, 2200);
+        }, 600);
+      }
+    }
+  });
+  elTapBtn.addEventListener('pointerup', function(){
+    state.holding = false;
+  });
+  elTapBtn.addEventListener('pointerleave', function(){
+    state.holding = false;
+  });
+
   elLangBtn.addEventListener('click', function(){
     state.lang = state.lang === 'id' ? 'en' : 'id';
     localStorage.setItem('sandhekala_lang', state.lang);
@@ -821,6 +866,14 @@
       var scene = SCENES[state.sceneIndex];
       if(scene.type === 'intro'){ elActionBtn.textContent = t('start'); }
       else { elActionBtn.textContent = t('next'); }
+    }
+    var curScene = SCENES[state.sceneIndex];
+    if(curScene){
+      if(curScene.type === 'mash'){ elTapBtn.textContent = t('mashBtn'); elHint.textContent = t('hintMash'); }
+      else if(curScene.type === 'hold'){ elTapBtn.textContent = t('holdBtn'); elHint.textContent = t('hintHold'); }
+      else if(curScene.type === 'collect'){ elHint.textContent = t('hintCollect'); }
+      else if(curScene.type === 'drag'){ elHint.textContent = t('hintDrag'); }
+      else if(curScene.type === 'reveal'){ elTapBtn.textContent = t('revealBtn'); elHint.textContent = t('hintReveal'); }
     }
   }
 
@@ -854,15 +907,6 @@
     }
     else if(scene.type === 'drag'){
       state.dragging = true;
-    }
-    else if(scene.type === 'reveal'){
-      if(!state.revealed){
-        state.revealed = true;
-        setTimeout(function(){
-          elNarration.textContent = scene.text[state.lang];
-          setTimeout(advance, 2200);
-        }, 600);
-      }
     }
   });
   window.addEventListener('pointerup', function(){
