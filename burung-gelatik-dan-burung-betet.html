@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burung Gelatik dan Burung Betet</title>
+<style>
+  :root{
+    --bg-parchment:#f7ecd6;
+    --bg-parchment-dark:#efe0bf;
+    --ink:#3a2b1c;
+    --brown:#7a4a26;
+    --brown-dark:#5a3419;
+    --leaf:#4d7c3a;
+    --leaf-dark:#345729;
+    --terracotta:#c2542f;
+    --terracotta-dark:#9c3e20;
+    --gold:#d9a441;
+    --cream:#fffaf0;
+    --sky-top:#a9d3e8;
+    --sky-dry:#e7c98a;
+    --shadow: rgba(58,43,28,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Verdana, Tahoma, sans-serif;
+    background:transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--bg-parchment),var(--bg-parchment-dark));
+    border:3px solid var(--brown);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 6px 18px var(--shadow);
+    position:relative;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 12px;
+    background:var(--brown-dark);
+    color:var(--cream);
+  }
+  #topbar .title{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.3px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
+  }
+  .topbtns{display:flex; gap:6px;}
+  .iconbtn{
+    background:var(--terracotta);
+    border:none;
+    color:var(--cream);
+    width:34px;
+    height:30px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .iconbtn:hover{background:var(--terracotta-dark); transform:translateY(-1px);}
+  .iconbtn.lang{
+    width:auto;
+    padding:0 10px;
+    font-weight:700;
+    font-size:12px;
+  }
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  canvas#stage{
+    display:block;
+    width:100%;
+    height:auto;
+    background:var(--sky-top);
+  }
+  #overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    background:rgba(20,15,8,0.55);
+    color:var(--cream);
+  }
+  #overlay h1{
+    font-size:clamp(20px,5vw,30px);
+    margin:0 0 10px;
+    text-shadow:0 2px 6px rgba(0,0,0,.5);
+  }
+  #overlay p{
+    font-size:clamp(13px,3vw,15px);
+    max-width:520px;
+    line-height:1.5;
+    margin:0 0 18px;
+    text-shadow:0 1px 4px rgba(0,0,0,.5);
+  }
+  .bigbtn{
+    background:var(--terracotta);
+    color:var(--cream);
+    border:none;
+    padding:12px 26px;
+    border-radius:999px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--terracotta-dark);
+    transition:transform .1s ease;
+  }
+  .bigbtn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--terracotta-dark);}
+  .hidden{display:none !important;}
+  #textbox{
+    padding:14px 16px 6px;
+    min-height:70px;
+    color:var(--ink);
+    font-size:15px;
+    line-height:1.55;
+  }
+  #textbox .who{
+    font-weight:700;
+    color:var(--terracotta-dark);
+    margin-right:4px;
+  }
+  #controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 16px 16px;
+    gap:10px;
+  }
+  #dots{
+    display:flex;
+    gap:7px;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#d8c39a;
+    border:1px solid var(--brown);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{
+    background:var(--terracotta);
+    transform:scale(1.25);
+  }
+  .dot.done{background:var(--leaf);}
+  #nextbtn{
+    background:var(--leaf);
+    color:var(--cream);
+    border:none;
+    padding:10px 20px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--leaf-dark);
+  }
+  #nextbtn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--leaf-dark);}
+  #nextbtn:disabled{opacity:.4; cursor:default;}
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--brown);
+    padding:6px 0 12px;
+    opacity:.75;
+  }
+  .minigame-ui{
+    position:absolute;
+    left:0;right:0;bottom:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .tapbtn{
+    background:var(--gold);
+    border:3px solid var(--brown-dark);
+    color:var(--ink);
+    font-weight:800;
+    font-size:15px;
+    padding:12px 28px;
+    border-radius:999px;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:0 4px 0 var(--brown-dark);
+  }
+  .tapbtn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--brown-dark);}
+  .meter{
+    width:70%;
+    max-width:320px;
+    height:16px;
+    background:rgba(255,255,255,.35);
+    border:2px solid var(--brown-dark);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--terracotta));
+    transition:width .08s linear;
+  }
+  .prompt-label{
+    color:var(--cream);
+    font-size:13px;
+    font-weight:700;
+    text-shadow:0 1px 4px rgba(0,0,0,.6);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="titleText">Burung Gelatik dan Burung Betet</div>
+    <div class="topbtns">
+      <button class="iconbtn lang" id="langBtn" title="Language">EN</button>
+      <button class="iconbtn" id="muteBtn" title="Mute">🔊</button>
+    </div>
+  </div>
+  <div id="stage-wrap">
+    <canvas id="stage" width="700" height="420"></canvas>
+    <div id="overlay">
+      <h1 id="ovTitle">Burung Gelatik dan Burung Betet</h1>
+      <p id="ovDesc">Cerita rakyat dari Jawa Timur tentang asal mula teleh Gelatik dan paruh bengkok Betet.</p>
+      <button class="bigbtn" id="startBtn">Mulai Cerita</button>
+    </div>
+  </div>
+  <div id="textbox"><span id="narrationText"></span></div>
+  <div id="controls">
+    <div id="dots"></div>
+    <button id="nextbtn">Lanjut</button>
+  </div>
+  <footer id="footerText">Kisah rakyat Jawa Timur • Diceritakan ulang secara interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Language & strings ---------------- */
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  const UI = {
+    id: {
+      title: "Burung Gelatik dan Burung Betet",
+      subtitle: "Cerita rakyat dari Jawa Timur tentang asal mula teleh Gelatik dan paruh bengkok Betet.",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      footer: "Kisah rakyat Jawa Timur • Diceritakan ulang secara interaktif",
+      langBtnShows: "EN",
+      tapPrompt: "Ketuk cepat!",
+      holdPrompt: "Tahan untuk menarik!"
+    },
+    en: {
+      title: "The Sparrow and the Parakeet",
+      subtitle: "A folktale from East Java about why the sparrow has a pouch on its neck and why the parakeet's beak is bent.",
+      start: "Start the Story",
+      replay: "Replay Story",
+      next: "Continue",
+      footer: "East Javanese folktale • Retold as an interactive story",
+      langBtnShows: "ID",
+      tapPrompt: "Tap quickly!",
+      holdPrompt: "Hold to pull!"
+    }
+  };
+
+  /* ---------------- Scenes ---------------- */
+  // type: "story" (narration + continue) or "minigame"
+  const SCENES = [
+    {
+      id: "intro",
+      type: "story",
+      bg: "dry",
+      text: {
+        id: "Konon pada zaman Nabi Sulaiman, negeri dilanda musim paceklik yang panjang. Wabah penyakit menyerang tanaman, membuat padi sulit tumbuh dan pangan sulit didapat oleh semua makhluk, termasuk para burung.",
+        en: "Long ago, in the time of Prophet Sulaiman, the land suffered a long famine. A blight struck the crops, so rice barely grew and food became scarce for every creature, including the birds."
+      },
+      draw: (ctx,w,h,t)=>{ drawDrySky(ctx,w,h); drawDryField(ctx,w,h); drawWiltedTrees(ctx,w,h); drawFlyingBirdsSmall(ctx,w,h,t); }
+    },
+    {
+      id: "betet-family",
+      type: "story",
+      bg: "village",
+      text: {
+        id: "Di sebuah dahan pohon, hiduplah keluarga burung Betet. Sang anak akan segera dikhitan, namun Betet tak punya uang untuk membeli kopiah dan sarung. Satu-satunya harta yang tersisa hanyalah sekarung padi hasil kerja kerasnya.",
+        en: "On a tree branch lived a family of parakeets. Their young one was soon to be circumcised, but Betet the parakeet had no money for a cap and sarong. All he had left was a sack of rice earned from hard work."
+      },
+      draw: (ctx,w,h,t)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawBigTree(ctx,w,h); drawNest(ctx,w*0.68,h*0.42); drawBetet(ctx,w*0.62,h*0.5,0.9,{mood:"normal"}); drawBetetChick(ctx,w*0.74,h*0.55,0.55); drawRiceSack(ctx,w*0.42,h*0.78,0.8); }
+    },
+    {
+      id: "betet-to-market",
+      type: "story",
+      bg: "road",
+      text: {
+        id: "Maka pergilah Betet memikul padinya ke pasar, berharap dapat menukarnya dengan uang secukupnya untuk keperluan sang anak.",
+        en: "So Betet set off, carrying his rice on a shoulder pole toward the market, hoping to trade it for enough money for his child's needs."
+      },
+      draw: (ctx,w,h,t)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawBetetWalking(ctx,w*0.5,h*0.62,1,t); }
+    },
+    {
+      id: "meet-gelatik",
+      type: "story",
+      bg: "road",
+      text: {
+        id: "“Hendak kemana Engkau, Betet, memikul padi?” tanya burung Gelatik yang kebetulan lewat. “Aku hendak ke pasar menjual padi ini untuk membeli sarung dan kopiah bagi anakku,” jawab Betet.",
+        en: "\u201CWhere are you going, Betet, carrying that rice?\u201D asked Gelatik the sparrow, who happened to pass by. \u201CI'm heading to market to sell this rice for a sarong and cap for my child,\u201D Betet replied."
+      },
+      draw: (ctx,w,h,t)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawBetet(ctx,w*0.32,h*0.6,1,{mood:"normal",carry:true}); drawGelatik(ctx,w*0.68,h*0.58,1,{mood:"normal"}); drawSpeechBubble(ctx,w*0.68,h*0.36,"?"); }
+    },
+    {
+      id: "peck-minigame",
+      type: "minigame",
+      kind: "tap",
+      duration: 8000,
+      goal: 22,
+      bg: "road",
+      introText: {
+        id: "“Berhentilah sejenak, kebetulan Aku membutuhkan padi. Aku ingin memeriksa apakah padimu bagus,” kata Gelatik. Ia lalu berpura-pura membolak-balik padi… padahal diam-diam mematuk dan memakannya! Bantu Gelatik mematuk padi secepat mungkin sebelum ketahuan.",
+        en: "\u201CWait a moment, I happen to need some rice. Let me check if yours is good,\u201D said Gelatik. He pretended to turn the grains over... while secretly pecking and eating them! Help Gelatik peck the rice as fast as you can before he's caught."
+      },
+      resultText: {
+        id: "Tik... tik... tik... Gelatik terus mengusap dan membolak-balik padi Betet, diam-diam menghabiskan sebagian isi karung.",
+        en: "Tick... tick... tick... Gelatik kept stroking and turning the rice, quietly eating away at the sack."
+      },
+      draw: (ctx,w,h,t,mgState)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawBetet(ctx,w*0.28,h*0.6,1,{mood:"normal",carry:true}); drawRiceSackOpen(ctx,w*0.58,h*0.72,1); drawGelatik(ctx,w*0.62,h*0.55,1,{mood:"sneaky",peck:t}); },
+      onTap:(mgState)=>{ mgState.score++; }
+    },
+    {
+      id: "betet-catches",
+      type: "story",
+      bg: "road",
+      text: {
+        id: "“Apa yang Kau lakukan, Gelatik? Kenapa Engkau memakan padi-padiku?” teriak Betet kesal setelah menyadari kecurangan itu. “Aku tidak memakannya, aku hanya memeriksanya!” sanggah Gelatik berbohong. Betet pun murka mendengar dalih itu.",
+        en: "\u201CWhat are you doing, Gelatik? Why are you eating my rice?\u201D Betet shouted angrily after realizing the trick. \u201CI'm not eating it, I'm only checking it!\u201D Gelatik lied back. Betet grew furious at the excuse."
+      },
+      draw: (ctx,w,h,t)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawBetet(ctx,w*0.3,h*0.58,1.05,{mood:"angry",carry:false}); drawGelatik(ctx,w*0.66,h*0.58,1,{mood:"scared"}); drawRiceSackOpen(ctx,w*0.5,h*0.76,0.9); }
+    },
+    {
+      id: "fight-minigame",
+      type: "minigame",
+      kind: "hold",
+      duration: 6000,
+      bg: "road",
+      introText: {
+        id: "Betet mencengkeram leher Gelatik, menariknya sekuat tenaga! Tahan tombol untuk membantu Betet menarik.",
+        en: "Betet grabbed Gelatik by the neck and pulled with all his strength! Hold the button to help Betet pull."
+      },
+      resultText: {
+        id: "Gelatik meronta kesakitan hingga lehernya membengkak menjadi teleh. Namun ia sempat memukulkan batang pikulan padi ke paruh Betet hingga bengkok ke bawah.",
+        en: "Gelatik writhed in pain as his neck swelled into a pouch. But he managed to strike Betet's beak with the carrying pole, bending it downward."
+      },
+      draw: (ctx,w,h,t,mgState)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawFightScene(ctx,w,h,mgState.progress||0); },
+      onHold:(mgState,dt)=>{ mgState.progress = Math.min(1,(mgState.progress||0)+dt/4500); }
+    },
+    {
+      id: "ending",
+      type: "story",
+      bg: "green",
+      text: {
+        id: "Sejak itulah, burung Gelatik memiliki teleh di lehernya sebagai bekas cengkeraman Betet, dan burung Betet memiliki paruh yang bengkok ke bawah sebagai bekas pukulan Gelatik. Begitulah asal mula ciri khas kedua burung ini hingga sekarang.",
+        en: "From that day on, the sparrow carries a pouch on its neck as a mark of Betet's grip, and the parakeet's beak curves downward as a mark of Gelatik's strike. And that is how these two birds came to look the way they do today."
+      },
+      draw: (ctx,w,h,t)=>{ drawGreenSky(ctx,w,h); drawGround(ctx,w,h); drawBigTree(ctx,w,h); drawBetet(ctx,w*0.3,h*0.55,1,{mood:"normal",bentBeak:true}); drawGelatik(ctx,w*0.68,h*0.55,1,{mood:"normal",teleh:true}); }
+    }
+  ];
+
+  /* ---------------- State ---------------- */
+  let sceneIdx = -1;
+  let muted = localStorage.getItem('bgb_muted') === '1';
+  let currentUtterance = null;
+  let animFrame = null;
+  let animStart = null;
+  let mg = null; // active minigame state
+  let started = false;
+
+  const el = {
+    app: document.getElementById('app'),
+    canvas: document.getElementById('stage'),
+    overlay: document.getElementById('overlay'),
+    ovTitle: document.getElementById('ovTitle'),
+    ovDesc: document.getElementById('ovDesc'),
+    startBtn: document.getElementById('startBtn'),
+    textbox: document.getElementById('textbox'),
+    narrationText: document.getElementById('narrationText'),
+    dots: document.getElementById('dots'),
+    nextbtn: document.getElementById('nextbtn'),
+    footerText: document.getElementById('footerText'),
+    titleText: document.getElementById('titleText'),
+    langBtn: document.getElementById('langBtn'),
+    muteBtn: document.getElementById('muteBtn')
+  };
+  const ctx = el.canvas.getContext('2d');
+
+  /* ---------------- Utility drawing ---------------- */
+  function drawDrySky(ctx,w,h){
+    let g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#e7c98a'); g.addColorStop(1,'#f4e3b8');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.beginPath(); ctx.arc(w*0.82,h*0.18,26,0,Math.PI*2); ctx.fill();
+  }
+  function drawDryField(ctx,w,h){
+    ctx.fillStyle='#c7a86b';
+    ctx.fillRect(0,h*0.7,w,h*0.3);
+    ctx.strokeStyle='#8a6a3f'; ctx.lineWidth=2;
+    for(let i=0;i<18;i++){
+      let x = (i/18)*w + Math.sin(i)*6;
+      ctx.beginPath();
+      ctx.moveTo(x,h*0.78);
+      ctx.lineTo(x-4,h*0.98);
+      ctx.moveTo(x,h*0.78);
+      ctx.lineTo(x+4,h*0.98);
+      ctx.stroke();
+    }
+  }
+  function drawWiltedTrees(ctx,w,h){
+    for(const x of [w*0.12,w*0.92]){
+      ctx.strokeStyle='#7a5a34'; ctx.lineWidth=8;
+      ctx.beginPath(); ctx.moveTo(x,h*0.75); ctx.lineTo(x,h*0.42); ctx.stroke();
+      ctx.strokeStyle='#9c7a4a'; ctx.lineWidth=4;
+      for(let a=-1;a<=1;a+=2){
+        ctx.beginPath(); ctx.moveTo(x,h*0.5); ctx.lineTo(x+a*22,h*0.4); ctx.stroke();
+      }
+    }
+  }
+  function drawFlyingBirdsSmall(ctx,w,h,t){
+    ctx.strokeStyle='#5a3419'; ctx.lineWidth=2;
+    for(let i=0;i<3;i++){
+      let x = ((t/2000)*w*0.3 + i*90) % (w+40) - 20;
+      let y = h*0.2 + i*18 + Math.sin(t/300+i)*4;
+      ctx.beginPath();
+      ctx.moveTo(x-8,y); ctx.quadraticCurveTo(x,y-6,x+8,y);
+      ctx.moveTo(x+8,y); ctx.quadraticCurveTo(x+16,y-6,x+24,y);
+      ctx.stroke();
+    }
+  }
+  function drawGreenSky(ctx,w,h){
+    let g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#a9d3e8'); g.addColorStop(1,'#e3f0e0');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    [[w*0.2,h*0.15,20],[w*0.75,h*0.1,26]].forEach(c=>{ ctx.beginPath(); ctx.arc(c[0],c[1],c[2],0,Math.PI*2); ctx.fill(); });
+  }
+  function drawGround(ctx,w,h){
+    ctx.fillStyle='#7fae5a';
+    ctx.fillRect(0,h*0.72,w,h*0.28);
+    ctx.fillStyle='#6a9a48';
+    for(let i=0;i<40;i++){
+      let x = (i*37)%w, y = h*0.75 + (i*23)%(h*0.2);
+      ctx.beginPath(); ctx.arc(x,y,2,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function drawPathTrees(ctx,w,h){
+    ctx.fillStyle='#c9a86a';
+    ctx.beginPath();
+    ctx.moveTo(w*0.35,h*0.72); ctx.quadraticCurveTo(w*0.5,h*0.68,w*0.65,h*0.72);
+    ctx.lineTo(w*0.62,h); ctx.lineTo(w*0.38,h); ctx.closePath(); ctx.fill();
+    drawTree(ctx,w*0.1,h*0.72,0.9);
+    drawTree(ctx,w*0.9,h*0.7,1.1);
+  }
+  function drawTree(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#8a5a2f'; ctx.fillRect(-6,-10,12,40);
+    ctx.fillStyle='#4d7c3a';
+    ctx.beginPath(); ctx.arc(0,-40,34,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-22,-22,22,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(22,-22,22,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawBigTree(ctx,w,h){
+    ctx.save();
+    ctx.translate(w*0.75,h*0.72);
+    ctx.fillStyle='#7a4a26'; ctx.fillRect(-14,-90,28,90);
+    ctx.strokeStyle='#7a4a26'; ctx.lineWidth=10; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,-70); ctx.quadraticCurveTo(-50,-95,-70,-70); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-80); ctx.quadraticCurveTo(50,-105,68,-84); ctx.stroke();
+    ctx.fillStyle='#4d7c3a';
+    [[0,-130,58],[-60,-100,38],[55,-115,42],[10,-95,44]].forEach(c=>{
+      ctx.beginPath(); ctx.arc(c[0],c[1],c[2],0,Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+  }
+  function drawNest(ctx,x,y){
+    ctx.save(); ctx.translate(x,y);
+    ctx.strokeStyle='#6a4423'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.ellipse(0,0,34,14,0,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='#8a6a3f'; ctx.lineWidth=2;
+    for(let i=0;i<8;i++){ ctx.beginPath(); ctx.ellipse(0,0,30-i,10-i*0.3,0,0,Math.PI); ctx.stroke(); }
+    ctx.restore();
+  }
+  function drawRiceSack(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#e8d4a0'; ctx.strokeStyle='#a3813f'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(-22,10); ctx.quadraticCurveTo(-26,-24,0,-30); ctx.quadraticCurveTo(26,-24,22,10);
+    ctx.quadraticCurveTo(22,26,0,28); ctx.quadraticCurveTo(-22,26,-22,10); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='#a3813f';
+    ctx.beginPath(); ctx.moveTo(-10,-26); ctx.lineTo(-6,26); ctx.moveTo(10,-26); ctx.lineTo(6,26); ctx.stroke();
+    ctx.restore();
+  }
+  function drawRiceSackOpen(ctx,x,y,scale){
+    drawRiceSack(ctx,x,y,scale);
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#f5e8c0';
+    for(let i=0;i<10;i++){
+      let a = (i/10)*Math.PI - Math.PI/2;
+      ctx.beginPath(); ctx.ellipse(Math.cos(a)*14, -30+Math.sin(a)*4, 3,1.6, a,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawBetetChick(ctx,x,y,scale){
+    drawGelatikLikeChick(ctx,x,y,scale);
+  }
+  function drawGelatikLikeChick(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#8fbf6a';
+    ctx.beginPath(); ctx.ellipse(0,0,16,14,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-10,-10,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#e0483e';
+    ctx.beginPath(); ctx.moveTo(-18,-10); ctx.lineTo(-26,-8); ctx.lineTo(-18,-5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-11,-13,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Betet = green parakeet with hooked/bent beak
+  function drawBetet(ctx,x,y,scale,opt){
+    opt = opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale, scale);
+    // tail
+    ctx.fillStyle='#3f7a34';
+    ctx.beginPath(); ctx.moveTo(-6,10); ctx.lineTo(-40,26); ctx.lineTo(-34,8); ctx.closePath(); ctx.fill();
+    // body
+    ctx.fillStyle='#5aa347';
+    ctx.beginPath(); ctx.ellipse(0,0,26,30,0,0,Math.PI*2); ctx.fill();
+    // belly
+    ctx.fillStyle='#bfe0a0';
+    ctx.beginPath(); ctx.ellipse(2,10,14,16,0,0,Math.PI*2); ctx.fill();
+    // wing
+    ctx.fillStyle= opt.mood==='angry' ? '#2f5e28' : '#3f7a34';
+    ctx.save();
+    let wingAngle = opt.mood==='angry' ? -0.5 : 0.1;
+    ctx.translate(-4,-2); ctx.rotate(wingAngle);
+    ctx.beginPath(); ctx.ellipse(0,10,10,20,0.3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    // head
+    ctx.fillStyle='#5aa347';
+    ctx.beginPath(); ctx.arc(20,-24,17,0,Math.PI*2); ctx.fill();
+    // cheek patch
+    ctx.fillStyle='#dfe98f';
+    ctx.beginPath(); ctx.arc(25,-20,7,0,Math.PI*2); ctx.fill();
+    // beak (normal hooked or bent-down for ending)
+    ctx.fillStyle='#c76b1f';
+    ctx.beginPath();
+    if(opt.bentBeak){
+      ctx.moveTo(34,-26);
+      ctx.quadraticCurveTo(50,-22,46,-10);
+      ctx.quadraticCurveTo(40,-14,32,-18);
+      ctx.closePath();
+    } else {
+      ctx.moveTo(34,-27);
+      ctx.quadraticCurveTo(48,-24,44,-16);
+      ctx.quadraticCurveTo(38,-18,32,-19);
+      ctx.closePath();
+    }
+    ctx.fill();
+    // eye
+    ctx.fillStyle='#222';
+    ctx.beginPath(); ctx.arc(24,-27, opt.mood==='angry'?2.4:2.2,0,Math.PI*2); ctx.fill();
+    if(opt.mood==='angry'){
+      ctx.strokeStyle='#222'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(17,-33); ctx.lineTo(28,-31); ctx.stroke();
+    }
+    // legs
+    ctx.strokeStyle='#c76b1f'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-4,26); ctx.lineTo(-6,38); ctx.moveTo(8,26); ctx.lineTo(10,38); ctx.stroke();
+
+    if(opt.carry){
+      // shoulder pole with rice sacks
+      ctx.save();
+      ctx.strokeStyle='#8a5a2f'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(-40,-18); ctx.lineTo(48,-30); ctx.stroke();
+      ctx.restore();
+      drawRiceSack(ctx,-40,-4,0.5);
+      drawRiceSack(ctx,50,-16,0.5);
+    }
+    ctx.restore();
+  }
+
+  function drawBetetWalking(ctx,x,y,scale,t){
+    let bob = Math.sin(t/180)*4;
+    drawBetet(ctx,x,y+bob,scale,{mood:'normal',carry:true});
+  }
+
+  // Gelatik = Java sparrow: grey body, black head, white cheek, pink/red beak
+  function drawGelatik(ctx,x,y,scale,opt){
+    opt = opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    // tail
+    ctx.fillStyle='#2b2b2b';
+    ctx.beginPath(); ctx.moveTo(20,8); ctx.lineTo(48,4); ctx.lineTo(46,20); ctx.closePath(); ctx.fill();
+    // body
+    ctx.fillStyle='#9aa1ab';
+    ctx.beginPath(); ctx.ellipse(0,0,24,26,0,0,Math.PI*2); ctx.fill();
+    // belly
+    ctx.fillStyle='#e7c9c4';
+    ctx.beginPath(); ctx.ellipse(-2,8,13,13,0,0,Math.PI*2); ctx.fill();
+    // teleh (neck pouch) for ending
+    if(opt.teleh){
+      ctx.fillStyle='#8a919c';
+      ctx.beginPath(); ctx.ellipse(-14,-16,10,8,0.3,0,Math.PI*2); ctx.fill();
+    }
+    // wing
+    ctx.fillStyle='#6f7680';
+    ctx.beginPath(); ctx.ellipse(2,4,9,17,0.2,0,Math.PI*2); ctx.fill();
+    // head
+    ctx.fillStyle='#2b2b2b';
+    ctx.beginPath(); ctx.arc(-18,-20,15,0,Math.PI*2); ctx.fill();
+    // cheek patch white
+    ctx.fillStyle='#f2ece2';
+    ctx.beginPath(); ctx.ellipse(-22,-16,7,8,0,0,Math.PI*2); ctx.fill();
+    // beak pink/red - animated pecking
+    ctx.fillStyle='#e0575a';
+    let peckOpen = 0;
+    if(opt.peck!==undefined){ peckOpen = (Math.sin(opt.peck/90)+1)/2 * 4; }
+    ctx.beginPath();
+    ctx.moveTo(-30,-22);
+    ctx.lineTo(-42,-19+peckOpen);
+    ctx.lineTo(-30,-16);
+    ctx.closePath(); ctx.fill();
+    // eye
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(-20,-23,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.beginPath(); ctx.arc(-19.5,-23,1.6,0,Math.PI*2); ctx.fill();
+    if(opt.mood==='scared'){
+      ctx.strokeStyle='#111'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(-26,-31); ctx.lineTo(-16,-29); ctx.stroke();
+    }
+    // legs
+    ctx.strokeStyle='#e0575a'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(-4,24); ctx.lineTo(-6,34); ctx.moveTo(6,24); ctx.lineTo(8,34); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSpeechBubble(ctx,x,y,txt){
+    ctx.save();
+    ctx.fillStyle='#fffaf0'; ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.ellipse(x,y,22,18,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#3a2b1c'; ctx.font='bold 20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(txt,x,y+1);
+    ctx.restore();
+  }
+
+  function drawFightScene(ctx,w,h,progress){
+    // Betet pulling Gelatik's neck; Gelatik swinging pole at Betet's beak
+    let pull = Math.min(1,progress);
+    let bx = w*0.35, by = h*0.55;
+    let gx = w*0.62 - pull*30, gy = h*0.55;
+    drawBetet(ctx,bx,by,1.05,{mood:'angry'});
+    // arm/beak reaching toward gelatik neck
+    ctx.save();
+    ctx.strokeStyle='#c76b1f'; ctx.lineWidth=4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(bx+40,by-24); ctx.lineTo(gx-14,gy-18); ctx.stroke();
+    ctx.restore();
+    let telehAmt = pull;
+    drawGelatik(ctx,gx,gy,1,{mood:'scared', teleh: telehAmt>0.4});
+    // pole swinging toward betet beak near end
+    if(pull>0.6){
+      ctx.save();
+      ctx.strokeStyle='#8a5a2f'; ctx.lineWidth=5; ctx.lineCap='round';
+      let swing = (pull-0.6)/0.4;
+      ctx.beginPath();
+      ctx.moveTo(gx-10, gy+10);
+      ctx.lineTo(bx+50 - swing*10, by-26 + swing*6);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* ---------------- Speech synthesis ---------------- */
+  function speak(text){
+    if(muted || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    currentUtterance = u;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------- Rendering scene ---------------- */
+  function renderDots(){
+    el.dots.innerHTML = '';
+    SCENES.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIdx?' active':'') + (i<sceneIdx?' done':'');
+      el.dots.appendChild(d);
+    });
+  }
+
+  function setNarration(txt){
+    el.narrationText.textContent = txt;
+  }
+
+  function clearMinigameUI(){
+    const existing = document.querySelector('.minigame-ui');
+    if(existing) existing.remove();
+  }
+
+  function goScene(idx){
+    stopSpeak();
+    clearMinigameUI();
+    sceneIdx = idx;
+    mg = null;
+    renderDots();
+    const scene = SCENES[idx];
+
+    if(scene.type === 'story'){
+      const t = scene.text[lang];
+      setNarration(t);
+      speak(t);
+      el.nextbtn.textContent = UI[lang].next;
+      el.nextbtn.disabled = false;
+      el.nextbtn.onclick = ()=>{
+        if(idx === SCENES.length-1){
+          finishStory();
+        } else {
+          goScene(idx+1);
+        }
+      };
+    } else if(scene.type === 'minigame'){
+      startMinigame(scene, idx);
+    }
+    startAnim();
+  }
+
+  function finishStory(){
+    stopSpeak();
+    el.nextbtn.textContent = UI[lang].replay;
+    el.nextbtn.disabled = false;
+    el.nextbtn.onclick = ()=>{ started=false; showOverlay(true); };
+  }
+
+  function startMinigame(scene, idx){
+    const t = scene.introText[lang];
+    setNarration(t);
+    speak(t);
+    el.nextbtn.disabled = true;
+    el.nextbtn.textContent = UI[lang].next;
+
+    mg = { score:0, progress:0, startTime: performance.now(), done:false };
+
+    const uiWrap = document.createElement('div');
+    uiWrap.className = 'minigame-ui';
+
+    if(scene.kind === 'tap'){
+      const label = document.createElement('div');
+      label.className = 'prompt-label';
+      label.textContent = UI[lang].tapPrompt;
+      const meter = document.createElement('div'); meter.className='meter';
+      const fill = document.createElement('div'); fill.className='meter-fill';
+      meter.appendChild(fill);
+      const btn = document.createElement('button');
+      btn.className = 'tapbtn';
+      btn.textContent = '🌾';
+      btn.addEventListener('click', ()=>{
+        if(mg.done) return;
+        scene.onTap(mg);
+        fill.style.width = Math.min(100,(mg.score/scene.goal)*100) + '%';
+        if(mg.score >= scene.goal){ endMinigame(scene, idx); }
+      });
+      uiWrap.appendChild(label);
+      uiWrap.appendChild(meter);
+      uiWrap.appendChild(btn);
+    } else if(scene.kind === 'hold'){
+      const label = document.createElement('div');
+      label.className = 'prompt-label';
+      label.textContent = UI[lang].holdPrompt;
+      const meter = document.createElement('div'); meter.className='meter';
+      const fill = document.createElement('div'); fill.className='meter-fill';
+      meter.appendChild(fill);
+      const btn = document.createElement('button');
+      btn.className = 'tapbtn';
+      btn.textContent = '💪';
+      let holding = false;
+      let lastT = null;
+      function step(now){
+        if(holding && !mg.done){
+          const dt = lastT ? now-lastT : 16;
+          lastT = now;
+          scene.onHold(mg, dt);
+          fill.style.width = (mg.progress*100)+'%';
+          if(mg.progress >= 1){ endMinigame(scene, idx); return; }
+          requestAnimationFrame(step);
+        } else {
+          lastT = null;
+        }
+      }
+      const startHold = (e)=>{ e.preventDefault(); if(mg.done) return; holding=true; lastT=null; requestAnimationFrame(step); };
+      const endHold = ()=>{ holding=false; };
+      btn.addEventListener('mousedown', startHold);
+      btn.addEventListener('touchstart', startHold, {passive:false});
+      window.addEventListener('mouseup', endHold);
+      btn.addEventListener('touchend', endHold);
+      uiWrap.appendChild(label);
+      uiWrap.appendChild(meter);
+      uiWrap.appendChild(btn);
+    }
+
+    document.getElementById('stage-wrap').appendChild(uiWrap);
+
+    // safety timeout auto-complete
+    mg.timeout = setTimeout(()=>{ if(!mg.done) endMinigame(scene, idx); }, scene.duration + 4000);
+  }
+
+  function endMinigame(scene, idx){
+    if(mg.done) return;
+    mg.done = true;
+    if(mg.timeout) clearTimeout(mg.timeout);
+    clearMinigameUI();
+    const t = scene.resultText[lang];
+    setNarration(t);
+    speak(t);
+    el.nextbtn.disabled = false;
+    el.nextbtn.textContent = UI[lang].next;
+    el.nextbtn.onclick = ()=>{
+      if(idx === SCENES.length-1){ finishStory(); } else { goScene(idx+1); }
+    };
+  }
+
+  /* ---------------- Canvas animation loop ---------------- */
+  function startAnim(){
+    if(animFrame) cancelAnimationFrame(animFrame);
+    animStart = performance.now();
+    function frame(now){
+      const t = now - animStart;
+      const scene = SCENES[sceneIdx];
+      ctx.clearRect(0,0,el.canvas.width, el.canvas.height);
+      try{
+        scene.draw(ctx, el.canvas.width, el.canvas.height, t, mg||{});
+      }catch(e){ /* fail-safe */ }
+      animFrame = requestAnimationFrame(frame);
+    }
+    animFrame = requestAnimationFrame(frame);
+  }
+
+  /* ---------------- Overlay / Start ---------------- */
+  function showOverlay(show){
+    if(show){
+      el.overlay.classList.remove('hidden');
+      stopSpeak();
+      if(animFrame) cancelAnimationFrame(animFrame);
+      ctx.clearRect(0,0,el.canvas.width,el.canvas.height);
+      drawGreenSky(ctx, el.canvas.width, el.canvas.height);
+      drawGround(ctx, el.canvas.width, el.canvas.height);
+      drawBigTree(ctx, el.canvas.width, el.canvas.height);
+      drawBetet(ctx, el.canvas.width*0.3, el.canvas.height*0.55,1,{mood:'normal'});
+      drawGelatik(ctx, el.canvas.width*0.66, el.canvas.height*0.55,1,{mood:'normal'});
+    } else {
+      el.overlay.classList.add('hidden');
+    }
+  }
+
+  /* ---------------- Apply language / labels ---------------- */
+  function applyLangUI(){
+    document.documentElement.lang = lang;
+    el.titleText.textContent = UI[lang].title;
+    el.ovTitle.textContent = UI[lang].title;
+    el.ovDesc.textContent = UI[lang].subtitle;
+    el.startBtn.textContent = started ? UI[lang].replay : UI[lang].start;
+    el.footerText.textContent = UI[lang].footer;
+    el.langBtn.textContent = UI[lang].langBtnShows;
+  }
+
+  function toggleLang(){
+    lang = lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+    if(sceneIdx>=0 && SCENES[sceneIdx]){
+      const scene = SCENES[sceneIdx];
+      if(scene.type==='story'){
+        setNarration(scene.text[lang]);
+        speak(scene.text[lang]);
+        el.nextbtn.textContent = (sceneIdx===SCENES.length-1 && el.nextbtn.textContent===UI[lang==='id'?'en':'id'].replay) ? UI[lang].replay : UI[lang].next;
+      } else if(scene.type==='minigame' && mg && !mg.done){
+        setNarration(scene.introText[lang]);
+        speak(scene.introText[lang]);
+      } else if(scene.type==='minigame' && mg && mg.done){
+        setNarration(scene.resultText[lang]);
+      }
+    }
+  }
+
+  /* ---------------- Mute ---------------- */
+  function applyMuteUI(){
+    el.muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+  function toggleMute(){
+    muted = !muted;
+    localStorage.setItem('bgb_muted', muted ? '1':'0');
+    applyMuteUI();
+    if(muted) stopSpeak();
+    else if(sceneIdx>=0){
+      const scene = SCENES[sceneIdx];
+      if(scene.type==='story') speak(scene.text[lang]);
+      else if(scene.type==='minigame' && mg && !mg.done) speak(scene.introText[lang]);
+    }
+  }
+
+  /* ---------------- Resize to parent (postMessage) ---------------- */
+  function reportHeight(){
+    const h = el.app.getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'bgb-resize', height: Math.ceil(h) + 4 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', ()=>{ resizeCanvas(); reportHeight(); });
+  if('ResizeObserver' in window){
+    new ResizeObserver(reportHeight).observe(el.app);
+  } else {
+    setInterval(reportHeight, 800);
+  }
+
+  function resizeCanvas(){
+    const ratio = 420/700;
+    const w = el.canvas.clientWidth || 700;
+    // keep internal resolution stable for crisp drawing
+    el.canvas.width = 700;
+    el.canvas.height = 420;
+  }
+
+  /* ---------------- Init ---------------- */
+  el.startBtn.addEventListener('click', ()=>{
+    started = true;
+    showOverlay(false);
+    goScene(0);
+    applyLangUI();
+    reportHeight();
+  });
+  el.langBtn.addEventListener('click', toggleLang);
+  el.muteBtn.addEventListener('click', toggleMute);
+
+  applyMuteUI();
+  applyLangUI();
+  showOverlay(true);
+  resizeCanvas();
+  setTimeout(reportHeight, 300);
+
+})();
+</script>
+</body>
+</html>
