@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Paduan Nama yang Baik - Cerita Interaktif</title>
+<style>
+  :root{
+    --pnb-cream:#f6ecd9;
+    --pnb-ink:#3b2618;
+    --pnb-brown:#5c3d24;
+    --pnb-gold:#c99a3f;
+    --pnb-gold-light:#e6c473;
+    --pnb-red:#a53d2e;
+    --pnb-green:#5c7a4a;
+    --pnb-sky:#f0d9a8;
+    --pnb-sky2:#e8b878;
+    --pnb-night:#2a2444;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:transparent;
+    color:var(--pnb-ink);
+    display:flex;
+    justify-content:center;
+  }
+  #pnb-app{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding:10px;
+  }
+  #pnb-card{
+    background:linear-gradient(180deg,#fffaf0,var(--pnb-cream));
+    border:3px solid var(--pnb-gold);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 6px 24px rgba(59,38,24,0.25);
+  }
+  #pnb-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 12px;
+    background:var(--pnb-brown);
+  }
+  #pnb-dots{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .pnb-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    transition:background .25s, transform .25s;
+  }
+  .pnb-dot.pnb-active{
+    background:var(--pnb-gold-light);
+    transform:scale(1.3);
+  }
+  .pnb-dot.pnb-done{
+    background:#fff;
+  }
+  #pnb-controls{
+    display:flex;
+    gap:8px;
+  }
+  .pnb-iconbtn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fff;
+    border-radius:8px;
+    padding:5px 10px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1.2;
+  }
+  .pnb-iconbtn:hover{background:rgba(255,255,255,0.25);}
+
+  #pnb-stage-wrapper{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  #pnb-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:8/5;
+    overflow:hidden;
+  }
+  #pnb-canvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  #pnb-overlay{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .pnb-overlay-btn{
+    pointer-events:auto;
+    position:absolute;
+    cursor:pointer;
+    font-family:inherit;
+  }
+
+  /* start / end screens */
+  .pnb-screen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:linear-gradient(160deg,#2a2444,#5c3d24 85%);
+    color:var(--pnb-cream);
+    padding:24px;
+    gap:14px;
+  }
+  .pnb-screen h1{
+    margin:0;
+    font-size:clamp(20px,5vw,30px);
+    color:var(--pnb-gold-light);
+    text-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  .pnb-screen p{
+    margin:0;
+    max-width:480px;
+    font-size:clamp(13px,3vw,16px);
+    line-height:1.5;
+    opacity:0.92;
+  }
+  .pnb-hidden{display:none !important;}
+
+  #pnb-caption-wrap{
+    padding:12px 16px 4px 16px;
+    min-height:64px;
+  }
+  #pnb-caption{
+    background:#fff8ec;
+    border:1px solid var(--pnb-gold);
+    border-radius:12px;
+    padding:10px 14px;
+    font-size:14px;
+    line-height:1.55;
+    color:var(--pnb-ink);
+  }
+  #pnb-instruction{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--pnb-red);
+    padding:4px 16px 0 16px;
+    min-height:20px;
+  }
+  #pnb-instruction::before{
+    content:"👉";
+  }
+
+  #pnb-bottombar{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:12px 16px 16px 16px;
+  }
+  .pnb-btn{
+    background:var(--pnb-red);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:11px 26px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a2c20;
+    transition:transform .1s;
+  }
+  .pnb-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #7a2c20;}
+  .pnb-btn.pnb-gold{
+    background:var(--pnb-gold);
+    box-shadow:0 3px 0 #93701f;
+  }
+  .pnb-btn:disabled{
+    opacity:0.5;
+    cursor:default;
+    box-shadow:none;
+    transform:none;
+  }
+
+  #pnb-footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7357;
+    padding:0 16px 12px 16px;
+  }
+
+  /* on-canvas overlay buttons */
+  .pnb-pill{
+    background:var(--pnb-gold);
+    color:#3b2618;
+    border:2px solid #fff8ec;
+    border-radius:999px;
+    padding:8px 18px;
+    font-weight:700;
+    font-size:14px;
+    box-shadow:0 3px 8px rgba(0,0,0,0.35);
+  }
+  .pnb-pill:active{transform:translateY(1px);}
+
+  .pnb-progressbar-outer{
+    background:rgba(255,255,255,0.5);
+    border:2px solid #fff;
+    border-radius:999px;
+    overflow:hidden;
+    height:14px;
+  }
+  .pnb-progressbar-inner{
+    height:100%;
+    background:var(--pnb-red);
+    width:0%;
+    transition:width .08s linear;
+  }
+
+  @media (max-width:420px){
+    #pnb-caption{font-size:13px;}
+    .pnb-btn{padding:10px 20px;font-size:14px;}
+  }
+</style>
+</head>
+<body>
+<div id="pnb-app">
+  <div id="pnb-card">
+    <div id="pnb-topbar">
+      <div id="pnb-dots"></div>
+      <div id="pnb-controls">
+        <button class="pnb-iconbtn" id="pnb-lang-btn" type="button">EN</button>
+        <button class="pnb-iconbtn" id="pnb-mute-btn" type="button">🔊</button>
+      </div>
+    </div>
+    <div id="pnb-stage-wrapper">
+      <div id="pnb-stage">
+        <canvas id="pnb-canvas" width="800" height="500"></canvas>
+        <div id="pnb-overlay"></div>
+        <div class="pnb-screen" id="pnb-start-screen">
+          <h1 id="pnb-title-text">Paduan Nama yang Baik</h1>
+          <p id="pnb-desc-text">Cerita rakyat Jawa Timur tentang Lasmudin dan Mukdima, sepasang suami istri yang percaya bahwa paduan nama yang baik dapat membawa keberuntungan.</p>
+          <button class="pnb-btn pnb-gold" id="pnb-start-btn" type="button">Mulai Cerita</button>
+        </div>
+        <div class="pnb-screen pnb-hidden" id="pnb-end-screen">
+          <h1 id="pnb-end-title">Cerita Selesai</h1>
+          <p id="pnb-end-text"></p>
+          <button class="pnb-btn pnb-gold" id="pnb-replay-btn" type="button">Ulangi Cerita</button>
+        </div>
+      </div>
+    </div>
+    <div id="pnb-caption-wrap">
+      <div id="pnb-caption"></div>
+    </div>
+    <div id="pnb-instruction"></div>
+    <div id="pnb-bottombar"></div>
+    <div id="pnb-footer">Cerita Rakyat Jawa Timur • Kisah Interaktif</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- language & mute state ---------- */
+  var qs = new URLSearchParams(window.location.search);
+  var LANG_KEY = "pnb_lang_pref";
+  var MUTE_KEY = "pnb_muted_pref";
+
+  var lang = "id";
+  if(qs.get("lang") === "en"){
+    lang = "en";
+  } else {
+    var savedLang = null;
+    try{ savedLang = localStorage.getItem(LANG_KEY); }catch(e){}
+    if(savedLang === "en" || savedLang === "id"){ lang = savedLang; }
+  }
+
+  var muted = false;
+  try{
+    var savedMute = localStorage.getItem(MUTE_KEY);
+    if(savedMute === "1"){ muted = true; }
+  }catch(e){}
+
+  /* ---------- DOM refs ---------- */
+  var canvas = document.getElementById("pnb-canvas");
+  var ctx = canvas.getContext("2d");
+  var overlay = document.getElementById("pnb-overlay");
+  var captionEl = document.getElementById("pnb-caption");
+  var instructionEl = document.getElementById("pnb-instruction");
+  var bottomBar = document.getElementById("pnb-bottombar");
+  var dotsWrap = document.getElementById("pnb-dots");
+  var startScreen = document.getElementById("pnb-start-screen");
+  var endScreen = document.getElementById("pnb-end-screen");
+  var startBtn = document.getElementById("pnb-start-btn");
+  var replayBtn = document.getElementById("pnb-replay-btn");
+  var langBtn = document.getElementById("pnb-lang-btn");
+  var muteBtn = document.getElementById("pnb-mute-btn");
+  var titleText = document.getElementById("pnb-title-text");
+  var descText = document.getElementById("pnb-desc-text");
+  var endTitle = document.getElementById("pnb-end-title");
+  var endText = document.getElementById("pnb-end-text");
+
+  var W = canvas.width, H = canvas.height;
+
+  /* ---------- text dictionary ---------- */
+  var T = {
+    title:{id:"Paduan Nama yang Baik", en:"A Good Match of Names"},
+    desc:{
+      id:"Cerita rakyat Jawa Timur tentang Lasmudin dan Mukdima, sepasang suami istri yang percaya bahwa paduan nama yang baik dapat membawa keberuntungan.",
+      en:"A folktale from East Java about Lasmudin and Mukdima, a married couple who believed a good match of names could bring good fortune."
+    },
+    start:{id:"Mulai Cerita", en:"Start Story"},
+    replay:{id:"Ulangi Cerita", en:"Replay Story"},
+    next:{id:"Lanjut", en:"Next"},
+    finish:{id:"Selesai", en:"Finish"},
+    endTitle:{id:"Cerita Selesai", en:"The End"},
+    endText:{
+      id:"Pesan Moral: Rezeki dan keberuntungan bisa datang dengan cara yang tak terduga. Namun kerja keras, sikap baik, dan saling menghormati tetaplah penting dalam menjalani kehidupan berkeluarga.",
+      en:"Moral of the story: Fortune and luck can come in unexpected ways. Still, hard work, kindness, and mutual respect remain important in family life."
+    },
+    wrongHouse:{id:"Bukan rumah ini, coba rumah lain.", en:"Not this house, try another one."}
+  };
+
+  function setLang(l){
+    lang = l;
+    try{ localStorage.setItem(LANG_KEY, l); }catch(e){}
+    langBtn.textContent = (l === "id") ? "EN" : "ID";
+    titleText.textContent = T.title[l];
+    descText.textContent = T.desc[l];
+    endTitle.textContent = T.endTitle[l];
+    endText.textContent = T.endText[l];
+    renderScene(true);
+  }
+
+  function setMuted(m){
+    muted = m;
+    try{ localStorage.setItem(MUTE_KEY, m ? "1" : "0"); }catch(e){}
+    muteBtn.textContent = m ? "🔇" : "🔊";
+    if(m){ window.speechSynthesis && window.speechSynthesis.cancel(); }
+  }
+
+  langBtn.addEventListener("click", function(){
+    setLang(lang === "id" ? "en" : "id");
+  });
+  muteBtn.addEventListener("click", function(){
+    setMuted(!muted);
+  });
+
+  /* ---------- speech ---------- */
+  function speak(text){
+    if(muted) return;
+    if(!("speechSynthesis" in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = (lang === "id") ? "id-ID" : "en-US";
+      utter.rate = 0.95;
+      utter.pitch = 1.0;
+      window.speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+
+  /* ---------- resize / postMessage to parent (Blogger iframe) ---------- */
+  function reportSize(){
+    var h = document.getElementById("pnb-app").offsetHeight;
+    try{
+      window.parent.postMessage({ type:"pnb-resize", height: h + 20, id:"paduan-nama-yang-baik" }, "*");
+    }catch(e){}
+  }
+  window.addEventListener("resize", reportSize);
+
+  /* ---------- animation loop time ---------- */
+  var startTime = Date.now();
+  function now(){ return (Date.now() - startTime) / 1000; }
+
+  /* ---------- helpers for drawing ---------- */
+  function rr(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawSky(top, bottom){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawGround(color, y){
+    ctx.fillStyle = color;
+    ctx.fillRect(0, y, W, H-y);
+  }
+
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,225,150,0.55)";
+    ctx.beginPath(); ctx.arc(x,y,r*1.8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#ffdd88";
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = "#6b4a2a";
+    ctx.fillRect(-6,-10,12,50);
+    ctx.fillStyle = "#4f7a3a";
+    ctx.beginPath(); ctx.arc(0,-40,32,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#5c8a44";
+    ctx.beginPath(); ctx.arc(-16,-22,20,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,-20,20,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* simple person: head + body, colors customizable, gestures via armAngle */
+  function drawPerson(x,y,opts){
+    opts = opts || {};
+    var skin = opts.skin || "#e3b48a";
+    var shirt = opts.shirt || "#8a3a2a";
+    var pants = opts.pants || "#3b2618";
+    var scale = opts.scale || 1;
+    var flip = opts.flip ? -1 : 1;
+    var armSwing = opts.armSwing || 0;
+    var headTilt = opts.headTilt || 0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*flip, scale);
+    // legs
+    ctx.fillStyle = pants;
+    ctx.fillRect(-10,40,8,34);
+    ctx.fillRect(2,40,8,34);
+    // body
+    ctx.fillStyle = shirt;
+    rr(-14,4,28,40,8); ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt;
+    ctx.lineWidth = 9;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-12,10);
+    ctx.lineTo(-22, 26 + armSwing);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(12,10);
+    ctx.lineTo(22, 26 - armSwing);
+    ctx.stroke();
+    // hands
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(-22,26+armSwing,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(22,26-armSwing,5,0,Math.PI*2); ctx.fill();
+    // head
+    ctx.save();
+    ctx.translate(0,-6);
+    ctx.rotate(headTilt);
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fill();
+    if(opts.hair !== false){
+      ctx.fillStyle = opts.hairColor || "#2a1c12";
+      ctx.beginPath();
+      ctx.arc(0,-4,15.5,Math.PI, Math.PI*2);
+      ctx.fill();
+      if(opts.female){
+        ctx.beginPath();
+        ctx.moveTo(-15,-2);
+        ctx.quadraticCurveTo(-20,20,-12,30);
+        ctx.quadraticCurveTo(-16,0,-15,-2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(15,-2);
+        ctx.quadraticCurveTo(20,20,12,30);
+        ctx.quadraticCurveTo(16,0,15,-2);
+        ctx.fill();
+      }
+    }
+    if(opts.headwear === "blangkon"){
+      ctx.fillStyle = "#7a4a2a";
+      ctx.beginPath(); ctx.ellipse(0,-6,17,10,0,Math.PI,Math.PI*2); ctx.fill();
+      ctx.fillRect(-6,-14,10,8);
+    }
+    if(opts.headwear === "crown"){
+      ctx.fillStyle = "#e6c34a";
+      ctx.beginPath();
+      ctx.moveTo(-14,-12); ctx.lineTo(-10,-24); ctx.lineTo(-4,-14);
+      ctx.lineTo(0,-26); ctx.lineTo(4,-14); ctx.lineTo(10,-24); ctx.lineTo(14,-12);
+      ctx.closePath(); ctx.fill();
+    }
+    // face
+    ctx.fillStyle = "#2a1c12";
+    ctx.beginPath(); ctx.arc(-5,1,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,1,1.6,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "#8a3a2a";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    if(opts.smile === false){
+      ctx.moveTo(-4,8); ctx.lineTo(4,8);
+    } else {
+      ctx.arc(0,6,5,0.15*Math.PI,0.85*Math.PI);
+    }
+    ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawDoll(x,y,scale,wiggle,color){
+    scale = scale || 1;
+    wiggle = wiggle || 0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(wiggle);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color || "#c94f4f";
+    rr(-10,-4,20,30,6); ctx.fill();
+    ctx.fillStyle = "#f2e0c0";
+    ctx.beginPath(); ctx.arc(0,-14,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#2a1c12";
+    ctx.beginPath(); ctx.arc(-3,-15,1.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(3,-15,1.3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "#8a3a2a";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(0,-12,3,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+    ctx.strokeStyle = color || "#c94f4f";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(-9,2); ctx.lineTo(-18,-6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9,2); ctx.lineTo(18,-6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-5,26); ctx.lineTo(-8,38); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(5,26); ctx.lineTo(8,38); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawHouse(x,y,w,h,roofColor,wallColor,doorGlow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = wallColor || "#d8b98a";
+    ctx.fillRect(-w/2, 0, w, h);
+    ctx.fillStyle = roofColor || "#7a3a26";
+    ctx.beginPath();
+    ctx.moveTo(-w/2-10,0);
+    ctx.lineTo(0,-h*0.65);
+    ctx.lineTo(w/2+10,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = doorGlow ? "#f2c26b" : "#4a2e1a";
+    rr(-w*0.15, h*0.4, w*0.3, h*0.6, 4); ctx.fill();
+    ctx.fillStyle = "#f2e6cf";
+    rr(-w*0.4, h*0.15, w*0.16, h*0.2, 3); ctx.fill();
+    rr(w*0.24, h*0.15, w*0.16, h*0.2, 3); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(){
+    drawSky("#f6d9a0","#f0b877");
+    drawGround("#c98f4a", H*0.78);
+    // pillars
+    for(var i=0;i<2;i++){
+      var px = i===0 ? 60 : W-100;
+      ctx.fillStyle = "#e8d3a0";
+      ctx.fillRect(px, H*0.15, 40, H*0.65);
+      ctx.fillStyle = "#c9a860";
+      ctx.fillRect(px-8, H*0.13, 56, 14);
+    }
+    // arch/throne backdrop
+    ctx.fillStyle = "#b8874a";
+    ctx.beginPath();
+    ctx.moveTo(W*0.25, H*0.78);
+    ctx.quadraticCurveTo(W*0.5, H*0.15, W*0.75, H*0.78);
+    ctx.fill();
+    ctx.fillStyle = "#f0d9a8";
+    ctx.beginPath();
+    ctx.moveTo(W*0.3, H*0.78);
+    ctx.quadraticCurveTo(W*0.5, H*0.25, W*0.7, H*0.78);
+    ctx.fill();
+  }
+
+  function drawVillageBg(){
+    drawSky("#bfe3f0","#f0d9a8");
+    drawGround("#7fa85c", H*0.78);
+    drawSun(W-90,80,34);
+    drawTree(70, H*0.78, 1.1);
+    drawTree(W-60, H*0.78, 0.9);
+  }
+
+  function drawRoadBg(){
+    drawSky("#cfe8f2","#f2ddb0");
+    drawGround("#7fa85c", H*0.78);
+    ctx.fillStyle = "#d8c091";
+    ctx.beginPath();
+    ctx.moveTo(0,H); ctx.lineTo(W,H); ctx.lineTo(W*0.65,H*0.78); ctx.lineTo(W*0.35,H*0.78);
+    ctx.closePath(); ctx.fill();
+    drawTree(50,H*0.8,0.8);
+    drawTree(W-50,H*0.82,1.0);
+  }
+
+  function drawNightBg(){
+    drawSky("#241d3d","#5a3f5c");
+    drawGround("#3a2a3a", H*0.8);
+    ctx.fillStyle = "#f4e6b0";
+    ctx.beginPath(); ctx.arc(W-90,70,26,0,Math.PI*2); ctx.fill();
+    for(var i=0;i<20;i++){
+      ctx.fillStyle = "rgba(255,255,255,"+(0.3+0.5*Math.random())+")";
+      ctx.beginPath();
+      ctx.arc(Math.random()*W, Math.random()*H*0.5, 1.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  /* ================= SCENES ================= */
+  var progress = { taps:0, tapNeeded:12, holdT:0, holdNeeded:2.6, dragDone:[false,false,false,false] };
+  var sceneIndex = -1; // -1 = start screen
+  var overlayBtns = [];
+  var rafId = null;
+  var dragState = null;
+
+  function clearOverlay(){
+    overlay.innerHTML = "";
+    overlayBtns = [];
+  }
+
+  function addOverlayBtn(x,y,w,h,label,onClick,extraClass){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pnb-overlay-btn pnb-pill" + (extraClass ? " "+extraClass : "");
+    b.style.left = (x/W*100)+"%";
+    b.style.top = (y/H*100)+"%";
+    b.style.transform = "translate(-50%,-50%)";
+    if(w) b.style.minWidth = w+"px";
+    b.textContent = label;
+    b.disabled = false;
+    b.addEventListener("click", onClick);
+    overlay.appendChild(b);
+    overlayBtns.push(b);
+    return b;
+  }
+
+  function addOverlayHold(x,y,w,h,label,onComplete){
+    var wrap = document.createElement("div");
+    wrap.className = "pnb-overlay-btn";
+    wrap.style.left = (x/W*100)+"%";
+    wrap.style.top = (y/H*100)+"%";
+    wrap.style.transform = "translate(-50%,-50%)";
+    wrap.style.width = (w||160)+"px";
+    wrap.style.textAlign = "center";
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pnb-pill";
+    btn.style.width = "100%";
+    btn.textContent = label;
+
+    var barOuter = document.createElement("div");
+    barOuter.className = "pnb-progressbar-outer";
+    barOuter.style.marginTop = "6px";
+    var barInner = document.createElement("div");
+    barInner.className = "pnb-progressbar-inner";
+    barOuter.appendChild(barInner);
+
+    wrap.appendChild(btn);
+    wrap.appendChild(barOuter);
+    overlay.appendChild(wrap);
+    overlayBtns.push(btn);
+
+    var holding = false;
+    var done = false;
+    function tick(){
+      if(!holding || done) return;
+      progress.holdT += 0.04;
+      var pct = Math.min(100, (progress.holdT/progress.holdNeeded)*100);
+      barInner.style.width = pct+"%";
+      if(progress.holdT >= progress.holdNeeded){
+        done = true;
+        holding = false;
+        onComplete();
+        return;
+      }
+      requestAnimationFrame(tick);
+    }
+    function start(e){
+      e.preventDefault();
+      if(done) return;
+      holding = true;
+      requestAnimationFrame(tick);
+    }
+    function stop(){
+      holding = false;
+    }
+    btn.addEventListener("mousedown", start);
+    btn.addEventListener("touchstart", start, {passive:false});
+    btn.addEventListener("mouseup", stop);
+    btn.addEventListener("mouseleave", stop);
+    btn.addEventListener("touchend", stop);
+    return btn;
+  }
+
+  function addOverlayTapZone(x,y,r,onTap,label){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pnb-overlay-btn";
+    b.style.left = (x/W*100)+"%";
+    b.style.top = (y/H*100)+"%";
+    b.style.width = (r*2)+"px";
+    b.style.height = (r*2)+"px";
+    b.style.borderRadius = "50%";
+    b.style.background = "transparent";
+    b.style.border = "none";
+    b.style.transform = "translate(-50%,-50%)";
+    if(label){ b.setAttribute("aria-label", label); }
+    b.addEventListener("click", onTap);
+    overlay.appendChild(b);
+    overlayBtns.push(b);
+    return b;
+  }
+
+  function addOverlayDraggable(x,y,w,h,dropZones,imgKey,onDropSuccess){
+    var el = document.createElement("div");
+    el.className = "pnb-overlay-btn";
+    el.style.left = (x/W*100)+"%";
+    el.style.top = (y/H*100)+"%";
+    el.style.width = w+"px";
+    el.style.height = h+"px";
+    el.style.transform = "translate(-50%,-50%)";
+    el.style.cursor = "grab";
+    el.style.touchAction = "none";
+    el.dataset.key = imgKey;
+
+    var inner = document.createElement("canvas");
+    inner.width = w; inner.height = h;
+    inner.style.width = "100%";
+    inner.style.height = "100%";
+    el.appendChild(inner);
+    var ictx = inner.getContext("2d");
+    drawGiftIcon(ictx, w, h, imgKey);
+
+    overlay.appendChild(el);
+    overlayBtns.push(el);
+
+    var dragging = false;
+    var offX=0, offY=0;
+    var stageRect;
+
+    function pointerPos(e){
+      var t = (e.touches && e.touches[0]) ? e.touches[0] : e;
+      return {x:t.clientX, y:t.clientY};
+    }
+
+    function onDown(e){
+      e.preventDefault();
+      dragging = true;
+      stageRect = document.getElementById("pnb-stage").getBoundingClientRect();
+      el.style.cursor = "grabbing";
+      el.style.zIndex = 50;
+    }
+    function onMove(e){
+      if(!dragging) return;
+      e.preventDefault();
+      var p = pointerPos(e);
+      var relX = ((p.x - stageRect.left)/stageRect.width)*W;
+      var relY = ((p.y - stageRect.top)/stageRect.height)*H;
+      el.style.left = (relX/W*100)+"%";
+      el.style.top = (relY/H*100)+"%";
+    }
+    function onUp(e){
+      if(!dragging) return;
+      dragging = false;
+      el.style.cursor = "grab";
+      var p = pointerPos(e.changedTouches ? {clientX:e.changedTouches[0].clientX, clientY:e.changedTouches[0].clientY} : e);
+      var relX = ((p.x - stageRect.left)/stageRect.width)*W;
+      var relY = ((p.y - stageRect.top)/stageRect.height)*H;
+      var hit = false;
+      for(var i=0;i<dropZones.length;i++){
+        var dz = dropZones[i];
+        if(relX > dz.x - dz.r && relX < dz.x + dz.r && relY > dz.y - dz.r && relY < dz.y + dz.r){
+          hit = true; break;
+        }
+      }
+      if(hit){
+        el.style.transition = "opacity .3s";
+        el.style.opacity = "0";
+        setTimeout(function(){ el.remove(); }, 280);
+        onDropSuccess();
+      } else {
+        el.style.transition = "left .25s, top .25s";
+        el.style.left = (x/W*100)+"%";
+        el.style.top = (y/H*100)+"%";
+        setTimeout(function(){ el.style.transition = ""; }, 260);
+      }
+    }
+    el.addEventListener("mousedown", onDown);
+    el.addEventListener("touchstart", onDown, {passive:false});
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove, {passive:false});
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchend", onUp);
+    return el;
+  }
+
+  function drawGiftIcon(c, w, h, key){
+    c.clearRect(0,0,w,h);
+    c.save();
+    c.translate(w/2,h/2);
+    if(key === "gold"){
+      c.fillStyle = "#e6c23f";
+      c.strokeStyle = "#a5811a";
+      c.lineWidth = 2;
+      rr2(c,-w*0.32,-h*0.22,w*0.64,h*0.44,6); c.fill(); c.stroke();
+      c.fillStyle = "#fff0b0";
+      c.font = "bold "+(h*0.28)+"px sans-serif";
+      c.textAlign="center"; c.textBaseline="middle";
+      c.fillText("Au", 0, 1);
+    } else if(key === "coins"){
+      c.fillStyle = "#d9a441";
+      c.beginPath(); c.ellipse(0,h*0.15,w*0.34,h*0.28,0,0,Math.PI*2); c.fill();
+      c.fillStyle = "#c9944a";
+      rr2(c,-w*0.3,-h*0.35,w*0.6,h*0.5,10); c.fill();
+      c.strokeStyle="#8a6a2a"; c.lineWidth=2;
+      c.beginPath(); c.moveTo(-w*0.3,-h*0.05); c.lineTo(w*0.3,-h*0.05); c.stroke();
+    } else if(key === "rice"){
+      c.fillStyle = "#e8e0c8";
+      rr2(c,-w*0.3,-h*0.35,w*0.6,h*0.7,8); c.fill();
+      c.strokeStyle="#a8956a"; c.lineWidth=2;
+      c.beginPath(); c.moveTo(-w*0.3,-h*0.05); c.lineTo(w*0.3,-h*0.05); c.stroke();
+      c.fillStyle="#6b4a2a";
+      c.beginPath(); c.moveTo(-w*0.14,-h*0.35); c.lineTo(0,-h*0.48); c.lineTo(w*0.14,-h*0.35); c.closePath(); c.fill();
+    } else {
+      c.fillStyle = "#d8c26a";
+      rr2(c,-w*0.3,-h*0.32,w*0.6,h*0.64,8); c.fill();
+      c.fillStyle = "#e6d888";
+      for(var i=-1;i<=1;i++){
+        c.beginPath(); c.ellipse(i*w*0.16, -h*0.42, w*0.09,h*0.14,0,0,Math.PI*2); c.fill();
+      }
+    }
+    c.restore();
+  }
+  function rr2(c,x,y,w,h,r){
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+
+  /* -------- scene definitions -------- */
+  var scenes = [
+    {
+      key:"lamaran",
+      narration:{
+        id:"Dahulu kala, di Jawa Timur, hiduplah seorang pemuda bernama Lasmudin. Ia menyukai seorang gadis bernama Mukdima. Lasmudin pergi menemui orang pintar untuk bertanya apakah paduan nama mereka berdua akan membawa keberuntungan.",
+        en:"Once upon a time in East Java lived a young man named Lasmudin. He was fond of a girl named Mukdima. Lasmudin visited a wise man to ask whether the match of their names would bring good fortune."
+      },
+      instruction:{id:"Ketuk meja orang pintar untuk mendengar ramalannya.", en:"Tap the wise man's table to hear his prediction."},
+      revealText:{
+        id:"Orang pintar berkata: \"Paduan nama kalian sangat baik, kelak kalian akan mendapatkan keberuntungan.\"",
+        en:"The wise man said: \"Your names match very well, one day you will receive good fortune.\""
+      },
+      draw:function(t){
+        drawVillageBg();
+        drawHouse(W*0.16, H*0.5, 150, H*0.3, "#7a3a26", "#d8b98a");
+        // orang pintar duduk di meja
+        ctx.fillStyle="#8a6a3a";
+        rr(W*0.55, H*0.62, 120, 18, 3); ctx.fill();
+        ctx.fillStyle="#6b4a2a";
+        ctx.fillRect(W*0.55+8,H*0.62+18,10,H*0.14);
+        ctx.fillRect(W*0.55+102,H*0.62+18,10,H*0.14);
+        drawPerson(W*0.5, H*0.5, {shirt:"#4a6a4a", pants:"#2a2a1a", headwear:"blangkon", scale:1.0, headTilt:Math.sin(t*1.4)*0.03});
+        drawPerson(W*0.72, H*0.5, {shirt:"#8a3a2a", pants:"#3b2618", scale:1.0, female:false, headTilt:0});
+      },
+      setup:function(){
+        var revealed = false;
+        var b = addOverlayTapZone(W*0.61, H*0.66, 45, function(){
+          if(revealed) return;
+          revealed = true;
+          setCaption(scenes[sceneIndex].revealText[lang]);
+          speak(scenes[sceneIndex].revealText[lang]);
+          setInstruction("");
+          showNextButton();
+        });
+      }
+    },
+    {
+      key:"pernikahan",
+      narration:{
+        id:"Lasmudin sangat gembira. Setelah berusaha keras, ia berhasil menikahi Mukdima. Mereka kemudian tinggal bersama di rumah orang tua Mukdima.",
+        en:"Lasmudin was overjoyed. After working hard, he succeeded in marrying Mukdima. They then lived together in her parents' house."
+      },
+      instruction:{id:"Ketuk tombol Lanjut untuk melanjutkan kisah pernikahan mereka.", en:"Tap the Next button to continue the story of their marriage."},
+      draw:function(t){
+        drawVillageBg();
+        drawHouse(W*0.5, H*0.42, 220, H*0.36, "#8a4a2a", "#e6cf9a");
+        drawPerson(W*0.42, H*0.62, {shirt:"#c9a860", pants:"#f2e6cf", scale:1.05, headwear:"blangkon"});
+        drawPerson(W*0.58, H*0.62, {shirt:"#c96a8a", pants:"#f2e6cf", scale:1.05, female:true, hairColor:"#2a1c12"});
+        // sparkle
+        for(var i=0;i<6;i++){
+          var a = t*1.5 + i;
+          ctx.fillStyle = "rgba(255,220,140,"+(0.4+0.3*Math.sin(a))+")";
+          ctx.beginPath();
+          ctx.arc(W*0.5 + Math.cos(a)*70, H*0.35 + Math.sin(a)*20 - 10, 3, 0, Math.PI*2);
+          ctx.fill();
+        }
+      },
+      setup:function(){
+        showNextButton();
+      }
+    },
+    {
+      key:"boneka",
+      narration:{
+        id:"Namun, setiap hari Lasmudin hanya membuat boneka-boneka dari kain dan menggerak-gerakkannya sambil tertawa. Mertuanya menjadi kesal karena Lasmudin tidak mau bekerja.",
+        en:"But every day, Lasmudin only made cloth dolls and moved them around while laughing. His father-in-law grew annoyed because Lasmudin refused to work."
+      },
+      instruction:{id:"Ketuk boneka kain berulang kali untuk menggerakkannya seperti Lasmudin.", en:"Tap the cloth doll repeatedly to make it move, just like Lasmudin does."},
+      draw:function(t, extra){
+        drawVillageBg();
+        drawHouse(W*0.82, H*0.55, 130, H*0.28, "#7a3a26", "#d8b98a");
+        // mertua kesal di pojok
+        drawPerson(W*0.85, H*0.62, {shirt:"#3b5a3b", pants:"#2a2a1a", scale:0.85, smile:false, headTilt: -0.08});
+        // Lasmudin duduk main boneka
+        drawPerson(W*0.28, H*0.66, {shirt:"#8a3a2a", pants:"#3b2618", scale:1.0, smile:true});
+        var wig = (extra && extra.wiggle) ? Math.sin(now()*18)*0.35 : Math.sin(t*1.2)*0.05;
+        drawDoll(W*0.28, H*0.5, 1.3, wig, "#c94f4f");
+      },
+      setup:function(){
+        progress.taps = 0;
+        var needed = progress.tapNeeded;
+        var barWrap = document.createElement("div");
+        barWrap.className = "pnb-overlay-btn";
+        barWrap.style.left = "50%";
+        barWrap.style.top = "12%";
+        barWrap.style.width = "70%";
+        barWrap.style.transform = "translate(-50%,-50%)";
+        var barOuter = document.createElement("div");
+        barOuter.className = "pnb-progressbar-outer";
+        var barInner = document.createElement("div");
+        barInner.className = "pnb-progressbar-inner";
+        barOuter.appendChild(barInner);
+        barWrap.appendChild(barOuter);
+        overlay.appendChild(barWrap);
+        overlayBtns.push(barWrap);
+
+        var wiggleTimer = 0;
+        var tapZone = addOverlayTapZone(W*0.28, H*0.48, 55, function(){
+          if(progress.taps >= needed) return;
+          progress.taps++;
+          barInner.style.width = Math.min(100,(progress.taps/needed)*100)+"%";
+          currentExtra = {wiggle:true};
+          wiggleTimer = 8;
+          if(progress.taps >= needed){
+            setInstruction("");
+            showNextButton();
+          }
+        }, "boneka kain");
+
+        var origDrawExtra = drawExtraHook;
+        drawExtraHook = function(){
+          if(wiggleTimer > 0){ wiggleTimer--; return {wiggle:true}; }
+          return {wiggle:false};
+        };
+      }
+    },
+    {
+      key:"permintaan",
+      narration:{
+        id:"Mukdima mendatangi suaminya dan memintanya membantu ayahnya bekerja menyabit rumput. Namun Lasmudin tetap santai, ia yakin paduan nama mereka yang baik akan membawa keberuntungan tanpa perlu kerja keras.",
+        en:"Mukdima approached her husband and asked him to help her father cut grass. But Lasmudin stayed relaxed, confident that their good name-match would bring fortune without hard work."
+      },
+      instruction:{id:"Ketuk gelembung percakapan Lasmudin untuk mendengar jawabannya.", en:"Tap Lasmudin's speech bubble to hear his answer."},
+      revealText:{
+        id:"\"Sudahlah dik, cukup main boneka-boneka ini saja. Paduan namaku dan namamu baik, kita pasti mendapat keberuntungan.\" kata Lasmudin santai.",
+        en:"\"It's alright, dear, let's just keep playing with these dolls. Our names match well, we will surely get good fortune,\" said Lasmudin, unconcerned."
+      },
+      draw:function(t){
+        drawVillageBg();
+        drawPerson(W*0.32, H*0.62, {shirt:"#c96a8a", pants:"#f2e6cf", scale:1.0, female:true});
+        drawPerson(W*0.62, H*0.64, {shirt:"#8a3a2a", pants:"#3b2618", scale:1.0});
+        drawDoll(W*0.7, H*0.5, 0.9, Math.sin(t*3)*0.2, "#c94f4f");
+      },
+      setup:function(){
+        var revealed = false;
+        addOverlayTapZone(W*0.66, H*0.5, 60, function(){
+          if(revealed) return;
+          revealed = true;
+          setCaption(scenes[sceneIndex].revealText[lang]);
+          speak(scenes[sceneIndex].revealText[lang]);
+          setInstruction("");
+          showNextButton();
+        }, "gelembung percakapan");
+      }
+    },
+    {
+      key:"mimpi",
+      narration:{
+        id:"Di istana kerajaan, putri raja sedang sakit. Suatu malam, sang putri bermimpi melihat boneka-boneka lucu dari kain dan meminta ayahnya mencarikannya.",
+        en:"In the royal palace, the princess was ill. One night, she dreamed of cute cloth dolls and asked her father the King to find them for her."
+      },
+      instruction:{id:"Ketuk tempat tidur putri untuk melihat mimpinya.", en:"Tap the princess's bed to see her dream."},
+      revealText:{
+        id:"\"Ayah, aku bermimpi melihat boneka-boneka lucu dari kain. Tolong carikan boneka-boneka itu untukku.\" pinta sang putri.",
+        en:"\"Father, I dreamed of cute cloth dolls. Please find those dolls for me,\" the princess asked."
+      },
+      draw:function(t){
+        drawNightBg();
+        // tempat tidur
+        ctx.fillStyle = "#8a5a3a";
+        rr(W*0.32,H*0.58,W*0.36,H*0.16,8); ctx.fill();
+        ctx.fillStyle = "#f2e6cf";
+        rr(W*0.34,H*0.5,W*0.32,H*0.14,10); ctx.fill();
+        ctx.fillStyle = "#e8b0c0";
+        ctx.beginPath(); ctx.ellipse(W*0.4,H*0.5,20,12,0,0,Math.PI*2); ctx.fill();
+        drawPerson(W*0.5, H*0.5, {shirt:"#e8b0c0", pants:"#e8b0c0", scale:0.8, female:true, headwear:"crown", smile:false});
+        if(t % 2 > 1){
+          ctx.globalAlpha = 0.5 + 0.3*Math.sin(t*3);
+          drawDoll(W*0.7, H*0.3, 0.9, Math.sin(t*2)*0.3, "#c94f4f");
+          ctx.globalAlpha = 1;
+        }
+      },
+      setup:function(){
+        var revealed = false;
+        addOverlayTapZone(W*0.5, H*0.55, 60, function(){
+          if(revealed) return;
+          revealed = true;
+          setCaption(scenes[sceneIndex].revealText[lang]);
+          speak(scenes[sceneIndex].revealText[lang]);
+          setInstruction("");
+          showNextButton();
+        }, "tempat tidur");
+      }
+    },
+    {
+      key:"pencarian",
+      narration:{
+        id:"Raja mengutus prajurit untuk mencari boneka-boneka kain ke seluruh negeri. Seorang tukang sapu menunjukkan jalan menuju rumah tempat boneka-boneka itu berada.",
+        en:"The King sent soldiers to search the whole kingdom for cloth dolls. A street sweeper showed the way to the house where the dolls could be found."
+      },
+      instruction:{id:"Ketuk salah satu rumah untuk menemukan rumah Lasmudin yang benar.", en:"Tap one of the houses to find Lasmudin's correct house."},
+      draw:function(t){
+        drawRoadBg();
+        drawHouse(W*0.22, H*0.62, 110, H*0.24, "#7a3a26", "#d8b98a", false);
+        drawHouse(W*0.5, H*0.6, 120, H*0.26, "#8a4a2a", "#e6cf9a", false);
+        drawHouse(W*0.78, H*0.62, 110, H*0.24, "#6a3a26", "#c8a878", false);
+        // small doll hint hanging outside correct house (index 1 = middle)
+        drawDoll(W*0.5+40, H*0.45, 0.45, Math.sin(t*2)*0.15, "#c94f4f");
+        drawPerson(W*0.5-70, H*0.75, {shirt:"#5a5a5a", pants:"#2a2a2a", scale:0.65});
+      },
+      setup:function(){
+        var solved = false;
+        function wrong(){
+          if(solved) return;
+          setInstruction(T.wrongHouse[lang]);
+        }
+        addOverlayTapZone(W*0.22, H*0.62, 55, wrong, "rumah pertama");
+        addOverlayTapZone(W*0.78, H*0.62, 55, wrong, "rumah ketiga");
+        addOverlayTapZone(W*0.5, H*0.6, 55, function(){
+          if(solved) return;
+          solved = true;
+          setInstruction("");
+          setCaption(scenes[sceneIndex].narration[lang]);
+          showNextButton();
+        }, "rumah kedua - benar");
+      }
+    },
+    {
+      key:"putri",
+      narration:{
+        id:"Lasmudin dan boneka-bonekanya dibawa ke istana. Mertuanya mengira ia akan dihukum. Namun ketika boneka-boneka itu digerakkan di hadapan putri, sang putri tertawa gembira dan berangsur sembuh dari sakitnya.",
+        en:"Lasmudin and his dolls were brought to the palace. His father-in-law thought he would be punished. But when the dolls were moved before the princess, she laughed happily and gradually recovered from her illness."
+      },
+      instruction:{id:"Tekan dan tahan tombol untuk menggerakkan boneka hingga putri tertawa.", en:"Press and hold the button to move the doll until the princess laughs."},
+      draw:function(t, extra){
+        drawPalaceBg();
+        var pct = Math.min(1, progress.holdT/progress.holdNeeded);
+        drawPerson(W*0.68, H*0.62, {shirt:"#e8b0c0", pants:"#e8b0c0", scale:1.0, female:true, headwear:"crown", smile: pct > 0.3, headTilt: pct>0.3 ? Math.sin(t*4)*0.1 : 0});
+        drawPerson(W*0.3, H*0.65, {shirt:"#8a3a2a", pants:"#3b2618", scale:1.0});
+        var wig = extra && extra.holding ? Math.sin(now()*14)*0.4 : 0.05*Math.sin(t);
+        drawDoll(W*0.3, H*0.48, 1.1, wig, "#c94f4f");
+      },
+      setup:function(){
+        progress.holdT = 0;
+        var holdingFlag = {v:false};
+        drawExtraHook = function(){ return {holding: holdingFlag.v}; };
+        var btn = addOverlayHold(W*0.5, H*0.85, 220, 60, lang==="id" ? "Gerakkan Boneka" : "Move the Doll", function(){
+          setInstruction("");
+          setCaption((lang==="id") ? "Putri tertawa gembira melihat boneka-boneka lucu itu, dan sakitnya pun perlahan sembuh!" : "The princess laughed with joy at the funny dolls, and her illness slowly faded away!");
+          speak((lang==="id") ? "Putri tertawa gembira melihat boneka-boneka lucu itu, dan sakitnya pun perlahan sembuh!" : "The princess laughed with joy at the funny dolls, and her illness slowly faded away!");
+          showNextButton();
+        });
+        btn.addEventListener("mousedown", function(){ holdingFlag.v = true; });
+        btn.addEventListener("touchstart", function(){ holdingFlag.v = true; });
+        btn.addEventListener("mouseup", function(){ holdingFlag.v = false; });
+        btn.addEventListener("mouseleave", function(){ holdingFlag.v = false; });
+        btn.addEventListener("touchend", function(){ holdingFlag.v = false; });
+      }
+    },
+    {
+      key:"hadiah",
+      narration:{
+        id:"Raja sangat senang dan memberi Lasmudin banyak hadiah: emas, uang, beras, dan jagung. Semua hadiah itu diantar pulang menggunakan kereta istana.",
+        en:"The King was overjoyed and gave Lasmudin many gifts: gold, money, rice, and corn. All the gifts were sent home using the royal carriage."
+      },
+      instruction:{id:"Seret setiap hadiah ke dalam kereta istana.", en:"Drag each gift into the royal carriage."},
+      draw:function(t){
+        drawPalaceBg();
+        // kereta / cart
+        ctx.fillStyle = "#6b4a2a";
+        rr(W*0.55,H*0.62,W*0.28,H*0.14,8); ctx.fill();
+        ctx.fillStyle = "#4a3018";
+        ctx.beginPath(); ctx.arc(W*0.6,H*0.78,16,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(W*0.78,H*0.78,16,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#c9a860";
+        rr(W*0.56,H*0.5,W*0.26,H*0.14,6); ctx.fill();
+        drawPerson(W*0.2, H*0.68, {shirt:"#8a3a2a", pants:"#3b2618", scale:1.0});
+      },
+      setup:function(){
+        progress.dragDone = [false,false,false,false];
+        var dropZone = [{x:W*0.68,y:H*0.6,r:90}];
+        var positions = [
+          {x:W*0.18,y:H*0.35,key:"gold"},
+          {x:W*0.32,y:H*0.3,key:"coins"},
+          {x:W*0.46,y:H*0.35,key:"rice"},
+          {x:W*0.6,y:H*0.3,key:"corn"}
+        ];
+        var doneCount = 0;
+        positions.forEach(function(p, idx){
+          addOverlayDraggable(p.x, p.y, 60, 60, dropZone, p.key, function(){
+            doneCount++;
+            progress.dragDone[idx] = true;
+            if(doneCount >= positions.length){
+              setInstruction("");
+              showNextButton();
+            }
+          });
+        });
+      }
+    },
+    {
+      key:"penutup",
+      narration:{
+        id:"Pak Mukdima sangat terkejut melihat semua hadiah itu. Ia pun percaya bahwa paduan nama Lasmudin dan Mukdima memang membawa keberuntungan, dan sejak saat itu ia tak pernah lagi marah kepada Lasmudin.",
+        en:"Mukdima's father was astonished to see all the gifts. He finally believed that Lasmudin and Mukdima's name-match truly brought good fortune, and from then on he never got angry at Lasmudin again."
+      },
+      instruction:{id:"Ketuk tombol Selesai untuk menutup cerita.", en:"Tap the Finish button to close the story."},
+      draw:function(t){
+        drawVillageBg();
+        drawHouse(W*0.5, H*0.42, 220, H*0.36, "#8a4a2a", "#e6cf9a");
+        drawPerson(W*0.3, H*0.66, {shirt:"#3b5a3b", pants:"#2a2a1a", scale:1.0, smile:true, headTilt:Math.sin(t*1.2)*0.05});
+        drawPerson(W*0.5, H*0.66, {shirt:"#8a3a2a", pants:"#3b2618", scale:1.0, smile:true});
+        drawPerson(W*0.66, H*0.66, {shirt:"#c96a8a", pants:"#f2e6cf", scale:1.0, female:true, smile:true});
+        for(var i=0;i<8;i++){
+          var a = t*1.2+i;
+          ctx.fillStyle = "rgba(230,180,60,"+(0.3+0.4*Math.sin(a))+")";
+          ctx.beginPath();
+          ctx.arc(W*0.5+Math.cos(a)*90, H*0.3+Math.sin(a)*15, 3, 0, Math.PI*2);
+          ctx.fill();
+        }
+      },
+      setup:function(){
+        addOverlayBtn(W*0.5, H*0.86, 160, 40, T.finish[lang], function(){
+          showEndScreen();
+        });
+      }
+    }
+  ];
+
+  var currentExtra = null;
+  var drawExtraHook = null;
+
+  /* ---------- caption / instruction helpers ---------- */
+  function setCaption(text){ captionEl.textContent = text; }
+  function setInstruction(text){ instructionEl.textContent = text; }
+
+  function showNextButton(){
+    bottomBar.innerHTML = "";
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pnb-btn";
+    btn.disabled = false;
+    btn.textContent = T.next[lang];
+    btn.addEventListener("click", function(){
+      goToScene(sceneIndex+1);
+    });
+    bottomBar.appendChild(btn);
+  }
+
+  function clearBottomBar(){
+    bottomBar.innerHTML = "";
+  }
+
+  /* ---------- dots ---------- */
+  function buildDots(){
+    dotsWrap.innerHTML = "";
+    for(var i=0;i<scenes.length;i++){
+      var d = document.createElement("div");
+      d.className = "pnb-dot";
+      d.setAttribute("data-idx", i);
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = dotsWrap.querySelectorAll(".pnb-dot");
+    dots.forEach(function(d, i){
+      d.classList.remove("pnb-active","pnb-done");
+      if(i < sceneIndex) d.classList.add("pnb-done");
+      if(i === sceneIndex) d.classList.add("pnb-active");
+    });
+  }
+
+  /* ---------- scene transitions ---------- */
+  function goToScene(idx){
+    if(idx >= scenes.length){
+      showEndScreen();
+      return;
+    }
+    sceneIndex = idx;
+    currentExtra = null;
+    drawExtraHook = null;
+    renderScene(false);
+  }
+
+  function renderScene(langChangedOnly){
+    if(sceneIndex < 0) return;
+    var sc = scenes[sceneIndex];
+    clearOverlay();
+    clearBottomBar();
+    setCaption(sc.narration[lang]);
+    setInstruction(sc.instruction[lang]);
+    updateDots();
+    sc.setup();
+    if(!langChangedOnly){
+      speak(sc.narration[lang]);
+    }
+    reportSize();
+  }
+
+  /* ---------- render loop ---------- */
+  function loop(){
+    if(sceneIndex >= 0 && sceneIndex < scenes.length){
+      ctx.clearRect(0,0,W,H);
+      var extra = drawExtraHook ? drawExtraHook() : null;
+      scenes[sceneIndex].draw(now(), extra);
+    } else {
+      ctx.clearRect(0,0,W,H);
+      drawVillageBg();
+      drawHouse(W*0.5, H*0.46, 200, H*0.32, "#8a4a2a", "#e6cf9a");
+      drawDoll(W*0.7, H*0.55, 1.0, Math.sin(now()*1.5)*0.15, "#c94f4f");
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+  loop();
+
+  /* ---------- start / end ---------- */
+  startBtn.addEventListener("click", function(){
+    startScreen.classList.add("pnb-hidden");
+    buildDots();
+    goToScene(0);
+  });
+
+  function showEndScreen(){
+    clearOverlay();
+    clearBottomBar();
+    setInstruction("");
+    setCaption("");
+    sceneIndex = scenes.length;
+    updateDots();
+    endScreen.classList.remove("pnb-hidden");
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    reportSize();
+  }
+
+  replayBtn.addEventListener("click", function(){
+    endScreen.classList.add("pnb-hidden");
+    progress = { taps:0, tapNeeded:12, holdT:0, holdNeeded:2.6, dragDone:[false,false,false,false] };
+    goToScene(0);
+  });
+
+  /* ---------- init ---------- */
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+  langBtn.textContent = (lang === "id") ? "EN" : "ID";
+  setLang(lang);
+  setTimeout(reportSize, 300);
+  new MutationObserver(reportSize).observe(document.getElementById("pnb-app"), {childList:true, subtree:true, attributes:true});
+})();
+</script>
+</body>
+</html>
