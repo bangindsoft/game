@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hai Hai Aku Sudah Tahu</title>
+<style>
+  :root{
+    --cream:#fbf1dc;
+    --cream2:#f3e2bb;
+    --gold:#c9962c;
+    --gold-dark:#a5741c;
+    --maroon:#7a2e2e;
+    --maroon-dark:#5c2020;
+    --green:#4f6f3d;
+    --ink:#3b2a1a;
+    --sky1:#fbead0;
+    --sky2:#f3cf9a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  .game-wrap{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,#fffaf0,var(--cream2));
+    border:3px solid var(--gold);
+    border-radius:18px;
+    box-shadow:0 6px 18px rgba(90,50,10,0.18);
+    overflow:hidden;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    background:var(--maroon);
+    color:#fff8ec;
+  }
+  .topbar .title{
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  .topbar .controls{
+    display:flex;
+    gap:6px;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fff8ec;
+    border-radius:8px;
+    padding:5px 9px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background 0.15s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.28);}
+  .icon-btn.active{background:var(--gold);border-color:var(--gold-dark);color:#3b2a1a;}
+
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 8px 4px 8px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d9c49a;
+    border:1px solid var(--gold-dark);
+    transition:all 0.25s;
+    cursor:default;
+  }
+  .dot.done{background:var(--green);border-color:var(--green);}
+  .dot.current{background:var(--maroon);border-color:var(--maroon-dark);transform:scale(1.35);}
+
+  .stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:800/450;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+    overflow:hidden;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .narration-box{
+    margin:10px 14px 4px 14px;
+    background:#fffaf0;
+    border:1.5px solid var(--gold);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:14.5px;
+    line-height:1.55;
+    min-height:64px;
+    color:var(--ink);
+  }
+
+  .action-area{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    padding:12px 14px 18px 14px;
+  }
+
+  .btn{
+    border:none;
+    border-radius:30px;
+    padding:11px 26px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--maroon);
+    color:#fff8ec;
+    box-shadow:0 3px 0 var(--maroon-dark);
+    transition:transform 0.08s;
+    user-select:none;
+    touch-action:manipulation;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--maroon-dark);}
+  .btn.secondary{
+    background:var(--gold);
+    color:var(--ink);
+    box-shadow:0 3px 0 var(--gold-dark);
+  }
+  .btn:disabled{opacity:0.5;cursor:default;}
+
+  .hint{
+    font-size:12.5px;
+    color:#7a6a4f;
+    text-align:center;
+  }
+
+  .progress-track{
+    width:100%;
+    max-width:340px;
+    height:16px;
+    background:#e6d3a6;
+    border:1.5px solid var(--gold-dark);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--maroon));
+    transition:width 0.08s linear;
+  }
+
+  .footer{
+    text-align:center;
+    font-size:11px;
+    color:#9a8a6c;
+    padding:8px 8px 12px 8px;
+  }
+
+  .lang-toggle-group{display:flex;gap:2px;}
+  .lang-toggle-group .icon-btn{padding:5px 8px;}
+
+  @media (max-width:420px){
+    .narration-box{font-size:13.5px;padding:10px 12px;}
+    .btn{padding:10px 20px;font-size:14px;}
+  }
+</style>
+</head>
+<body>
+<div class="game-wrap" id="gameWrap">
+  <div class="topbar">
+    <div class="title" id="gameTitle">Hai Hai Aku Sudah Tahu</div>
+    <div class="controls">
+      <div class="lang-toggle-group">
+        <button class="icon-btn" id="btnLangId">ID</button>
+        <button class="icon-btn" id="btnLangEn">EN</button>
+      </div>
+      <button class="icon-btn" id="btnMute">🔊</button>
+    </div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="stage">
+    <canvas id="canvas" width="800" height="450"></canvas>
+  </div>
+
+  <div class="narration-box" id="narrationBox"></div>
+
+  <div class="action-area" id="actionArea"></div>
+
+  <div class="footer" id="footerText">Cerita Rakyat Jawa Timur • Interaktif</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var STORAGE_MUTE = "hhast_muted";
+  var STORAGE_LANG = "hhast_lang";
+
+  var params = new URLSearchParams(window.location.search);
+  var urlLang = params.get("lang");
+
+  var state = {
+    lang: (urlLang === "en" || urlLang === "id") ? urlLang : (localStorage.getItem(STORAGE_LANG) || "id"),
+    muted: localStorage.getItem(STORAGE_MUTE) === "1",
+    sceneIndex: -1, // -1 = title screen
+    visited: [],
+    holding: false,
+    holdProgress: 0,
+    holdRAF: null,
+    mashProgress: 0,
+    mashDecayRAF: null,
+    walkProgress: 0,
+    peopleAsked: [0,0,0],
+    voices: [],
+  };
+
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext("2d");
+  var narrationBox = document.getElementById("narrationBox");
+  var actionArea = document.getElementById("actionArea");
+  var dotsEl = document.getElementById("dots");
+  var gameTitle = document.getElementById("gameTitle");
+  var footerText = document.getElementById("footerText");
+  var btnMute = document.getElementById("btnMute");
+  var btnLangId = document.getElementById("btnLangId");
+  var btnLangEn = document.getElementById("btnLangEn");
+
+  /* ---------------------------------------------------------
+     TEXT CONTENT
+  --------------------------------------------------------- */
+  var UI = {
+    id: {
+      title: "Hai Hai Aku Sudah Tahu",
+      footer: "Cerita Rakyat Jawa Timur • Interaktif",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      hold: "Tahan untuk Menghafal",
+      holdHint: "Tekan dan tahan tombol untuk menghafalkan aji-aji",
+      walk: "Ketuk untuk Melangkah",
+      walkHint: "Ketuk tombol untuk berjalan menuju ibu kota",
+      ask: "Minta Makanan",
+      askHint: "Ketuk warga untuk meminta makanan",
+      mash: "Rapalkan Aji-Aji!",
+      mashHint: "Ketuk tombol dengan cepat untuk merapalkan mantra",
+      moral: "Pesan Moral: Patuhilah nasihat orang tua, sebab kebaikan hati akan selalu membawa berkah.",
+      titleScreenDesc: "Sebuah dongeng rakyat dari Jawa Timur tentang seorang anak yatim piatu yang patuh pada nasihat ayahnya.",
+    },
+    en: {
+      title: "Hai Hai I Already Know",
+      footer: "Folktale from East Java • Interactive",
+      start: "Start Story",
+      replay: "Replay Story",
+      next: "Continue",
+      hold: "Hold to Memorize",
+      holdHint: "Press and hold the button to memorize the magic words",
+      walk: "Tap to Walk",
+      walkHint: "Tap the button to walk toward the capital city",
+      ask: "Ask for Food",
+      askHint: "Tap the villagers to ask for food",
+      mash: "Recite the Words!",
+      mashHint: "Tap the button quickly to recite the magic phrase",
+      moral: "Moral: Always obey your parents' advice, for a kind heart always brings blessings.",
+      titleScreenDesc: "A folktale from East Java about an orphaned boy who obeyed his father's advice.",
+    }
+  };
+
+  var SCENES = [
+    {
+      id: "wasiat",
+      type: "hold",
+      text: {
+        id: "Suatu hari, sang kakek memanggil anaknya. \u201cNak, kemarilah. Ayah akan mewariskan ilmu kepadamu. Hafalkanlah aji-aji ini baik-baik: Hai Hai Aku Sudah Tahu. Kelak, kata-kata ini akan memberimu kemuliaan.\u201d Anak itu menghafalkannya sungguh-sungguh, meski air matanya menetes mendengar penjelasan ayahnya.",
+        en: "One day, the old man called his son. \u201cCome here, my child. I will pass down my knowledge to you. Memorize these words well: Hai Hai I Already Know. One day, these words will bring you honor.\u201d The boy memorized it earnestly, tears falling as he listened to his father."
+      }
+    },
+    {
+      id: "kepergian",
+      type: "walk",
+      text: {
+        id: "Tiga hari kemudian, sang kakek berpulang. Anak itu kini menjadi yatim piatu. Untuk mengobati kesedihannya, ia memutuskan merantau ke ibu kota kerajaan. Sepanjang perjalanan yang jauh, ia terus merapalkan aji-aji dari ayahnya, walau tak tahu apa gunanya.",
+        en: "Three days later, the old man passed away. The boy was now an orphan. To ease his sorrow, he decided to travel to the kingdom's capital. Throughout the long journey, he kept reciting his father's words, though he did not know their purpose."
+      }
+    },
+    {
+      id: "ibukota",
+      type: "ask",
+      text: {
+        id: "Setibanya di ibu kota, ia sangat lelah dan lapar. Ia mencoba meminta makanan kepada orang-orang yang ditemuinya, namun tak seorang pun mau memberinya. Dengan tubuh lunglai, ia duduk beristirahat di depan seorang tukang cukur yang sedang bekerja.",
+        en: "Upon arriving in the capital, he was exhausted and hungry. He tried asking passersby for food, but no one would give him any. Weary, he sat down to rest in front of a barber who was busy at work."
+      }
+    },
+    {
+      id: "ajisakti",
+      type: "mash",
+      text: {
+        id: "Tanpa disadarinya, tukang cukur itu sedang mencukur sang raja! Karena lapar, haus, dan lelah, anak itu teringat pesan ayahnya. Ia pun merapalkan aji-aji: \u201cHai Hai Aku Sudah Tahu!\u201d",
+        en: "Unknowingly, the barber was shaving the king himself! Hungry, thirsty, and tired, the boy remembered his father's words. He recited the magic phrase: \u201cHai Hai I Already Know!\u201d"
+      }
+    },
+    {
+      id: "pengakuan",
+      type: "narrative",
+      text: {
+        id: "Mendengar kata-kata itu, tukang cukur langsung gemetar dan wajahnya pucat pasi. Ia bersujud di hadapan raja. \u201cAmpun, Baginda! Hamba disuruh Patih untuk membunuh Baginda. Sepertinya anak itu telah mengetahui rencana jahat ini!\u201d Raja pun terkejut mendengar pengakuan tersebut.",
+        en: "Hearing those words, the barber trembled and turned pale. He fell to his knees before the king. \u201cForgive me, Your Majesty! The Prime Minister ordered me to kill you. It seems this boy already knew of the wicked plan!\u201d The king was shocked to hear the confession."
+      }
+    },
+    {
+      id: "ending",
+      type: "ending",
+      text: {
+        id: "Sang raja segera memerintahkan pengawalnya menangkap tukang cukur dan Patih yang berkhianat. Ia lalu memanggil anak itu, \u201cTerima kasih, Nak. Engkau telah menyelamatkan hidupku.\u201d Sebagai balas jasa, raja memberinya banyak hadiah. Berkat kepatuhannya pada nasihat sang ayah, anak yatim piatu itu pun hidup berkecukupan selamanya.",
+        en: "The king ordered his guards to arrest the treacherous barber and the Prime Minister. He then called the boy over, \u201cThank you, my child. You have saved my life.\u201d As a reward, the king gave him many gifts. Because he obeyed his father's advice, the orphaned boy lived comfortably ever after."
+      }
+    }
+  ];
+
+  var INTRO_TEXT = {
+    id: "Pada zaman dahulu, hiduplah seorang kakek miskin bersama anak laki-lakinya yang masih kecil. Istrinya sudah lama meninggal dunia. Sang kakek sering bersedih memikirkan nasib anaknya kelak, sebab ia merasa hidupnya tak akan lama lagi.",
+    en: "Once upon a time, there lived a poor old man with his young son. His wife had passed away long ago. The old man often felt sad thinking about his son's future, for he sensed his own life would not last much longer."
+  };
+
+  /* ---------------------------------------------------------
+     SPEECH
+  --------------------------------------------------------- */
+  function loadVoices(){
+    state.voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function speak(text){
+    if (!window.speechSynthesis || state.muted || !text) return;
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    var wantLang = state.lang === "en" ? "en" : "id";
+    var chosen = null;
+    for (var i=0;i<state.voices.length;i++){
+      if (state.voices[i].lang && state.voices[i].lang.toLowerCase().indexOf(wantLang) === 0){
+        chosen = state.voices[i];
+        break;
+      }
+    }
+    if (chosen) utter.voice = chosen;
+    utter.lang = wantLang === "en" ? "en-US" : "id-ID";
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    window.speechSynthesis.speak(utter);
+  }
+  function stopSpeak(){
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------------------------------------------------
+     DRAWING HELPERS
+  --------------------------------------------------------- */
+  function clear(){
+    ctx.clearRect(0,0,800,450);
+  }
+  function sky(topColor,botColor){
+    var g = ctx.createLinearGradient(0,0,0,450);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,800,450);
+  }
+  function ground(y,color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,y,800,450-y);
+  }
+  function sun(x,y,r){
+    ctx.fillStyle = "rgba(255,224,150,0.9)";
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#ffd166";
+    ctx.beginPath(); ctx.arc(x,y,r*0.62,0,Math.PI*2); ctx.fill();
+  }
+  function cloud(x,y,s){
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.arc(x,y,18*s,0,Math.PI*2);
+    ctx.arc(x+22*s,y-10*s,22*s,0,Math.PI*2);
+    ctx.arc(x+46*s,y,16*s,0,Math.PI*2);
+    ctx.fill();
+  }
+  function tree(x,y,s){
+    ctx.fillStyle = "#6b4226";
+    ctx.fillRect(x-4*s,y-10*s,8*s,30*s);
+    ctx.fillStyle = "#4f6f3d";
+    ctx.beginPath();
+    ctx.arc(x,y-20*s,20*s,0,Math.PI*2);
+    ctx.arc(x-14*s,y-8*s,16*s,0,Math.PI*2);
+    ctx.arc(x+14*s,y-8*s,16*s,0,Math.PI*2);
+    ctx.fill();
+  }
+  function hut(x,y,s){
+    ctx.fillStyle = "#a97a4b";
+    ctx.fillRect(x-30*s,y-30*s,60*s,30*s);
+    ctx.fillStyle = "#7a5230";
+    ctx.beginPath();
+    ctx.moveTo(x-40*s,y-30*s);
+    ctx.lineTo(x,y-58*s);
+    ctx.lineTo(x+40*s,y-30*s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#3b2a1a";
+    ctx.fillRect(x-8*s,y-18*s,16*s,18*s);
+  }
+  // simple person: head circle, body, arms, legs. color customizable
+  function person(x,y,s,opts){
+    opts = opts || {};
+    var skin = opts.skin || "#e8b98a";
+    var shirt = opts.shirt || "#b5451b";
+    var pants = opts.pants || "#5c4326";
+    var headR = 11*s;
+    ctx.save();
+    ctx.translate(x,y);
+    if (opts.rotate) ctx.rotate(opts.rotate);
+    // legs
+    ctx.strokeStyle = pants;
+    ctx.lineWidth = 6*s;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-6*s,20*s); ctx.lineTo(-8*s,40*s);
+    ctx.moveTo(6*s,20*s); ctx.lineTo(8*s,40*s);
+    ctx.stroke();
+    // body
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-12*s,0);
+    ctx.quadraticCurveTo(0,-6*s,12*s,0);
+    ctx.lineTo(10*s,22*s);
+    ctx.lineTo(-10*s,22*s);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt;
+    ctx.lineWidth = 5*s;
+    if (opts.armsUp){
+      ctx.beginPath();
+      ctx.moveTo(-10*s,2*s); ctx.lineTo(-18*s,-14*s);
+      ctx.moveTo(10*s,2*s); ctx.lineTo(18*s,-14*s);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(-10*s,2*s); ctx.lineTo(-14*s,18*s);
+      ctx.moveTo(10*s,2*s); ctx.lineTo(14*s,18*s);
+      ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-headR-2*s,headR,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = opts.hair || "#2b1c10";
+    ctx.beginPath();
+    ctx.arc(0,-headR-4*s,headR*1.02,Math.PI,Math.PI*2);
+    ctx.fill();
+    if (opts.old){
+      ctx.fillStyle = "#eee7d8";
+      ctx.beginPath();
+      ctx.arc(0,-headR-4*s,headR*1.02,Math.PI,Math.PI*2);
+      ctx.fill();
+      // beard
+      ctx.fillStyle = "#d8d0bd";
+      ctx.beginPath();
+      ctx.arc(0,-headR+6*s,headR*0.7,0,Math.PI);
+      ctx.fill();
+    }
+    if (opts.crown){
+      ctx.fillStyle = "#d4a017";
+      ctx.beginPath();
+      ctx.moveTo(-11*s,-headR-14*s);
+      ctx.lineTo(-6*s,-headR-24*s);
+      ctx.lineTo(0,-headR-16*s);
+      ctx.lineTo(6*s,-headR-24*s);
+      ctx.lineTo(11*s,-headR-14*s);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // face
+    ctx.fillStyle = "#2b1c10";
+    ctx.beginPath();
+    ctx.arc(-4*s,-headR-2*s,1.4*s,0,Math.PI*2);
+    ctx.arc(4*s,-headR-2*s,1.4*s,0,Math.PI*2);
+    ctx.fill();
+    if (opts.sad){
+      ctx.strokeStyle = "#2b1c10";
+      ctx.lineWidth = 1.2*s;
+      ctx.beginPath();
+      ctx.arc(0,-headR+6*s,4*s,Math.PI*1.15,Math.PI*1.85,true);
+      ctx.stroke();
+    } else if (opts.scared){
+      ctx.fillStyle = "#2b1c10";
+      ctx.beginPath();
+      ctx.arc(0,-headR+7*s,2.2*s,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = "#2b1c10";
+      ctx.lineWidth = 1.2*s;
+      ctx.beginPath();
+      ctx.arc(0,-headR+2*s,4*s,Math.PI*0.15,Math.PI*0.85,false);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function pathRoad(){
+    ctx.fillStyle = "#d9c49a";
+    ctx.beginPath();
+    ctx.moveTo(0,420);
+    ctx.quadraticCurveTo(400,380,800,420);
+    ctx.lineTo(800,450);
+    ctx.lineTo(0,450);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function footprint(x,y,s,active){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = active ? "#7a2e2e" : "rgba(122,46,46,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(0,0,6*s,9*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0,-11*s,3*s,4*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function palaceBg(){
+    sky("#fbead0","#f3cf9a");
+    ground(370,"#e8c98a");
+    // palace silhouette
+    ctx.fillStyle = "#c48a3e";
+    ctx.fillRect(60,220,680,150);
+    for (var i=0;i<6;i++){
+      ctx.fillStyle = "#a5741c";
+      ctx.beginPath();
+      ctx.moveTo(100+i*110,220);
+      ctx.lineTo(130+i*110,180);
+      ctx.lineTo(160+i*110,220);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = "#7a2e2e";
+    ctx.fillRect(0,360,800,20);
+  }
+  function chair(x,y,s){
+    ctx.fillStyle = "#8a5a2b";
+    ctx.fillRect(x-22*s,y-2*s,44*s,8*s);
+    ctx.fillRect(x-22*s,y-40*s,8*s,44*s);
+    ctx.fillRect(x+14*s,y-40*s,8*s,44*s);
+    ctx.fillRect(x-22*s,y-40*s,44*s,8*s);
+  }
+
+  /* ---------------------------------------------------------
+     SCENE RENDERERS
+  --------------------------------------------------------- */
+  var t = 0; // animation tick
+
+  function renderTitle(){
+    sky("#fbead0","#f3cf9a");
+    ground(360,"#c9a45c");
+    sun(690,80,42);
+    cloud(120,70,1); cloud(560,50,0.8);
+    tree(90,360,1.3); tree(700,360,1.1);
+    hut(400,370,1.7);
+    person(320,392,1.6,{old:true,sad:false});
+    person(400,400,1.15,{});
+    ctx.fillStyle = "rgba(59,42,26,0.08)";
+    ctx.fillRect(0,0,800,450);
+  }
+
+  function renderIntro(){
+    sky("#fbead0","#f3cf9a");
+    ground(360,"#c9a45c");
+    sun(700,70,38);
+    cloud(150,60,1);
+    tree(80,360,1.2); tree(730,360,1.2);
+    hut(400,375,2);
+    person(345,398,1.5,{old:true});
+    person(430,405,1.1,{sad:true});
+  }
+
+  function renderWasiat(){
+    sky("#fbead0","#f3cf9a");
+    ground(360,"#c9a45c");
+    tree(90,360,1.1); tree(710,360,1.1);
+    hut(400,390,1.6);
+    // kakek menunjuk anak
+    person(320,400,1.6,{old:true,armsUp:true});
+    person(420,408,1.2,{sad:true});
+    // glowing aji-aji text bubble
+    var pulse = 0.5+0.5*Math.sin(t/18);
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = "#fff3d6";
+    ctx.strokeStyle = "#c9962c";
+    ctx.lineWidth = 2;
+    roundRect(300,230,220,60,14);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#7a2e2e";
+    ctx.font = "bold 17px Georgia";
+    ctx.textAlign = "center";
+    ctx.fillText("\u201cHai Hai Aku Sudah Tahu\u201d", 410, 267);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = 0.25+0.35*pulse;
+    ctx.fillStyle = "#d4a017";
+    ctx.beginPath();
+    ctx.arc(410,150,26+10*pulse,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function renderWalk(){
+    sky("#fbead0","#f3cf9a");
+    ground(400,"#cdb27e");
+    pathRoad();
+    tree(70,390,1.1); tree(730,390,1.1);
+    cloud(600,60,0.9);
+    sun(80,70,34);
+    // footprints along path, 6 steps
+    var steps = 6;
+    for (var i=0;i<steps;i++){
+      var fx = 90 + i*115;
+      var fy = 410 - Math.sin(i*0.5)*8;
+      footprint(fx,fy,1.4, i < state.walkProgress);
+    }
+    // character position based on progress
+    var progRatio = Math.min(state.walkProgress/steps,1);
+    var cx = 90 + progRatio*(115*(steps-1));
+    var cy = 400 - Math.sin(progRatio*Math.PI)*4;
+    person(cx,cy,1.3,{sad:false});
+    // mountain silhouette far bg
+    ctx.fillStyle = "rgba(122,90,60,0.25)";
+    ctx.beginPath();
+    ctx.moveTo(0,300);
+    ctx.lineTo(150,220);
+    ctx.lineTo(280,300);
+    ctx.lineTo(420,210);
+    ctx.lineTo(600,300);
+    ctx.lineTo(800,240);
+    ctx.lineTo(800,400);
+    ctx.lineTo(0,400);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function renderAsk(){
+    palaceBg();
+    // three villagers
+    var positions = [ [190,392], [400,398], [610,392] ];
+    for (var i=0;i<3;i++){
+      var asked = state.peopleAsked[i];
+      person(positions[i][0], positions[i][1], 1.25, {
+        shirt: ["#4f6f3d","#3d5a80","#8a5a2b"][i],
+        rotate: asked ? (Math.sin(t/6)*0.06) : 0
+      });
+      if (asked){
+        ctx.save();
+        ctx.font="bold 22px Arial";
+        ctx.fillStyle="#7a2e2e";
+        ctx.textAlign="center";
+        ctx.fillText("\u2716", positions[i][0], positions[i][1]-70);
+        ctx.restore();
+      }
+    }
+    // boy sitting to the side, in front of barber+king setup preview
+    person(720,405,1.05,{sad:true});
+  }
+
+  function renderMash(){
+    palaceBg();
+    chair(560,395,1.3);
+    // king sitting
+    person(560,398,1.25,{crown:true,shirt:"#7a2e2e"});
+    // barber standing with scissors
+    person(500,405,1.15,{shirt:"#3d5a80"});
+    ctx.save();
+    ctx.strokeStyle="#c9c9c9";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(520,375); ctx.lineTo(545,368);
+    ctx.stroke();
+    ctx.restore();
+    // boy reciting, sitting on ground with growing aura
+    var bx=250, by=410;
+    var auraR = 18 + (state.mashProgress/100)*55;
+    ctx.save();
+    ctx.globalAlpha = 0.35 + 0.25*Math.sin(t/8);
+    var g = ctx.createRadialGradient(bx,by-20,4,bx,by-20,auraR);
+    g.addColorStop(0,"rgba(212,160,23,0.9)");
+    g.addColorStop(1,"rgba(212,160,23,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(bx,by-20,auraR,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    person(bx,by,1.2,{armsUp: state.mashProgress>20});
+    if (state.mashProgress>10){
+      ctx.save();
+      ctx.font="bold 13px Georgia";
+      ctx.fillStyle="#7a2e2e";
+      ctx.textAlign="center";
+      ctx.globalAlpha = Math.min(1,state.mashProgress/60);
+      ctx.fillText("\u201cHai Hai Aku Sudah Tahu!\u201d", bx, by-70- (state.mashProgress%20)*0.6);
+      ctx.restore();
+    }
+  }
+
+  function renderNarrativePengakuan(){
+    palaceBg();
+    chair(590,395,1.3);
+    person(590,398,1.25,{crown:true,shirt:"#7a2e2e"});
+    // barber bersujud pucat
+    ctx.save();
+    ctx.translate(470,415);
+    ctx.fillStyle="#e8d9c3";
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    person(470,404,1.05,{scared:true, shirt:"#3d5a80", rotate:0.5});
+    // guards
+    person(690,400,1.15,{shirt:"#4f6f3d"});
+    person(250,405,1.0,{sad:false});
+  }
+
+  function renderEnding(){
+    palaceBg();
+    chair(500,395,1.3);
+    person(500,398,1.25,{crown:true,shirt:"#7a2e2e",armsUp:true});
+    // boy receiving gift chest
+    ctx.save();
+    ctx.fillStyle="#a5741c";
+    ctx.fillRect(300,395,50,28);
+    ctx.fillStyle="#d4a017";
+    ctx.fillRect(300,395,50,8);
+    ctx.restore();
+    person(330,404,1.15,{armsUp:true});
+    // guards taking away the minister in bg, small
+    ctx.save();
+    ctx.globalAlpha=0.7;
+    person(680,410,0.9,{shirt:"#3b2a1a",scared:true});
+    person(720,410,0.9,{shirt:"#4f6f3d"});
+    ctx.restore();
+    // sparkle
+    for (var i=0;i<5;i++){
+      var sx = 150+ (i*15) + Math.sin(t/10+i)*6;
+      var sy = 120 + Math.cos(t/9+i)*10;
+      ctx.save();
+      ctx.globalAlpha = 0.5+0.5*Math.sin(t/12+i);
+      ctx.fillStyle="#d4a017";
+      ctx.beginPath();
+      ctx.arc(sx,sy,3,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function renderScene(){
+    var scene = state.sceneIndex >=0 ? SCENES[state.sceneIndex] : null;
+    if (!scene){ renderTitle(); return; }
+    switch(scene.id){
+      case "wasiat": renderWasiat(); break;
+      case "kepergian": renderWalk(); break;
+      case "ibukota": renderAsk(); break;
+      case "ajisakti": renderMash(); break;
+      case "pengakuan": renderNarrativePengakuan(); break;
+      case "ending": renderEnding(); break;
+      default: renderIntro();
+    }
+  }
+
+  var introShown = false;
+  function draw(){
+    clear();
+    if (state.sceneIndex === -1){
+      renderTitle();
+    } else if (state.sceneIndex === -2){
+      renderIntro();
+    } else {
+      renderScene();
+    }
+    t++;
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  /* ---------------------------------------------------------
+     DOTS
+  --------------------------------------------------------- */
+  function renderDots(){
+    dotsEl.innerHTML = "";
+    for (var i=0;i<SCENES.length;i++){
+      var d = document.createElement("div");
+      d.className = "dot";
+      if (i < state.sceneIndex) d.className += " done";
+      if (i === state.sceneIndex) d.className += " current";
+      dotsEl.appendChild(d);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     UI RENDERING PER STEP
+  --------------------------------------------------------- */
+  function setNarration(txt){
+    narrationBox.textContent = txt;
+  }
+
+  function clearAction(){
+    actionArea.innerHTML = "";
+    state.holding = false;
+    if (state.holdRAF) cancelAnimationFrame(state.holdRAF);
+    if (state.mashDecayRAF) cancelAnimationFrame(state.mashDecayRAF);
+  }
+
+  function showTitleScreen(){
+    state.sceneIndex = -1;
+    renderDots();
+    var u = UI[state.lang];
+    setNarration(u.titleScreenDesc);
+    clearAction();
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.start;
+    btn.onclick = function(){ goToIntro(); };
+    actionArea.appendChild(btn);
+    stopSpeak();
+  }
+
+  function goToIntro(){
+    state.sceneIndex = -2;
+    renderDots();
+    var u = UI[state.lang];
+    setNarration(INTRO_TEXT[state.lang]);
+    clearAction();
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.next;
+    btn.onclick = function(){ state.sceneIndex = 0; showScene(); };
+    actionArea.appendChild(btn);
+    speak(INTRO_TEXT[state.lang]);
+  }
+
+  function showScene(){
+    renderDots();
+    var scene = SCENES[state.sceneIndex];
+    var u = UI[state.lang];
+    setNarration(scene.text[state.lang]);
+    clearAction();
+    speak(scene.text[state.lang]);
+
+    if (scene.type === "hold"){
+      buildHoldUI(u);
+    } else if (scene.type === "walk"){
+      state.walkProgress = 0;
+      buildWalkUI(u);
+    } else if (scene.type === "ask"){
+      state.peopleAsked = [0,0,0];
+      buildAskUI(u);
+    } else if (scene.type === "mash"){
+      state.mashProgress = 0;
+      buildMashUI(u);
+    } else if (scene.type === "narrative"){
+      buildNextUI(u);
+    } else if (scene.type === "ending"){
+      buildEndingUI(u);
+    }
+  }
+
+  function advanceScene(){
+    if (state.sceneIndex < SCENES.length - 1){
+      state.sceneIndex++;
+      showScene();
+    }
+  }
+
+  function buildNextUI(u){
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.next;
+    btn.onclick = advanceScene;
+    actionArea.appendChild(btn);
+  }
+
+  function buildHoldUI(u){
+    var hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = u.holdHint;
+
+    var track = document.createElement("div");
+    track.className = "progress-track";
+    var fill = document.createElement("div");
+    fill.className = "progress-fill";
+    track.appendChild(fill);
+
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.hold;
+
+    state.holdProgress = 0;
+    var HOLD_SPEED = 1.6;
+
+    function step(){
+      if (state.holding){
+        state.holdProgress += HOLD_SPEED;
+        if (state.holdProgress >= 100){
+          state.holdProgress = 100;
+          fill.style.width = "100%";
+          state.holding = false;
+          setTimeout(advanceScene, 350);
+          return;
+        }
+        fill.style.width = state.holdProgress + "%";
+      } else {
+        state.holdProgress = Math.max(0, state.holdProgress - 1.2);
+        fill.style.width = state.holdProgress + "%";
+      }
+      state.holdRAF = requestAnimationFrame(step);
+    }
+    state.holdRAF = requestAnimationFrame(step);
+
+    function start(e){ e.preventDefault(); state.holding = true; }
+    function stop(e){ state.holding = false; }
+    btn.addEventListener("mousedown", start);
+    btn.addEventListener("touchstart", start, {passive:false});
+    btn.addEventListener("mouseup", stop);
+    btn.addEventListener("mouseleave", stop);
+    btn.addEventListener("touchend", stop);
+    btn.addEventListener("touchcancel", stop);
+
+    actionArea.appendChild(hint);
+    actionArea.appendChild(track);
+    actionArea.appendChild(btn);
+  }
+
+  function buildWalkUI(u){
+    var hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = u.walkHint;
+
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.walk;
+    btn.onclick = function(){
+      state.walkProgress++;
+      if (state.walkProgress >= 6){
+        btn.disabled = true;
+        setTimeout(advanceScene, 400);
+      }
+    };
+    actionArea.appendChild(hint);
+    actionArea.appendChild(btn);
+  }
+
+  function buildAskUI(u){
+    var hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = u.askHint;
+
+    var row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.gap = "8px";
+    row.style.flexWrap = "wrap";
+    row.style.justifyContent = "center";
+
+    for (var i=0;i<3;i++){
+      (function(idx){
+        var btn = document.createElement("button");
+        btn.className = "btn secondary";
+        btn.textContent = u.ask + " " + (idx+1);
+        btn.onclick = function(){
+          if (state.peopleAsked[idx]) return;
+          state.peopleAsked[idx] = 1;
+          btn.disabled = true;
+          var allDone = state.peopleAsked.every(function(v){return v===1;});
+          if (allDone){
+            setTimeout(advanceScene, 500);
+          }
+        };
+        row.appendChild(btn);
+      })(i);
+    }
+    actionArea.appendChild(hint);
+    actionArea.appendChild(row);
+  }
+
+  function buildMashUI(u){
+    var hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = u.mashHint;
+
+    var track = document.createElement("div");
+    track.className = "progress-track";
+    var fill = document.createElement("div");
+    fill.className = "progress-fill";
+    track.appendChild(fill);
+
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.mash;
+
+    var finished = false;
+    btn.onclick = function(){
+      if (finished) return;
+      state.mashProgress = Math.min(100, state.mashProgress + 9);
+      fill.style.width = state.mashProgress + "%";
+      if (state.mashProgress >= 100){
+        finished = true;
+        btn.disabled = true;
+        setTimeout(advanceScene, 500);
+      }
+    };
+
+    function decay(){
+      if (!finished){
+        state.mashProgress = Math.max(0, state.mashProgress - 0.5);
+        fill.style.width = state.mashProgress + "%";
+      }
+      state.mashDecayRAF = requestAnimationFrame(decay);
+    }
+    state.mashDecayRAF = requestAnimationFrame(decay);
+
+    actionArea.appendChild(hint);
+    actionArea.appendChild(track);
+    actionArea.appendChild(btn);
+  }
+
+  function buildEndingUI(u){
+    var moral = document.createElement("div");
+    moral.className = "hint";
+    moral.style.fontStyle = "italic";
+    moral.style.marginBottom = "2px";
+    moral.textContent = u.moral;
+
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = u.replay;
+    btn.onclick = function(){ showTitleScreen(); };
+
+    actionArea.appendChild(moral);
+    actionArea.appendChild(btn);
+  }
+
+  /* ---------------------------------------------------------
+     TOP CONTROLS
+  --------------------------------------------------------- */
+  function applyLangUI(){
+    var u = UI[state.lang];
+    gameTitle.textContent = u.title;
+    footerText.textContent = u.footer;
+    btnLangId.classList.toggle("active", state.lang === "id");
+    btnLangEn.classList.toggle("active", state.lang === "en");
+    document.documentElement.lang = state.lang;
+  }
+  function applyMuteUI(){
+    btnMute.textContent = state.muted ? "🔇" : "🔊";
+    btnMute.classList.toggle("active", state.muted);
+  }
+
+  btnLangId.addEventListener("click", function(){
+    if (state.lang === "id") return;
+    state.lang = "id";
+    localStorage.setItem(STORAGE_LANG,"id");
+    applyLangUI();
+    rerenderCurrentStep();
+  });
+  btnLangEn.addEventListener("click", function(){
+    if (state.lang === "en") return;
+    state.lang = "en";
+    localStorage.setItem(STORAGE_LANG,"en");
+    applyLangUI();
+    rerenderCurrentStep();
+  });
+  btnMute.addEventListener("click", function(){
+    state.muted = !state.muted;
+    localStorage.setItem(STORAGE_MUTE, state.muted ? "1":"0");
+    applyMuteUI();
+    if (state.muted) stopSpeak();
+  });
+
+  function rerenderCurrentStep(){
+    if (state.sceneIndex === -1){ showTitleScreen(); }
+    else if (state.sceneIndex === -2){ goToIntro(); }
+    else { showScene(); }
+  }
+
+  /* ---------------------------------------------------------
+     RESIZE / POSTMESSAGE (for iframe auto-resize on Blogger)
+  --------------------------------------------------------- */
+  function sendHeight(){
+    var h = document.getElementById("gameWrap").scrollHeight + 20;
+    window.parent.postMessage({ type: "hhast-resize", height: h }, "*");
+  }
+  window.addEventListener("load", sendHeight);
+  window.addEventListener("resize", sendHeight);
+  if (window.ResizeObserver){
+    new ResizeObserver(sendHeight).observe(document.getElementById("gameWrap"));
+  } else {
+    setInterval(sendHeight, 800);
+  }
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  applyLangUI();
+  applyMuteUI();
+  showTitleScreen();
+  setTimeout(sendHeight, 300);
+
+})();
+</script>
+</body>
+</html>
