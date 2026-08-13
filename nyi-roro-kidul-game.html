@@ -33,7 +33,7 @@
     color: #5c6b6b;
     margin: 0 0 10px;
   }
-  #nrk-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #nrk-hud { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 6px; }
   #nrk-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -43,6 +43,26 @@
     border-radius: 20px;
     font-weight: 700;
   }
+  #nrk-muteBtn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #1E6E5A;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  #nrk-muteBtn.muted { background: #8a8f8d; }
+  #nrk-muteBtn:active { transform: translateY(-50%) scale(0.93); }
   #nrk-canvas-holder {
     position: relative;
     width: 100%;
@@ -126,7 +146,10 @@
   <h2>🌊 Asal Usul Nyi Roro Kidul</h2>
   <p id="nrk-sub">Ikuti kisah Putri Kandita dari Kerajaan Pakuan Pajajaran hingga menjadi Ratu Laut Pantai Selatan.</p>
 
-  <div id="nrk-hud"><span id="nrk-phase">Tahap 1 / 5</span></div>
+  <div id="nrk-hud">
+    <span id="nrk-phase">Tahap 1 / 5</span>
+    <button id="nrk-muteBtn" type="button" aria-label="Matikan suara narasi">🔊</button>
+  </div>
 
   <div id="nrk-canvas-holder">
     <canvas id="nrk-canvas"></canvas>
@@ -173,6 +196,8 @@
       winBody: 'Hingga kini, Nyi Roro Kidul dikenal luas dalam cerita rakyat Jawa Barat sebagai Ratu Laut Pantai Selatan — sosok putri yang bangkit dari kesedihan menjadi penguasa lautan yang dihormati oleh masyarakat pesisir.',
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
+      muteLabel: 'Matikan suara narasi',
+      unmuteLabel: 'Aktifkan suara narasi',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       walkBtn: '🚶 TERUS BERJALAN',
@@ -205,6 +230,8 @@
       winBody: 'To this day, Nyi Roro Kidul is widely known in West Java folklore as the Queen of the Southern Sea — a princess who rose from sorrow to become a ruler of the sea, respected by coastal communities.',
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
+      muteLabel: 'Mute narration',
+      unmuteLabel: 'Unmute narration',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Press On',
       walkBtn: '🚶 KEEP WALKING',
@@ -239,6 +266,66 @@
   document.getElementById('nrk-playAgainBtn').textContent = TXT.playAgainBtn;
   document.getElementById('nrk-caption').textContent = TXT.captionInit;
   document.getElementById('nrk-actionBtn').textContent = TXT.nextBtn;
+
+  // --- Narasi suara (Web Speech API) ---
+  var synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+  var MUTE_KEY = 'nrk_muted';
+  var muted = false;
+  try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch(e){}
+  var muteBtn = document.getElementById('nrk-muteBtn');
+  var voicesCache = [];
+  function loadVoices(){ voicesCache = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    if(typeof synth.onvoiceschanged !== 'undefined'){ synth.onvoiceschanged = loadVoices; }
+  }
+  function pickVoice(){
+    if(!voicesCache || !voicesCache.length) return null;
+    var want = LANG === 'id' ? 'id' : 'en';
+    var found = null;
+    for(var i=0;i<voicesCache.length;i++){
+      var v = voicesCache[i];
+      if(v.lang && v.lang.toLowerCase().indexOf(want) === 0){ found = v; break; }
+    }
+    return found;
+  }
+  function updateMuteBtn(){
+    if(!muteBtn) return;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', muted);
+    muteBtn.setAttribute('aria-label', muted ? TXT.unmuteLabel : TXT.muteLabel);
+  }
+  function speak(text){
+    if(!synth || muted || !text) return;
+    try{
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice();
+      if(v) u.voice = v;
+      u.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      synth.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){ if(synth){ try{ synth.cancel(); }catch(e){} } }
+  if(muteBtn){
+    if(!synth){
+      muteBtn.style.display = 'none';
+    } else {
+      updateMuteBtn();
+      muteBtn.addEventListener('click', function(){
+        muted = !muted;
+        try{ localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); }catch(e){}
+        updateMuteBtn();
+        if(muted) stopSpeak();
+      });
+    }
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopSpeak();
+  });
+  window.addEventListener('beforeunload', stopSpeak);
 
   var canvas = document.getElementById('nrk-canvas');
   var ctx = canvas.getContext('2d');
@@ -290,6 +377,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -312,6 +400,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
