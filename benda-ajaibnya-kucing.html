@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benda Ajaibnya Kucing</title>
+<style>
+  :root{
+    --bg-parchment:#f5ead2;
+    --bg-parchment-dark:#ecdcb4;
+    --ink:#33241b;
+    --brown:#7a4a26;
+    --brown-dark:#54331a;
+    --leaf:#4d7c3a;
+    --leaf-dark:#335728;
+    --terracotta:#c2542f;
+    --terracotta-dark:#9c3e20;
+    --gold:#e0b23c;
+    --gold-dark:#b3872a;
+    --cream:#fff8ea;
+    --shadow: rgba(51,36,27,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Verdana, Tahoma, sans-serif;
+    background:transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--bg-parchment),var(--bg-parchment-dark));
+    border:3px solid var(--brown);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 6px 18px var(--shadow);
+    position:relative;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 12px;
+    background:var(--brown-dark);
+    color:var(--cream);
+  }
+  #topbar .title{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.3px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
+  }
+  .topbtns{display:flex; gap:6px;}
+  .iconbtn{
+    background:var(--terracotta);
+    border:none;
+    color:var(--cream);
+    width:34px;
+    height:30px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .iconbtn:hover{background:var(--terracotta-dark); transform:translateY(-1px);}
+  .iconbtn.lang{
+    width:auto;
+    padding:0 10px;
+    font-weight:700;
+    font-size:12px;
+  }
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  canvas#stage{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#bfe3f2;
+  }
+  #overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    background:rgba(20,15,8,0.55);
+    color:var(--cream);
+  }
+  #overlay h1{
+    font-size:clamp(20px,5vw,30px);
+    margin:0 0 10px;
+    text-shadow:0 2px 6px rgba(0,0,0,.5);
+  }
+  #overlay p{
+    font-size:clamp(13px,3vw,15px);
+    max-width:520px;
+    line-height:1.5;
+    margin:0 0 18px;
+    text-shadow:0 1px 4px rgba(0,0,0,.5);
+  }
+  .bigbtn{
+    background:var(--terracotta);
+    color:var(--cream);
+    border:none;
+    padding:12px 26px;
+    border-radius:999px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--terracotta-dark);
+    transition:transform .1s ease;
+  }
+  .bigbtn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--terracotta-dark);}
+  .hidden{display:none !important;}
+  #textbox{
+    padding:14px 16px 6px;
+    min-height:70px;
+    color:var(--ink);
+    font-size:15px;
+    line-height:1.55;
+  }
+  #controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 16px 16px;
+    gap:10px;
+  }
+  #dots{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    max-width:70%;
+  }
+  .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#d8c39a;
+    border:1px solid var(--brown);
+    transition:background .2s ease, transform .2s ease;
+    flex:0 0 auto;
+  }
+  .dot.active{
+    background:var(--terracotta);
+    transform:scale(1.25);
+  }
+  .dot.done{background:var(--leaf);}
+  #nextbtn{
+    background:var(--leaf);
+    color:var(--cream);
+    border:none;
+    padding:10px 20px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--leaf-dark);
+    flex:0 0 auto;
+  }
+  #nextbtn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--leaf-dark);}
+  #nextbtn:disabled{opacity:.4; cursor:default;}
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--brown);
+    padding:6px 0 12px;
+    opacity:.75;
+  }
+  .minigame-ui{
+    position:absolute;
+    left:0;right:0;bottom:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .tapbtn{
+    background:var(--gold);
+    border:3px solid var(--brown-dark);
+    color:var(--ink);
+    font-weight:800;
+    font-size:15px;
+    padding:12px 28px;
+    border-radius:999px;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:0 4px 0 var(--brown-dark);
+  }
+  .tapbtn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--brown-dark);}
+  .meter{
+    width:70%;
+    max-width:320px;
+    height:16px;
+    background:rgba(255,255,255,.35);
+    border:2px solid var(--brown-dark);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .meter-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--terracotta));
+    transition:width .08s linear;
+  }
+  .prompt-label{
+    color:var(--cream);
+    font-size:13px;
+    font-weight:700;
+    text-shadow:0 1px 4px rgba(0,0,0,.6);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="titleText">Benda Ajaibnya Kucing</div>
+    <div class="topbtns">
+      <button class="iconbtn lang" id="langBtn" title="Language">EN</button>
+      <button class="iconbtn" id="muteBtn" title="Mute">🔊</button>
+    </div>
+  </div>
+  <div id="stage-wrap">
+    <canvas id="stage" width="700" height="420"></canvas>
+    <div id="overlay">
+      <h1 id="ovTitle">Benda Ajaibnya Kucing</h1>
+      <p id="ovDesc">Cerita rakyat Jawa Timur tentang keluarga miskin yang sabar dan seekor kucing setia.</p>
+      <button class="bigbtn" id="startBtn">Mulai Cerita</button>
+    </div>
+  </div>
+  <div id="textbox"><span id="narrationText"></span></div>
+  <div id="controls">
+    <div id="dots"></div>
+    <button id="nextbtn">Lanjut</button>
+  </div>
+  <footer id="footerText">Kisah rakyat Jawa Timur • Diceritakan ulang secara interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Language & strings ---------------- */
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  const UI = {
+    id: {
+      title: "Benda Ajaibnya Kucing",
+      subtitle: "Cerita rakyat Jawa Timur tentang keluarga miskin yang sabar dan seekor kucing setia.",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      footer: "Kisah rakyat Jawa Timur • Diceritakan ulang secara interaktif",
+      langBtnShows: "EN",
+      tapDog: "Ketuk gambar anjing untuk menenangkannya!",
+      tapCat: "Ketuk gambar kucing untuk menenangkannya!",
+      tapMice: "Ketuk tombol tikus secepat mungkin!",
+      holdHeron: "Tahan tombol untuk membantu belekok menyelam!"
+    },
+    en: {
+      title: "The Cat's Magic Charm",
+      subtitle: "An East Javanese folktale about a patient poor family and a loyal cat.",
+      start: "Start the Story",
+      replay: "Replay Story",
+      next: "Continue",
+      footer: "East Javanese folktale • Retold as an interactive story",
+      langBtnShows: "ID",
+      tapDog: "Tap the dog to calm it down!",
+      tapCat: "Tap the cat to calm it down!",
+      tapMice: "Tap the mouse button as fast as you can!",
+      holdHeron: "Hold the button to help the heron dive!"
+    }
+  };
+
+  /* ---------------- Scenes ---------------- */
+  const SCENES = [
+    {
+      id:"intro", type:"story",
+      text:{
+        id:"Di sebuah desa di Jawa Timur, hiduplah Pak Sabar dan Bu Sabar, pasangan yang sangat miskin namun dikenal karena kesabarannya. Kadang mereka tidak makan berhari-hari, tapi tak sekali pun mereka mengeluh.",
+        en:"In a village in East Java lived Pak Sabar and Bu Sabar, a very poor couple known for their patience. Sometimes they went days without eating, yet they never once complained."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawTree(ctx,w*0.86,h*0.6,0.9); drawHut(ctx,w*0.32,h*0.5,1); drawManSabar(ctx,w*0.42,h*0.72,1,{mood:"sad"}); drawWomanSabar(ctx,w*0.56,h*0.74,1,{mood:"sad"}); }
+    },
+    {
+      id:"borrow-first", type:"story",
+      text:{
+        id:"“Bu, cobalah pinjam uang pada Bu Mellas. Sudah dua hari kita tak makan,” kata Pak Sabar. Bu Sabar pun pergi ke rumah Bu Mellas, dan pulang membawa seratus rupiah pinjaman.",
+        en:"\u201CWife, please try to borrow some money from Bu Mellas. We haven't eaten in two days,\u201D said Pak Sabar. Bu Sabar went to Bu Mellas's house and returned with a hundred rupiah she had borrowed."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawHut(ctx,w*0.78,h*0.48,0.85); drawWomanMellas(ctx,w*0.7,h*0.72,0.9,{mood:"kind"}); drawWomanSabar(ctx,w*0.42,h*0.74,1,{mood:"hopeful",holdCoin:true}); drawSpeechCoins(ctx,w*0.56,h*0.5); }
+    },
+    {
+      id:"meet-dog", type:"story",
+      text:{
+        id:"Di tengah jalan pulang, Bu Sabar melihat seorang lelaki menyeret seekor anjing yang ketakutan. “Anjing ini mau kubuang, kerjanya cuma makan saja,” kata lelaki itu. Bu Sabar merasa iba melihatnya.",
+        en:"On her way home, Bu Sabar saw a man dragging a frightened dog. \u201CI'm getting rid of this dog, all it does is eat,\u201D the man said. Bu Sabar felt sorry for the poor creature."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawManSeller(ctx,w*0.3,h*0.68,1); drawDog(ctx,w*0.44,h*0.75,0.9,{mood:"scared"}); drawWomanSabar(ctx,w*0.72,h*0.7,1,{mood:"worried"}); }
+    },
+    {
+      id:"calm-dog", type:"minigame", kind:"tap", target:"dog", goal:16, duration:7000,
+      introText:{
+        id:"“Jangan dibuang, kasihan. Biar kubeli seratus rupiah,” kata Bu Sabar. Namun anjing itu masih ketakutan dan gemetar. Ketuk gambar anjing berulang kali untuk menenangkannya sebelum dibawa pulang.",
+        en:"\u201CDon't get rid of it, that's cruel. Let me buy it for a hundred rupiah,\u201D said Bu Sabar. But the dog was still trembling with fear. Tap the dog again and again to calm it down before bringing it home."
+      },
+      resultText:{
+        id:"Sedikit demi sedikit anjing itu tenang dan mulai mempercayai Bu Sabar. Ia pun membawa pulang anjing itu, meski uang pinjaman telah habis untuk membelinya.",
+        en:"Little by little the dog calmed down and began to trust Bu Sabar. She brought it home, even though the borrowed money was now gone, spent on the dog."
+      },
+      draw:(ctx,w,h,t,mg)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawWomanSabar(ctx,w*0.7,h*0.72,1,{mood:"kind"}); drawDog(ctx,w*0.4,h*0.76,1.1,{mood: (mg.score||0) > 10 ? "happy" : "scared", wag:(mg.score||0)>10, tapPulse:t}); }
+    },
+    {
+      id:"dog-home", type:"story",
+      text:{
+        id:"“Mana uang pinjaman, Bu? Anjing siapa ini?” tanya Pak Sabar. “Kubelikan anjing ini, kasihan mau dibuang,” jawab Bu Sabar. Pak Sabar tak marah walau perutnya lapar. Anjing itu ditambatkan di bawah langgar, tak diberi makan, hanya menyalak sepanjang hari.",
+        en:"\u201CWhere's the borrowed money, dear? Whose dog is that?\u201D Pak Sabar asked. \u201CI bought this dog, it was about to be abandoned,\u201D Bu Sabar replied. Pak Sabar was not angry, even with an empty stomach. The dog was tied up under the little prayer hut, unfed, barking all day."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawHut(ctx,w*0.3,h*0.5,1); drawLanggar(ctx,w*0.68,h*0.66,0.8); drawDog(ctx,w*0.68,h*0.82,0.7,{mood:"bark",tapPulse:t}); drawManSabar(ctx,w*0.4,h*0.72,1,{mood:"patient"}); }
+    },
+    {
+      id:"meet-cat", type:"story",
+      text:{
+        id:"Berhari-hari kemudian, Pak Sabar meminta istrinya meminjam uang lagi pada Bu Mellas. Dalam perjalanan pulang, Bu Sabar kembali bertemu seorang lelaki, kali ini menyeret seekor kucing. “Kucing ini suka mencuri ikan, mau kubuang,” katanya.",
+        en:"Days later, Pak Sabar asked his wife to borrow money again from Bu Mellas. On the way home, Bu Sabar again met a man, this time dragging a cat. \u201CThis cat keeps stealing fish, I'm getting rid of it,\u201D he said."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawManSeller(ctx,w*0.3,h*0.7,1); drawCat(ctx,w*0.44,h*0.78,0.9,{mood:"scared"}); drawWomanSabar(ctx,w*0.72,h*0.7,1,{mood:"worried"}); }
+    },
+    {
+      id:"calm-cat", type:"minigame", kind:"tap", target:"cat", goal:16, duration:7000,
+      introText:{
+        id:"“Kasihan sekali, biar kubeli saja seharga seratus rupiah,” kata Bu Sabar. Kucing itu masih meronta ketakutan. Ketuk gambar kucing berulang kali agar ia tenang dan mau digendong pulang.",
+        en:"\u201CThat's so sad, let me buy it for a hundred rupiah,\u201D said Bu Sabar. The cat was still struggling in fear. Tap the cat again and again so it calms down and lets itself be carried home."
+      },
+      resultText:{
+        id:"Kucing itu perlahan tenang dalam pelukan Bu Sabar. Ia pun pulang tanpa membawa uang sepeser pun, tapi dengan seekor kucing dalam gendongannya.",
+        en:"The cat slowly settled in Bu Sabar's arms. She walked home without a single coin left, but with a cat cradled in her arms."
+      },
+      draw:(ctx,w,h,t,mg)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawPathTrees(ctx,w,h); drawWomanSabar(ctx,w*0.68,h*0.72,1,{mood:"kind"}); drawCat(ctx,w*0.4,h*0.78,1.1,{mood:(mg.score||0)>10?"happy":"scared", purr:(mg.score||0)>10, tapPulse:t}); }
+    },
+    {
+      id:"cat-home", type:"story",
+      text:{
+        id:"“Uang pinjaman kubelikan kucing ini, kasihan mau dibuang,” kata Bu Sabar pada suaminya. “Ya sudah, tak apa,” jawab Pak Sabar dengan sabar, seperti biasa. Kucing itu pun tinggal bersama mereka, disayang sepenuh hati.",
+        en:"\u201CI spent the borrowed money on this cat, it was about to be abandoned,\u201D Bu Sabar told her husband. \u201CIt's alright,\u201D Pak Sabar replied patiently, as always. The cat came to live with them, cherished with their whole hearts."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawHut(ctx,w*0.3,h*0.5,1); drawManSabar(ctx,w*0.42,h*0.72,1,{mood:"patient"}); drawWomanSabar(ctx,w*0.56,h*0.74,1,{mood:"kind"}); drawCat(ctx,w*0.66,h*0.82,0.8,{mood:"happy",purr:true,tapPulse:t}); }
+    },
+    {
+      id:"magic-find", type:"story",
+      text:{
+        id:"Suatu malam, Bu Sabar melihat sebuah benda bulat bersinar di serambi rumah. “Itu Gumalana Kucing, benda ajaibnya kucing,” kata Pak Sabar. Mereka menyusunnya dengan kemenyan lalu memohon uang dan emas. Ajaib! Uang dan emas berlimpah muncul di hadapan mereka.",
+        en:"One night, Bu Sabar saw a round, glowing object on the porch. \u201CThat's Gumalana Kucing, the cat's magic charm,\u201D said Pak Sabar. They set it beside burning incense and wished for money and gold. Wondrously, piles of money and gold appeared before them."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyNight(ctx,w,h); drawGround(ctx,w,h); drawHut(ctx,w*0.3,h*0.48,1); drawManSabar(ctx,w*0.42,h*0.74,1,{mood:"amazed"}); drawWomanSabar(ctx,w*0.56,h*0.76,1,{mood:"amazed"}); drawMagicBall(ctx,w*0.5,h*0.6,1,t); drawIncenseSmoke(ctx,w*0.5,h*0.72,t); drawGoldPile(ctx,w*0.62,h*0.86,0.8); }
+    },
+    {
+      id:"goldsmith-cheat", type:"story",
+      text:{
+        id:"Agar suami-istri dapat memakainya sendiri-sendiri, mereka meminta tukang emas Akhmad membuatkan satu tiruan, dengan benda asli sebagai contoh. Seminggu kemudian, Bu Sabar mengambil kedua benda itu. Namun saat dicoba, tak terjadi apa-apa — Akhmad diam-diam menukar yang asli dengan tiruan!",
+        en:"So that husband and wife could each have one, they asked the goldsmith Akhmad to make a copy, using the real one as a model. A week later, Bu Sabar collected both objects. But when they tried them, nothing happened — Akhmad had secretly swapped the real one for a fake!"
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGoldsmithHut(ctx,w,h); drawGoldsmithAkhmad(ctx,w*0.62,h*0.66,1,{mood:"sly"}); drawManSabar(ctx,w*0.28,h*0.72,0.9,{mood:"confused"}); drawWomanSabar(ctx,w*0.4,h*0.74,0.9,{mood:"confused"}); drawMagicBall(ctx,w*0.34,h*0.58,0.6,t); }
+    },
+    {
+      id:"cat-mission", type:"story",
+      text:{
+        id:"Si kucing mengintip dari balik pintu dan merasa kasihan pada majikannya yang tertipu. Ia mengajak si anjing untuk mengambil kembali benda ajaib itu di rumah tukang emas Akhmad. Di sana, seekor tikus lewat — kucing menangkapnya dan mengancam akan memakannya jika tak mau membantu.",
+        en:"The cat peeked from behind the door and felt sorry for its deceived owners. It asked the dog to help retrieve the magic charm from Akhmad's house. There, a mouse scurried by — the cat caught it and threatened to eat it unless it helped."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGoldsmithHut(ctx,w,h); drawDog(ctx,w*0.72,h*0.78,0.85,{mood:"determined"}); drawCat(ctx,w*0.42,h*0.72,1,{mood:"determined",tapPulse:t}); drawMouse(ctx,w*0.5,h*0.84,1,{mood:"scared"}); }
+    },
+    {
+      id:"gnaw-hole", type:"minigame", kind:"tap", target:"mouse", goal:22, duration:8000,
+      introText:{
+        id:"Si tikus mengajak kawan-kawannya menggerogoti peti tempat benda ajaib disimpan. Ketuk tombol tikus secepat mungkin untuk membantu melubangi peti kayu itu!",
+        en:"The mouse called its friends to gnaw a hole into the chest where the charm was hidden. Tap the mouse button as fast as you can to help gnaw through the wooden chest!"
+      },
+      resultText:{
+        id:"Krek... krek... krek! Lubang besar akhirnya terbentuk di peti kayu itu. Si anjing pun menyalak keras-keras untuk memancing tukang emas Akhmad keluar rumah.",
+        en:"Crunch... crunch... crunch! A large hole finally opened in the wooden chest. The dog began barking loudly to lure the goldsmith Akhmad out of the house."
+      },
+      draw:(ctx,w,h,t,mg)=>{ drawSkyDay(ctx,w,h); drawGoldsmithHut(ctx,w,h); drawChest(ctx,w*0.55,h*0.78,1,(mg.score||0)/22); drawMouseGnaw(ctx,w*0.5,h*0.86,1,t); drawDog(ctx,w*0.78,h*0.7,0.8,{mood:"bark",tapPulse:t}); }
+    },
+    {
+      id:"rescue-ball", type:"story",
+      text:{
+        id:"Tukang emas Akhmad keluar marah mengusir anjing yang menyalak. Saat itulah kucing menyelinap lewat lubang peti dan mengambil benda ajaibnya yang asli. Keduanya lalu berlari pulang secepat mungkin.",
+        en:"Akhmad the goldsmith stormed out, angrily chasing away the barking dog. That was the cat's chance — it slipped through the hole in the chest and snatched back the real magic charm. The two of them ran home as fast as they could."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGoldsmithHut(ctx,w,h); drawGoldsmithAkhmad(ctx,w*0.68,h*0.64,1,{mood:"angry"}); drawDog(ctx,w*0.8,h*0.78,0.8,{mood:"run",tapPulse:t}); drawCat(ctx,w*0.4,h*0.78,1,{mood:"run",tapPulse:t}); drawMagicBall(ctx,w*0.4,h*0.66,0.5,t); }
+    },
+    {
+      id:"river-drop", type:"story",
+      text:{
+        id:"Di tengah jalan pulang, anjing yang membawa benda ajaib itu menjatuhkannya ke sungai lalu melarikan diri sendirian. Kucing menunggu sedih di bawah dedaunan, hingga lewatlah seekor belekok. Kucing menangkapnya dan meminta bantuan mengambil benda itu dari dasar sungai.",
+        en:"Halfway home, the dog carrying the charm dropped it into the river and ran off on its own. The cat waited sadly beneath the leaves, until a heron passed by. The cat caught it and asked for help retrieving the charm from the riverbed."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDusk(ctx,w,h); drawRiver(ctx,w,h); drawCat(ctx,w*0.28,h*0.6,0.9,{mood:"sad"}); drawHeron(ctx,w*0.58,h*0.5,1,{mood:"scared"}); drawMagicBall(ctx,w*0.6,h*0.86,0.35,t); }
+    },
+    {
+      id:"heron-dive", type:"minigame", kind:"hold", duration:6000,
+      introText:{
+        id:"Belekok berjanji membantu. Tahan tombol untuk membantunya menyelam mengambil benda ajaib yang berkilau di dasar sungai.",
+        en:"The heron promised to help. Hold the button to help it dive down and retrieve the glowing charm from the riverbed."
+      },
+      resultText:{
+        id:"Belekok berhasil membawa benda ajaib itu ke permukaan dan menyerahkannya pada kucing. Kucing sangat gembira dan segera berlari pulang.",
+        en:"The heron surfaced with the charm in its beak and handed it to the cat. The cat was overjoyed and hurried home right away."
+      },
+      draw:(ctx,w,h,t,mg)=>{ drawSkyDusk(ctx,w,h); drawRiver(ctx,w,h); drawCat(ctx,w*0.28,h*0.58,0.9,{mood:"hopeful"}); drawHeronDive(ctx,w*0.58,h,mg.progress||0); },
+      onHold:(mg,dt)=>{ mg.progress = Math.min(1,(mg.progress||0)+dt/4200); }
+    },
+    {
+      id:"ending", type:"story",
+      text:{
+        id:"Sesampainya di rumah, kucing menyerahkan benda ajaib itu pada Pak Sabar dan Bu Sabar yang tengah duduk di serambi. Betapa gembiranya mereka! Sejak saat itu keluarga itu tak pernah kekurangan lagi. Kucing sangat disayang, sedangkan anjing tak pernah kembali ke rumah majikannya.",
+        en:"Back home, the cat handed the charm to Pak Sabar and Bu Sabar, who sat waiting on the porch. How overjoyed they were! From then on, the family never went without again. The cat was cherished dearly, while the dog never returned to its owners' home."
+      },
+      draw:(ctx,w,h,t)=>{ drawSkyDay(ctx,w,h); drawGround(ctx,w,h); drawHut(ctx,w*0.3,h*0.48,1); drawManSabar(ctx,w*0.4,h*0.72,1,{mood:"happy"}); drawWomanSabar(ctx,w*0.54,h*0.74,1,{mood:"happy"}); drawCat(ctx,w*0.66,h*0.82,0.85,{mood:"happy",purr:true,tapPulse:t}); drawMagicBall(ctx,w*0.66,h*0.66,0.4,t); }
+    }
+  ];
+
+  /* ---------------- State ---------------- */
+  let sceneIdx = -1;
+  let muted = localStorage.getItem('bak_muted') === '1';
+  let currentUtterance = null;
+  let animFrame = null;
+  let animStart = null;
+  let mg = null;
+  let started = false;
+
+  const el = {
+    app: document.getElementById('app'),
+    canvas: document.getElementById('stage'),
+    overlay: document.getElementById('overlay'),
+    ovTitle: document.getElementById('ovTitle'),
+    ovDesc: document.getElementById('ovDesc'),
+    startBtn: document.getElementById('startBtn'),
+    textbox: document.getElementById('textbox'),
+    narrationText: document.getElementById('narrationText'),
+    dots: document.getElementById('dots'),
+    nextbtn: document.getElementById('nextbtn'),
+    footerText: document.getElementById('footerText'),
+    titleText: document.getElementById('titleText'),
+    langBtn: document.getElementById('langBtn'),
+    muteBtn: document.getElementById('muteBtn')
+  };
+  const ctx = el.canvas.getContext('2d');
+
+  /* ---------------- Backgrounds ---------------- */
+  function drawSkyDay(ctx,w,h){
+    let g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#8fd0ea'); g.addColorStop(1,'#dff0e0');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(255,250,220,0.9)';
+    ctx.beginPath(); ctx.arc(w*0.85,h*0.16,26,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.8)';
+    for(const cx of [w*0.2,w*0.45]){
+      ctx.beginPath(); ctx.ellipse(cx,h*0.14,26,12,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+22,h*0.16,18,10,0,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function drawSkyDusk(ctx,w,h){
+    let g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#3a3160'); g.addColorStop(0.5,'#c9714a'); g.addColorStop(1,'#f0c583');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(255,235,200,0.9)';
+    ctx.beginPath(); ctx.arc(w*0.78,h*0.22,22,0,Math.PI*2); ctx.fill();
+  }
+  function drawSkyNight(ctx,w,h){
+    let g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#141838'); g.addColorStop(1,'#3a3a5c');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#fdf1c8';
+    ctx.beginPath(); ctx.arc(w*0.82,h*0.16,20,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    for(let i=0;i<22;i++){
+      const sx = (i*53)%w, sy = (i*37)%(h*0.5);
+      ctx.beginPath(); ctx.arc(sx,sy,1.4,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function drawGround(ctx,w,h){
+    ctx.fillStyle='#7fae5b';
+    ctx.fillRect(0,h*0.68,w,h*0.32);
+    ctx.strokeStyle='#5c8a3f'; ctx.lineWidth=1.5;
+    for(let i=0;i<20;i++){
+      let x=(i/20)*w+((i%3)*4);
+      ctx.beginPath(); ctx.moveTo(x,h*0.7); ctx.lineTo(x-3,h*0.76); ctx.stroke();
+    }
+  }
+  function drawPathTrees(ctx,w,h){
+    ctx.fillStyle='#c7a86b';
+    ctx.fillRect(0,h*0.7,w,h*0.3);
+    ctx.strokeStyle='#a4844d'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(w*0.1,h); ctx.lineTo(w*0.4,h*0.7); ctx.lineTo(w*0.62,h*0.7); ctx.lineTo(w*0.9,h); ctx.stroke();
+    drawTree(ctx,w*0.08,h*0.62,0.7);
+    drawTree(ctx,w*0.94,h*0.6,0.8);
+  }
+  function drawTree(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle='#6b4527'; ctx.lineWidth=8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,40); ctx.lineTo(0,0); ctx.stroke();
+    ctx.fillStyle='#4d7c3a';
+    ctx.beginPath(); ctx.arc(0,-24,30,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,-8,20,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,-8,20,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawHut(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#8a6a3f';
+    ctx.fillRect(-70,-10,140,60);
+    ctx.fillStyle='#6b4527';
+    ctx.beginPath(); ctx.moveTo(-80,-10); ctx.lineTo(0,-58); ctx.lineTo(80,-10); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#e7c98a';
+    ctx.fillRect(-58,4,26,36);
+    ctx.fillStyle='#3a2b1c';
+    ctx.fillRect(-50,14,10,26);
+    ctx.fillStyle='#cfe0f0';
+    ctx.fillRect(12,4,26,20);
+    ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-70,50); ctx.lineTo(-70,80); ctx.moveTo(70,50); ctx.lineTo(70,80); ctx.stroke();
+    ctx.restore();
+  }
+  function drawLanggar(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#a4844d'; ctx.fillRect(-40,-8,80,34);
+    ctx.fillStyle='#6b4527';
+    ctx.beginPath(); ctx.moveTo(-46,-8); ctx.lineTo(0,-40); ctx.lineTo(46,-8); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(-38,26); ctx.lineTo(-38,50); ctx.moveTo(38,26); ctx.lineTo(38,50); ctx.stroke();
+    ctx.restore();
+  }
+  function drawGoldsmithHut(ctx,w,h){
+    drawSkyDay(ctx,w,h); drawGround(ctx,w,h);
+    ctx.save();
+    ctx.fillStyle='#9c7a4a'; ctx.fillRect(w*0.42,h*0.42,w*0.4,h*0.32);
+    ctx.fillStyle='#5a3419';
+    ctx.beginPath(); ctx.moveTo(w*0.4,h*0.42); ctx.lineTo(w*0.62,h*0.28); ctx.lineTo(w*0.84,h*0.42); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#2b2b2b'; ctx.fillRect(w*0.58,h*0.6,w*0.08,h*0.14);
+    ctx.fillStyle='#c2542f';
+    ctx.beginPath(); ctx.moveTo(w*0.5,h*0.6); ctx.quadraticCurveTo(w*0.48,h*0.5,w*0.52,h*0.42); ctx.quadraticCurveTo(w*0.5,h*0.36,w*0.46,h*0.3); ctx.strokeStyle='rgba(255,180,120,0.5)'; ctx.lineWidth=4; ctx.stroke();
+    ctx.restore();
+  }
+  function drawRiver(ctx,w,h){
+    ctx.fillStyle='#5c8a3f'; ctx.fillRect(0,h*0.6,w,h*0.4);
+    let g = ctx.createLinearGradient(0,h*0.66,0,h);
+    g.addColorStop(0,'#4a7fa8'); g.addColorStop(1,'#2f5877');
+    ctx.fillStyle=g; ctx.fillRect(0,h*0.66,w,h*0.34);
+    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=2;
+    for(let i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.moveTo(0,h*0.72+i*14);
+      ctx.quadraticCurveTo(w*0.5,h*0.68+i*14, w,h*0.74+i*14);
+      ctx.stroke();
+    }
+  }
+  function drawChest(ctx,x,y,scale,holeProgress){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#7a4a26'; ctx.fillRect(-36,-20,72,36);
+    ctx.fillStyle='#5a3419'; ctx.fillRect(-38,-30,76,14);
+    ctx.strokeStyle='#3a2410'; ctx.lineWidth=2; ctx.strokeRect(-36,-20,72,36);
+    if(holeProgress>0){
+      ctx.fillStyle='#1a1108';
+      ctx.beginPath(); ctx.arc(0,0,Math.min(20,holeProgress*22),0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawIncenseSmoke(ctx,x,y,t){
+    ctx.save();
+    ctx.strokeStyle='rgba(230,230,230,0.6)'; ctx.lineWidth=2;
+    for(let i=0;i<3;i++){
+      const off=i*400;
+      ctx.beginPath();
+      let px=x+ Math.sin((t+off)/300)*6;
+      ctx.moveTo(px,y);
+      for(let s=1;s<=6;s++){
+        const py=y-s*8;
+        ctx.lineTo(x+Math.sin((t+off)/300+s)*8, py);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle='#c2542f';
+    ctx.fillRect(x-3,y,6,6);
+    ctx.restore();
+  }
+  function drawGoldPile(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#e0b23c';
+    for(const [dx,dy,r] of [[-14,0,10],[0,-4,12],[14,0,10],[-6,6,9],[8,6,9]]){
+      ctx.beginPath(); ctx.arc(dx,dy,r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.strokeStyle='#b3872a'; ctx.lineWidth=1.5;
+    for(const [dx,dy,r] of [[-14,0,10],[0,-4,12],[14,0,10]]){
+      ctx.beginPath(); ctx.arc(dx,dy,r*0.6,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawMagicBall(ctx,x,y,scale,t){
+    const pulse = 1 + Math.sin(t/260)*0.08;
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale*pulse,scale*pulse);
+    const g = ctx.createRadialGradient(0,0,2,0,0,26);
+    g.addColorStop(0,'#fff9e0'); g.addColorStop(0.5,'#ffe27a'); g.addColorStop(1,'rgba(255,200,80,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#f4c542';
+    ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.8)';
+    ctx.beginPath(); ctx.arc(-3,-3,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------- People ---------------- */
+  function faceMood(ctx,cx,cy,mood){
+    ctx.strokeStyle='#2a1c12'; ctx.lineWidth=1.6;
+    ctx.fillStyle='#2a1c12';
+    ctx.beginPath(); ctx.arc(cx-4,cy,1.6,0,Math.PI*2); ctx.arc(cx+4,cy,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    if(mood==='happy'||mood==='kind'||mood==='amazed'){ ctx.arc(cx,cy+4,4,0,Math.PI); }
+    else if(mood==='sad'||mood==='worried'||mood==='confused'){ ctx.arc(cx,cy+8,4,Math.PI,Math.PI*2); }
+    else { ctx.moveTo(cx-4,cy+6); ctx.lineTo(cx+4,cy+6); }
+    ctx.stroke();
+  }
+  function drawManSabar(ctx,x,y,scale,opt){
+    opt=opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#8a5a2f'; ctx.beginPath(); ctx.moveTo(-20,60); ctx.lineTo(20,60); ctx.lineTo(14,10); ctx.lineTo(-14,10); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c9a86b'; ctx.beginPath(); ctx.moveTo(-14,10); ctx.lineTo(14,10); ctx.lineTo(10,-16); ctx.lineTo(-10,-16); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#e0b98a'; ctx.beginPath(); ctx.arc(0,-32,15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2a2a2a'; ctx.beginPath(); ctx.arc(0,-42,15,Math.PI,Math.PI*2); ctx.fill();
+    faceMood(ctx,0,-30,opt.mood);
+    if(opt.holdCoin){ ctx.fillStyle='#e0b23c'; ctx.beginPath(); ctx.arc(18,0,6,0,Math.PI*2); ctx.fill(); }
+    ctx.restore();
+  }
+  function drawWomanSabar(ctx,x,y,scale,opt){
+    opt=opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#7a4a68'; ctx.beginPath(); ctx.moveTo(-22,60); ctx.lineTo(22,60); ctx.lineTo(12,4); ctx.lineTo(-12,4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c98a9c'; ctx.beginPath(); ctx.moveTo(-12,4); ctx.lineTo(12,4); ctx.lineTo(9,-18); ctx.lineTo(-9,-18); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#e0b98a'; ctx.beginPath(); ctx.arc(0,-32,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#7a4a68';
+    ctx.beginPath(); ctx.moveTo(-16,-38); ctx.quadraticCurveTo(0,-56,16,-38); ctx.quadraticCurveTo(14,-14,4,-16); ctx.quadraticCurveTo(10,-30,0,-34); ctx.quadraticCurveTo(-10,-30,-4,-16); ctx.quadraticCurveTo(-14,-14,-16,-38); ctx.fill();
+    faceMood(ctx,0,-30,opt.mood);
+    if(opt.holdCoin){ ctx.fillStyle='#e0b23c'; ctx.beginPath(); ctx.arc(-18,0,6,0,Math.PI*2); ctx.fill(); }
+    ctx.restore();
+  }
+  function drawWomanMellas(ctx,x,y,scale,opt){
+    opt=opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#4a5a86'; ctx.beginPath(); ctx.moveTo(-22,58); ctx.lineTo(22,58); ctx.lineTo(12,2); ctx.lineTo(-12,2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#8ea0d0'; ctx.beginPath(); ctx.moveTo(-12,2); ctx.lineTo(12,2); ctx.lineTo(9,-20); ctx.lineTo(-9,-20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#e0b98a'; ctx.beginPath(); ctx.arc(0,-32,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#4a5a86';
+    ctx.beginPath(); ctx.moveTo(-16,-38); ctx.quadraticCurveTo(0,-54,16,-38); ctx.quadraticCurveTo(14,-16,-14,-16); ctx.quadraticCurveTo(-16,-16,-16,-38); ctx.fill();
+    faceMood(ctx,0,-30,opt.mood);
+    ctx.fillStyle='#e0b23c'; ctx.beginPath(); ctx.arc(14,-2,7,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawManSeller(ctx,x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#6b5636'; ctx.beginPath(); ctx.moveTo(-18,56); ctx.lineTo(18,56); ctx.lineTo(12,8); ctx.lineTo(-12,8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#a68a5c'; ctx.beginPath(); ctx.moveTo(-12,8); ctx.lineTo(12,8); ctx.lineTo(9,-16); ctx.lineTo(-9,-16); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c9a06a'; ctx.beginPath(); ctx.arc(0,-30,13,0,Math.PI*2); ctx.fill();
+    faceMood(ctx,0,-28,'confused');
+    ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(38,20); ctx.stroke();
+    ctx.restore();
+  }
+  function drawGoldsmithAkhmad(ctx,x,y,scale,opt){
+    opt=opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#3a3a3a'; ctx.beginPath(); ctx.moveTo(-20,58); ctx.lineTo(20,58); ctx.lineTo(13,6); ctx.lineTo(-13,6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#8a5a2f'; ctx.fillRect(-16,-4,32,26);
+    ctx.fillStyle='#c9a06a'; ctx.beginPath(); ctx.arc(0,-30,14,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#2a1c12'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(-6,-24); ctx.lineTo(6,-24); ctx.stroke();
+    faceMood(ctx,0,-30,opt.mood==='angry'?'worried':'confused');
+    if(opt.mood==='angry'){
+      ctx.strokeStyle='#c2402f'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-10,-40); ctx.lineTo(-2,-36); ctx.moveTo(10,-40); ctx.lineTo(2,-36); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* ---------------- Animals ---------------- */
+  function drawDog(ctx,x,y,scale,opt){
+    opt=opt||{};
+    const bob = opt.mood==='run' ? Math.sin((opt.tapPulse||0)/80)*6 : (opt.wag? Math.sin((opt.tapPulse||0)/150)*2:0);
+    ctx.save(); ctx.translate(x,y+bob); ctx.scale(scale,scale);
+    ctx.fillStyle='#a97c50';
+    ctx.beginPath(); ctx.ellipse(0,0,26,17,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-22,-4,12,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#7a5636';
+    ctx.beginPath(); ctx.moveTo(-30,-12); ctx.lineTo(-38,-24); ctx.lineTo(-24,-16); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-14,-12); ctx.lineTo(-6,-24); ctx.lineTo(-18,-16); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#5a3a20';
+    ctx.beginPath(); ctx.ellipse(-30,-2,5,4,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-24,-8,2.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2a1c12'; ctx.beginPath(); ctx.arc(-24.5,-8,1.2,0,Math.PI*2); ctx.fill();
+    if(opt.mood==='scared'){
+      ctx.strokeStyle='#2a1c12'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(-28,-13); ctx.lineTo(-22,-11); ctx.stroke();
+    }
+    let tailWag = opt.mood==='bark'||opt.mood==='run' ? Math.sin((opt.tapPulse||0)/100)*0.6 : (opt.wag? Math.sin((opt.tapPulse||0)/150)*0.4:0.1);
+    ctx.strokeStyle='#7a5636'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.save(); ctx.translate(22,2); ctx.rotate(tailWag);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(14,-10,10,-22); ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle='#7a5636'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-10,14); ctx.lineTo(-10,26); ctx.moveTo(10,14); ctx.lineTo(10,26); ctx.stroke();
+    if(opt.mood==='bark'){
+      ctx.fillStyle='#2a1c12';
+      ctx.beginPath(); ctx.ellipse(-36,-1,2.5,3+Math.abs(Math.sin((opt.tapPulse||0)/120))*3,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawCat(ctx,x,y,scale,opt){
+    opt=opt||{};
+    const bob = opt.mood==='run' ? Math.sin((opt.tapPulse||0)/80)*6 : (opt.purr? Math.sin((opt.tapPulse||0)/180)*1.6:0);
+    ctx.save(); ctx.translate(x,y+bob); ctx.scale(scale,scale);
+    ctx.fillStyle='#e08a3c';
+    ctx.beginPath(); ctx.ellipse(0,0,22,15,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,-4,11,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-26,-12); ctx.lineTo(-30,-24); ctx.lineTo(-20,-16); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-12,-12); ctx.lineTo(-8,-24); ctx.lineTo(-16,-16); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#c26a26'; ctx.lineWidth=1.6;
+    for(const dx of [-8,-2,4]){ ctx.beginPath(); ctx.moveTo(dx,4); ctx.lineTo(dx,10); ctx.stroke(); }
+    ctx.fillStyle='#fff5e0'; ctx.beginPath(); ctx.ellipse(-18,0,5,7,0,0,Math.PI*2); ctx.fill();
+    const eyeShape = opt.mood==='sneaky' ? 0.4 : 1;
+    ctx.fillStyle='#3a2b18';
+    ctx.beginPath(); ctx.ellipse(-21,-7,1.8,2.4*eyeShape,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-15,-7,1.8,2.4*eyeShape,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#e0575a';
+    ctx.beginPath(); ctx.moveTo(-19,-3); ctx.lineTo(-17,-3); ctx.lineTo(-18,-1); ctx.closePath(); ctx.fill();
+    if(opt.mood==='scared'){
+      ctx.strokeStyle='#2a1c12'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(-25,-13); ctx.lineTo(-19,-11); ctx.moveTo(-15,-11); ctx.lineTo(-9,-13); ctx.stroke();
+    }
+    let tailSwish = Math.sin((opt.tapPulse||0)/160)*0.5;
+    ctx.strokeStyle='#e08a3c'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.save(); ctx.translate(18,2); ctx.rotate(tailSwish);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(16,-8,12,-24); ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle='#e08a3c'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-8,12); ctx.lineTo(-8,22); ctx.moveTo(8,12); ctx.lineTo(8,22); ctx.stroke();
+    ctx.restore();
+  }
+  function drawMouse(ctx,x,y,scale,opt){
+    opt=opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#9a9a9a';
+    ctx.beginPath(); ctx.ellipse(0,0,14,9,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-12,-2,7,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#c98a9c';
+    ctx.beginPath(); ctx.arc(-18,-6,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-10,-8,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2a1c12'; ctx.beginPath(); ctx.arc(-15,-3,1.2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#c9a9a9'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(12,2); ctx.quadraticCurveTo(24,6,20,16); ctx.stroke();
+    ctx.restore();
+  }
+  function drawMouseGnaw(ctx,x,y,scale,t){
+    const jitter = Math.sin(t/70)*2;
+    drawMouse(ctx,x+jitter,y,scale,{});
+  }
+  function drawHeron(ctx,x,y,scale,opt){
+    opt=opt||{};
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle='#e7e7e7'; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-6,20); ctx.lineTo(-8,44); ctx.moveTo(6,20); ctx.lineTo(8,44); ctx.stroke();
+    ctx.fillStyle='#f2f2f2';
+    ctx.beginPath(); ctx.ellipse(0,4,16,20,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-22,10,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#f2f2f2'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,-6); ctx.quadraticCurveTo(2,-18,6,-22); ctx.stroke();
+    ctx.fillStyle='#e0a23c';
+    ctx.beginPath(); ctx.moveTo(14,-24); ctx.lineTo(30,-22); ctx.lineTo(14,-19); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#2a1c12'; ctx.beginPath(); ctx.arc(9,-25,1.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawHeronDive(ctx,x,riverBaseY,progress){
+    const y = riverBaseY*0.5 + progress*(riverBaseY*0.4);
+    const scale = 1 - progress*0.5;
+    drawHeron(ctx,x,y,scale,{});
+    if(progress>0.1){
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=2;
+      for(let i=0;i<3;i++){
+        ctx.beginPath(); ctx.arc(x,riverBaseY*0.9,10+i*8+progress*10,0,Math.PI*2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+  function drawSpeechCoins(ctx,x,y){
+    ctx.save();
+    ctx.fillStyle='#fffaf0'; ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(x,y,26,20,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#e0b23c';
+    ctx.beginPath(); ctx.arc(x-6,y,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+6,y,6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------- Speech synthesis ---------------- */
+  function speak(text){
+    if(muted || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    currentUtterance = u;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------- Scene flow ---------------- */
+  function renderDots(){
+    el.dots.innerHTML = '';
+    SCENES.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIdx?' active':'') + (i<sceneIdx?' done':'');
+      el.dots.appendChild(d);
+    });
+  }
+  function setNarration(txt){ el.narrationText.textContent = txt; }
+  function clearMinigameUI(){
+    const existing = document.querySelector('.minigame-ui');
+    if(existing) existing.remove();
+  }
+
+  function goScene(idx){
+    stopSpeak();
+    clearMinigameUI();
+    sceneIdx = idx;
+    mg = null;
+    renderDots();
+    const scene = SCENES[idx];
+    el.nextbtn.disabled = false;
+
+    if(scene.type === 'story'){
+      const t = scene.text[lang];
+      setNarration(t);
+      speak(t);
+      el.nextbtn.textContent = UI[lang].next;
+      el.nextbtn.onclick = ()=>{
+        if(idx === SCENES.length-1) finishStory();
+        else goScene(idx+1);
+      };
+    } else if(scene.type === 'minigame'){
+      startMinigame(scene, idx);
+    }
+    startAnim();
+  }
+
+  function finishStory(){
+    stopSpeak();
+    el.nextbtn.textContent = UI[lang].replay;
+    el.nextbtn.disabled = false;
+    el.nextbtn.onclick = ()=>{ started=false; showOverlay(true); };
+  }
+
+  function startMinigame(scene, idx){
+    const t = scene.introText[lang];
+    setNarration(t);
+    speak(t);
+    el.nextbtn.disabled = true;
+    el.nextbtn.textContent = UI[lang].next;
+
+    mg = { score:0, progress:0, startTime: performance.now(), done:false };
+
+    const uiWrap = document.createElement('div');
+    uiWrap.className = 'minigame-ui';
+
+    if(scene.kind === 'tap'){
+      const label = document.createElement('div');
+      label.className = 'prompt-label';
+      label.textContent = scene.target==='dog' ? UI[lang].tapDog : scene.target==='cat' ? UI[lang].tapCat : UI[lang].tapMice;
+      const meter = document.createElement('div'); meter.className='meter';
+      const fill = document.createElement('div'); fill.className='meter-fill';
+      meter.appendChild(fill);
+      const btn = document.createElement('button');
+      btn.className = 'tapbtn';
+      btn.textContent = scene.target==='dog' ? '🐾 Ketuk' : scene.target==='cat' ? '🐾 Ketuk' : '🐭 Ketuk';
+      btn.addEventListener('click', ()=>{
+        if(mg.done) return;
+        mg.score++;
+        fill.style.width = Math.min(100,(mg.score/scene.goal)*100) + '%';
+        if(mg.score >= scene.goal){ endMinigame(scene, idx); }
+      });
+      uiWrap.appendChild(label);
+      uiWrap.appendChild(meter);
+      uiWrap.appendChild(btn);
+    } else if(scene.kind === 'hold'){
+      const label = document.createElement('div');
+      label.className = 'prompt-label';
+      label.textContent = UI[lang].holdHeron;
+      const meter = document.createElement('div'); meter.className='meter';
+      const fill = document.createElement('div'); fill.className='meter-fill';
+      meter.appendChild(fill);
+      const btn = document.createElement('button');
+      btn.className = 'tapbtn';
+      btn.textContent = '🕊️ Tahan';
+      let holding = false;
+      let lastT = null;
+      function step(now){
+        if(holding && !mg.done){
+          const dt = lastT ? now-lastT : 16;
+          lastT = now;
+          scene.onHold(mg, dt);
+          fill.style.width = (mg.progress*100)+'%';
+          if(mg.progress >= 1){ endMinigame(scene, idx); return; }
+          requestAnimationFrame(step);
+        } else { lastT = null; }
+      }
+      const startHold = (e)=>{ e.preventDefault(); if(mg.done) return; holding=true; lastT=null; requestAnimationFrame(step); };
+      const endHold = ()=>{ holding=false; };
+      btn.addEventListener('mousedown', startHold);
+      btn.addEventListener('touchstart', startHold, {passive:false});
+      window.addEventListener('mouseup', endHold);
+      btn.addEventListener('touchend', endHold);
+      uiWrap.appendChild(label);
+      uiWrap.appendChild(meter);
+      uiWrap.appendChild(btn);
+    }
+
+    document.getElementById('stage-wrap').appendChild(uiWrap);
+    mg.timeout = setTimeout(()=>{ if(!mg.done) endMinigame(scene, idx); }, scene.duration + 4000);
+  }
+
+  function endMinigame(scene, idx){
+    if(mg.done) return;
+    mg.done = true;
+    if(mg.timeout) clearTimeout(mg.timeout);
+    clearMinigameUI();
+    const t = scene.resultText[lang];
+    setNarration(t);
+    speak(t);
+    el.nextbtn.disabled = false;
+    el.nextbtn.textContent = UI[lang].next;
+    el.nextbtn.onclick = ()=>{
+      if(idx === SCENES.length-1) finishStory(); else goScene(idx+1);
+    };
+  }
+
+  /* ---------------- Canvas animation loop ---------------- */
+  function startAnim(){
+    if(animFrame) cancelAnimationFrame(animFrame);
+    animStart = performance.now();
+    function frame(now){
+      const t = now - animStart;
+      const scene = SCENES[sceneIdx];
+      ctx.clearRect(0,0,el.canvas.width, el.canvas.height);
+      try{
+        scene.draw(ctx, el.canvas.width, el.canvas.height, t, mg||{});
+      }catch(e){ /* fail-safe */ }
+      animFrame = requestAnimationFrame(frame);
+    }
+    animFrame = requestAnimationFrame(frame);
+  }
+
+  /* ---------------- Overlay / Start ---------------- */
+  function showOverlay(show){
+    if(show){
+      el.overlay.classList.remove('hidden');
+      stopSpeak();
+      if(animFrame) cancelAnimationFrame(animFrame);
+      ctx.clearRect(0,0,el.canvas.width,el.canvas.height);
+      drawSkyDay(ctx, el.canvas.width, el.canvas.height);
+      drawGround(ctx, el.canvas.width, el.canvas.height);
+      drawHut(ctx, el.canvas.width*0.32, el.canvas.height*0.5, 1);
+      drawCat(ctx, el.canvas.width*0.62, el.canvas.height*0.78, 1.1, {mood:'happy',purr:true,tapPulse:0});
+      drawDog(ctx, el.canvas.width*0.78, el.canvas.height*0.82, 0.9, {mood:'normal',tapPulse:0});
+    } else {
+      el.overlay.classList.add('hidden');
+    }
+  }
+
+  /* ---------------- Apply language / labels ---------------- */
+  function applyLangUI(){
+    document.documentElement.lang = lang;
+    el.titleText.textContent = UI[lang].title;
+    el.ovTitle.textContent = UI[lang].title;
+    el.ovDesc.textContent = UI[lang].subtitle;
+    el.startBtn.textContent = started ? UI[lang].replay : UI[lang].start;
+    el.footerText.textContent = UI[lang].footer;
+    el.langBtn.textContent = UI[lang].langBtnShows;
+  }
+
+  function toggleLang(){
+    lang = lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+    if(sceneIdx>=0 && SCENES[sceneIdx]){
+      const scene = SCENES[sceneIdx];
+      if(scene.type==='story'){
+        setNarration(scene.text[lang]);
+        speak(scene.text[lang]);
+      } else if(scene.type==='minigame' && mg && !mg.done){
+        const label = document.querySelector('.prompt-label');
+        if(label){
+          label.textContent = scene.kind==='hold' ? UI[lang].holdHeron : (scene.target==='dog'?UI[lang].tapDog:scene.target==='cat'?UI[lang].tapCat:UI[lang].tapMice);
+        }
+        setNarration(scene.introText[lang]);
+        speak(scene.introText[lang]);
+      } else if(scene.type==='minigame' && mg && mg.done){
+        setNarration(scene.resultText[lang]);
+      }
+    }
+  }
+
+  /* ---------------- Mute ---------------- */
+  function applyMuteUI(){ el.muteBtn.textContent = muted ? '🔇' : '🔊'; }
+  function toggleMute(){
+    muted = !muted;
+    localStorage.setItem('bak_muted', muted ? '1':'0');
+    applyMuteUI();
+    if(muted) stopSpeak();
+    else if(sceneIdx>=0){
+      const scene = SCENES[sceneIdx];
+      if(scene.type==='story') speak(scene.text[lang]);
+      else if(scene.type==='minigame' && mg && !mg.done) speak(scene.introText[lang]);
+    }
+  }
+
+  /* ---------------- Resize to parent (postMessage) ---------------- */
+  function reportHeight(){
+    const h = el.app.getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'bak-resize', height: Math.ceil(h) + 4 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', ()=>{ resizeCanvas(); reportHeight(); });
+  if('ResizeObserver' in window){
+    new ResizeObserver(reportHeight).observe(el.app);
+  } else {
+    setInterval(reportHeight, 800);
+  }
+  function resizeCanvas(){
+    el.canvas.width = 700;
+    el.canvas.height = 420;
+  }
+
+  /* ---------------- Init ---------------- */
+  el.startBtn.addEventListener('click', ()=>{
+    started = true;
+    showOverlay(false);
+    goScene(0);
+    applyLangUI();
+    reportHeight();
+  });
+  el.langBtn.addEventListener('click', toggleLang);
+  el.muteBtn.addEventListener('click', toggleMute);
+
+  applyMuteUI();
+  applyLangUI();
+  showOverlay(true);
+  resizeCanvas();
+  setTimeout(reportHeight, 300);
+
+})();
+</script>
+</body>
+</html>
