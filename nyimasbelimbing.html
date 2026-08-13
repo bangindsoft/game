@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kisah Nyi Mas Belimbing</title>
+<style>
+  :root{
+    --bg1:#1b1224;
+    --bg2:#3a1f3d;
+    --panel:#241726;
+    --gold:#e0b055;
+    --gold-soft:#f0d9a3;
+    --cream:#f5e9d6;
+    --purple:#8a5fb0;
+    --danger:#b3453c;
+    --green:#4c7a5a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:transparent;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 24px rgba(0,0,0,0.35);
+    border:1px solid #4a3350;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    background:rgba(0,0,0,0.25);
+  }
+  .topbar-title{
+    font-size:13px;
+    letter-spacing:0.5px;
+    color:var(--gold-soft);
+    opacity:0.85;
+  }
+  .topbtns{display:flex;gap:8px;}
+  .iconbtn{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.2);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .iconbtn:hover{background:rgba(255,255,255,0.16);}
+  .stage{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    aspect-ratio:800/450;
+    cursor:pointer;
+  }
+  .narration{
+    padding:14px 18px 6px 18px;
+    min-height:54px;
+  }
+  #narrationText{
+    margin:0;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--cream);
+  }
+  #instructionText{
+    margin:6px 0 0 0;
+    font-size:13px;
+    color:var(--gold-soft);
+    font-style:italic;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 0 4px 0;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(255,255,255,0.2);
+    transition:background 0.2s, transform 0.2s;
+  }
+  .dot.done{background:var(--gold);}
+  .dot.current{background:var(--gold-soft);transform:scale(1.3);}
+  .controls{
+    padding:10px 18px 20px 18px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    min-height:44px;
+    align-items:center;
+  }
+  .btn{
+    background:linear-gradient(180deg,#c9924b,#a8712f);
+    border:none;
+    color:#241205;
+    font-weight:600;
+    padding:11px 20px;
+    border-radius:24px;
+    font-size:14.5px;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.35);
+    transition:transform 0.12s, filter 0.12s;
+    user-select:none;
+    touch-action:manipulation;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:scale(0.96);}
+  .btn.secondary{
+    background:rgba(255,255,255,0.08);
+    color:var(--cream);
+    border:1px solid rgba(255,255,255,0.3);
+  }
+  .btn:disabled{
+    opacity:0.35;
+    cursor:default;
+  }
+  .btn.big{
+    padding:14px 28px;
+    font-size:16px;
+  }
+  .progress-wrap{
+    width:100%;
+    max-width:320px;
+    height:10px;
+    background:rgba(255,255,255,0.12);
+    border-radius:6px;
+    overflow:hidden;
+    margin:2px auto 0 auto;
+  }
+  .progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--gold-soft));
+    transition:width 0.06s linear;
+  }
+  .footer{
+    text-align:center;
+    font-size:11px;
+    color:rgba(245,233,214,0.45);
+    padding:6px 0 12px 0;
+    letter-spacing:0.4px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <span class="topbar-title" id="topTitle">Cerita Rakyat Interaktif</span>
+    <div class="topbtns">
+      <button class="iconbtn" id="langBtn" aria-label="Ganti Bahasa">EN</button>
+      <button class="iconbtn" id="muteBtn" aria-label="Bisukan Narasi">🔊</button>
+    </div>
+  </div>
+  <div class="stage">
+    <canvas id="canvas" width="800" height="450"></canvas>
+  </div>
+  <div class="narration">
+    <p id="narrationText"></p>
+    <p id="instructionText"></p>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="controls" id="controls"></div>
+  <div class="footer" id="footerText">Legenda Nusantara &middot; Jawa Barat</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  var narrationText = document.getElementById('narrationText');
+  var instructionText = document.getElementById('instructionText');
+  var dotsEl = document.getElementById('dots');
+  var controlsEl = document.getElementById('controls');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var topTitle = document.getElementById('topTitle');
+  var footerText = document.getElementById('footerText');
+
+  var W = 800, H = 450;
+
+  // ---------- language & mute state ----------
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+  try {
+    var storedLang = localStorage.getItem('nmb_lang');
+    if (!params.get('lang') && storedLang) lang = storedLang;
+  } catch(e){}
+
+  var muted = false;
+  try { muted = localStorage.getItem('nmb_muted') === '1'; } catch(e){}
+
+  function setLangUI(){
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    topTitle.textContent = lang === 'id' ? 'Cerita Rakyat Interaktif' : 'Interactive Folktale';
+    footerText.textContent = lang === 'id' ? 'Legenda Nusantara \u00b7 Jawa Barat' : 'Indonesian Legend \u00b7 West Java';
+    document.documentElement.lang = lang;
+  }
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    try { localStorage.setItem('nmb_lang', lang); } catch(e){}
+    setLangUI();
+    renderScene(true);
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try { localStorage.setItem('nmb_muted', muted ? '1':'0'); } catch(e){}
+    setLangUI();
+    if (muted) window.speechSynthesis && window.speechSynthesis.cancel();
+    else speak(currentNarration());
+  });
+
+  // ---------- speech ----------
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if (!voices || !voices.length) return null;
+    var want = lang === 'id' ? 'id-ID' : 'en-US';
+    var v = voices.find(function(v){ return v.lang === want; });
+    if (!v) v = voices.find(function(v){ return v.lang && v.lang.indexOf(lang) === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis || muted || !text) return;
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    var v = pickVoice();
+    if (v) utter.voice = v;
+    utter.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ---------- resize to parent (iframe) ----------
+  function sendHeight(){
+    var h = document.getElementById('app').scrollHeight + 4;
+    try {
+      window.parent.postMessage({ type: 'resize', height: h }, '*');
+      window.parent.postMessage({ frameHeight: h }, '*');
+      window.parent.postMessage(String(h), '*');
+    } catch(e){}
+  }
+  window.addEventListener('load', function(){ sendHeight(); setTimeout(sendHeight,300); });
+  window.addEventListener('resize', sendHeight);
+
+  // ================= STORY CONTENT =================
+  var T = {
+    title: {
+      id: { title:"Kisah Nyi Mas Belimbing", narration:"Sebuah dongeng cinta dan keajaiban dari tanah Jawa Barat, tentang seorang putri pertapa yang jatuh cinta dalam mimpi.", instruction:"Tekan tombol di bawah untuk memulai kisahnya.", start:"Mulai Cerita" },
+      en: { title:"The Tale of Nyi Mas Belimbing", narration:"A tale of love and wonder from West Java, about a hermit's daughter who fell in love in a dream.", instruction:"Press the button below to begin the story.", start:"Start Story" }
+    },
+    dream: {
+      id: { narration:"Di malam yang tenang, Nyi Mas Belimbing bermimpi bertemu seorang pemuda tampan bernama Sunan Gunung Jati. Sejak saat itu, hatinya selalu memikirkan sosok dalam mimpinya.", instruction:"Ketuk tiga bintang yang berkelip untuk membuka mimpi Nyi Mas." },
+      en: { narration:"On a quiet night, Nyi Mas Belimbing dreamed of a handsome young man named Sunan Gunung Jati. From that night on, her heart could not stop thinking of him.", instruction:"Tap the three twinkling stars to open Nyi Mas's dream." }
+    },
+    confess: {
+      id: { narration:"Ayahnya, Resi Rarata, melihat Nyi Mas selalu murung. Ia pun bertanya lembut apa yang mengganjal hati putrinya.", instruction:"Tekan dan tahan tombol hati agar Nyi Mas berani mengungkapkan perasaannya.", hold:"Tahan untuk Bicara" },
+      en: { narration:"Her father, Resi Rarata, noticed Nyi Mas was always sad. He gently asked what was troubling his daughter's heart.", instruction:"Press and hold the heart button to help Nyi Mas speak her feelings.", hold:"Hold to Speak" }
+    },
+    forbid: {
+      id: { narration:"Resi Rarata tidak mengizinkan putrinya pergi sendirian menemui pemuda itu. Ia menasihati, jika memang berjodoh, Tuhan pasti akan mempertemukan.", instruction:"Pilih apa yang akan dilakukan Nyi Mas.",
+        obey:"Coba Menaati Ayah", go:"Nekat Menemuinya",
+        outObey:"Nyi Mas mencoba menuruti kata ayahnya. Namun semakin ia berusaha melupakan, semakin besar rasa rindu itu tumbuh di hatinya.",
+        outGo:"Rindu di hatinya sudah terlalu besar untuk ditahan lagi. Ia bertekad harus bertemu dengan pemuda dalam mimpinya." },
+      en: { narration:"Resi Rarata forbade his daughter from going alone to meet the young man. He advised her that if they were truly meant to be, God would bring them together.", instruction:"Choose what Nyi Mas will do.",
+        obey:"Try to Obey Father", go:"Go Meet Him Anyway",
+        outObey:"Nyi Mas tried to obey her father. But the more she tried to forget, the more her longing grew.",
+        outGo:"The longing in her heart had grown too strong to hold back. She was determined to meet the young man from her dream." }
+    },
+    sneak: {
+      id: { narration:"Di suatu pagi ketika Resi Rarata masih tertidur lelap, Nyi Mas pergi diam-diam meninggalkan pertapaan menuju Cirebon.", instruction:"Ketuk batu-batu pijakan secara berurutan dari kiri ke kanan agar langkahnya tidak terdengar." },
+      en: { narration:"One morning, while Resi Rarata was still deep asleep, Nyi Mas quietly left the hermitage and set off toward Cirebon.", instruction:"Tap the stepping stones in order from left to right so her footsteps stay silent." }
+    },
+    chase: {
+      id: { narration:"Kepergian Nyi Mas diketahui oleh Ki Pandan Alam, seorang lelaki yang lama menyimpan rasa padanya. Dibakar api cemburu, ia mengejarnya menuju Cirebon.", instruction:"Ketuk tombol di bawah berulang kali untuk mempercepat langkah Nyi Mas.", mash:"Percepat Langkah" },
+      en: { narration:"Ki Pandan Alam, a man who had long admired her, discovered Nyi Mas was gone. Burning with jealousy, he chased after her toward Cirebon.", instruction:"Tap the button below repeatedly to speed up Nyi Mas's journey.", mash:"Speed Up" }
+    },
+    duel: {
+      id: { narration:"Setelah menempuh setengah perjalanan, Ki Pandan Alam berhasil menyusul dan memaksa Nyi Mas untuk pulang. Nyi Mas menolak, dan pertarungan pun tak terhindarkan.", instruction:"Ketuk tombol di bawah berulang kali untuk mengerahkan kesaktian Nyi Mas.", mash:"Kerahkan Kesaktian" },
+      en: { narration:"Halfway through the journey, Ki Pandan Alam caught up and tried to force Nyi Mas back home. She refused, and a fierce fight broke out.", instruction:"Tap the button below repeatedly to channel Nyi Mas's inner power.", mash:"Channel Her Power" }
+    },
+    disguise: {
+      id: { narration:"Ki Pandan Alam kalah dan pulang dengan malu. Ayahnya, Sang Hyang Tenggulung, kasihan melihatnya, lalu mengubah wujud Ki Pandan Alam menyerupai Sunan Gunung Jati.", instruction:"Ketuk lingkaran sihir untuk menjentikkan jari keajaiban." },
+      en: { narration:"Defeated and ashamed, Ki Pandan Alam went home. His father, Sang Hyang Tenggulung, took pity and magically transformed him to look just like Sunan Gunung Jati.", instruction:"Tap the magic circle to snap the fingers of magic." }
+    },
+    wedding: {
+      id: { narration:"Tanpa curiga, Nyi Mas menerima kehadiran sosok yang mirip Sunan Gunung Jati itu. Mereka pun menikah dan tinggal bersama di Cirebon untuk beberapa waktu.", instruction:"Ketuk simbol hati untuk menerima pinangannya." },
+      en: { narration:"Without suspicion, Nyi Mas welcomed the figure who looked just like Sunan Gunung Jati. They married and lived together in Cirebon for some time.", instruction:"Tap the heart symbol to accept his proposal." }
+    },
+    reveal: {
+      id: { narration:"Namun kebohongan tak bisa disembunyikan selamanya. Perlahan, penyamaran Ki Pandan Alam mulai terbongkar di hadapan semua orang.", instruction:"Ketuk topeng itu berulang kali untuk mengungkap wajah aslinya.", mash:"Kupas Topeng" },
+      en: { narration:"But a lie cannot stay hidden forever. Slowly, Ki Pandan Alam's disguise began to unravel in front of everyone.", instruction:"Tap the mask repeatedly to reveal his true face.", mash:"Peel the Mask" }
+    },
+    cikal: {
+      id: { narration1:"Nyi Mas sangat sedih dan malu karena merasa tertipu. Ia tak sanggup kembali ke pertapaan, dan kesedihan yang begitu dalam akhirnya merenggut nyawanya. Ia dimakamkan di Cirebon.", instruction1:"Ketuk pusara itu untuk mendengarkan suara misterius yang terdengar beberapa bulan kemudian.",
+        narration2:"Warga melapor kepada Sunan Gunung Jati. Ketika pusara itu dibuka, di dalamnya ditemukan seorang bayi laki-laki yang sehat. Sunan Gunung Jati mengangkatnya sebagai anak dan menamainya Cikal.", continue2:"Lanjutkan ke Akhir Cerita" },
+      en: { narration1:"Nyi Mas was overcome with sorrow and shame at being deceived. Unable to return to the hermitage, her deep grief eventually took her life. She was buried in Cirebon.", instruction1:"Tap the grave to listen to the mysterious sound heard months later.",
+        narration2:"Villagers reported it to Sunan Gunung Jati. When the grave was opened, a healthy baby boy was found inside. Sunan Gunung Jati adopted him as his own son and named him Cikal.", continue2:"Continue to the Ending" }
+    },
+    end: {
+      id: { narration:"Setelah dewasa, Cikal senang mengembara. Dalam perjalanannya ia bertemu Nabi Khaidir dan menjadi muridnya, lalu tak pernah kembali ke Cirebon. Begitulah kisah cinta dan keajaiban Nyi Mas Belimbing, salah satu legenda dari tanah Jawa Barat.", moral:"Pesan dari cerita ini: dengarkanlah nasihat orang tua, dan jangan biarkan amarah serta cemburu menguasai hati kita.", replay:"Ulangi Cerita" },
+      en: { narration:"When Cikal grew up, he loved to wander. On his travels he met the Prophet Khidr and became his student, and never returned to Cirebon. So goes the tale of love and wonder of Nyi Mas Belimbing, a legend from the land of West Java.", moral:"The lesson of this tale: listen to your parents' advice, and never let anger or jealousy rule your heart.", replay:"Replay Story" }
+    }
+  };
+
+  // ================= SCENE ENGINE =================
+  var SCENE_ORDER = ['title','dream','confess','forbid','sneak','chase','duel','disguise','wedding','reveal','cikal','end'];
+  var DOT_SCENES = ['dream','confess','forbid','sneak','chase','duel','disguise','wedding','reveal','cikal'];
+  var sceneIdx = 0;
+  var hitRegions = [];
+  var animT = 0;
+  var rafId = null;
+
+  // per-scene mutable state
+  var state = {
+    dreamStars:[false,false,false],
+    confessHold:0,
+    confessHolding:false,
+    forbidChoice:null,
+    sneakOrder:[],
+    sneakFlash:-1,
+    chaseProgress:0,
+    duelProgress:0,
+    disguiseDone:false,
+    disguiseAnim:0,
+    weddingDone:false,
+    revealProgress:0,
+    cikalPhase:0 // 0=grave closed,1=revealed
+  };
+
+  function resetState(){
+    state = {
+      dreamStars:[false,false,false],
+      confessHold:0, confessHolding:false,
+      forbidChoice:null,
+      sneakOrder:[], sneakFlash:-1,
+      chaseProgress:0,
+      duelProgress:0,
+      disguiseDone:false, disguiseAnim:0,
+      weddingDone:false,
+      revealProgress:0,
+      cikalPhase:0
+    };
+  }
+
+  function currentSceneKey(){ return SCENE_ORDER[sceneIdx]; }
+
+  function currentNarration(){
+    var key = currentSceneKey();
+    var d = T[key][lang];
+    if (key === 'cikal') return state.cikalPhase === 0 ? d.narration1 : d.narration2;
+    return d.narration;
+  }
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    var key = currentSceneKey();
+    if (key === 'title' || key === 'end'){ dotsEl.style.visibility='hidden'; return; }
+    dotsEl.style.visibility='visible';
+    var curPos = DOT_SCENES.indexOf(key);
+    DOT_SCENES.forEach(function(sk, i){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i < curPos ? ' done' : '') + (i === curPos ? ' current' : '');
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function goScene(key, opts){
+    opts = opts || {};
+    var idx = SCENE_ORDER.indexOf(key);
+    if (idx === -1) return;
+    sceneIdx = idx;
+    animT = 0;
+    renderScene(false, opts.skipSpeak);
+  }
+
+  function nextScene(){
+    var order = SCENE_ORDER;
+    var i = sceneIdx + 1;
+    if (i < order.length) goScene(order[i]);
+  }
+
+  function setText(narr, instr){
+    narrationText.textContent = narr || '';
+    instructionText.textContent = instr || '';
+  }
+
+  function clearControls(){ controlsEl.innerHTML = ''; }
+
+  function addButton(label, cls, onClick, disabled){
+    var b = document.createElement('button');
+    b.className = 'btn ' + (cls||'');
+    b.textContent = label;
+    if (disabled) b.disabled = true;
+    b.addEventListener('click', onClick);
+    controlsEl.appendChild(b);
+    return b;
+  }
+
+  function addProgressBar(){
+    var wrap = document.createElement('div');
+    wrap.className = 'progress-wrap';
+    var bar = document.createElement('div');
+    bar.className = 'progress-bar';
+    wrap.appendChild(bar);
+    controlsEl.appendChild(wrap);
+    return bar;
+  }
+
+  // ---------- drawing helpers ----------
+  function grd(x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+    return g;
+  }
+
+  function drawSky(t){
+    // t: 'night' | 'dusk' | 'day'
+    var colors = {
+      night: ['#0c0a1f','#241a3d'],
+      dusk:  ['#2b1740','#6b3560'],
+      day:   ['#3a5a7d','#7a9fb5']
+    };
+    var c = colors[t] || colors.night;
+    ctx.fillStyle = grd(0,0,0,H,[[0,c[0]],[1,c[1]]]);
+    ctx.fillRect(0,0,W,H*0.72);
+    if (t !== 'day'){
+      // stars
+      ctx.save();
+      for (var i=0;i<40;i++){
+        var sx = (i*137)%W;
+        var sy = (i*71)%(H*0.5);
+        var tw = 0.5 + 0.5*Math.sin(animT*0.002 + i);
+        ctx.globalAlpha = 0.25 + 0.4*Math.abs(tw);
+        ctx.fillStyle = '#fff8e0';
+        ctx.beginPath();
+        ctx.arc(sx, sy+10, 1.3, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    // moon or sun
+    if (t !== 'day'){
+      ctx.save();
+      ctx.fillStyle = '#f5e9c8';
+      ctx.shadowColor = '#f5e9c8';
+      ctx.shadowBlur = 25;
+      ctx.beginPath();
+      ctx.arc(W-100, 70, 32, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.fillStyle = '#ffe9a8';
+      ctx.shadowColor = '#ffdb80';
+      ctx.shadowBlur = 30;
+      ctx.beginPath();
+      ctx.arc(W-100, 70, 36, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawGround(color){
+    ctx.fillStyle = color || '#2c2038';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.72);
+    ctx.quadraticCurveTo(W*0.5,H*0.66,W,H*0.72);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawTree(x,y,scale,kind){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // trunk
+    ctx.fillStyle = '#5a3d28';
+    ctx.fillRect(-6,-10,12,60);
+    if (kind === 'kamboja'){
+      // frangipani: gnarled branches + small canopy clusters (grave tree)
+      ctx.strokeStyle = '#5a3d28';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(0,-10); ctx.lineTo(-25,-45);
+      ctx.moveTo(0,-10); ctx.lineTo(20,-50);
+      ctx.moveTo(0,-10); ctx.lineTo(5,-55);
+      ctx.stroke();
+      ctx.fillStyle = '#3f6b46';
+      [[-25,-50],[20,-56],[5,-62]].forEach(function(p){
+        ctx.beginPath(); ctx.ellipse(p[0],p[1],20,14,0,0,Math.PI*2); ctx.fill();
+      });
+      ctx.fillStyle = '#fff6e6';
+      for (var i=0;i<6;i++){
+        var fx = -20 + i*8 + Math.sin(i)*4;
+        var fy = -55 + (i%3)*6;
+        ctx.beginPath(); ctx.arc(fx,fy,2.2,0,Math.PI*2); ctx.fill();
+      }
+    } else {
+      // pine-ish tropical canopy
+      ctx.fillStyle = '#345a3c';
+      ctx.beginPath();
+      ctx.ellipse(0,-55,34,30,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#3f6b46';
+      ctx.beginPath();
+      ctx.ellipse(-12,-40,26,22,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(14,-38,24,20,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a3626';
+    ctx.beginPath();
+    ctx.moveTo(-50,0); ctx.lineTo(0,-45); ctx.lineTo(50,0); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#6b4f36';
+    ctx.fillRect(-38,0,76,45);
+    ctx.fillStyle = '#2a1d14';
+    ctx.fillRect(-12,15,24,30);
+    ctx.restore();
+  }
+
+  // person drawing: opts {robe, skin, pose, facing, beard, staff, headOrnament, name}
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    var robe = opts.robe || '#8a5fb0';
+    var skin = opts.skin || '#c98a5e';
+    var facing = opts.facing || 1; // 1 right, -1 left
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*facing, scale);
+
+    var pose = opts.pose || 'stand';
+    var bob = pose === 'walk' ? Math.sin(animT*0.01)*3 : 0;
+
+    ctx.translate(0,bob);
+
+    if (pose === 'sleep'){
+      drawSleepingFigure(robe, skin, opts);
+      ctx.restore();
+      return;
+    }
+
+    if (pose === 'sit' || pose === 'bow'){
+      ctx.translate(0,10);
+    }
+
+    drawBody(robe, skin, opts, pose === 'attack' ? 1.05 : 1);
+
+    ctx.restore();
+  }
+
+  function drawSleepingFigure(robe, skin, opts){
+    ctx.save();
+    // sleeping mat
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0,42,70,14,0,0,Math.PI*2);
+    ctx.fill();
+    // blanket / body mound (lying, feet to the right)
+    ctx.fillStyle = robe;
+    ctx.beginPath();
+    ctx.moveTo(-40,40);
+    ctx.quadraticCurveTo(-40,10,-10,10);
+    ctx.quadraticCurveTo(40,10,55,34);
+    ctx.quadraticCurveTo(30,44,-10,44);
+    ctx.quadraticCurveTo(-30,44,-40,40);
+    ctx.closePath();
+    ctx.fill();
+    // gentle blanket fold lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-10,16); ctx.quadraticCurveTo(10,26,30,30);
+    ctx.stroke();
+    // head on a small pillow
+    ctx.fillStyle = '#3a2c22';
+    ctx.beginPath();
+    ctx.ellipse(-38,26,14,8,0.2,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(-38,18,12,0,Math.PI*2);
+    ctx.fill();
+    if (opts.beard){
+      ctx.fillStyle = '#e8e2d5';
+      ctx.beginPath();
+      ctx.ellipse(-38,27,9,6,0,0,Math.PI);
+      ctx.fill();
+    }
+    if (opts.hair === 'long'){
+      ctx.fillStyle = opts.hairColor || '#2a1c14';
+      ctx.beginPath();
+      ctx.ellipse(-30,14,10,14,0.5,0,Math.PI*2);
+      ctx.fill();
+    }
+    // closed eyes
+    ctx.strokeStyle = '#241205';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(-44,17); ctx.lineTo(-40,18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-37,19); ctx.lineTo(-33,20); ctx.stroke();
+    // little "z z z" sleep marks
+    ctx.save();
+    ctx.translate(-20,-4 - 4*Math.sin(animT*0.003));
+    ctx.fillStyle = 'rgba(245,233,214,0.7)';
+    ctx.font = '600 13px Georgia, serif';
+    ctx.fillText('z', 0, 0);
+    ctx.font = '600 10px Georgia, serif';
+    ctx.fillText('z', 10, -8);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawBody(robe, skin, opts, sc){
+    ctx.save();
+    ctx.scale(sc,sc);
+    // robe (trapezoid)
+    ctx.fillStyle = robe;
+    ctx.beginPath();
+    ctx.moveTo(-12,-8);
+    ctx.lineTo(12,-8);
+    ctx.lineTo(20,48);
+    ctx.lineTo(-20,48);
+    ctx.closePath();
+    ctx.fill();
+    // sash
+    ctx.strokeStyle = opts.sash || 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-10,0); ctx.lineTo(10,18);
+    ctx.stroke();
+    // arms
+    ctx.strokeStyle = robe;
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    var armAngle = opts.armsUp ? -0.9 : (opts.pose==='attack' ? -0.5 : 0.35);
+    ctx.beginPath();
+    ctx.moveTo(-10,0);
+    ctx.lineTo(-10 - 16*Math.sin(armAngle), 20 - 16*Math.cos(armAngle));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(10,0);
+    var a2 = opts.armsUp ? -0.9 : (opts.holdStaff ? 0.1 : 0.35);
+    ctx.lineTo(10 + 16*Math.sin(a2), 20 - 16*Math.cos(a2));
+    ctx.stroke();
+    // hands (skin)
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(-10 - 16*Math.sin(armAngle), 20 - 16*Math.cos(armAngle), 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10 + 16*Math.sin(a2), 20 - 16*Math.cos(a2), 4.2, 0, Math.PI*2); ctx.fill();
+    // staff
+    if (opts.holdStaff){
+      ctx.strokeStyle = '#7a5a36';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(10 + 16*Math.sin(a2), 20 - 16*Math.cos(a2));
+      ctx.lineTo(10 + 16*Math.sin(a2), -55);
+      ctx.stroke();
+    }
+    // neck + head
+    ctx.fillStyle = skin;
+    ctx.fillRect(-4,-16,8,10);
+    ctx.beginPath();
+    ctx.arc(0,-24,13,0,Math.PI*2);
+    ctx.fill();
+    // hair / headwear
+    if (opts.hair === 'long'){
+      ctx.fillStyle = opts.hairColor || '#2a1c14';
+      ctx.beginPath();
+      ctx.moveTo(-13,-28);
+      ctx.quadraticCurveTo(-18,-5,-10,20);
+      ctx.quadraticCurveTo(-15,-10,-13,-28);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0,-28,13.5,Math.PI*0.05,Math.PI*0.95,false);
+      ctx.fill();
+    }
+    if (opts.beard){
+      ctx.fillStyle = '#e8e2d5';
+      ctx.beginPath();
+      ctx.moveTo(-9,-18);
+      ctx.quadraticCurveTo(0,10,9,-18);
+      ctx.quadraticCurveTo(0,-6,-9,-18);
+      ctx.fill();
+    }
+    if (opts.headband){
+      ctx.fillStyle = opts.headband;
+      ctx.beginPath();
+      ctx.arc(0,-30,13.2,Math.PI*1.02,Math.PI*1.98);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = opts.headband;
+      ctx.stroke();
+    }
+    if (opts.turban){
+      ctx.fillStyle = opts.turban;
+      ctx.beginPath();
+      ctx.ellipse(0,-32,15,10,0,Math.PI,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(0,-30,13,8,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    if (opts.flower){
+      ctx.fillStyle = '#e0483e';
+      ctx.beginPath();
+      ctx.arc(10,-33,3,0,Math.PI*2);
+      ctx.fill();
+    }
+    // face (simple, non-realistic)
+    ctx.fillStyle = '#241205';
+    var eyeY = -25, eyeDX = 4.2;
+    if (opts.eyesClosed){
+      ctx.lineWidth = 1.3;
+      ctx.strokeStyle = '#241205';
+      ctx.beginPath(); ctx.moveTo(-eyeDX-2,eyeY); ctx.lineTo(-eyeDX+2,eyeY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(eyeDX-2,eyeY); ctx.lineTo(eyeDX+2,eyeY); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(-eyeDX,eyeY,1.4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(eyeDX,eyeY,1.4,0,Math.PI*2); ctx.fill();
+    }
+    if (opts.angry){
+      ctx.strokeStyle = '#241205';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(-eyeDX-3,eyeY-4); ctx.lineTo(-eyeDX+1,eyeY-2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(eyeDX+3,eyeY-4); ctx.lineTo(eyeDX-1,eyeY-2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawMask(x,y,scale,revealAmt){
+    // draws the disguised (gold) face fading into the true (green) face as revealAmt -> 1
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.globalAlpha = 1;
+    drawBody('#d9b25a', '#d8b98a', {turban:'#f2e6c8', beard:false}, 1);
+    ctx.globalAlpha = Math.min(1, revealAmt);
+    drawBody('#3f6b45', '#c98a5e', {headband:'#2f4a33', angry:true}, 1);
+    ctx.restore();
+  }
+
+  function drawStar(x,y,r,collected){
+    ctx.save();
+    ctx.translate(x,y);
+    var pulse = 1 + 0.15*Math.sin(animT*0.006 + x);
+    ctx.scale(pulse,pulse);
+    ctx.fillStyle = collected ? '#ffe9a8' : '#cbb9e8';
+    ctx.shadowColor = collected ? '#ffd97a' : '#b79be0';
+    ctx.shadowBlur = collected ? 20 : 10;
+    ctx.beginPath();
+    for (var i=0;i<5;i++){
+      var ang = -Math.PI/2 + i*(Math.PI*2/5);
+      var ang2 = ang + Math.PI/5;
+      ctx.lineTo(Math.cos(ang)*r, Math.sin(ang)*r);
+      ctx.lineTo(Math.cos(ang2)*r*0.45, Math.sin(ang2)*r*0.45);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStone(x,y,r,active,done,flash){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = flash ? '#b3453c' : (done ? '#e0b055' : (active ? '#cbb9e8' : '#5a4a66'));
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = (done||flash) ? 16 : 4;
+    ctx.beginPath();
+    ctx.ellipse(0,0,r,r*0.6,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMagicCircle(x,y,r,prog){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(animT*0.001);
+    ctx.strokeStyle = '#e0b055';
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2*Math.min(1,prog+0.15)); ctx.stroke();
+    ctx.rotate(-2*animT*0.001);
+    ctx.beginPath(); ctx.arc(0,0,r*0.7,0,Math.PI*2*Math.min(1,prog+0.3)); ctx.stroke();
+    for (var i=0;i<8;i++){
+      var ang = i*(Math.PI*2/8);
+      ctx.beginPath();
+      ctx.arc(Math.cos(ang)*r, Math.sin(ang)*r, 3, 0, Math.PI*2);
+      ctx.fillStyle = '#f5e9c8';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawHeartShape(x,y,r,filled,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    var s = r/16;
+    ctx.scale(s,s);
+    ctx.fillStyle = filled ? '#e0483e' : 'rgba(224,72,62,0.35)';
+    if (glow){ ctx.shadowColor = '#e0483e'; ctx.shadowBlur = 20; }
+    ctx.beginPath();
+    ctx.moveTo(0,6);
+    ctx.bezierCurveTo(-16,-10,-16,10,0,20);
+    ctx.bezierCurveTo(16,10,16,-10,0,6);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGrave(x,y,scale,opened){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a3d55';
+    ctx.beginPath();
+    ctx.ellipse(0,10,42,14,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#3a3045';
+    ctx.beginPath();
+    ctx.moveTo(-8,-40); ctx.quadraticCurveTo(0,-48,8,-40); ctx.lineTo(8,0); ctx.lineTo(-8,0); ctx.closePath();
+    ctx.fill();
+    if (opened){
+      ctx.fillStyle = '#f5e9c8';
+      ctx.shadowColor = '#ffe9a8';
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(0,-2,10,0,Math.PI*2);
+      ctx.fill();
+      // simple baby bundle
+      ctx.fillStyle = '#e8dcc4';
+      ctx.beginPath();
+      ctx.ellipse(0,4,13,9,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#d8b98a';
+      ctx.beginPath();
+      ctx.arc(0,-4,6,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function fitHit(px,py){
+    var rect = canvas.getBoundingClientRect();
+    return { x:(px-rect.left)*(W/rect.width), y:(py-rect.top)*(H/rect.height) };
+  }
+
+  canvas.addEventListener('click', function(ev){
+    var p = fitHit(ev.clientX, ev.clientY);
+    for (var i=hitRegions.length-1;i>=0;i--){
+      var r = hitRegions[i];
+      var dx = p.x-r.x, dy = p.y-r.y;
+      if (Math.sqrt(dx*dx+dy*dy) <= r.r){
+        r.onTap();
+        break;
+      }
+    }
+  });
+  canvas.addEventListener('touchstart', function(ev){
+    if (!ev.touches || !ev.touches[0]) return;
+    var t = ev.touches[0];
+    var p = fitHit(t.clientX, t.clientY);
+    for (var i=hitRegions.length-1;i>=0;i--){
+      var r = hitRegions[i];
+      var dx = p.x-r.x, dy = p.y-r.y;
+      if (Math.sqrt(dx*dx+dy*dy) <= r.r){
+        r.onTap();
+        ev.preventDefault();
+        break;
+      }
+    }
+  }, {passive:false});
+
+  // ================= PER-SCENE DRAW/LOGIC =================
+  function drawSceneFrame(){
+    ctx.clearRect(0,0,W,H);
+    hitRegions = [];
+    var key = currentSceneKey();
+    var fn = SCENE_DRAW[key];
+    if (fn) fn();
+  }
+
+  var SCENE_DRAW = {
+    title: function(){
+      drawSky('night');
+      drawGround('#241826');
+      drawTree(120,340,1.1,'palm');
+      drawHut(420,330,1.5);
+      drawTree(650,350,0.9,'palm');
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.28)';
+      ctx.fillRect(0,H*0.36,W,86);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f5e9c8';
+      ctx.font = '600 30px Georgia, serif';
+      ctx.fillText(T.title[lang].title, W/2, H*0.36+50);
+      ctx.restore();
+    },
+    dream: function(){
+      drawSky('night');
+      drawGround('#241a30');
+      drawHut(150,360,1.1);
+      drawPerson(400,330,1.3,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',pose:'sleep',flower:true});
+      var positions = [[280,110],[400,80],[520,120]];
+      positions.forEach(function(pos,i){
+        drawStar(pos[0],pos[1],20,state.dreamStars[i]);
+        hitRegions.push({x:pos[0],y:pos[1],r:26,onTap:function(idx){
+          return function(){
+            if (state.dreamStars[idx]) return;
+            state.dreamStars[idx]=true;
+            renderScene(false,true);
+          };
+        }(i)});
+      });
+      if (state.dreamStars.every(Boolean)){
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = '#f0d9a3';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(400,190,55,0,Math.PI*2);
+        ctx.stroke();
+        drawPerson(400,225,0.85,{robe:'#e8d9a8',skin:'#c98a5e',turban:'#f5e9d6',pose:'stand'});
+        ctx.restore();
+      }
+    },
+    confess: function(){
+      drawSky('dusk');
+      drawGround('#2c2038');
+      drawHut(650,360,1.0);
+      drawPerson(300,320,1.15,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true,armsUp:false});
+      drawPerson(500,315,1.2,{robe:'#5a4530',skin:'#c98a5e',beard:true,holdStaff:true});
+      var glow = state.confessHold/100;
+      drawHeartShape(400,150,26+10*glow,glow>0.05,glow>0.3);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(400,150,34,-Math.PI/2, -Math.PI/2 + Math.PI*2*glow);
+      ctx.strokeStyle = '#f0d9a3';
+      ctx.stroke();
+      ctx.restore();
+    },
+    forbid: function(){
+      drawSky('dusk');
+      drawGround('#2c2038');
+      drawHut(650,360,1.0);
+      drawPerson(500,315,1.2,{robe:'#5a4530',skin:'#c98a5e',beard:true,holdStaff:true,armsUp:true});
+      drawPerson(300,325,1.15,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true,eyesClosed:true});
+    },
+    sneak: function(){
+      drawSky('night');
+      drawGround('#221930');
+      drawHut(150,340,1.0);
+      drawPerson(150,345,0.8,{robe:'#5a4530',skin:'#c98a5e',beard:true,pose:'sleep'});
+      var order = [0,1,2,3];
+      var stoneX = [280,380,480,580];
+      order.forEach(function(i){
+        var done = state.sneakOrder.indexOf(i) !== -1;
+        var flash = state.sneakFlash === i;
+        drawStone(stoneX[i],300,26,true,done,flash);
+        hitRegions.push({x:stoneX[i],y:300,r:30,onTap:function(idx){
+          return function(){
+            if (state.sneakOrder.indexOf(idx) !== -1) return;
+            var expected = state.sneakOrder.length;
+            if (idx === expected){
+              state.sneakOrder.push(idx);
+              state.sneakFlash = -1;
+            } else {
+              state.sneakFlash = idx;
+              state.sneakOrder = [];
+              setTimeout(function(){ state.sneakFlash=-1; renderScene(false,true); }, 260);
+            }
+            renderScene(false,true);
+          };
+        }(i)});
+      });
+      var progressX = 260 + state.sneakOrder.length*100;
+      drawPerson(progressX,330,0.95,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true,pose:'walk'});
+    },
+    chase: function(){
+      drawSky('dusk');
+      drawGround('#2c2038');
+      drawTree(120,350,0.8,'palm');
+      drawTree(700,340,0.9,'palm');
+      var p = state.chaseProgress/100;
+      var nyiX = 200 + p*380;
+      var kiX = nyiX - 130 + p*40;
+      drawPerson(nyiX,330,1.0,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true,pose:'walk'});
+      drawPerson(kiX,330,1.0,{robe:'#2f4a33',skin:'#c98a5e',headband:'#1c2e1f',angry:true,pose:'walk',facing:1});
+      ctx.save();
+      ctx.fillStyle='rgba(0,0,0,0.3)';
+      ctx.fillRect(60,392,W-120,14);
+      ctx.fillStyle='#e0b055';
+      ctx.fillRect(60,392,(W-120)*p,14);
+      ctx.restore();
+    },
+    duel: function(){
+      drawSky('day');
+      drawGround('#3a5240');
+      var p = state.duelProgress/100;
+      drawPerson(300,320,1.15,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true,pose:'attack'});
+      drawPerson(500,320,1.15,{robe:'#2f4a33',skin:'#c98a5e',headband:'#1c2e1f',angry:true,pose:p>0.8?'sit':'attack'});
+      ctx.save();
+      ctx.globalAlpha = 0.5+0.5*Math.sin(animT*0.02);
+      ctx.strokeStyle = '#f5e9c8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(340,300); ctx.lineTo(460,300);
+      ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.fillStyle='rgba(0,0,0,0.25)';
+      ctx.fillRect(60,392,W-120,14);
+      ctx.fillStyle='#e0483e';
+      ctx.fillRect(60,392,(W-120)*p,14);
+      ctx.restore();
+    },
+    disguise: function(){
+      drawSky('night');
+      drawGround('#221930');
+      drawPerson(560,325,1.0,{robe:'#6b4f36',skin:'#c98a5e',beard:true,holdStaff:true});
+      drawPerson(300,320,1.05,{robe:'#2f4a33',skin:'#c98a5e',headband:'#1c2e1f',pose:'bow'});
+      var prog = state.disguiseAnim;
+      drawMagicCircle(300,230,50,prog);
+      hitRegions.push({x:300,y:230,r:56,onTap:function(){
+        if (state.disguiseDone) return;
+        state.disguiseAnim = Math.min(1,(state.disguiseAnim||0)+0.34);
+        if (state.disguiseAnim >= 1) state.disguiseDone = true;
+        renderScene(false,true);
+      }});
+      if (state.disguiseDone){
+        drawPerson(300,320,1.05,{robe:'#d9b25a',skin:'#d8b98a',turban:'#f2e6c8'});
+      }
+    },
+    wedding: function(){
+      drawSky('dusk');
+      drawGround('#2c2038');
+      drawTree(120,350,0.8,'palm');
+      drawTree(700,340,0.9,'palm');
+      drawPerson(320,320,1.1,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true});
+      drawPerson(480,320,1.1,{robe:'#d9b25a',skin:'#d8b98a',turban:'#f2e6c8'});
+      drawHeartShape(400,180,state.weddingDone?36:26,state.weddingDone,state.weddingDone);
+      hitRegions.push({x:400,y:180,r:34,onTap:function(){
+        if (state.weddingDone) return;
+        state.weddingDone = true;
+        renderScene(false,true);
+      }});
+      if (state.weddingDone){
+        for (var i=0;i<10;i++){
+          var ang = i*(Math.PI*2/10) + animT*0.001;
+          var rr = 60 + 10*Math.sin(animT*0.005+i);
+          ctx.fillStyle = i%2? '#f0d9a3':'#e0483e';
+          ctx.beginPath();
+          ctx.arc(400+Math.cos(ang)*rr, 180+Math.sin(ang)*rr, 3, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    },
+    reveal: function(){
+      drawSky('dusk');
+      drawGround('#2c2038');
+      drawPerson(320,320,1.1,{robe:'#7a5aa0',skin:'#d8b98a',hair:'long',flower:true,eyesClosed:false});
+      var amt = state.revealProgress/100;
+      drawMask(480,300,1.15,amt);
+      hitRegions.push({x:480,y:280,r:60,onTap:function(){
+        state.revealProgress = Math.min(100, state.revealProgress+16);
+        renderScene(false,true);
+      }});
+    },
+    cikal: function(){
+      drawSky('night');
+      drawGround('#221930');
+      drawTree(560,330,1.1,'kamboja');
+      drawGrave(400,340,1.1, state.cikalPhase===1);
+      if (state.cikalPhase===0){
+        hitRegions.push({x:400,y:320,r:60,onTap:function(){
+          state.cikalPhase = 1;
+          renderScene(false,true);
+        }});
+      } else {
+        drawPerson(230,310,1.05,{robe:'#d9b25a',skin:'#d8b98a',turban:'#f2e6c8',armsUp:true});
+      }
+    },
+    end: function(){
+      drawSky('day');
+      drawGround('#3a5a44');
+      drawTree(160,340,1.0,'palm');
+      drawTree(640,330,0.9,'palm');
+      drawPerson(400,320,1.1,{robe:'#c98a4a',skin:'#c98a5e',pose:'walk'});
+      ctx.save();
+      ctx.fillStyle='rgba(0,0,0,0.25)';
+      ctx.fillRect(0,H*0.06,W,54);
+      ctx.textAlign='center';
+      ctx.fillStyle='#f5e9c8';
+      ctx.font='600 22px Georgia, serif';
+      ctx.fillText(lang==='id'?'~ Tamat ~':'~ The End ~', W/2, H*0.06+36);
+      ctx.restore();
+    }
+  };
+
+  // ================= CONTROLS PER SCENE =================
+  function buildControls(){
+    clearControls();
+    var key = currentSceneKey();
+    var d = T[key][lang];
+
+    if (key === 'title'){
+      addButton(d.start, 'big', function(){ resetState(); nextScene(); });
+      return;
+    }
+
+    if (key === 'end'){
+      addButton(T.end[lang].replay, 'big', function(){
+        resetState();
+        goScene('title');
+      });
+      return;
+    }
+
+    if (key === 'dream'){
+      var done = state.dreamStars.every(Boolean);
+      addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, !done);
+      return;
+    }
+
+    if (key === 'confess'){
+      var bar = addProgressBar();
+      var holdBtn = addButton(d.hold, '', function(){}, false);
+      var contBtn = addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, state.confessHold < 100);
+
+      function updateBar(){ bar.style.width = state.confessHold + '%'; }
+      updateBar();
+
+      var holding = false, rafHold = null;
+      function tick(){
+        if (!holding) return;
+        state.confessHold = Math.min(100, state.confessHold + 2.2);
+        updateBar();
+        drawSceneFrame();
+        if (state.confessHold >= 100){
+          holding = false;
+          contBtn.disabled = false;
+          return;
+        }
+        rafHold = requestAnimationFrame(tick);
+      }
+      function startHold(ev){ ev.preventDefault(); if (state.confessHold>=100) return; holding = true; tick(); }
+      function endHold(){ holding = false; if (rafHold) cancelAnimationFrame(rafHold); }
+      holdBtn.addEventListener('mousedown', startHold);
+      holdBtn.addEventListener('touchstart', startHold, {passive:false});
+      holdBtn.addEventListener('mouseup', endHold);
+      holdBtn.addEventListener('mouseleave', endHold);
+      holdBtn.addEventListener('touchend', endHold);
+      return;
+    }
+
+    if (key === 'forbid'){
+      if (!state.forbidChoice){
+        addButton(d.obey, 'secondary', function(){
+          state.forbidChoice = 'obey';
+          narrationText.textContent = d.outObey;
+          speak(d.outObey);
+          buildControls();
+        });
+        addButton(d.go, '', function(){
+          state.forbidChoice = 'go';
+          narrationText.textContent = d.outGo;
+          speak(d.outGo);
+          buildControls();
+        });
+      } else {
+        addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene);
+      }
+      return;
+    }
+
+    if (key === 'sneak'){
+      var done = state.sneakOrder.length === 4;
+      addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, !done);
+      return;
+    }
+
+    if (key === 'chase'){
+      var bar2 = addProgressBar();
+      bar2.style.width = state.chaseProgress + '%';
+      var contBtn2 = addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, state.chaseProgress < 100);
+      addButton(d.mash, 'secondary', function(){
+        state.chaseProgress = Math.min(100, state.chaseProgress + 9);
+        bar2.style.width = state.chaseProgress + '%';
+        drawSceneFrame();
+        if (state.chaseProgress >= 100) contBtn2.disabled = false;
+      });
+      return;
+    }
+
+    if (key === 'duel'){
+      var bar3 = addProgressBar();
+      bar3.style.width = state.duelProgress + '%';
+      var contBtn3 = addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, state.duelProgress < 100);
+      addButton(d.mash, 'secondary', function(){
+        state.duelProgress = Math.min(100, state.duelProgress + 8);
+        bar3.style.width = state.duelProgress + '%';
+        drawSceneFrame();
+        if (state.duelProgress >= 100) contBtn3.disabled = false;
+      });
+      return;
+    }
+
+    if (key === 'disguise'){
+      addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, !state.disguiseDone);
+      return;
+    }
+
+    if (key === 'wedding'){
+      addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, !state.weddingDone);
+      return;
+    }
+
+    if (key === 'reveal'){
+      var bar4 = addProgressBar();
+      bar4.style.width = state.revealProgress + '%';
+      addButton(lang==='id'?'Lanjutkan':'Continue', '', nextScene, state.revealProgress < 100);
+      return;
+    }
+
+    if (key === 'cikal'){
+      if (state.cikalPhase === 1){
+        addButton(T.cikal[lang].continue2, '', nextScene);
+      }
+      return;
+    }
+  }
+
+  // ================= RENDER LOOP =================
+  function renderScene(langChangedOnly, skipSpeak){
+    var key = currentSceneKey();
+    var d = T[key][lang];
+
+    if (key === 'cikal'){
+      setText(state.cikalPhase===0 ? d.narration1 : d.narration2, state.cikalPhase===0 ? d.instruction1 : '');
+    } else if (key === 'forbid' && state.forbidChoice){
+      setText(state.forbidChoice==='obey'?d.outObey:d.outGo, '');
+    } else {
+      setText(d.narration, d.instruction);
+    }
+
+    if (key === 'end'){
+      var p = document.createElement('span');
+      narrationText.textContent = d.narration + '  ' + T.end[lang].moral;
+    }
+
+    buildDots();
+    buildControls();
+    drawSceneFrame();
+
+    if (!skipSpeak){
+      speak(narrationText.textContent);
+    }
+    sendHeight();
+  }
+
+  function loop(t){
+    animT = t;
+    var key = currentSceneKey();
+    if (key === 'dream' || key === 'disguise' || key === 'wedding' || key === 'duel' || key === 'chase' || key==='title'){
+      drawSceneFrame();
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // init
+  setLangUI();
+  resetState();
+  renderScene(false, true);
+  rafId = requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
