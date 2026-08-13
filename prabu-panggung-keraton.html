@@ -390,14 +390,38 @@
 
   /* ---------- canvas scaling ---------- */
   var CW = 800, CH = 500;
+  var ppkReady = false;
+  var ppkResizeTimer = null;
   function fitCanvas(){
     var dpr = window.devicePixelRatio || 1;
-    canvas.width = CW * dpr;
-    canvas.height = CH * dpr;
+    var neededW = Math.round(CW * dpr);
+    var neededH = Math.round(CH * dpr);
+    // Only touch width/height (which clears the canvas) when the size actually changed.
+    if (canvas.width !== neededW || canvas.height !== neededH){
+      canvas.width = neededW;
+      canvas.height = neededH;
+    }
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   fitCanvas();
-  window.addEventListener('resize', fitCanvas);
+  // Holds a no-argument function that redraws exactly what's currently on
+  // screen for the active scene, WITHOUT resetting any interaction state
+  // (drag progress, tap-mash counters, hold progress, etc). Each scene sets
+  // this whenever it draws. Resize must never call the scene setup function
+  // itself, since that would re-run onCanvasClick()/etc and re-arm timers,
+  // duplicating handlers and resetting progress.
+  var ppkCurrentDraw = null;
+
+  window.addEventListener('resize', function(){
+    fitCanvas();
+    // Changing canvas.width/height clears its pixels, so redraw the current
+    // frame. Debounced since some embed contexts (e.g. Blogger iframes with
+    // dynamic surrounding layout) fire resize repeatedly on load.
+    if (ppkResizeTimer) clearTimeout(ppkResizeTimer);
+    ppkResizeTimer = setTimeout(function(){
+      if (ppkReady && ppkCurrentDraw) ppkCurrentDraw();
+    }, 80);
+  });
 
   /* ---------- postMessage auto-resize ---------- */
   function sendHeight(){
@@ -777,13 +801,17 @@
 
   /* ---- Scene 0: Start ---- */
   function sceneStart(){
-    clear();
-    drawSun(680,70,36);
-    drawCloud(150,70,30);
-    drawMountains();
-    groundBand(340,160,'#7a9c5f');
-    drawCastle(400,330,1.15,true);
-    crowdOfPeopleSmall();
+    function draw(){
+      clear();
+      drawSun(680,70,36);
+      drawCloud(150,70,30);
+      drawMountains();
+      groundBand(340,160,'#7a9c5f');
+      drawCastle(400,330,1.15,true);
+      crowdOfPeopleSmall();
+    }
+    draw();
+    ppkCurrentDraw = draw;
     setCaption(ppkLang==='id' ? 'Sebuah kisah cinta, teka-teki, dan keberanian dari Kerajaan Dayeuh Manggung, Jawa Barat.' : 'A tale of love, riddles, and courage from the Kingdom of Dayeuh Manggung, West Java.');
     setInstruction('');
     setMainBtn(tr('start'), true, false);
@@ -817,6 +845,7 @@
       ctx.restore && 0;
     }
     draw();
+    ppkCurrentDraw = draw;
     setCaption(tr('s1cap'));
     setInstruction(tr('tapCastle'));
     setMainBtn(tr('next'), false, false);
@@ -856,6 +885,7 @@
       }
     }
     draw();
+    ppkCurrentDraw = draw;
     setCaption(tr('s2cap'));
     setInstruction(opened ? '' : tr('tapScroll'));
     setMainBtn(tr('next'), opened, false);
@@ -880,6 +910,7 @@
     var attempts = 0;
     var needed = 6;
     var phase = 'mash'; // mash -> gajah
+    var oathShown = false;
     function draw(){
       clear();
       groundBand(360,140,'#c9a878');
@@ -900,10 +931,6 @@
         ctx.fillRect(0,0,CW,CH);
       }
     }
-    draw();
-    setCaption(tr('s3cap'));
-    setInstruction(tr('tapAnswer'));
-
     // show a mash button via canvas: draw a button rect and detect taps on it
     function drawMashBtn(){
       ctx.fillStyle = '#c9972f';
@@ -914,19 +941,26 @@
       ctx.textAlign = 'center';
       ctx.fillText(ppkLang==='id' ? 'Coba Jawab' : 'Try to Answer', 400, 470-40+28);
     }
-    draw(); drawMashBtn();
+    function fullRedraw(){
+      if (phase === 'mash'){ draw(); drawMashBtn(); }
+      else { drawGajah(oathShown); }
+    }
+    fullRedraw();
+    ppkCurrentDraw = fullRedraw;
+    setCaption(tr('s3cap'));
+    setInstruction(tr('tapAnswer'));
     setMainBtn(tr('next'), false, false);
 
     onCanvasClick(function(cx,cy){
       if (phase !== 'mash') return;
       if (cx>320 && cx<480 && cy>430 && cy<474){
         attempts++;
-        draw(); drawMashBtn();
+        fullRedraw();
         if (attempts >= needed){
           phase = 'gajah';
           setCaption(tr('s3fail'));
           setTimeout(function(){
-            drawGajah(false);
+            fullRedraw();
             setCaption(tr('s3cap2'));
             setInstruction(tr('tapGajah'));
           }, 900);
@@ -937,7 +971,8 @@
     onCanvasClick(function(cx,cy){
       if (phase !== 'gajah') return;
       if (dist(cx,cy,400,300) < 110){
-        drawGajah(true);
+        oathShown = true;
+        fullRedraw();
         setInstruction('');
         setMainBtn(tr('next'), true, false);
       }
@@ -992,6 +1027,7 @@
       drawMapCard(mapPos);
     }
     full();
+    ppkCurrentDraw = full;
     setCaption(tr('s4cap'));
     setInstruction(tr('dragMap'));
     setMainBtn(tr('next'), false, false);
@@ -1050,6 +1086,7 @@
       drawPerson(490,340,{scale:0.8, robe:'#e6c9d6', longHair:true, headscarf:'#7a1f2b', skin:'#f0d3ae', flip:true});
     }
     draw();
+    ppkCurrentDraw = draw;
     setCaption(tr('s5cap') + ' ' + tr('s5q'));
     setInstruction(tr('instr_choose'));
     setMainBtn(tr('next'), false, true);
@@ -1112,6 +1149,7 @@
       roundRect(300,460,200*(progress/100),14,7); ctx.fill();
     }
     draw();
+    ppkCurrentDraw = draw;
     setCaption(tr('s6cap'));
     setInstruction(tr('holdSneak'));
     setMainBtn(tr('next'), false, true);
@@ -1182,6 +1220,7 @@
       }
     }
     draw();
+    ppkCurrentDraw = draw;
     setCaption(tr('s7cap'));
     setInstruction(tr('tapFight'));
     setMainBtn(tr('next'), false, true);
@@ -1238,7 +1277,12 @@
       roundRect(300,455,200*(snakeHits/snakeNeeded),14,7); ctx.fill();
     }
 
-    drawForestScene();
+    function fullRedraw(){
+      if (phase === 'snake' || phase === 'won') drawSnakeScene(false);
+      else drawForestScene();
+    }
+    fullRedraw();
+    ppkCurrentDraw = fullRedraw;
     setCaption(tr('s8cap'));
     setInstruction(tr('tapForest'));
     setMainBtn(tr('next'), false, true);
@@ -1287,16 +1331,20 @@
 
   /* ---- Scene 9: Ending ---- */
   function scene9(){
-    clear();
-    drawSun(680,60,32);
-    drawCloud(140,60,26);
-    drawMountains();
-    groundBand(340,160,'#7a9c5f');
-    drawCastle(400,330,1.1,true);
-    drawPerson(300,420,{scale:0.7, robe:'#3d5a3a', skin:'#e8b98a', crown:true, sash:'#c9972f'});
-    drawPerson(400,425,{scale:0.65, robe:'#e6c9d6', longHair:true, headscarf:'#7a1f2b', skin:'#f0d3ae'});
-    drawPerson(480,420,{scale:0.65, robe:'#c9972f', crown:false, skin:'#e8b98a', flip:true});
-    drawTwins(560,440,0.9);
+    function draw(){
+      clear();
+      drawSun(680,60,32);
+      drawCloud(140,60,26);
+      drawMountains();
+      groundBand(340,160,'#7a9c5f');
+      drawCastle(400,330,1.1,true);
+      drawPerson(300,420,{scale:0.7, robe:'#3d5a3a', skin:'#e8b98a', crown:true, sash:'#c9972f'});
+      drawPerson(400,425,{scale:0.65, robe:'#e6c9d6', longHair:true, headscarf:'#7a1f2b', skin:'#f0d3ae'});
+      drawPerson(480,420,{scale:0.65, robe:'#c9972f', crown:false, skin:'#e8b98a', flip:true});
+      drawTwins(560,440,0.9);
+    }
+    draw();
+    ppkCurrentDraw = draw;
 
     setCaption(tr('s9cap'));
     setInstruction('');
@@ -1311,6 +1359,7 @@
 
   /* ---------- init ---------- */
   goToScene(0);
+  ppkReady = true;
 })();
 </script>
 </body>
