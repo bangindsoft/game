@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pak Mendong dan Mbok Mendong</title>
+<style>
+  :root{
+    --pm-bg1:#fbe9c6;
+    --pm-bg2:#f7d38f;
+    --pm-ink:#3b2a1a;
+    --pm-panel:#fffaf0;
+    --pm-accent:#c0562b;
+    --pm-accent-dark:#8f3d1c;
+    --pm-gold:#d9a441;
+    --pm-green:#5a7d4a;
+    --pm-shadow:rgba(59,42,26,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body.pm-root{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,var(--pm-bg1),var(--pm-bg2));
+    color:var(--pm-ink);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 18px;
+  }
+  .pm-wrap{
+    width:100%;
+    max-width:760px;
+  }
+  .pm-card{
+    background:var(--pm-panel);
+    border-radius:18px;
+    box-shadow:0 10px 30px var(--pm-shadow);
+    padding:14px 14px 16px;
+    border:3px solid var(--pm-gold);
+  }
+  .pm-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  .pm-title{
+    font-weight:700;
+    font-size:16px;
+    color:var(--pm-accent-dark);
+    letter-spacing:0.3px;
+    margin:0;
+  }
+  .pm-controls{
+    display:flex;
+    gap:6px;
+  }
+  .pm-btn{
+    border:none;
+    background:var(--pm-accent);
+    color:#fff;
+    padding:7px 12px;
+    border-radius:999px;
+    font-size:13px;
+    cursor:pointer;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    transition:transform .12s ease, background .2s ease;
+    box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  }
+  .pm-btn:hover{background:var(--pm-accent-dark);}
+  .pm-btn:active{transform:scale(0.95);}
+  .pm-btn.pm-ghost{
+    background:#fff;
+    color:var(--pm-accent-dark);
+    border:2px solid var(--pm-accent);
+  }
+  .pm-stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    border:2px solid #e7c27a;
+    background:#cfe6d8;
+  }
+  #pm-canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+    cursor:pointer;
+  }
+  .pm-instruction{
+    position:absolute;
+    top:8px;
+    left:8px;
+    right:8px;
+    background:rgba(59,42,26,0.72);
+    color:#fff;
+    font-size:12.5px;
+    padding:6px 10px;
+    border-radius:10px;
+    text-align:center;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .25s ease;
+    z-index:5;
+  }
+  .pm-instruction.show{opacity:1;}
+  .pm-caption-box{
+    margin-top:10px;
+    background:#fff6e2;
+    border:2px dashed #e0b869;
+    border-radius:12px;
+    padding:10px 14px;
+    font-size:14.5px;
+    line-height:1.55;
+    min-height:54px;
+  }
+  .pm-caption-box .pm-name{
+    font-weight:700;
+    color:var(--pm-accent-dark);
+    margin-right:4px;
+  }
+  .pm-bottombar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .pm-dots{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .pm-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#e6d3ad;
+    border:1.5px solid #c9ac6b;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .pm-dot.active{background:var(--pm-accent);transform:scale(1.25);border-color:var(--pm-accent-dark);}
+  .pm-dot.done{background:var(--pm-green);border-color:#3f5c33;}
+  .pm-main-actions{
+    display:flex;
+    gap:8px;
+  }
+  .pm-footer{
+    text-align:center;
+    font-size:11px;
+    color:#9c8358;
+    margin-top:10px;
+    letter-spacing:.2px;
+  }
+  .pm-icon{width:15px;height:15px;flex:none;}
+  @media (max-width:420px){
+    .pm-title{font-size:14px;}
+    .pm-btn{padding:6px 9px;font-size:12px;}
+    .pm-caption-box{font-size:13.5px;}
+  }
+</style>
+</head>
+<body class="pm-root">
+<div class="pm-wrap">
+  <div class="pm-card">
+    <div class="pm-topbar">
+      <p class="pm-title" id="pm-title-text">Pak Mendong dan Mbok Mendong</p>
+      <div class="pm-controls">
+        <button class="pm-btn pm-ghost" id="pm-lang-btn" type="button" aria-label="Ganti bahasa">EN</button>
+        <button class="pm-btn pm-ghost" id="pm-mute-btn" type="button" aria-label="Bisukan suara">
+          <svg class="pm-icon" viewBox="0 0 24 24" fill="none" id="pm-mute-icon"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/><path d="M16 8a5 5 0 0 1 0 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="pm-stage-wrap">
+      <canvas id="pm-canvas" width="800" height="450"></canvas>
+      <div class="pm-instruction" id="pm-instruction"></div>
+    </div>
+
+    <div class="pm-caption-box" id="pm-caption">
+      <span class="pm-name" id="pm-caption-name"></span><span id="pm-caption-text"></span>
+    </div>
+
+    <div class="pm-bottombar">
+      <div class="pm-dots" id="pm-dots"></div>
+      <div class="pm-main-actions">
+        <button class="pm-btn" id="pm-start-btn" type="button">Mulai Cerita</button>
+      </div>
+    </div>
+
+    <div class="pm-footer" id="pm-footer-text">Cerita rakyat Jawa Timur • Ketuk dan mainkan setiap adegan</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------------
+     STRINGS
+  --------------------------------------------------------------- */
+  var STR = {
+    id:{
+      title:"Pak Mendong dan Mbok Mendong",
+      footer:"Cerita rakyat Jawa Timur • Ketuk dan mainkan setiap adegan",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      next:"Lanjut",
+      mute:"Bisukan suara",
+      unmute:"Nyalakan suara",
+      langBtn:"EN",
+      names:{
+        narator:"Narator",
+        pak:"Pak Mendong",
+        mbok:"Mbok Mendong",
+        nenek:"Nenek Buyut",
+        kikir:"Si Kaya Kikir"
+      },
+      scenes:[
+        {
+          key:"title",
+          caption:"Ketuk \u201cMulai Cerita\u201d untuk memulai kisah keluarga penenun tikar yang hidupnya berubah karena niat baik mereka.",
+          instruction:""
+        },
+        {
+          key:"weaving",
+          name:"narator",
+          caption:"Alkisah, keluarga Pak Mendong sangatlah miskin. Sehari-hari mereka menenun tikar mendong untuk dijual ke kota, dibantu istrinya, Mbok Mendong.",
+          instruction:"Tekan dan tahan tikar untuk membantu menenun"
+        },
+        {
+          key:"dream",
+          name:"pak",
+          caption:"\u201cMbokne, aku bermimpi bertemu nenek buyutku. Ia menyuruhku mengadakan kenduri: menyembelih lembu dan mengundang orang-orang miskin,\u201d kata Pak Mendong.",
+          instruction:"Ketuk sosok nenek buyut untuk mendengar pesannya"
+        },
+        {
+          key:"pawn",
+          name:"pak",
+          caption:"Karena tak punya uang, Pak Mendong menggadaikan anaknya, Sumi, kepada orang kaya di desa. Uangnya dipakai membeli lembu, beras, dan kuali.",
+          instruction:"Seret Sumi ke rumah orang kaya untuk digadaikan"
+        },
+        {
+          key:"kenduri",
+          name:"mbok",
+          caption:"Mbok Mendong pun memasak untuk kenduri. Para fakir miskin diundang, dan karena masakannya lezat, semua hidangan habis tak bersisa.",
+          instruction:"Ketuk lembu, beras, dan kuali untuk memasak kenduri"
+        },
+        {
+          key:"gold",
+          name:"mbok",
+          caption:"\u201cPak... Pak... lihatlah kuali kita dipenuhi emas dan perak entah dari mana!\u201d teriak Mbok Mendong sambil membereskan rumah selepas kenduri.",
+          instruction:"Ketuk kuali untuk melihat isinya"
+        },
+        {
+          key:"redeem",
+          name:"pak",
+          caption:"Pak Mendong segera menjual sebagian emas dan perak itu, lalu menggunakan uangnya untuk menebus Sumi kembali dari rumah orang kaya.",
+          instruction:"Seret kepingan emas ke rumah orang kaya untuk menebus Sumi"
+        },
+        {
+          key:"miser",
+          name:"kikir",
+          caption:"Seorang kaya tapi kikir penasaran dan meniru kenduri Pak Mendong. Namun ia menawar lembu di pasar dengan harga yang terlalu murah.",
+          instruction:"Ketuk tombol TAWAR untuk menawar harga lembu"
+        },
+        {
+          key:"ending",
+          name:"narator",
+          caption:"Karena gagal membeli lembu, si kikir malah menyembelih anjingnya sendiri untuk kenduri. Namun saat doa dibacakan, sang anjing hidup kembali dan menggigitnya. Para tamu lari ketakutan, dan si kikir pun kesakitan karena keserakahannya sendiri.",
+          instruction:"Ketuk anjing untuk melihat keajaibannya"
+        },
+        {
+          key:"moral",
+          name:"narator",
+          caption:"Demikianlah kisah Pak Mendong dan Mbok Mendong dari Jawa Timur \u2014 ketulusan hati membawa berkah, sedangkan kikir dan tamak hanya mendatangkan celaka.",
+          instruction:""
+        }
+      ]
+    },
+    en:{
+      title:"Pak Mendong and Mbok Mendong",
+      footer:"A folktale from East Java • Tap and play each scene",
+      start:"Start Story",
+      replay:"Replay Story",
+      next:"Next",
+      mute:"Mute sound",
+      unmute:"Unmute sound",
+      langBtn:"ID",
+      names:{
+        narator:"Narrator",
+        pak:"Pak Mendong",
+        mbok:"Mbok Mendong",
+        nenek:"Great-Grandmother",
+        kikir:"The Greedy Rich Man"
+      },
+      scenes:[
+        {
+          key:"title",
+          caption:"Tap \u201cStart Story\u201d to begin the tale of a poor mat-weaving family whose kindness changed their fortune forever.",
+          instruction:""
+        },
+        {
+          key:"weaving",
+          name:"narator",
+          caption:"Once, Pak Mendong's family was very poor. Every day he and his wife, Mbok Mendong, wove mendong grass mats to sell in town.",
+          instruction:"Press and hold the mat to help weave it"
+        },
+        {
+          key:"dream",
+          name:"pak",
+          caption:"\"Wife, I dreamed of my great-grandmother. She told me to hold a feast \u2014 slaughter a cow and invite the poor,\" said Pak Mendong.",
+          instruction:"Tap the great-grandmother's spirit to hear her message"
+        },
+        {
+          key:"pawn",
+          name:"pak",
+          caption:"With no money of their own, Pak Mendong pawned his daughter Sumi to a rich villager. The money bought a cow, rice, and a cooking pot.",
+          instruction:"Drag Sumi to the rich man's house to be pawned"
+        },
+        {
+          key:"kenduri",
+          name:"mbok",
+          caption:"Mbok Mendong cooked for the feast. Poor villagers were invited, and her cooking was so delicious that every dish was finished.",
+          instruction:"Tap the cow, rice, and pot to cook the feast"
+        },
+        {
+          key:"gold",
+          name:"mbok",
+          caption:"\"Husband... husband... look, our pot is filled with gold and silver, I don't know from where!\" cried Mbok Mendong as she tidied up after the feast.",
+          instruction:"Tap the cooking pot to see what's inside"
+        },
+        {
+          key:"redeem",
+          name:"pak",
+          caption:"Pak Mendong sold part of the gold and silver, then used the money to redeem Sumi from the rich man's house.",
+          instruction:"Drag a gold coin to the rich man's house to redeem Sumi"
+        },
+        {
+          key:"miser",
+          name:"kikir",
+          caption:"A rich but stingy man grew curious and copied the feast. But at the market, he haggled the cow's price down far too low.",
+          instruction:"Tap the BARGAIN button to haggle for the cow"
+        },
+        {
+          key:"ending",
+          name:"narator",
+          caption:"Having failed to buy the cow, the miser slaughtered his own dog for the feast instead. But as the prayer was read, the dog sprang back to life and bit him. The guests fled in fright, leaving the miser in pain \u2014 a fitting result of his own greed.",
+          instruction:"Tap the dog to see the miracle"
+        },
+        {
+          key:"moral",
+          name:"narator",
+          caption:"So goes the tale of Pak Mendong and Mbok Mendong from East Java \u2014 sincerity brings blessing, while greed and stinginess only bring misfortune.",
+          instruction:""
+        }
+      ]
+    }
+  };
+
+  /* ---------------------------------------------------------------
+     STATE
+  --------------------------------------------------------------- */
+  var qs = new URLSearchParams(window.location.search);
+  var lang = qs.get("lang") === "en" ? "en" : "id";
+  var muted = false;
+  try{ muted = localStorage.getItem("pm-mendong-mute") === "1"; }catch(e){}
+
+  var sceneIndex = 0; // 0 = title
+  var sceneCount = STR.id.scenes.length;
+  var started = false;
+  var sceneState = {}; // per-scene mini-game state
+  var rafId = null;
+  var startTime = performance.now();
+  var pointer = {down:false,x:0,y:0,startX:0,startY:0};
+  var dragging = null;
+
+  var canvas = document.getElementById("pm-canvas");
+  var ctx = canvas.getContext("2d");
+  var DPR = Math.max(1, window.devicePixelRatio || 1);
+  var CW = 800, CH = 450;
+
+  function fitCanvas(){
+    canvas.width = CW * DPR;
+    canvas.height = CH * DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  fitCanvas();
+  window.addEventListener("resize", fitCanvas);
+
+  /* ---------------------------------------------------------------
+     DOM refs
+  --------------------------------------------------------------- */
+  var titleText = document.getElementById("pm-title-text");
+  var footerText = document.getElementById("pm-footer-text");
+  var startBtn = document.getElementById("pm-start-btn");
+  var muteBtn = document.getElementById("pm-mute-btn");
+  var langBtn = document.getElementById("pm-lang-btn");
+  var dotsWrap = document.getElementById("pm-dots");
+  var captionName = document.getElementById("pm-caption-name");
+  var captionText = document.getElementById("pm-caption-text");
+  var instructionEl = document.getElementById("pm-instruction");
+
+  /* ---------------------------------------------------------------
+     UTIL: drawing helpers
+  --------------------------------------------------------------- */
+  function clear(){
+    ctx.clearRect(0,0,CW,CH);
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function sky(topColor,botColor){
+    var g = ctx.createLinearGradient(0,0,0,CH*0.7);
+    g.addColorStop(0,topColor);
+    g.addColorStop(1,botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,CW,CH*0.72);
+  }
+  function ground(color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,CH*0.66);
+    ctx.quadraticCurveTo(CW*0.5,CH*0.6,CW,CH*0.68);
+    ctx.lineTo(CW,CH);
+    ctx.lineTo(0,CH);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function sun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = "#ffe6a3";
+    ctx.beginPath(); ctx.arc(x,y,r*1.7,0,Math.PI*2); ctx.globalAlpha=0.5; ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.fillStyle = "#ffd166";
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function cloud(x,y,s){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.arc(x,y,18*s,0,Math.PI*2);
+    ctx.arc(x+22*s,y-10*s,16*s,0,Math.PI*2);
+    ctx.arc(x+42*s,y,18*s,0,Math.PI*2);
+    ctx.arc(x+20*s,y+8*s,20*s,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function tree(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = "#8a5a34";
+    roundRect(-5,0,10,40,4); ctx.fill();
+    ctx.fillStyle = "#4f7a3d";
+    ctx.beginPath();
+    ctx.arc(0,-10,26,0,Math.PI*2);
+    ctx.arc(-18,5,20,0,Math.PI*2);
+    ctx.arc(18,5,20,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function hut(x,y,s,lit){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    // walls
+    ctx.fillStyle = lit ? "#e3c088" : "#c9a06a";
+    roundRect(-45,0,90,55,4); ctx.fill();
+    // door
+    ctx.fillStyle = "#5a3a22";
+    roundRect(-12,20,24,35,3); ctx.fill();
+    // roof
+    ctx.fillStyle = "#7a5230";
+    ctx.beginPath();
+    ctx.moveTo(-58,5);
+    ctx.lineTo(0,-40);
+    ctx.lineTo(58,5);
+    ctx.lineTo(48,10);
+    ctx.lineTo(0,-28);
+    ctx.lineTo(-48,10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#5a3a1e";
+    ctx.lineWidth = 1.5;
+    for(var i=-45;i<=45;i+=8){
+      ctx.beginPath();
+      ctx.moveTo(i, i<0 ? 5+ (i/-45)*-2 : 5);
+      ctx.lineTo(i*0.2, -30);
+      ctx.stroke();
+    }
+    if(lit){
+      ctx.fillStyle="rgba(255,220,150,0.9)";
+      ctx.beginPath(); ctx.arc(-25,30,6,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function richHouse(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = "#e8e0d0";
+    roundRect(-55,-5,110,70,6); ctx.fill();
+    ctx.fillStyle = "#b5473a";
+    ctx.beginPath();
+    ctx.moveTo(-65,-5);
+    ctx.lineTo(0,-55);
+    ctx.lineTo(65,-5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle="#8a3527";
+    roundRect(-70,-8,140,10,3); ctx.fill();
+    // pillars
+    ctx.fillStyle = "#cfc4a6";
+    roundRect(-45,10,10,55,2); ctx.fill();
+    roundRect(35,10,10,55,2); ctx.fill();
+    // door
+    ctx.fillStyle="#6b3a20";
+    roundRect(-14,25,28,40,3); ctx.fill();
+    // windows
+    ctx.fillStyle="#7fa9c9";
+    roundRect(-38,15,16,18,2); ctx.fill();
+    roundRect(22,15,16,18,2); ctx.fill();
+    ctx.restore();
+  }
+
+  function person(x,y,s,opts){
+    opts = opts || {};
+    var skin = opts.skin || "#e8b98a";
+    var shirt = opts.shirt || "#c0562b";
+    var pants = opts.pants || "#4a4a4a";
+    var headScale = opts.headScale || 1;
+    var raise = opts.raise || 0; // arm raise 0..1
+    var bob = opts.bob || 0;
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.scale(s,s);
+    // legs
+    ctx.fillStyle = pants;
+    roundRect(-10,30,8,26,3); ctx.fill();
+    roundRect(2,30,8,26,3); ctx.fill();
+    // body
+    ctx.fillStyle = shirt;
+    roundRect(-14,2,28,32,8); ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt;
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-12,8);
+    ctx.lineTo(-20, 8 - raise*22);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(12,8);
+    ctx.lineTo(20, 8 - raise*22);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-12*headScale,15*headScale,0,Math.PI*2);
+    ctx.fill();
+    if(opts.hair){
+      ctx.fillStyle = opts.hair;
+      ctx.beginPath();
+      ctx.arc(0,-16*headScale,15.5*headScale,Math.PI,Math.PI*2);
+      ctx.fill();
+    }
+    if(opts.headwrap){
+      ctx.fillStyle = opts.headwrap;
+      ctx.beginPath();
+      ctx.arc(0,-18*headScale,16*headScale,Math.PI*0.95,Math.PI*2.05);
+      ctx.fill();
+    }
+    // face
+    ctx.fillStyle = "#3b2a1a";
+    ctx.beginPath(); ctx.arc(-5*headScale,-12*headScale,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5*headScale,-12*headScale,1.6,0,Math.PI*2); ctx.fill();
+    if(opts.smile){
+      ctx.strokeStyle = "#3b2a1a";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(0,-7*headScale,4*headScale,0.15*Math.PI,0.85*Math.PI);
+      ctx.stroke();
+    }
+    if(opts.mustache){
+      ctx.strokeStyle = "#2b2016";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-6*headScale,-6*headScale);
+      ctx.lineTo(6*headScale,-6*headScale);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function child(x,y,s,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s*0.72,s*0.72);
+    ctx.fillStyle = opts.pants || "#8a6a4a";
+    roundRect(-8,26,6,20,3); ctx.fill();
+    roundRect(2,26,6,20,3); ctx.fill();
+    ctx.fillStyle = opts.shirt || "#e0b06a";
+    roundRect(-12,2,24,28,7); ctx.fill();
+    ctx.fillStyle = "#e8b98a";
+    ctx.beginPath(); ctx.arc(0,-10,13,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#2b2016";
+    ctx.beginPath(); ctx.arc(0,-16,13.5,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#3b2a1a";
+    ctx.beginPath(); ctx.arc(-4,-10,1.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-10,1.3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function cow(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = "#f2ede1";
+    roundRect(-32,-10,64,32,14); ctx.fill();
+    ctx.fillStyle = "#8a6a52";
+    ctx.beginPath(); ctx.ellipse(-14,-2,8,6,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(10,6,10,7,0,0,Math.PI*2); ctx.fill();
+    // legs
+    ctx.fillStyle = "#e5ddcb";
+    roundRect(-24,18,7,16,3); ctx.fill();
+    roundRect(18,18,7,16,3); ctx.fill();
+    // head
+    ctx.fillStyle = "#f2ede1";
+    ctx.beginPath(); ctx.ellipse(-38,-2,14,11,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#8a6a52";
+    ctx.beginPath(); ctx.ellipse(-38,3,9,6,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#3b2a1a";
+    ctx.beginPath(); ctx.arc(-42,-6,1.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-34,-6,1.5,0,Math.PI*2); ctx.fill();
+    // horns
+    ctx.strokeStyle = "#d8c9a3";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-45,-12); ctx.lineTo(-49,-19); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-33,-12); ctx.lineTo(-29,-19); ctx.stroke();
+    ctx.restore();
+  }
+
+  function dogShape(x,y,s,alive){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = alive ? "#c9a06a" : "#a89076";
+    roundRect(-22,-6,40,20,10); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(16,0,10,9,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#3b2a1a";
+    ctx.beginPath(); ctx.arc(20,-3,1.4,0,Math.PI*2); ctx.fill();
+    if(alive){
+      ctx.strokeStyle="#3b2a1a"; ctx.lineWidth=2; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(-22,4); ctx.lineTo(-32,-4+Math.sin(Date.now()/90)*4); ctx.stroke();
+    } else {
+      ctx.strokeStyle="#3b2a1a"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-22,4); ctx.lineTo(-30,4); ctx.stroke();
+    }
+    ctx.fillStyle = alive ? "#c9a06a" : "#a89076";
+    roundRect(-4,10,6,10,2); ctx.fill();
+    roundRect(6,10,6,10,2); ctx.fill();
+    ctx.restore();
+  }
+
+  function pot(x,y,s,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    if(glow>0){
+      ctx.save();
+      ctx.globalAlpha = 0.35*glow;
+      ctx.fillStyle = "#ffd94d";
+      ctx.beginPath(); ctx.arc(0,-6,34,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = "#4a4642";
+    ctx.beginPath();
+    ctx.ellipse(0,10,30,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-30,10);
+    ctx.quadraticCurveTo(-32,-18,0,-20);
+    ctx.quadraticCurveTo(32,-18,30,10);
+    ctx.closePath();
+    ctx.fill();
+    // rim
+    ctx.fillStyle = "#615c56";
+    ctx.beginPath(); ctx.ellipse(0,-20,20,6,0,0,Math.PI*2); ctx.fill();
+    if(glow>0){
+      ctx.fillStyle = "#ffd94d";
+      ctx.beginPath(); ctx.ellipse(0,-19,16,4.5,0,0,Math.PI*2); ctx.fill();
+      for(var i=0;i<6;i++){
+        var ang = (i/6)*Math.PI*2 + Date.now()/500;
+        var gx = Math.cos(ang)*10;
+        var gy = -19 + Math.sin(ang)*3;
+        ctx.save();
+        ctx.translate(gx,gy);
+        ctx.rotate(ang);
+        ctx.fillStyle = i%2===0 ? "#fff2b0":"#e8e8e8";
+        ctx.beginPath();
+        ctx.moveTo(0,-4); ctx.lineTo(1.4,0); ctx.lineTo(0,4); ctx.lineTo(-1.4,0);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
+  function mat(x,y,s,progress){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = "#d8c193";
+    roundRect(-40,-25,80,50,4); ctx.fill();
+    ctx.strokeStyle = "#b89a63";
+    ctx.lineWidth = 1;
+    for(var i=-36;i<=36;i+=6){
+      ctx.beginPath(); ctx.moveTo(i,-25); ctx.lineTo(i,25); ctx.stroke();
+    }
+    // woven overlay grows with progress
+    ctx.save();
+    ctx.beginPath();
+    roundRect(-40,-25,80*Math.max(0,Math.min(1,progress)),50,4);
+    ctx.clip();
+    ctx.fillStyle = "#c0562b";
+    roundRect(-40,-25,80,50,4); ctx.globalAlpha=0.18; ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.strokeStyle = "#8f3d1c";
+    ctx.lineWidth = 1.2;
+    for(var j=-22;j<=22;j+=8){
+      ctx.beginPath(); ctx.moveTo(-40,j); ctx.lineTo(40,j); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function moneyBag(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = "#c9a441";
+    ctx.beginPath();
+    ctx.moveTo(-14,-4);
+    ctx.quadraticCurveTo(-18,20,0,24);
+    ctx.quadraticCurveTo(18,20,14,-4);
+    ctx.quadraticCurveTo(8,-10,0,-10);
+    ctx.quadraticCurveTo(-8,-10,-14,-4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#8a6a20";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-8,-9); ctx.lineTo(-4,-16); ctx.lineTo(4,-16); ctx.lineTo(8,-9); ctx.stroke();
+    ctx.fillStyle="#5a3a10";
+    ctx.font="bold 11px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText("$",0,10);
+    ctx.restore();
+  }
+
+  function coin(x,y,r){
+    ctx.save();
+    ctx.translate(x,y);
+    var g = ctx.createRadialGradient(-r*0.3,-r*0.3,1,0,0,r);
+    g.addColorStop(0,"#fff3b0");
+    g.addColorStop(1,"#d9a441");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "#a97a1e";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function speechBubble(x,y,w,h,text,align){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.strokeStyle = "#c9a441";
+    ctx.lineWidth = 1.6;
+    var bx = align==="right" ? x-w : x;
+    roundRect(bx,y,w,h,10);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    var tipX = align==="right" ? bx+w-18 : bx+18;
+    ctx.moveTo(tipX,y+h);
+    ctx.lineTo(tipX-8,y+h+10);
+    ctx.lineTo(tipX+10,y+h);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.fill();
+    ctx.fillStyle = "#3b2a1a";
+    ctx.font = "13px sans-serif";
+    ctx.textAlign = "left";
+    wrapText(text, bx+12, y+20, w-24, 16);
+    ctx.restore();
+  }
+  function wrapText(text,x,y,maxW,lh){
+    var words = text.split(" ");
+    var line = "";
+    var yy = y;
+    for(var n=0;n<words.length;n++){
+      var test = line + words[n] + " ";
+      if(ctx.measureText(test).width > maxW && n>0){
+        ctx.fillText(line,x,yy);
+        line = words[n]+" ";
+        yy += lh;
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line,x,yy);
+  }
+
+  function progressRing(x,y,r,progress,color){
+    ctx.save();
+    ctx.strokeStyle = "rgba(59,42,26,0.18)";
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = color || "#c0562b";
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(x,y,r,-Math.PI/2,-Math.PI/2 + progress*Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------------
+     SCENE DEFINITIONS
+  --------------------------------------------------------------- */
+  var scenes = [
+    { key:"title", draw:drawTitle },
+    { key:"weaving", draw:drawWeaving, setup:setupWeaving, down:weavingDown, move:weavingMove, up:weavingUp },
+    { key:"dream", draw:drawDream, setup:setupDream, down:dreamDown },
+    { key:"pawn", draw:drawPawn, setup:setupPawn, down:pawnDown, move:pawnMove, up:pawnUp },
+    { key:"kenduri", draw:drawKenduri, setup:setupKenduri, down:kenduriDown },
+    { key:"gold", draw:drawGold, setup:setupGold, down:goldDown },
+    { key:"redeem", draw:drawRedeem, setup:setupRedeem, down:redeemDown, move:redeemMove, up:redeemUp },
+    { key:"miser", draw:drawMiser, setup:setupMiser, down:miserDown },
+    { key:"ending", draw:drawEnding, setup:setupEnding, down:endingDown },
+    { key:"moral", draw:drawMoral, setup:setupMoral }
+  ];
+
+  /* ----- 0. TITLE ----- */
+  function drawTitle(t){
+    sky("#ffe9bd","#ffcf8a");
+    ground("#8fbf7a");
+    sun(680,70,34);
+    cloud(120,60,1); cloud(600,40,0.8);
+    tree(90,300,1.3); tree(720,290,1.1);
+    hut(230,260,1.55,true);
+    person(150,340,1.6,{shirt:"#c0562b",pants:"#3b3b3b",mustache:true,smile:true,bob:Math.sin(t/500)*2});
+    person(330,345,1.5,{shirt:"#a85a7a",pants:"#5a4a6a",headwrap:"#a85a7a",smile:true,bob:Math.sin(t/500+1)*2});
+    child(400,360,1.6,{shirt:"#e0b06a"});
+    cow(560,370,1.1);
+    ctx.save();
+    ctx.font = "bold 30px 'Segoe UI', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(59,42,26,0.85)";
+    ctx.fillText(L().title, CW/2+2, 62);
+    ctx.fillStyle = "#fff6e2";
+    ctx.fillText(L().title, CW/2, 60);
+    ctx.font = "14px sans-serif";
+    ctx.fillStyle = "#5a3a1e";
+    ctx.fillText(lang==="id" ? "Cerita Rakyat Jawa Timur" : "A Folktale from East Java", CW/2, 84);
+    ctx.restore();
+  }
+
+  /* ----- 1. WEAVING ----- */
+  function setupWeaving(){
+    sceneState = { progress:0, holding:false, hitbox:{x:CW*0.5,y:280,w:180,h:110} };
+  }
+  function drawWeaving(t){
+    sky("#fce8c2","#f6cf95");
+    ground("#94b978");
+    tree(70,300,1.1); tree(730,300,1.0);
+    hut(140,255,1.2,false);
+    person(560,330,1.4,{shirt:"#a85a7a",pants:"#5a4a6a",headwrap:"#a85a7a",smile:true,raise:0.3,bob:Math.sin(t/450)*1.5});
+    child(460,360,1.3,{shirt:"#e0b06a"});
+    var hb = sceneState.hitbox;
+    ctx.save();
+    ctx.translate(0,20);
+    mat(hb.x, hb.y, 1.0, sceneState.progress);
+    ctx.restore();
+    person(CW*0.5-10,220,1.3,{shirt:"#c0562b",pants:"#3b3b3b",mustache:true,raise:sceneState.holding?0.6:0.15,bob:0});
+    progressRing(hb.x, hb.y-100, 26, sceneState.progress, "#c0562b");
+    ctx.save();
+    ctx.font="bold 13px sans-serif";
+    ctx.fillStyle="#3b2a1a";
+    ctx.textAlign="center";
+    ctx.fillText(Math.round(sceneState.progress*100)+"%", hb.x, hb.y-96);
+    ctx.restore();
+  }
+  function inBox(x,y,b){ return x>b.x-b.w/2 && x<b.x+b.w/2 && y>b.y-b.h/2 && y<b.y+b.h/2; }
+  function weavingDown(x,y){
+    if(inBox(x,y,sceneState.hitbox)){ sceneState.holding = true; }
+  }
+  function weavingMove(x,y){
+    if(sceneState.holding && sceneState.progress<1){
+      sceneState.progress = Math.min(1, sceneState.progress + 0.012);
+      if(sceneState.progress>=1){ sceneState.holding=false; completeScene(); }
+    }
+  }
+  function weavingUp(){ sceneState.holding = false; }
+
+  /* ----- 2. DREAM ----- */
+  function setupDream(){
+    sceneState = { tapped:false, ghost:{x:CW*0.62,y:170,r:60} };
+  }
+  function drawDream(t){
+    sky("#2c2650","#4a3f7a");
+    for(var i=0;i<40;i++){
+      var sx = (i*97)%CW, sy=(i*53)%230;
+      ctx.fillStyle="rgba(255,255,255,"+(0.3+0.4*Math.sin(t/600+i))+")";
+      ctx.beginPath(); ctx.arc(sx,sy+10,1.4,0,Math.PI*2); ctx.fill();
+    }
+    ground("#3d3560");
+    hut(180,290,1.4,false);
+    // sleeping pak mendong
+    ctx.save();
+    ctx.translate(180,340);
+    ctx.rotate(-0.05);
+    person(0,0,1.3,{shirt:"#c0562b",pants:"#3b3b3b",mustache:true});
+    ctx.restore();
+    ctx.save();
+    ctx.strokeStyle="rgba(255,255,255,0.6)";
+    ctx.font="20px sans-serif";
+    ctx.fillStyle="rgba(255,255,255,0.7)";
+    ctx.fillText("Z", 120+Math.sin(t/400)*4, 300-((t/40)%40));
+    ctx.fillText("z", 105+Math.sin(t/400)*4, 315-((t/40)%30));
+    ctx.restore();
+
+    var g = sceneState.ghost;
+    var pulse = sceneState.tapped ? 1 : 0.55+0.25*Math.sin(t/400);
+    ctx.save();
+    ctx.globalAlpha = pulse*0.9;
+    var grad = ctx.createRadialGradient(g.x,g.y,5,g.x,g.y,g.r);
+    grad.addColorStop(0,"#fff7d6");
+    grad.addColorStop(1,"rgba(255,247,214,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(g.x,g.y,g.r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    person(g.x,g.y+40,1.3,{shirt:"#e8e0cf",pants:"#e8e0cf",headwrap:"#f5efe0",skin:"#f0e6d6",headScale:1.0,smile:true});
+    ctx.restore();
+
+    if(sceneState.tapped){
+      speechBubble(g.x-70,g.y-70,220,64, lang==="id" ? "\u201cAdakan kenduri, sembelih lembu, undang orang miskin...\u201d" : "\u201cHold a feast, slaughter a cow, invite the poor...\u201d","left");
+    }
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+  function dreamDown(x,y){
+    var g = sceneState.ghost;
+    if(dist(x,y,g.x,g.y+10) < g.r*0.9){
+      if(!sceneState.tapped){
+        sceneState.tapped = true;
+        setTimeout(completeScene, 1400);
+      }
+    }
+  }
+
+  /* ----- 3. PAWN (drag Sumi to rich house) ----- */
+  function setupPawn(){
+    sceneState = {
+      sumi:{x:180,y:340,startX:180,startY:340},
+      target:{x:640,y:300,r:70},
+      dragging:false,
+      done:false
+    };
+  }
+  function drawPawn(t){
+    sky("#fbe6bd","#f5cf90");
+    ground("#8fb976");
+    tree(60,300,1.0);
+    hut(140,270,1.1,false);
+    richHouse(640,300,1.15);
+    var s = sceneState.sumi;
+    person(300,330,1.35,{shirt:"#c0562b",pants:"#3b3b3b",mustache:true,raise:0.25,bob:Math.sin(t/500)*1.5});
+    person(400,335,1.3,{shirt:"#a85a7a",pants:"#5a4a6a",headwrap:"#a85a7a",bob:Math.sin(t/500+1)*1.5});
+    if(!sceneState.done){
+      ctx.save();
+      if(sceneState.dragging){ ctx.globalAlpha = 0.95; }
+      child(s.x,s.y,1.4,{shirt:"#e0b06a"});
+      ctx.restore();
+      if(!sceneState.dragging){
+        ctx.save();
+        ctx.strokeStyle="rgba(192,86,43,0.6)";
+        ctx.lineWidth=2;
+        ctx.setLineDash([6,6]);
+        ctx.beginPath();
+        ctx.moveTo(s.x,s.y-10);
+        ctx.lineTo(sceneState.target.x, sceneState.target.y+30);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    } else {
+      child(sceneState.target.x, sceneState.target.y+40, 1.3, {shirt:"#e0b06a"});
+      person(sceneState.target.x+50, sceneState.target.y+40, 1.3, {shirt:"#3f6b8a",pants:"#2b2b2b",smile:true});
+    }
+  }
+  function pawnDown(x,y){
+    if(sceneState.done) return;
+    var s = sceneState.sumi;
+    if(dist(x,y,s.x,s.y-10) < 45){ sceneState.dragging = true; dragging="sumi"; }
+  }
+  function pawnMove(x,y){
+    if(sceneState.dragging && !sceneState.done){
+      sceneState.sumi.x = x; sceneState.sumi.y = y+10;
+    }
+  }
+  function pawnUp(x,y){
+    if(!sceneState.dragging) return;
+    sceneState.dragging = false;
+    var t = sceneState.target;
+    if(dist(x,y,t.x,t.y+30) < t.r){
+      sceneState.done = true;
+      setTimeout(completeScene, 900);
+    } else {
+      sceneState.sumi.x = sceneState.sumi.startX;
+      sceneState.sumi.y = sceneState.sumi.startY;
+    }
+  }
+
+  /* ----- 4. KENDURI (tap 3 ingredients) ----- */
+  function setupKenduri(){
+    sceneState = {
+      items:{
+        cow:{x:170,y:330,r:55,done:false},
+        rice:{x:400,y:340,r:45,done:false},
+        pot:{x:630,y:330,r:48,done:false}
+      }
+    };
+  }
+  function riceSack(x,y,s,done){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = done ? "#e8dcb8" : "#efe3c2";
+    ctx.beginPath();
+    ctx.moveTo(-22,-25);
+    ctx.quadraticCurveTo(-30,20,-15,30);
+    ctx.lineTo(15,30);
+    ctx.quadraticCurveTo(30,20,22,-25);
+    ctx.quadraticCurveTo(0,-35,-22,-25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#c9a441";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-20,-20); ctx.lineTo(20,-20); ctx.stroke();
+    if(done){
+      ctx.fillStyle="#5a7d4a";
+      ctx.font="bold 22px sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText("\u2713", 0, 5);
+    }
+    ctx.restore();
+  }
+  function drawKenduri(t){
+    sky("#fdeccb","#f6d9a0");
+    ground("#93bb78");
+    hut(120,280,1.1,false);
+    person(700,330,1.3,{shirt:"#a85a7a",pants:"#5a4a6a",headwrap:"#a85a7a",raise:0.4,bob:Math.sin(t/450)*1.5});
+    var it = sceneState.items;
+    ctx.save(); if(it.cow.done) ctx.globalAlpha=0.55;
+    cow(it.cow.x, it.cow.y, 1.0);
+    ctx.restore();
+    if(it.cow.done){ ctx.fillStyle="#5a7d4a"; ctx.font="bold 22px sans-serif"; ctx.textAlign="center"; ctx.fillText("\u2713", it.cow.x, it.cow.y-45); }
+
+    ctx.save(); if(it.rice.done) ctx.globalAlpha=0.55;
+    riceSack(it.rice.x, it.rice.y, 1.0, it.rice.done);
+    ctx.restore();
+
+    ctx.save(); if(it.pot.done) ctx.globalAlpha=0.55;
+    pot(it.pot.x, it.pot.y, 1.0, 0);
+    ctx.restore();
+    if(it.pot.done){ ctx.fillStyle="#5a7d4a"; ctx.font="bold 22px sans-serif"; ctx.textAlign="center"; ctx.fillText("\u2713", it.pot.x, it.pot.y-45); }
+
+    var doneCount = (it.cow.done?1:0)+(it.rice.done?1:0)+(it.pot.done?1:0);
+    ctx.save();
+    ctx.font="bold 14px sans-serif";
+    ctx.fillStyle="#3b2a1a";
+    ctx.textAlign="center";
+    ctx.fillText((lang==="id"?"Bahan siap: ":"Ingredients ready: ")+doneCount+"/3", CW/2, 60);
+    ctx.restore();
+  }
+  function kenduriDown(x,y){
+    var it = sceneState.items;
+    var keys = ["cow","rice","pot"];
+    for(var i=0;i<keys.length;i++){
+      var k = keys[i], o = it[k];
+      if(!o.done && dist(x,y,o.x,o.y)<o.r){
+        o.done = true;
+        break;
+      }
+    }
+    if(it.cow.done && it.rice.done && it.pot.done){
+      setTimeout(completeScene, 700);
+    }
+  }
+
+  /* ----- 5. GOLD ----- */
+  function setupGold(){
+    sceneState = { revealed:false, glow:0, potPos:{x:CW/2,y:290,r:70} };
+  }
+  function drawGold(t){
+    sky("#fbe6bd","#f2ca86");
+    ground("#8fb976");
+    hut(140,270,1.05,false);
+    person(560,330,1.25,{shirt:"#a85a7a",pants:"#5a4a6a",headwrap:"#a85a7a",raise: sceneState.revealed?0.7:0.1});
+    if(sceneState.glow<1 && sceneState.revealed) sceneState.glow = Math.min(1,sceneState.glow+0.03);
+    pot(sceneState.potPos.x, sceneState.potPos.y, 1.3, sceneState.glow);
+    if(sceneState.revealed){
+      for(var i=0;i<8;i++){
+        var ang = (i/8)*Math.PI*2 + t/1000;
+        var rr = 40+10*Math.sin(t/300+i);
+        coin(sceneState.potPos.x + Math.cos(ang)*rr, sceneState.potPos.y-30 + Math.sin(ang)*rr*0.4 - 20, 8);
+      }
+      speechBubble(sceneState.potPos.x-100, sceneState.potPos.y-160, 220, 56, lang==="id"?"Emas dan perak berkilauan!":"Gleaming gold and silver!","left");
+    }
+  }
+  function goldDown(x,y){
+    if(sceneState.revealed) return;
+    if(dist(x,y,sceneState.potPos.x,sceneState.potPos.y)<90){
+      sceneState.revealed = true;
+      setTimeout(completeScene, 1600);
+    }
+  }
+
+  /* ----- 6. REDEEM (drag coin to rich house) ----- */
+  function setupRedeem(){
+    sceneState = {
+      c:{x:170,y:330,startX:170,startY:330},
+      target:{x:630,y:300,r:70},
+      dragging:false,
+      done:false
+    };
+  }
+  function drawRedeem(t){
+    sky("#fbe6bd","#f5cf90");
+    ground("#8fb976");
+    hut(120,270,1.0,false);
+    richHouse(630,300,1.15);
+    person(280,330,1.3,{shirt:"#c0562b",pants:"#3b3b3b",mustache:true,raise:0.2,bob:Math.sin(t/500)*1.4});
+    if(!sceneState.done){
+      coin(sceneState.c.x, sceneState.c.y, 22);
+      if(!sceneState.dragging){
+        ctx.save();
+        ctx.strokeStyle="rgba(192,86,43,0.6)";
+        ctx.lineWidth=2;
+        ctx.setLineDash([6,6]);
+        ctx.beginPath();
+        ctx.moveTo(sceneState.c.x,sceneState.c.y);
+        ctx.lineTo(sceneState.target.x, sceneState.target.y+30);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    } else {
+      child(sceneState.target.x-50, sceneState.target.y+40, 1.3, {shirt:"#e0b06a"});
+      person(sceneState.target.x+40, sceneState.target.y+30, 1.3, {shirt:"#c0562b",pants:"#3b3b3b",mustache:true,raise:0.6,smile:true});
+    }
+  }
+  function redeemDown(x,y){
+    if(sceneState.done) return;
+    if(dist(x,y,sceneState.c.x,sceneState.c.y)<40){ sceneState.dragging=true; }
+  }
+  function redeemMove(x,y){
+    if(sceneState.dragging){ sceneState.c.x=x; sceneState.c.y=y; }
+  }
+  function redeemUp(x,y){
+    if(!sceneState.dragging) return;
+    sceneState.dragging=false;
+    var t = sceneState.target;
+    if(dist(x,y,t.x,t.y+30)<t.r){
+      sceneState.done = true;
+      setTimeout(completeScene, 900);
+    } else {
+      sceneState.c.x = sceneState.c.startX;
+      sceneState.c.y = sceneState.c.startY;
+    }
+  }
+
+  /* ----- 7. MISER (bargain timing bar) ----- */
+  function setupMiser(){
+    sceneState = { pos:0, dir:1, taps:0, done:false, result:"" };
+  }
+  function drawMiser(t){
+    sky("#fbe6bd","#f2ca86");
+    ground("#c9bb8f");
+    cow(560,340,1.05);
+    person(320,330,1.35,{shirt:"#3f6b3f",pants:"#2b2b2b",skin:"#e0b98a",raise:0.3,bob:Math.sin(t/500)*1.5});
+    moneyBag(370,320,1.0);
+
+    // bargain bar
+    var bx=CW/2-150, by=110, bw=300, bh=26;
+    ctx.save();
+    ctx.fillStyle="#fff6e2";
+    roundRect(bx,by,bw,bh,13); ctx.fill();
+    ctx.strokeStyle="#c9a441"; ctx.lineWidth=2; roundRect(bx,by,bw,bh,13); ctx.stroke();
+    // "fair" zone (green) on the right, miser always taps too early into cheap/red zone
+    var fairX = bx+bw*0.62;
+    ctx.fillStyle="rgba(90,125,74,0.35)";
+    roundRect(fairX,by,bx+bw-fairX,bh,13); ctx.fill();
+    ctx.fillStyle="rgba(176,60,50,0.3)";
+    roundRect(bx,by,fairX-bx,bh,13); ctx.fill();
+
+    if(!sceneState.done){
+      sceneState.pos += sceneState.dir*4.2;
+      if(sceneState.pos>bw-10){ sceneState.pos=bw-10; sceneState.dir=-1; }
+      if(sceneState.pos<10){ sceneState.pos=10; sceneState.dir=1; }
+    }
+    var mx = bx+sceneState.pos;
+    ctx.fillStyle="#c0562b";
+    ctx.beginPath(); ctx.arc(mx,by+bh/2,10,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#8f3d1c"; ctx.lineWidth=2; ctx.stroke();
+
+    ctx.save();
+    ctx.font="13px sans-serif"; ctx.fillStyle="#3b2a1a"; ctx.textAlign="center";
+    ctx.fillText(lang==="id" ? "murah" : "cheap", bx+40, by-8);
+    ctx.fillText(lang==="id" ? "wajar" : "fair", bx+bw-40, by-8);
+    ctx.restore();
+
+    if(sceneState.result){
+      speechBubble(CW/2-110, 150, 220, 60, sceneState.result, "left");
+    }
+  }
+  function miserDown(x,y){
+    if(sceneState.done) return;
+    sceneState.taps++;
+    sceneState.done = true;
+    var cheap = lang==="id" ? "\u201cTerlalu murah! Penjual menolak menjual lembunya,\u201d" : "\u201cToo cheap! The seller refuses to sell the cow,\u201d";
+    var fairMsg = lang==="id" ? "Untung sekali harganya pas!" : "Lucky, the price was fair!";
+    var bx=CW/2-150, bw=300;
+    var fairThreshold = bw*0.62;
+    if(sceneState.pos >= fairThreshold){
+      sceneState.result = fairMsg;
+    } else {
+      sceneState.result = cheap;
+    }
+    setTimeout(completeScene, 1700);
+  }
+
+  /* ----- 8. ENDING (tap dog) ----- */
+  function setupEnding(){
+    sceneState = { bitten:false, fled:0 };
+  }
+  function drawEnding(t){
+    sky("#fbe6bd","#f2ca86");
+    ground("#c9bb8f");
+    richHouse(400,240,1.1);
+    person(300,330,1.3,{shirt:"#3f6b3f",pants:"#2b2b2b",raise: sceneState.bitten?0.9:0.1});
+    // fleeing guests
+    for(var i=0;i<3;i++){
+      var fx = 560 + i*40 + (sceneState.bitten ? sceneState.fled : 0);
+      person(fx, 340, 1.05, {shirt: i%2===0?"#7a5230":"#4a5a7a", pants:"#3b3b3b", raise:sceneState.bitten?0.7:0.1, bob:Math.sin(t/300+i)*2});
+    }
+    dogShape(300, 380, 1.4, sceneState.bitten);
+    if(sceneState.bitten){
+      sceneState.fled = Math.min(140, sceneState.fled+3);
+      speechBubble(200,250,200,56, lang==="id" ? "Auw! Anjingnya hidup kembali!" : "Ouch! The dog came back to life!","left");
+    }
+  }
+  function endingDown(x,y){
+    if(sceneState.bitten) return;
+    if(dist(x,y,300,380)<70){
+      sceneState.bitten = true;
+      setTimeout(completeScene, 1800);
+    }
+  }
+
+  /* ----- 9. MORAL ----- */
+  function setupMoral(){ sceneState = {}; }
+  function drawMoral(t){
+    sky("#ffe9bd","#ffcf8a");
+    ground("#8fbf7a");
+    sun(680,70,30);
+    hut(180,270,1.3,true);
+    person(140,340,1.4,{shirt:"#c0562b",pants:"#3b3b3b",mustache:true,smile:true,raise:0.4,bob:Math.sin(t/450)*1.5});
+    person(300,345,1.35,{shirt:"#a85a7a",pants:"#5a4a6a",headwrap:"#a85a7a",smile:true,raise:0.4,bob:Math.sin(t/450+1)*1.5});
+    child(220,365,1.4,{shirt:"#e0b06a"});
+    for(var i=0;i<10;i++){
+      var ang=(i/10)*Math.PI*2 + t/900;
+      coin(500+Math.cos(ang)*70, 200+Math.sin(ang)*40, 7);
+    }
+    ctx.save();
+    ctx.font="bold 20px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillStyle="#5a3a1e";
+    ctx.fillText(lang==="id" ? "Selamat! Cerita Selesai" : "The End", CW/2, 60);
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------------
+     SPEECH SYNTHESIS
+  --------------------------------------------------------------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    var prefix = lang==="id" ? "id" : "en";
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(prefix)===0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(muted || !window.speechSynthesis) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice();
+      if(v) u.voice = v;
+      u.lang = lang==="id" ? "id-ID" : "en-US";
+      u.rate = 0.98;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+  }
+
+  /* ---------------------------------------------------------------
+     SCENE FLOW
+  --------------------------------------------------------------- */
+  function L(){ return STR[lang]; }
+  function currentSceneStr(){ return L().scenes[sceneIndex]; }
+
+  function updateDots(){
+    dotsWrap.innerHTML = "";
+    for(var i=1;i<scenes.length;i++){ // exclude title dot
+      var d = document.createElement("div");
+      d.className = "pm-dot" + (i===sceneIndex ? " active" : (i<sceneIndex ? " done":""));
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function updateCaption(){
+    var s = currentSceneStr();
+    if(s.name){
+      captionName.textContent = L().names[s.name] + ": ";
+    } else {
+      captionName.textContent = "";
+    }
+    captionText.textContent = s.caption;
+  }
+
+  function updateInstruction(){
+    var s = currentSceneStr();
+    if(s.instruction){
+      instructionEl.textContent = s.instruction;
+      instructionEl.classList.add("show");
+    } else {
+      instructionEl.classList.remove("show");
+      instructionEl.textContent = "";
+    }
+  }
+
+  function updateStartBtn(){
+    if(!started){
+      startBtn.textContent = L().start;
+    } else if(sceneIndex === scenes.length-1){
+      startBtn.textContent = L().replay;
+    } else {
+      startBtn.textContent = L().next;
+    }
+  }
+
+  function resetSceneState(){
+    var sc = scenes[sceneIndex];
+    if(sc.setup) sc.setup();
+    else sceneState = {};
+  }
+
+  function enterScene(idx){
+    sceneIndex = idx;
+    resetSceneState();
+    updateDots();
+    updateCaption();
+    updateInstruction();
+    updateStartBtn();
+    speak(currentSceneStr().caption);
+    notifyResize();
+  }
+
+  function completeScene(){
+    // auto-advance for scenes that finish via mini-game, but stop at last
+    if(sceneIndex < scenes.length-1){
+      enterScene(sceneIndex+1);
+    }
+  }
+
+  function onStartClick(){
+    if(!started){
+      started = true;
+      enterScene(1);
+      return;
+    }
+    if(sceneIndex === scenes.length-1){
+      // replay
+      enterScene(0);
+      started = false;
+      updateStartBtn();
+      return;
+    }
+    // manual "next" fallback (for title-less progression / accessibility)
+    enterScene(Math.min(sceneIndex+1, scenes.length-1));
+  }
+  startBtn.addEventListener("click", onStartClick);
+
+  /* ---------------------------------------------------------------
+     POINTER HANDLING
+  --------------------------------------------------------------- */
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+    var scaleX = CW/rect.width;
+    var scaleY = CH/rect.height;
+    return { x:(cx-rect.left)*scaleX, y:(cy-rect.top)*scaleY };
+  }
+  function handleDown(evt){
+    if(!started) return;
+    var p = getPos(evt);
+    var sc = scenes[sceneIndex];
+    if(sc.down) sc.down(p.x,p.y);
+    evt.preventDefault();
+  }
+  function handleMove(evt){
+    if(!started) return;
+    var p = getPos(evt);
+    var sc = scenes[sceneIndex];
+    if(sc.move) sc.move(p.x,p.y);
+  }
+  function handleUp(evt){
+    if(!started) return;
+    var p = pointer;
+    var sc = scenes[sceneIndex];
+    var last = evt.changedTouches ? getPos(evt) : getPos(evt);
+    if(sc.up) sc.up(last.x,last.y);
+  }
+  canvas.addEventListener("mousedown", handleDown);
+  canvas.addEventListener("mousemove", handleMove);
+  window.addEventListener("mouseup", handleUp);
+  canvas.addEventListener("touchstart", handleDown, {passive:false});
+  canvas.addEventListener("touchmove", handleMove, {passive:false});
+  canvas.addEventListener("touchend", handleUp);
+
+  /* ---------------------------------------------------------------
+     MUTE / LANG
+  --------------------------------------------------------------- */
+  function refreshMuteBtn(){
+    muteBtn.setAttribute("aria-label", muted ? L().unmute : L().mute);
+    muteBtn.style.opacity = muted ? "0.6" : "1";
+  }
+  muteBtn.addEventListener("click", function(){
+    muted = !muted;
+    try{ localStorage.setItem("pm-mendong-mute", muted ? "1":"0"); }catch(e){}
+    if(muted) stopSpeak(); else speak(currentSceneStr().caption);
+    refreshMuteBtn();
+  });
+
+  function applyLangTexts(){
+    titleText.textContent = L().title;
+    footerText.textContent = L().footer;
+    langBtn.textContent = L().langBtn;
+    updateCaption();
+    updateInstruction();
+    updateStartBtn();
+    refreshMuteBtn();
+  }
+  langBtn.addEventListener("click", function(){
+    lang = lang==="id" ? "en" : "id";
+    applyLangTexts();
+    speak(currentSceneStr().caption);
+  });
+
+  /* ---------------------------------------------------------------
+     IFRAME AUTO-RESIZE
+  --------------------------------------------------------------- */
+  function notifyResize(){
+    try{
+      var h = document.body.scrollHeight;
+      window.parent.postMessage({ type:"pm-mendong-resize", height:h }, "*");
+    }catch(e){}
+  }
+  window.addEventListener("load", notifyResize);
+  window.addEventListener("resize", notifyResize);
+
+  /* ---------------------------------------------------------------
+     RENDER LOOP
+  --------------------------------------------------------------- */
+  function loop(now){
+    clear();
+    var sc = scenes[sceneIndex];
+    sc.draw(now - startTime);
+    rafId = requestAnimationFrame(loop);
+  }
+  rafId = requestAnimationFrame(loop);
+
+  /* ---------------------------------------------------------------
+     INIT
+  --------------------------------------------------------------- */
+  resetSceneState();
+  applyLangTexts();
+  updateDots();
+  setTimeout(notifyResize, 300);
+
+})();
+</script>
+</body>
+</html>
