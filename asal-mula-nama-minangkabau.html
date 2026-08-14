@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Nama Minangkabau</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Georgia', 'Segoe UI', serif;
+    background: linear-gradient(180deg, #fdf6e3 0%, #f5ead0 100%);
+    color: #3b2a1a;
+    overflow-x: hidden;
+  }
+  #app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px 14px 20px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  h1.gameTitle {
+    font-size: 1.15rem;
+    margin: 0;
+    color: #7a3b12;
+    line-height: 1.3;
+  }
+  .iconBtn {
+    background: #fff8ea;
+    border: 2px solid #c98a3b;
+    color: #7a3b12;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .iconBtn:hover { background: #f3e0b8; }
+  .topControls { display: flex; gap: 6px; }
+
+  #canvasWrap {
+    position: relative;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 3px solid #c98a3b;
+    background: #eadfc0;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: manipulation;
+  }
+
+  #instruction {
+    margin-top: 10px;
+    background: #fff2d6;
+    border-left: 5px solid #c98a3b;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    min-height: 20px;
+  }
+  #narration {
+    margin-top: 10px;
+    font-size: 1rem;
+    line-height: 1.55;
+    padding: 4px 2px;
+    min-height: 40px;
+  }
+
+  #controls {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .actionBtn {
+    background: linear-gradient(180deg,#e0a94a,#c98a3b);
+    color: #fff8ea;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #93601f;
+    transition: transform 0.05s;
+  }
+  .actionBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 #93601f; }
+  .actionBtn:disabled { opacity: 0.5; cursor: default; }
+  .actionBtn.secondary {
+    background: linear-gradient(180deg,#f5ead0,#e6d3a3);
+    color: #7a3b12;
+    box-shadow: 0 3px 0 #b99a5c;
+  }
+
+  #progressWrap {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #dcc79a;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .dot.active { background: #c94a2b; transform: scale(1.3); }
+  .dot.done { background: #7a3b12; }
+
+  #holdBarWrap {
+    width: 100%;
+    max-width: 320px;
+    height: 16px;
+    background: #e6d3a3;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 8px auto 0;
+    border: 2px solid #c98a3b;
+    display: none;
+  }
+  #holdBarFill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg,#c94a2b,#e0a94a);
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.78rem;
+    color: #9c7a4d;
+  }
+
+  .startScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 6px 4px;
+  }
+  .startScreen p {
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1 class="gameTitle" id="titleText">Asal Mula Nama Minangkabau</h1>
+    <div class="topControls">
+      <button class="iconBtn" id="langBtn" type="button">EN</button>
+      <button class="iconBtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="game" width="800" height="500"></canvas>
+  </div>
+
+  <div id="instruction"></div>
+  <div id="narration"></div>
+
+  <div id="holdBarWrap"><div id="holdBarFill"></div></div>
+
+  <div id="controls"></div>
+
+  <div id="progressWrap"></div>
+
+  <footer id="footerText">Kisah rakyat Nusantara</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- language setup ----------
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var TXT = {
+    id: {
+      title: "Asal Mula Nama Minangkabau",
+      footer: "Kisah rakyat Nusantara",
+      start: "Mulai Cerita",
+      restart: "Ulangi Cerita",
+      next: "Lanjut",
+      muteOn: "🔊",
+      muteOff: "🔇",
+      langBtn: "EN",
+      intro: "Konon, di tanah Sumatra, sebuah kerajaan besar dari seberang lautan hendak menaklukkan negeri yang subur ini. Alih-alih perang besar yang akan menumpahkan darah, kedua belah pihak sepakat menyelesaikannya dengan cara yang tidak terduga.",
+      introInstruction: "Ketuk tombol di bawah untuk mendengar tawaran damai dari sang raja.",
+      scene1Title: "Dua Pasukan Berhadapan",
+      scene1Text: "Ribuan prajurit dari kerajaan seberang berbaris di satu sisi padang, sementara penduduk negeri ini berkumpul di sisi lain. Perang besar hampir saja pecah.",
+      scene1Instruction: "Ketuk tombol \"Hentikan Perang\" agar pertempuran tidak jadi terjadi.",
+      scene1Btn: "Hentikan Perang!",
+      scene2Title: "Usul Sang Tetua",
+      scene2Text: "Seorang tetua bijaksana dari negeri ini maju dan mengusulkan cara lain: daripada mengorbankan nyawa prajurit, biarlah dua ekor kerbau saja yang beradu. Siapa kerbaunya menang, wilayahnya diakui menang.",
+      scene2Instruction: "Ketuk sosok tetua yang berkedip di kanvas untuk mendengar usulnya.",
+      scene3Title: "Memilih Kerbau",
+      scene3Text: "Kerajaan seberang membawa kerbau jantan raksasa yang gagah dan garang. Sang tetua justru memilih seekor anak kerbau kecil yang masih menyusu induknya.",
+      scene3Instruction: "Ketuk anak kerbau kecil yang berkedip di kanvas untuk memilihnya.",
+      scene4Title: "Tanduk Berpisau",
+      scene4Text: "Diam-diam, tanduk anak kerbau kecil itu diasah tajam dan dipasangi bilah pisau kecil di ujungnya, tersembunyi rapi di antara bulu-bulunya.",
+      scene4Instruction: "Ketuk kedua tanduk kerbau yang berkedip untuk memasang pisau tajam.",
+      scene5Title: "Kerbau Dibuat Lapar",
+      scene5Text: "Selama beberapa hari, anak kerbau itu sengaja tidak diberi susu sama sekali, hingga ia menjadi sangat lapar dan gelisah mencari induknya.",
+      scene5Instruction: "Tahan tombol \"Tahan Lapar\" agar anak kerbau semakin lapar dan siap bertarung.",
+      scene5Btn: "Tahan Lapar",
+      scene6Title: "Pertarungan Dimulai",
+      scene6Text: "Saat dilepaskan ke tengah lapangan, anak kerbau yang kelaparan itu melihat kerbau raksasa dan mengiranya sebagai induknya sendiri. Ia pun berlari secepat mungkin untuk menyusu.",
+      scene6Instruction: "Ketuk tombol \"Lari, Kerbau, Lari!\" berkali-kali agar anak kerbau berlari sekencang-kencangnya.",
+      scene6Btn: "Lari, Kerbau, Lari!",
+      scene7Title: "Menang Kerbau",
+      scene7Text: "Karena tanduknya berpisau tajam, saat anak kerbau itu menyeruduk perut kerbau raksasa untuk mencari susu, kerbau besar itu pun terluka dan kalah seketika. Sejak saat itu, negeri ini dikenal dengan nama \"Menang Kerbau\", yang lama-kelamaan disebut Minangkabau.",
+      scene7Instruction: "Ketuk tombol \"Ulangi Cerita\" untuk mendengar kisah ini kembali dari awal.",
+      progressLabel: "Tahap"
+    },
+    en: {
+      title: "The Origin of the Name Minangkabau",
+      footer: "A folktale from the Indonesian archipelago",
+      start: "Start the Story",
+      restart: "Replay Story",
+      next: "Continue",
+      muteOn: "🔊",
+      muteOff: "🔇",
+      langBtn: "ID",
+      intro: "Long ago in the land of Sumatra, a mighty kingdom from across the sea sought to conquer this fertile country. Instead of a great war that would spill much blood, both sides agreed to settle it in an unexpected way.",
+      introInstruction: "Tap the button below to hear the king's offer of peace.",
+      scene1Title: "Two Armies Face Off",
+      scene1Text: "Thousands of soldiers from the kingdom across the sea lined up on one side of the field, while the people of this land gathered on the other. A great war was about to break out.",
+      scene1Instruction: "Tap the \"Stop the War\" button so the battle does not happen.",
+      scene1Btn: "Stop the War!",
+      scene2Title: "The Elder's Proposal",
+      scene2Text: "A wise elder of this land stepped forward and proposed another way: instead of sacrificing soldiers' lives, let two buffalo fight instead. Whoever's buffalo wins, that side's claim is recognized.",
+      scene2Instruction: "Tap the glowing elder figure on the canvas to hear his proposal.",
+      scene3Title: "Choosing the Buffalo",
+      scene3Text: "The kingdom across the sea brought a huge, fierce bull buffalo. The elder, instead, chose a small calf that was still nursing from its mother.",
+      scene3Instruction: "Tap the glowing baby buffalo on the canvas to choose it.",
+      scene4Title: "Blades on the Horns",
+      scene4Text: "In secret, the calf's small horns were sharpened and fitted with tiny blades at their tips, hidden neatly among its fur.",
+      scene4Instruction: "Tap both glowing horns of the buffalo to attach the sharp blades.",
+      scene5Title: "Starving the Buffalo",
+      scene5Text: "For several days, the calf was deliberately given no milk at all, until it grew very hungry and restless, searching everywhere for its mother.",
+      scene5Instruction: "Hold the \"Hold the Hunger\" button so the calf grows hungrier and ready to fight.",
+      scene5Btn: "Hold the Hunger",
+      scene6Title: "The Fight Begins",
+      scene6Text: "When released into the field, the starving calf saw the giant buffalo and mistook it for its own mother. It ran as fast as it could to nurse.",
+      scene6Instruction: "Tap the \"Run, Buffalo, Run!\" button repeatedly to make the calf run as fast as possible.",
+      scene6Btn: "Run, Buffalo, Run!",
+      scene7Title: "Menang Kerbau — The Buffalo Wins",
+      scene7Text: "Because its horns bore sharp blades, when the calf rammed into the giant buffalo's belly searching for milk, the huge animal was wounded and lost instantly. From that day, this land became known as \"Menang Kerbau\" — the winning buffalo — which over time became Minangkabau.",
+      scene7Instruction: "Tap \"Replay Story\" to hear this tale again from the beginning.",
+      progressLabel: "Step"
+    }
+  };
+
+  var totalScenes = 8; // 0..7
+
+  // ---------- DOM refs ----------
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var instructionEl = document.getElementById('instruction');
+  var narrationEl = document.getElementById('narration');
+  var controlsEl = document.getElementById('controls');
+  var progressWrap = document.getElementById('progressWrap');
+  var titleText = document.getElementById('titleText');
+  var footerText = document.getElementById('footerText');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var holdBarWrap = document.getElementById('holdBarWrap');
+  var holdBarFill = document.getElementById('holdBarFill');
+
+  var state = {
+    scene: 0,
+    muted: (localStorage.getItem('minangkabauMuted') === 'true'),
+    hornsAttached: 0,
+    hungerLevel: 0,
+    holding: false,
+    runProgress: 0,
+    running: false,
+    tick: 0
+  };
+
+  // ---------- speech ----------
+  var voices = [];
+  function loadVoices() { voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice() {
+    var target = lang === 'en' ? 'en-US' : 'id-ID';
+    for (var i=0;i<voices.length;i++){
+      if (voices[i].lang === target) return voices[i];
+    }
+    var prefix = lang === 'en' ? 'en' : 'id';
+    for (var j=0;j<voices.length;j++){
+      if (voices[j].lang && voices[j].lang.indexOf(prefix) === 0) return voices[j];
+    }
+    return null;
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (state.muted) return;
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice();
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+
+  // ---------- resize / postMessage ----------
+  function notifyResize() {
+    var h = document.body.scrollHeight;
+    try {
+      window.parent.postMessage({ type: 'resize', height: h }, '*');
+      window.parent.postMessage(JSON.stringify({ type: 'resize', height: h }), '*');
+    } catch(e) {}
+  }
+  window.addEventListener('load', notifyResize);
+  window.addEventListener('resize', notifyResize);
+  if (window.ResizeObserver) {
+    new ResizeObserver(notifyResize).observe(document.body);
+  }
+
+  // ---------- canvas responsive scaling ----------
+  var CW = 800, CH = 500;
+  function fitCanvas() {
+    canvas.width = CW;
+    canvas.height = CH;
+  }
+  fitCanvas();
+
+  // ---------- helpers ----------
+  function T() { return TXT[lang]; }
+
+  function setInstruction(text) { instructionEl.textContent = text; }
+  function setNarration(text) { narrationEl.textContent = text; }
+
+  function clearControls() { controlsEl.innerHTML = ''; }
+
+  function addButton(label, onClick, opts) {
+    var btn = document.createElement('button');
+    btn.className = 'actionBtn' + (opts && opts.secondary ? ' secondary' : '');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.addEventListener('click', onClick);
+    controlsEl.appendChild(btn);
+    return btn;
+  }
+
+  function updateDots() {
+    progressWrap.innerHTML = '';
+    for (var i=0;i<totalScenes;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i === state.scene ? ' active' : (i < state.scene ? ' done' : ''));
+      progressWrap.appendChild(d);
+    }
+  }
+
+  // ---------- drawing primitives ----------
+  function bgSky() {
+    var grad = ctx.createLinearGradient(0,0,0,CH);
+    grad.addColorStop(0, '#fbe6b0');
+    grad.addColorStop(1, '#e9c877');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,CW,CH);
+    // sun
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath(); ctx.arc(680,80,50,0,Math.PI*2); ctx.fill();
+    // hills
+    ctx.fillStyle = '#c9a15a';
+    ctx.beginPath();
+    ctx.moveTo(0,340);
+    ctx.quadraticCurveTo(200,280,400,330);
+    ctx.quadraticCurveTo(600,380,800,320);
+    ctx.lineTo(800,500); ctx.lineTo(0,500);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8f6a34';
+    ctx.beginPath();
+    ctx.moveTo(0,400);
+    ctx.quadraticCurveTo(250,360,450,400);
+    ctx.quadraticCurveTo(650,440,800,390);
+    ctx.lineTo(800,500); ctx.lineTo(0,500);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function groundField() {
+    ctx.fillStyle = '#a9c464';
+    ctx.fillRect(0,400,CW,100);
+  }
+
+  function drawPerson(x,y,color,scale) {
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.strokeStyle = '#3b2a1a';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-6,20); ctx.lineTo(-8,38); ctx.moveTo(6,20); ctx.lineTo(8,38); ctx.stroke();
+    // body
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-10,20); ctx.lineTo(10,20); ctx.lineTo(7,-6); ctx.lineTo(-7,-6);
+    ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = '#e8b98a';
+    ctx.beginPath(); ctx.arc(0,-14,9,0,Math.PI*2); ctx.fill();
+    // arm holding spear
+    ctx.strokeStyle = '#5a4020';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(8,-2); ctx.lineTo(20,-30); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawArmy(startX, endX, y, color, count) {
+    var step = (endX-startX)/count;
+    for (var i=0;i<count;i++){
+      drawPerson(startX + i*step, y, color, 0.9 + (i%3)*0.05);
+    }
+  }
+
+  function drawElder(x,y,glow) {
+    ctx.save();
+    ctx.translate(x,y);
+    if (glow) {
+      var pulse = 0.5 + 0.5*Math.sin(state.tick*0.08);
+      ctx.shadowColor = 'rgba(255,210,90,'+(0.6+0.4*pulse)+')';
+      ctx.shadowBlur = 25 + 15*pulse;
+    }
+    // robe
+    ctx.fillStyle = '#d9c48a';
+    ctx.beginPath();
+    ctx.moveTo(-16,50); ctx.lineTo(16,50); ctx.lineTo(11,-10); ctx.lineTo(-11,-10);
+    ctx.closePath(); ctx.fill();
+    // sash
+    ctx.fillStyle = '#c94a2b';
+    ctx.fillRect(-11,10,22,8);
+    // head
+    ctx.fillStyle = '#e8b98a';
+    ctx.beginPath(); ctx.arc(0,-20,13,0,Math.PI*2); ctx.fill();
+    // headwrap (deta-like)
+    ctx.fillStyle = '#7a3b12';
+    ctx.beginPath();
+    ctx.moveTo(-14,-26); ctx.quadraticCurveTo(0,-46,14,-26);
+    ctx.quadraticCurveTo(0,-32,-14,-26);
+    ctx.closePath(); ctx.fill();
+    // staff
+    ctx.strokeStyle = '#5a4020';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(20,-10); ctx.lineTo(20,55); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBuffalo(x,y,scale,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+
+    if (opts.glow) {
+      var pulse = 0.5 + 0.5*Math.sin(state.tick*0.08);
+      ctx.shadowColor = 'rgba(255,210,90,'+(0.6+0.4*pulse)+')';
+      ctx.shadowBlur = 22 + 12*pulse;
+    }
+
+    // legs
+    ctx.fillStyle = '#4a4a4a';
+    ctx.fillRect(-28,20,8,22);
+    ctx.fillRect(18,20,8,22);
+    ctx.fillRect(-10,22,8,20);
+    ctx.fillRect(8,22,8,20);
+
+    // body
+    ctx.fillStyle = opts.color || '#5c5c5c';
+    ctx.beginPath();
+    ctx.ellipse(0,5,42,26,0,0,Math.PI*2);
+    ctx.fill();
+
+    // head
+    ctx.beginPath();
+    ctx.ellipse(48,0,20,16,0,0,Math.PI*2);
+    ctx.fill();
+
+    // snout
+    ctx.fillStyle = '#3d3d3d';
+    ctx.beginPath();
+    ctx.ellipse(62,4,8,7,0,0,Math.PI*2);
+    ctx.fill();
+
+    // horns (drawn separately for tap targets in scene 4, else normal)
+    if (!opts.hideHorns) {
+      drawHorn(48,-12,opts.hornBlades, -1);
+      drawHorn(48,-12,opts.hornBlades, 1);
+    }
+
+    // eye
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.arc(56,-3,2.2,0,Math.PI*2); ctx.fill();
+
+    // tail
+    ctx.strokeStyle = '#3d3d3d';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-40,0);
+    ctx.quadraticCurveTo(-55,15,-48,30);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawHorn(cx,cy,withBlade,dir){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(dir,1);
+    ctx.strokeStyle = '#e6d8b0';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(14,-18,6,-30);
+    ctx.stroke();
+    if (withBlade) {
+      ctx.fillStyle = '#f2f6fa';
+      ctx.beginPath();
+      ctx.moveTo(5,-28);
+      ctx.lineTo(20,-52);
+      ctx.lineTo(9,-25);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#5a6472';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function glowCircle(x,y,r){
+    var pulse = 0.5 + 0.5*Math.sin(state.tick*0.1);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,180,60,'+(0.5+0.5*pulse)+')';
+    ctx.lineWidth = 3 + 2*pulse;
+    ctx.beginPath();
+    ctx.arc(x,y,r + 4*pulse,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- scene tap targets ----------
+  var tapTargets = []; // {x,y,r,onTap}
+
+  function registerTap(x,y,r,onTap){
+    tapTargets.push({x:x,y:y,r:r,onTap:onTap});
+  }
+
+  canvas.addEventListener('click', function(evt){
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = CW / rect.width;
+    var scaleY = CH / rect.height;
+    var x = (evt.clientX - rect.left) * scaleX;
+    var y = (evt.clientY - rect.top) * scaleY;
+    for (var i=0;i<tapTargets.length;i++){
+      var t = tapTargets[i];
+      var d = Math.hypot(x - t.x, y - t.y);
+      if (d <= t.r) { t.onTap(); return; }
+    }
+  });
+
+  // ---------- animation loop ----------
+  function loop(){
+    state.tick++;
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  function render(){
+    ctx.clearRect(0,0,CW,CH);
+    switch(state.scene){
+      case 0: renderStart(); break;
+      case 1: renderScene1(); break;
+      case 2: renderScene2(); break;
+      case 3: renderScene3(); break;
+      case 4: renderScene4(); break;
+      case 5: renderScene5(); break;
+      case 6: renderScene6(); break;
+      case 7: renderScene7(); break;
+    }
+  }
+
+  // ---------- scenes ----------
+
+  function renderStart(){
+    bgSky(); groundField();
+    drawElder(400,300,false);
+    drawBuffalo(200,420,1.0,{glow:false});
+    drawBuffalo(600,420,1.3,{glow:false});
+    ctx.save();
+    ctx.fillStyle = 'rgba(59,42,26,0.75)';
+    ctx.font = 'bold 34px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang === 'en' ? 'A Sumatran Legend' : 'Legenda dari Sumatra', CW/2, 80);
+    ctx.restore();
+  }
+
+  function setupStart(){
+    tapTargets = [];
+    setInstruction(T().introInstruction);
+    setNarration(T().intro);
+    clearControls();
+    addButton(T().start, function(){
+      goScene(1);
+    });
+    holdBarWrap.style.display = 'none';
+  }
+
+  function renderScene1(){
+    bgSky(); groundField();
+    drawArmy(60,300,430,'#8a2e2e', 6);
+    drawArmy(500,760,430,'#2e5b8a', 6);
+    ctx.save();
+    ctx.fillStyle = '#3b2a1a';
+    ctx.font = 'bold 20px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang==='en' ? 'Kingdom of the Homeland' : 'Kerajaan Negeri Ini', 180, 460);
+    ctx.fillText(lang==='en' ? 'Kingdom Across the Sea' : 'Kerajaan Seberang Lautan', 630, 460);
+    ctx.restore();
+  }
+
+  function setupScene1(){
+    tapTargets = [];
+    setInstruction(T().scene1Instruction);
+    setNarration(T().scene1Text);
+    speak(T().scene1Text);
+    clearControls();
+    addButton(T().scene1Btn, function(){
+      goScene(2);
+    });
+    holdBarWrap.style.display = 'none';
+  }
+
+  function renderScene2(){
+    bgSky(); groundField();
+    drawArmy(30,200,440,'#8a2e2e', 4);
+    drawArmy(620,790,440,'#2e5b8a', 4);
+    drawElder(400,330, true);
+    var t = state.elderTapped;
+    if (t) {
+      ctx.save();
+      ctx.fillStyle = '#3b2a1a';
+      ctx.font = '16px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(lang==='en' ? '"Let two buffalo decide it!"' : '"Biarlah dua kerbau yang menentukan!"', 400, 260);
+      ctx.restore();
+    }
+  }
+
+  function setupScene2(){
+    tapTargets = [];
+    state.elderTapped = false;
+    setInstruction(T().scene2Instruction);
+    setNarration('');
+    clearControls();
+    registerTap(400,300,55, function(){
+      if (state.elderTapped) return;
+      state.elderTapped = true;
+      setNarration(T().scene2Text);
+      speak(T().scene2Text);
+      var btn = addButton(T().next, function(){ goScene(3); });
+    });
+    holdBarWrap.style.display = 'none';
+  }
+
+  function renderScene3(){
+    bgSky(); groundField();
+    drawBuffalo(560,410,1.5,{color:'#4a4a4a'}); // giant buffalo
+    drawBuffalo(220,440,0.75,{glow:true, color:'#7a6247'}); // baby buffalo, glowing
+    ctx.save();
+    ctx.fillStyle='#3b2a1a';
+    ctx.font='16px Georgia, serif';
+    ctx.textAlign='center';
+    ctx.fillText(lang==='en' ? 'Giant Bull Buffalo' : 'Kerbau Jantan Raksasa', 590, 350);
+    ctx.fillText(lang==='en' ? 'Small Calf' : 'Anak Kerbau Kecil', 220, 380);
+    ctx.restore();
+  }
+
+  function setupScene3(){
+    tapTargets = [];
+    setInstruction(T().scene3Instruction);
+    setNarration(T().scene3Text);
+    speak(T().scene3Text);
+    clearControls();
+    registerTap(220,440,60, function(){
+      goScene(4);
+    });
+    holdBarWrap.style.display = 'none';
+  }
+
+  function renderScene4(){
+    bgSky(); groundField();
+    var b = state.hornsAttached;
+    // draw baby buffalo big & centered, with horns as tap targets
+    ctx.save();
+    var x=400,y=380,scale=2.0;
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // reuse buffalo body drawing manually so we can control horn glow individually
+    ctx.restore();
+
+    // body via helper (without horns)
+    drawBuffalo(400,380,2.0,{color:'#7a6247', hideHorns:true});
+
+    // compute horn world positions (approx, matching drawBuffalo's head offset*scale)
+    var headX = 400 + 48*2.0;
+    var headY = 380 - 12*2.0;
+    var hornGap = 22; // world-space separation between the two horn bases
+    // left horn (dir -1 flips x)
+    drawGlowHorn(headX - hornGap, headY, -1, b>=1, b<1);
+    // right horn (dir 1)
+    drawGlowHorn(headX + hornGap, headY, 1, b>=2, b<2);
+  }
+
+  function drawGlowHorn(cx,cy,dir,attached,glow){
+    ctx.save();
+    if (glow) {
+      var pulse = 0.5+0.5*Math.sin(state.tick*0.09);
+      ctx.shadowColor = 'rgba(255,180,60,'+(0.6+0.4*pulse)+')';
+      ctx.shadowBlur = 20+10*pulse;
+    }
+    ctx.translate(cx,cy);
+    ctx.scale(dir*2.0,2.0);
+    ctx.strokeStyle = '#e6d8b0';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(14,-18,6,-30);
+    ctx.stroke();
+    if (attached) {
+      ctx.fillStyle = '#f2f6fa';
+      ctx.beginPath();
+      ctx.moveTo(5,-28);
+      ctx.lineTo(20,-52);
+      ctx.lineTo(9,-25);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#5a6472';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function setupScene4(){
+    tapTargets = [];
+    state.hornsAttached = 0;
+    setInstruction(T().scene4Instruction);
+    setNarration(T().scene4Text);
+    speak(T().scene4Text);
+    clearControls();
+
+    function computeHornPos(dir){
+      var headX = 400 + 48*2.0;
+      var headY = 380 - 12*2.0;
+      var hornGap = 22;
+      var baseX = headX + dir*hornGap;
+      // approximate tip position after transform
+      var localTipX = 6*dir, localTipY = -30;
+      return { x: baseX + localTipX*2.0, y: headY + localTipY*2.0 };
+    }
+
+    var leftPos = computeHornPos(-1);
+    var rightPos = computeHornPos(1);
+
+    registerTap(leftPos.x, leftPos.y, 24, function(){
+      if (state.hornsAttached < 1) { state.hornsAttached = 1; checkHornsDone(); }
+    });
+    registerTap(rightPos.x, rightPos.y, 24, function(){
+      if (state.hornsAttached === 1) { state.hornsAttached = 2; checkHornsDone(); }
+    });
+
+    holdBarWrap.style.display = 'none';
+  }
+
+  function checkHornsDone(){
+    if (state.hornsAttached >= 2) {
+      clearControls();
+      addButton(T().next, function(){ goScene(5); });
+    }
+  }
+
+  function renderScene5(){
+    bgSky(); groundField();
+    var shrink = 1 - Math.min(state.hungerLevel,100)/400;
+    drawBuffalo(400,400,1.8*shrink+0.4,{color:'#7a6247', hornBlades:true});
+    ctx.save();
+    ctx.font = '15px Georgia, serif';
+    ctx.fillStyle = '#8a2e2e';
+    ctx.textAlign='center';
+    ctx.fillText((lang==='en'?'Hunger: ':'Lapar: ') + Math.floor(state.hungerLevel) + '%', 400, 460);
+    ctx.restore();
+  }
+
+  function setupScene5(){
+    tapTargets = [];
+    state.hungerLevel = 0;
+    state.holding = false;
+    setInstruction(T().scene5Instruction);
+    setNarration(T().scene5Text);
+    speak(T().scene5Text);
+    clearControls();
+    holdBarWrap.style.display = 'block';
+    holdBarFill.style.width = '0%';
+
+    var btn = addButton(T().scene5Btn, function(){});
+    btn.addEventListener('mousedown', startHold);
+    btn.addEventListener('touchstart', function(e){ e.preventDefault(); startHold(); }, {passive:false});
+    btn.addEventListener('mouseup', stopHold);
+    btn.addEventListener('mouseleave', stopHold);
+    btn.addEventListener('touchend', stopHold);
+
+    function startHold(){ state.holding = true; }
+    function stopHold(){ state.holding = false; }
+
+    var interval = setInterval(function(){
+      if (state.scene !== 5) { clearInterval(interval); return; }
+      if (state.holding && state.hungerLevel < 100) {
+        state.hungerLevel += 2;
+        if (state.hungerLevel >= 100) state.hungerLevel = 100;
+        holdBarFill.style.width = state.hungerLevel + '%';
+        if (state.hungerLevel >= 100) {
+          clearInterval(interval);
+          clearControls();
+          addButton(T().next, function(){ goScene(6); });
+        }
+      }
+    }, 60);
+  }
+
+  function renderScene6(){
+    bgSky(); groundField();
+    var progress = state.runProgress/100;
+    var babyX = 150 + progress*380;
+    drawBuffalo(620,400,1.6,{color:'#4a4a4a'});
+    drawBuffalo(babyX,440,0.85,{color:'#7a6247', hornBlades:true});
+    ctx.save();
+    ctx.strokeStyle='#c9a15a';
+    ctx.lineWidth=4;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath(); ctx.moveTo(150,460); ctx.lineTo(600,460); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  function setupScene6(){
+    tapTargets = [];
+    state.runProgress = 0;
+    setInstruction(T().scene6Instruction);
+    setNarration(T().scene6Text);
+    speak(T().scene6Text);
+    clearControls();
+    holdBarWrap.style.display = 'none';
+
+    var btn = addButton(T().scene6Btn, function(){
+      if (state.runProgress >= 100) return;
+      state.runProgress = Math.min(100, state.runProgress + 8);
+      if (state.runProgress >= 100) {
+        btn.disabled = true;
+        setTimeout(function(){ goScene(7); }, 500);
+      }
+    });
+  }
+
+  function renderScene7(){
+    bgSky(); groundField();
+    drawBuffalo(500,420,1.4,{color:'#4a4a4a'});
+    drawBuffalo(350,440,0.9,{color:'#7a6247', hornBlades:true});
+    ctx.save();
+    ctx.fillStyle='rgba(201,74,43,0.85)';
+    ctx.font='bold 26px Georgia, serif';
+    ctx.textAlign='center';
+    ctx.fillText(lang==='en' ? '"Menang Kerbau"' : '"Menang Kerbau"', CW/2, 90);
+    ctx.font='16px Georgia, serif';
+    ctx.fillStyle='#3b2a1a';
+    ctx.fillText(lang==='en' ? '(The buffalo has won)' : '(Kerbau telah menang)', CW/2, 118);
+    ctx.restore();
+  }
+
+  function setupScene7(){
+    tapTargets = [];
+    setInstruction(T().scene7Instruction);
+    setNarration(T().scene7Text);
+    speak(T().scene7Text);
+    clearControls();
+    addButton(T().restart, function(){
+      goScene(0);
+    });
+    holdBarWrap.style.display = 'none';
+  }
+
+  // ---------- scene setup dispatcher ----------
+  function goScene(n){
+    state.scene = n;
+    updateDots();
+    switch(n){
+      case 0: setupStart(); break;
+      case 1: setupScene1(); break;
+      case 2: setupScene2(); break;
+      case 3: setupScene3(); break;
+      case 4: setupScene4(); break;
+      case 5: setupScene5(); break;
+      case 6: setupScene6(); break;
+      case 7: setupScene7(); break;
+    }
+    setTimeout(notifyResize, 50);
+  }
+
+  // ---------- UI: language & mute ----------
+  function applyStaticText(){
+    document.documentElement.lang = lang === 'en' ? 'en' : 'id';
+    titleText.textContent = T().title;
+    footerText.textContent = T().footer;
+    langBtn.textContent = T().langBtn;
+    muteBtn.textContent = state.muted ? T().muteOff : T().muteOn;
+  }
+
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'en' ? 'id' : 'en';
+    applyStaticText();
+    goScene(state.scene); // re-render current scene text/narration
+  });
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('minangkabauMuted', state.muted ? 'true' : 'false');
+    muteBtn.textContent = state.muted ? T().muteOff : T().muteOn;
+    if (state.muted && window.speechSynthesis) window.speechSynthesis.cancel();
+  });
+
+  // ---------- init ----------
+  applyStaticText();
+  updateDots();
+  goScene(0);
+  loop();
+
+})();
+</script>
+</body>
+</html>
