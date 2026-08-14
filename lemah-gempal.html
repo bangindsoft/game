@@ -509,6 +509,47 @@
     ctx.fillRect(x + w * 0.4, y + h * 0.45, w * 0.2, h * 0.55);
   }
 
+  function roundRectPath(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  function drawTapLabel(x, y, text){
+    ctx.save();
+    var bounce = Math.sin(frame * 0.08) * 3;
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    var padding = 9;
+    var textWidth = ctx.measureText(text).width;
+    var boxW = textWidth + padding * 2;
+    var boxH = 25;
+    var bx = x - boxW / 2;
+    var by = y - boxH - 14 + bounce;
+    roundRectPath(bx, by, boxW, boxH, 7);
+    ctx.fillStyle = 'rgba(192,64,47,0.94)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - 6, by + boxH);
+    ctx.lineTo(x + 6, by + boxH);
+    ctx.lineTo(x, by + boxH + 8);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(192,64,47,0.94)';
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, by + boxH / 2 + 1);
+    ctx.restore();
+  }
+
   function drawFigure(x, y, scale, colorShirt){
     ctx.save();
     ctx.translate(x, y);
@@ -597,6 +638,7 @@
       ctx.strokeStyle = 'rgba(255,255,255,' + (0.3 + 0.3 * pulse) + ')';
       ctx.lineWidth = 3;
       ctx.strokeRect(riverHitbox.x + 4, riverY, W - 8, riverH - 4);
+      drawTapLabel(W / 2, riverY, lang === 'id' ? 'Ketuk Sungai' : 'Tap the River');
     }
   }
 
@@ -706,6 +748,7 @@
       ctx.strokeStyle = 'rgba(255,255,255,' + (0.3 + 0.4 * pulse) + ')';
       ctx.lineWidth = 3;
       ctx.strokeRect(doorBox.x - 3, doorBox.y - 3, doorBox.w + 6, doorBox.h + 6);
+      drawTapLabel(doorBox.x + doorBox.w / 2, doorBox.y, lang === 'id' ? 'Ketuk Pintu' : 'Tap the Door');
     }
 
     // group of workers approaching
@@ -783,6 +826,8 @@
 
     drawStone(stoneLeftBox, stoneLeftTaken);
     drawStone(stoneRightBox, stoneRightTaken);
+    if (!stoneLeftTaken) drawTapLabel(stoneLeftBox.x, stoneLeftBox.y - stoneLeftBox.r * 0.8, lang === 'id' ? 'Ketuk Batu Kiri' : 'Tap Left Stone');
+    if (!stoneRightTaken) drawTapLabel(stoneRightBox.x, stoneRightBox.y - stoneRightBox.r * 0.8, lang === 'id' ? 'Ketuk Batu Kanan' : 'Tap Right Stone');
 
     // workers
     drawFigure(W / 2 - 30, H * 0.88, 1.1, '#c0402f');
@@ -872,6 +917,8 @@
     }
     drawHole(holeLeft, stoneLeftPlaced);
     drawHole(holeRight, stoneRightPlaced);
+    if (!stoneLeftPlaced) drawTapLabel(holeLeft.x, holeLeft.y - holeLeft.r * 0.7, lang === 'id' ? 'Taruh di Sini' : 'Drop Here');
+    if (!stoneRightPlaced) drawTapLabel(holeRight.x, holeRight.y - holeRight.r * 0.7, lang === 'id' ? 'Taruh di Sini' : 'Drop Here');
 
     // canal water below
     ctx.fillStyle = '#4a90c4';
@@ -893,6 +940,7 @@
       ctx.ellipse(-4, -4, st.r * 0.4, st.r * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+      drawTapLabel(st.x, st.y - st.r * 0.8, lang === 'id' ? 'Seret Batu' : 'Drag Stone');
     }
 
     if (dragStone) {
