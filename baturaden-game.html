@@ -33,7 +33,21 @@
     color: #6b5f4f;
     margin: 0 0 10px;
   }
-  #brg-hud { display: flex; justify-content: center; margin-bottom: 6px; }
+  #brg-hud { display: flex; justify-content: center; align-items: center; margin-bottom: 6px; position: relative; }
+  #brg-controls { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; }
+  .brg-iconBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #ffffff;
+    color: #6E2E48;
+    border: 2px solid #8A3E5A;
+    border-radius: 16px;
+    padding: 3px 10px;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .brg-iconBtn:active { transform: translateY(-50%) scale(0.95); }
   #brg-phase {
     font-family: 'Baloo 2', sans-serif;
     font-size: 14px;
@@ -126,7 +140,13 @@
   <h2>🐴 Legenda Baturaden</h2>
   <p id="brg-sub">Ikuti kisah cinta Suta dan Putri Adipati Kutaliman, asal mula nama tempat Baturaden.</p>
 
-  <div id="brg-hud"><span id="brg-phase">Tahap 1 / 5</span></div>
+  <div id="brg-hud">
+    <span id="brg-phase">Tahap 1 / 5</span>
+    <div id="brg-controls">
+      <button id="brg-muteBtn" class="brg-iconBtn" type="button">🔊</button>
+      <button id="brg-langBtn" class="brg-iconBtn" type="button">EN</button>
+    </div>
+  </div>
 
   <div id="brg-canvas-holder">
     <canvas id="brg-canvas"></canvas>
@@ -173,6 +193,9 @@
       winBody: 'Suta dan Putri Adipati akhirnya menikah dan membangun rumah tangga di lereng Gunung Slamet yang sejuk dan asri. Tempat itu kini dikenal dengan nama Baturaden — gabungan kata "batur" (pembantu) dan "raden" (bangsawan), mengenang kisah cinta mereka berdua.',
       playAgainBtn: 'Main Lagi',
       captionInit: 'Bersiap memulai kisah...',
+      muteLabel: 'Matikan suara narasi',
+      unmuteLabel: 'Aktifkan suara narasi',
+      langSwitchLabel: 'Ganti ke Bahasa Inggris',
       nextBtn: 'Lanjut ▶',
       holdBtn: 'Tahan untuk Berjuang',
       fightBtn: '⚔️ LAWAN!',
@@ -204,6 +227,9 @@
       winBody: 'Suta and the Regent\'s daughter finally marry and build a home on the cool, scenic slopes of Mount Slamet. That place is now known as Baturaden — combining the words "batur" (servant) and "raden" (noble), in memory of their love story.',
       playAgainBtn: 'Play Again',
       captionInit: 'Getting the tale ready...',
+      muteLabel: 'Mute narration',
+      unmuteLabel: 'Unmute narration',
+      langSwitchLabel: 'Switch to Indonesian',
       nextBtn: 'Next ▶',
       holdBtn: 'Hold to Press On',
       fightBtn: '⚔️ FIGHT!',
@@ -226,17 +252,47 @@
     }
   };
   var TXT = I18N[LANG];
-  document.title = TXT.title;
-  document.querySelector('#brg-wrap h2').textContent = TXT.h2;
-  document.getElementById('brg-sub').textContent = TXT.sub;
-  document.querySelector('#brg-start h3').textContent = TXT.startTitle;
-  document.querySelector('#brg-start p').textContent = TXT.startBody;
-  document.getElementById('brg-startBtn').textContent = TXT.startBtn;
-  document.querySelector('#brg-win h3').textContent = TXT.winTitle;
-  document.querySelector('#brg-win p').textContent = TXT.winBody;
-  document.getElementById('brg-playAgainBtn').textContent = TXT.playAgainBtn;
-  document.getElementById('brg-caption').textContent = TXT.captionInit;
-  document.getElementById('brg-actionBtn').textContent = TXT.nextBtn;
+  var langBtn = document.getElementById('brg-langBtn');
+  var MUTE_KEY = 'baturaden-narration-muted';
+  var muteBtn = document.getElementById('brg-muteBtn');
+  var muted = false;
+  try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch(e){}
+  var gameStarted = false;
+
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.title = muted ? TXT.unmuteLabel : TXT.muteLabel;
+  }
+
+  var synth = window.speechSynthesis || null;
+  var voicesList = [];
+  function loadVoices(){ voicesList = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    if('onvoiceschanged' in synth) synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if(!voicesList || !voicesList.length) return null;
+    var wantLang = LANG === 'id' ? 'id-id' : 'en-us';
+    var exact = voicesList.filter(function(v){ return v.lang && v.lang.toLowerCase() === wantLang; })[0];
+    if(exact) return exact;
+    var partial = voicesList.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(LANG === 'id' ? 'id' : 'en') === 0; })[0];
+    if(partial) return partial;
+    return voicesList[0] || null;
+  }
+  function speak(text){
+    if(!synth || muted || !text) return;
+    try {
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice();
+      if(v) u.voice = v;
+      u.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.98;
+      u.pitch = 1.0;
+      synth.speak(u);
+    } catch(e){}
+  }
 
   var canvas = document.getElementById('brg-canvas');
   var ctx = canvas.getContext('2d');
@@ -278,7 +334,6 @@
     { type:'hold', phase:5, scene:'pacu_kuda' },
     { type:'caption', phase:5, scene:'baturaden_lahir' }
   ];
-  steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
   var stepIndex = 0;
 
   function setPhaseLabel(p){ phaseEl.textContent = TXT.phase(p); }
@@ -287,6 +342,7 @@
     var step = steps[stepIndex];
     setPhaseLabel(step.phase);
     captionEl.textContent = step.text;
+    if(gameStarted) speak(step.text);
     progress = 0;
     progressBar.style.width = '0%';
     holdAdvancing = false;
@@ -309,6 +365,7 @@
     stepIndex++;
     if(stepIndex >= steps.length){
       winOverlay.classList.add('show');
+      speak(TXT.winBody);
       return;
     }
     showStep();
@@ -345,11 +402,50 @@
 
   document.getElementById('brg-startBtn').addEventListener('click', function(){
     startOverlay.classList.remove('show');
+    gameStarted = true;
     resetGame();
   });
   document.getElementById('brg-playAgainBtn').addEventListener('click', function(){
     winOverlay.classList.remove('show');
+    gameStarted = true;
     resetGame();
+  });
+  window.addEventListener('pagehide', function(){ if(synth) synth.cancel(); });
+
+  function applyLanguage(newLang){
+    LANG = newLang;
+    TXT = I18N[LANG];
+    document.title = TXT.title;
+    document.querySelector('#brg-wrap h2').textContent = TXT.h2;
+    document.getElementById('brg-sub').textContent = TXT.sub;
+    document.querySelector('#brg-start h3').textContent = TXT.startTitle;
+    document.querySelector('#brg-start p').textContent = TXT.startBody;
+    document.getElementById('brg-startBtn').textContent = TXT.startBtn;
+    document.querySelector('#brg-win h3').textContent = TXT.winTitle;
+    document.querySelector('#brg-win p').textContent = TXT.winBody;
+    document.getElementById('brg-playAgainBtn').textContent = TXT.playAgainBtn;
+    langBtn.textContent = LANG === 'id' ? 'EN' : 'ID';
+    langBtn.title = TXT.langSwitchLabel;
+    updateMuteBtn();
+    steps.forEach(function(s, i){ s.text = TXT.steps[i]; });
+    if(synth) synth.cancel();
+    winOverlay.classList.remove('show');
+    resetGame();
+  }
+
+  langBtn.addEventListener('click', function(){
+    applyLanguage(LANG === 'id' ? 'en' : 'id');
+  });
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch(e){}
+    updateMuteBtn();
+    if(muted){
+      if(synth) synth.cancel();
+    } else if(gameStarted){
+      var currentStep = steps[stepIndex];
+      speak(currentStep ? currentStep.text : null);
+    }
   });
 
   function drawEmoji(str, x, y, size){
@@ -600,7 +696,7 @@
   }
 
   resize();
-  resetGame();
+  applyLanguage(LANG);
   requestAnimationFrame(loop);
 
   function sendHeight(){
