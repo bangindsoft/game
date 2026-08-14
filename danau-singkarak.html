@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Danau Singkarak dan Sungai Batang Ombilin</title>
+<style>
+  :root{
+    --sea:#0e4d64;
+    --sea-light:#1a7a9e;
+    --sand:#e8c07a;
+    --sky:#bfe3f0;
+    --panel:#fff8ec;
+    --ink:#2c2418;
+    --accent:#c7521f;
+    --accent2:#2a7a4f;
+    --gold:#d99b2b;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    display:flex;
+    justify-content:center;
+    padding:10px;
+    color:var(--ink);
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,#f4ead2,#efe0bd);
+    border-radius:18px;
+    box-shadow:0 6px 22px rgba(0,0,0,.18);
+    overflow:hidden;
+    border:1px solid #d9c69a;
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:linear-gradient(90deg,#0e4d64,#1a7a9e);
+    color:#fff;
+  }
+  #topbar h1{
+    font-size:15px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  #topbar .sub{
+    font-size:11px;
+    opacity:.85;
+    margin-top:2px;
+  }
+  .iconbtn{
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.4);
+    color:#fff;
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .15s;
+  }
+  .iconbtn:hover{background:rgba(255,255,255,.32);}
+  .iconbtn.active{background:#c7521f;border-color:#c7521f;}
+  #topcontrols{display:flex;gap:8px;}
+
+  #stage-wrap{
+    position:relative;
+    background:#0e4d64;
+  }
+  #canvasHolder{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4 / 3;
+    max-height:420px;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+
+  #captionPanel{
+    background:var(--panel);
+    padding:12px 16px;
+    min-height:64px;
+    border-top:3px solid var(--gold);
+    font-size:14.5px;
+    line-height:1.5;
+    color:#3a2f1e;
+  }
+  #captionPanel .label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--accent);
+    font-weight:700;
+    margin-bottom:3px;
+  }
+
+  #instructionBar{
+    background:#fff3d6;
+    border-top:1px dashed #d9c69a;
+    padding:9px 16px;
+    font-size:13px;
+    color:#6b4a12;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+  }
+  #instructionBar .ico{font-size:16px;}
+
+  #controlsRow{
+    padding:12px 16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    background:#f4ead2;
+    min-height:56px;
+    align-items:center;
+  }
+  .actionBtn{
+    background:linear-gradient(180deg,#e2822f,var(--accent));
+    color:#fff;
+    border:none;
+    padding:11px 18px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #93370f;
+    transition:transform .08s;
+    user-select:none;
+    touch-action:manipulation;
+  }
+  .actionBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #93370f;}
+  .actionBtn.secondary{
+    background:linear-gradient(180deg,#3a9a68,var(--accent2));
+    box-shadow:0 3px 0 #1b5334;
+  }
+  .actionBtn.secondary:active{box-shadow:0 1px 0 #1b5334;}
+  .actionBtn:disabled{opacity:.5;cursor:default;}
+  .actionBtn .count{
+    display:inline-block;
+    margin-left:6px;
+    background:rgba(255,255,255,.3);
+    border-radius:8px;
+    padding:1px 7px;
+    font-size:12px;
+  }
+
+  #progressRow{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 10px 14px;
+    background:#f4ead2;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d9c69a;
+    transition:background .2s, transform .2s;
+  }
+  .dot.done{background:var(--accent2);}
+  .dot.current{background:var(--accent);transform:scale(1.3);}
+
+  #footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7854;
+    padding:8px 10px 12px;
+    background:#f4ead2;
+  }
+
+  .progressBarWrap{
+    width:220px;
+    max-width:70vw;
+    height:16px;
+    background:#e6d6ac;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid #c7ac72;
+  }
+  .progressBarFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#d99b2b,#c7521f);
+    transition:width .08s linear;
+  }
+
+  #startOverlay, #endOverlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,#0e4d64,#1a7a9e 60%, #2a7a4f);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:22px;
+    color:#fff;
+    z-index:5;
+  }
+  #startOverlay h2, #endOverlay h2{
+    font-size:20px;
+    margin:10px 0 8px;
+  }
+  #startOverlay p, #endOverlay p{
+    font-size:13.5px;
+    line-height:1.55;
+    max-width:480px;
+    opacity:.95;
+    margin:0 0 16px;
+  }
+  .startBtn{
+    background:#d99b2b;
+    color:#3a2308;
+    border:none;
+    padding:13px 26px;
+    border-radius:14px;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 0 #8a5f10;
+  }
+  .startBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5f10;}
+  .emoji-badge{font-size:44px;margin-bottom:4px;}
+
+  @media (max-width:420px){
+    #topbar h1{font-size:13px;}
+    .iconbtn{padding:6px 8px;font-size:12px;}
+    #captionPanel{font-size:13.5px;padding:10px 12px;}
+    .actionBtn{padding:10px 14px;font-size:13px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div>
+      <h1 id="gameTitle">Asal Usul Danau Singkarak</h1>
+      <div class="sub" id="gameSub">&amp; Sungai Batang Ombilin</div>
+    </div>
+    <div id="topcontrols">
+      <button class="iconbtn" id="langBtn" type="button">🌐 EN</button>
+      <button class="iconbtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <div id="canvasHolder">
+      <canvas id="stage" width="800" height="600"></canvas>
+      <div id="startOverlay">
+        <div class="emoji-badge">🏞️</div>
+        <h2 id="startTitle">Asal Usul Danau Singkarak dan Sungai Batang Ombilin</h2>
+        <p id="startDesc">Cerita rakyat dari Sumatera Barat tentang Indra, seekor ayam bernama Taduang, dan sebuah batu ajaib yang mengubah lautan menjadi danau dan sungai.</p>
+        <button class="startBtn" id="startBtn">▶ Mulai Cerita</button>
+      </div>
+      <div id="endOverlay" style="display:none;">
+        <div class="emoji-badge">🌾</div>
+        <h2 id="endTitle">Cerita Selesai</h2>
+        <p id="endDesc">Begitulah asal usul Danau Singkarak dan Sungai Batang Ombilin.</p>
+        <button class="startBtn" id="replayBtn">↻ Ulangi Cerita</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="captionPanel">
+    <div class="label" id="captionLabel">NARASI</div>
+    <div id="captionText">Ketuk "Mulai Cerita" untuk memulai.</div>
+  </div>
+
+  <div id="instructionBar">
+    <span class="ico">👉</span>
+    <span id="instructionText">Ketuk tombol "Mulai Cerita" pada layar untuk memulai petualangan.</span>
+  </div>
+
+  <div id="controlsRow"></div>
+  <div id="progressRow"></div>
+  <div id="footer">Cerita Rakyat Sumatera Barat — Dongeng Interaktif</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== I18N TEXT ===================== */
+  var STR = {
+    id:{
+      title:"Asal Usul Danau Singkarak",
+      sub:"& Sungai Batang Ombilin",
+      startTitle:"Asal Usul Danau Singkarak dan Sungai Batang Ombilin",
+      startDesc:"Cerita rakyat dari Sumatera Barat tentang Indra, seekor ayam bernama Taduang, dan sebuah batu ajaib yang mengubah lautan menjadi danau dan sungai.",
+      startBtn:"▶ Mulai Cerita",
+      endTitle:"Cerita Selesai",
+      endDesc:"Begitulah asal usul Danau Singkarak dan Sungai Batang Ombilin. Cerita ini mengajarkan kita untuk selalu berbagi dan tidak melupakan orang-orang yang kita sayangi.",
+      replayBtn:"↻ Ulangi Cerita",
+      narasi:"NARASI",
+      footer:"Cerita Rakyat Sumatera Barat — Dongeng Interaktif",
+      lang:"🌐 EN",
+      muteOn:"🔇",
+      muteOff:"🔊"
+    },
+    en:{
+      title:"The Origin of Lake Singkarak",
+      sub:"& Batang Ombilin River",
+      startTitle:"The Origin of Lake Singkarak and Batang Ombilin River",
+      startDesc:"A folktale from West Sumatra about Indra, a rooster named Taduang, and a magical rock that turned the sea into a lake and a river.",
+      startBtn:"▶ Start Story",
+      endTitle:"The End",
+      endDesc:"That is how Lake Singkarak and the Batang Ombilin River came to be. This story reminds us to always share and never forget the people we love.",
+      replayBtn:"↻ Replay Story",
+      narasi:"NARRATION",
+      footer:"Folktale of West Sumatra — Interactive Story",
+      lang:"🌐 ID",
+      muteOn:"🔇",
+      muteOff:"🔊"
+    }
+  };
+
+  /* ===================== STATE ===================== */
+  var state = {
+    lang: 'id',
+    muted: false,
+    sceneIndex: -1, // -1 = start screen
+    ended:false,
+    // per-scene mini game counters
+    tapCount:0,
+    holdActive:false,
+    holdProgress:0,
+    holdTimer:null,
+    collected:0,
+    shellTargets:[],
+    searchTargets:[],
+    searchFound:0,
+    rockScale:1,
+    flightHeight:0,
+    impactDone:false,
+    animFrame:null,
+    animT:0
+  };
+
+  try{
+    var qLang = new URLSearchParams(window.location.search).get('lang');
+    if(qLang === 'en') state.lang = 'en';
+    var storedMute = localStorage.getItem('aduo-muted');
+    if(storedMute === '1') state.muted = true;
+  }catch(e){}
+
+  /* ===================== DOM refs ===================== */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var gameTitle = document.getElementById('gameTitle');
+  var gameSub = document.getElementById('gameSub');
+  var startOverlay = document.getElementById('startOverlay');
+  var endOverlay = document.getElementById('endOverlay');
+  var startTitle = document.getElementById('startTitle');
+  var startDesc = document.getElementById('startDesc');
+  var startBtn = document.getElementById('startBtn');
+  var endTitle = document.getElementById('endTitle');
+  var endDesc = document.getElementById('endDesc');
+  var replayBtn = document.getElementById('replayBtn');
+  var captionLabel = document.getElementById('captionLabel');
+  var captionText = document.getElementById('captionText');
+  var instructionText = document.getElementById('instructionText');
+  var controlsRow = document.getElementById('controlsRow');
+  var progressRow = document.getElementById('progressRow');
+  var footerEl = document.getElementById('footer');
+
+  /* ===================== RESIZE (postMessage to parent) ===================== */
+  function sendResize(){
+    try{
+      var h = document.getElementById('app').offsetHeight;
+      window.parent.postMessage({ type:'aduo-resize', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendResize);
+  window.addEventListener('resize', sendResize);
+
+  /* ===================== SPEECH ===================== */
+  var voices = [];
+  function loadVoices(){
+    if('speechSynthesis' in window){
+      voices = window.speechSynthesis.getVoices();
+    }
+  }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if(!voices || !voices.length) return null;
+    var prefix = lang === 'en' ? 'en' : 'id';
+    var v = voices.find(function(vv){ return vv.lang && vv.lang.toLowerCase().indexOf(prefix)===0; });
+    return v || null;
+  }
+  function speak(text){
+    if(state.muted) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+      var v = pickVoice(state.lang);
+      if(v) u.voice = v;
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
+  }
+
+  /* ===================== SCENES DATA ===================== */
+  // Each scene: id, caption {id,en}, instruction {id,en}, draw(t), setup(), teardown()
+  var scenes = [];
+
+  function cap(idText, enText){ return {id:idText, en:enText}; }
+
+  /* ---------- Drawing helpers ---------- */
+  function W(){ return canvas.width; }
+  function H(){ return canvas.height; }
+
+  function skyGradient(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,H()*0.62);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W(),H()*0.65);
+  }
+
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = '#ffd873';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMoon(x,y,r){
+    ctx.save();
+    ctx.fillStyle = '#f4f1d9';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(20,30,50,0.55)';
+    ctx.beginPath(); ctx.arc(x+r*0.35,y-r*0.15,r*0.85,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStars(seedT){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for(var i=0;i<28;i++){
+      var sx = (i*57 % W());
+      var sy = (i*97 % (H()*0.4));
+      var tw = 0.5 + 0.5*Math.abs(Math.sin(seedT*0.002 + i));
+      ctx.globalAlpha = tw;
+      ctx.beginPath(); ctx.arc(sx, sy+10, 1.6,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawSea(waveT, level){
+    level = level === undefined ? 0.62 : level;
+    var seaTop = H()*level;
+    var g = ctx.createLinearGradient(0,seaTop,0,H());
+    g.addColorStop(0, '#1a7a9e');
+    g.addColorStop(1, '#0e4d64');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,seaTop,W(),H()-seaTop);
+    // waves
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for(var row=0; row<4; row++){
+      ctx.beginPath();
+      var y = seaTop + 18 + row*26;
+      for(var x=0; x<=W(); x+=14){
+        var yy = y + Math.sin((x*0.04) + waveT*0.003 + row) * 4;
+        if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawSand(level){
+    level = level === undefined ? 0.86 : level;
+    var g = ctx.createLinearGradient(0,H()*level,0,H());
+    g.addColorStop(0,'#eccf8f');
+    g.addColorStop(1,'#d9b467');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,H()*level,W(),H()*(1-level));
+  }
+
+  function drawHill(cx, baseY, w, h, color){
+    ctx.save();
+    ctx.fillStyle = color || '#3f7d4c';
+    ctx.beginPath();
+    ctx.moveTo(cx-w/2, baseY);
+    ctx.quadraticCurveTo(cx, baseY-h, cx+w/2, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a5232';
+    ctx.fillRect(-5,-10,10,40);
+    ctx.fillStyle = '#2e7d42';
+    ctx.beginPath(); ctx.arc(0,-30,26,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,-12,18,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,-12,18,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBush(x,y,scale,color){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#3d8a4e';
+    ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-14,4,12,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14,4,12,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // stilts
+    ctx.fillStyle = '#6b4726';
+    ctx.fillRect(-38,20,8,30);
+    ctx.fillRect(30,20,8,30);
+    // body
+    ctx.fillStyle = '#c99a5b';
+    ctx.fillRect(-45,-10,90,32);
+    // roof
+    ctx.fillStyle = '#8a5a2b';
+    ctx.beginPath();
+    ctx.moveTo(-58,-10);
+    ctx.lineTo(0,-52);
+    ctx.lineTo(58,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#734a20';
+    ctx.beginPath();
+    ctx.moveTo(-58,-10);
+    ctx.lineTo(0,-52);
+    ctx.lineTo(0,-42);
+    ctx.lineTo(-48,-10);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = '#5b3a1c';
+    ctx.fillRect(-10,2,20,20);
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var skin = opts.skin || '#e8b382';
+    var shirt = opts.shirt || '#c7521f';
+    var bottom = opts.bottom || '#4a3a2a';
+    // legs
+    ctx.fillStyle = bottom;
+    ctx.fillRect(-9,20,7,22);
+    ctx.fillRect(2,20,7,22);
+    // body
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-14,0);
+    ctx.quadraticCurveTo(0,-6,14,0);
+    ctx.lineTo(12,24);
+    ctx.lineTo(-12,24);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    if(opts.armsUp){
+      ctx.strokeStyle = shirt; ctx.lineWidth=7; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-10,2); ctx.lineTo(-20,-16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10,2); ctx.lineTo(20,-16); ctx.stroke();
+    } else {
+      ctx.strokeStyle = shirt; ctx.lineWidth=7; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-11,4); ctx.lineTo(-18,20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(11,4); ctx.lineTo(18,20); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-16,13,0,Math.PI*2); ctx.fill();
+    // hair
+    ctx.fillStyle = opts.hair || '#2b2018';
+    ctx.beginPath(); ctx.arc(0,-22,13,Math.PI,0); ctx.fill();
+    if(opts.headwrap){
+      ctx.fillStyle = opts.headwrap;
+      ctx.beginPath(); ctx.arc(0,-23,14,Math.PI*1.05,Math.PI*1.95); ctx.fill();
+    }
+    // face
+    if(opts.sad){
+      ctx.strokeStyle='#3a2a1c'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(-4,-13,1.6,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(4,-13,1.6,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,-6,5,Math.PI*1.15,Math.PI*1.85,true); ctx.stroke();
+      if(opts.tears){
+        ctx.strokeStyle='#4fb2e0'; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(-4,-11); ctx.lineTo(-5,-4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(4,-11); ctx.lineTo(5,-4); ctx.stroke();
+      }
+    } else if(opts.sleeping){
+      ctx.strokeStyle='#3a2a1c'; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(-7,-13); ctx.lineTo(-1,-13); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(1,-13); ctx.lineTo(7,-13); ctx.stroke();
+      ctx.font='11px sans-serif'; ctx.fillStyle='#3a2a1c';
+      ctx.fillText('z z',6,-24);
+    } else {
+      ctx.fillStyle='#2b2018';
+      ctx.beginPath(); ctx.arc(-4,-16,1.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4,-16,1.6,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#8c4a24'; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.arc(0,-11,4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawChicken(x,y,scale,flap){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var flapOff = flap ? Math.sin(flap*0.02)*10 : 0;
+    // body
+    ctx.fillStyle = '#f2e7cf';
+    ctx.beginPath(); ctx.ellipse(0,0,20,15,0,0,Math.PI*2); ctx.fill();
+    // wing
+    ctx.fillStyle = '#e0cfa8';
+    ctx.beginPath();
+    ctx.ellipse(-2, -2 - flapOff*0.3, 12, 8, -0.3, 0, Math.PI*2);
+    ctx.fill();
+    // tail
+    ctx.fillStyle = '#c7521f';
+    ctx.beginPath();
+    ctx.moveTo(-16,-6); ctx.lineTo(-30,-20 - flapOff*0.4); ctx.lineTo(-14,2);
+    ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = '#f2e7cf';
+    ctx.beginPath(); ctx.arc(18,-10,8,0,Math.PI*2); ctx.fill();
+    // comb
+    ctx.fillStyle = '#c7521f';
+    ctx.beginPath(); ctx.arc(16,-18,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20,-19,3,0,Math.PI*2); ctx.fill();
+    // beak
+    ctx.fillStyle = '#d99b2b';
+    ctx.beginPath(); ctx.moveTo(25,-10); ctx.lineTo(31,-8); ctx.lineTo(25,-6); ctx.closePath(); ctx.fill();
+    // eye
+    ctx.fillStyle = '#2b2018';
+    ctx.beginPath(); ctx.arc(20,-11,1.3,0,Math.PI*2); ctx.fill();
+    // legs
+    ctx.strokeStyle = '#d99b2b'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(-2,13); ctx.lineTo(-2,22); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,13); ctx.lineTo(6,22); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRock(x,y,scale,color){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#8b8378';
+    ctx.beginPath();
+    ctx.moveTo(-26,14);
+    ctx.lineTo(-30,-4);
+    ctx.lineTo(-12,-18);
+    ctx.lineTo(14,-16);
+    ctx.lineTo(28,0);
+    ctx.lineTo(22,14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(-12,-18); ctx.lineTo(14,-16); ctx.lineTo(6,-6); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawShell(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#e8dcc6';
+    ctx.beginPath();
+    ctx.moveTo(0,-10);
+    for(var a=-Math.PI/2; a<=Math.PI/2; a+=0.3){
+      var r = 10 + Math.sin(a*3)*1.5;
+      ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r+2);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#c7a76a'; ctx.lineWidth=0.8;
+    for(var i=-3;i<=3;i++){
+      ctx.beginPath(); ctx.moveTo(0,-9); ctx.lineTo(i*3.2, 10); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawRiceBowl(x,y,scale,fill){
+    scale = scale || 1;
+    fill = fill===undefined?1:fill;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#a35b26';
+    ctx.beginPath();
+    ctx.moveTo(-26,0);
+    ctx.quadraticCurveTo(0,24,26,0);
+    ctx.lineTo(22,-4);
+    ctx.quadraticCurveTo(0,16,-22,-4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(0,-4,22*fill,7*fill,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDoor(x,y,scale,open){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b3a1c';
+    ctx.fillRect(-30,-50,60,100);
+    ctx.strokeStyle = '#3a2410'; ctx.lineWidth=3;
+    ctx.strokeRect(-30,-50,60,100);
+    if(open){
+      ctx.save();
+      ctx.translate(-30,-50);
+      ctx.transform(0.35,0,0,1,0,0);
+      ctx.fillStyle = '#7a4d24';
+      ctx.fillRect(0,0,60,100);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#d99b2b';
+      ctx.beginPath(); ctx.arc(18,0,3,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPot(x,y,scale,steam){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3a3a3a';
+    ctx.beginPath();
+    ctx.moveTo(-24,-6);
+    ctx.quadraticCurveTo(0,20,24,-6);
+    ctx.lineTo(20,-10);
+    ctx.quadraticCurveTo(0,12,-20,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle='#222'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,-9,24,6,0,0,Math.PI*2); ctx.stroke();
+    if(steam){
+      ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round';
+      for(var i=-1;i<=1;i++){
+        var off = Math.sin(steam*0.05+i)*4;
+        ctx.beginPath();
+        ctx.moveTo(i*8, -14);
+        ctx.quadraticCurveTo(i*8+off, -26, i*8, -38);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPlate(x,y,scale,hasShells){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#f4f1e6';
+    ctx.beginPath(); ctx.ellipse(0,0,22,8,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#c7a76a'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.ellipse(0,0,22,8,0,0,Math.PI*2); ctx.stroke();
+    if(hasShells){
+      for(var i=0;i<4;i++){
+        drawShell(-14+i*9, -1, 0.5);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawRiver(fromX, fromY, toX, toY, width, progress){
+    // draws a river path revealed by progress 0..1
+    ctx.save();
+    ctx.strokeStyle = '#1a7a9e';
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    var steps = 40;
+    var n = Math.floor(steps*progress);
+    ctx.beginPath();
+    for(var i=0;i<=n;i++){
+      var t = i/steps;
+      var x = fromX + (toX-fromX)*t + Math.sin(t*8)*14;
+      var y = fromY + (toY-fromY)*t;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ===================== SCENE RENDER FUNCTIONS ===================== */
+
+  function renderStaticSea(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSun(680,70,42);
+    drawSea(state.animT);
+    drawSand(0.9);
+  }
+
+  // Scene 1: keluarga di gubuk
+  function draw1(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSun(690,60,38);
+    drawSea(state.animT,0.55);
+    drawSand(0.82);
+    drawHut(400,400,1.5);
+    drawPerson(320,470,1.1,{shirt:'#8a5a2b',headwrap:'#d99b2b'}); // Pak Buyung
+    drawPerson(470,470,1.0,{shirt:'#c7521f',headwrap:'#fceec2'}); // Ibu
+    drawPerson(400,500,0.75,{shirt:'#2a7a4f'}); // Indra kecil
+  }
+
+  // Scene 2: nafsu makan indra - tap bakul nasi (tap-mash fill)
+  function draw2(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSea(state.animT,0.5);
+    drawSand(0.78);
+    drawHut(620,360,0.9);
+    var fillLevel = Math.min(1, 0.15 + state.tapCount*0.11);
+    drawPerson(300,470,1.3,{shirt:'#2a7a4f'});
+    drawRiceBowl(280,540,1.5, fillLevel<1?fillLevel:0.15);
+    if(state.tapCount>=1){
+      ctx.font='bold 16px sans-serif';
+      ctx.fillStyle='#c7521f';
+      ctx.fillText(state.lang==='en' ? 'Bowls eaten: '+state.tapCount : 'Bakul dihabiskan: '+state.tapCount, 400, 200);
+    }
+  }
+
+  // Scene 3: dialog - pergi mencari makanan
+  function draw3(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSea(state.animT,0.5);
+    drawSand(0.8);
+    drawHut(150,420,0.9);
+    drawPerson(300,470,1.1,{shirt:'#8a5a2b',headwrap:'#d99b2b'}); // pak buyung
+    drawPerson(420,470,1.0,{shirt:'#c7521f',headwrap:'#fceec2',armsUp:true}); // ibu membujuk
+    drawPerson(540,480,0.85,{shirt:'#2a7a4f', sad: state.tapCount<1});
+  }
+
+  // Scene 4: beri makan taduang (tap-mash)
+  function draw4(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawHill(200,520,420,120,'#5a9a5f');
+    drawTree(120,470,1.1);
+    drawTree(650,460,1.0);
+    drawPerson(330,470,1.0,{shirt:'#2a7a4f',armsUp: state.tapCount%2===0});
+    drawChicken(430,500,1.6, state.tapCount>0 ? state.animT : 0);
+    if(state.tapCount>0){
+      for(var i=0;i<Math.min(state.tapCount,6);i++){
+        ctx.fillStyle='#d99b2b';
+        ctx.beginPath();
+        ctx.arc(380 + i*8, 470 + (i%2)*6, 3,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Scene 5: cari hasil hutan & ikan (multi-target tap, empty)
+  var searchSpots = [
+    {x:0.18,y:0.55,type:'bush'},
+    {x:0.36,y:0.62,type:'bush'},
+    {x:0.60,y:0.6,type:'water'},
+    {x:0.78,y:0.55,type:'water'},
+    {x:0.5,y:0.42,type:'tree'}
+  ];
+  function draw5(){
+    skyGradient('#cdeaf3','#f0f6df');
+    drawSun(690,60,36);
+    drawHill(650,500,320,140,'#4a8a55');
+    drawSea(state.animT,0.68);
+    drawSand(0.92);
+    drawTree(150,430,1.0);
+    drawBush(350,470,1.1);
+    for(var i=0;i<searchSpots.length;i++){
+      var sp = searchSpots[i];
+      var x = sp.x*W(), y = sp.y*H();
+      var found = state.searchTargets[i];
+      if(sp.type==='bush'){ drawBush(x,y,0.85, found? '#c9d9a8':'#3d8a4e'); }
+      else if(sp.type==='tree'){ drawTree(x,y,0.7); }
+      else { ctx.save(); ctx.globalAlpha= found?0.4:0.85; ctx.fillStyle='#1a7a9e'; ctx.beginPath(); ctx.ellipse(x,y,30,14,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+      if(found){
+        ctx.font='18px sans-serif';
+        ctx.fillText('✖', x-6, y-18);
+      }
+    }
+    drawPerson(430,560,1.0,{shirt:'#2a7a4f', sad: state.searchFound>=searchSpots.length});
+  }
+
+  // Scene 6: ibu cari kerang (collection game)
+  function draw6(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSun(690,60,36);
+    drawSea(state.animT,0.58);
+    drawSand(0.86);
+    drawPerson(400,560,1.05,{shirt:'#c7521f',headwrap:'#fceec2'});
+    for(var i=0;i<state.shellTargets.length;i++){
+      var sTarget = state.shellTargets[i];
+      if(!sTarget.collected){
+        drawShell(sTarget.x, sTarget.y, 1.1);
+      }
+    }
+    ctx.font='bold 16px sans-serif';
+    ctx.fillStyle='#0e4d64';
+    ctx.fillText((state.lang==='en'?'Shells collected: ':'Kerang terkumpul: ')+state.collected+'/6', 20, 30);
+  }
+
+  // Scene 7: masak & makan kerang (sequential tap)
+  function draw7(){
+    skyGradient('#e7d9b8','#f0e6c8');
+    drawHut(400,420,1.4);
+    var step = state.tapCount; // 0 = belum masak, 1 = masak, 2 = makan
+    drawPot(400,470,1.3, step>=1 ? state.animT : 0);
+    drawPerson(280,460,1.0,{shirt:'#8a5a2b',headwrap:'#d99b2b', sleeping: step>=2});
+    drawPerson(520,460,1.0,{shirt:'#c7521f',headwrap:'#fceec2', sleeping: step>=2});
+    if(step>=2){
+      drawPlate(300,540,1.0,true);
+      drawPlate(500,540,1.0,true);
+    }
+  }
+
+  // Scene 8: indra pulang, buka pintu dapur
+  function draw8(){
+    skyGradient('#1a2c4a','#3a5a6e');
+    drawStars(state.animT);
+    drawMoon(680,70,30);
+    var open = state.tapCount>=1;
+    drawDoor(400,430,1.5, open);
+    if(open){
+      drawPerson(300,470,0.9,{shirt:'#8a5a2b',headwrap:'#d99b2b', sleeping:true});
+      drawPerson(490,470,0.9,{shirt:'#c7521f',headwrap:'#fceec2', sleeping:true});
+      drawPlate(280,540,0.9,true);
+      drawPlate(500,540,0.9,true);
+      drawShell(360,555,0.7);
+      drawShell(430,560,0.6);
+      drawShell(390,540,0.6);
+    }
+    drawPerson(150,500,0.95,{shirt:'#2a7a4f', sad:open, tears:open});
+  }
+
+  // Scene 9: indra duduk di batu, taduang mengepak sayap
+  function draw9(){
+    skyGradient('#1a2c4a','#3a5a6e');
+    drawStars(state.animT);
+    drawMoon(680,70,30);
+    drawHill(400,540,600,90,'#274a3a');
+    var sitting = state.tapCount>=1;
+    drawRock(430,560,1.4);
+    drawPerson(430, sitting? 530:560, 1.0, {shirt:'#2a7a4f', sad:true, tears:sitting, armsUp:false});
+    drawChicken(300,565,1.3, state.animT);
+  }
+
+  // Scene 10: terbang (press and hold)
+  function draw10(){
+    var t = state.holdProgress; // 0..1
+    var skyTopColor = mixColor('#1a2c4a', '#3a5a6e', t);
+    skyGradient(skyTopColor, '#e9f4e2');
+    drawStars(state.animT*(1-t));
+    var groundY = H()*0.86 + t*40;
+    drawHill(400, groundY, 700, 110, '#274a3a');
+    drawSea(state.animT, 0.9);
+    var liftY = H()*0.62 - t*260;
+    var rockScale = 1 + t*2.4;
+    ctx.save();
+    drawRock(420, liftY+30, rockScale*0.7);
+    drawChicken(360, liftY-20, 1.3 + t*0.4, state.animT + t*400);
+    drawPerson(420, liftY, 0.95 + t*0.2, {shirt:'#2a7a4f', armsUp:true});
+    ctx.restore();
+  }
+
+  function mixColor(c1,c2,t){
+    function hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.substring(0,2),16),parseInt(h.substring(2,4),16),parseInt(h.substring(4,6),16)]; }
+    var a = hexToRgb(c1), b = hexToRgb(c2);
+    var r = Math.round(a[0]+(b[0]-a[0])*t);
+    var g = Math.round(a[1]+(b[1]-a[1])*t);
+    var bl = Math.round(a[2]+(b[2]-a[2])*t);
+    return 'rgb('+r+','+g+','+bl+')';
+  }
+
+  // Scene 11: batu jatuh, terbentuk sungai & danau (tap-mash then reveal)
+  function draw11(){
+    var impactLevel = Math.min(1, state.tapCount/6);
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSun(690,60,36);
+    drawHill(620,470,320,140,'#4a8a55');
+    if(!state.impactDone){
+      drawSea(state.animT,0.72);
+      drawSand(0.9);
+      var fallY = 120 + impactLevel*260;
+      drawRock(500, fallY, 1.6 - impactLevel*0.4);
+      if(impactLevel>=1){
+        // shake effect handled by controls
+      }
+    } else {
+      // final landscape: lake (sea shrunk) + river flowing from hill
+      drawSea(state.animT, 0.86); // shrunk sea -> lake area
+      drawSand(0.95);
+      drawRiver(560,330, 760,600, 26, 1);
+      ctx.font='bold 14px sans-serif';
+      ctx.fillStyle='#0e4d64';
+      ctx.fillText(state.lang==='en' ? 'Batang Ombilin River' : 'Sungai Batang Ombilin', 590, 340);
+      ctx.fillStyle='#0e4d64';
+      ctx.fillText(state.lang==='en' ? 'Lake Singkarak' : 'Danau Singkarak', 160, 500);
+      drawHill(560,470,220,120,'#4a8a55');
+    }
+  }
+
+  function drawEndingScene(){
+    skyGradient('#bfe3f0','#e9f4e2');
+    drawSun(690,60,36);
+    drawSea(state.animT,0.7);
+    drawSand(0.9);
+    drawRiver(560,240,760,500,24,1);
+    drawHill(560,400,240,100,'#4a8a55');
+    ctx.font='bold 13px sans-serif';
+    ctx.fillStyle='#0e4d64';
+    ctx.fillText(state.lang==='en' ? 'Lake Singkarak' : 'Danau Singkarak', 140, 420);
+    ctx.fillText(state.lang==='en' ? 'Batang Ombilin River' : 'Sungai Batang Ombilin', 560, 250);
+  }
+
+  /* ===================== SCENE DEFINITIONS ===================== */
+
+  scenes = [
+    {
+      key:'family',
+      caption: cap(
+        "Pada zaman dahulu, hiduplah Pak Buyung bersama istri dan anak semata wayangnya bernama Indra. Mereka tinggal di sebuah gubuk kecil di pinggir laut dan mencari nafkah dengan menangkap ikan serta mengumpulkan hasil hutan.",
+        "Long ago, there lived Pak Buyung with his wife and their only child, Indra. They lived in a small hut by the sea, earning a living by fishing and gathering forest produce."
+      ),
+      instruction: cap("Ketuk gubuk untuk melihat kehidupan keluarga Pak Buyung.","Tap the hut to see Pak Buyung's family life."),
+      draw: draw1,
+      buttons: function(){
+        return [{
+          id:'tapHut', label: cap('🏠 Ketuk Gubuk','🏠 Tap the Hut'), primary:true,
+          onClick: function(){ nextScene(); }
+        }];
+      }
+    },
+    {
+      key:'appetite',
+      caption: cap(
+        "Indra adalah anak yang rajin, namun ia memiliki nafsu makan yang sangat besar. Sekali makan, ia bisa menghabiskan satu bakul nasi penuh. Hal ini membuat orang tuanya resah, terutama saat musim paceklik tiba.",
+        "Indra was a hardworking boy, but he had a huge appetite. In a single meal, he could finish an entire bowl of rice. This worried his parents, especially during lean seasons."
+      ),
+      instruction: cap("Ketuk bakul nasi berkali-kali untuk melihat besarnya nafsu makan Indra!","Tap the rice bowl repeatedly to see how big Indra's appetite is!"),
+      draw: draw2,
+      onEnter: function(){ state.tapCount = 0; },
+      buttons: function(){
+        return [{
+          id:'tapBowl', label: cap('🍚 Ketuk Bakul Nasi','🍚 Tap the Rice Bowl'), primary:true,
+          onClick: function(){
+            state.tapCount++;
+            if(state.tapCount>=5){ setTimeout(nextScene, 500); }
+          }
+        }];
+      }
+    },
+    {
+      key:'told-to-search',
+      caption: cap(
+        "Suatu hari dapur kosong tanpa makanan. Pak Buyung meminta Indra mencari makanan sendiri. Awalnya Indra enggan, namun akhirnya ia pergi setelah dibujuk ibunya untuk mencari hasil hutan di Bukit Junjung Sirih.",
+        "One day the kitchen was empty. Pak Buyung asked Indra to find food on his own. Indra was reluctant at first, but finally left after his mother encouraged him to search the forest at Junjung Sirih Hill."
+      ),
+      instruction: cap("Ketuk tombol \"Pergi Mencari Makanan\" agar Indra mau berangkat.","Tap the \"Go Find Food\" button so Indra sets off."),
+      draw: draw3,
+      onEnter: function(){ state.tapCount = 0; },
+      buttons: function(){
+        return [{
+          id:'goSearch', label: cap('🎒 Pergi Mencari Makanan','🎒 Go Find Food'), primary:true,
+          onClick: function(){ state.tapCount = 1; nextScene(); }
+        }];
+      }
+    },
+    {
+      key:'feed-taduang',
+      caption: cap(
+        "Sebelum pergi, Indra terlebih dahulu memberi makan ayam peliharaannya, Taduang. Karena rutin diberi makan, Taduang menjadi ayam yang setia dan akan berkokok setiap kali Indra pulang ke rumah.",
+        "Before leaving, Indra first fed his pet rooster, Taduang. Because he was fed regularly, Taduang became a loyal rooster who would crow whenever Indra came home."
+      ),
+      instruction: cap("Ketuk tombol \"Beri Makan\" beberapa kali untuk memberi makan Taduang.","Tap the \"Feed\" button a few times to feed Taduang."),
+      draw: draw4,
+      onEnter: function(){ state.tapCount = 0; },
+      buttons: function(){
+        return [{
+          id:'feedChicken', label: cap('🌾 Beri Makan Taduang','🌾 Feed Taduang'), primary:true,
+          onClick: function(){
+            state.tapCount++;
+            if(state.tapCount>=4){ setTimeout(nextScene, 500); }
+          }
+        }];
+      }
+    },
+    {
+      key:'search-forest-sea',
+      caption: cap(
+        "Hampir setengah hari Indra mencari hasil hutan di Bukit Junjung Sirih, namun tak membuahkan hasil. Menjelang siang ia pergi ke laut untuk mencari ikan, tetapi tetap saja tidak berhasil mendapatkan apa pun.",
+        "For almost half a day Indra searched the forest at Junjung Sirih Hill, but found nothing. Near noon he went to the sea to fish, yet still came back empty-handed."
+      ),
+      instruction: cap("Ketuk semak-semak, pohon, dan air laut untuk membantu Indra mencari makanan.","Tap the bushes, tree, and sea water to help Indra search for food."),
+      draw: draw5,
+      onEnter: function(){ state.searchFound = 0; state.searchTargets = searchSpots.map(function(){return false;}); },
+      onCanvasClick: function(mx,my){
+        for(var i=0;i<searchSpots.length;i++){
+          if(state.searchTargets[i]) continue;
+          var sp = searchSpots[i];
+          var x = sp.x*W(), y = sp.y*H();
+          var dx = mx-x, dy = my-y;
+          if(Math.sqrt(dx*dx+dy*dy) < 40){
+            state.searchTargets[i] = true;
+            state.searchFound++;
+            updateButtonCount();
+            if(state.searchFound>=searchSpots.length){ setTimeout(nextScene, 700); }
+            break;
+          }
+        }
+      },
+      buttons: function(){
+        return [{
+          id:'searchStatus', label: function(){ return cap(
+            '🔍 Titik dicari: '+state.searchFound+'/'+searchSpots.length,
+            '🔍 Spots searched: '+state.searchFound+'/'+searchSpots.length
+          );}, isStatus:true
+        }];
+      }
+    },
+    {
+      key:'collect-shells',
+      caption: cap(
+        "Sementara itu, Ibu Indra pergi ke sebuah tanjung untuk mencari ikan. Setelah lama mencari, ia pulang membawa kerang-kerang yang berhasil dikumpulkannya dari tepi pantai.",
+        "Meanwhile, Indra's mother went to a cape to fish. After a long search, she returned home carrying shellfish she had gathered along the shore."
+      ),
+      instruction: cap("Ketuk kerang-kerang di pantai untuk membantu Ibu mengumpulkannya.","Tap the shells on the beach to help Mother collect them."),
+      draw: draw6,
+      onEnter: function(){
+        state.collected = 0;
+        state.shellTargets = [];
+        for(var i=0;i<6;i++){
+          state.shellTargets.push({
+            x: 60 + Math.random()*(W()-120),
+            y: H()*0.68 + Math.random()*(H()*0.22),
+            collected:false
+          });
+        }
+      },
+      onCanvasClick: function(mx,my){
+        for(var i=0;i<state.shellTargets.length;i++){
+          var sTarget = state.shellTargets[i];
+          if(sTarget.collected) continue;
+          var dx = mx-sTarget.x, dy = my-sTarget.y;
+          if(Math.sqrt(dx*dx+dy*dy) < 28){
+            sTarget.collected = true;
+            state.collected++;
+            if(state.collected>=6){ setTimeout(nextScene, 700); }
+            break;
+          }
+        }
+      },
+      buttons: function(){ return []; }
+    },
+    {
+      key:'parents-eat',
+      caption: cap(
+        "Ibu Indra memasak kerang-kerang itu. Karena jumlahnya sedikit sementara nafsu makan Indra sangat besar, Pak Buyung dan istrinya memutuskan menghabiskannya berdua tanpa menyisakan untuk Indra, lalu tertidur pulas.",
+        "Indra's mother cooked the shells. Since there were only a few, and Indra's appetite was so big, Pak Buyung and his wife decided to eat them all themselves, leaving none for Indra, then fell fast asleep."
+      ),
+      instruction: cap("Ketuk tombol \"Masak\" lalu \"Makan\" secara berurutan.","Tap \"Cook\" then \"Eat\" in order."),
+      draw: draw7,
+      onEnter: function(){ state.tapCount = 0; },
+      buttons: function(){
+        var btns = [];
+        if(state.tapCount < 1){
+          btns.push({ id:'cook', label: cap('🍲 Masak Kerang','🍲 Cook the Shells'), primary:true,
+            onClick: function(){ state.tapCount = 1; renderControls(); }});
+        } else if(state.tapCount < 2){
+          btns.push({ id:'eat', label: cap('🍽️ Makan Berdua','🍽️ Eat Together'), primary:true,
+            onClick: function(){ state.tapCount = 2; setTimeout(nextScene, 900); }});
+        }
+        return btns;
+      }
+    },
+    {
+      key:'indra-returns',
+      caption: cap(
+        "Menjelang malam, Taduang berkokok pertanda majikannya pulang. Indra pulang dengan perut sangat lapar. Ia menuju dapur, dan betapa terkejutnya ia melihat kedua orang tuanya tertidur pulas dikelilingi kulit kerang.",
+        "As night fell, Taduang crowed to signal his master's return. Indra came home starving. He headed to the kitchen, and was shocked to see his parents fast asleep, surrounded by empty shells."
+      ),
+      instruction: cap("Ketuk pintu dapur untuk melihat apa yang ditemukan Indra.","Tap the kitchen door to see what Indra finds."),
+      draw: draw8,
+      onEnter: function(){ state.tapCount = 0; },
+      buttons: function(){
+        return [{
+          id:'openDoor', label: cap('🚪 Buka Pintu Dapur','🚪 Open the Kitchen Door'), primary:true,
+          onClick: function(){ state.tapCount = 1; setTimeout(nextScene, 1600); }
+        }];
+      }
+    },
+    {
+      key:'sad-on-rock',
+      caption: cap(
+        "Sangat sedih hati Indra karena merasa tidak dicintai orang tuanya. Ia berjalan keluar sambil menangis, lalu duduk lunglai di sebuah batu. Taduang mengepak-ngepakkan sayapnya melihat majikannya bersedih.",
+        "Indra's heart was very sad, feeling unloved by his parents. He walked outside crying and sat wearily on a rock. Taduang flapped his wings, seeing his master so sorrowful."
+      ),
+      instruction: cap("Ketuk batu untuk melihat Indra duduk termenung.","Tap the rock to see Indra sit down, lost in thought."),
+      draw: draw9,
+      onEnter: function(){ state.tapCount = 0; },
+      buttons: function(){
+        return [{
+          id:'sitRock', label: cap('🪨 Ketuk Batu','🪨 Tap the Rock'), primary:true,
+          onClick: function(){ state.tapCount = 1; setTimeout(nextScene, 1200); }
+        }];
+      }
+    },
+    {
+      key:'fly',
+      caption: cap(
+        "Saat Taduang kembali mengepakkan sayapnya, Indra memegang kaki ayamnya itu. Ajaibnya, ia terbawa terbang ke udara bersama batu tempatnya duduk. Semakin tinggi terbang, semakin besar pula batu itu.",
+        "As Taduang flapped his wings again, Indra grabbed his rooster's legs. Miraculously, he was carried up into the air along with the rock he had been sitting on. The higher he flew, the bigger the rock grew."
+      ),
+      instruction: cap("Tekan dan tahan tombol \"Pegang Kaki Taduang\" agar Indra bisa terbang bersama batunya.","Press and hold the \"Grab Taduang's Legs\" button so Indra can fly with the rock."),
+      draw: draw10,
+      onEnter: function(){ state.holdProgress = 0; state.holdActive = false; },
+      buttons: function(){
+        return [{
+          id:'holdFly', label: cap('🐓 Pegang Kaki Taduang','🐓 Grab Taduang\'s Legs'), primary:true, isHold:true
+        }];
+      }
+    },
+    {
+      key:'impact',
+      caption: cap(
+        "Karena sudah sangat besar, batu itu pun jatuh menghantam salah satu bukit di sekitar laut. Hantaman keras membentuk lubang memanjang yang segera terisi air laut, membentuk aliran Sungai Batang Ombilin.",
+        "Having grown so massive, the rock finally fell and struck one of the hills near the sea. The powerful impact formed a long hollow that quickly filled with seawater, forming the flow of the Batang Ombilin River."
+      ),
+      instruction: cap("Ketuk tombol \"Hantamkan Batu\" berulang kali hingga batu jatuh menghantam bukit!","Tap the \"Strike the Rock Down\" button repeatedly until the rock hits the hill!"),
+      draw: draw11,
+      onEnter: function(){ state.tapCount = 0; state.impactDone = false; },
+      buttons: function(){
+        if(!state.impactDone){
+          return [{
+            id:'impactBtn', label: cap('💥 Hantamkan Batu','💥 Strike the Rock Down'), primary:true,
+            onClick: function(){
+              state.tapCount++;
+              if(state.tapCount>=6){
+                state.impactDone = true;
+                setTimeout(nextScene, 1400);
+              }
+            }
+          }];
+        }
+        return [];
+      }
+    }
+  ];
+
+  var endCaption = cap(
+    "Air laut yang tersisa semakin lama semakin menyusut hingga membentuk sebuah danau yang kini dinamai Danau Singkarak. Sementara aliran airnya menjadi Sungai Batang Ombilin yang mengalir jauh hingga Riau. Begitulah cerita rakyat ini mengajarkan kita untuk selalu berbagi dan tidak melupakan orang-orang yang kita sayangi.",
+    "The remaining seawater gradually shrank into a lake now called Lake Singkarak, while its flowing water became the Batang Ombilin River, which runs all the way to Riau. This folktale reminds us to always share and never forget the people we love."
+  );
+
+  /* ===================== SCENE MACHINE ===================== */
+
+  function updateButtonCount(){
+    renderControls();
+  }
+
+  function clearHoldTimer(){
+    if(state.holdTimer){ clearInterval(state.holdTimer); state.holdTimer = null; }
+  }
+
+  function stopAnimLoop(){
+    if(state.animFrame){ cancelAnimationFrame(state.animFrame); state.animFrame = null; }
+  }
+
+  function currentScene(){
+    return scenes[state.sceneIndex];
+  }
+
+  function goToScene(idx){
+    clearHoldTimer();
+    state.sceneIndex = idx;
+    if(idx >= scenes.length){
+      showEnding();
+      return;
+    }
+    var sc = scenes[idx];
+    if(sc.onEnter) sc.onEnter();
+    renderCaption();
+    renderInstruction();
+    renderControls();
+    renderProgress();
+    speakCurrent();
+    sendResize();
+  }
+
+  function nextScene(){
+    goToScene(state.sceneIndex + 1);
+  }
+
+  function renderCaption(){
+    var sc = currentScene();
+    captionLabel.textContent = STR[state.lang].narasi;
+    if(sc){
+      captionText.textContent = sc.caption[state.lang];
+    }
+  }
+
+  function renderInstruction(){
+    var sc = currentScene();
+    if(sc && sc.instruction){
+      instructionText.textContent = sc.instruction[state.lang];
+    }
+  }
+
+  function speakCurrent(){
+    var sc = currentScene();
+    if(sc){ speak(sc.caption[state.lang]); }
+  }
+
+  function renderProgress(){
+    progressRow.innerHTML = '';
+    for(var i=0;i<scenes.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      if(i < state.sceneIndex) d.className += ' done';
+      else if(i === state.sceneIndex) d.className += ' current';
+      progressRow.appendChild(d);
+    }
+  }
+
+  function renderControls(){
+    controlsRow.innerHTML = '';
+    var sc = currentScene();
+    if(!sc) return;
+    var btns = sc.buttons ? sc.buttons() : [];
+
+    if(sc.key === 'fly'){
+      // custom hold button + progress bar
+      var wrap = document.createElement('div');
+      wrap.style.display = 'flex';
+      wrap.style.flexDirection = 'column';
+      wrap.style.alignItems = 'center';
+      wrap.style.gap = '8px';
+
+      var btn = document.createElement('button');
+      btn.className = 'actionBtn';
+      btn.type = 'button';
+      btn.textContent = btns[0].label[state.lang];
+
+      var barWrap = document.createElement('div');
+      barWrap.className = 'progressBarWrap';
+      var barFill = document.createElement('div');
+      barFill.className = 'progressBarFill';
+      barWrap.appendChild(barFill);
+
+      function startHold(){
+        if(state.holdActive) return;
+        state.holdActive = true;
+        clearHoldTimer();
+        state.holdTimer = setInterval(function(){
+          state.holdProgress = Math.min(1, state.holdProgress + 0.045);
+          barFill.style.width = (state.holdProgress*100)+'%';
+          if(state.holdProgress >= 1){
+            clearHoldTimer();
+            state.holdActive = false;
+            setTimeout(nextScene, 500);
+          }
+        }, 60);
+      }
+      function stopHold(){
+        state.holdActive = false;
+        clearHoldTimer();
+        // do not reset progress fully; ease back a little to avoid feeling punitive
+      }
+      btn.addEventListener('mousedown', startHold);
+      btn.addEventListener('touchstart', function(e){ e.preventDefault(); startHold(); }, {passive:false});
+      btn.addEventListener('mouseup', stopHold);
+      btn.addEventListener('mouseleave', stopHold);
+      btn.addEventListener('touchend', function(e){ e.preventDefault(); stopHold(); }, {passive:false});
+
+      wrap.appendChild(btn);
+      wrap.appendChild(barWrap);
+      controlsRow.appendChild(wrap);
+      // ensure fill reflects current progress if re-rendered
+      barFill.style.width = (state.holdProgress*100)+'%';
+      return;
+    }
+
+    btns.forEach(function(b){
+      var btn = document.createElement('button');
+      btn.className = 'actionBtn' + (b.isStatus ? ' secondary' : '');
+      btn.type = 'button';
+      var labelObj = typeof b.label === 'function' ? b.label() : b.label;
+      btn.textContent = labelObj[state.lang];
+      if(b.isStatus){
+        btn.disabled = true;
+      } else if(b.onClick){
+        btn.addEventListener('click', b.onClick);
+      }
+      controlsRow.appendChild(btn);
+    });
+  }
+
+  /* ===================== CANVAS CLICK HANDLER ===================== */
+  canvas.addEventListener('click', function(e){
+    var sc = currentScene();
+    if(!sc || !sc.onCanvasClick) return;
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    var mx = (e.clientX - rect.left) * scaleX;
+    var my = (e.clientY - rect.top) * scaleY;
+    sc.onCanvasClick(mx, my);
+  });
+
+  /* ===================== MAIN RENDER LOOP ===================== */
+  function loop(ts){
+    state.animT = ts || 0;
+    ctx.clearRect(0,0,W(),H());
+    if(state.sceneIndex >= 0 && state.sceneIndex < scenes.length){
+      var sc = scenes[state.sceneIndex];
+      if(sc && sc.draw) sc.draw();
+    } else if(state.ended){
+      drawEndingScene();
+    } else {
+      renderStaticSea();
+    }
+    state.animFrame = requestAnimationFrame(loop);
+  }
+
+  /* ===================== START / END ===================== */
+  function showStart(){
+    startOverlay.style.display = 'flex';
+    endOverlay.style.display = 'none';
+    state.sceneIndex = -1;
+    state.ended = false;
+    progressRow.innerHTML = '';
+    controlsRow.innerHTML = '';
+    captionLabel.textContent = STR[state.lang].narasi;
+    captionText.textContent = state.lang==='id' ? 'Ketuk "Mulai Cerita" untuk memulai.' : 'Tap "Start Story" to begin.';
+    instructionText.textContent = state.lang==='id' ? 'Ketuk tombol "Mulai Cerita" pada layar untuk memulai petualangan.' : 'Tap the "Start Story" button on screen to begin the adventure.';
+    sendResize();
+  }
+
+  function showEnding(){
+    startOverlay.style.display = 'none';
+    endOverlay.style.display = 'flex';
+    state.ended = true;
+    captionLabel.textContent = STR[state.lang].narasi;
+    captionText.textContent = endCaption[state.lang];
+    instructionText.textContent = state.lang==='id' ? 'Ketuk "Ulangi Cerita" jika ingin menonton kembali dari awal.' : 'Tap "Replay Story" if you want to watch it again from the start.';
+    controlsRow.innerHTML = '';
+    renderProgress();
+    // mark all dots done
+    Array.prototype.forEach.call(progressRow.children, function(d){ d.className = 'dot done'; });
+    speak(endCaption[state.lang]);
+    sendResize();
+  }
+
+  startBtn.addEventListener('click', function(){
+    startOverlay.style.display = 'none';
+    goToScene(0);
+  });
+  replayBtn.addEventListener('click', function(){
+    stopSpeak();
+    showStart();
+  });
+
+  /* ===================== LANG / MUTE TOGGLES ===================== */
+  function applyLanguage(){
+    langBtn.textContent = STR[state.lang].lang;
+    gameTitle.textContent = STR[state.lang].title;
+    gameSub.textContent = STR[state.lang].sub;
+    startTitle.textContent = STR[state.lang].startTitle;
+    startDesc.textContent = STR[state.lang].startDesc;
+    startBtn.textContent = STR[state.lang].startBtn;
+    endTitle.textContent = STR[state.lang].endTitle;
+    endDesc.textContent = STR[state.lang].endDesc;
+    replayBtn.textContent = STR[state.lang].replayBtn;
+    footerEl.textContent = STR[state.lang].footer;
+
+    if(state.sceneIndex === -1 && !state.ended){
+      captionText.textContent = state.lang==='id' ? 'Ketuk "Mulai Cerita" untuk memulai.' : 'Tap "Start Story" to begin.';
+      instructionText.textContent = state.lang==='id' ? 'Ketuk tombol "Mulai Cerita" pada layar untuk memulai petualangan.' : 'Tap the "Start Story" button on screen to begin the adventure.';
+    } else if(state.ended){
+      captionText.textContent = endCaption[state.lang];
+      instructionText.textContent = state.lang==='id' ? 'Ketuk "Ulangi Cerita" jika ingin menonton kembali dari awal.' : 'Tap "Replay Story" if you want to watch it again from the start.';
+    } else {
+      renderCaption();
+      renderInstruction();
+      renderControls();
+    }
+    captionLabel.textContent = STR[state.lang].narasi;
+  }
+
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    try{
+      var url = new URL(window.location.href);
+      url.searchParams.set('lang', state.lang);
+      window.history.replaceState(null,'',url.toString());
+    }catch(e){}
+    applyLanguage();
+    stopSpeak();
+    if(!state.muted){ speakCurrent(); }
+  });
+
+  function applyMuteUI(){
+    muteBtn.textContent = state.muted ? STR[state.lang].muteOn : STR[state.lang].muteOff;
+    muteBtn.classList.toggle('active', state.muted);
+  }
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('aduo-muted', state.muted ? '1':'0'); }catch(e){}
+    applyMuteUI();
+    if(state.muted){ stopSpeak(); } else { speakCurrent(); }
+  });
+
+  /* ===================== INIT ===================== */
+  applyLanguage();
+  applyMuteUI();
+  showStart();
+  requestAnimationFrame(loop);
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopSpeak();
+  });
+
+})();
+</script>
+</body>
+</html>
