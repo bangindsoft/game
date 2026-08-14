@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sabai Nan Aluih - Cerita Rakyat Sumatra Barat</title>
+<style>
+  :root{
+    --bg-top:#fdf1dc;
+    --bg-bottom:#f7e4c2;
+    --panel:#fffaf0;
+    --ink:#3a2a1c;
+    --ink-soft:#6b5744;
+    --accent:#9c2b1f;
+    --accent-dark:#6f1c14;
+    --gold:#c69327;
+    --gold-light:#e6c065;
+    --green:#4d6b3a;
+    --line:#e6d3ad;
+    --shadow:0 10px 26px rgba(80,50,20,0.16);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', 'Noto Sans', Roboto, Arial, sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:14px;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:var(--panel);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:14px 16px 10px 16px;
+    background:linear-gradient(180deg,#fffdf7,#fbf1da);
+    border-bottom:1px solid var(--line);
+  }
+  header h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:1.05rem;
+    margin:0;
+    color:var(--accent-dark);
+    line-height:1.2;
+  }
+  header h1 small{
+    display:block;
+    font-family:'Segoe UI',sans-serif;
+    font-size:0.65rem;
+    font-weight:400;
+    color:var(--ink-soft);
+    letter-spacing:.04em;
+  }
+  .header-btns{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .icon-btn{
+    border:1px solid var(--gold);
+    background:#fff;
+    color:var(--accent-dark);
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:0.78rem;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .icon-btn:hover{background:#fff6e2;}
+  .icon-btn:active{transform:scale(0.95);}
+  .icon-btn[aria-pressed="true"]{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:#eadfc0;
+  }
+  #canvasHolder{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    overflow:hidden;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    padding:10px 10px 2px 10px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#e3d2ac;
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--accent); transform:scale(1.3);}
+  .dot.done{background:var(--gold);}
+
+  #captionPanel{
+    padding:12px 16px 6px 16px;
+    min-height:64px;
+  }
+  #captionTitle{
+    font-family:Georgia,'Times New Roman',serif;
+    color:var(--accent-dark);
+    font-size:1rem;
+    margin:0 0 4px 0;
+  }
+  #captionText{
+    font-size:0.92rem;
+    line-height:1.5;
+    color:var(--ink);
+    margin:0;
+  }
+  #instructionBox{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:8px;
+    padding:8px 10px;
+    background:#fff3d9;
+    border:1px dashed var(--gold);
+    border-radius:10px;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+  #instructionBox .ic{font-size:1rem;flex-shrink:0;}
+
+  #controls{
+    padding:10px 16px 18px 16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    min-height:56px;
+  }
+  .action-btn{
+    border:none;
+    background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    font-size:0.92rem;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 #4c120c, 0 6px 10px rgba(0,0,0,0.15);
+    transition:transform .08s ease, box-shadow .08s ease;
+    touch-action:manipulation;
+    user-select:none;
+  }
+  .action-btn:active{transform:translateY(3px); box-shadow:0 1px 0 #4c120c, 0 2px 6px rgba(0,0,0,0.15);}
+  .action-btn:disabled{opacity:.45; cursor:default; box-shadow:none; transform:none;}
+  .action-btn.secondary{
+    background:linear-gradient(180deg,#fff,#f3e6c6);
+    color:var(--accent-dark);
+    box-shadow:0 4px 0 var(--gold), 0 6px 10px rgba(0,0,0,0.1);
+    border:1px solid var(--gold-light);
+  }
+  .action-btn.secondary:active{box-shadow:0 1px 0 var(--gold), 0 2px 6px rgba(0,0,0,0.1);}
+  .action-btn.wide{min-width:220px;}
+
+  #holdBarWrap{
+    width:100%;
+    max-width:320px;
+    height:12px;
+    background:#e6d6ae;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--gold);
+  }
+  #holdBarFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--accent));
+  }
+
+  #timingBarWrap{
+    position:relative;
+    width:100%;
+    max-width:320px;
+    height:16px;
+    background:#e6d6ae;
+    border-radius:8px;
+    border:1px solid var(--gold);
+    overflow:hidden;
+  }
+  #timingZone{
+    position:absolute;
+    top:0; bottom:0;
+    background:rgba(77,107,58,0.55);
+  }
+  #timingMarker{
+    position:absolute;
+    top:-3px;
+    width:6px; height:22px;
+    background:var(--accent-dark);
+    border-radius:3px;
+  }
+
+  footer{
+    text-align:center;
+    font-size:0.7rem;
+    color:var(--ink-soft);
+    padding:8px 12px 12px 12px;
+    border-top:1px solid var(--line);
+  }
+
+  @media (max-width:420px){
+    header h1{font-size:0.92rem;}
+    .icon-btn{padding:6px 8px; font-size:0.72rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="gameTitle">Sabai Nan Aluih<small id="gameSubtitle">Cerita Rakyat Sumatra Barat</small></h1>
+    <div class="header-btns">
+      <button class="icon-btn" id="langBtn" type="button">🌐 EN</button>
+      <button class="icon-btn" id="muteBtn" type="button" aria-pressed="false">🔊 Suara</button>
+    </div>
+  </header>
+
+  <div id="stage-wrap">
+    <div id="canvasHolder">
+      <canvas id="scene" width="800" height="600"></canvas>
+    </div>
+  </div>
+
+  <div id="dots" aria-hidden="true"></div>
+
+  <div id="captionPanel">
+    <p id="captionTitle"></p>
+    <p id="captionText"></p>
+    <div id="instructionBox"><span class="ic">👉</span><span id="instructionText"></span></div>
+  </div>
+
+  <div id="controls"></div>
+
+  <footer id="footerText">Diceritakan ulang secara interaktif untuk anak-anak. Sumber kisah: cerita rakyat Minangkabau.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   LANGUAGE STRINGS (UI)
+--------------------------------------------------------- */
+var UI = {
+  id:{
+    subtitle:"Cerita Rakyat Sumatra Barat",
+    langBtn:"🌐 EN",
+    muteOn:"🔊 Suara",
+    muteOff:"🔇 Bisu",
+    footer:"Diceritakan ulang secara interaktif untuk anak-anak. Sumber kisah: cerita rakyat Minangkabau.",
+    startBtn:"🎬 Mulai Cerita",
+    replayBtn:"🔁 Ulangi Cerita",
+    coverTitle:"Sabai Nan Aluih",
+    coverText:"Sebuah kisah tentang gadis lembut hati dari Sumatra Barat yang berani membela kehormatan keluarganya. Ketuk tombol di bawah untuk memulai.",
+    coverInstruction:"Ketuk tombol \"Mulai Cerita\" untuk memulai petualangan Sabai."
+  },
+  en:{
+    subtitle:"Folktale from West Sumatra",
+    langBtn:"🌐 ID",
+    muteOn:"🔊 Sound",
+    muteOff:"🔇 Muted",
+    footer:"Retold interactively for children. Story source: Minangkabau folklore.",
+    startBtn:"🎬 Start Story",
+    replayBtn:"🔁 Replay Story",
+    coverTitle:"Sabai Nan Aluih",
+    coverText:"A story about a gentle-hearted girl from West Sumatra who bravely defended her family's honor. Tap the button below to begin.",
+    coverInstruction:"Tap the \"Start Story\" button to begin Sabai's journey."
+  }
+};
+
+/* ---------------------------------------------------------
+   STORY SCENES
+--------------------------------------------------------- */
+var SCENES = [
+  {
+    id:"family",
+    place:"village",
+    title:{id:"Rumah Gadang di Tepi Batang Agam", en:"The House by the Batang Agam River"},
+    caption:{
+      id:"Di tepi Sungai Batang Agam, tinggallah Sabai Nan Aluih bersama ayahnya Rajo Babanding, ibunya Sadun Saribai, dan adiknya Mangkutak Alam. Sabai dikenal lembut hatinya, cantik parasnya, dan rajin membantu kedua orang tuanya.",
+      en:"By the Batang Agam river lived Sabai Nan Aluih with her father Rajo Babanding, her mother Sadun Saribai, and her younger brother Mangkutak Alam. Sabai was known for her gentle heart, her beauty, and how diligently she helped her parents."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cSirami Bunga\u201d untuk melihat Sabai membantu ibunya di halaman rumah.",
+      en:"Tap the \u201cWater the Flower\u201d button to see Sabai help her mother in the yard."
+    },
+    controlLabel:{ id:"🌸 Sirami Bunga", en:"🌸 Water the Flower" },
+    draw: drawSceneFamily
+  },
+  {
+    id:"proposal",
+    place:"village",
+    title:{id:"Utusan dari Kampung Situjuh", en:"A Messenger from Situjuh"},
+    caption:{
+      id:"Kabar kecantikan dan kebaikan hati Sabai terdengar hingga ke Kampung Situjuh. Rajo Nan Panjang, saudagar kaya yang disegani, mengirim utusan untuk meminang Sabai.",
+      en:"News of Sabai's beauty and kindness reached faraway Situjuh village. Rajo Nan Panjang, a wealthy and feared merchant, sent a messenger to propose marriage to Sabai."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cTerima Surat Pinangan\u201d untuk membuka surat yang dibawa utusan.",
+      en:"Tap the \u201cReceive the Proposal Letter\u201d button to open the letter the messenger brought."
+    },
+    controlLabel:{ id:"📜 Terima Surat Pinangan", en:"📜 Receive the Letter" },
+    draw: drawSceneProposal
+  },
+  {
+    id:"refuse",
+    place:"village",
+    title:{id:"Rajo Babanding Menolak", en:"Rajo Babanding Declines"},
+    caption:{
+      id:"Rajo Babanding menerima utusan itu dengan sopan, namun menolak pinangannya. Ia merasa tidak pantas menikahkan putrinya dengan sahabatnya sendiri yang seusia dengannya.",
+      en:"Rajo Babanding received the messenger politely, but declined the proposal. He felt it was not proper to marry his daughter to his own old friend, who was the same age as him."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cTolak dengan Sopan\u201d agar Rajo Babanding menyampaikan jawabannya.",
+      en:"Tap the \u201cDecline Politely\u201d button so Rajo Babanding can give his answer."
+    },
+    controlLabel:{ id:"🙅 Tolak dengan Sopan", en:"🙅 Decline Politely" },
+    draw: drawSceneRefuse
+  },
+  {
+    id:"challenge",
+    place:"field",
+    title:{id:"Tantangan di Padang Panahunan", en:"A Challenge at Padang Panahunan"},
+    caption:{
+      id:"Rajo Nan Panjang datang sendiri bersama tiga pengawalnya, merasa terhina oleh penolakan itu. Rajo Babanding pun mengajaknya berunding di Padang Panahunan, tempat yang biasa dipakai untuk menyelesaikan perselisihan.",
+      en:"Feeling insulted, Rajo Nan Panjang came in person with his three guards. Rajo Babanding invited him to talk it over at Padang Panahunan, a field traditionally used to settle disputes."
+    },
+    instruction:{
+      id:"Tahan tombol \u201cBersiap Menghadapi Tantangan\u201d hingga penuh untuk melihat Rajo Babanding bersiap.",
+      en:"Hold the \u201cPrepare for the Challenge\u201d button until it's full to see Rajo Babanding get ready."
+    },
+    controlLabel:{ id:"✊ Bersiap Menghadapi Tantangan", en:"✊ Prepare for the Challenge" },
+    draw: drawSceneChallenge
+  },
+  {
+    id:"treachery",
+    place:"field",
+    title:{id:"Sesuatu di Balik Semak", en:"Something Behind the Bushes"},
+    caption:{
+      id:"Diam-diam, Rajo Nan Panjang menyuruh dua pengawalnya bersembunyi di balik semak-semak sambil membawa senapan, bersiap berbuat curang jika diperlukan.",
+      en:"Secretly, Rajo Nan Panjang ordered two of his guards to hide behind the bushes carrying a rifle, ready to cheat if it became necessary."
+    },
+    instruction:{
+      id:"Ketuk kedua semak untuk mengungkap pengawal yang bersembunyi di baliknya.",
+      en:"Tap both bushes to reveal the guards hiding behind them."
+    },
+    controlLabel:{ id:"🌿 Ketuk Semak", en:"🌿 Tap the Bushes" },
+    draw: drawSceneTreachery
+  },
+  {
+    id:"witness",
+    place:"field",
+    title:{id:"Kabar Duka bagi Keluarga", en:"Sorrowful News for the Family"},
+    caption:{
+      id:"Pertarungan pun berkobar hebat. Setelah lama bertarung, sebuah peluru curang dari balik semak mengenai Rajo Babanding. Seorang gembala yang melihatnya segera berlari memberi kabar ke rumah gadang.",
+      en:"A fierce fight broke out. After a long struggle, a treacherous shot from behind the bushes struck Rajo Babanding. A shepherd who witnessed it ran straight to the family home with the news."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cLihat Kejadian\u201d untuk mengetahui apa yang terjadi di Padang Panahunan.",
+      en:"Tap the \u201cSee What Happened\u201d button to find out what happened at Padang Panahunan."
+    },
+    controlLabel:{ id:"👀 Lihat Kejadian", en:"👀 See What Happened" },
+    draw: drawSceneWitness
+  },
+  {
+    id:"rifle",
+    place:"village",
+    title:{id:"Sabai Bertekad Bulat", en:"Sabai's Firm Resolve"},
+    caption:{
+      id:"Mendengar kabar itu, hati Sabai hancur. Tanpa ragu, ia mengambil senapan ayahnya dan berlari menuju Padang Panahunan, sementara adiknya Mangkutak Alam memilih tinggal karena takut.",
+      en:"Sabai's heart shattered at the news. Without hesitation, she grabbed her father's rifle and ran toward Padang Panahunan, while her brother Mangkutak Alam chose to stay behind out of fear."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cAmbil Senapan Ayah\u201d agar Sabai bersiap membela keluarganya.",
+      en:"Tap the \u201cGrab Father's Rifle\u201d button so Sabai can set off to defend her family."
+    },
+    controlLabel:{ id:"🔫 Ambil Senapan Ayah", en:"🔫 Grab Father's Rifle" },
+    draw: drawSceneRifle
+  },
+  {
+    id:"confront",
+    place:"road",
+    title:{id:"Sabai Berhadapan dengan Rajo Nan Panjang", en:"Sabai Faces Rajo Nan Panjang"},
+    caption:{
+      id:"Di tengah jalan, Sabai berpapasan dengan Rajo Nan Panjang yang masih tertawa mengejek kematian ayahnya. Amarahnya memuncak, namun Sabai tetap membidik dengan tenang, menunggu saat yang tepat.",
+      en:"On the road, Sabai came upon Rajo Nan Panjang, who was still laughing mockingly about her father's death. Her anger surged, but Sabai stayed calm, taking careful aim and waiting for the right moment."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cTembak\u201d tepat saat penanda berada di zona hijau.",
+      en:"Tap the \u201cFire\u201d button exactly when the marker is in the green zone."
+    },
+    controlLabel:{ id:"🎯 Tembak", en:"🎯 Fire" },
+    draw: drawSceneConfront
+  },
+  {
+    id:"ending",
+    place:"village",
+    title:{id:"Kehormatan Keluarga Terjaga", en:"The Family's Honor Is Restored"},
+    caption:{
+      id:"Tembakan Sabai tepat sasaran. Keadilan pun ditegakkan dan kehormatan keluarga Rajo Babanding terjaga. Sabai Nan Aluih dikenang sebagai gadis lembut yang berhati baja, berani membela orang-orang yang ia cintai.",
+      en:"Sabai's shot found its mark. Justice was served, and the honor of Rajo Babanding's family was restored. Sabai Nan Aluih is remembered as a gentle girl with a heart of steel, brave enough to defend those she loved."
+    },
+    instruction:{
+      id:"Ketuk tombol \u201cUlangi Cerita\u201d untuk menonton kisah ini kembali.",
+      en:"Tap the \u201cReplay Story\u201d button to watch this story again."
+    },
+    controlLabel:{ id:"", en:"" },
+    draw: drawSceneEnding
+  }
+];
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+var state = {
+  lang: "id",
+  muted: false,
+  sceneIndex: -1,     // -1 = cover screen
+  stage: 0,           // interaction sub-stage within a scene
+  holdActive:false,
+  holdProgress:0,
+  bushLeft:false,
+  bushRight:false,
+  timingActive:false,
+  timingPos:0,
+  timingDir:1,
+  timingResult:null,  // null | 'hit' | 'miss'
+  voices:[]
+};
+
+/* ---------------------------------------------------------
+   DOM refs
+--------------------------------------------------------- */
+var canvas = document.getElementById("scene");
+var ctx = canvas.getContext("2d");
+var dotsEl = document.getElementById("dots");
+var captionTitleEl = document.getElementById("captionTitle");
+var captionTextEl = document.getElementById("captionText");
+var instructionTextEl = document.getElementById("instructionText");
+var controlsEl = document.getElementById("controls");
+var langBtn = document.getElementById("langBtn");
+var muteBtn = document.getElementById("muteBtn");
+var footerEl = document.getElementById("footerText");
+var subtitleEl = document.getElementById("gameSubtitle");
+
+/* ---------------------------------------------------------
+   INITIAL LANG / MUTE FROM URL & LOCALSTORAGE
+--------------------------------------------------------- */
+(function initPrefs(){
+  try{
+    var params = new URLSearchParams(window.location.search);
+    var urlLang = params.get("lang");
+    var savedLang = localStorage.getItem("sna_lang");
+    var savedMute = localStorage.getItem("sna_muted");
+    if(urlLang === "en" || urlLang === "id"){
+      state.lang = urlLang;
+    } else if(savedLang === "en" || savedLang === "id"){
+      state.lang = savedLang;
+    }
+    if(savedMute === "1"){ state.muted = true; }
+  }catch(e){ /* localStorage may be unavailable in sandboxed iframe */ }
+})();
+
+/* ---------------------------------------------------------
+   SPEECH SYNTHESIS
+--------------------------------------------------------- */
+var synth = window.speechSynthesis || null;
+
+function loadVoices(){
+  if(!synth) return;
+  state.voices = synth.getVoices() || [];
+}
+if(synth){
+  loadVoices();
+  synth.onvoiceschanged = loadVoices;
+}
+
+function pickVoice(lang){
+  if(!state.voices || !state.voices.length) return null;
+  var prefix = lang === "en" ? "en" : "id";
+  var exact = state.voices.filter(function(v){ return v.lang && v.lang.toLowerCase().indexOf(prefix) === 0; });
+  if(exact.length) return exact[0];
+  return null;
+}
+
+function speak(text){
+  if(!synth || state.muted || !text) return;
+  try{
+    synth.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = state.lang === "en" ? "en-US" : "id-ID";
+    var v = pickVoice(state.lang);
+    if(v) utter.voice = v;
+    utter.rate = 0.94;
+    utter.pitch = 1.02;
+    synth.speak(utter);
+  }catch(e){ /* speech synthesis not supported */ }
+}
+
+function stopSpeaking(){
+  if(synth){ try{ synth.cancel(); }catch(e){} }
+}
+
+/* ---------------------------------------------------------
+   RESIZE / IFRAME AUTO-HEIGHT
+--------------------------------------------------------- */
+function fitCanvas(){
+  var holder = document.getElementById("canvasHolder");
+  var rect = holder.getBoundingClientRect();
+  var dpr = window.devicePixelRatio || 1;
+  var w = Math.max(1, Math.round(rect.width));
+  var h = Math.max(1, Math.round(rect.height));
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  renderCanvas();
+}
+
+function notifyResize(){
+  try{
+    var height = document.getElementById("app").getBoundingClientRect().height;
+    window.parent.postMessage({ type: "sna-resize", height: Math.ceil(height) + 16 }, "*");
+  }catch(e){}
+}
+
+window.addEventListener("resize", function(){ fitCanvas(); notifyResize(); });
+if(window.ResizeObserver){
+  var ro = new ResizeObserver(function(){ fitCanvas(); notifyResize(); });
+  ro.observe(document.getElementById("app"));
+} else {
+  setInterval(notifyResize, 800);
+}
+
+/* ---------------------------------------------------------
+   LANGUAGE / MUTE TOGGLES
+--------------------------------------------------------- */
+function applyLanguage(){
+  var t = UI[state.lang];
+  subtitleEl.textContent = t.subtitle;
+  langBtn.textContent = t.langBtn;
+  muteBtn.textContent = state.muted ? t.muteOff : t.muteOn;
+  footerEl.textContent = t.footer;
+  try{ localStorage.setItem("sna_lang", state.lang); }catch(e){}
+  renderScene(false);
+}
+
+langBtn.addEventListener("click", function(){
+  state.lang = state.lang === "id" ? "en" : "id";
+  applyLanguage();
+});
+
+muteBtn.addEventListener("click", function(){
+  state.muted = !state.muted;
+  muteBtn.setAttribute("aria-pressed", state.muted ? "true" : "false");
+  muteBtn.textContent = state.muted ? UI[state.lang].muteOff : UI[state.lang].muteOn;
+  try{ localStorage.setItem("sna_muted", state.muted ? "1" : "0"); }catch(e){}
+  if(state.muted){ stopSpeaking(); } else { speakCurrent(); }
+});
+
+function speakCurrent(){
+  if(state.sceneIndex === -1){
+    speak(UI[state.lang].coverText);
+  } else {
+    var sc = SCENES[state.sceneIndex];
+    speak(sc.caption[state.lang]);
+  }
+}
+
+/* ---------------------------------------------------------
+   PROGRESS DOTS
+--------------------------------------------------------- */
+function renderDots(){
+  dotsEl.innerHTML = "";
+  for(var i=0;i<SCENES.length;i++){
+    var d = document.createElement("span");
+    d.className = "dot";
+    if(state.sceneIndex > i) d.className += " done";
+    if(state.sceneIndex === i) d.className += " active";
+    dotsEl.appendChild(d);
+  }
+}
+
+/* ---------------------------------------------------------
+   SCENE / CONTROL RENDERING
+--------------------------------------------------------- */
+function clearControls(){
+  controlsEl.innerHTML = "";
+  state.holdActive = false;
+  if(state._holdRAF){ cancelAnimationFrame(state._holdRAF); state._holdRAF = null; }
+  if(state._timingRAF){ cancelAnimationFrame(state._timingRAF); state._timingRAF = null; }
+}
+
+function goToScene(index, opts){
+  opts = opts || {};
+  clearControls();
+  state.sceneIndex = index;
+  state.stage = 0;
+  state.bushLeft = false;
+  state.bushRight = false;
+  state.holdProgress = 0;
+  state.timingResult = null;
+  state.timingPos = 0;
+  state.timingDir = 1;
+  renderScene(!opts.silent);
+  renderDots();
+  notifyResize();
+}
+
+function renderScene(doSpeak){
+  var t = UI[state.lang];
+  if(state.sceneIndex === -1){
+    captionTitleEl.textContent = t.coverTitle;
+    captionTextEl.textContent = t.coverText;
+    instructionTextEl.textContent = t.coverInstruction;
+    buildCoverControls();
+  } else {
+    var sc = SCENES[state.sceneIndex];
+    captionTitleEl.textContent = sc.title[state.lang];
+    captionTextEl.textContent = sc.caption[state.lang];
+    instructionTextEl.textContent = sc.instruction[state.lang];
+    buildSceneControls(sc);
+  }
+  if(doSpeak !== false){ speakCurrent(); }
+  renderCanvas();
+}
+
+function buildCoverControls(){
+  clearControls();
+  var btn = document.createElement("button");
+  btn.className = "action-btn wide";
+  btn.textContent = UI[state.lang].startBtn;
+  btn.addEventListener("click", function(){ goToScene(0); });
+  controlsEl.appendChild(btn);
+}
+
+function buildSceneControls(sc){
+  clearControls();
+  // Safety net: always ensure no stray disabled buttons linger between scenes
+  switch(sc.id){
+    case "challenge":
+      buildHoldControl(sc);
+      break;
+    case "treachery":
+      buildBushControls(sc);
+      break;
+    case "confront":
+      buildTimingControl(sc);
+      break;
+    case "ending":
+      buildEndingControl();
+      break;
+    default:
+      buildSimpleTapControl(sc);
+  }
+}
+
+function advanceAfterDelay(delay){
+  window.setTimeout(function(){
+    if(state.sceneIndex < SCENES.length - 1){
+      goToScene(state.sceneIndex + 1);
+    }
+  }, delay);
+}
+
+/* Simple single tap-to-advance interaction */
+function buildSimpleTapControl(sc){
+  var btn = document.createElement("button");
+  btn.className = "action-btn wide";
+  btn.textContent = sc.controlLabel[state.lang];
+  btn.disabled = false;
+  btn.addEventListener("click", function(){
+    if(btn.disabled) return;
+    btn.disabled = true;
+    state.stage = 1;
+    renderCanvas();
+    advanceAfterDelay(1100);
+  });
+  controlsEl.appendChild(btn);
+}
+
+/* Press-and-hold interaction (challenge scene) */
+function buildHoldControl(sc){
+  var btn = document.createElement("button");
+  btn.className = "action-btn wide";
+  btn.textContent = sc.controlLabel[state.lang];
+
+  var barWrap = document.createElement("div");
+  barWrap.id = "holdBarWrap";
+  var barFill = document.createElement("div");
+  barFill.id = "holdBarFill";
+  barWrap.appendChild(barFill);
+
+  function startHold(){
+    if(btn.disabled) return;
+    state.holdActive = true;
+    tickHold();
+  }
+  function stopHold(){
+    state.holdActive = false;
+  }
+  function tickHold(){
+    if(!state.holdActive) return;
+    state.holdProgress = Math.min(100, state.holdProgress + 2.2);
+    barFill.style.width = state.holdProgress + "%";
+    renderCanvas();
+    if(state.holdProgress >= 100){
+      state.holdActive = false;
+      btn.disabled = true;
+      state.stage = 1;
+      renderCanvas();
+      advanceAfterDelay(1000);
+      return;
+    }
+    state._holdRAF = requestAnimationFrame(tickHold);
+  }
+
+  btn.addEventListener("pointerdown", startHold);
+  btn.addEventListener("pointerup", stopHold);
+  btn.addEventListener("pointerleave", stopHold);
+  btn.addEventListener("pointercancel", stopHold);
+
+  controlsEl.appendChild(btn);
+  controlsEl.appendChild(barWrap);
+}
+
+/* Two-button reveal interaction (treachery scene) */
+function buildBushControls(sc){
+  var t = state.lang;
+  var btnLeft = document.createElement("button");
+  btnLeft.className = "action-btn";
+  btnLeft.textContent = (t === "id" ? "🌿 Semak Kiri" : "🌿 Left Bush");
+  var btnRight = document.createElement("button");
+  btnRight.className = "action-btn";
+  btnRight.textContent = (t === "id" ? "🌿 Semak Kanan" : "🌿 Right Bush");
+
+  function checkDone(){
+    if(state.bushLeft && state.bushRight){
+      btnLeft.disabled = true;
+      btnRight.disabled = true;
+      advanceAfterDelay(1100);
+    }
+  }
+
+  btnLeft.addEventListener("click", function(){
+    if(btnLeft.disabled) return;
+    state.bushLeft = true;
+    btnLeft.disabled = true;
+    renderCanvas();
+    checkDone();
+  });
+  btnRight.addEventListener("click", function(){
+    if(btnRight.disabled) return;
+    state.bushRight = true;
+    btnRight.disabled = true;
+    renderCanvas();
+    checkDone();
+  });
+
+  controlsEl.appendChild(btnLeft);
+  controlsEl.appendChild(btnRight);
+}
+
+/* Timing-bar interaction (confront scene) */
+function buildTimingControl(sc){
+  var wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.flexDirection = "column";
+  wrap.style.alignItems = "center";
+  wrap.style.gap = "10px";
+  wrap.style.width = "100%";
+
+  var barWrap = document.createElement("div");
+  barWrap.id = "timingBarWrap";
+  var zone = document.createElement("div");
+  zone.id = "timingZone";
+  zone.style.left = "40%";
+  zone.style.width = "22%";
+  var marker = document.createElement("div");
+  marker.id = "timingMarker";
+  barWrap.appendChild(zone);
+  barWrap.appendChild(marker);
+
+  var btn = document.createElement("button");
+  btn.className = "action-btn wide";
+  btn.textContent = sc.controlLabel[state.lang];
+
+  wrap.appendChild(barWrap);
+  wrap.appendChild(btn);
+  controlsEl.appendChild(wrap);
+
+  state.timingActive = true;
+  state.timingPos = 0;
+  state.timingDir = 1;
+
+  function tick(){
+    if(!state.timingActive) return;
+    state.timingPos += state.timingDir * 1.6;
+    if(state.timingPos >= 100){ state.timingPos = 100; state.timingDir = -1; }
+    if(state.timingPos <= 0){ state.timingPos = 0; state.timingDir = 1; }
+    marker.style.left = state.timingPos + "%";
+    state._timingRAF = requestAnimationFrame(tick);
+  }
+  tick();
+
+  btn.addEventListener("click", function(){
+    if(btn.disabled) return;
+    var pos = state.timingPos;
+    var hit = pos >= 40 && pos <= 62;
+    if(hit){
+      state.timingActive = false;
+      state.timingResult = "hit";
+      btn.disabled = true;
+      state.stage = 1;
+      renderCanvas();
+      advanceAfterDelay(1300);
+    } else {
+      state.timingResult = "miss";
+      barWrap.style.borderColor = "#9c2b1f";
+      window.setTimeout(function(){ barWrap.style.borderColor = "var(--gold)"; }, 350);
+    }
+  });
+}
+
+function buildEndingControl(){
+  var btn = document.createElement("button");
+  btn.className = "action-btn wide";
+  btn.textContent = UI[state.lang].replayBtn;
+  btn.addEventListener("click", function(){
+    goToScene(-1);
+  });
+  controlsEl.appendChild(btn);
+}
+
+/* ---------------------------------------------------------
+   CANVAS ILLUSTRATIONS
+--------------------------------------------------------- */
+var animT = 0;
+function animLoop(){
+  animT += 0.016;
+  renderCanvas();
+  requestAnimationFrame(animLoop);
+}
+
+function renderCanvas(){
+  var rect = document.getElementById("canvasHolder").getBoundingClientRect();
+  var w = rect.width, h = rect.height;
+  if(!w || !h) return;
+  ctx.clearRect(0,0,w,h);
+
+  if(state.sceneIndex === -1){
+    drawCover(ctx, w, h, animT);
+    return;
+  }
+  var sc = SCENES[state.sceneIndex];
+  sc.draw(ctx, w, h, animT, state.stage);
+}
+
+/* ---- palette ---- */
+var PAL = {
+  skyDay:["#fbe6b8","#f6cf88"],
+  skyField:["#fdeecb","#f3d79a"],
+  ground:"#7a9a52",
+  groundField:"#c9b878",
+  roof:"#241a12",
+  roofShine:"#3a2c1c",
+  wall:"#e8c98a",
+  wallDark:"#c9a45f",
+  skin:"#e3ad7a",
+  skinShade:"#c98f5f",
+  sabaiDress:"#c65a6b",
+  sabaiDress2:"#f2c6cd",
+  sabaiScarf:"#8b2e2e",
+  fatherOutfit:"#3f5230",
+  fatherOutfit2:"#2c3a20",
+  motherDress:"#7a4a8b",
+  brotherOutfit:"#5b6b8b",
+  villainOutfit:"#4a2226",
+  villainOutfit2:"#6f2f2f",
+  guardOutfit:"#3c4a2a",
+  gold:"#c69327",
+  ink:"#241a12"
+};
+
+function skyGradient(ctx,w,h,colors){
+  var g = ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,colors[0]);
+  g.addColorStop(1,colors[1]);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,w,h);
+}
+
+function drawSun(ctx,x,y,r){
+  ctx.save();
+  ctx.fillStyle = "rgba(255,235,180,0.9)";
+  ctx.beginPath(); ctx.arc(x,y,r*1.6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#fff3d0";
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawHills(ctx,w,h,baseY,color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,baseY);
+  ctx.bezierCurveTo(w*0.2,baseY-40,w*0.35,baseY-10,w*0.55,baseY-30);
+  ctx.bezierCurveTo(w*0.75,baseY-50,w*0.9,baseY-15,w,baseY-25);
+  ctx.lineTo(w,h); ctx.lineTo(0,h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCloud(ctx,x,y,scale){
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.beginPath();
+  ctx.arc(x,y,18*scale,0,Math.PI*2);
+  ctx.arc(x+20*scale,y-8*scale,16*scale,0,Math.PI*2);
+  ctx.arc(x+38*scale,y,17*scale,0,Math.PI*2);
+  ctx.arc(x+18*scale,y+6*scale,20*scale,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* Rumah Gadang: iconic curved horn roofline of Minangkabau houses */
+function drawRumahGadang(ctx,x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+
+  // stilts
+  ctx.fillStyle = "#8a6a3f";
+  for(var i=-70;i<=70;i+=35){
+    ctx.fillRect(i-4,40,8,45);
+  }
+
+  // base platform
+  ctx.fillStyle = PAL.wallDark;
+  ctx.fillRect(-95,20,190,26);
+
+  // wall
+  ctx.fillStyle = PAL.wall;
+  ctx.fillRect(-90,-40,180,62);
+  // wall wood lines
+  ctx.strokeStyle = "rgba(0,0,0,0.08)";
+  ctx.lineWidth = 1;
+  for(var wl=-35;wl<20;wl+=10){
+    ctx.beginPath(); ctx.moveTo(-90,wl); ctx.lineTo(90,wl); ctx.stroke();
+  }
+
+  // windows
+  ctx.fillStyle = "#5b3a20";
+  ctx.fillRect(-65,-22,26,30);
+  ctx.fillRect(40,-22,26,30);
+  ctx.fillStyle = "#c69327";
+  ctx.fillRect(-65,-22,26,3);
+  ctx.fillRect(40,-22,26,3);
+
+  // door
+  ctx.fillStyle = "#4a2f18";
+  ctx.fillRect(-13,-16,26,38);
+
+  // roof (multi-horn curved silhouette, signature Minangkabau shape)
+  ctx.fillStyle = PAL.roof;
+  ctx.beginPath();
+  ctx.moveTo(-115,-38);
+  ctx.bezierCurveTo(-100,-100,-70,-58,-55,-95);
+  ctx.bezierCurveTo(-40,-60,-15,-72,0,-108);
+  ctx.bezierCurveTo(15,-72,40,-60,55,-95);
+  ctx.bezierCurveTo(70,-58,100,-100,115,-38);
+  ctx.bezierCurveTo(70,-52,-70,-52,-115,-38);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = PAL.roofShine;
+  ctx.beginPath();
+  ctx.moveTo(-108,-40);
+  ctx.bezierCurveTo(-95,-70,-75,-55,-64,-78);
+  ctx.lineTo(-60,-70);
+  ctx.bezierCurveTo(-75,-52,-95,-56,-108,-40);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* Generic person: head + torso + limbs, simple flat-vector figure */
+function drawPerson(ctx, opts){
+  var x=opts.x, y=opts.y, s=opts.scale||1, mirror=opts.mirror?-1:1;
+  var skin=opts.skin||PAL.skin, outfit=opts.outfit||"#888", outfit2=opts.outfit2||"#666";
+  var pose=opts.pose||"idle", bob=opts.bob||0, headwear=opts.headwear||"none";
+  var armSwing = opts.armSwing!==undefined?opts.armSwing:0;
+
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.scale(s*mirror, s);
+
+  // shadow
+  ctx.fillStyle = "rgba(0,0,0,0.14)";
+  ctx.beginPath();
+  ctx.ellipse(0,4,22,6,0,0,Math.PI*2);
+  ctx.fill();
+
+  if(pose === "fallen"){
+    ctx.rotate(Math.PI/2 * (mirror>0?1:-1));
+    ctx.translate(0,-2);
+  }
+
+  // legs
+  ctx.strokeStyle = outfit2;
+  ctx.lineWidth = 9;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-7,0); ctx.lineTo(-9,-34);
+  ctx.moveTo(7,0); ctx.lineTo(9,-34);
+  ctx.stroke();
+
+  // body / skirt-ish garment (trapezoid)
+  ctx.fillStyle = outfit;
+  ctx.beginPath();
+  ctx.moveTo(-19,-30);
+  ctx.lineTo(19,-30);
+  ctx.lineTo(13,-70);
+  ctx.lineTo(-13,-70);
+  ctx.closePath();
+  ctx.fill();
+
+  // sash accent
+  ctx.strokeStyle = opts.accent || PAL.gold;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-13,-58); ctx.lineTo(13,-50);
+  ctx.stroke();
+
+  // arms
+  var aAngle = armSwing;
+  ctx.strokeStyle = outfit;
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(-12,-64);
+  ctx.lineTo(-12 - 14*Math.cos(aAngle), -64 + 18*Math.sin(aAngle)+ (opts.leftArmUp?-16:0));
+  ctx.moveTo(12,-64);
+  ctx.lineTo(12 + 14*Math.cos(aAngle), -64 + 18*Math.sin(aAngle) + (opts.rightArmUp?-16:0));
+  ctx.stroke();
+
+  // hands
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(-12 - 14*Math.cos(aAngle), -64 + 18*Math.sin(aAngle)+ (opts.leftArmUp?-16:0),4,0,Math.PI*2);
+  ctx.arc(12 + 14*Math.cos(aAngle), -64 + 18*Math.sin(aAngle) + (opts.rightArmUp?-16:0),4,0,Math.PI*2);
+  ctx.fill();
+
+  // neck + head
+  ctx.fillStyle = skin;
+  ctx.fillRect(-4,-78,8,10);
+  ctx.beginPath();
+  ctx.arc(0,-88,13,0,Math.PI*2);
+  ctx.fill();
+
+  // headwear
+  if(headwear === "tikuluak"){
+    ctx.fillStyle = opts.accent || PAL.sabaiScarf;
+    ctx.beginPath();
+    ctx.moveTo(-14,-92);
+    ctx.quadraticCurveTo(0,-118,16,-90);
+    ctx.quadraticCurveTo(0,-100,-14,-92);
+    ctx.closePath();
+    ctx.fill();
+  } else if(headwear === "deta"){
+    ctx.fillStyle = opts.accent || "#3a2a1c";
+    ctx.beginPath();
+    ctx.ellipse(0,-93,15,7,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-15,-96,30,6);
+  } else if(headwear === "mustache"){
+    ctx.strokeStyle = "#241a12";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(-7,-84); ctx.lineTo(-1,-82);
+    ctx.moveTo(7,-84); ctx.lineTo(1,-82);
+    ctx.stroke();
+  }
+
+  // simple face
+  ctx.fillStyle = "#241a12";
+  ctx.beginPath();
+  ctx.arc(-4,-88,1.4,0,Math.PI*2);
+  ctx.arc(4,-88,1.4,0,Math.PI*2);
+  ctx.fill();
+  if(opts.expression === "smile"){
+    ctx.strokeStyle = "#241a12"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,-83,3.4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  } else if(opts.expression === "angry"){
+    ctx.strokeStyle = "#241a12"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(-3,-85); ctx.lineTo(3,-85); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-6,-92); ctx.lineTo(-2,-90); ctx.moveTo(6,-92); ctx.lineTo(2,-90); ctx.stroke();
+  } else if(opts.expression === "sad"){
+    ctx.strokeStyle="#241a12"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,-80,3,1.15*Math.PI,1.85*Math.PI); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawFlowerPot(ctx,x,y,bloom){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = "#a86a3d";
+  ctx.beginPath();
+  ctx.moveTo(-12,0); ctx.lineTo(12,0); ctx.lineTo(9,16); ctx.lineTo(-9,16); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#4d6b3a";
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-20); ctx.stroke();
+  var petalColor = bloom ? "#e97fa0" : "#c9c2a8";
+  var count = bloom ? 6 : 3;
+  for(var i=0;i<count;i++){
+    var ang = (Math.PI*2/count)*i;
+    ctx.fillStyle = petalColor;
+    ctx.beginPath();
+    ctx.ellipse(Math.cos(ang)*7, -20+Math.sin(ang)*7, 5, 3, ang, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle = bloom ? "#e0a527" : "#8a8560";
+  ctx.beginPath(); ctx.arc(0,-20,3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawBush(ctx,x,y,scale,revealed,mirror){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale*(mirror?-1:1),scale);
+
+  if(revealed){
+    // guard peeking
+    ctx.fillStyle = PAL.skin;
+    ctx.beginPath(); ctx.arc(0,-34,8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = PAL.guardOutfit;
+    ctx.fillRect(-9,-28,18,20);
+    ctx.strokeStyle = "#241a12"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-9,-20); ctx.lineTo(-22,-14); ctx.stroke();
+    ctx.fillStyle="#3a2a1c";
+    ctx.save(); ctx.translate(-22,-14); ctx.rotate(-0.5);
+    ctx.fillRect(-3,-2,26,4);
+    ctx.restore();
+  }
+
+  ctx.fillStyle = "#4d6b3a";
+  var clumps = [[-14,0,16],[0,-6,20],[16,0,15],[-4,4,14]];
+  for(var i=0;i<clumps.length;i++){
+    ctx.beginPath();
+    ctx.arc(clumps[i][0],clumps[i][1],clumps[i][2],0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#5d7d47";
+  ctx.beginPath(); ctx.arc(-6,-4,10,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawTree(ctx,x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#6b4a2a";
+  ctx.fillRect(-5,-30,10,32);
+  ctx.fillStyle = "#4d6b3a";
+  ctx.beginPath(); ctx.arc(0,-42,26,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#5d7d47";
+  ctx.beginPath(); ctx.arc(-14,-30,16,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(14,-30,16,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawScroll(ctx,x,y,scale,open){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = "#eadfba";
+  var wOpen = open ? 40 : 14;
+  ctx.fillRect(-wOpen/2,-14,wOpen,28);
+  ctx.strokeStyle = "#a6321c"; ctx.lineWidth = 2;
+  ctx.strokeRect(-wOpen/2,-14,wOpen,28);
+  ctx.fillStyle = "#8a6a3f";
+  ctx.beginPath(); ctx.arc(-wOpen/2,0,5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(wOpen/2,0,5,0,Math.PI*2); ctx.fill();
+  if(open){
+    ctx.strokeStyle = "rgba(0,0,0,0.25)"; ctx.lineWidth = 1;
+    for(var i=-8;i<=8;i+=4){
+      ctx.beginPath(); ctx.moveTo(-14,i); ctx.lineTo(14,i); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawRifle(ctx,x,y,scale,rot){
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(rot||0); ctx.scale(scale,scale);
+  ctx.fillStyle = "#4a3320";
+  ctx.fillRect(-30,-3,60,6);
+  ctx.fillStyle = "#241a12";
+  ctx.fillRect(20,-5,14,4);
+  ctx.fillRect(-34,-2,8,10);
+  ctx.restore();
+}
+
+/* ---------- SCENE DRAWERS ---------- */
+
+function drawSceneFamily(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyDay);
+  drawSun(ctx,w*0.85,h*0.16,26);
+  drawCloud(ctx,w*0.15,h*0.14,1);
+  drawCloud(ctx,w*0.45,h*0.08,0.7);
+  var groundY = h*0.72;
+  ctx.fillStyle = PAL.ground;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#8fae63");
+
+  drawTree(ctx,w*0.08,groundY+6,1.1);
+  drawRumahGadang(ctx, w*0.55, groundY-8, 1.05);
+
+  var bob = Math.sin(t*2)*2;
+  // mother figure near door
+  drawPerson(ctx,{x:w*0.68,y:groundY+2,scale:0.9,skin:PAL.skin,outfit:PAL.motherDress,outfit2:"#4a2f5b",headwear:"tikuluak",accent:"#5b2f6b",expression:"smile",bob:bob*0.4});
+
+  // Sabai near flower pot
+  drawPerson(ctx,{x:w*0.28,y:groundY+4,scale:1,skin:PAL.skin,outfit:PAL.sabaiDress,outfit2:PAL.sabaiDress2,headwear:"tikuluak",accent:PAL.sabaiScarf,expression: stage>=1 ? "smile":"idle",bob:bob,leftArmUp:stage>=1});
+
+  drawFlowerPot(ctx, w*0.28+34, groundY+18, stage>=1);
+
+  // brother lazing under tree
+  drawPerson(ctx,{x:w*0.09,y:groundY+18,scale:0.85,skin:PAL.skin,outfit:PAL.brotherOutfit,outfit2:"#2c3a20",expression:"idle",bob:0});
+}
+
+function drawSceneProposal(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyDay);
+  drawSun(ctx,w*0.85,h*0.16,24);
+  var groundY = h*0.72;
+  ctx.fillStyle = PAL.ground;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#8fae63");
+  drawRumahGadang(ctx, w*0.66, groundY-8, 1.0);
+
+  var bob = Math.sin(t*2)*2;
+  // father at door
+  drawPerson(ctx,{x:w*0.55,y:groundY+2,scale:0.95,skin:PAL.skin,outfit:PAL.fatherOutfit,outfit2:PAL.fatherOutfit2,headwear:"deta",accent:"#241a12",expression:"idle",bob:bob*0.4});
+
+  // messenger with scroll
+  drawPerson(ctx,{x:w*0.24,y:groundY+6,scale:0.95,skin:PAL.skin,outfit:"#7a5a2f",outfit2:"#4a2f18",headwear:"deta",accent:"#3a2a1c",expression:"idle",bob:bob,mirror:true,rightArmUp:stage>=1});
+
+  drawScroll(ctx, w*0.24-30, groundY-58, 1, stage>=1);
+}
+
+function drawSceneRefuse(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyDay);
+  drawSun(ctx,w*0.85,h*0.16,24);
+  var groundY = h*0.72;
+  ctx.fillStyle = PAL.ground;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#8fae63");
+  drawRumahGadang(ctx, w*0.66, groundY-8, 1.0);
+
+  var bob = Math.sin(t*2)*2;
+  var shake = stage>=1 ? Math.sin(t*14)*3 : 0;
+  drawPerson(ctx,{x:w*0.5+shake,y:groundY+2,scale:0.95,skin:PAL.skin,outfit:PAL.fatherOutfit,outfit2:PAL.fatherOutfit2,headwear:"deta",accent:"#241a12",expression: stage>=1 ? "sad":"idle",bob:bob*0.4});
+
+  drawPerson(ctx,{x:w*0.22,y:groundY+8,scale:0.9,skin:PAL.skin,outfit:"#7a5a2f",outfit2:"#4a2f18",headwear:"deta",accent:"#3a2a1c",expression:"idle",bob:bob,mirror:true});
+  drawPerson(ctx,{x:w*0.14,y:groundY+8,scale:0.85,skin:PAL.skin,outfit:"#6a4a25",outfit2:"#3a2410",headwear:"deta",accent:"#3a2a1c",expression:"idle",bob:bob*1.1,mirror:true});
+}
+
+function drawSceneChallenge(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyField);
+  drawSun(ctx,w*0.15,h*0.15,22);
+  var groundY = h*0.74;
+  ctx.fillStyle = PAL.groundField;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#b6a866");
+  drawTree(ctx,w*0.9,groundY+4,0.9);
+
+  var bob = Math.sin(t*2)*2;
+  var readyGlow = stage>=1;
+  var flex = state.holdProgress/100;
+
+  // Rajo Babanding, resolve building
+  drawPerson(ctx,{x:w*0.32,y:groundY+2,scale:1,skin:PAL.skin,outfit:PAL.fatherOutfit,outfit2:PAL.fatherOutfit2,headwear:"deta",accent:"#241a12",expression: readyGlow?"smile":"angry",bob:bob*(1+flex),rightArmUp:flex>0.5});
+
+  if(flex>0){
+    ctx.save();
+    ctx.globalAlpha = 0.25+flex*0.4;
+    ctx.strokeStyle = PAL.gold; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(w*0.32,groundY-58,20+flex*10,0,Math.PI*2*flex);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Rajo Nan Panjang + guards across the field
+  drawPerson(ctx,{x:w*0.68,y:groundY+2,scale:1,skin:PAL.skin,outfit:PAL.villainOutfit,outfit2:PAL.villainOutfit2,headwear:"mustache",accent:"#6f2f2f",expression:"angry",bob:bob,mirror:true});
+  drawPerson(ctx,{x:w*0.8,y:groundY+10,scale:0.85,skin:PAL.skin,outfit:PAL.guardOutfit,outfit2:"#2a3218",headwear:"deta",accent:"#241a12",expression:"idle",bob:bob*1.1,mirror:true});
+  drawPerson(ctx,{x:w*0.88,y:groundY+10,scale:0.85,skin:PAL.skin,outfit:PAL.guardOutfit,outfit2:"#2a3218",headwear:"deta",accent:"#241a12",expression:"idle",bob:bob*0.9,mirror:true});
+  drawPerson(ctx,{x:w*0.6,y:groundY+12,scale:0.8,skin:PAL.skin,outfit:PAL.guardOutfit,outfit2:"#2a3218",headwear:"deta",accent:"#241a12",expression:"idle",bob:bob,mirror:true});
+}
+
+function drawSceneTreachery(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyField);
+  drawSun(ctx,w*0.85,h*0.14,20);
+  var groundY = h*0.74;
+  ctx.fillStyle = PAL.groundField;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#b6a866");
+
+  var bob = Math.sin(t*2)*2;
+  // duelists mid-field, small, far away
+  drawPerson(ctx,{x:w*0.42,y:groundY-6,scale:0.7,skin:PAL.skin,outfit:PAL.fatherOutfit,outfit2:PAL.fatherOutfit2,headwear:"deta",accent:"#241a12",expression:"angry",bob:bob});
+  drawPerson(ctx,{x:w*0.58,y:groundY-6,scale:0.7,skin:PAL.skin,outfit:PAL.villainOutfit,outfit2:PAL.villainOutfit2,headwear:"mustache",accent:"#6f2f2f",expression:"angry",bob:bob,mirror:true});
+
+  drawBush(ctx, w*0.14, groundY+22, 1.3, state.bushLeft, false);
+  drawBush(ctx, w*0.86, groundY+22, 1.3, state.bushRight, true);
+}
+
+function drawSceneWitness(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,["#e9d3b0","#d9b98a"]);
+  var groundY = h*0.74;
+  ctx.fillStyle = PAL.groundField;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#a89860");
+
+  var bob = Math.sin(t*2)*2;
+  if(stage<1){
+    // shepherd running, distant fallen figure implied
+    drawPerson(ctx,{x:w*0.3+Math.sin(t*6)*4,y:groundY+2,scale:0.9,skin:PAL.skin,outfit:"#7a5a2f",outfit2:"#4a2f18",headwear:"deta",accent:"#3a2a1c",expression:"sad",bob:Math.abs(Math.sin(t*8))*6,rightArmUp:true});
+    drawTree(ctx,w*0.75,groundY+6,0.9);
+  } else {
+    drawPerson(ctx,{x:w*0.5,y:groundY+6,scale:0.9,skin:PAL.skin,outfit:PAL.fatherOutfit,outfit2:PAL.fatherOutfit2,headwear:"deta",accent:"#241a12",pose:"fallen",bob:0});
+    drawPerson(ctx,{x:w*0.28,y:groundY+2,scale:0.8,skin:PAL.skin,outfit:"#7a5a2f",outfit2:"#4a2f18",headwear:"deta",accent:"#3a2a1c",expression:"sad",bob:bob});
+  }
+}
+
+function drawSceneRifle(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyDay);
+  var groundY = h*0.72;
+  ctx.fillStyle = PAL.ground;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawRumahGadang(ctx, w*0.7, groundY-8, 1.0);
+
+  var bob = Math.sin(t*2)*2;
+  drawPerson(ctx,{x:w*0.35,y:groundY+4,scale:1,skin:PAL.skin,outfit:PAL.sabaiDress,outfit2:PAL.sabaiDress2,headwear:"tikuluak",accent:PAL.sabaiScarf,expression: stage>=1?"angry":"sad",bob:bob,rightArmUp:stage>=1});
+
+  // rifle hanging on wall / carried
+  if(stage<1){
+    drawRifle(ctx, w*0.55, groundY-70, 1, Math.PI/2.3);
+  } else {
+    drawRifle(ctx, w*0.35+30, groundY-40, 0.9, -0.3);
+  }
+
+  // brother sitting, refusing to go
+  drawPerson(ctx,{x:w*0.14,y:groundY+16,scale:0.8,skin:PAL.skin,outfit:PAL.brotherOutfit,outfit2:"#2c3a20",expression:"idle",bob:0});
+}
+
+function drawSceneConfront(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,["#f0d9a8","#dcb26a"]);
+  var groundY = h*0.74;
+  ctx.fillStyle = "#c2a663";
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#a89860");
+  drawTree(ctx,w*0.1,groundY+4,0.8);
+
+  var bob = Math.sin(t*2)*2;
+  var success = state.timingResult === "hit";
+
+  drawPerson(ctx,{x:w*0.3,y:groundY+4,scale:1,skin:PAL.skin,outfit:PAL.sabaiDress,outfit2:PAL.sabaiDress2,headwear:"tikuluak",accent:PAL.sabaiScarf,expression:"angry",bob:bob,rightArmUp:true});
+  drawRifle(ctx, w*0.3+26, groundY-56, 0.9, -0.15);
+
+  if(success){
+    drawPerson(ctx,{x:w*0.72,y:groundY+10,scale:1,skin:PAL.skin,outfit:PAL.villainOutfit,outfit2:PAL.villainOutfit2,headwear:"mustache",accent:"#6f2f2f",pose:"fallen",bob:0,mirror:true});
+  } else {
+    drawPerson(ctx,{x:w*0.72,y:groundY+2,scale:1,skin:PAL.skin,outfit:PAL.villainOutfit,outfit2:PAL.villainOutfit2,headwear:"mustache",accent:"#6f2f2f",expression:"angry",bob:bob,mirror:true});
+  }
+}
+
+function drawSceneEnding(ctx,w,h,t,stage){
+  skyGradient(ctx,w,h,PAL.skyDay);
+  drawSun(ctx,w*0.82,h*0.15,26);
+  drawCloud(ctx,w*0.2,h*0.12,0.8);
+  var groundY = h*0.72;
+  ctx.fillStyle = PAL.ground;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#8fae63");
+  drawRumahGadang(ctx, w*0.5, groundY-8, 1.15);
+
+  var bob = Math.sin(t*2)*2;
+  drawPerson(ctx,{x:w*0.28,y:groundY+6,scale:0.95,skin:PAL.skin,outfit:PAL.sabaiDress,outfit2:PAL.sabaiDress2,headwear:"tikuluak",accent:PAL.sabaiScarf,expression:"smile",bob:bob});
+  drawPerson(ctx,{x:w*0.7,y:groundY+6,scale:0.9,skin:PAL.skin,outfit:PAL.motherDress,outfit2:"#4a2f5b",headwear:"tikuluak",accent:"#5b2f6b",expression:"smile",bob:bob*0.8,mirror:true});
+  drawPerson(ctx,{x:w*0.82,y:groundY+12,scale:0.75,skin:PAL.skin,outfit:PAL.brotherOutfit,outfit2:"#2c3a20",expression:"sad",bob:bob*0.7,mirror:true});
+
+  // little glow / stars of honor
+  ctx.save();
+  ctx.fillStyle = PAL.gold;
+  for(var i=0;i<5;i++){
+    var gx = w*0.28 + Math.sin(t*1.5+i)*40;
+    var gy = groundY-110 + Math.cos(t*1.3+i)*10 - i*4;
+    ctx.globalAlpha = 0.5+0.5*Math.sin(t*2+i);
+    ctx.beginPath();
+    ctx.arc(gx,gy,2.4,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCover(ctx,w,h,t){
+  skyGradient(ctx,w,h,PAL.skyDay);
+  drawSun(ctx,w*0.8,h*0.18,28);
+  drawCloud(ctx,w*0.18,h*0.15,1);
+  drawCloud(ctx,w*0.5,h*0.09,0.6);
+  var groundY = h*0.72;
+  ctx.fillStyle = PAL.ground;
+  ctx.fillRect(0,groundY,w,h-groundY);
+  drawHills(ctx,w,groundY,groundY,"#8fae63");
+  drawRumahGadang(ctx, w*0.5, groundY-4, 1.25);
+
+  var bob = Math.sin(t*2)*2.5;
+  drawPerson(ctx,{x:w*0.5,y:groundY+22,scale:1.15,skin:PAL.skin,outfit:PAL.sabaiDress,outfit2:PAL.sabaiDress2,headwear:"tikuluak",accent:PAL.sabaiScarf,expression:"smile",bob:bob});
+}
+
+/* ---------------------------------------------------------
+   BOOTSTRAP
+--------------------------------------------------------- */
+window.addEventListener("load", function(){
+  applyLanguage();
+  muteBtn.setAttribute("aria-pressed", state.muted ? "true" : "false");
+  goToScene(-1, { silent:true });
+  fitCanvas();
+  notifyResize();
+  requestAnimationFrame(animLoop);
+});
+
+window.addEventListener("beforeunload", stopSpeaking);
+
+})();
+</script>
+</body>
+</html>
