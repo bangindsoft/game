@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sutan Pangaduan - Cerita Rakyat Sumatra Barat</title>
+<style>
+  :root{
+    --bg-panel:#fff8ec;
+    --ink:#3b2a1a;
+    --gold:#c8963e;
+    --gold-dark:#9c6f26;
+    --teal:#0e6e6e;
+    --teal-dark:#0a4f4f;
+    --red:#b23a2e;
+    --paper:#fffaf1;
+    --shadow:0 4px 14px rgba(59,42,26,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,#f3e3c4,#e9d3a6);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #spg-app{
+    width:100%;
+    max-width:760px;
+    background:var(--paper);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    border:1px solid #e0c68e;
+  }
+  header{
+    padding:12px 16px 8px;
+    text-align:center;
+    background:linear-gradient(180deg,#7a3b28,#5c2a1c);
+    color:#fbe8c8;
+  }
+  header h1{
+    margin:0;
+    font-size:1.25rem;
+    letter-spacing:0.5px;
+    font-family:Georgia,'Times New Roman',serif;
+  }
+  header p{
+    margin:2px 0 0;
+    font-size:0.75rem;
+    opacity:0.85;
+  }
+  #spg-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    background:#efdcb4;
+    border-bottom:1px solid #d9be86;
+    flex-wrap:wrap;
+  }
+  .spg-tbtn{
+    background:var(--paper);
+    border:1px solid var(--gold-dark);
+    color:var(--ink);
+    padding:6px 10px;
+    border-radius:20px;
+    font-size:0.78rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .spg-tbtn:hover{background:#fff2da;}
+  .spg-tbtn:active{transform:scale(0.95);}
+  #spg-dots{
+    display:flex;
+    gap:5px;
+    padding:8px 10px 0;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .spg-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d9c298;
+    border:1px solid var(--gold-dark);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .spg-dot.active{background:var(--gold-dark);transform:scale(1.25);}
+  .spg-dot.done{background:var(--teal);border-color:var(--teal-dark);}
+  #spg-canvas-wrap{
+    position:relative;
+    width:100%;
+    margin-top:8px;
+    background:#dff1ef;
+  }
+  canvas#spg-canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    aspect-ratio:8/4.6;
+  }
+  #spg-caption-panel{
+    padding:10px 16px 4px;
+    min-height:44px;
+  }
+  #spg-caption{
+    font-size:0.95rem;
+    line-height:1.4;
+    margin:0;
+  }
+  #spg-instruction{
+    margin:6px 0 0;
+    font-size:0.8rem;
+    color:var(--teal-dark);
+    font-style:italic;
+  }
+  #spg-controls{
+    padding:6px 16px 4px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    min-height:44px;
+  }
+  .spg-actionbtn{
+    background:linear-gradient(180deg,#e3ad55,#c8963e);
+    border:1px solid var(--gold-dark);
+    color:#4a2f10;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:0.85rem;
+    box-shadow:0 2px 4px rgba(0,0,0,0.15);
+    transition:transform .12s ease, filter .12s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .spg-actionbtn:hover{filter:brightness(1.05);}
+  .spg-actionbtn:active{transform:scale(0.96);}
+  .spg-actionbtn:disabled{opacity:0.45;cursor:default;}
+  .spg-actionbtn.secondary{
+    background:linear-gradient(180deg,#7fbcbc,#0e6e6e);
+    color:#fff;
+    border-color:var(--teal-dark);
+  }
+  .spg-actionbtn.wide{width:100%;justify-content:center;}
+  #spg-progressbar-wrap{
+    width:100%;
+    background:#e5d6b3;
+    border-radius:8px;
+    height:12px;
+    overflow:hidden;
+    border:1px solid var(--gold-dark);
+    margin-top:4px;
+  }
+  #spg-progressbar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#c8963e,#0e6e6e);
+    transition:width .18s ease;
+  }
+  #spg-cta-row{
+    padding:8px 16px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  footer{
+    text-align:center;
+    font-size:0.68rem;
+    color:#8a725077;
+    padding:6px 10px 12px;
+  }
+  .spg-draggable{
+    touch-action:none;
+    user-select:none;
+    cursor:grab;
+  }
+  .spg-draggable.dragging{
+    opacity:0.75;
+    cursor:grabbing;
+    z-index:10;
+  }
+  .spg-dropzone{
+    border:2px dashed var(--gold-dark);
+    background:#fff2da;
+  }
+  .spg-dropzone.spg-hover{
+    background:#ffe3ad;
+    border-color:var(--red);
+  }
+  .spg-drag-row{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    width:100%;
+  }
+  .spg-tapped{
+    background:linear-gradient(180deg,#7fbcbc,#0e6e6e) !important;
+    color:#fff !important;
+  }
+  @media (max-width:420px){
+    header h1{font-size:1.05rem;}
+    .spg-actionbtn{font-size:0.78rem;padding:8px 12px;}
+  }
+</style>
+</head>
+<body>
+<div id="spg-app">
+  <header>
+    <h1 id="spg-title">Sutan Pangaduan</h1>
+    <p id="spg-subtitle">Cerita Rakyat dari Sumatra Barat</p>
+  </header>
+
+  <div id="spg-toolbar">
+    <button class="spg-tbtn" id="spg-lang-btn" aria-label="Ganti bahasa">🌐 <span id="spg-lang-label">EN</span></button>
+    <div id="spg-dots" role="img" aria-label="Kemajuan cerita"></div>
+    <button class="spg-tbtn" id="spg-mute-btn" aria-label="Bisukan narasi">🔊 <span id="spg-mute-label">Suara</span></button>
+  </div>
+
+  <div id="spg-canvas-wrap">
+    <canvas id="spg-canvas" width="800" height="460" aria-label="Ilustrasi cerita Sutan Pangaduan"></canvas>
+  </div>
+
+  <div id="spg-caption-panel">
+    <p id="spg-caption"></p>
+    <p id="spg-instruction"></p>
+  </div>
+
+  <div id="spg-progressbar-wrap" style="display:none;"><div id="spg-progressbar-fill"></div></div>
+
+  <div id="spg-controls"></div>
+
+  <div id="spg-cta-row"></div>
+
+  <footer id="spg-footer">Kisah rakyat Nusantara &middot; diceritakan ulang secara interaktif</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ CONFIG ============ */
+var RESIZE_KEY = "spg-resize";
+var LS_MUTE = "spg-mute-v1";
+var LS_LANG = "spg-lang-v1";
+
+var qs = new URLSearchParams(location.search);
+var state = {
+  lang: (qs.get("lang") === "en") ? "en" : (localStorage.getItem(LS_LANG) || "id"),
+  muted: localStorage.getItem(LS_MUTE) === "1",
+  sceneIndex: 0,
+  t: 0,
+  interactionDone: false,
+  tapProgress: 0,
+  multiTapped: {},
+  seqStep: 0
+};
+
+/* ============ UI STRINGS ============ */
+var UI = {
+  id: {
+    subtitle: "Cerita Rakyat dari Sumatra Barat",
+    startBtn: "▶️ Mulai Cerita",
+    replayBtn: "🔁 Ulangi Cerita",
+    continueBtn: "➡️ Lanjutkan",
+    muteOn: "Suara",
+    muteOff: "Bisu",
+    footer: "Kisah rakyat Nusantara \u00B7 diceritakan ulang secara interaktif"
+  },
+  en: {
+    subtitle: "A Folktale from West Sumatra",
+    startBtn: "▶️ Start Story",
+    replayBtn: "🔁 Replay Story",
+    continueBtn: "➡️ Continue",
+    muteOn: "Sound",
+    muteOff: "Muted",
+    footer: "A tale from the Nusantara \u00B7 retold as an interactive story"
+  }
+};
+
+/* ============ SCENES DATA ============ */
+// type: 'start' | 'tapOnce' | 'tapMash' | 'dragdrop' | 'sequential' | 'multiTarget' | 'end'
+var SCENES = [
+  { id:"start", type:"start",
+    cap:{id:"", en:""} },
+
+  { id:"perpisahan", type:"tapOnce", draw:"drawPalaceScene",
+    cap:{ id:"Di Kampung Dalam, Pariaman, Sang Raja memiliki tiga anak dari ibu berbeda. Kini Sang Raja hendak bersemayam ke Gunung Ledang, meninggalkan tahta pada anak-anaknya.",
+          en:"In Kampung Dalam, Pariaman, the King has three children from different mothers. Now the King is about to retreat to Mount Ledang, leaving the throne to his children." },
+    inst:{ id:"Ketuk Sang Raja untuk mendengar keputusannya.", en:"Tap the King to hear his decision." },
+    btn:{ id:"👑 Sang Raja", en:"👑 The King" },
+    after:{ id:"Sang Raja pun berangkat ke Gunung Ledang, meninggalkan istana dalam damai... untuk sementara.",
+            en:"The King departs for Mount Ledang, leaving the palace in peace... for now." } },
+
+  { id:"penculikan", type:"tapOnce", draw:"drawHillScene",
+    cap:{ id:"Rajo Unggeh Layang, raja dari Taluak Singalai, ingin mempersunting Puti Andam Dewi, ibunda Sutan Pangaduan. Pinangannya ditolak.",
+          en:"Rajo Unggeh Layang, king of Taluak Singalai, wishes to marry Puti Andam Dewi, mother of Sutan Pangaduan. His proposal is refused." },
+    inst:{ id:"Ketuk Rajo Unggeh Layang untuk melihat apa yang ia lakukan.", en:"Tap Rajo Unggeh Layang to see what he does." },
+    btn:{ id:"🦅 Rajo Unggeh Layang", en:"🦅 Rajo Unggeh Layang" },
+    after:{ id:"Marah ditolak, Rajo Unggeh Layang menculik Puti Andam Dewi dan membawanya ke sebuah bukit terpencil.",
+            en:"Enraged by the refusal, Rajo Unggeh Layang kidnaps Puti Andam Dewi and takes her to a remote hill." } },
+
+  { id:"senjata", type:"dragdrop", draw:"drawCerminScene",
+    cap:{ id:"Di Kuala Pantai Cermin, Sutan Pangaduan kecil diasuh oleh neneknya dan kakak sepupunya, seorang pendekar sakti. Ia tumbuh tangkas dan bijaksana.",
+          en:"At Kuala Pantai Cermin, young Sutan Pangaduan is raised by his grandmother and his cousin, a skilled warrior. He grows agile and wise." },
+    inst:{ id:"Seret keris pusaka ke tangan Sutan Pangaduan.", en:"Drag the sacred kris to Sutan Pangaduan's hand." },
+    src:{ id:"🗡️ Keris Pusaka", en:"🗡️ Sacred Kris" },
+    dst:{ id:"🧍 Sutan Pangaduan", en:"🧍 Sutan Pangaduan" },
+    after:{ id:"Nenek dan kakak sepupunya membekalinya senjata keramat, lalu mengabarkan tugas dari ayahandanya: membebaskan sang ibunda.",
+            en:"His grandmother and cousin equip him with a sacred weapon, then relay his father's task: to free his mother." } },
+
+  { id:"tertipu", type:"sequential", draw:"drawJalanScene",
+    cap:{ id:"Dalam perjalanan menuju istana, seorang penipu menghampiri Sutan Pangaduan yang sedang memetik kembang.",
+          en:"On the way to the palace, a trickster approaches Sutan Pangaduan as he picks a flower." },
+    inst:{ id:"Ketuk Kembang, lalu ketuk Tukar Pakaian sesuai perintah si penipu.", en:"Tap the Flower, then tap Swap Clothes as the trickster demands." },
+    steps:[
+      { btn:{id:"🌸 Kembang", en:"🌸 Flower"}, note:{id:"Si penipu membual bahwa kembang itu terlarang untuk dipetik!", en:"The trickster claims the flower was forbidden to pick!"} },
+      { btn:{id:"👕 Tukar Pakaian", en:"👕 Swap Clothes"}, note:{id:"Dengan lugu, Sutan Pangaduan menukar pakaian bangsawannya dengan pakaian compang-camping.", en:"Naively, Sutan Pangaduan trades his noble robes for the trickster's ragged clothes."} }
+    ],
+    after:{ id:"Berpakaian compang-camping, Sutan Pangaduan pun melanjutkan perjalanan ke istana Kampung Dalam.",
+            en:"Dressed in rags, Sutan Pangaduan continues his journey to the palace of Kampung Dalam." } },
+
+  { id:"kataKunci", type:"tapMash", draw:"drawDuelScene", mashTarget:14,
+    cap:{ id:"Sutan Lembak Tuah tak mengenali adiknya yang datang compang-camping, dan mereka pun berkelahi.",
+          en:"Sutan Lembak Tuah does not recognize his ragged little brother, and the two end up fighting." },
+    inst:{ id:"Ketuk tombol Berkelahi berulang kali hingga penuh.", en:"Tap the Fight button repeatedly until the bar is full." },
+    btn:{ id:"⚔️ Berkelahi", en:"⚔️ Fight" },
+    after:{ id:"Sutan Pangaduan menang, lalu mengucapkan kata kunci rahasia dari ayahandanya. Seketika Sutan Lembak Tuah sadar — ia sedang berhadapan dengan saudaranya sendiri!",
+            en:"Sutan Pangaduan wins, then speaks the secret words their father taught him. At once Sutan Lembak Tuah realizes — he is facing his own brother!" } },
+
+  { id:"serbuan", type:"tapMash", draw:"drawSiegeScene", mashTarget:18,
+    cap:{ id:"Kedua saudara berangkat ke bukit tempat Puti Andam Dewi ditawan. Ribuan penjaga Rajo Unggeh Layang menghadang mereka.",
+          en:"The two brothers set out for the hill where Puti Andam Dewi is held. Thousands of Rajo Unggeh Layang's guards block their way." },
+    inst:{ id:"Ketuk tombol Lawan Penjaga berulang kali.", en:"Tap the Fight Guards button repeatedly." },
+    btn:{ id:"🛡️ Lawan Penjaga", en:"🛡️ Fight Guards" },
+    after:{ id:"Sayangnya jumlah musuh terlalu banyak. Sutan Pangaduan dan Sutan Lembak Tuah tertangkap dan dirantai.",
+            en:"Sadly the enemy are too many. Sutan Pangaduan and Sutan Lembak Tuah are captured and chained." } },
+
+  { id:"badai", type:"multiTarget", draw:"drawStormScene",
+    cap:{ id:"Puti Sari Makah dan dua sepupu sakti datang menolong. Masing-masing menguasai air, angin, dan suara.",
+          en:"Puti Sari Makah and two mighty cousins arrive to help. Each commands water, wind, or sound." },
+    inst:{ id:"Ketuk ketiga kekuatan: Air, Angin, dan Suara untuk menciptakan badai.", en:"Tap all three powers: Water, Wind, and Sound to summon the storm." },
+    targets:[ {key:"air", btn:{id:"🌊 Air", en:"🌊 Water"}}, {key:"angin", btn:{id:"💨 Angin", en:"💨 Wind"}}, {key:"suara", btn:{id:"🎵 Suara", en:"🎵 Sound"}} ],
+    after:{ id:"Ketiganya memadukan kekuatan menjadi badai dahsyat yang menyapu para penjaga. Puti Andam Dewi dan kedua saudara pun bebas!",
+            en:"Together they summon a mighty storm that sweeps the guards away. Puti Andam Dewi and the two brothers are free at last!" } },
+
+  { id:"penutup", type:"end", draw:"drawEndingScene",
+    cap:{ id:"Sutan Pangaduan tumbuh dewasa dan menjadi raja di negeri seberang. Kelak, suatu malam purnama, hentakan kakinya yang sakti terdengar hingga jauh — pertanda anaknya telah lahir, kelak akan menuntaskan kisah keluarganya.",
+          en:"Sutan Pangaduan grows into a king of a neighboring land. Later, on a moonlit night, the thunder of his mystical stomp echoes far and wide — a sign his child has been born, who will one day complete the family's story." } }
+];
+
+var STORY_START_INDEX = 1;
+var STORY_END_INDEX = SCENES.length - 1;
+var DOTS_COUNT = STORY_END_INDEX - STORY_START_INDEX + 1; // scenes 1..7 count as story steps, 8th(end) also dot? We'll count 1..last-1 plus end.
+
+/* ============ DOM REFS ============ */
+var canvas = document.getElementById("spg-canvas");
+var ctx = canvas.getContext("2d");
+var captionEl = document.getElementById("spg-caption");
+var instructionEl = document.getElementById("spg-instruction");
+var controlsEl = document.getElementById("spg-controls");
+var ctaRowEl = document.getElementById("spg-cta-row");
+var dotsEl = document.getElementById("spg-dots");
+var langBtn = document.getElementById("spg-lang-btn");
+var langLabel = document.getElementById("spg-lang-label");
+var muteBtn = document.getElementById("spg-mute-btn");
+var muteLabel = document.getElementById("spg-mute-label");
+var titleEl = document.getElementById("spg-title");
+var subtitleEl = document.getElementById("spg-subtitle");
+var footerEl = document.getElementById("spg-footer");
+var progWrap = document.getElementById("spg-progressbar-wrap");
+var progFill = document.getElementById("spg-progressbar-fill");
+
+/* ============ RESIZE / POSTMESSAGE ============ */
+function sendHeight(){
+  var h = document.getElementById("spg-app").getBoundingClientRect().height + 20;
+  try{
+    window.parent.postMessage({ type: RESIZE_KEY, height: Math.ceil(h) }, "*");
+  }catch(e){}
+}
+window.addEventListener("load", sendHeight);
+window.addEventListener("resize", sendHeight);
+
+/* ============ SPEECH ============ */
+var voicesReady = false;
+var cachedVoices = [];
+function loadVoices(){
+  cachedVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  if(cachedVoices.length) voicesReady = true;
+}
+if(window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(lang){
+  var target = lang === "en" ? "en" : "id";
+  var v = cachedVoices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target) === 0; });
+  return v || null;
+}
+function speak(text){
+  if(!window.speechSynthesis || state.muted || !text) return;
+  try{
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = state.lang === "en" ? "en-US" : "id-ID";
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    var v = pickVoice(state.lang);
+    if(v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function stopSpeech(){
+  if(window.speechSynthesis){
+    try{ window.speechSynthesis.cancel(); }catch(e){}
+  }
+}
+
+/* ============ LANGUAGE / MUTE TOGGLES ============ */
+function applyLanguage(){
+  var ui = UI[state.lang];
+  langLabel.textContent = state.lang === "id" ? "EN" : "ID";
+  document.documentElement.lang = state.lang;
+  subtitleEl.textContent = ui.subtitle;
+  footerEl.textContent = ui.footer;
+  muteLabel.textContent = state.muted ? ui.muteOff : ui.muteOn;
+  renderScene(true);
+}
+langBtn.addEventListener("click", function(){
+  state.lang = state.lang === "id" ? "en" : "id";
+  localStorage.setItem(LS_LANG, state.lang);
+  applyLanguage();
+});
+
+function applyMuteUI(){
+  var ui = UI[state.lang];
+  muteBtn.querySelector("span").textContent = state.muted ? ui.muteOff : ui.muteOn;
+  muteBtn.firstChild.textContent = state.muted ? "🔈" : "🔊";
+}
+muteBtn.addEventListener("click", function(){
+  state.muted = !state.muted;
+  localStorage.setItem(LS_MUTE, state.muted ? "1" : "0");
+  if(state.muted) stopSpeech();
+  applyMuteUI();
+  if(!state.muted){
+    var sc = SCENES[state.sceneIndex];
+    if(sc && sc.cap) speak(sc.cap[state.lang]);
+  }
+});
+
+/* ============ PROGRESS DOTS ============ */
+function renderDots(){
+  dotsEl.innerHTML = "";
+  for(var i = STORY_START_INDEX; i <= STORY_END_INDEX; i++){
+    var d = document.createElement("div");
+    d.className = "spg-dot";
+    if(i < state.sceneIndex) d.className += " done";
+    if(i === state.sceneIndex) d.className += " active";
+    dotsEl.appendChild(d);
+  }
+}
+
+/* ============ DRAWING HELPERS ============ */
+var W = 800, H = 460;
+function scaleCanvas(){
+  var ratio = window.devicePixelRatio || 1;
+  canvas.width = W * ratio;
+  canvas.height = H * ratio;
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+}
+scaleCanvas();
+window.addEventListener("resize", scaleCanvas);
+
+function clear(){ ctx.clearRect(0,0,W,H); }
+
+function sky(top, bottom){
+  var g = ctx.createLinearGradient(0,0,0,H*0.7);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H*0.72);
+}
+
+function cloud(x,y,s,alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha || 0.9;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(x,y,18*s,0,Math.PI*2);
+  ctx.arc(x+22*s,y-8*s,22*s,0,Math.PI*2);
+  ctx.arc(x+46*s,y,18*s,0,Math.PI*2);
+  ctx.arc(x+22*s,y+8*s,20*s,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function mountainRange(y, h, color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,y);
+  for(var x=0;x<=W;x+=80){
+    var peak = y - h*(0.4 + 0.6*Math.abs(Math.sin(x*0.013+state.t*0.05)));
+    ctx.lineTo(x, peak);
+  }
+  ctx.lineTo(W,y+h);
+  ctx.lineTo(0,y+h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function ground(y, color){
+  ctx.fillStyle = color;
+  ctx.fillRect(0,y,W,H-y);
+}
+
+function sea(y, h, color1, color2){
+  var g = ctx.createLinearGradient(0,y,0,y+h);
+  g.addColorStop(0,color1);
+  g.addColorStop(1,color2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,y,W,h);
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 2;
+  for(var i=0;i<5;i++){
+    var wy = y + 14 + i*16 + Math.sin(state.t*0.05+i)*3;
+    ctx.beginPath();
+    for(var x=0;x<=W;x+=20){
+      var yy = wy + Math.sin(x*0.04+state.t*0.08+i)*3;
+      if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+}
+
+function tree(x,y,scale){
+  scale = scale || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#6b4423";
+  ctx.fillRect(-6,-10,12,50);
+  ctx.fillStyle = "#2f7d4f";
+  ctx.beginPath();
+  ctx.moveTo(0,-90);
+  ctx.lineTo(-38,-10);
+  ctx.lineTo(38,-10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0,-65);
+  ctx.lineTo(-30,4);
+  ctx.lineTo(30,4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function palmTree(x,y,scale){
+  scale = scale || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.strokeStyle = "#6b4423";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(0,10);
+  ctx.quadraticCurveTo(-14,-40,-4,-85);
+  ctx.stroke();
+  ctx.fillStyle = "#2f7d4f";
+  for(var i=0;i<6;i++){
+    var ang = (i/6)*Math.PI*2;
+    ctx.save();
+    ctx.translate(-4,-85);
+    ctx.rotate(ang*0.5 - 0.7);
+    ctx.beginPath();
+    ctx.ellipse(24,0,30,9,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function hut(x,y,scale){
+  scale = scale || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#a97a4a";
+  ctx.fillRect(-35,-10,70,55);
+  ctx.fillStyle = "#7a3b28";
+  ctx.beginPath();
+  ctx.moveTo(-45,-10);
+  ctx.lineTo(0,-55);
+  ctx.lineTo(45,-10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#5c2a1c";
+  ctx.fillRect(-9,15,18,30);
+  ctx.restore();
+}
+
+function palace(x,y,scale){
+  scale = scale || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#c8963e";
+  ctx.fillRect(-90,-10,180,70);
+  ctx.fillStyle = "#7a3b28";
+  ctx.beginPath();
+  ctx.moveTo(-110,-10);
+  ctx.quadraticCurveTo(0,-95,110,-10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#5c2a1c";
+  for(var i=-2;i<=2;i++){
+    ctx.beginPath();
+    ctx.moveTo(i*32-14,-10);
+    ctx.quadraticCurveTo(i*32,-40,i*32+14,-10);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = "#5c2a1c";
+  ctx.fillRect(-16,30,32,30);
+  ctx.restore();
+}
+
+function person(x,y,scale,opts){
+  opts = opts || {};
+  scale = scale || 1;
+  var robe = opts.robe || "#c8963e";
+  var skin = "#e3a86f";
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // shadow
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.beginPath();
+  ctx.ellipse(0,58,22,6,0,0,Math.PI*2);
+  ctx.fill();
+  // robe/body
+  ctx.fillStyle = robe;
+  ctx.beginPath();
+  ctx.moveTo(-20,55);
+  ctx.quadraticCurveTo(-24,0,-10,-18);
+  ctx.lineTo(10,-18);
+  ctx.quadraticCurveTo(24,0,20,55);
+  ctx.closePath();
+  ctx.fill();
+  if(opts.cloak){
+    ctx.fillStyle = opts.cloakColor || "#3b2a1a";
+    ctx.beginPath();
+    ctx.moveTo(-20,-10);
+    ctx.quadraticCurveTo(-40,20,-26,55);
+    ctx.lineTo(-14,55);
+    ctx.quadraticCurveTo(-18,10,-6,-14);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(0,-32,16,0,Math.PI*2);
+  ctx.fill();
+  // hair
+  if(opts.hair !== false){
+    ctx.fillStyle = opts.hairColor || "#2b1c10";
+    ctx.beginPath();
+    ctx.arc(0,-36,16,Math.PI,Math.PI*2);
+    ctx.fill();
+  }
+  if(opts.female){
+    ctx.beginPath();
+    ctx.arc(0,-24,15,0,Math.PI);
+    ctx.fillStyle = opts.hairColor || "#2b1c10";
+    ctx.fill();
+  }
+  // crown
+  if(opts.crown){
+    ctx.fillStyle = "#f0c85e";
+    ctx.beginPath();
+    ctx.moveTo(-14,-46);
+    ctx.lineTo(-14,-56);
+    ctx.lineTo(-6,-48);
+    ctx.lineTo(0,-58);
+    ctx.lineTo(6,-48);
+    ctx.lineTo(14,-56);
+    ctx.lineTo(14,-46);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // elder gray bun
+  if(opts.elder){
+    ctx.fillStyle = "#cfcfcf";
+    ctx.beginPath();
+    ctx.arc(0,-40,10,0,Math.PI*2);
+    ctx.fill();
+  }
+  // weapon
+  if(opts.weapon){
+    ctx.strokeStyle = "#c0c0c0";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(20,10);
+    ctx.lineTo(38,-24);
+    ctx.stroke();
+    ctx.fillStyle = "#6b4423";
+    ctx.fillRect(16,4,10,10);
+  }
+  // rags patches
+  if(opts.rags){
+    ctx.fillStyle = "#8a7355";
+    ctx.beginPath();
+    ctx.moveTo(-6,20);
+    ctx.lineTo(4,26);
+    ctx.lineTo(-2,36);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function birdKing(x,y,scale){
+  scale = scale || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.beginPath();
+  ctx.ellipse(0,58,26,6,0,0,Math.PI*2);
+  ctx.fill();
+  // feather cape
+  ctx.fillStyle = "#5c1414";
+  ctx.beginPath();
+  ctx.moveTo(-30,-20);
+  ctx.quadraticCurveTo(-50,20,-28,58);
+  ctx.lineTo(28,58);
+  ctx.quadraticCurveTo(50,20,30,-20);
+  ctx.closePath();
+  ctx.fill();
+  for(var i=-2;i<=2;i++){
+    ctx.fillStyle = "#7a1f1f";
+    ctx.beginPath();
+    ctx.ellipse(i*11, 44, 7, 16, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  // body
+  ctx.fillStyle = "#3b1414";
+  ctx.beginPath();
+  ctx.moveTo(-16,50);
+  ctx.quadraticCurveTo(-20,0,-8,-18);
+  ctx.lineTo(8,-18);
+  ctx.quadraticCurveTo(20,0,16,50);
+  ctx.closePath();
+  ctx.fill();
+  // head
+  ctx.fillStyle = "#c98b5a";
+  ctx.beginPath();
+  ctx.arc(0,-32,15,0,Math.PI*2);
+  ctx.fill();
+  // beak mask
+  ctx.fillStyle = "#2b2b2b";
+  ctx.beginPath();
+  ctx.moveTo(-14,-30);
+  ctx.lineTo(14,-30);
+  ctx.lineTo(0,-14);
+  ctx.closePath();
+  ctx.fill();
+  // headdress
+  ctx.fillStyle = "#8a1f1f";
+  ctx.beginPath();
+  ctx.moveTo(-16,-42);
+  ctx.lineTo(0,-62);
+  ctx.lineTo(16,-42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function chainRing(x,y,r){
+  ctx.strokeStyle = "#8a8a8a";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(x,y,r,r*0.6,0,0,Math.PI*2);
+  ctx.stroke();
+}
+
+function lightning(x,y,scale,alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = "#fff6c8";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x-10*scale,y+30*scale);
+  ctx.lineTo(x+6*scale,y+30*scale);
+  ctx.lineTo(x-8*scale,y+70*scale);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============ SCENE DRAW FUNCTIONS ============ */
+function drawPalaceScene(){
+  sky("#bfe3f0","#f3d9a6");
+  cloud(80,60,1,0.9); cloud(560+Math.sin(state.t*0.03)*20,50,1.3,0.85);
+  mountainRange(H*0.62,70,"#7ba876");
+  ground(H*0.66,"#d9b46a");
+  tree(90,H*0.7,1.1); tree(680,H*0.66,1.3);
+  palace(400,H*0.66,1.5);
+  person(300,H*0.86,1, {robe:"#8a1f1f", crown:true});
+  person(500,H*0.86,1, {robe:"#0e6e6e", crown:true, female:true});
+  person(400,H*0.9,0.85, {robe:"#c8963e", crown:true});
+}
+
+function drawHillScene(){
+  sky("#dcb8c8","#f0d3a0");
+  cloud(120,60,1,0.7); cloud(500,80,1,0.6);
+  mountainRange(H*0.6,90,"#8a7a5a");
+  ground(H*0.66,"#b79a5e");
+  hut(600,H*0.72,0.8);
+  person(300,H*0.86,1.1, {robe:"#c8963e", crown:false, female:true, hairColor:"#2b1c10"});
+  birdKing(470,H*0.84,1.15);
+}
+
+function drawCerminScene(){
+  sky("#bfe6ea","#e7f0d6");
+  cloud(100,50,1,0.8); cloud(560,70,1.1,0.7);
+  sea(H*0.58,H*0.16,"#4fb3b3","#0e6e6e");
+  ground(H*0.6,"#d8c68a");
+  palmTree(120,H*0.62,1);
+  palmTree(660,H*0.6,1.1);
+  hut(230,H*0.72,0.9);
+  person(360,H*0.86,0.85, {robe:"#9c9c9c", elder:true, hair:false});
+  person(470,H*0.86,1, {robe:"#5c2a1c", weapon:true});
+  person(560,H*0.9,0.7, {robe:"#c8963e"});
+}
+
+function drawJalanScene(){
+  sky("#cfe8c0","#f3e3b0");
+  cloud(150,50,1,0.7);
+  mountainRange(H*0.58,60,"#8fae72");
+  ground(H*0.64,"#c9b374");
+  tree(120,H*0.68,1); tree(640,H*0.66,1.1);
+  ctx.fillStyle="#e2708a";
+  ctx.beginPath(); ctx.arc(400,H*0.72,7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle="#2f7d4f"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(400,H*0.72+6); ctx.lineTo(400,H*0.72+22); ctx.stroke();
+  person(400,H*0.88,0.95, {robe:"#c8963e", crown:true});
+  person(540,H*0.9,0.9, {robe:"#5c4433", rags:true, hair:true});
+}
+
+function drawDuelScene(){
+  sky("#f6dcae","#f0c98a");
+  mountainRange(H*0.58,50,"#a68a55");
+  ground(H*0.64,"#d9b46a");
+  palace(400,H*0.6,1.05);
+  var wobble = Math.sin(state.t*0.4)*6;
+  person(330+wobble,H*0.88,0.95, {robe:"#7a2f2f", rags:true});
+  person(470-wobble,H*0.88,1, {robe:"#0e6e6e", crown:true});
+}
+
+function drawSiegeScene(){
+  sky("#c9d8e8","#e9d3a6");
+  mountainRange(H*0.55,100,"#6f7a5c");
+  ground(H*0.64,"#8c8060");
+  for(var i=0;i<5;i++){
+    var gx = 140 + i*110 + Math.sin(state.t*0.3+i)*4;
+    person(gx,H*0.86,0.7, {robe:"#3b1414", cloak:true, cloakColor:"#2b0f0f"});
+  }
+  person(400,H*0.72,0.9, {robe:"#7a2f2f"});
+  person(470,H*0.72,0.9, {robe:"#0e6e6e", crown:true});
+}
+
+function drawStormScene(){
+  var dark = 0.35 + 0.15*Math.sin(state.t*0.2);
+  sky("#3a4a5c","#5c6f7a");
+  ctx.save();
+  ctx.globalAlpha = dark;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,W,H*0.72);
+  ctx.restore();
+  sea(H*0.55,H*0.2,"#0e6e6e","#0a4f4f");
+  if(state.multiTapped.air) lightning(200,20,2,0.8*(0.5+0.5*Math.sin(state.t*0.9)));
+  if(state.multiTapped.angin){
+    cloud(120+Math.sin(state.t*0.5)*30,50,1.4,0.9);
+    cloud(500+Math.cos(state.t*0.5)*30,40,1.6,0.9);
+  }
+  if(state.multiTapped.suara){
+    ctx.strokeStyle="rgba(255,255,255,0.5)";
+    ctx.lineWidth=2;
+    for(var r=20;r<80;r+=20){
+      ctx.beginPath();
+      ctx.arc(400,H*0.55,r+ (state.t*4)%40,0,Math.PI*2);
+      ctx.stroke();
+    }
+  }
+  person(250,H*0.82,0.85, {robe:"#0e6e6e", female:true});
+  person(340,H*0.86,0.85, {robe:"#8a1f8a", female:true});
+  person(430,H*0.86,0.85, {robe:"#c8963e", female:true});
+  var bx = 560, by = H*0.8;
+  chainRing(bx,by,10);
+  person(bx,by,0.7,{robe:"#7a2f2f", rags:true});
+}
+
+function drawEndingScene(){
+  var moonGlow = 0.5+0.3*Math.sin(state.t*0.15);
+  sky("#20304a","#4a3a58");
+  ctx.save();
+  ctx.globalAlpha = moonGlow;
+  ctx.fillStyle="#f0e6c8";
+  ctx.beginPath(); ctx.arc(650,70,34,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  cloud(140,60,1,0.35);
+  mountainRange(H*0.58,60,"#2f3f4a");
+  ground(H*0.64,"#4a3a2c");
+  palace(400,H*0.6,1.2);
+  person(330,H*0.88,1, {robe:"#c8963e", crown:true});
+  person(470,H*0.88,1, {robe:"#8a1f8a", crown:true, female:true});
+  ctx.fillStyle="rgba(255,255,255,0.5)";
+  for(var i=0;i<3;i++){
+    var rr = 6 + ((state.t*10+i*20)%60);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0,0.5-rr/120);
+    ctx.beginPath();
+    ctx.arc(400,H*0.9,rr,0,Math.PI*2);
+    ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,0.5)";
+    ctx.restore();
+  }
+}
+
+var DRAW_FN = {
+  drawPalaceScene:drawPalaceScene,
+  drawHillScene:drawHillScene,
+  drawCerminScene:drawCerminScene,
+  drawJalanScene:drawJalanScene,
+  drawDuelScene:drawDuelScene,
+  drawSiegeScene:drawSiegeScene,
+  drawStormScene:drawStormScene,
+  drawEndingScene:drawEndingScene
+};
+
+function drawStartScene(){
+  sky("#bfe3f0","#f3d9a6");
+  cloud(100,60,1.1,0.85); cloud(560,50,1.3,0.8);
+  mountainRange(H*0.6,80,"#7ba876");
+  ground(H*0.66,"#d9b46a");
+  palace(400,H*0.66,1.7);
+  tree(80,H*0.72,1.2); tree(720,H*0.7,1.2);
+}
+
+/* ============ ANIMATION LOOP ============ */
+function animate(){
+  state.t += 1;
+  clear();
+  var sc = SCENES[state.sceneIndex];
+  if(sc.type === "start"){
+    drawStartScene();
+  } else if(sc.type === "end"){
+    drawEndingScene();
+  } else if(sc.draw && DRAW_FN[sc.draw]){
+    DRAW_FN[sc.draw]();
+  }
+  requestAnimationFrame(animate);
+}
+
+/* ============ CONTROL BUILDERS ============ */
+function clearControls(){
+  controlsEl.innerHTML = "";
+  ctaRowEl.innerHTML = "";
+  progWrap.style.display = "none";
+  progFill.style.width = "0%";
+}
+
+function makeActionBtn(label, cls){
+  var b = document.createElement("button");
+  b.className = "spg-actionbtn" + (cls ? " "+cls : "");
+  b.textContent = label;
+  return b;
+}
+
+function showContinueButton(label, onClick){
+  var b = makeActionBtn(label, "wide");
+  b.addEventListener("click", onClick);
+  ctaRowEl.appendChild(b);
+}
+
+/* ============ SCENE INTERACTION SETUP ============ */
+function goToScene(idx){
+  stopSpeech();
+  state.sceneIndex = idx;
+  state.interactionDone = false;
+  state.tapProgress = 0;
+  state.multiTapped = {};
+  state.seqStep = 0;
+  renderScene(false);
+}
+
+function setInstruction(text){
+  instructionEl.textContent = text || "";
+}
+function setCaption(text){
+  captionEl.textContent = text || "";
+}
+
+function renderScene(isLangSwitch){
+  var sc = SCENES[state.sceneIndex];
+  var ui = UI[state.lang];
+  clearControls();
+  renderDots();
+
+  if(sc.type === "start"){
+    setCaption(state.lang === "id"
+      ? "Sebuah kisah dari Sumatra Barat tentang Sutan Pangaduan, putra mahkota yang berjuang membebaskan ibundanya dari cengkeraman Rajo Unggeh Layang."
+      : "A tale from West Sumatra about Sutan Pangaduan, a crown prince who fights to free his mother from the clutches of Rajo Unggeh Layang.");
+    setInstruction(state.lang === "id" ? "Ketuk tombol di bawah untuk memulai." : "Tap the button below to begin.");
+    var startBtn = makeActionBtn(ui.startBtn, "wide");
+    startBtn.addEventListener("click", function(){ goToScene(STORY_START_INDEX); });
+    ctaRowEl.appendChild(startBtn);
+    sendHeight();
+    return;
+  }
+
+  if(sc.type === "end"){
+    setCaption(sc.cap[state.lang]);
+    setInstruction("");
+    var replayBtn = makeActionBtn(ui.replayBtn, "wide secondary");
+    replayBtn.addEventListener("click", function(){ goToScene(0); });
+    ctaRowEl.appendChild(replayBtn);
+    if(!isLangSwitch) speak(sc.cap[state.lang]);
+    sendHeight();
+    return;
+  }
+
+  setCaption(sc.cap[state.lang]);
+  setInstruction(sc.inst ? sc.inst[state.lang] : "");
+  if(!isLangSwitch) speak(sc.cap[state.lang]);
+
+  buildInteraction(sc, ui);
+  sendHeight();
+}
+
+function completeInteraction(sc, ui){
+  if(state.interactionDone) return;
+  state.interactionDone = true;
+  setCaption(sc.after[state.lang]);
+  setInstruction("");
+  speak(sc.after[state.lang]);
+  controlsEl.innerHTML = "";
+  progWrap.style.display = "none";
+  var isLast = state.sceneIndex >= STORY_END_INDEX - 1 ? false : true;
+  var nextLabel = (state.sceneIndex + 1 === STORY_END_INDEX) ? ui.continueBtn : ui.continueBtn;
+  showContinueButton(nextLabel, function(){
+    goToScene(state.sceneIndex + 1);
+  });
+  sendHeight();
+}
+
+function buildInteraction(sc, ui){
+  var container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.flexWrap = "wrap";
+  container.style.gap = "10px";
+  container.style.justifyContent = "center";
+  container.style.width = "100%";
+
+  if(sc.type === "tapOnce"){
+    var b = makeActionBtn(sc.btn[state.lang]);
+    b.addEventListener("click", function(){
+      b.disabled = false; // safety reset pattern
+      completeInteraction(sc, ui);
+    });
+    container.appendChild(b);
+    controlsEl.appendChild(container);
+  }
+
+  else if(sc.type === "tapMash"){
+    progWrap.style.display = "block";
+    progFill.style.width = "0%";
+    var target = sc.mashTarget || 12;
+    var mb = makeActionBtn(sc.btn[state.lang]);
+    mb.addEventListener("click", function(){
+      if(state.interactionDone) return;
+      state.tapProgress++;
+      var pct = Math.min(100, Math.round((state.tapProgress/target)*100));
+      progFill.style.width = pct + "%";
+      mb.disabled = false; // ensure never gets stuck disabled
+      if(state.tapProgress >= target){
+        completeInteraction(sc, ui);
+      }
+    });
+    container.appendChild(mb);
+    controlsEl.appendChild(container);
+  }
+
+  else if(sc.type === "sequential"){
+    state.seqStep = state.seqStep || 0;
+    sc.steps.forEach(function(step, i){
+      var sb = makeActionBtn(step.btn[state.lang]);
+      if(i < state.seqStep) sb.classList.add("spg-tapped");
+      sb.disabled = (i !== state.seqStep);
+      sb.addEventListener("click", function(){
+        if(i !== state.seqStep) return;
+        sb.classList.add("spg-tapped");
+        setCaption(step.note[state.lang]);
+        speak(step.note[state.lang]);
+        state.seqStep++;
+        Array.prototype.forEach.call(container.children, function(child, idx){
+          child.disabled = (idx !== state.seqStep);
+        });
+        if(state.seqStep >= sc.steps.length){
+          setTimeout(function(){ completeInteraction(sc, ui); }, 600);
+        }
+        sendHeight();
+      });
+      container.appendChild(sb);
+    });
+    controlsEl.appendChild(container);
+  }
+
+  else if(sc.type === "multiTarget"){
+    sc.targets.forEach(function(tg){
+      var tb = makeActionBtn(tg.btn[state.lang]);
+      tb.addEventListener("click", function(){
+        if(state.multiTapped[tg.key]) return;
+        state.multiTapped[tg.key] = true;
+        tb.classList.add("spg-tapped");
+        tb.disabled = false;
+        var allDone = sc.targets.every(function(t){ return state.multiTapped[t.key]; });
+        if(allDone){
+          setTimeout(function(){ completeInteraction(sc, ui); }, 500);
+        }
+      });
+      container.appendChild(tb);
+    });
+    controlsEl.appendChild(container);
+  }
+
+  else if(sc.type === "dragdrop"){
+    var row = document.createElement("div");
+    row.className = "spg-drag-row";
+    var src = document.createElement("button");
+    src.className = "spg-actionbtn spg-draggable";
+    src.textContent = sc.src[state.lang];
+    src.setAttribute("aria-label", sc.src[state.lang]);
+
+    var arrow = document.createElement("div");
+    arrow.textContent = "→";
+    arrow.style.fontSize = "1.4rem";
+    arrow.style.color = "#9c6f26";
+
+    var dst = document.createElement("button");
+    dst.className = "spg-actionbtn spg-dropzone";
+    dst.textContent = sc.dst[state.lang];
+    dst.disabled = true;
+    dst.style.opacity = "0.85";
+
+    row.appendChild(src);
+    row.appendChild(arrow);
+    row.appendChild(dst);
+    controlsEl.appendChild(row);
+
+    var dragging = false;
+    function pointerDown(e){
+      dragging = true;
+      src.classList.add("dragging");
+    }
+    function pointerUp(e){
+      if(!dragging) return;
+      dragging = false;
+      src.classList.remove("dragging");
+      var rect = dst.getBoundingClientRect();
+      var point = (e.changedTouches ? e.changedTouches[0] : e);
+      var px = point.clientX, py = point.clientY;
+      if(px >= rect.left-20 && px <= rect.right+20 && py >= rect.top-20 && py <= rect.bottom+20){
+        dst.classList.remove("spg-dropzone");
+        dst.classList.add("spg-tapped");
+        src.disabled = false; // safety reset
+        completeInteraction(sc, ui);
+      } else {
+        dst.classList.remove("spg-hover");
+      }
+    }
+    function pointerMove(e){
+      if(!dragging) return;
+      var rect = dst.getBoundingClientRect();
+      var point = (e.touches ? e.touches[0] : e);
+      var px = point.clientX, py = point.clientY;
+      if(px >= rect.left-20 && px <= rect.right+20 && py >= rect.top-20 && py <= rect.bottom+20){
+        dst.classList.add("spg-hover");
+      } else {
+        dst.classList.remove("spg-hover");
+      }
+    }
+    src.addEventListener("mousedown", pointerDown);
+    src.addEventListener("touchstart", pointerDown, {passive:true});
+    window.addEventListener("mousemove", pointerMove);
+    window.addEventListener("touchmove", pointerMove, {passive:true});
+    window.addEventListener("mouseup", pointerUp);
+    window.addEventListener("touchend", pointerUp);
+
+    // Fallback: tap-to-move for accessibility (click source then click destination)
+    src.addEventListener("click", function(){
+      dst.disabled = false;
+      dst.classList.add("spg-hover");
+    });
+    dst.addEventListener("click", function(){
+      if(dst.disabled) return;
+      dst.classList.remove("spg-dropzone");
+      dst.classList.add("spg-tapped");
+      completeInteraction(sc, ui);
+    });
+  }
+}
+
+/* ============ INIT ============ */
+applyMuteUI();
+applyLanguage();
+requestAnimationFrame(animate);
+setTimeout(sendHeight, 300);
+setInterval(sendHeight, 1500);
+
+})();
+</script>
+</body>
+</html>
