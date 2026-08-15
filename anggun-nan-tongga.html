@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anggun Nan Tongga - Cerita Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#7a1f2b;
+    --maroon-dark:#5a141d;
+    --gold:#c9a227;
+    --gold-light:#e8c96a;
+    --cream:#f7ecd6;
+    --teal:#2b6b6a;
+    --ink:#3a2418;
+    --panel:#fffaf0;
+    --shadow:0 6px 18px rgba(58,36,24,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:linear-gradient(180deg,#f2e2bd 0%,#eddcb6 100%);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 22px;
+  }
+  #app{
+    width:100%;
+    max-width:820px;
+    background:var(--panel);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    border:3px solid var(--gold);
+  }
+  header{
+    background:linear-gradient(135deg,var(--maroon) 0%,var(--maroon-dark) 100%);
+    color:var(--cream);
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  header h1{
+    font-family:'Baloo 2',sans-serif;
+    font-size:1.25rem;
+    margin:0;
+    letter-spacing:.3px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  header h1 .flag{font-size:1.1rem;}
+  .headerBtns{display:flex;gap:8px;}
+  .iconBtn{
+    background:rgba(255,255,255,0.14);
+    border:1.5px solid rgba(255,255,255,0.5);
+    color:var(--cream);
+    border-radius:10px;
+    padding:7px 11px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:.82rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .iconBtn:hover{background:rgba(255,255,255,0.26);}
+  .iconBtn:active{transform:scale(0.96);}
+  .iconBtn[aria-pressed="true"]{background:var(--gold);color:var(--maroon-dark);border-color:var(--gold);}
+
+  #stage{
+    position:relative;
+    background:#1f3b3a;
+    line-height:0;
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#bcd7d6;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  #sceneTitle{
+    position:absolute;
+    top:10px;
+    left:10px;
+    right:10px;
+    background:rgba(58,36,24,0.66);
+    color:var(--cream);
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:.8rem;
+    line-height:1.3;
+    padding:5px 12px;
+    border-radius:20px;
+    pointer-events:none;
+    max-width:fit-content;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  #belowCanvas{
+    padding:14px 18px 6px;
+  }
+  #instructionPanel{
+    background:#fbeecb;
+    border:2px dashed var(--gold);
+    border-radius:12px;
+    padding:9px 13px;
+    margin-bottom:10px;
+    font-weight:700;
+    font-size:.92rem;
+    color:var(--maroon-dark);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  #instructionPanel .pin{font-size:1.05rem;flex-shrink:0;}
+  #captionPanel{
+    background:#fffdf6;
+    border-left:4px solid var(--teal);
+    border-radius:8px;
+    padding:11px 14px;
+    margin-bottom:12px;
+    min-height:52px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  #captionText{
+    margin:0;
+    font-size:.98rem;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  #replaySpeech{
+    flex-shrink:0;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:1rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #replaySpeech:active{transform:scale(0.93);}
+
+  #dynamicControls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:10px;
+    min-height:0;
+  }
+  .gameBtn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:.98rem;
+    background:linear-gradient(180deg,var(--gold-light),var(--gold));
+    color:var(--maroon-dark);
+    border:none;
+    border-radius:12px;
+    padding:11px 20px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #a3811c;
+    transition:transform .08s ease;
+  }
+  .gameBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #a3811c;}
+  .gameBtn:disabled{opacity:.55;cursor:default;}
+  .gameBtn.secondary{
+    background:linear-gradient(180deg,#8fc2c0,var(--teal));
+    color:#fff;
+    box-shadow:0 3px 0 #1d4c4b;
+  }
+  .gameBtn.secondary:active{box-shadow:0 1px 0 #1d4c4b;}
+
+  #progressRow{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:2px 10px 14px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:#dccca3;
+    border:1.5px solid #b89a5a;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.done{background:var(--teal);border-color:var(--teal);}
+  .dot.current{background:var(--maroon);border-color:var(--maroon);transform:scale(1.3);}
+
+  #controlsBar{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    padding:0 16px 18px;
+  }
+  #controlsBar .gameBtn{font-size:1.05rem;padding:12px 26px;}
+
+  footer{
+    text-align:center;
+    font-size:.74rem;
+    color:#8a7256;
+    padding:8px 12px 14px;
+    border-top:1px solid #ecdcb4;
+  }
+
+  @media (max-width:480px){
+    header h1{font-size:1.05rem;}
+    #instructionPanel, #captionText{font-size:.86rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1><span class="flag">🌾</span><span id="headerTitle">Anggun Nan Tongga</span></h1>
+    <div class="headerBtns">
+      <button class="iconBtn" id="langBtn" aria-pressed="false" type="button">🌐 <span id="langBtnLabel">EN</span></button>
+      <button class="iconBtn" id="muteBtn" aria-pressed="false" type="button">🔊 <span id="muteBtnLabel">Suara</span></button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <div id="sceneTitle"></div>
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  </div>
+
+  <div id="belowCanvas">
+    <div id="instructionPanel"><span class="pin">👉</span><span id="instructionText"></span></div>
+    <div id="captionPanel">
+      <button id="replaySpeech" type="button" title="Dengarkan lagi">🔁</button>
+      <p id="captionText"></p>
+    </div>
+    <div id="dynamicControls"></div>
+  </div>
+
+  <div id="progressRow"></div>
+
+  <div id="controlsBar">
+    <button class="gameBtn" id="startBtn" type="button">▶️ Mulai Cerita</button>
+    <button class="gameBtn secondary" id="replayBtn" type="button" hidden>🔄 Ulangi Cerita</button>
+  </div>
+
+  <footer id="footerText">Kisah rakyat Minangkabau, dituturkan ulang secara interaktif.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================= STRINGS ============================= */
+const STRINGS = {
+  id: {
+    headerTitle: "Anggun Nan Tongga",
+    footerText: "Kisah rakyat Minangkabau, dituturkan ulang secara interaktif.",
+    startBtn: "▶️ Mulai Cerita",
+    replayBtn: "🔄 Ulangi Cerita",
+    muteOn: "Suara",
+    muteOff: "Bisu",
+    langLabel: "EN",
+    listenAgain: "Dengarkan lagi narasi",
+    nextBtn: "Lanjutkan ▶",
+    scenesOf: (i,n)=>`Bagian ${i} dari ${n}`
+  },
+  en: {
+    headerTitle: "Anggun Nan Tongga",
+    footerText: "A Minangkabau folktale, retold as an interactive story.",
+    startBtn: "▶️ Start Story",
+    replayBtn: "🔄 Replay Story",
+    muteOn: "Sound",
+    muteOff: "Muted",
+    langLabel: "ID",
+    listenAgain: "Listen to narration again",
+    nextBtn: "Continue ▶",
+    scenesOf: (i,n)=>`Part ${i} of ${n}`
+  }
+};
+
+/* ============================= STATE ============================= */
+const state = {
+  lang: 'id',
+  muted: false,
+  sceneIndex: -1,
+  sceneDone: false,
+  // mechanic-specific
+  targetsHit: new Set(),
+  mash: 0,
+  hold: 0,
+  holding: false,
+  dragging: false,
+  dragDone: false,
+  dragPos: {x:0,y:0},
+  timingHits: 0,
+  timingMarker: 0,
+  timingDir: 1,
+  timingActive: false,
+  birdT: 0,
+  animT: 0
+};
+
+let voices = [];
+function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function pickVoice(lang){
+  if(!voices || !voices.length) return null;
+  const want = lang === 'id' ? 'id' : 'en';
+  let v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(want));
+  if(!v) v = voices.find(v=>v.lang && v.lang.toLowerCase().includes(want));
+  return v || null;
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if(state.muted || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+  const v = pickVoice(state.lang);
+  if(v) u.voice = v;
+  u.rate = 0.95;
+  u.pitch = 1.02;
+  window.speechSynthesis.speak(u);
+}
+
+/* ============================= CANVAS SETUP ============================= */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const LW = canvas.width, LH = canvas.height;
+
+function getLogicalXY(evt){
+  const rect = canvas.getBoundingClientRect();
+  const clientX = (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX;
+  const clientY = (evt.touches && evt.touches[0]) ? evt.touches[0].clientY : evt.clientY;
+  const scaleX = LW / rect.width;
+  const scaleY = LH / rect.height;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+canvas.addEventListener('click', function(evt){
+  const p = getLogicalXY(evt);
+  const scene = SCENES[state.sceneIndex];
+  if(scene && typeof scene.onClick === 'function') scene.onClick(p.x, p.y);
+});
+
+/* ============================= DRAW HELPERS ============================= */
+function clear(){ ctx.clearRect(0,0,LW,LH); }
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawSky(top,bottom){
+  const g = ctx.createLinearGradient(0,0,0,LH*0.62);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,LW,LH*0.62);
+}
+
+function drawCloud(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.ellipse(0,0,34,16,0,0,Math.PI*2);
+  ctx.ellipse(-24,4,20,13,0,0,Math.PI*2);
+  ctx.ellipse(24,4,22,13,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSun(x,y,r,color){
+  ctx.save();
+  ctx.fillStyle = color || 'rgba(255,224,150,0.9)';
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawGround(color, y){
+  ctx.fillStyle = color;
+  ctx.fillRect(0,y,LW,LH-y);
+}
+
+function drawWater(y,color1,color2,t){
+  const g = ctx.createLinearGradient(0,y,0,LH);
+  g.addColorStop(0,color1);
+  g.addColorStop(1,color2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,y,LW,LH-y);
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 2;
+  for(let i=0;i<5;i++){
+    const wy = y + 20 + i*22;
+    ctx.beginPath();
+    for(let x=-20;x<=LW+20;x+=20){
+      const yy = wy + Math.sin((x*0.04)+(t*0.002)+i)*4;
+      if(x===-20) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+}
+
+// Iconic Minangkabau curved-horn roof (rumah gadang / gonjong)
+function drawRumahGadang(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // base house body
+  ctx.fillStyle = '#8a5a34';
+  roundRect(-70,10,140,55,4); ctx.fill();
+  ctx.fillStyle = '#5f3c22';
+  ctx.fillRect(-70,10,140,10);
+  // pillars
+  ctx.fillStyle = '#6b4426';
+  for(let i=-60;i<=60;i+=24){ ctx.fillRect(i-3,55,6,18); }
+  // main roof (multi gonjong horns)
+  ctx.fillStyle = '#3d2a1c';
+  function horn(cx){
+    ctx.beginPath();
+    ctx.moveTo(cx-46,14);
+    ctx.quadraticCurveTo(cx-30,-34,cx-8,-50);
+    ctx.quadraticCurveTo(cx-2,-54,cx+2,-50);
+    ctx.quadraticCurveTo(cx+10,-40,cx+8,-20);
+    ctx.quadraticCurveTo(cx+30,-26,cx+46,14);
+    ctx.closePath();
+    ctx.fill();
+  }
+  horn(-30); horn(30);
+  ctx.fillStyle = '#c9a227';
+  ctx.fillRect(-72,8,144,4);
+  ctx.restore();
+}
+
+function drawPalm(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.strokeStyle = '#7a5a34';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.quadraticCurveTo(6,-40,-4,-78);
+  ctx.stroke();
+  ctx.fillStyle = '#2f7a3d';
+  for(let i=0;i<6;i++){
+    const ang = (i/6)*Math.PI*2;
+    ctx.save();
+    ctx.translate(-4,-78);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.ellipse(22,0,26,8,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawMountain(){
+  drawSky('#bfe3ea','#eaf3d8');
+  ctx.fillStyle = '#7a8f6a';
+  ctx.beginPath();
+  ctx.moveTo(0,LH*0.62); ctx.lineTo(220,LH*0.22); ctx.lineTo(430,LH*0.62); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#5f7752';
+  ctx.beginPath();
+  ctx.moveTo(280,LH*0.62); ctx.lineTo(560,LH*0.12); ctx.lineTo(800,LH*0.62); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.moveTo(540,LH*0.12+8); ctx.lineTo(575,LH*0.12+34); ctx.lineTo(545,LH*0.12+34); ctx.closePath(); ctx.fill();
+  drawGround('#9fae7d', LH*0.62);
+}
+
+// Generic stylized person figure
+function drawPerson(x,y,opts){
+  opts = opts || {};
+  const scale = opts.scale || 1;
+  const skin = opts.skin || '#e6b58a';
+  const outfit = opts.outfit || '#7a1f2b';
+  const outfit2 = opts.outfit2 || '#c9a227';
+  const gender = opts.gender || 'm'; // m / f
+  const facing = opts.facing || 1; // 1 right, -1 left
+  const bob = opts.bob || 0;
+
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.scale(scale*facing, scale);
+
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(0,60,22,6,0,0,Math.PI*2); ctx.fill();
+
+  // legs
+  ctx.fillStyle = '#3a2c22';
+  ctx.fillRect(-10,32,8,26);
+  ctx.fillRect(2,32,8,26);
+
+  // body / clothing
+  ctx.fillStyle = outfit;
+  roundRect(-16,4,32,32,8); ctx.fill();
+  // sash accent
+  ctx.fillStyle = outfit2;
+  ctx.fillRect(-16,16,32,6);
+
+  if(gender==='f'){
+    // selendang / shawl
+    ctx.fillStyle = outfit2;
+    ctx.beginPath();
+    ctx.moveTo(-16,6); ctx.quadraticCurveTo(-30,20,-14,40); ctx.lineTo(-8,36);
+    ctx.quadraticCurveTo(-20,20,-10,8); ctx.closePath(); ctx.fill();
+  }
+
+  // arms
+  ctx.strokeStyle = skin;
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-14,10); ctx.lineTo(opts.armOutL ? -26 : -20, opts.armOutL ? -4 : 22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(14,10); ctx.lineTo(opts.armOutR ? 26 : 20, opts.armOutR ? -4 : 22); ctx.stroke();
+
+  // neck + head
+  ctx.fillStyle = skin;
+  ctx.fillRect(-4,-8,8,10);
+  ctx.beginPath(); ctx.arc(0,-16,13,0,Math.PI*2); ctx.fill();
+
+  // hair / headwear
+  if(gender==='f'){
+    ctx.fillStyle = opts.hair || '#2a1c12';
+    ctx.beginPath(); ctx.arc(0,-18,14.5,Math.PI*0.05,Math.PI*0.98); ctx.fill();
+    if(opts.veil){
+      ctx.fillStyle = outfit2;
+      ctx.beginPath();
+      ctx.moveTo(-14,-24); ctx.quadraticCurveTo(0,-34,14,-24);
+      ctx.quadraticCurveTo(16,-4,6,10); ctx.lineTo(0,-10);
+      ctx.quadraticCurveTo(-16,-4,-14,-24); ctx.closePath(); ctx.fill();
+    }
+  } else {
+    if(opts.destar){
+      ctx.fillStyle = outfit2;
+      ctx.beginPath(); ctx.ellipse(0,-24,15,7,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10,-22); ctx.lineTo(24,-16); ctx.lineTo(12,-14); ctx.closePath(); ctx.fill();
+    } else if(opts.peci){
+      ctx.fillStyle = '#2a2a2a';
+      roundRect(-11,-30,22,10,3); ctx.fill();
+    } else {
+      ctx.fillStyle = opts.hair || '#2a1c12';
+      ctx.beginPath(); ctx.arc(0,-20,13.5,Math.PI,Math.PI*2); ctx.fill();
+    }
+  }
+
+  // face
+  ctx.fillStyle = '#2a1c12';
+  ctx.beginPath(); ctx.arc(4,-16,1.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-16,1.4,0,Math.PI*2); ctx.fill();
+  if(opts.smile !== false){
+    ctx.strokeStyle = '#2a1c12'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(6.5,-12,3,0,Math.PI*0.6); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawBoat(x,y,scale,bob){
+  ctx.save();
+  ctx.translate(x,y+bob);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#6b4426';
+  ctx.beginPath();
+  ctx.moveTo(-90,0); ctx.quadraticCurveTo(-100,26,-70,30); ctx.lineTo(70,30);
+  ctx.quadraticCurveTo(100,26,90,0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#4a2e18'; ctx.lineWidth=3; ctx.stroke();
+  // mast
+  ctx.strokeStyle = '#4a2e18'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-90); ctx.stroke();
+  // sail
+  ctx.fillStyle = '#f2e6c8';
+  ctx.beginPath();
+  ctx.moveTo(0,-86); ctx.lineTo(58,-40); ctx.lineTo(0,-20); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#c9a227'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+}
+
+function drawParrot(x,y,scale,flap){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#2e8f4f';
+  ctx.beginPath(); ctx.ellipse(0,0,14,10,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#d6382f';
+  ctx.beginPath(); ctx.moveTo(-12,-2); ctx.lineTo(-22,-6); ctx.lineTo(-12,4); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#e8c96a';
+  ctx.beginPath(); ctx.arc(9,-4,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#d6382f';
+  ctx.beginPath(); ctx.moveTo(14,-5); ctx.lineTo(20,-2); ctx.lineTo(14,1); ctx.closePath(); ctx.fill();
+  const wingAngle = Math.sin(flap*0.02)*0.6;
+  ctx.save();
+  ctx.translate(-2,-1);
+  ctx.rotate(wingAngle);
+  ctx.fillStyle = '#f2c94c';
+  ctx.beginPath(); ctx.ellipse(-4,0,12,6,0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#256b3a';
+  ctx.beginPath(); ctx.moveTo(-13,2); ctx.lineTo(-26,6); ctx.lineTo(-24,10); ctx.lineTo(-13,6); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawPigPen(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#9c7b4f';
+  for(let i=-40;i<=40;i+=16){ ctx.fillRect(i,-40,7,50); }
+  ctx.fillRect(-44,-32,92,7);
+  ctx.fillRect(-44,-6,92,7);
+  ctx.fillStyle = '#d9a9a0';
+  ctx.beginPath(); ctx.ellipse(0,4,18,11,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(16,0,8,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#b97a72';
+  ctx.beginPath(); ctx.ellipse(22,0,3.4,2.2,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawSpeechBubble(x,y,w,h,text,color){
+  ctx.save();
+  ctx.fillStyle = color || '#fffdf6';
+  ctx.strokeStyle = '#3a2418';
+  ctx.lineWidth = 2;
+  roundRect(x,y,w,h,10); ctx.fill(); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x+18,y+h);
+  ctx.lineTo(x+8,y+h+14);
+  ctx.lineTo(x+30,y+h);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#3a2418';
+  ctx.font = '13px Nunito, sans-serif';
+  ctx.textAlign = 'center';
+  wrapText(text, x+w/2, y+22, w-16, 16);
+  ctx.restore();
+}
+
+function wrapText(text,x,y,maxWidth,lineHeight){
+  const words = text.split(' ');
+  let line = '';
+  let yy = y;
+  for(let i=0;i<words.length;i++){
+    const test = line + words[i] + ' ';
+    if(ctx.measureText(test).width > maxWidth && i>0){
+      ctx.fillText(line, x, yy);
+      line = words[i] + ' ';
+      yy += lineHeight;
+    } else { line = test; }
+  }
+  ctx.fillText(line, x, yy);
+}
+
+/* ============================= SCENES ============================= */
+const SCENES = [];
+
+/* ---- Scene 0: Prolog ---- */
+SCENES.push({
+  key:'prolog',
+  title:{id:'Kampung Dalam, Pariaman',en:'Kampung Dalam, Pariaman'},
+  narration:{
+    id:'Di Kampung Dalam, Pariaman, hiduplah seorang pemuda tampan bergelar Magek Jabang, bernama Anggun Nan Tongga. Sejak kecil ia diasuh oleh mandenya, Suto Suri, dan telah dijodohkan dengan sepupunya, Gondan Gondoriah.',
+    en:'In Kampung Dalam, Pariaman, there lived a handsome young man titled Magek Jabang, named Anggun Nan Tongga. Since childhood he was raised by his aunt, Suto Suri, and had been betrothed to his cousin, Gondan Gondoriah.'
+  },
+  instruction:{id:'Ketuk tombol "Lanjutkan" di bawah untuk mengikuti kisah Anggun Nan Tongga.', en:'Tap the "Continue" button below to follow Anggun Nan Tongga\'s story.'},
+  autoDone:true,
+  onClick(){},
+  draw(){
+    drawSky('#bfe3ea','#f2e2bd');
+    drawSun(700,70,36,'rgba(255,224,150,0.9)');
+    drawCloud(140,60,1); drawCloud(560,40,0.8);
+    drawGround('#8fae6b', LH*0.6);
+    drawRumahGadang(400,LH*0.6-6,1.3);
+    drawPalm(120,LH*0.6,1.1);
+    drawPalm(680,LH*0.6,0.9);
+    drawPerson(300, LH*0.6+40, {gender:'m', destar:true, outfit:'#7a1f2b', outfit2:'#c9a227'});
+    drawPerson(500, LH*0.6+40, {gender:'f', veil:true, outfit:'#2b6b6a', outfit2:'#e8c96a', facing:-1});
+  }
+});
+
+/* ---- Scene 1: Sayembara di Sungai Garinggiang (multi-target tap) ---- */
+SCENES.push({
+  key:'sayembara',
+  title:{id:'Sayembara di Sungai Garinggiang',en:'The Contest at Garinggiang River'},
+  narration:{
+    id:'Anggun Nan Tongga mendengar kabar sayembara di Sungai Garinggiang untuk mencari suami bagi Intan Korong. Ia memenangkan setiap pertandingan dengan mudah: catur, memanah, dan sabung ayam.',
+    en:'Anggun Nan Tongga heard about a contest at Garinggiang River to find a husband for Intan Korong. He easily won every match: chess, archery, and cockfighting.'
+  },
+  instruction:{id:'Ketuk papan catur, busur panah, dan ayam jago satu per satu untuk memenangkan setiap pertandingan.', en:'Tap the chessboard, the bow, and the rooster one by one to win each match.'},
+  targets:[
+    {id:'chess', x:180, y:330, r:46, label:{id:'Catur',en:'Chess'}},
+    {id:'bow', x:400, y:330, r:46, label:{id:'Panah',en:'Archery'}},
+    {id:'rooster', x:620, y:330, r:46, label:{id:'Sabung Ayam',en:'Cockfight'}}
+  ],
+  onClick(x,y){
+    if(state.sceneDone) return;
+    for(const t of this.targets){
+      const d = Math.hypot(x-t.x,y-t.y);
+      if(d<t.r && !state.targetsHit.has(t.id)){
+        state.targetsHit.add(t.id);
+        flashPulse(t.x,t.y);
+        if(state.targetsHit.size >= this.targets.length){
+          markSceneDone();
+        }
+      }
+    }
+  },
+  draw(){
+    drawSky('#bfe3ea','#dcefe2');
+    drawWater(LH*0.66,'#7fc4c9','#3f8f97', state.animT);
+    drawGround('#8fae6b', LH*0.55);
+    drawGround('transparent', LH*0.55);
+    ctx.fillStyle = '#8fae6b';
+    ctx.fillRect(0,LH*0.55,LW,LH*0.11);
+    drawPerson(730, 250, {gender:'m', destar:true, outfit:'#3a4a7a', outfit2:'#c9a227', scale:0.75, facing:-1});
+
+    this.targets.forEach(t=>{
+      const hit = state.targetsHit.has(t.id);
+      ctx.save();
+      ctx.translate(t.x,t.y);
+      ctx.fillStyle = hit ? 'rgba(43,107,106,0.25)' : 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.arc(0,0,t.r,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = hit ? '#2b6b6a' : '#7a1f2b';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      if(t.id==='chess'){
+        ctx.fillStyle = '#5a3a22';
+        roundRect(-28,-20,56,40,4); ctx.fill();
+        for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+          ctx.fillStyle = (r+c)%2===0 ? '#f0e2c0' : '#5a3a22';
+          ctx.fillRect(-28+c*14,-20+r*10,14,10);
+        }
+      } else if(t.id==='bow'){
+        ctx.strokeStyle = '#6b4426'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(0,0,26,-Math.PI*0.4,Math.PI*0.4); ctx.stroke();
+        ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(0,-24); ctx.lineTo(0,24); ctx.stroke();
+        ctx.strokeStyle = '#c9a227'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-4,0); ctx.lineTo(22,0); ctx.stroke();
+      } else {
+        ctx.fillStyle = '#d6382f';
+        ctx.beginPath(); ctx.ellipse(0,4,18,14,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#7a1f2b';
+        ctx.beginPath(); ctx.moveTo(-8,-8); ctx.lineTo(-2,-22); ctx.lineTo(4,-8); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#e8c96a';
+        ctx.beginPath(); ctx.moveTo(16,2); ctx.lineTo(28,-2); ctx.lineTo(16,-6); ctx.closePath(); ctx.fill();
+      }
+      if(hit){
+        ctx.fillStyle = '#2b6b6a';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('✓', 0, t.r+22);
+      }
+      ctx.restore();
+
+      ctx.fillStyle = '#3a2418';
+      ctx.font = 'bold 13px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(t.label[state.lang], t.x, t.y+t.r+40);
+    });
+  }
+});
+
+/* ---- Scene 2: Kabar duka (tap-once on messenger) ---- */
+SCENES.push({
+  key:'kabar',
+  title:{id:'Kabar dari Nangkodoh Baha',en:'News from Nangkodoh Baha'},
+  narration:{
+    id:'Karena malu telah dikalahkan, Nangkodoh Baha mengejek Anggun Nan Tongga. Ia berkata bahwa ketiga mamak Anggun telah ditawan bajak laut di Pulau Binuang Sati.',
+    en:'Ashamed of losing, Nangkodoh Baha taunted Anggun Nan Tongga. He revealed that Anggun\'s three uncles had been captured by pirates on Binuang Sati Island.'
+  },
+  instruction:{id:'Ketuk sosok Nangkodoh Baha untuk mendengar kabar yang ia sampaikan.', en:'Tap Nangkodoh Baha to hear the news he brings.'},
+  revealed:false,
+  onClick(x,y){
+    if(state.sceneDone) return;
+    const d = Math.hypot(x-420,y-330);
+    if(d<70 && !this.revealed){
+      this.revealed = true;
+      markSceneDone();
+    }
+  },
+  draw(){
+    drawSky('#bfe3ea','#dcefe2');
+    drawWater(LH*0.7,'#7fc4c9','#3f8f97', state.animT);
+    ctx.fillStyle = '#8fae6b';
+    ctx.fillRect(0,LH*0.55,LW,LH*0.16);
+    drawPerson(260,340,{gender:'m', destar:true, outfit:'#7a1f2b', outfit2:'#c9a227'});
+    const pulse = 1 + Math.sin(state.animT*0.005)*0.03;
+    ctx.save();
+    ctx.translate(420,340); ctx.scale(pulse,pulse); ctx.translate(-420,-340);
+    drawPerson(420,340,{gender:'m', peci:true, outfit:'#4a4a4a', outfit2:'#7a1f2b', facing:-1, armOutR:true});
+    ctx.restore();
+    if(!this.revealed){
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(420,330,54,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+    if(this.revealed){
+      drawSpeechBubble(320,180,220,70, state.lang==='id' ? 'Mamak-mamakmu ditawan bajak laut di Pulau Binuang Sati!' : 'Your uncles are held captive by pirates on Binuang Sati Island!', '#fbeecb');
+    }
+  }
+});
+
+/* ---- Scene 3: Berlayar (timing bar x3) ---- */
+SCENES.push({
+  key:'berlayar',
+  title:{id:'Berlayar ke Binuang Sati',en:'Sailing to Binuang Sati'},
+  narration:{
+    id:'Bersama Bujang Salamat, Anggun Nan Tongga berlayar dengan kapal Dandang Panjang menuju Pulau Binuang Sati untuk menyelamatkan mamak-mamaknya.',
+    en:'Together with Bujang Salamat, Anggun Nan Tongga sailed the ship Dandang Panjang toward Binuang Sati Island to rescue his uncles.'
+  },
+  instruction:{id:'Ketuk tombol "Kemudikan!" tepat saat penanda berada di zona hijau. Lakukan 3 kali.', en:'Tap the "Steer!" button exactly when the marker is in the green zone. Do it 3 times.'},
+  needControls:true,
+  buildControls(container){
+    const btn = document.createElement('button');
+    btn.className = 'gameBtn';
+    btn.id = 'steerBtn';
+    btn.type = 'button';
+    btn.textContent = state.lang==='id' ? '⛵ Kemudikan!' : '⛵ Steer!';
+    btn.addEventListener('click', ()=>{
+      if(state.sceneDone) return;
+      const pos = state.timingMarker;
+      if(pos > 0.38 && pos < 0.62){
+        state.timingHits++;
+        flashPulse(400,300);
+        if(state.timingHits>=3) markSceneDone();
+      }
+    });
+    container.appendChild(btn);
+  },
+  onClick(){},
+  draw(){
+    drawSky('#bfe3ea','#dcefe2');
+    drawWater(LH*0.5,'#5fa9b3','#2c6f78', state.animT);
+    const bob = Math.sin(state.animT*0.004)*6;
+    drawBoat(400,300,1.15,bob);
+    drawPerson(360,320+bob,{gender:'m', destar:true, outfit:'#7a1f2b', outfit2:'#c9a227', scale:0.8});
+    drawPerson(440,320+bob,{gender:'m', peci:true, outfit:'#2b6b6a', outfit2:'#e8c96a', scale:0.8, facing:-1});
+
+    if(!state.sceneDone){
+      state.timingMarker = (Math.sin(state.animT*0.004)+1)/2;
+    }
+    const barX = 250, barY = 400, barW = 300, barH = 20;
+    ctx.fillStyle = '#f2e6c8';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle = '#8fd19e';
+    roundRect(barX+barW*0.38, barY, barW*0.24, barH, 6); ctx.fill();
+    const mx = barX + state.timingMarker*barW;
+    ctx.fillStyle = '#7a1f2b';
+    ctx.beginPath(); ctx.moveTo(mx-8,barY-10); ctx.lineTo(mx+8,barY-10); ctx.lineTo(mx,barY+2); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#3a2418';
+    ctx.font = 'bold 14px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${state.timingHits} / 3`, 400, 400-16);
+  }
+});
+
+/* ---- Scene 4: Pertempuran (tap-mash) ---- */
+SCENES.push({
+  key:'pertempuran',
+  title:{id:'Pertempuran di Binuang Sati',en:'Battle at Binuang Sati'},
+  narration:{
+    id:'Utusan raja Binuang Sati meminta Anggun pergi, namun ia menolak. Pertempuran sengit pun terjadi hingga Bujang Salamat berhasil mengalahkan Panglima Bajau.',
+    en:'The king of Binuang Sati\'s envoy demanded Anggun leave, but he refused. A fierce battle broke out until Bujang Salamat managed to defeat the pirate commander, Panglima Bajau.'
+  },
+  instruction:{id:'Ketuk tombol "Serang!" berulang kali untuk mengisi bilah pertempuran hingga penuh.', en:'Tap the "Attack!" button repeatedly to fill the battle bar all the way.'},
+  needControls:true,
+  buildControls(container){
+    const btn = document.createElement('button');
+    btn.className = 'gameBtn';
+    btn.id = 'attackBtn';
+    btn.type = 'button';
+    btn.textContent = state.lang==='id' ? '⚔️ Serang!' : '⚔️ Attack!';
+    btn.addEventListener('click', ()=>{
+      if(state.sceneDone) return;
+      state.mash = Math.min(state.mash+8, 100);
+      flashPulse(400,300);
+      if(state.mash>=100) markSceneDone();
+    });
+    container.appendChild(btn);
+  },
+  onClick(){},
+  draw(){
+    drawSky('#e7cfc0','#c9dec0');
+    ctx.fillStyle = '#c9b789';
+    ctx.fillRect(0,LH*0.6,LW,LH*0.4);
+    drawPalm(700,LH*0.6,1);
+    const shake = state.mash>0 && state.mash<100 ? Math.sin(state.animT*0.06)*3 : 0;
+    drawPerson(300+shake,340,{gender:'m', destar:true, outfit:'#2b6b6a', outfit2:'#e8c96a', armOutR:true});
+    drawPerson(500-shake,340,{gender:'m', outfit:'#4a2a2a', outfit2:'#8a1f1f', facing:-1, armOutL:true, hair:'#1a1a1a'});
+    // headband for pirate
+    ctx.save();
+    ctx.fillStyle = '#8a1f1f';
+    ctx.beginPath(); ctx.ellipse(500,325,15,5,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    const barX = 250, barY = 400, barW = 300, barH = 20;
+    ctx.fillStyle = '#f2e6c8';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle = '#c94a3f';
+    roundRect(barX,barY,barW*(state.mash/100),barH,10); ctx.fill();
+    ctx.strokeStyle='#7a1f2b'; ctx.lineWidth=2;
+    roundRect(barX,barY,barW,barH,10); ctx.stroke();
+    ctx.fillStyle = '#3a2418';
+    ctx.font = 'bold 13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(state.lang==='id' ? 'Semangat Bertempur' : 'Battle Spirit', 400, barY-8);
+  }
+});
+
+/* ---- Scene 5: Selamatkan mamak + burung nuri (tap-once + drag-drop) ---- */
+SCENES.push({
+  key:'selamat',
+  title:{id:'Menyelamatkan Mamak & Burung Nuri',en:'Freeing an Uncle & the Talking Parrot'},
+  narration:{
+    id:'Nan Tongga menemukan mamaknya, Nangkodoh Rajo, dikurung di kandang babi. Lalu di Kuala Kota Tanau, ia bertemu Putri Adami Sutan yang memiliki burung nuri ajaib. Putri bersedia memberi burung itu jika Nan Tongga mau menikahinya.',
+    en:'Nan Tongga found his uncle, Nangkodoh Rajo, locked in a pig pen. Then in Kuala Kota Tanau, he met Princess Adami Sutan, who owned a magical talking parrot. She agreed to give the bird only if Nan Tongga married her.'
+  },
+  instruction:{id:'Langkah 1: Ketuk kandang babi untuk membebaskan Nangkodoh Rajo. Langkah 2: Seret burung nuri ke tangan Nan Tongga.', en:'Step 1: Tap the pig pen to free Nangkodoh Rajo. Step 2: Drag the parrot to Nan Tongga\'s hand.'},
+  step1:false,
+  onClick(x,y){
+    if(state.sceneDone) return;
+    if(!this.step1){
+      const d = Math.hypot(x-220,y-330);
+      if(d<70){ this.step1 = true; flashPulse(220,330); }
+    }
+  },
+  draw(){
+    drawSky('#bfe3ea','#f2e2bd');
+    ctx.fillStyle = '#8fae6b';
+    ctx.fillRect(0,LH*0.6,LW,LH*0.4);
+    drawRumahGadang(600,LH*0.6-6,0.9);
+
+    if(!this.step1){
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(220,330,60,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+      drawPigPen(220,340,1.1);
+    } else {
+      drawPerson(220,340,{gender:'m', outfit:'#5a4a34', outfit2:'#8a6a44', scale:0.85});
+      ctx.fillStyle = '#2b6b6a';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText('✓', 220, 260);
+    }
+
+    drawPerson(480,340,{gender:'m', destar:true, outfit:'#7a1f2b', outfit2:'#c9a227', armOutR: this.step1 && !state.dragDone});
+    drawPerson(600,340,{gender:'f', veil:true, outfit:'#2b6b6a', outfit2:'#e8c96a', facing:-1});
+
+    if(this.step1 && !state.dragDone){
+      const px = state.dragging ? state.dragPos.x : 620;
+      const py = state.dragging ? state.dragPos.y : 260;
+      drawParrot(px,py,1.6, state.animT);
+      if(!state.dragging){
+        ctx.save();
+        ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2;
+        ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.arc(620,260,26,0,Math.PI*2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    } else if(state.dragDone){
+      drawParrot(500,270,1.4, state.animT);
+    }
+  }
+});
+
+/* ---- Scene 6: Pengkhianatan Malin Cik Ameh (tap-once) ---- */
+SCENES.push({
+  key:'khianat',
+  title:{id:'Kebohongan Malin Cik Ameh',en:'The Lie of Malin Cik Ameh'},
+  narration:{
+    id:'Nan Tongga mengutus Malin Cik Ameh pulang membawa kabar. Namun karena tergoda kecantikan Gondan Gondoriah, Malin Cik Ameh berbohong dan mengaku sebagai pemimpin baru Kampung Dalam.',
+    en:'Nan Tongga sent Malin Cik Ameh home with news. But tempted by Gondan Gondoriah\'s beauty, Malin Cik Ameh lied and claimed he had been appointed the new leader of Kampung Dalam.'
+  },
+  instruction:{id:'Ketuk sosok Malin Cik Ameh untuk mendengar kebohongan yang ia ucapkan.', en:'Tap Malin Cik Ameh to hear the lie he tells.'},
+  revealed:false,
+  onClick(x,y){
+    if(state.sceneDone) return;
+    const d = Math.hypot(x-420,y-330);
+    if(d<70 && !this.revealed){ this.revealed = true; markSceneDone(); }
+  },
+  draw(){
+    drawSky('#bfe3ea','#f2e2bd');
+    drawGround('#8fae6b', LH*0.6);
+    drawRumahGadang(650,LH*0.6-6,0.9);
+    drawPerson(560,340,{gender:'f', veil:true, outfit:'#2b6b6a', outfit2:'#e8c96a', facing:-1});
+    const pulse = 1 + Math.sin(state.animT*0.005)*0.03;
+    ctx.save();
+    ctx.translate(420,340); ctx.scale(pulse,pulse); ctx.translate(-420,-340);
+    drawPerson(420,340,{gender:'m', outfit:'#4a3a5a', outfit2:'#c9a227', armOutR:true, smile:true});
+    ctx.restore();
+    if(!this.revealed){
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(420,330,54,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+    if(this.revealed){
+      drawSpeechBubble(300,170,240,74, state.lang==='id' ? 'Nan Tongga berpesan agar aku menjadi pemimpin di sini...' : 'Nan Tongga said I should become the leader here...', '#fbeecb');
+    }
+  }
+});
+
+/* ---- Scene 7: Burung nuri membawa kabar (tap-once, animates flight) ---- */
+SCENES.push({
+  key:'nuri',
+  title:{id:'Burung Nuri Membawa Kabar',en:'The Parrot Delivers the News'},
+  narration:{
+    id:'Burung nuri ajaib terlepas dari sangkarnya dan terbang ke Pariaman. Ia menyampaikan kepada Gondan Gondoriah bahwa Nan Tongga telah menikah dengan Putri Adami Sutan. Hati Gondan pun hancur.',
+    en:'The magical parrot escaped its cage and flew to Pariaman. It told Gondan Gondoriah that Nan Tongga had married Princess Adami Sutan. Gondan\'s heart shattered.'
+  },
+  instruction:{id:'Ketuk burung nuri agar ia terbang menyampaikan kabar kepada Gondan Gondoriah.', en:'Tap the parrot so it flies to deliver the news to Gondan Gondoriah.'},
+  flying:false,
+  flyStart:0,
+  onClick(x,y){
+    if(state.sceneDone || this.flying) return;
+    const d = Math.hypot(x-160,y-200);
+    if(d<50){ this.flying = true; this.flyStart = state.animT; }
+  },
+  draw(){
+    drawSky('#bfe3ea','#f2e2bd');
+    drawGround('#8fae6b', LH*0.62);
+    drawRumahGadang(600,LH*0.62-6,1);
+    drawPerson(600,340,{gender:'f', veil:true, outfit:'#2b6b6a', outfit2:'#e8c96a', facing:-1});
+
+    let bx = 160, by = 200;
+    if(this.flying){
+      const t = Math.min((state.animT - this.flyStart)/1400, 1);
+      bx = 160 + (560-160)*t;
+      by = 200 + Math.sin(t*Math.PI)*(-60) + (300-200)*t;
+      if(t>=1 && !state.sceneDone) markSceneDone();
+    } else {
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.arc(160,200,42,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+    drawParrot(bx,by,1.6, state.animT);
+
+    if(state.sceneDone){
+      drawSpeechBubble(400,150,240,70, state.lang==='id' ? 'Nan Tongga telah menikah dengan Putri Adami Sutan...' : 'Nan Tongga has married Princess Adami Sutan...', '#fbeecb');
+    }
+  }
+});
+
+/* ---- Scene 8: Mengejar Gondan ke Gunung Ledang (press and hold) ---- */
+SCENES.push({
+  key:'kejar',
+  title:{id:'Mengejar ke Gunung Ledang',en:'Chasing to Gunung Ledang'},
+  narration:{
+    id:'Gondan Gondoriah melarikan diri ke Gunung Ledang karena hatinya terluka. Nan Tongga mengejarnya dan berjanji akan menikahinya, hingga akhirnya Gondan bersedia kembali ke Pariaman.',
+    en:'Heartbroken, Gondan Gondoriah fled to Gunung Ledang. Nan Tongga chased after her and promised to marry her, until Gondan finally agreed to return to Pariaman.'
+  },
+  instruction:{id:'Tekan dan tahan tombol "Kejar!" hingga bilah penuh untuk mendaki gunung.', en:'Press and hold the "Chase!" button until the bar is full to climb the mountain.'},
+  needControls:true,
+  buildControls(container){
+    const btn = document.createElement('button');
+    btn.className = 'gameBtn';
+    btn.id = 'chaseBtn';
+    btn.type = 'button';
+    btn.textContent = state.lang==='id' ? '🏃 Kejar!' : '🏃 Chase!';
+    const start = ()=>{ if(!state.sceneDone) state.holding = true; };
+    const end = ()=>{ state.holding = false; };
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); start(); }, {passive:false});
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', end);
+    btn.addEventListener('touchend', end);
+    container.appendChild(btn);
+  },
+  onClick(){},
+  draw(){
+    drawMountain();
+    const climb = state.hold/100;
+    const px = 200 + climb*380;
+    const py = LH*0.62 - climb*180;
+    if(state.holding && !state.sceneDone){
+      state.hold = Math.min(state.hold + 1.1, 100);
+      if(state.hold>=100) markSceneDone();
+    }
+    drawPerson(px+50,py+20,{gender:'m', destar:true, outfit:'#7a1f2b', outfit2:'#c9a227', scale:0.85});
+    drawPerson(px,py,{gender:'f', veil:true, outfit:'#2b6b6a', outfit2:'#e8c96a', scale:0.85, facing:-1});
+
+    const barX = 250, barY = 400, barW = 300, barH = 20;
+    ctx.fillStyle = '#f2e6c8';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle = '#8fd19e';
+    roundRect(barX,barY,barW*(state.hold/100),barH,10); ctx.fill();
+    ctx.strokeStyle='#5f7752'; ctx.lineWidth=2;
+    roundRect(barX,barY,barW,barH,10); ctx.stroke();
+  }
+});
+
+/* ---- Scene 9: Naik ke langit (ending) ---- */
+SCENES.push({
+  key:'akhir',
+  title:{id:'Naik ke Langit',en:'Ascending to the Sky'},
+  narration:{
+    id:'Tuanku Haji Mudo mengungkap bahwa Nan Tongga dan Gondan bersaudara sepersusuan, sehingga tak bisa menikah di dunia. Ketiganya pun naik ke langit, dan hanya bisa berjodoh di akhirat. Demikianlah kisah Anggun Nan Tongga berakhir.',
+    en:'Tuanku Haji Mudo revealed that Nan Tongga and Gondan were milk-siblings, and so could never marry on earth. All three ascended to the sky, destined to be united only in the afterlife. Thus ends the tale of Anggun Nan Tongga.'
+  },
+  instruction:{id:'Ketuk tombol "Ulangi Cerita" di bawah bila ingin mendengar kisah ini lagi.', en:'Tap the "Replay Story" button below if you would like to hear this tale again.'},
+  autoDone:true,
+  onClick(){},
+  draw(){
+    const g = ctx.createLinearGradient(0,0,0,LH);
+    g.addColorStop(0,'#2b3a6b'); g.addColorStop(1,'#e8c96a');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,LW,LH);
+    for(let i=0;i<40;i++){
+      const sx = (i*97)%LW, sy = (i*53)%(LH*0.5);
+      const tw = 0.5+0.5*Math.sin(state.animT*0.003+i);
+      ctx.fillStyle = `rgba(255,255,255,${0.3+0.5*tw})`;
+      ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
+    }
+    const rise = Math.min(state.animT/4000, 1);
+    const py = LH*0.75 - rise*250;
+    drawPerson(340,py,{gender:'m', destar:true, outfit:'#7a1f2b', outfit2:'#c9a227', scale:0.9});
+    drawPerson(420,py-10,{gender:'f', veil:true, outfit:'#2b6b6a', outfit2:'#e8c96a', scale:0.9, facing:-1});
+    drawPerson(500,py,{gender:'m', peci:true, outfit:'#3a3a3a', outfit2:'#c9a227', scale:0.9, facing:-1});
+    drawCloud(300,py+70,0.9); drawCloud(480,py+80,0.7);
+  }
+});
+
+/* ============================= ENGINE ============================= */
+let lastFrameT = 0;
+function flashPulse(x,y){
+  // small visual feedback marker (drawn transiently via a quick timeout flag)
+  state._flash = {x,y,t:state.animT};
+}
+
+function markSceneDone(){
+  state.sceneDone = true;
+  updateProgress();
+  showNextControl();
+}
+
+function currentSceneObj(){ return SCENES[state.sceneIndex]; }
+
+function renderScene(){
+  clear();
+  const scene = currentSceneObj();
+  if(scene) scene.draw();
+  requestAnimationFrame(loop);
+}
+
+function loop(t){
+  state.animT = t;
+  renderScene();
+}
+
+/* ============================= UI WIRING ============================= */
+const els = {
+  headerTitle: document.getElementById('headerTitle'),
+  footerText: document.getElementById('footerText'),
+  startBtn: document.getElementById('startBtn'),
+  replayBtn: document.getElementById('replayBtn'),
+  langBtn: document.getElementById('langBtn'),
+  langBtnLabel: document.getElementById('langBtnLabel'),
+  muteBtn: document.getElementById('muteBtn'),
+  muteBtnLabel: document.getElementById('muteBtnLabel'),
+  sceneTitle: document.getElementById('sceneTitle'),
+  instructionText: document.getElementById('instructionText'),
+  captionText: document.getElementById('captionText'),
+  replaySpeech: document.getElementById('replaySpeech'),
+  dynamicControls: document.getElementById('dynamicControls'),
+  progressRow: document.getElementById('progressRow'),
+  controlsBar: document.getElementById('controlsBar')
+};
+
+function buildProgressDots(){
+  els.progressRow.innerHTML = '';
+  SCENES.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot-'+i;
+    els.progressRow.appendChild(d);
+  });
+}
+
+function updateProgress(){
+  SCENES.forEach((s,i)=>{
+    const d = document.getElementById('dot-'+i);
+    if(!d) return;
+    d.classList.remove('done','current');
+    if(i < state.sceneIndex || (i===state.sceneIndex && state.sceneDone)) d.classList.add('done');
+    else if(i === state.sceneIndex) d.classList.add('current');
+  });
+}
+
+function resetSceneMechanicState(){
+  state.targetsHit = new Set();
+  state.mash = 0;
+  state.hold = 0;
+  state.holding = false;
+  state.dragging = false;
+  state.dragDone = false;
+  state.timingHits = 0;
+  state.timingMarker = 0;
+  state.sceneDone = false;
+  const scene = currentSceneObj();
+  if(scene){
+    scene.revealed = false;
+    scene.step1 = false;
+    scene.flying = false;
+  }
+}
+
+function showNextControl(){
+  els.dynamicControls.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className = 'gameBtn';
+  btn.id = 'nextBtn';
+  btn.type = 'button';
+  const isLast = state.sceneIndex === SCENES.length - 1;
+  btn.textContent = isLast ? STRINGS[state.lang].replayBtn : STRINGS[state.lang].nextBtn;
+  btn.addEventListener('click', ()=>{
+    if(isLast){ restartStory(); }
+    else { goToScene(state.sceneIndex+1); }
+  });
+  els.dynamicControls.appendChild(btn);
+}
+
+function goToScene(i){
+  state.sceneIndex = i;
+  resetSceneMechanicState();
+  els.dynamicControls.innerHTML = '';
+  const scene = currentSceneObj();
+  els.sceneTitle.textContent = STRINGS[state.lang].scenesOf(i+1, SCENES.length) + ' · ' + scene.title[state.lang];
+  els.instructionText.textContent = scene.instruction[state.lang];
+  els.captionText.textContent = scene.narration[state.lang];
+  updateProgress();
+  if(scene.needControls && typeof scene.buildControls === 'function'){
+    scene.buildControls(els.dynamicControls);
+    // safety reset: ensure any disabled state from a previous run is cleared
+    els.dynamicControls.querySelectorAll('button').forEach(b=> b.disabled = false);
+  }
+  speak(scene.narration[state.lang]);
+  requestResize();
+
+  if(scene.autoDone){
+    markSceneDone();
+  }
+}
+
+function startStory(){
+  document.getElementById('controlsBar').querySelector('#startBtn').hidden = true;
+  document.getElementById('controlsBar').querySelector('#replayBtn').hidden = true;
+  goToScene(0);
+}
+
+function restartStory(){
+  els.dynamicControls.innerHTML = '';
+  goToScene(0);
+}
+
+/* Drag and drop for scene 5 (parrot) */
+let dragActive = false;
+canvas.addEventListener('mousedown', evt=>{
+  const scene = currentSceneObj();
+  if(!scene || scene.key !== 'selamat' || !scene.step1 || state.dragDone) return;
+  const p = getLogicalXY(evt);
+  if(Math.hypot(p.x-620,p.y-260) < 40){ dragActive = true; state.dragging = true; }
+});
+canvas.addEventListener('mousemove', evt=>{
+  if(!dragActive) return;
+  const p = getLogicalXY(evt);
+  state.dragPos = p;
+});
+window.addEventListener('mouseup', evt=>{
+  if(!dragActive) return;
+  dragActive = false;
+  state.dragging = false;
+  const scene = currentSceneObj();
+  if(scene && scene.key==='selamat'){
+    const p = state.dragPos;
+    if(Math.hypot(p.x-480,p.y-330) < 60){
+      state.dragDone = true;
+      markSceneDone();
+    }
+  }
+});
+canvas.addEventListener('touchstart', evt=>{
+  const scene = currentSceneObj();
+  if(!scene || scene.key !== 'selamat' || !scene.step1 || state.dragDone) return;
+  const p = getLogicalXY(evt);
+  if(Math.hypot(p.x-620,p.y-260) < 46){ dragActive = true; state.dragging = true; evt.preventDefault(); }
+}, {passive:false});
+canvas.addEventListener('touchmove', evt=>{
+  if(!dragActive) return;
+  evt.preventDefault();
+  const p = getLogicalXY(evt);
+  state.dragPos = p;
+}, {passive:false});
+canvas.addEventListener('touchend', evt=>{
+  if(!dragActive) return;
+  dragActive = false;
+  state.dragging = false;
+  const scene = currentSceneObj();
+  if(scene && scene.key==='selamat'){
+    const p = state.dragPos;
+    if(Math.hypot(p.x-480,p.y-330) < 60){
+      state.dragDone = true;
+      markSceneDone();
+    }
+  }
+});
+
+/* ============================= LANGUAGE ============================= */
+function applyLanguage(lang, opts){
+  opts = opts || {};
+  state.lang = lang;
+  document.documentElement.lang = lang;
+  const S = STRINGS[lang];
+  els.headerTitle.textContent = S.headerTitle;
+  document.title = S.headerTitle + (lang==='id' ? ' - Cerita Interaktif' : ' - Interactive Story');
+  els.footerText.textContent = S.footerText;
+  els.startBtn.textContent = S.startBtn;
+  els.replayBtn.textContent = S.replayBtn;
+  els.langBtnLabel.textContent = S.langLabel;
+  els.muteBtnLabel.textContent = state.muted ? S.muteOff : S.muteOn;
+  els.replaySpeech.title = S.listenAgain;
+
+  if(state.sceneIndex >= 0){
+    const scene = currentSceneObj();
+    els.sceneTitle.textContent = S.scenesOf(state.sceneIndex+1, SCENES.length) + ' · ' + scene.title[lang];
+    els.instructionText.textContent = scene.instruction[lang];
+    els.captionText.textContent = scene.narration[lang];
+    if(state.sceneDone){
+      showNextControl();
+    } else if(scene.needControls && typeof scene.buildControls === 'function'){
+      els.dynamicControls.innerHTML = '';
+      scene.buildControls(els.dynamicControls);
+    }
+    if(!opts.silent) speak(scene.narration[lang]);
+  }
+  localStorage.setItem('ant-lang', lang);
+  requestResize();
+}
+
+els.langBtn.addEventListener('click', ()=>{
+  const next = state.lang === 'id' ? 'en' : 'id';
+  els.langBtn.setAttribute('aria-pressed', next==='en' ? 'true':'false');
+  applyLanguage(next);
+});
+
+/* ============================= MUTE ============================= */
+function applyMute(muted){
+  state.muted = muted;
+  els.muteBtn.setAttribute('aria-pressed', muted ? 'true':'false');
+  els.muteBtn.querySelector.length; // no-op guard
+  els.muteBtnLabel.textContent = STRINGS[state.lang][muted?'muteOff':'muteOn'];
+  els.muteBtn.firstChild && (els.muteBtn.childNodes[0].textContent = muted ? '🔇 ' : '🔊 ');
+  if(muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  localStorage.setItem('ant-muted', muted ? '1' : '0');
+}
+els.muteBtn.addEventListener('click', ()=>{
+  applyMute(!state.muted);
+});
+els.replaySpeech.addEventListener('click', ()=>{
+  if(state.sceneIndex>=0){
+    const scene = currentSceneObj();
+    speak(scene.narration[state.lang]);
+  }
+});
+
+/* ============================= START / REPLAY BUTTONS ============================= */
+els.startBtn.addEventListener('click', startStory);
+els.replayBtn.addEventListener('click', ()=>{
+  els.startBtn.hidden = true;
+  els.replayBtn.hidden = true;
+  restartStory();
+});
+
+/* ============================= IFRAME RESIZE ============================= */
+function requestResize(){
+  requestAnimationFrame(()=>{
+    const h = document.getElementById('app').scrollHeight + 12;
+    try{
+      window.parent.postMessage({ type:'ant-resize', height:h }, '*');
+    }catch(e){}
+  });
+}
+window.addEventListener('resize', requestResize);
+if(window.ResizeObserver){
+  new ResizeObserver(requestResize).observe(document.getElementById('app'));
+}
+
+/* ============================= INIT ============================= */
+function init(){
+  buildProgressDots();
+
+  const params = new URLSearchParams(window.location.search);
+  const urlLang = params.get('lang');
+  const storedLang = localStorage.getItem('ant-lang');
+  const initialLang = (urlLang==='en'||urlLang==='id') ? urlLang : (storedLang==='en'||storedLang==='id') ? storedLang : 'id';
+
+  const storedMute = localStorage.getItem('ant-muted');
+  state.muted = storedMute === '1';
+  els.muteBtn.setAttribute('aria-pressed', state.muted ? 'true':'false');
+  if(state.muted){ els.muteBtn.childNodes[0].textContent = '🔇 '; }
+
+  els.langBtn.setAttribute('aria-pressed', initialLang==='en' ? 'true':'false');
+  applyLanguage(initialLang, {silent:true});
+  els.muteBtnLabel.textContent = STRINGS[initialLang][state.muted?'muteOff':'muteOn'];
+
+  requestAnimationFrame(loop);
+  requestResize();
+  setTimeout(requestResize, 400);
+}
+
+init();
+
+})();
+</script>
+</body>
+</html>
