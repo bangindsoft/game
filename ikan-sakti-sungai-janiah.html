@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikan Sakti Sungai Janiah</title>
+<style>
+  :root{
+    --sky1:#8fd3f4;
+    --sky2:#e6f7ff;
+    --river:#4fb8c9;
+    --river-dark:#2f8a9c;
+    --ground:#8fbf5c;
+    --ground-dark:#6fa245;
+    --panel:#fffaf0;
+    --wood:#7a4a2b;
+    --accent:#e0743e;
+    --accent-dark:#c25a29;
+    --ink:#3a2c1f;
+    --gold:#e8b23c;
+    --white:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI',Tahoma,Verdana,sans-serif;
+    background:transparent;
+    color:var(--ink);
+  }
+  #isj-root{
+    max-width:820px;
+    margin:0 auto;
+    background:linear-gradient(180deg,#fdf6e8,#f7ecd6);
+    border-radius:16px;
+    padding:14px 14px 18px;
+    border:1px solid #e3d3ab;
+  }
+  .isj-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+    gap:8px;
+  }
+  .isj-title{
+    font-size:16px;
+    font-weight:700;
+    color:var(--accent-dark);
+    letter-spacing:.3px;
+  }
+  .isj-controls{
+    display:flex;
+    gap:6px;
+  }
+  .isj-iconbtn{
+    background:var(--panel);
+    border:1px solid #d9c496;
+    border-radius:10px;
+    width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+    color:var(--ink);
+    transition:transform .15s ease, background .15s ease;
+    user-select:none;
+  }
+  .isj-iconbtn:hover{background:#fff2d8;}
+  .isj-iconbtn:active{transform:scale(.93);}
+  .isj-iconbtn.isj-lang{
+    width:auto;padding:0 12px;font-weight:700;font-size:13px;
+  }
+
+  .isj-stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:12px;
+    overflow:hidden;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+    border:3px solid #d9c496;
+    touch-action:none;
+  }
+  #isj-canvas{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  .isj-instruction{
+    margin-top:10px;
+    background:#fff2d8;
+    border:1px dashed var(--accent);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--accent-dark);
+    text-align:center;
+    min-height:20px;
+  }
+  .isj-narration{
+    margin-top:8px;
+    background:var(--panel);
+    border:1px solid #e3d3ab;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:14.5px;
+    line-height:1.55;
+    min-height:44px;
+    color:#4a3a28;
+  }
+
+  .isj-dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:12px 0 4px;
+    flex-wrap:wrap;
+  }
+  .isj-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d9c9a3;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .isj-dot.active{background:var(--accent);transform:scale(1.3);}
+  .isj-dot.done{background:var(--river-dark);}
+
+  .isj-actions{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .isj-btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:24px;
+    padding:11px 22px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--accent-dark);
+    transition:transform .1s ease;
+  }
+  .isj-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--accent-dark);}
+  .isj-btn.secondary{
+    background:var(--river);
+    box-shadow:0 3px 0 var(--river-dark);
+  }
+  .isj-btn:disabled{
+    opacity:.5;
+    cursor:default;
+    box-shadow:0 3px 0 #b7a068;
+  }
+
+  .isj-footer{
+    text-align:center;
+    font-size:11.5px;
+    color:#a08a5f;
+    margin-top:12px;
+  }
+
+  .isj-progressbar-wrap{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:14px;
+    width:70%;
+    max-width:340px;
+    height:16px;
+    background:rgba(255,255,255,.55);
+    border:2px solid var(--accent-dark);
+    border-radius:10px;
+    overflow:hidden;
+    display:none;
+  }
+  .isj-progressbar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--accent));
+  }
+</style>
+</head>
+<body>
+<div id="isj-root">
+  <div class="isj-topbar">
+    <div class="isj-title" id="isj-titleText">Ikan Sakti Sungai Janiah</div>
+    <div class="isj-controls">
+      <button class="isj-iconbtn isj-lang" id="isj-langBtn" title="Ganti Bahasa">EN</button>
+      <button class="isj-iconbtn" id="isj-muteBtn" title="Bisukan narasi">🔊</button>
+    </div>
+  </div>
+
+  <div class="isj-stage-wrap">
+    <canvas id="isj-canvas" width="800" height="450"></canvas>
+    <div class="isj-progressbar-wrap" id="isj-progressWrap">
+      <div class="isj-progressbar-fill" id="isj-progressFill"></div>
+    </div>
+  </div>
+
+  <div class="isj-instruction" id="isj-instruction"></div>
+  <div class="isj-narration" id="isj-narration"></div>
+
+  <div class="isj-dots" id="isj-dots"></div>
+
+  <div class="isj-actions" id="isj-actions"></div>
+
+  <div class="isj-footer">Legenda Rakyat Sumatra Barat &mdash; Kabupaten Agam</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var qs = new URLSearchParams(location.search);
+  var state = {
+    lang: (localStorage.getItem('isjLang') || (qs.get('lang')==='en'?'en':'id')),
+    muted: localStorage.getItem('isjMute') === '1',
+    sceneIndex: -1, // -1 = title screen
+    interactionDone: false,
+    dragging: null,
+    holdActive: false,
+    holdProgress: 0,
+    holdTarget: 0,
+    tapCount: 0,
+    tapTarget: 0,
+    multiHit: [],
+    started: false
+  };
+
+  var canvas = document.getElementById('isj-canvas');
+  var ctx = canvas.getContext('2d');
+  var instructionEl = document.getElementById('isj-instruction');
+  var narrationEl = document.getElementById('isj-narration');
+  var dotsEl = document.getElementById('isj-dots');
+  var actionsEl = document.getElementById('isj-actions');
+  var titleEl = document.getElementById('isj-titleText');
+  var langBtn = document.getElementById('isj-langBtn');
+  var muteBtn = document.getElementById('isj-muteBtn');
+  var progressWrap = document.getElementById('isj-progressWrap');
+  var progressFill = document.getElementById('isj-progressFill');
+
+  var W = 800, H = 450;
+
+  /* ---------------------------------------------------------
+     TEXT CONTENT (ID / EN)
+  --------------------------------------------------------- */
+  var T = {
+    id:{
+      title:"Ikan Sakti Sungai Janiah",
+      mute:"Bisukan narasi",
+      unmute:"Aktifkan narasi",
+      start:"▶ Mulai Cerita",
+      next:"Lanjut ➜",
+      replay:"⟲ Ulangi Cerita",
+      titleScreenNarration:"Sebuah legenda dari Kabupaten Agam, Sumatra Barat, tentang asal mula ikan sakti di Sungai Janiah.",
+      titleInstruction:"Ketuk tombol \"Mulai Cerita\" untuk memulai.",
+      scenes:[
+        {
+          narr:"Pada zaman dahulu, hiduplah seorang janda bersama dua orang anaknya, seorang anak laki-laki dan seorang anak perempuan. Mereka tinggal berbahagia di sebuah desa kecil.",
+          instr:"Ketuk kedua baju indah di jemuran untuk mendandani anak-anak.",
+          done:"Kedua anak sudah mengenakan baju indah mereka. \"Hari ini kita akan pergi ke pesta, Nak!\" kata sang Ibu dengan gembira."
+        },
+        {
+          narr:"Sampailah mereka di tempat pesta. Kedua anak riang gembira melihat banyak tamu dan makanan lezat. Tak jauh dari sana, ada panggung pertunjukan musik yang ramai penonton.",
+          instr:"Ketuk panggung musik agar anak-anak boleh menonton pertunjukan.",
+          done:"\"Boleh, asal jangan pergi terlalu jauh,\" pesan sang Ibu. Kedua anak pun berlari riang menuju panggung."
+        },
+        {
+          narr:"Mula-mula mereka asyik menikmati musik. Namun lama-kelamaan mereka mulai bosan dan lupa akan pesan ibunya untuk tidak pergi jauh-jauh.",
+          instr:"Seret kedua anak menjauh dari panggung menuju telaga di kejauhan.",
+          done:"Sambil berjalan-jalan, mereka menemukan sebuah telaga berair jernih yang menyejukkan."
+        },
+        {
+          narr:"Hari itu matahari bersinar sangat terik. Air telaga yang jernih membuat kedua anak sangat tergoda untuk mandi dan bermain air.",
+          instr:"Tahan telaga sejenak untuk membuat mereka melompat berenang.",
+          done:"Byuur! Kedua anak melompat ke dalam telaga dan bermain air dengan riang, sampai lupa waktu."
+        },
+        {
+          narr:"Pesta hampir usai. Sang Ibu pergi ke panggung musik untuk menjemput anak-anaknya, tetapi mereka tidak ada di sana. Ia pun bertanya ke sana kemari kepada warga desa.",
+          instr:"Ketuk berulang-ulang warga desa untuk bertanya keberadaan anak-anaknya.",
+          done:"Namun tak seorang pun tahu ke mana perginya kedua anak itu. Hari pun mulai gelap, dan sang Ibu pulang dengan hati sedih."
+        },
+        {
+          narr:"Sesampainya di rumah, sang Ibu menangis sedih dan akhirnya tertidur karena kelelahan. Dalam tidurnya, ia bermimpi bertemu seorang wanita tua.",
+          instr:"Ketuk wanita tua itu untuk mendengarkan pesannya.",
+          done:"\"Kedua anakmu ada di kolam dekat lokasi pesta. Lemparkan beras ke dalam kolam, maka mereka akan muncul,\" kata wanita tua itu."
+        },
+        {
+          narr:"Keesokan paginya, sang Ibu teringat mimpinya semalam. Ia pun bergegas pergi ke kolam itu dengan segenggam beras di tangan.",
+          instr:"Tahan genggaman beras lalu lepaskan untuk melemparkannya ke kolam.",
+          done:"Beras pun melayang jatuh ke permukaan kolam yang tenang, riak air mulai bergerak perlahan."
+        },
+        {
+          narr:"Sang Ibu menunggu dengan hati berdebar sambil memanggil nama-nama anaknya, berharap keduanya akan muncul dari dalam kolam.",
+          instr:"Ketuk permukaan kolam untuk memanggil kedua ikan itu muncul.",
+          done:"Tak lama, dua ekor ikan besar berwarna indah muncul ke permukaan. Sang Ibu menangis histeris menyadari itu adalah kedua anaknya."
+        },
+        {
+          narr:"Penduduk desa berdatangan mendengar tangisan sang Ibu. Sejak saat itu, desa tempat kolam itu berada dikenal sebagai Desa Sungai Janiah, atau Sungai Jernih. Kolam itu dianggap suci hingga kini.",
+          instr:"Ketuk tombol \"Ulangi Cerita\" jika ingin mendengarkan legenda ini lagi.",
+          done:""
+        }
+      ],
+      endingTitle:"Tamat",
+      moral:"Pesan moral: patuhilah selalu nasihat orang tua, agar tidak menyesal di kemudian hari."
+    },
+    en:{
+      title:"The Magical Fish of Sungai Janiah",
+      mute:"Mute narration",
+      unmute:"Enable narration",
+      start:"▶ Start Story",
+      next:"Next ➜",
+      replay:"⟲ Replay Story",
+      titleScreenNarration:"A legend from Agam Regency, West Sumatra, about the origin of the magical fish of Sungai Janiah.",
+      titleInstruction:"Tap the \"Start Story\" button to begin.",
+      scenes:[
+        {
+          narr:"Long ago, there lived a widow with her two children, a boy and a girl. They lived happily together in a small village.",
+          instr:"Tap both beautiful clothes on the line to dress the children.",
+          done:"Both children were now dressed in their finest clothes. \"Today we're going to a festival, children!\" said the mother joyfully."
+        },
+        {
+          narr:"They arrived at the festival. The two children were delighted to see so many guests and delicious food. Nearby stood a music stage crowded with an audience.",
+          instr:"Tap the music stage so the children may watch the performance.",
+          done:"\"Alright, but don't wander too far,\" the mother warned. The children ran happily toward the stage."
+        },
+        {
+          narr:"At first they enjoyed the music, but soon grew bored and forgot their mother's warning not to go too far.",
+          instr:"Drag both children away from the stage toward the pond in the distance.",
+          done:"While wandering, they found a pond with clear, cool water."
+        },
+        {
+          narr:"The sun was blazing that day. The clear, inviting water tempted the two children to jump in and swim.",
+          instr:"Hold the pond for a moment to make them jump in and swim.",
+          done:"Splash! The children leapt into the pond and played joyfully, losing all track of time."
+        },
+        {
+          narr:"The festival was ending. The mother went to the music stage to fetch her children, but they were nowhere to be found. She asked the villagers again and again.",
+          instr:"Tap the villagers repeatedly to ask about the children.",
+          done:"But no one knew where the children had gone. As night fell, the mother walked home with a heavy heart."
+        },
+        {
+          narr:"Back home, the mother wept and eventually fell asleep from exhaustion. In her dream, she met an old woman.",
+          instr:"Tap the old woman to hear her message.",
+          done:"\"Your children are in the pond near the festival grounds. Throw rice into the pond, and they will appear,\" said the old woman."
+        },
+        {
+          narr:"The next morning, remembering her dream, the mother hurried to the pond with a handful of rice.",
+          instr:"Hold the rice, then release to throw it into the pond.",
+          done:"The rice scattered across the still surface of the pond, and gentle ripples began to spread."
+        },
+        {
+          narr:"With a pounding heart, the mother waited and called her children's names, hoping they would rise from the water.",
+          instr:"Tap the surface of the pond to call the two fish to appear.",
+          done:"Soon, two large, beautifully colored fish rose to the surface. The mother wept, realizing they were her own children."
+        },
+        {
+          narr:"Villagers gathered at the sound of her cries. Ever since, the village by the pond has been known as Sungai Janiah, or 'Clear River'. The pond is still considered sacred to this day.",
+          instr:"Tap \"Replay Story\" if you'd like to hear this legend again.",
+          done:""
+        }
+      ],
+      endingTitle:"The End",
+      moral:"Moral: always heed the advice of your parents, so you need not live with regret."
+    }
+  };
+
+  function L(){ return T[state.lang]; }
+
+  /* ---------------------------------------------------------
+     SPEECH
+  --------------------------------------------------------- */
+  var voices = [];
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    if(!voices || !voices.length) return null;
+    var exact = voices.find(function(v){ return v.lang === langCode; });
+    if(exact) return exact;
+    var prefix = langCode.split('-')[0];
+    var partial = voices.find(function(v){ return v.lang && v.lang.indexOf(prefix) === 0; });
+    return partial || null;
+  }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if(state.muted || !text) return;
+    var utter = new SpeechSynthesisUtterance(text);
+    var langCode = state.lang === 'id' ? 'id-ID' : 'en-US';
+    var v = pickVoice(langCode);
+    if(v) utter.voice = v;
+    utter.lang = langCode;
+    utter.rate = 0.95;
+    utter.pitch = 1.02;
+    window.speechSynthesis.speak(utter);
+  }
+  function stopSpeech(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------------------------------------------------
+     RESIZE / AUTO-FIT IFRAME
+  --------------------------------------------------------- */
+  function fitCanvas(){
+    var wrap = canvas.parentElement;
+    var cssWidth = wrap.clientWidth;
+    var ratio = H / W;
+    canvas.style.height = (cssWidth * ratio) + 'px';
+  }
+  function postHeight(){
+    var height = document.getElementById('isj-root').getBoundingClientRect().height + 24;
+    try{
+      window.parent.postMessage({ type: 'isj-resize', frameId: 'ikan-sakti-sungai-janiah', height: Math.ceil(height) }, '*');
+    }catch(e){}
+  }
+  function scheduleResize(){
+    fitCanvas();
+    postHeight();
+    if(currentDrawFn) currentDrawFn();
+  }
+  window.addEventListener('resize', scheduleResize);
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(scheduleResize);
+    ro.observe(document.getElementById('isj-root'));
+  } else {
+    setInterval(postHeight, 800);
+  }
+
+  /* ---------------------------------------------------------
+     DRAW HELPERS (procedural art, no external images)
+  --------------------------------------------------------- */
+  function clear(){
+    ctx.clearRect(0,0,W,H);
+  }
+  function skyBg(topColor, botColor){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, botColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+  function sun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,220,120,0.55)';
+    ctx.beginPath(); ctx.arc(x,y,r*1.8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffd45c';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function cloud(x,y,s){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.arc(x,y,18*s,0,Math.PI*2);
+    ctx.arc(x+22*s,y-10*s,22*s,0,Math.PI*2);
+    ctx.arc(x+44*s,y,16*s,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function groundHill(y, color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,y+40);
+    ctx.quadraticCurveTo(W/2, y-30, W, y+40);
+    ctx.lineTo(W,H); ctx.lineTo(0,H);
+    ctx.closePath(); ctx.fill();
+  }
+  function tree(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#7a4a2b';
+    ctx.fillRect(-4*s,-10*s,8*s,30*s);
+    ctx.fillStyle = '#4c8c3f';
+    ctx.beginPath(); ctx.arc(0,-25*s,20*s,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-14*s,-14*s,14*s,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14*s,-14*s,14*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function house(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#c98a52';
+    ctx.fillRect(-30*s,-10*s,60*s,40*s);
+    ctx.fillStyle = '#8b3f2a';
+    ctx.beginPath();
+    ctx.moveTo(-38*s,-10*s);
+    ctx.lineTo(0,-42*s);
+    ctx.lineTo(38*s,-10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5b3420';
+    ctx.fillRect(-8*s,10*s,16*s,20*s);
+    ctx.fillStyle = '#e8f0f5';
+    ctx.fillRect(-24*s,0*s,12*s,12*s);
+    ctx.fillRect(12*s,0*s,12*s,12*s);
+    ctx.restore();
+  }
+  function pond(cx,cy,rw,rh, ripple){
+    ctx.save();
+    ctx.fillStyle = '#3fa9bd';
+    ctx.beginPath();
+    ctx.ellipse(cx,cy,rw,rh,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 2;
+    for(var i=1;i<=3;i++){
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,rw*(0.35*i)+(ripple||0), rh*(0.35*i)+(ripple||0)*0.5, 0, 0, Math.PI*2);
+      ctx.globalAlpha = 0.35 - i*0.08;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+  function person(x,y,s, skinColor, shirtColor, pantsColor, hairColor, isFemale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    // legs
+    ctx.fillStyle = pantsColor;
+    if(isFemale){
+      ctx.beginPath();
+      ctx.moveTo(-10,20); ctx.lineTo(10,20); ctx.lineTo(14,44); ctx.lineTo(-14,44);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillRect(-9,20,8,24);
+      ctx.fillRect(1,20,8,24);
+    }
+    // body
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath();
+    ctx.moveTo(-12,-6);
+    ctx.lineTo(12,-6);
+    ctx.lineTo(10,22);
+    ctx.lineTo(-10,22);
+    ctx.closePath(); ctx.fill();
+    // arms
+    ctx.strokeStyle = shirtColor;
+    ctx.lineWidth = 6;
+    ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-11,-2); ctx.lineTo(-18,14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(11,-2); ctx.lineTo(18,14); ctx.stroke();
+    // head
+    ctx.fillStyle = skinColor;
+    ctx.beginPath(); ctx.arc(0,-16,11,0,Math.PI*2); ctx.fill();
+    // hair
+    ctx.fillStyle = hairColor;
+    if(isFemale){
+      ctx.beginPath(); ctx.arc(0,-18,12,Math.PI,Math.PI*2); ctx.fill();
+      ctx.fillRect(-13,-18,4,20);
+      ctx.fillRect(9,-18,4,20);
+    } else {
+      ctx.beginPath(); ctx.arc(0,-19,11.5,Math.PI,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function fish(x,y,s,color,flip){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s*(flip?-1:1), s);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,14,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-24,0); ctx.lineTo(-40,-14); ctx.lineTo(-40,14); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath(); ctx.ellipse(6,-4,10,5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(16,-2,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(17,-2,1.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function stage(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#b5432b';
+    ctx.fillRect(-60*s,-6*s,120*s,10*s);
+    ctx.fillStyle = '#8b3f2a';
+    ctx.fillRect(-55*s,4*s,10*s,26*s);
+    ctx.fillRect(45*s,4*s,10*s,26*s);
+    ctx.fillStyle = '#e8b23c';
+    ctx.beginPath();
+    ctx.moveTo(-64*s,-6*s); ctx.lineTo(0,-40*s); ctx.lineTo(64*s,-6*s);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#c25a29';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // little drum figure
+    ctx.fillStyle = '#5b3420';
+    ctx.fillRect(-8*s,-14*s,16*s,10*s);
+    ctx.restore();
+  }
+  function villager(x,y,s,skin,shirt){
+    person(x,y,s,skin,shirt,'#5b3420','#2b1c10', false);
+  }
+  function oldWoman(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = '#8f8fb0';
+    ctx.beginPath();
+    ctx.moveTo(-16,30); ctx.lineTo(16,30); ctx.lineTo(10,-10); ctx.lineTo(-10,-10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e2c9a3';
+    ctx.beginPath(); ctx.arc(0,-20,12,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#d8d8e6';
+    ctx.beginPath(); ctx.arc(0,-24,13,Math.PI*0.9,Math.PI*2.1); ctx.fill();
+    ctx.strokeStyle = '#4b3b2a';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(-4,-19,1.4,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(4,-19,1.4,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  function clothesLine(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.strokeStyle = '#7a4a2b';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-70*s,0); ctx.lineTo(70*s,0); ctx.stroke();
+    ctx.fillRect(-72*s,-2*s,4*s,40*s);
+    ctx.fillRect(68*s,-2*s,4*s,40*s);
+    ctx.restore();
+  }
+  function shirtOnLine(x,y,s,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-16,0); ctx.lineTo(16,0); ctx.lineTo(12,32); ctx.lineTo(-12,32);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-16,0); ctx.lineTo(-24,10); ctx.lineTo(-16,14); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(16,0); ctx.lineTo(24,10); ctx.lineTo(16,14); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function riceHand(x,y,s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+    ctx.fillStyle = '#e2c9a3';
+    ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f5f0e0';
+    for(var i=0;i<10;i++){
+      ctx.beginPath();
+      ctx.ellipse((Math.random()-0.5)*20,(Math.random()-0.5)*20,2.4,1.4,Math.random()*3,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function riverRibbon(){
+    ctx.fillStyle = '#3fa9bd';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.72);
+    ctx.quadraticCurveTo(W*0.3,H*0.62,W*0.55,H*0.75);
+    ctx.quadraticCurveTo(W*0.8,H*0.88,W,H*0.7);
+    ctx.lineTo(W,H); ctx.lineTo(0,H);
+    ctx.closePath(); ctx.fill();
+  }
+  function highlight(x,y,r,pulse){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(224,116,62,' + (0.55 + 0.25*Math.sin(pulse||0)) + ')';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------
+     SCENES: hitboxes + interaction logic + draw
+  --------------------------------------------------------- */
+  var currentDrawFn = null;
+  var pulseT = 0;
+  var animId = null;
+
+  function animate(){
+    pulseT += 0.06;
+    if(currentDrawFn) currentDrawFn(pulseT);
+    animId = requestAnimationFrame(animate);
+  }
+
+  // ---- Scene 0: dress the children (multi-tap 2 targets) ----
+  function drawScene0(t){
+    clear();
+    skyBg('#8fd3f4','#eaf7ff');
+    cloud(80,60,1); cloud(600,40,1.3);
+    sun(730,50,26);
+    groundHill(H-90, '#8fbf5c');
+    house(150,H-120,1.3);
+    clothesLine(430,150,1);
+    var hit1Done = state.multiHit.indexOf(0) !== -1;
+    var hit2Done = state.multiHit.indexOf(1) !== -1;
+    shirtOnLine(370,150,0.9,'#3fa9bd');
+    shirtOnLine(490,150,0.9,'#e0743e');
+    if(!hit1Done) highlight(370,168,34,t);
+    if(!hit2Done) highlight(490,168,34,t);
+    if(hit1Done) { ctx.save(); ctx.globalAlpha=.5; ctx.fillStyle='#ffe27a'; ctx.beginPath(); ctx.arc(370,168,30,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+    if(hit2Done) { ctx.save(); ctx.globalAlpha=.5; ctx.fillStyle='#ffe27a'; ctx.beginPath(); ctx.arc(490,168,30,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+    person(150,H-140,1.4,'#e2c9a3','#c25a29','#5b3420','#2b1c10',true); // mother
+    person(300,H-95,1.1,'#e6c8a0','#cfa15a','#3fa9bd','#241a10',false); // boy
+    person(340,H-95,1.0,'#e6c8a0','#e07ab0','#7a4a2b','#241a10',true); // girl
+  }
+  function scene0Init(){
+    state.multiHit = [];
+  }
+  function scene0Click(px,py){
+    var d1 = Math.hypot(px-370,py-168);
+    var d2 = Math.hypot(px-490,py-168);
+    if(d1<36 && state.multiHit.indexOf(0)===-1) state.multiHit.push(0);
+    else if(d2<36 && state.multiHit.indexOf(1)===-1) state.multiHit.push(1);
+    if(state.multiHit.length>=2) completeInteraction();
+  }
+
+  // ---- Scene 1: tap music stage ----
+  function drawScene1(t){
+    clear();
+    skyBg('#8fd3f4','#eaf7ff');
+    cloud(120,50,1); cloud(650,70,1.1);
+    sun(60,60,22);
+    groundHill(H-90, '#e0c27a');
+    // festival tents
+    for(var i=0;i<3;i++){
+      ctx.fillStyle = i%2? '#e0743e':'#4fb8c9';
+      ctx.beginPath();
+      ctx.moveTo(80+i*70,H-100); ctx.lineTo(110+i*70,H-150); ctx.lineTo(140+i*70,H-100);
+      ctx.closePath(); ctx.fill();
+    }
+    stage(560,H-140,1.3);
+    if(!state.interactionDone) highlight(560,H-150,74,t);
+    // crowd dots
+    for(var j=0;j<6;j++){
+      villager(500+j*22, H-95, 0.75, '#e2c9a3', j%2?'#e07ab0':'#f2c14e');
+    }
+    person(300,H-95,1.1,'#e6c8a0','#cfa15a','#3fa9bd','#241a10',false);
+    person(335,H-95,1.0,'#e6c8a0','#e07ab0','#7a4a2b','#241a10',true);
+    person(230,H-100,1.2,'#e2c9a3','#c25a29','#5b3420','#2b1c10',true);
+  }
+  function scene1Click(px,py){
+    var d = Math.hypot(px-560,py-150);
+    if(d<80){ completeInteraction(); }
+  }
+
+  // ---- Scene 2: drag children to pond ----
+  var dragChildren = [{x:300,y:H-95,homeX:300,homeY:H-95,done:false},{x:335,y:H-95,homeX:335,homeY:H-95,done:false}];
+  var pondTarget = {x:600,y:180};
+  function scene2Init(){
+    dragChildren[0] = {x:300,y:H-95,done:false};
+    dragChildren[1] = {x:335,y:H-95,done:false};
+  }
+  function drawScene2(t){
+    clear();
+    skyBg('#8fd3f4','#eaf7ff');
+    cloud(120,50,1);
+    sun(700,50,24);
+    groundHill(H-90, '#8fbf5c');
+    tree(120,H-100,1.2);
+    tree(680,H-90,1.4);
+    pond(pondTarget.x,pondTarget.y,90,46, Math.sin(t)*2);
+    if(!allDragged()) highlight(pondTarget.x,pondTarget.y,105,t);
+    stage(150,H-150,0.9);
+    person(80,H-120,1.1,'#e2c9a3','#c25a29','#5b3420','#2b1c10',true);
+    person(dragChildren[0].x,dragChildren[0].y,1.1,'#e6c8a0','#cfa15a','#3fa9bd','#241a10',false);
+    person(dragChildren[1].x,dragChildren[1].y,1.0,'#e6c8a0','#e07ab0','#7a4a2b','#241a10',true);
+  }
+  function allDragged(){ return dragChildren[0].done && dragChildren[1].done; }
+  function scene2PointerDown(px,py){
+    for(var i=0;i<2;i++){
+      if(dragChildren[i].done) continue;
+      if(Math.hypot(px-dragChildren[i].x,py-dragChildren[i].y) < 34){
+        state.dragging = i;
+        return;
+      }
+    }
+  }
+  function scene2PointerMove(px,py){
+    if(state.dragging===null || state.dragging===undefined) return;
+    var c = dragChildren[state.dragging];
+    c.x = px; c.y = py;
+  }
+  function scene2PointerUp(px,py){
+    if(state.dragging===null || state.dragging===undefined) return;
+    var c = dragChildren[state.dragging];
+    if(Math.hypot(c.x-pondTarget.x,c.y-pondTarget.y) < 100){
+      c.done = true;
+      c.x = pondTarget.x + (state.dragging===0?-30:30);
+      c.y = pondTarget.y + 10;
+    } else {
+      c.x = state.dragging===0? 300:335;
+      c.y = H-95;
+    }
+    state.dragging = null;
+    if(allDragged()) completeInteraction();
+  }
+
+  // ---- Scene 3: hold pond to jump in ----
+  function drawScene3(t){
+    clear();
+    skyBg('#a9e3f7','#eaf7ff');
+    sun(400,60,34);
+    groundHill(H-90, '#8fbf5c');
+    tree(100,H-100,1.1);
+    tree(700,H-95,1.2);
+    pond(400,220,140,64, Math.sin(t)*3);
+    if(!state.interactionDone){
+      highlight(400,220,150,t);
+      if(state.holdActive){
+        progressWrap.style.display='block';
+        progressFill.style.width = (state.holdProgress/state.holdTarget*100)+'%';
+      } else if(!state.interactionDone){
+        progressWrap.style.display='none';
+      }
+    }
+    var jumpY = state.interactionDone ? 190 : H-95;
+    person(360,jumpY,1.05,'#e6c8a0','#cfa15a','#3fa9bd','#241a10',false);
+    person(440,jumpY,1.0,'#e6c8a0','#e07ab0','#7a4a2b','#241a10',true);
+  }
+
+  // ---- Scene 4: tap-mash villagers ----
+  var villagerSpots = [{x:120,y:H-90},{x:230,y:H-100},{x:350,y:H-85},{x:470,y:H-95},{x:590,y:H-90},{x:690,y:H-85}];
+  function drawScene4(t){
+    clear();
+    skyBg('#7fb8e0','#dbe8ef');
+    groundHill(H-90, '#7a9e57');
+    for(var i=0;i<villagerSpots.length;i++){
+      var v = villagerSpots[i];
+      var tapped = state.multiHit.indexOf(i) !== -1;
+      villager(v.x,v.y,0.95, '#e2c9a3', tapped ? '#c9a15a' : ['#e07ab0','#4fb8c9','#e0743e','#8fbf5c','#e8b23c','#a06fd9'][i%6]);
+      if(tapped){
+        ctx.save();
+        ctx.globalAlpha=.6; ctx.fillStyle='#ffe27a';
+        ctx.beginPath(); ctx.arc(v.x,v.y-40,10,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      } else {
+        highlight(v.x,v.y-15,28,t);
+      }
+    }
+    person(400,H-130,1.2,'#e2c9a3','#c25a29','#5b3420','#2b1c10',true);
+    progressWrap.style.display='block';
+    progressFill.style.width = (state.multiHit.length/state.tapTarget*100)+'%';
+  }
+  function scene4Init(){
+    state.multiHit = [];
+    state.tapTarget = villagerSpots.length;
+  }
+  function scene4Click(px,py){
+    for(var i=0;i<villagerSpots.length;i++){
+      if(state.multiHit.indexOf(i)!==-1) continue;
+      var v = villagerSpots[i];
+      if(Math.hypot(px-v.x,py-(v.y-15)) < 34){
+        state.multiHit.push(i);
+        break;
+      }
+    }
+    if(state.multiHit.length >= state.tapTarget) completeInteraction();
+  }
+
+  // ---- Scene 5: tap old woman in dream ----
+  function drawScene5(t){
+    clear();
+    skyBg('#2b2a4a','#4a4a78');
+    for(var i=0;i<40;i++){
+      var sx=(i*53)%W, sy=(i*97)%(H-100);
+      ctx.fillStyle='rgba(255,255,255,'+(0.3+0.3*Math.abs(Math.sin(t+i)))+')';
+      ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
+    }
+    ctx.save();
+    ctx.globalAlpha=.9;
+    ctx.fillStyle='#3a3a5e';
+    ctx.beginPath(); ctx.ellipse(150,H-70,140,40,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    person(150,H-95,1.3,'#e2c9a3','#8f8fb0','#5b3420','#2b1c10',true);
+    ctx.save();
+    ctx.globalAlpha=.85;
+    ctx.beginPath();
+    ctx.arc(560,190,95,0,Math.PI*2);
+    var g = ctx.createRadialGradient(560,190,10,560,190,95);
+    g.addColorStop(0,'rgba(255,255,255,0.9)');
+    g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.restore();
+    if(!state.interactionDone) highlight(560,200,80,t);
+    oldWoman(560,220,1.6);
+  }
+  function scene5Click(px,py){
+    if(Math.hypot(px-560,py-210) < 90) completeInteraction();
+  }
+
+  // ---- Scene 6: hold rice then release to throw ----
+  function drawScene6(t){
+    clear();
+    skyBg('#bfe6f5','#eef8fb');
+    sun(700,60,26);
+    groundHill(H-90, '#8fbf5c');
+    pond(430,240,150,60, Math.sin(t)*2);
+    person(230,H-110,1.3,'#e2c9a3','#c25a29','#5b3420','#2b1c10',true);
+    if(!state.interactionDone){
+      riceHand(300,H-155,1.2);
+      highlight(300,H-155,34,t);
+      if(state.holdActive){
+        progressWrap.style.display='block';
+        progressFill.style.width = (state.holdProgress/state.holdTarget*100)+'%';
+      } else {
+        progressWrap.style.display='none';
+      }
+    } else {
+      for(var i=0;i<8;i++){
+        ctx.fillStyle='#f5f0e0';
+        ctx.beginPath();
+        ctx.ellipse(400+i*8,230+((i%3)*6),2.4,1.4,i,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // ---- Scene 7: tap pond surface to call fish ----
+  var fishReveal = 0;
+  function scene7Init(){ fishReveal = 0; }
+  function drawScene7(t){
+    clear();
+    skyBg('#bfe6f5','#eef8fb');
+    sun(700,60,26);
+    groundHill(H-90, '#8fbf5c');
+    pond(430,240,150,60, Math.sin(t)*2 + fishReveal*2);
+    person(230,H-110,1.3,'#e2c9a3','#c25a29','#5b3420','#2b1c10',true);
+    if(!state.interactionDone) highlight(430,240,155,t);
+    if(fishReveal>0){
+      var fy = 240 - Math.min(fishReveal,30);
+      fish(390,fy,1.1,'#e0a83e',false);
+      fish(470,fy,1.0,'#4fb8c9',true);
+    }
+  }
+  function scene7Click(px,py){
+    if(state.interactionDone) return;
+    if(Math.hypot(px-430,py-240) < 155){
+      fishReveal = 1;
+      var grow = setInterval(function(){
+        fishReveal += 2;
+        if(fishReveal>=30){ clearInterval(grow); completeInteraction(); }
+      },40);
+    }
+  }
+
+  // ---- Scene 8: ending ----
+  function drawScene8(t){
+    clear();
+    skyBg('#8fd3f4','#eaf7ff');
+    cloud(100,50,1); cloud(650,60,1.2);
+    sun(400,50,24);
+    groundHill(H-90, '#8fbf5c');
+    pond(400,230,150,60, Math.sin(t)*2);
+    fish(360,215,1.15,'#e0a83e',false);
+    fish(450,215,1.05,'#4fb8c9',true);
+    for(var i=0;i<5;i++){
+      villager(120+i*140, H-90, 0.85, '#e2c9a3', ['#e07ab0','#4fb8c9','#e0743e','#8fbf5c','#e8b23c'][i]);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     SCENE DEFINITIONS
+  --------------------------------------------------------- */
+  var scenes = [
+    { draw: drawScene0, init: scene0Init, click: scene0Click, type:'multitap' },
+    { draw: drawScene1, init: function(){}, click: scene1Click, type:'tap' },
+    { draw: drawScene2, init: scene2Init, type:'drag', pdown: scene2PointerDown, pmove: scene2PointerMove, pup: scene2PointerUp },
+    { draw: drawScene3, init: function(){ state.holdTarget = 45; }, type:'hold', holdCenter:{x:400,y:220}, holdRadius:150 },
+    { draw: drawScene4, init: scene4Init, click: scene4Click, type:'multitap' },
+    { draw: drawScene5, init: function(){}, click: scene5Click, type:'tap' },
+    { draw: drawScene6, init: function(){ state.holdTarget = 40; }, type:'hold', holdCenter:{x:300,y:H-155}, holdRadius:40 },
+    { draw: drawScene7, init: scene7Init, click: scene7Click, type:'tap-custom' },
+    { draw: drawScene8, init: function(){}, type:'end' }
+  ];
+
+  /* ---------------------------------------------------------
+     GENERIC INTERACTION HANDLERS
+  --------------------------------------------------------- */
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  var holdTimer = null;
+  function startHold(scene){
+    if(state.interactionDone) return;
+    state.holdActive = true;
+    state.holdProgress = 0;
+    holdTimer = setInterval(function(){
+      state.holdProgress++;
+      if(state.holdProgress >= state.holdTarget){
+        clearInterval(holdTimer);
+        state.holdActive = false;
+        progressWrap.style.display='none';
+        completeInteraction();
+      }
+    }, 40);
+  }
+  function cancelHold(){
+    if(holdTimer) clearInterval(holdTimer);
+    state.holdActive = false;
+    state.holdProgress = 0;
+    progressWrap.style.display='none';
+  }
+
+  function onPointerDown(evt){
+    if(state.sceneIndex < 0 || state.sceneIndex >= scenes.length) return;
+    var scene = scenes[state.sceneIndex];
+    var p = getPos(evt);
+    if(scene.type === 'tap' || scene.type === 'multitap' || scene.type === 'tap-custom'){
+      if(scene.click) scene.click(p.x,p.y);
+    } else if(scene.type === 'drag'){
+      if(scene.pdown) scene.pdown(p.x,p.y);
+    } else if(scene.type === 'hold'){
+      var d = Math.hypot(p.x-scene.holdCenter.x, p.y-scene.holdCenter.y);
+      if(d < scene.holdRadius) startHold(scene);
+    }
+    evt.preventDefault();
+  }
+  function onPointerMove(evt){
+    if(state.sceneIndex < 0 || state.sceneIndex >= scenes.length) return;
+    var scene = scenes[state.sceneIndex];
+    if(scene.type === 'drag' && scene.pmove){
+      var p = getPos(evt);
+      scene.pmove(p.x,p.y);
+    }
+  }
+  function onPointerUp(evt){
+    if(state.sceneIndex < 0 || state.sceneIndex >= scenes.length) return;
+    var scene = scenes[state.sceneIndex];
+    if(scene.type === 'drag' && scene.pup){
+      var p = getPos(evt.changedTouches ? evt.changedTouches[0] : evt);
+      scene.pup(p.x,p.y);
+    } else if(scene.type === 'hold'){
+      cancelHold();
+    }
+  }
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('touchstart', onPointerDown, {passive:false});
+  canvas.addEventListener('touchmove', onPointerMove, {passive:false});
+  canvas.addEventListener('touchend', onPointerUp);
+
+  /* ---------------------------------------------------------
+     SCENE FLOW
+  --------------------------------------------------------- */
+  function updateDots(){
+    dotsEl.innerHTML = '';
+    var total = scenes.length;
+    for(var i=0;i<total;i++){
+      var d = document.createElement('div');
+      d.className = 'isj-dot';
+      if(i < state.sceneIndex) d.className += ' done';
+      if(i === state.sceneIndex) d.className += ' active';
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function setActions(buttons){
+    actionsEl.innerHTML = '';
+    buttons.forEach(function(b){
+      var btn = document.createElement('button');
+      btn.className = 'isj-btn' + (b.secondary? ' secondary':'');
+      btn.textContent = b.label;
+      btn.onclick = b.onClick;
+      actionsEl.appendChild(btn);
+    });
+  }
+
+  function completeInteraction(){
+    if(state.interactionDone) return;
+    state.interactionDone = true;
+    progressWrap.style.display = 'none';
+    var lang = L();
+    var sceneText = lang.scenes[state.sceneIndex];
+    instructionEl.textContent = '';
+    narrationEl.textContent = sceneText.done;
+    speak(sceneText.done);
+    var isLast = state.sceneIndex === scenes.length - 1;
+    if(isLast){
+      showEnding();
+    } else {
+      setActions([{ label: lang.next, onClick: goNextScene }]);
+    }
+  }
+
+  function goNextScene(){
+    state.sceneIndex++;
+    loadScene(state.sceneIndex);
+  }
+
+  function loadScene(idx){
+    stopSpeech();
+    state.interactionDone = false;
+    state.holdActive = false;
+    state.holdProgress = 0;
+    state.multiHit = [];
+    state.dragging = null;
+    cancelHold();
+    progressWrap.style.display = 'none';
+    var scene = scenes[idx];
+    if(scene.init) scene.init();
+    currentDrawFn = scene.draw;
+    updateDots();
+    var lang = L();
+    var sceneText = lang.scenes[idx];
+    if(scene.type === 'end'){
+      instructionEl.textContent = '';
+      narrationEl.textContent = sceneText.narr + '  ' + lang.moral;
+      speak(sceneText.narr + '. ' + lang.moral);
+      setActions([{ label: lang.replay, onClick: restartGame }]);
+    } else {
+      narrationEl.textContent = sceneText.narr;
+      instructionEl.textContent = sceneText.instr;
+      speak(sceneText.narr);
+      setActions([]);
+    }
+    postHeight();
+  }
+
+  function showEnding(){
+    var lang = L();
+    var sceneText = lang.scenes[scenes.length-1];
+    instructionEl.textContent = '';
+    narrationEl.textContent = (sceneText.done || sceneText.narr) + '  ' + lang.moral;
+    setActions([{ label: lang.replay, onClick: restartGame }]);
+    updateDots();
+  }
+
+  function restartGame(){
+    stopSpeech();
+    state.sceneIndex = -1;
+    showTitleScreen();
+  }
+
+  function drawTitleScreen(t){
+    clear();
+    skyBg('#8fd3f4','#eaf7ff');
+    cloud(90,60,1); cloud(600,40,1.2);
+    sun(700,60,30);
+    groundHill(H-90,'#8fbf5c');
+    tree(90,H-100,1.3);
+    tree(700,H-95,1.4);
+    pond(400,250,150,55, Math.sin(t)*2);
+    fish(360,235,1.1,'#e0a83e',false);
+    fish(450,235,1.0,'#4fb8c9',true);
+    ctx.save();
+    ctx.textAlign='center';
+    ctx.fillStyle='rgba(0,0,0,0.35)';
+    ctx.font='bold 34px Georgia, serif';
+    ctx.fillText(L().title, 402, 92);
+    ctx.fillStyle='#fff8e8';
+    ctx.fillText(L().title, 400, 90);
+    ctx.font='16px Georgia, serif';
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.fillText('Sumatra Barat', 402, 122);
+    ctx.fillStyle='#fff2d8';
+    ctx.fillText('Sumatra Barat', 400, 120);
+    ctx.restore();
+  }
+
+  function showTitleScreen(){
+    currentDrawFn = drawTitleScreen;
+    narrationEl.textContent = L().titleScreenNarration;
+    instructionEl.textContent = L().titleInstruction;
+    dotsEl.innerHTML = '';
+    setActions([{ label: L().start, onClick: function(){
+      state.started = true;
+      state.sceneIndex = 0;
+      loadScene(0);
+    }}]);
+    postHeight();
+  }
+
+  /* ---------------------------------------------------------
+     LANGUAGE / MUTE UI
+  --------------------------------------------------------- */
+  function applyLanguage(){
+    titleEl.textContent = L().title;
+    langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    muteBtn.title = state.muted ? L().unmute : L().mute;
+    document.documentElement.lang = state.lang;
+    if(state.sceneIndex < 0){
+      showTitleScreen();
+    } else if(scenes[state.sceneIndex].type === 'end'){
+      showEnding();
+    } else {
+      var lang = L();
+      var sceneText = lang.scenes[state.sceneIndex];
+      narrationEl.textContent = state.interactionDone ? (sceneText.done || lang.moral) : sceneText.narr;
+      instructionEl.textContent = state.interactionDone ? '' : sceneText.instr;
+      updateDots();
+      if(state.interactionDone){
+        setActions([{ label: lang.next, onClick: goNextScene }]);
+      }
+    }
+  }
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('isjLang', state.lang);
+    stopSpeech();
+    applyLanguage();
+  });
+  function applyMuteUI(){
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    muteBtn.title = state.muted ? L().unmute : L().mute;
+  }
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('isjMute', state.muted ? '1':'0');
+    applyMuteUI();
+    if(state.muted) stopSpeech();
+  });
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  applyMuteUI();
+  applyLanguage();
+  fitCanvas();
+  animate();
+  setTimeout(postHeight, 200);
+  setTimeout(postHeight, 800);
+
+})();
+</script>
+</body>
+</html>
