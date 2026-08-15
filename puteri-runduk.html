@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puteri Runduk - Cerita Rakyat Sumatera Utara</title>
+<style>
+  :root{
+    --sky-day-1:#3f8fae; --sky-day-2:#cdeaea;
+    --sky-dusk-1:#2c1f45; --sky-dusk-2:#c4623f;
+    --sky-night-1:#050c1e; --sky-night-2:#122238;
+    --sea-day-1:#1c5f78; --sea-day-2:#0e3a4c;
+    --sea-dusk-1:#5a3a4a; --sea-dusk-2:#2a1f2e;
+    --sea-night-1:#0a1830; --sea-night-2:#04101f;
+    --panel:#0d2a2c; --panel-2:#123a3c; --accent:#d4af37;
+    --accent-2:#f2dd8a; --text-light:#fbf3dd; --text-dim:#b9cfce;
+    --danger:#c0392b; --ok:#3f9e6b;
+    --font-head:'Georgia','Palatino Linotype',serif;
+    --font-body:'Segoe UI', Tahoma, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:var(--font-body);}
+  #pr-root{
+    max-width:720px;margin:0 auto;background:linear-gradient(160deg,#07181a,#0d2426);
+    border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35);
+    color:var(--text-light);border:1px solid #1f4144;
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;background:var(--panel);border-bottom:1px solid #1f4144;
+  }
+  .topbar h1{font-family:var(--font-head);font-size:16px;margin:0;color:var(--accent-2);letter-spacing:.5px;}
+  .topbar .controls{display:flex;gap:8px;}
+  .icon-btn{
+    background:var(--panel-2);border:1px solid #2a5254;color:var(--text-light);
+    border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:5px;transition:background .15s;
+  }
+  .icon-btn:hover{background:#1c4446;}
+  .stage-wrap{position:relative;width:100%;background:#000;}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:7/4.4;}
+  .scene-title{
+    padding:6px 14px 0;font-family:var(--font-head);font-size:13px;
+    color:var(--accent-2);letter-spacing:.3px;opacity:.9;
+  }
+  .below-stage{
+    padding:6px 14px 14px;background:linear-gradient(180deg,#0c2224,#081617);
+    display:flex;flex-direction:column;gap:8px;border-top:1px solid #1f4144;
+  }
+  .narration-box{
+    font-size:14px;line-height:1.45;color:var(--text-light);min-height:38px;
+    text-shadow:0 1px 3px rgba(0,0,0,.7);
+  }
+  .action-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .btn{
+    background:linear-gradient(180deg,var(--accent-2),var(--accent));
+    border:none;color:#2a1c00;font-weight:700;padding:9px 18px;border-radius:24px;
+    cursor:pointer;font-size:14px;box-shadow:0 3px 8px rgba(0,0,0,.4);
+    transition:transform .1s;
+  }
+  .btn:active{transform:scale(.96);}
+  .btn.secondary{
+    background:transparent;border:1.5px solid var(--accent-2);color:var(--accent-2);
+  }
+  .btn:disabled{opacity:.4;cursor:default;}
+  #pr-tap-btn{animation:pr-pulse 1s ease-in-out infinite;}
+  @keyframes pr-pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.08);}
+  }
+  .dots{display:flex;gap:6px;justify-content:center;padding:8px 0;background:var(--panel);flex-wrap:wrap;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#2a4d4f;transition:all .2s;}
+  .dot.active{background:var(--accent-2);width:20px;border-radius:5px;}
+  .dot.done{background:var(--accent);}
+  .mini-hint{font-size:12px;color:var(--text-dim);text-align:center;padding:2px 0;}
+  .progressbar-wrap{
+    width:100%;height:10px;background:#0c2224;border-radius:6px;overflow:hidden;
+    border:1px solid #2a5254;
+  }
+  .progressbar-fill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));width:0%;transition:width .1s linear;}
+  footer.pr-foot{
+    text-align:center;font-size:11px;color:#7c9694;padding:8px;background:var(--panel);
+  }
+</style>
+</head>
+<body>
+<div id="pr-root">
+  <div class="topbar">
+    <h1 id="pr-title">Puteri Runduk</h1>
+    <div class="controls">
+      <button class="icon-btn" id="pr-lang-btn">EN</button>
+      <button class="icon-btn" id="pr-mute-btn">🔊</button>
+    </div>
+  </div>
+  <div class="stage-wrap">
+    <canvas id="pr-canvas" width="700" height="440"></canvas>
+  </div>
+  <div class="scene-title" id="pr-scene-title"></div>
+  <div class="below-stage">
+    <div class="narration-box" id="pr-narration"></div>
+    <div id="pr-mini-hint" class="mini-hint" style="display:none;"></div>
+    <div id="pr-progress-wrap" class="progressbar-wrap" style="display:none;">
+      <div id="pr-progress-fill" class="progressbar-fill"></div>
+    </div>
+    <div class="action-row">
+      <button class="btn secondary" id="pr-replay-btn" style="display:none;">↺ <span id="pr-replay-label">Ulangi Cerita</span></button>
+      <div style="flex:1"></div>
+      <button class="btn" id="pr-tap-btn" style="display:none;">Ketuk!</button>
+      <button class="btn" id="pr-action-btn">Mulai Cerita</button>
+    </div>
+  </div>
+  <div class="dots" id="pr-dots"></div>
+  <footer class="pr-foot" id="pr-foot">Legenda dari Sumatera Utara • Puteri Runduk</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var canvas = document.getElementById('pr-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  // ---------- i18n ----------
+  var UI = {
+    id: {
+      title: "Puteri Runduk",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      muteOn: "🔊", muteOff: "🔇",
+      footer: "Legenda dari Sumatera Utara • Puteri Runduk",
+      hintReject: "Ketuk setiap raja pelamar untuk menolak lamarannya",
+      rejectCount: "raja telah ditolak",
+      hintMash: "Ketuk cepat tombol \"Bertahan!\" untuk membantu pasukan Barus Raya!",
+      mashBtn: "Bertahan!",
+      tolakBtn: "Tolak!",
+      hintTolak: "Ketuk tombol \"Tolak!\" untuk menyaksikan Puteri Runduk menolak dengan tegas",
+      hintSail: "Ketuk pulau-pulau secara berurutan mulai dari pulau nomor 1 untuk berlayar",
+      sailWrong: "Mulai dari pulau nomor 1 dulu ya!",
+      holdBtn: "Angkat Tongkat!",
+      hintHold: "Tahan tombol \"Angkat Tongkat!\" untuk mengumpulkan kekuatan tongkat pusaka"
+    },
+    en: {
+      title: "Puteri Runduk",
+      start: "Start Story",
+      replay: "Replay Story",
+      next: "Next",
+      muteOn: "🔊", muteOff: "🔇",
+      footer: "A folktale from North Sumatra • Puteri Runduk",
+      hintReject: "Tap each suitor king to turn down his proposal",
+      rejectCount: "kings turned away",
+      hintMash: "Tap the \"Hold the Line!\" button rapidly to help the Barus Raya army!",
+      mashBtn: "Hold the Line!",
+      tolakBtn: "Refuse!",
+      hintTolak: "Tap the \"Refuse!\" button to watch Puteri Runduk stand her ground",
+      hintSail: "Tap the islands in order, starting from island number 1, to sail onward",
+      sailWrong: "Start from island number 1 first!",
+      holdBtn: "Raise the Staff!",
+      hintHold: "Hold the \"Raise the Staff!\" button to gather the power of the sacred staff"
+    }
+  };
+
+  // ---------- Scenes ----------
+  var SCENES = [
+    {
+      key:"intro", sky:"day", terrain:"land", type:"intro",
+      title:{id:"Kerajaan Barus Raya", en:"The Kingdom of Barus Raya"},
+      text:{
+        id:"Di tanah Barus, Sumatera Utara, berdirilah Kerajaan Barus Raya yang megah, dipimpin oleh Raja Jayadana. Permaisurinya, Puteri Runduk, begitu cantik jelita hingga namanya termasyhur sampai ke negeri-negeri jauh.",
+        en:"On the coast of Barus, North Sumatra, stood the splendid Kingdom of Barus Raya, ruled by King Jayadana. His queen, Puteri Runduk, was so beautiful that her fame spread to distant lands."
+      },
+      draw: drawIntroScene
+    },
+    {
+      key:"suitors", sky:"day", terrain:"land", type:"reject",
+      title:{id:"Banyak Raja Ingin Meminang", en:"Many Kings Wish to Court Her"},
+      text:{
+        id:"Karena kecantikannya, para raja dan saudagar dari negeri jauh datang melamar Puteri Runduk, meski mereka tahu ia telah bersuami.",
+        en:"Because of her beauty, kings and merchants from faraway lands came to court Puteri Runduk, even though she was already married."
+      },
+      draw: drawSuitorScene, target:3
+    },
+    {
+      key:"war", sky:"dusk", terrain:"land", type:"mash",
+      title:{id:"Peperangan dengan Mataram", en:"War with Mataram"},
+      text:{
+        id:"Raja Sanjaya dari Kerajaan Mataram mengirim pasukan besar untuk merebut Puteri Runduk. Pertempuran hebat pun pecah di gerbang Kota Guguk.",
+        en:"King Sanjaya of the Mataram Kingdom sent a great army to seize Puteri Runduk. A fierce battle broke out at the gates of Kota Guguk."
+      },
+      draw: drawWarScene, duration:8000
+    },
+    {
+      key:"defeat", sky:"dusk", terrain:"land", type:"narration",
+      title:{id:"Barus Raya Kalah", en:"Barus Raya Falls"},
+      text:{
+        id:"Meski bertempur gigih, pasukan Barus Raya kalah jumlah. Kerajaan itu takluk, dan Raja Jayadana gugur dalam pertempuran tersebut.",
+        en:"Despite fighting bravely, the Barus Raya army was outnumbered. The kingdom fell, and King Jayadana perished in the battle."
+      },
+      draw: drawDefeatScene
+    },
+    {
+      key:"proposal", sky:"dusk", terrain:"land", type:"tapbtn",
+      title:{id:"Lamaran yang Ditolak", en:"A Refused Proposal"},
+      text:{
+        id:"Setelah menang, Raja Sanjaya segera melamar Puteri Runduk. Tetapi Puteri Runduk, yang memeluk Islam, menolak keras karena keyakinan mereka berbeda.",
+        en:"After his victory, King Sanjaya quickly proposed to Puteri Runduk. But Puteri Runduk, a Muslim, refused firmly, for their faiths did not align."
+      },
+      draw: drawProposalScene
+    },
+    {
+      key:"capture", sky:"night", terrain:"land", type:"narration",
+      title:{id:"Puteri Runduk Ditawan", en:"Puteri Runduk Is Captured"},
+      text:{
+        id:"Murka atas penolakan itu, Raja Sanjaya memerintahkan Puteri Runduk ditawan di dalam istana yang telah direbutnya.",
+        en:"Enraged by her refusal, King Sanjaya ordered Puteri Runduk to be held captive within the palace he had conquered."
+      },
+      draw: drawCaptureScene
+    },
+    {
+      key:"sail", sky:"night", terrain:"sea", type:"sail",
+      title:{id:"Pelarian ke Pulau Morsala", en:"The Escape to Morsala Island"},
+      text:{
+        id:"Di tengah kekacauan saat Raja Janggi menyerbu pasukan Mataram yang kelelahan, pengawal setia membawa Puteri Runduk kabur menaiki perahu menuju Pulau Morsala.",
+        en:"Amid the chaos as King Janggi struck the exhausted Mataram forces, loyal guards helped Puteri Runduk flee by boat toward Morsala Island."
+      },
+      draw: drawSailScene
+    },
+    {
+      key:"fight", sky:"night", terrain:"sea", type:"hold",
+      title:{id:"Dikejar Raja Janggi", en:"Pursued by King Janggi"},
+      text:{
+        id:"Raja Janggi berhasil mengejar hingga ke Pulau Morsala. Saat ia hendak menangkapnya, Puteri Runduk mengangkat tongkat pusaka akar bahar warisan kerajaan.",
+        en:"King Janggi caught up with her on Morsala Island. As he reached to seize her, Puteri Runduk raised the kingdom's sacred akar bahar staff."
+      },
+      draw: drawFightScene, duration:4200
+    },
+    {
+      key:"sea", sky:"dusk", terrain:"sea", type:"narration",
+      title:{id:"Menghilang di Tengah Lautan", en:"Vanishing Into the Sea"},
+      text:{
+        id:"Puteri Runduk berhasil melawan, namun ia tahu pengejaran takkan pernah berakhir selagi ia hidup dalam kuasa orang lain. Demi menjaga kehormatannya, ia memilih pergi ke laut lepas dan menghilang selamanya, tak pernah tertangkap oleh siapa pun.",
+        en:"Puteri Runduk fought back bravely, but she knew the pursuit would never end while she lived under another's power. To keep her honor, she chose to go out to the open sea and vanish forever, never captured by anyone."
+      },
+      draw: drawSeaScene
+    },
+    {
+      key:"end", sky:"night", terrain:"sea", type:"end",
+      title:{id:"Ratapan Sikambang Bandahari", en:"The Lament of Sikambang Bandahari"},
+      text:{
+        id:"Sikambang Bandahari, dayang setia sang permaisuri, meratapi kepergiannya dengan syair yang panjang tak putus-putus. Hingga kini, kecantikan dan kehormatan Puteri Runduk serta kejayaan Kerajaan Barus Raya tetap dikenang dalam legenda Sumatera Utara. Tamat.",
+        en:"Sikambang Bandahari, the queen's loyal attendant, mourned her passing with an unending lament. To this day, the beauty and honor of Puteri Runduk, and the glory of the Kingdom of Barus Raya, live on in the folklore of North Sumatra. The End."
+      },
+      draw: drawEndScene
+    }
+  ];
+
+  // ---------- State ----------
+  var state = {
+    lang: getInitialLang(),
+    muted: localStorage.getItem('puteri_runduk_muted') === '1',
+    sceneIndex: 0,
+    frame: 0,
+    rejectTargets: [],
+    rejectedCount: 0,
+    mashProgress: 0,
+    warProgress: 0,
+    holdProgress: 0,
+    holding: false,
+    sailTargets: [],
+    sailIndex: 0,
+    tolakDone: false,
+    running: false
+  };
+
+  function getInitialLang(){
+    var params = new URLSearchParams(window.location.search);
+    var q = params.get('lang');
+    if(q === 'en' || q === 'id') return q;
+    var stored = localStorage.getItem('puteri_runduk_lang');
+    if(stored === 'en' || stored === 'id') return stored;
+    return 'id';
+  }
+
+  // ---------- DOM refs ----------
+  var elTitle = document.getElementById('pr-title');
+  var elSceneTitle = document.getElementById('pr-scene-title');
+  var elNarration = document.getElementById('pr-narration');
+  var elActionBtn = document.getElementById('pr-action-btn');
+  var elTapBtn = document.getElementById('pr-tap-btn');
+  var elReplayBtn = document.getElementById('pr-replay-btn');
+  var elReplayLabel = document.getElementById('pr-replay-label');
+  var elLangBtn = document.getElementById('pr-lang-btn');
+  var elMuteBtn = document.getElementById('pr-mute-btn');
+  var elDots = document.getElementById('pr-dots');
+  var elFoot = document.getElementById('pr-foot');
+  var elHint = document.getElementById('pr-mini-hint');
+  var elProgWrap = document.getElementById('pr-progress-wrap');
+  var elProgFill = document.getElementById('pr-progress-fill');
+
+  function t(key){ return UI[state.lang][key]; }
+
+  // ---------- Build dots ----------
+  function buildDots(){
+    elDots.innerHTML = '';
+    for(var i=0;i<SCENES.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      elDots.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = elDots.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].className = 'dot' + (i===state.sceneIndex ? ' active' : (i<state.sceneIndex ? ' done' : ''));
+    }
+  }
+
+  // ---------- Speech ----------
+  var synth = window.speechSynthesis;
+  var voices = [];
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if(!voices || !voices.length) return null;
+    var code = lang === 'en' ? 'en' : 'id';
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(code) === 0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(!synth) return;
+    synth.cancel();
+    if(state.muted) return;
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice(state.lang);
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    synth.speak(utter);
+  }
+  function stopSpeech(){ if(synth) synth.cancel(); }
+
+  // ---------- postMessage resize ----------
+  function reportSize(){
+    var h = document.getElementById('pr-root').offsetHeight;
+    window.parent.postMessage({ type:'puteri-runduk-resize', height:h }, '*');
+  }
+
+  // ---------- Sky / sea gradients ----------
+  function skyGradient(sky){
+    var g;
+    if(sky === 'day'){ g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3f8fae'); g.addColorStop(1,'#cdeaea'); }
+    else if(sky === 'dusk'){ g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#2c1f45'); g.addColorStop(0.55,'#8a3e4a'); g.addColorStop(1,'#c4623f'); }
+    else { g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#050c1e'); g.addColorStop(1,'#122238'); }
+    return g;
+  }
+  function groundGradient(sky){
+    var g = ctx.createLinearGradient(0,H*0.62,0,H);
+    if(sky === 'day'){ g.addColorStop(0,'#5a8a5a'); g.addColorStop(1,'#3a6238'); }
+    else if(sky === 'dusk'){ g.addColorStop(0,'#4a3a3a'); g.addColorStop(1,'#241a1c'); }
+    else { g.addColorStop(0,'#182a2c'); g.addColorStop(1,'#0a1416'); }
+    return g;
+  }
+  function seaGradient(sky){
+    var g = ctx.createLinearGradient(0,H*0.6,0,H);
+    if(sky === 'day'){ g.addColorStop(0,'#1c5f78'); g.addColorStop(1,'#0e3a4c'); }
+    else if(sky === 'dusk'){ g.addColorStop(0,'#5a3a4a'); g.addColorStop(1,'#241a24'); }
+    else { g.addColorStop(0,'#0e1e34'); g.addColorStop(1,'#050c18'); }
+    return g;
+  }
+
+  function drawBase(sky, terrain){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = skyGradient(sky);
+    ctx.fillRect(0,0,W,H*0.62);
+    if(terrain === 'sea'){
+      ctx.fillStyle = seaGradient(sky);
+      ctx.fillRect(0,H*0.58,W,H*0.42);
+      drawWaves(sky);
+    } else {
+      ctx.fillStyle = groundGradient(sky);
+      ctx.fillRect(0,H*0.6,W,H*0.4);
+    }
+    if(sky === 'night'){
+      drawMoon(610,68,32);
+      drawStars();
+    } else if(sky === 'dusk'){
+      drawSun(560,88,36,'#f2b33d');
+    } else {
+      drawSun(605,66,34,'#fff6d6');
+    }
+  }
+
+  function drawWaves(sky){
+    ctx.save();
+    ctx.strokeStyle = sky==='night' ? 'rgba(180,210,230,0.25)' : (sky==='dusk' ? 'rgba(255,220,200,0.3)' : 'rgba(255,255,255,0.35)');
+    ctx.lineWidth = 2;
+    for(var row=0; row<5; row++){
+      var y = H*0.66 + row*22;
+      ctx.beginPath();
+      for(var x=0; x<=W; x+=14){
+        var yy = y + Math.sin((x*0.05) + state.frame*0.002 + row) * 3;
+        if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 30;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawMoon(x,y,r){
+    ctx.save();
+    ctx.fillStyle = '#f4f1e0';
+    ctx.shadowColor = '#f4f1e0';
+    ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(10,20,40,0.85)';
+    ctx.beginPath(); ctx.arc(x+11,y-5,r*0.85,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  var starPositions = null;
+  function drawStars(){
+    if(!starPositions){
+      starPositions = [];
+      for(var i=0;i<40;i++){
+        starPositions.push({x:Math.random()*W, y:Math.random()*H*0.45, r:Math.random()*1.6+0.5, tw:Math.random()*6.28});
+      }
+    }
+    ctx.fillStyle = '#fff';
+    for(var i=0;i<starPositions.length;i++){
+      var s = starPositions[i];
+      var alpha = 0.4 + 0.6*Math.abs(Math.sin(state.frame*0.03 + s.tw));
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- Reusable figures ----------
+  function drawPalace(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // base building
+    ctx.fillStyle = '#8a6a34';
+    ctx.fillRect(-90,-20,180,90);
+    // limas roof (Melayu style)
+    ctx.fillStyle = '#5a3f1c';
+    ctx.beginPath();
+    ctx.moveTo(-105,-20); ctx.lineTo(0,-95); ctx.lineTo(105,-20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d4af37';
+    ctx.beginPath();
+    ctx.moveTo(-40,-58); ctx.lineTo(0,-95); ctx.lineTo(40,-58); ctx.closePath(); ctx.fill();
+    // spire
+    ctx.fillStyle = '#f2dd8a';
+    ctx.fillRect(-3,-112,6,20);
+    ctx.beginPath(); ctx.arc(0,-114,5,0,Math.PI*2); ctx.fill();
+    // door
+    ctx.fillStyle = '#2a1c0c';
+    ctx.beginPath();
+    ctx.moveTo(-16,70); ctx.lineTo(-16,25); ctx.quadraticCurveTo(0,5,16,25); ctx.lineTo(16,70); ctx.closePath(); ctx.fill();
+    // windows
+    ctx.fillStyle = '#f2dd8a';
+    ctx.fillRect(-65,0,20,26);
+    ctx.fillRect(45,0,20,26);
+    // pillars
+    ctx.fillStyle = '#c7a352';
+    ctx.fillRect(-88,-18,8,88);
+    ctx.fillRect(80,-18,8,88);
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,skin,shirt,crownColor,facing){
+    scale = scale || 1;
+    facing = facing || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale*facing,scale);
+    // robe
+    ctx.fillStyle = shirt;
+    ctx.beginPath(); ctx.moveTo(-16,10); ctx.lineTo(16,10); ctx.lineTo(12,52); ctx.lineTo(-12,52); ctx.closePath(); ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt; ctx.lineWidth = 8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-14,16); ctx.lineTo(-22,34); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,16); ctx.lineTo(22,34); ctx.stroke();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-6,15,0,Math.PI*2); ctx.fill();
+    if(crownColor){
+      ctx.fillStyle = crownColor;
+      ctx.beginPath();
+      ctx.moveTo(-14,-16); ctx.lineTo(-8,-30); ctx.lineTo(0,-18); ctx.lineTo(8,-30); ctx.lineTo(14,-16); ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#1c140c';
+      ctx.beginPath(); ctx.arc(0,-11,15,Math.PI,0); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawQueen(x,y,scale,expression){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // gown
+    ctx.fillStyle = '#8a2040';
+    ctx.beginPath(); ctx.moveTo(-18,10); ctx.lineTo(18,10); ctx.lineTo(15,58); ctx.lineTo(-15,58); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(-18,10,36,8);
+    // arms
+    if(expression === 'crossed'){
+      ctx.strokeStyle = '#e6c8a0'; ctx.lineWidth = 7; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-14,18); ctx.lineTo(10,26); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,18); ctx.lineTo(-10,26); ctx.stroke();
+    } else {
+      ctx.strokeStyle = '#e6c8a0'; ctx.lineWidth = 7; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-16,16); ctx.lineTo(-24,32); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(16,16); ctx.lineTo(24,32); ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = '#e6c8a0';
+    ctx.beginPath(); ctx.arc(0,-6,15,0,Math.PI*2); ctx.fill();
+    // veil/hair
+    ctx.fillStyle = '#3a2410';
+    ctx.beginPath(); ctx.moveTo(-16,-4); ctx.quadraticCurveTo(-20,30,-10,44); ctx.lineTo(-4,40); ctx.quadraticCurveTo(-12,10,-8,-8); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(16,-4); ctx.quadraticCurveTo(20,30,10,44); ctx.lineTo(4,40); ctx.quadraticCurveTo(12,10,8,-8); ctx.closePath(); ctx.fill();
+    // small gold crown
+    ctx.fillStyle = '#f2dd8a';
+    ctx.beginPath();
+    ctx.moveTo(-10,-17); ctx.lineTo(-5,-27); ctx.lineTo(0,-19); ctx.lineTo(5,-27); ctx.lineTo(10,-17); ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawIntroScene(){
+    drawBase('day','land');
+    drawPalace(W*0.5, H*0.62, 1.05);
+    drawQueen(W*0.38, H*0.86, 1.0);
+    drawPerson(W*0.62, H*0.86, 1.0, '#d8ab7a', '#2a4a6a', '#d4af37');
+  }
+
+  function drawSuitorScene(){
+    drawBase('day','land');
+    drawPalace(W*0.5, H*0.3, 0.55);
+    drawQueen(W*0.5, H*0.9, 1.0);
+    var positions = [ {x:W*0.18,y:H*0.86}, {x:W*0.5,y:H*0.94}, {x:W*0.82,y:H*0.86} ];
+    var colors = ['#c0392b','#2c6e49','#4040a0'];
+    for(var i=0;i<state.rejectTargets.length;i++){
+      var g = state.rejectTargets[i];
+      var p = positions[i];
+      ctx.save();
+      if(g.rejected){ ctx.globalAlpha = 0.35; }
+      drawPerson(p.x, p.y*0.72, 0.85, '#c99a6a', colors[i], '#d4af37', i===2?-1:1);
+      ctx.restore();
+      if(g.rejected){
+        ctx.save();
+        ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 6; ctx.lineCap='round';
+        var cx = p.x, cy = p.y*0.72 - 40;
+        ctx.beginPath(); ctx.moveTo(cx-18,cy-18); ctx.lineTo(cx+18,cy+18); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+18,cy-18); ctx.lineTo(cx-18,cy+18); ctx.stroke();
+        ctx.restore();
+      } else {
+        // gentle bob to show they're waiting/tappable
+        var bob = Math.sin(state.frame*0.004 + i)*3;
+        ctx.save();
+        ctx.translate(0,bob);
+        ctx.restore();
+      }
+    }
+  }
+
+  function drawWarScene(){
+    drawBase('dusk','land');
+    // two banners
+    ctx.save();
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(W*0.16, H*0.55, 5, 70);
+    ctx.beginPath(); ctx.moveTo(W*0.16+5,H*0.55); ctx.lineTo(W*0.16+40,H*0.6); ctx.lineTo(W*0.16+5,H*0.65); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8a2020';
+    ctx.fillRect(W*0.8, H*0.55, 5, 70);
+    ctx.beginPath(); ctx.moveTo(W*0.8+5,H*0.55); ctx.lineTo(W*0.8-30,H*0.6); ctx.lineTo(W*0.8+5,H*0.65); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    var wobble = Math.sin(state.frame*0.01)*6;
+    drawPerson(W*0.36+wobble, H*0.86, 1.0, '#c99a6a', '#2a4a6a', null);
+    drawPerson(W*0.64-wobble, H*0.86, 1.0, '#c99a6a', '#8a2020', null, -1);
+    // clashing swords
+    ctx.save();
+    ctx.strokeStyle = '#e6e6e6'; ctx.lineWidth = 4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(W*0.5-20, H*0.78); ctx.lineTo(W*0.5+20, H*0.7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W*0.5+20, H*0.78); ctx.lineTo(W*0.5-20, H*0.7); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDefeatScene(){
+    drawBase('dusk','land');
+    // fallen banner lying on the ground
+    ctx.save();
+    ctx.translate(W*0.28, H*0.86);
+    ctx.rotate(-0.12);
+    ctx.fillStyle = '#6b4a1c';
+    ctx.fillRect(-4,-4,110,8);
+    ctx.fillStyle = '#d4af37';
+    ctx.beginPath(); ctx.moveTo(106,-14); ctx.lineTo(150,0); ctx.lineTo(106,14); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // kneeling king figure, head bowed
+    drawPerson(W*0.6, H*0.9, 0.9, '#c99a6a', '#2a4a6a', '#d4af37');
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(W*0.6, H*0.97, 26, 6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawProposalScene(){
+    drawBase('dusk','land');
+    drawPalace(W*0.5, H*0.28, 0.5);
+    drawQueen(W*0.36, H*0.88, 1.0, state.tolakDone ? 'crossed' : 'normal');
+    drawPerson(W*0.64, H*0.9, 1.0, '#c99a6a', '#8a2020', '#d4af37', -1);
+    if(state.tolakDone){
+      ctx.save();
+      ctx.strokeStyle = '#e6b800'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(W*0.36, H*0.7, 30 + Math.sin(state.frame*0.02)*4, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawCaptureScene(){
+    drawBase('night','land');
+    // stone room
+    ctx.fillStyle = '#1a2426';
+    ctx.fillRect(W*0.2, H*0.4, W*0.6, H*0.5);
+    drawQueen(W*0.5, H*0.86, 0.9);
+    // bars
+    ctx.save();
+    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 6;
+    for(var i=0;i<6;i++){
+      var x = W*0.24 + i*(W*0.52/5);
+      ctx.beginPath(); ctx.moveTo(x, H*0.42); ctx.lineTo(x, H*0.95); ctx.stroke();
+    }
+    ctx.restore();
+    drawPerson(W*0.14, H*0.9, 0.85, '#a08060', '#333', null);
+    drawPerson(W*0.86, H*0.9, 0.85, '#a08060', '#333', null, -1);
+  }
+
+  function drawSailScene(){
+    drawBase('night','sea');
+    var islandsPos = [ {x:W*0.24,y:H*0.72}, {x:W*0.5,y:H*0.62}, {x:W*0.78,y:H*0.72} ];
+    for(var i=0;i<state.sailTargets.length;i++){
+      var isl = state.sailTargets[i];
+      var p = islandsPos[i];
+      ctx.save();
+      ctx.fillStyle = isl.visited ? '#3f9e6b' : '#3a6a4a';
+      ctx.beginPath(); ctx.ellipse(p.x,p.y,42,16,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = isl.visited ? '#5abf8a' : '#2f5a3a';
+      ctx.beginPath(); ctx.arc(p.x-10,p.y-14,14,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x+12,p.y-10,10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(i+1), p.x, p.y+5);
+      ctx.restore();
+    }
+    // boat position follows sailIndex
+    var boatX = W*0.1 + (state.sailIndex/3) * W*0.7;
+    var bob = Math.sin(state.frame*0.006)*4;
+    ctx.save();
+    ctx.translate(boatX, H*0.85+bob);
+    ctx.fillStyle = '#7a5a34';
+    ctx.beginPath(); ctx.moveTo(-30,0); ctx.lineTo(30,0); ctx.lineTo(20,14); ctx.lineTo(-20,14); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-30); ctx.stroke();
+    ctx.fillStyle = '#f2f2e0';
+    ctx.beginPath(); ctx.moveTo(0,-30); ctx.lineTo(22,-6); ctx.lineTo(0,-6); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    drawQueen(boatX, H*0.83+bob-14, 0.55);
+  }
+
+  function drawFightScene(){
+    drawBase('night','sea');
+    ctx.save();
+    ctx.fillStyle = '#2f5a3a';
+    ctx.beginPath(); ctx.ellipse(W*0.5,H*0.9,120,20,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    drawPerson(W*0.72, H*0.86, 1.0, '#5a3a2a', '#1a1a1a', null, -1);
+    drawQueen(W*0.32, H*0.86, 1.0, 'normal');
+    // staff
+    var glow = state.holdProgress/100;
+    ctx.save();
+    ctx.translate(W*0.32+18, H*0.78);
+    ctx.rotate(-0.9 - glow*0.6);
+    ctx.strokeStyle = '#7a5a34'; ctx.lineWidth = 6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-58); ctx.stroke();
+    if(glow > 0.05){
+      ctx.shadowColor = '#f2dd8a';
+      ctx.shadowBlur = 20*glow;
+      ctx.fillStyle = 'rgba(242,221,138,'+(0.3+0.5*glow)+')';
+      ctx.beginPath(); ctx.arc(0,-58,8+10*glow,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawSeaScene(){
+    drawBase('dusk','sea');
+    var fade = 1;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#3a2a3a';
+    ctx.beginPath(); ctx.ellipse(W*0.6, H*0.62, 10, 22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    // gentle ripples where she vanished
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
+    for(var i=0;i<3;i++){
+      var r = 14 + i*12 + (state.frame*0.01)%12;
+      ctx.globalAlpha = Math.max(0, 0.4 - i*0.12);
+      ctx.beginPath(); ctx.ellipse(W*0.6, H*0.66, r, r*0.3, 0, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawEndScene(){
+    drawBase('night','sea');
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    drawQueen(W*0.5, H*0.9, 0.75); // reused figure silhouette for the attendant, softened
+    ctx.restore();
+  }
+
+  // ---------- Interaction setup per scene ----------
+  function setupInteraction(scene){
+    elHint.style.display = 'none';
+    elProgWrap.style.display = 'none';
+    elActionBtn.style.display = 'inline-block';
+    elActionBtn.disabled = false;
+    elTapBtn.style.display = 'none';
+
+    if(scene.type === 'intro' || scene.type === 'narration'){
+      elActionBtn.textContent = t('next');
+    }
+    else if(scene.type === 'reject'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      state.rejectedCount = 0;
+      state.rejectTargets = [];
+      for(var i=0;i<scene.target;i++){
+        state.rejectTargets.push({ rejected:false });
+      }
+      updateRejectHint();
+    }
+    else if(scene.type === 'mash'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintMash');
+      elProgWrap.style.display = 'block';
+      elTapBtn.style.display = 'inline-block';
+      elTapBtn.textContent = t('mashBtn');
+      state.mashProgress = 0;
+      state._warStart = performance.now();
+      state._warDone = false;
+    }
+    else if(scene.type === 'tapbtn'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintTolak');
+      elTapBtn.style.display = 'inline-block';
+      elTapBtn.textContent = t('tolakBtn');
+      elTapBtn.disabled = false;
+      state.tolakDone = false;
+    }
+    else if(scene.type === 'sail'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintSail');
+      elProgWrap.style.display = 'block';
+      state.sailIndex = 0;
+      state.sailTargets = [{visited:false},{visited:false},{visited:false}];
+      state._sailDone = false;
+    }
+    else if(scene.type === 'hold'){
+      elActionBtn.style.display = 'none';
+      elHint.style.display = 'block';
+      elHint.textContent = t('hintHold');
+      elProgWrap.style.display = 'block';
+      elTapBtn.style.display = 'inline-block';
+      elTapBtn.textContent = t('holdBtn');
+      state.holdProgress = 0;
+      state._holdDone = false;
+    }
+    else if(scene.type === 'end'){
+      elActionBtn.style.display = 'none';
+      elReplayBtn.style.display = 'inline-block';
+    }
+  }
+
+  function updateRejectHint(){
+    elHint.textContent = t('hintReject') + '  (' + state.rejectedCount + '/' + state.rejectTargets.length + ' ' + t('rejectCount') + ')';
+  }
+
+  // ---------- Scene lifecycle ----------
+  function enterScene(index){
+    state.sceneIndex = index;
+    var scene = SCENES[index];
+    elNarration.textContent = scene.text[state.lang];
+    elSceneTitle.textContent = scene.title[state.lang];
+    elReplayBtn.style.display = 'none';
+    updateDots();
+    setupInteraction(scene);
+    speak(scene.text[state.lang]);
+    reportSize();
+  }
+
+  function advance(){
+    if(state.sceneIndex < SCENES.length-1){
+      enterScene(state.sceneIndex+1);
+    }
+  }
+
+  elActionBtn.addEventListener('click', function(){
+    var scene = SCENES[state.sceneIndex];
+    if(scene.type === 'intro' || scene.type === 'narration'){
+      advance();
+    }
+  });
+
+  elReplayBtn.addEventListener('click', function(){
+    enterScene(0);
+    elActionBtn.style.display = 'inline-block';
+    elActionBtn.textContent = t('start');
+  });
+
+  elTapBtn.addEventListener('pointerdown', function(evt){
+    evt.preventDefault();
+    var scene = SCENES[state.sceneIndex];
+    if(scene.type === 'mash'){
+      state.mashProgress = Math.min(100, state.mashProgress+8);
+    } else if(scene.type === 'hold'){
+      state.holding = true;
+    } else if(scene.type === 'tapbtn'){
+      if(!state.tolakDone){
+        state.tolakDone = true;
+        elTapBtn.disabled = true;
+        setTimeout(advance, 1400);
+      }
+    }
+  });
+  elTapBtn.addEventListener('pointerup', function(){
+    state.holding = false;
+  });
+  elTapBtn.addEventListener('pointerleave', function(){
+    state.holding = false;
+  });
+
+  elLangBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('puteri_runduk_lang', state.lang);
+    refreshLangUI();
+    var scene = SCENES[state.sceneIndex];
+    elNarration.textContent = scene.text[state.lang];
+    elSceneTitle.textContent = scene.title[state.lang];
+    speak(scene.text[state.lang]);
+  });
+
+  elMuteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('puteri_runduk_muted', state.muted ? '1':'0');
+    elMuteBtn.textContent = state.muted ? t('muteOff') : t('muteOn');
+    if(state.muted) stopSpeech();
+    else speak(SCENES[state.sceneIndex].text[state.lang]);
+  });
+
+  function refreshLangUI(){
+    elLangBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    elTitle.textContent = t('title');
+    elFoot.textContent = t('footer');
+    elReplayLabel.textContent = t('replay');
+    elMuteBtn.textContent = state.muted ? t('muteOff') : t('muteOn');
+    if(elActionBtn.style.display !== 'none'){
+      var scene = SCENES[state.sceneIndex];
+      if(scene.type === 'intro'){ elActionBtn.textContent = t('start'); }
+      else { elActionBtn.textContent = t('next'); }
+    }
+    var curScene = SCENES[state.sceneIndex];
+    if(curScene){
+      if(curScene.type === 'mash'){ elTapBtn.textContent = t('mashBtn'); elHint.textContent = t('hintMash'); }
+      else if(curScene.type === 'hold'){ elTapBtn.textContent = t('holdBtn'); elHint.textContent = t('hintHold'); }
+      else if(curScene.type === 'reject'){ updateRejectHint(); }
+      else if(curScene.type === 'sail'){ elHint.textContent = t('hintSail'); }
+      else if(curScene.type === 'tapbtn'){ elTapBtn.textContent = t('tolakBtn'); elHint.textContent = t('hintTolak'); }
+    }
+  }
+
+  // ---------- Canvas pointer interactions ----------
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+    return { x: cx * (W/rect.width), y: cy * (H/rect.height) };
+  }
+
+  var suitorPositions = [ {x:0.18,y:0.62}, {x:0.5,y:0.68}, {x:0.82,y:0.62} ];
+  var islandPositions = [ {x:0.24,y:0.72}, {x:0.5,y:0.62}, {x:0.78,y:0.72} ];
+
+  canvas.addEventListener('pointerdown', function(evt){
+    var scene = SCENES[state.sceneIndex];
+    var pos = getCanvasPos(evt);
+
+    if(scene.type === 'reject'){
+      for(var i=0;i<state.rejectTargets.length;i++){
+        var g = state.rejectTargets[i];
+        if(g.rejected) continue;
+        var sp = suitorPositions[i];
+        var dx = pos.x-(sp.x*W), dy = pos.y-(sp.y*H);
+        if(Math.sqrt(dx*dx+dy*dy) < 55){
+          g.rejected = true;
+          state.rejectedCount++;
+          updateRejectHint();
+          if(state.rejectedCount >= state.rejectTargets.length){
+            setTimeout(advance, 500);
+          }
+        }
+      }
+    }
+    else if(scene.type === 'sail'){
+      var ip = islandPositions[state.sailIndex];
+      if(ip){
+        var dx2 = pos.x-(ip.x*W), dy2 = pos.y-(ip.y*H);
+        if(Math.sqrt(dx2*dx2+dy2*dy2) < 55){
+          state.sailTargets[state.sailIndex].visited = true;
+          state.sailIndex++;
+          elProgFill.style.width = ((state.sailIndex/3)*100) + '%';
+          if(state.sailIndex >= 3 && !state._sailDone){
+            state._sailDone = true;
+            setTimeout(advance, 500);
+          }
+        } else {
+          // check if tapped a wrong / future island
+          for(var j=0;j<islandPositions.length;j++){
+            if(j===state.sailIndex) continue;
+            var jp = islandPositions[j];
+            var dxj = pos.x-(jp.x*W), dyj = pos.y-(jp.y*H);
+            if(Math.sqrt(dxj*dxj+dyj*dyj) < 55){
+              elHint.textContent = t('sailWrong');
+              setTimeout(function(){ if(SCENES[state.sceneIndex].type==='sail') elHint.textContent = t('hintSail'); }, 1200);
+            }
+          }
+        }
+      }
+    }
+  });
+  window.addEventListener('pointerup', function(){
+    state.holding = false;
+  });
+
+  // ---------- Main loop ----------
+  var lastTime = performance.now();
+  var prevIndex = -1;
+  function loop(now){
+    var dt = now - lastTime; lastTime = now;
+    state.frame = now;
+    var scene = SCENES[state.sceneIndex];
+
+    if(state.sceneIndex !== prevIndex){
+      prevIndex = state.sceneIndex;
+    }
+
+    if(scene.type === 'mash'){
+      state.mashProgress = Math.max(0, state.mashProgress - dt*0.012);
+      elProgFill.style.width = state.mashProgress + '%';
+      var elapsedWar = now - (state._warStart||now);
+      if((state.mashProgress >= 100 || elapsedWar >= scene.duration) && !state._warDone){
+        state._warDone = true;
+        setTimeout(advance, 400);
+      }
+    }
+    else if(scene.type === 'hold'){
+      if(state.holding){
+        state.holdProgress = Math.min(100, state.holdProgress + dt*0.05);
+      } else {
+        state.holdProgress = Math.max(0, state.holdProgress - dt*0.02);
+      }
+      elProgFill.style.width = state.holdProgress + '%';
+      if(state.holdProgress >= 100 && !state._holdDone){
+        state._holdDone = true;
+        setTimeout(advance, 500);
+      }
+    }
+
+    scene.draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Init ----------
+  buildDots();
+  refreshLangUI();
+  elActionBtn.textContent = t('start');
+  enterSceneInit();
+
+  function enterSceneInit(){
+    state.sceneIndex = 0;
+    var scene = SCENES[0];
+    elNarration.textContent = scene.text[state.lang];
+    elSceneTitle.textContent = scene.title[state.lang];
+    updateDots();
+    setupInteraction(scene);
+    elActionBtn.style.display = 'inline-block';
+    elActionBtn.textContent = t('start');
+    reportSize();
+  }
+
+  requestAnimationFrame(loop);
+  window.addEventListener('resize', reportSize);
+  setTimeout(reportSize, 300);
+
+})();
+</script>
+</body>
+</html>
