@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raja Kelana Swandana - Asal Usul Reog Ponorogo</title>
+<style>
+  :root{
+    --bg-a:#2b1810;
+    --bg-b:#4a2818;
+    --panel:#fff8ec;
+    --ink:#2b1810;
+    --gold:#c9962c;
+    --gold-dark:#8a6416;
+    --red:#a02c2c;
+    --green:#3d7a3d;
+    --dot-off:#d8c39a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Trebuchet MS', 'Segoe UI', Tahoma, sans-serif;
+    background:linear-gradient(180deg,var(--bg-a),var(--bg-b));
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:var(--panel);
+    border-radius:16px;
+    box-shadow:0 8px 30px rgba(0,0,0,.45);
+    overflow:hidden;
+    border:3px solid var(--gold);
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(180deg,#7a3418,#5a2410);
+    color:#fce9c8;
+  }
+  #topbar h1{
+    font-size:15px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.3px;
+    line-height:1.25;
+    padding-right:8px;
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .iconbtn{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.35);
+    color:#fce9c8;
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .iconbtn:hover{ background:rgba(255,255,255,.22); }
+  .iconbtn.active{ background:var(--gold); color:#3a2308; border-color:var(--gold); }
+
+  #stage-wrap{
+    position:relative;
+    background:#eadfc4;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+  #overlay-btn{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    padding:14px 26px;
+    font-size:16px;
+    font-weight:700;
+    border:none;
+    border-radius:10px;
+    background:var(--gold);
+    color:#3a2308;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.4);
+  }
+  #overlay-btn:hover{ background:#dba838; }
+  #overlay-btn.hidden{ display:none; }
+
+  #instruction{
+    padding:10px 16px 4px 16px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--red);
+    text-align:center;
+    min-height:20px;
+  }
+  #narration{
+    padding:4px 18px 14px 18px;
+    font-size:14.5px;
+    line-height:1.55;
+    text-align:center;
+    color:var(--ink);
+    min-height:44px;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:2px 0 12px 0;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--dot-off);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{ background:var(--red); transform:scale(1.25); }
+  .dot.done{ background:var(--gold-dark); }
+
+  #bottombar{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:0 16px 18px 16px;
+  }
+  .mainbtn{
+    padding:10px 22px;
+    font-size:15px;
+    font-weight:700;
+    border:none;
+    border-radius:10px;
+    background:var(--red);
+    color:#fce9c8;
+    cursor:pointer;
+  }
+  .mainbtn:hover{ background:#8f2323; }
+  .mainbtn.secondary{
+    background:transparent;
+    border:2px solid var(--gold-dark);
+    color:var(--gold-dark);
+  }
+  .mainbtn.hidden{ display:none; }
+
+  #footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7554;
+    padding:6px 10px 12px 10px;
+  }
+
+  /* progress bar used for hold / mash interactions */
+  .progress-track{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    width:70%;
+    max-width:340px;
+    height:14px;
+    background:rgba(0,0,0,.2);
+    border-radius:7px;
+    overflow:hidden;
+    border:2px solid rgba(0,0,0,.3);
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold-dark),var(--gold));
+  }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1 id="title-text">Raja Kelana Swandana - Asal Usul Reog Ponorogo</h1>
+    <div id="controls">
+      <button class="iconbtn" id="lang-btn" title="Bahasa">EN</button>
+      <button class="iconbtn" id="mute-btn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="450"></canvas>
+    <button id="overlay-btn" class="hidden"></button>
+    <div class="progress-track hidden" id="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <div id="instruction"></div>
+  <div id="narration"></div>
+  <div id="dots"></div>
+  <div id="bottombar">
+    <button class="mainbtn" id="start-btn">Mulai Cerita</button>
+    <button class="mainbtn secondary hidden" id="replay-btn">Ulangi Cerita</button>
+  </div>
+  <div id="footer">Cerita Rakyat Jawa Timur &middot; Reog Ponorogo</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== STATE ===================== */
+  var state = {
+    lang: 'id',
+    muted: false,
+    sceneIndex: -1, // -1 = title/cover screen
+    playing: false,
+    anim: null
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('lang') === 'en') state.lang = 'en';
+  try {
+    var savedLang = localStorage.getItem('reog_lang');
+    if (savedLang) state.lang = savedLang;
+    var savedMute = localStorage.getItem('reog_mute');
+    if (savedMute === '1') state.muted = true;
+  } catch(e){}
+
+  /* ===================== TEXT DATA ===================== */
+  var T = {
+    id: {
+      title: "Raja Kelana Swandana - Asal Usul Reog Ponorogo",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      footer: "Cerita Rakyat Jawa Timur \u00B7 Reog Ponorogo"
+    },
+    en: {
+      title: "King Kelana Swandana - The Origin of Reog Ponorogo",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      footer: "Folktale from East Java \u00B7 Reog Ponorogo"
+    }
+  };
+
+  /* ===================== SCENES ===================== */
+  // interaction types: 'tap-once', 'multi-tap', 'sequence-tap', 'drag', 'hold', 'timing'
+  var scenes = [
+    {
+      key:'intro',
+      narration:{
+        id:"Di Kerajaan Kediri, tersebutlah seorang putri raja bernama Dewi Sanggalangit yang terkenal akan kecantikannya. Banyak pangeran dan raja ingin meminangnya, namun ia selalu menolak karena belum ingin menikah.",
+        en:"In the Kingdom of Kediri, there lived a princess named Dewi Sanggalangit, famous for her beauty. Many princes and kings wished to marry her, but she always refused, saying she did not yet wish to wed."
+      },
+      instruction:{
+        id:"Ketuk gerbang istana untuk memulai kisah",
+        en:"Tap the palace gate to begin the story"
+      },
+      interaction:'tap-once',
+      targetLabel:{id:'gerbang istana', en:'palace gate'},
+      hit:{x:400,y:330,r:70},
+      draw: drawSceneIntro
+    },
+    {
+      key:'syarat',
+      narration:{
+        id:"Ingin membahagiakan orang tuanya, Dewi Sanggalangit bersedia menikah dengan syarat: sebuah tontonan belum pernah ada, berupa tarian diiringi gamelan, kuda kembar, dan binatang berkepala dua.",
+        en:"Wishing to please her parents, Dewi Sanggalangit agreed to marry, on the condition of a spectacle never seen before: a dance accompanied by gamelan music, a pair of twin horses, and a two-headed animal."
+      },
+      instruction:{
+        id:"Ketuk keempat syarat Dewi Sanggalangit satu per satu",
+        en:"Tap each of Dewi Sanggalangit's four requests, one by one"
+      },
+      interaction:'multi-tap',
+      targets:[
+        {id:'tari', x:190, y:330, r:55, label:{id:'tarian',en:'dance'}},
+        {id:'gamelan', x:340, y:330, r:55, label:{id:'gamelan',en:'gamelan'}},
+        {id:'kuda', x:490, y:330, r:55, label:{id:'kuda kembar',en:'twin horses'}},
+        {id:'hewan', x:630, y:330, r:55, label:{id:'hewan berkepala dua',en:'two-headed animal'}}
+      ],
+      draw: drawSceneSyarat
+    },
+    {
+      key:'sayembara',
+      narration:{
+        id:"Raja Kediri mengadakan sayembara. Setelah banyak yang mengundurkan diri karena syarat berat, tinggal dua pemberani: Raja Singabarong dari Lodaya yang berkepala harimau dan berbulu lebat, serta Raja Kelana Swandana dari Bandarangin yang gagah dan tampan.",
+        en:"The King of Kediri held a contest. After many withdrew due to the difficult terms, only two remained: King Singabarong of Lodaya, with a tiger's head and thick fur, and King Kelana Swandana of Bandarangin, handsome and noble."
+      },
+      instruction:{
+        id:"Ketuk Raja Singabarong, lalu ketuk Raja Kelana Swandana",
+        en:"Tap King Singabarong, then tap King Kelana Swandana"
+      },
+      interaction:'sequence-tap',
+      targets:[
+        {id:'singabarong', x:230, y:290, r:80, label:{id:'Raja Singabarong', en:'King Singabarong'}},
+        {id:'kelana', x:570, y:290, r:80, label:{id:'Raja Kelana Swandana', en:'King Kelana Swandana'}}
+      ],
+      draw: drawSceneSayembara
+    },
+    {
+      key:'patih',
+      narration:{
+        id:"Raja Singabarong mengutus patihnya, Iderkala, untuk menyelidiki persiapan Kelana Swandana di Kerajaan Bandarangin.",
+        en:"King Singabarong sent his minister, Iderkala, to spy on Kelana Swandana's preparations in the Kingdom of Bandarangin."
+      },
+      instruction:{
+        id:"Seret Patih Iderkala menuju Istana Bandarangin",
+        en:"Drag Minister Iderkala toward Bandarangin Palace"
+      },
+      interaction:'drag',
+      drag:{ startX:150, startY:330, endX:620, endY:230, r:44, threshold:60 },
+      draw: drawScenePatih
+    },
+    {
+      key:'mata2',
+      narration:{
+        id:"Patih melapor: semua syarat sudah disiapkan Kelana Swandana, kecuali hewan berkepala dua. Singabarong panik dan mengirim mata-mata untuk menyelidiki rute perjalanan Kelana Swandana.",
+        en:"The minister reported: everything was ready except the two-headed animal. Panicked, Singabarong sent spies to track Kelana Swandana's travel route."
+      },
+      instruction:{
+        id:"Ketuk kedua mata-mata yang bersembunyi untuk menangkap mereka",
+        en:"Tap both hidden spies to have them caught"
+      },
+      interaction:'multi-tap',
+      targets:[
+        {id:'mata1', x:250, y:300, r:50, label:{id:'mata-mata',en:'spy'}},
+        {id:'mata2', x:560, y:300, r:50, label:{id:'mata-mata',en:'spy'}}
+      ],
+      draw: drawSceneMataMata
+    },
+    {
+      key:'tidur',
+      narration:{
+        id:"Ketika mata-matanya tertangkap, Singabarong justru tertidur nyenyak di taman istana, keenakan kutu di kepalanya dipatuki burung merak peliharaannya, sementara pasukan Bandarangin mendekat.",
+        en:"While his spies were caught, Singabarong lay fast asleep in the palace garden, lulled by his pet peacock pecking the lice from his head, as the Bandarangin army drew near."
+      },
+      instruction:{
+        id:"Tahan ketukan pada burung merak agar Singabarong tetap tertidur",
+        en:"Press and hold the peacock to keep Singabarong sleeping"
+      },
+      interaction:'hold',
+      holdTarget:{x:560,y:290,r:70},
+      holdDuration:2600,
+      draw: drawSceneTidur
+    },
+    {
+      key:'duel',
+      narration:{
+        id:"Pasukan Bandarangin berhasil mengalahkan prajurit Lodaya. Singabarong pun terbangun dan langsung dicegat oleh Kelana Swandana di halaman istana.",
+        en:"The Bandarangin army defeated the Lodaya soldiers. Singabarong awoke, only to be confronted at once by Kelana Swandana in the palace courtyard."
+      },
+      instruction:{
+        id:"Ketuk tombol pedang saat penunjuk berada di zona hijau",
+        en:"Tap the sword button when the marker is in the green zone"
+      },
+      interaction:'timing',
+      timing:{ zoneStart:0.62, zoneEnd:0.86, speed:1.4 },
+      draw: drawSceneDuel
+    },
+    {
+      key:'transformasi',
+      narration:{
+        id:"Dengan kesaktiannya, Kelana Swandana mengubah wujud Singabarong menjadi harimau berkepala burung merak, seekor binatang berkepala dua seperti yang diminta Dewi Sanggalangit.",
+        en:"With his mystical power, Kelana Swandana transformed Singabarong into a tiger with a peacock's head, a two-headed creature just as Dewi Sanggalangit had requested."
+      },
+      instruction:{
+        id:"Ketuk tongkat sakti Kelana Swandana untuk mengubah wujud Singabarong",
+        en:"Tap Kelana Swandana's magic staff to transform Singabarong"
+      },
+      interaction:'tap-once',
+      targetLabel:{id:'tongkat sakti', en:'magic staff'},
+      hit:{x:250,y:230,r:60},
+      draw: drawSceneTransformasi
+    },
+    {
+      key:'akhir',
+      narration:{
+        id:"Semua syarat terpenuhi. Dewi Sanggalangit pun menikah dengan Kelana Swandana. Kesenian ciptaannya itu kini dikenal turun-temurun dengan nama Reog Ponorogo.",
+        en:"With every condition met, Dewi Sanggalangit married Kelana Swandana. The art form he created has been passed down through generations, known today as Reog Ponorogo."
+      },
+      instruction:{
+        id:"Kisah selesai. Ketuk \u201CUlangi Cerita\u201D untuk menonton kembali",
+        en:"The story is complete. Tap \u201CReplay Story\u201D to watch it again"
+      },
+      interaction:'end',
+      draw: drawSceneAkhir
+    }
+  ];
+
+  /* ===================== DOM ===================== */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var overlayBtn = document.getElementById('overlay-btn');
+  var instructionEl = document.getElementById('instruction');
+  var narrationEl = document.getElementById('narration');
+  var dotsEl = document.getElementById('dots');
+  var startBtn = document.getElementById('start-btn');
+  var replayBtn = document.getElementById('replay-btn');
+  var langBtn = document.getElementById('lang-btn');
+  var muteBtn = document.getElementById('mute-btn');
+  var titleText = document.getElementById('title-text');
+  var footerEl = document.getElementById('footer');
+  var progressTrack = document.getElementById('progress-track');
+  var progressFill = document.getElementById('progress-fill');
+
+  var CW = canvas.width, CH = canvas.height;
+
+  /* ===================== HELPERS ===================== */
+  function tr(obj){ return obj[state.lang] || obj.id; }
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    for (var i=0;i<scenes.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.setAttribute('data-i', i);
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var ds = dotsEl.querySelectorAll('.dot');
+    for (var i=0;i<ds.length;i++){
+      ds[i].className = 'dot' + (i < state.sceneIndex ? ' done' : (i === state.sceneIndex ? ' active' : ''));
+    }
+  }
+
+  function applyLanguage(){
+    titleText.textContent = tr(T).title;
+    startBtn.textContent = tr(T).startBtn;
+    replayBtn.textContent = tr(T).replayBtn;
+    footerEl.textContent = tr(T).footer;
+    langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+    if (state.sceneIndex >= 0 && state.sceneIndex < scenes.length){
+      renderTextForScene(scenes[state.sceneIndex]);
+    } else {
+      instructionEl.textContent = '';
+      narrationEl.textContent = tr({
+        id:"Sebuah dongeng dari Jawa Timur tentang asal usul kesenian Reog Ponorogo.",
+        en:"A folktale from East Java about the origin of the Reog Ponorogo art form."
+      });
+    }
+  }
+
+  function renderTextForScene(scene){
+    instructionEl.textContent = scene.interaction === 'end' ? '' : tr(scene.instruction);
+    narrationEl.textContent = tr(scene.narration);
+  }
+
+  /* ===================== SPEECH ===================== */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if ('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if (!voices || !voices.length) return null;
+    var want = state.lang === 'id' ? 'id-ID' : 'en-US';
+    var v = voices.find(function(v){ return v.lang === want; });
+    if (v) return v;
+    var prefix = state.lang === 'id' ? 'id' : 'en';
+    v = voices.find(function(v){ return v.lang && v.lang.indexOf(prefix) === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if (state.muted || !text) return;
+    try{
+      var u = new SpeechSynthesisUtterance(text);
+      var v = pickVoice();
+      if (v) u.voice = v;
+      u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeech(){
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+  if (!('speechSynthesis' in window)){
+    muteBtn.style.display = 'none';
+  }
+
+  /* ===================== RESIZE / POSTMESSAGE ===================== */
+  function reportHeight(){
+    var h = document.getElementById('app').getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:'caritasato-resize', height: Math.ceil(h) + 16 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  var resizeObs = null;
+  if (window.ResizeObserver){
+    resizeObs = new ResizeObserver(function(){ reportHeight(); });
+    resizeObs.observe(document.getElementById('app'));
+  }
+  setInterval(reportHeight, 900);
+
+  /* ===================== POINTER MAPPING ===================== */
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if (evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if (evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    var x = (clientX - rect.left) * (CW / rect.width);
+    var y = (clientY - rect.top) * (CH / rect.height);
+    return {x:x, y:y};
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
+
+  /* ===================== SCENE RUNTIME ===================== */
+  var runtime = {}; // per-scene mutable data (drag pos, hold progress, timing marker)
+  var rafId = null;
+  var currentLeaveHandler = null;
+
+  function clearCanvasClicks(){
+    canvas.onclick = null;
+    canvas.onpointerdown = null;
+    canvas.onpointermove = null;
+    canvas.onpointerup = null;
+    if (currentLeaveHandler){
+      canvas.removeEventListener('pointerleave', currentLeaveHandler);
+      currentLeaveHandler = null;
+    }
+  }
+
+  function startScene(index){
+    if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    clearCanvasClicks();
+    progressTrack.classList.add('hidden');
+    overlayBtn.classList.add('hidden');
+    state.sceneIndex = index;
+    updateDots();
+
+    if (index >= scenes.length){
+      finishStory();
+      return;
+    }
+    var scene = scenes[index];
+    renderTextForScene(scene);
+    speak(tr(scene.narration));
+    runtime = { done:false, seqStep:0, tapped:{}, dragging:false, dragX:scene.drag?scene.drag.startX:0, dragY:scene.drag?scene.drag.startY:0, holdActive:false, holdProgress:0, timingT:0, timingDir:1, flashHit:null, transformP:0 };
+
+    setupInteraction(scene);
+    animate();
+
+    if (scene.interaction === 'end'){
+      replayBtn.classList.remove('hidden');
+      startBtn.classList.add('hidden');
+    }
+  }
+
+  function animate(){
+    var scene = scenes[state.sceneIndex];
+    if (!scene) return;
+    scene.draw(ctx, CW, CH, runtime, state);
+    drawHitHints(scene);
+    updateAnimatedInteraction(scene);
+    rafId = requestAnimationFrame(animate);
+  }
+
+  function drawHitHints(scene){
+    // subtle pulsing hint circles drawn by draw() itself via runtime.pulseTargets; kept simple.
+  }
+
+  function goNext(){
+    stopSpeech();
+    startScene(state.sceneIndex + 1);
+  }
+
+  function finishStory(){
+    if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    replayBtn.classList.remove('hidden');
+    startBtn.classList.add('hidden');
+  }
+
+  /* ---------- interaction setup ---------- */
+  function setupInteraction(scene){
+    if (scene.interaction === 'tap-once'){
+      canvas.onclick = function(e){
+        var p = getCanvasPos(e);
+        if (dist(p.x,p.y,scene.hit.x,scene.hit.y) <= scene.hit.r){
+          runtime.done = true;
+          canvas.onclick = null;
+          setTimeout(goNext, 500);
+        }
+      };
+    } else if (scene.interaction === 'multi-tap'){
+      canvas.onclick = function(e){
+        var p = getCanvasPos(e);
+        for (var i=0;i<scene.targets.length;i++){
+          var t = scene.targets[i];
+          if (!runtime.tapped[t.id] && dist(p.x,p.y,t.x,t.y) <= t.r){
+            runtime.tapped[t.id] = true;
+            break;
+          }
+        }
+        var count = Object.keys(runtime.tapped).length;
+        if (count >= scene.targets.length){
+          canvas.onclick = null;
+          setTimeout(goNext, 500);
+        }
+      };
+    } else if (scene.interaction === 'sequence-tap'){
+      canvas.onclick = function(e){
+        var p = getCanvasPos(e);
+        var expected = scene.targets[runtime.seqStep];
+        if (!expected) return;
+        if (dist(p.x,p.y,expected.x,expected.y) <= expected.r){
+          runtime.tapped[expected.id] = true;
+          runtime.seqStep++;
+          if (runtime.seqStep >= scene.targets.length){
+            canvas.onclick = null;
+            setTimeout(goNext, 500);
+          }
+        }
+      };
+    } else if (scene.interaction === 'drag'){
+      var d = scene.drag;
+      var active = false;
+      function down(e){
+        var p = getCanvasPos(e);
+        if (dist(p.x,p.y,runtime.dragX,runtime.dragY) <= d.r + 20){
+          active = true;
+        }
+      }
+      function move(e){
+        if (!active) return;
+        var p = getCanvasPos(e);
+        runtime.dragX = p.x; runtime.dragY = p.y;
+      }
+      function up(e){
+        if (!active) return;
+        active = false;
+        if (dist(runtime.dragX, runtime.dragY, d.endX, d.endY) <= d.threshold){
+          runtime.dragX = d.endX; runtime.dragY = d.endY;
+          runtime.done = true;
+          clearCanvasClicks();
+          setTimeout(goNext, 500);
+        } else {
+          runtime.dragX = d.startX; runtime.dragY = d.startY;
+        }
+      }
+      canvas.onpointerdown = down;
+      canvas.onpointermove = move;
+      canvas.onpointerup = up;
+      currentLeaveHandler = up;
+      canvas.addEventListener('pointerleave', up);
+    } else if (scene.interaction === 'hold'){
+      var ht = scene.holdTarget;
+      var holding = false;
+      function inZone(p){ return dist(p.x,p.y,ht.x,ht.y) <= ht.r; }
+      function down(e){
+        var p = getCanvasPos(e);
+        if (inZone(p)){ holding = true; runtime.holdActive = true; }
+      }
+      function move(e){
+        if (!holding) return;
+        var p = getCanvasPos(e);
+        if (!inZone(p)){ holding = false; runtime.holdActive = false; }
+      }
+      function up(){ holding = false; runtime.holdActive = false; }
+      canvas.onpointerdown = down;
+      canvas.onpointermove = move;
+      canvas.onpointerup = up;
+      currentLeaveHandler = up;
+      canvas.addEventListener('pointerleave', up);
+      progressTrack.classList.remove('hidden');
+    } else if (scene.interaction === 'timing'){
+      overlayBtn.classList.remove('hidden');
+      overlayBtn.textContent = state.lang === 'id' ? '\u2694 Serang!' : '\u2694 Strike!';
+      overlayBtn.onclick = function(){
+        var tm = scene.timing;
+        if (runtime.timingT >= tm.zoneStart && runtime.timingT <= tm.zoneEnd){
+          runtime.done = true;
+          overlayBtn.classList.add('hidden');
+          clearCanvasClicks();
+          setTimeout(goNext, 600);
+        } else {
+          runtime.flashFail = 18;
+        }
+      };
+    } else if (scene.interaction === 'end'){
+      // nothing, handled by replay button
+    }
+  }
+
+  function updateAnimatedInteraction(scene){
+    if (scene.interaction === 'hold'){
+      if (!runtime.done){
+        if (runtime.holdActive){
+          runtime.holdProgress += 100 / (scene.holdDuration / 16.7);
+          if (runtime.holdProgress >= 100){
+            runtime.holdProgress = 100;
+            runtime.done = true;
+            progressTrack.classList.add('hidden');
+            clearCanvasClicks();
+            setTimeout(goNext, 500);
+          }
+        } else {
+          runtime.holdProgress = Math.max(0, runtime.holdProgress - 1.2);
+        }
+      }
+      progressFill.style.width = runtime.holdProgress + '%';
+    } else if (scene.interaction === 'timing'){
+      var tm = scene.timing;
+      runtime.timingT += 0.006 * tm.speed * runtime.timingDir;
+      if (runtime.timingT >= 1){ runtime.timingT = 1; runtime.timingDir = -1; }
+      if (runtime.timingT <= 0){ runtime.timingT = 0; runtime.timingDir = 1; }
+      if (runtime.flashFail > 0) runtime.flashFail--;
+    }
+  }
+
+  /* ===================== CANVAS DRAWING ===================== */
+  function bgSky(ctx, w, h, top, bottom){
+    var g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+  }
+  function ground(ctx,w,h,color,y){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,y,w,h-y);
+  }
+  function palaceSilhouette(ctx, x, y, scale, color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    // base
+    ctx.fillRect(-90,-10,180,90);
+    // gate
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.beginPath();
+    ctx.moveTo(-22,80); ctx.lineTo(-22,20); ctx.arc(0,20,22,Math.PI,0); ctx.lineTo(22,80); ctx.closePath();
+    ctx.fill();
+    // towers
+    ctx.fillStyle = color;
+    [-95,95].forEach(function(tx){
+      ctx.fillRect(tx-16,-55,32,55);
+      ctx.beginPath();
+      ctx.moveTo(tx-20,-55); ctx.lineTo(tx,-90); ctx.lineTo(tx+20,-55); ctx.closePath();
+      ctx.fill();
+    });
+    // central roof
+    ctx.beginPath();
+    ctx.moveTo(-100,-10); ctx.lineTo(0,-70); ctx.lineTo(100,-10); ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  function person(ctx, x, y, skin, cloth, opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,.15)';
+    ctx.beginPath(); ctx.ellipse(0,78,34,9,0,0,Math.PI*2); ctx.fill();
+    // legs/robe
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(-28,76); ctx.quadraticCurveTo(-34,18,0,10); ctx.quadraticCurveTo(34,18,28,76); ctx.closePath();
+    ctx.fill();
+    // sash
+    if (opts.sash){
+      ctx.fillStyle = opts.sash;
+      ctx.fillRect(-26,34,52,10);
+    }
+    // arms
+    ctx.strokeStyle = cloth; ctx.lineWidth = 12; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-14,18); ctx.lineTo(opts.armLX!==undefined?opts.armLX:-32, opts.armLY!==undefined?opts.armLY:44); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,18); ctx.lineTo(opts.armRX!==undefined?opts.armRX:32, opts.armRY!==undefined?opts.armRY:44); ctx.stroke();
+    // neck
+    ctx.fillStyle = skin;
+    ctx.fillRect(-7,2,14,14);
+    // head
+    ctx.beginPath(); ctx.arc(0,-14,22,0,Math.PI*2); ctx.fill();
+    // headwear
+    if (opts.crown){
+      ctx.fillStyle = opts.crown;
+      ctx.beginPath();
+      ctx.moveTo(-20,-30); ctx.lineTo(-12,-46); ctx.lineTo(0,-32); ctx.lineTo(12,-46); ctx.lineTo(20,-30); ctx.closePath();
+      ctx.fill();
+    }
+    if (opts.hair){
+      ctx.fillStyle = opts.hair;
+      ctx.beginPath();
+      ctx.arc(0,-18,23,Math.PI*0.95,Math.PI*2.05);
+      ctx.fill();
+    }
+    // face
+    ctx.fillStyle = '#2b1810';
+    ctx.beginPath(); ctx.arc(-7,-14,2.2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7,-14,2.2,0,Math.PI*2); ctx.fill();
+    if (opts.smile){
+      ctx.strokeStyle = '#2b1810'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(0,-8,5,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function princess(ctx,x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(0,0,0,.15)';
+    ctx.beginPath(); ctx.ellipse(0,80,32,8,0,0,Math.PI*2); ctx.fill();
+    // dress
+    var g = ctx.createLinearGradient(0,-10,0,82);
+    g.addColorStop(0,'#c9962c'); g.addColorStop(1,'#7a4f14');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-14,8); ctx.quadraticCurveTo(-46,40,-40,82); ctx.lineTo(40,82); ctx.quadraticCurveTo(46,40,14,8); ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = '#e9c98a'; ctx.lineWidth = 10; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-12,20); ctx.lineTo(-30,42); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(12,20); ctx.lineTo(30,42); ctx.stroke();
+    // neck & head
+    ctx.fillStyle = '#e9c98a';
+    ctx.fillRect(-6,0,12,12);
+    ctx.beginPath(); ctx.arc(0,-14,20,0,Math.PI*2); ctx.fill();
+    // hair bun
+    ctx.fillStyle = '#241407';
+    ctx.beginPath(); ctx.arc(0,-16,21,Math.PI*0.95,Math.PI*2.05); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-38,9,0,Math.PI*2); ctx.fill();
+    // crown/sanggul ornament
+    ctx.fillStyle = '#c9962c';
+    ctx.beginPath(); ctx.arc(0,-38,4,0,Math.PI*2); ctx.fill();
+    // face
+    ctx.fillStyle = '#2b1810';
+    ctx.beginPath(); ctx.arc(-6,-14,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-14,2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#a02c2c'; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(0,-8,4,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+    ctx.restore();
+  }
+  function tigerHeadKing(ctx,x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(0,0,0,.15)';
+    ctx.beginPath(); ctx.ellipse(0,80,34,9,0,0,Math.PI*2); ctx.fill();
+    // robe
+    ctx.fillStyle = '#4a2818';
+    ctx.beginPath();
+    ctx.moveTo(-28,76); ctx.quadraticCurveTo(-34,18,0,10); ctx.quadraticCurveTo(34,18,28,76); ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = '#4a2818'; ctx.lineWidth = 12; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-14,18); ctx.lineTo(-34,40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,18); ctx.lineTo(34,40); ctx.stroke();
+    // furry tiger head
+    ctx.fillStyle = '#d9711f';
+    ctx.beginPath(); ctx.arc(0,-16,26,0,Math.PI*2); ctx.fill();
+    // ears
+    ctx.beginPath(); ctx.arc(-20,-36,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20,-36,9,0,Math.PI*2); ctx.fill();
+    // stripes
+    ctx.strokeStyle = '#2b1810'; ctx.lineWidth = 3;
+    [[-14,-30,-6,-14],[8,-32,16,-16],[-4,-2,-2,10],[6,-2,8,10]].forEach(function(s){
+      ctx.beginPath(); ctx.moveTo(s[0],s[1]); ctx.lineTo(s[2],s[3]); ctx.stroke();
+    });
+    // muzzle
+    ctx.fillStyle = '#f2d9b8';
+    ctx.beginPath(); ctx.ellipse(0,-4,12,9,0,0,Math.PI*2); ctx.fill();
+    // eyes
+    ctx.fillStyle = '#1a0f06';
+    ctx.beginPath(); ctx.arc(-9,-18,2.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(9,-18,2.6,0,Math.PI*2); ctx.fill();
+    // nose/mouth
+    ctx.fillStyle='#1a0f06';
+    ctx.beginPath(); ctx.moveTo(-4,-4); ctx.lineTo(4,-4); ctx.lineTo(0,1); ctx.closePath(); ctx.fill();
+    if (opts.fangs){
+      ctx.beginPath(); ctx.moveTo(-5,2); ctx.lineTo(-3,10); ctx.lineTo(-1,2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(5,2); ctx.lineTo(3,10); ctx.lineTo(1,2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function peacock(ctx,x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    var tail = opts.tailSpread!==undefined?opts.tailSpread:1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // tail feathers
+    ctx.save();
+    ctx.translate(-6,4);
+    for (var i=-3;i<=3;i++){
+      var ang = i*0.18*tail;
+      ctx.save();
+      ctx.rotate(ang);
+      var g = ctx.createLinearGradient(0,0,0,-46);
+      g.addColorStop(0,'#1c6e5a'); g.addColorStop(1,'#3fae8f');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(0,-40,7,16,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#274a8a';
+      ctx.beginPath(); ctx.arc(0,-40,3.4,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+    // body
+    ctx.fillStyle = '#2f6fb0';
+    ctx.beginPath(); ctx.ellipse(6,10,16,12,0,0,Math.PI*2); ctx.fill();
+    // neck+head
+    ctx.strokeStyle = '#2f6fb0'; ctx.lineWidth = 8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(14,4); ctx.quadraticCurveTo(30,-10,26,-20); ctx.stroke();
+    ctx.fillStyle = '#2f6fb0';
+    ctx.beginPath(); ctx.arc(27,-22,7,0,Math.PI*2); ctx.fill();
+    // crest
+    ctx.strokeStyle = '#2f6fb0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(27,-29); ctx.lineTo(29,-35); ctx.stroke();
+    // beak
+    ctx.fillStyle = '#e8b93a';
+    ctx.beginPath(); ctx.moveTo(34,-22); ctx.lineTo(40,-20); ctx.lineTo(34,-18); ctx.closePath(); ctx.fill();
+    // legs
+    ctx.strokeStyle = '#c9962c'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(2,20); ctx.lineTo(0,32); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(10,20); ctx.lineTo(12,32); ctx.stroke();
+    ctx.restore();
+  }
+  function reogMask(ctx,x,y,opts){
+    opts = opts || {};
+    var scale = opts.scale || 1;
+    var fan = opts.fan !== undefined ? opts.fan : 1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    // peacock feather fan on top
+    for (var i=-5;i<=5;i++){
+      var ang = i*0.13*fan - Math.PI/2;
+      var fx = Math.cos(ang)*70, fy = Math.sin(ang)*70;
+      var g = ctx.createLinearGradient(0,0,fx,fy-40);
+      g.addColorStop(0,'#1c6e5a'); g.addColorStop(1,'#4fc79f');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(fx*0.9, fy*0.9-30, 9, 26, ang+Math.PI/2, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#274a8a';
+      ctx.beginPath(); ctx.arc(fx*0.9, fy*0.9-30, 4, 0, Math.PI*2); ctx.fill();
+    }
+    // tiger head base
+    ctx.fillStyle = '#d9711f';
+    ctx.beginPath(); ctx.arc(0,0,54,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-38,-30,16,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(38,-30,16,0,Math.PI*2); ctx.fill();
+    // stripes
+    ctx.strokeStyle = '#2b1810'; ctx.lineWidth = 5;
+    [[-26,-40,-10,-18],[14,-42,28,-20],[-30,10,-14,18],[16,10,30,18],[-8,30,-4,44],[8,30,12,44]].forEach(function(s){
+      ctx.beginPath(); ctx.moveTo(s[0],s[1]); ctx.lineTo(s[2],s[3]); ctx.stroke();
+    });
+    // muzzle
+    ctx.fillStyle = '#f2d9b8';
+    ctx.beginPath(); ctx.ellipse(0,20,26,20,0,0,Math.PI*2); ctx.fill();
+    // eyes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-18,-4,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,-4,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a0f06';
+    ctx.beginPath(); ctx.arc(-16,-4,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16,-4,4,0,Math.PI*2); ctx.fill();
+    // fangs and mouth
+    ctx.strokeStyle = '#1a0f06'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.arc(0,26,20,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.moveTo(-14,34); ctx.lineTo(-10,50); ctx.lineTo(-6,34); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(14,34); ctx.lineTo(10,50); ctx.lineTo(6,34); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---- Scene draw functions ---- */
+  function drawSceneIntro(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#f6d99a','#e8b96a');
+    ground(ctx,w,h,'#b98b3c',360);
+    palaceSilhouette(ctx, 400, 300, 1.05, '#8a5a24');
+    // princess at window
+    princess(ctx, 400, 210, {scale:0.75});
+    // pulsing gate hint
+    var pulse = 4*Math.sin(Date.now()/260);
+    ctx.strokeStyle = 'rgba(160,44,44,.85)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(400,330,70+pulse,0,Math.PI*2); ctx.stroke();
+  }
+  function drawSceneSyarat(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#f6d99a','#e8b96a');
+    ground(ctx,w,h,'#b98b3c',380);
+    princess(ctx, 400, 130, {scale:0.62});
+    var scene = scenes[1];
+    var icons = [
+      {x:190,y:330,draw:iconDance},
+      {x:340,y:330,draw:iconGamelan},
+      {x:490,y:330,draw:iconHorses},
+      {x:630,y:330,draw:iconMystery}
+    ];
+    icons.forEach(function(ic,i){
+      var t = scene.targets[i];
+      var done = rt.tapped[t.id];
+      ctx.save();
+      ctx.globalAlpha = done ? 1 : 0.55 + 0.15*Math.sin(Date.now()/220 + i);
+      ic.draw(ctx, ic.x, ic.y);
+      ctx.restore();
+      if (done){
+        ctx.strokeStyle = '#3d7a3d'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(ic.x,ic.y,58,0,Math.PI*2); ctx.stroke();
+      } else {
+        ctx.strokeStyle = 'rgba(160,44,44,.7)'; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.arc(ic.x,ic.y,55,0,Math.PI*2); ctx.stroke();
+      }
+    });
+  }
+  function iconDance(ctx,x,y){
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = '#a02c2c';
+    ctx.beginPath(); ctx.arc(0,-20,10,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#a02c2c'; ctx.lineWidth = 6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(0,14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-2); ctx.lineTo(-20,-16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-2); ctx.lineTo(20,-16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,14); ctx.lineTo(-16,34); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,14); ctx.lineTo(16,34); ctx.stroke();
+    ctx.restore();
+  }
+  function iconGamelan(ctx,x,y){
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = '#8a6416';
+    ctx.fillRect(-28,-4,56,26);
+    ctx.fillStyle = '#c9962c';
+    for (var i=-2;i<=2;i++){
+      ctx.beginPath(); ctx.arc(i*11,4,7,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function iconHorses(ctx,x,y){
+    ctx.save(); ctx.translate(x,y);
+    [-14,14].forEach(function(dx){
+      ctx.save(); ctx.translate(dx,0);
+      ctx.fillStyle = '#4a2818';
+      ctx.beginPath(); ctx.ellipse(0,10,16,10,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(14,-6,8,10,0.4,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#4a2818'; ctx.lineWidth=5;
+      ctx.beginPath(); ctx.moveTo(-10,18); ctx.lineTo(-12,32); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10,18); ctx.lineTo(12,32); ctx.stroke();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+  function iconMystery(ctx,x,y){
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = '#2b1810';
+    ctx.beginPath(); ctx.ellipse(0,6,26,18,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-16,-12,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16,-12,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#c9962c';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('?', 0, 12);
+    ctx.restore();
+  }
+  function drawSceneSayembara(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#f2d59a','#dba85c');
+    ground(ctx,w,h,'#b98b3c',380);
+    // board
+    ctx.fillStyle = '#7a4f14';
+    ctx.fillRect(370,150,60,110);
+    ctx.fillStyle = '#fce9c8';
+    ctx.fillRect(360,140,80,60);
+    ctx.strokeStyle = '#4a2818'; ctx.lineWidth = 3;
+    ctx.strokeRect(360,140,80,60);
+    ctx.fillStyle = '#a02c2c';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(st.lang==='id'?'SAYEMBARA':'CONTEST', 400, 175);
+
+    var s1 = !!rt.tapped['singabarong'];
+    var s2 = !!rt.tapped['kelana'];
+    ctx.save(); ctx.globalAlpha = s1?1:0.7;
+    tigerHeadKing(ctx,230,300,{scale:0.95,fangs:true});
+    ctx.restore();
+    if (s1){ ctx.strokeStyle='#3d7a3d'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(230,290,90,0,Math.PI*2); ctx.stroke(); }
+    else if (rt.seqStep===0){ ctx.strokeStyle='rgba(160,44,44,.8)'; ctx.lineWidth=2.4; ctx.beginPath(); ctx.arc(230,290,88,0,Math.PI*2); ctx.stroke(); }
+
+    ctx.save(); ctx.globalAlpha = (s2 || rt.seqStep>=1) ? 1 : 0.7;
+    person(ctx,570,300,'#e9c98a','#274a8a',{scale:0.95,crown:'#c9962c',smile:true,sash:'#a02c2c'});
+    ctx.restore();
+    if (s2){ ctx.strokeStyle='#3d7a3d'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(570,290,90,0,Math.PI*2); ctx.stroke(); }
+    else if (rt.seqStep===1){ ctx.strokeStyle='rgba(160,44,44,.8)'; ctx.lineWidth=2.4; ctx.beginPath(); ctx.arc(570,290,88,0,Math.PI*2); ctx.stroke(); }
+  }
+  function drawScenePatih(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#e9dcb8','#c9ad72');
+    ground(ctx,w,h,'#a9863f',380);
+    // path dotted
+    ctx.strokeStyle = 'rgba(74,40,24,.5)';
+    ctx.setLineDash([8,8]);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(150,330); ctx.quadraticCurveTo(380,420,620,230);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    palaceSilhouette(ctx,650,210,0.62,'#7a3418');
+    ctx.fillStyle = '#4a2818';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(st.lang==='id'?'Istana Bandarangin':'Bandarangin Palace', 650, 300);
+    person(ctx, rt.dragX, rt.dragY, '#c98a5a','#5a2410',{scale:0.8, crown:'#8a6416'});
+  }
+  function drawSceneMataMata(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#dfe6c4','#9bb06a');
+    ground(ctx,w,h,'#5f7a3d',370);
+    // bushes
+    [[130,340],[250,300],[560,300],[680,340]].forEach(function(b){
+      ctx.fillStyle = '#3f5a2a';
+      ctx.beginPath(); ctx.arc(b[0],b[1],34,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(b[0]+26,b[1]+8,24,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(b[0]-26,b[1]+8,24,0,Math.PI*2); ctx.fill();
+    });
+    var scene = scenes[4];
+    scene.targets.forEach(function(t){
+      var caught = rt.tapped[t.id];
+      ctx.save();
+      ctx.globalAlpha = caught ? 0.3 : 1;
+      person(ctx, t.x, t.y, '#c98a5a','#2b1810',{scale:0.55});
+      ctx.restore();
+      if (caught){
+        ctx.fillStyle = '#a02c2c';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('X', t.x, t.y-40);
+      } else {
+        ctx.strokeStyle = 'rgba(160,44,44,.8)'; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.arc(t.x,t.y-10,50,0,Math.PI*2); ctx.stroke();
+      }
+    });
+  }
+  function drawSceneTidur(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#cfe0a8','#8fae5c');
+    ground(ctx,w,h,'#5f7a3d',380);
+    // reclining Singabarong (simplified as tiger head lying + body)
+    ctx.save();
+    ctx.translate(300,320);
+    ctx.fillStyle = 'rgba(0,0,0,.15)';
+    ctx.beginPath(); ctx.ellipse(0,70,90,16,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#4a2818';
+    ctx.beginPath(); ctx.ellipse(20,30,80,34,0.05,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    var bob = Math.sin(Date.now()/500)*3;
+    tigerHeadKing(ctx, 220, 300+bob, {scale:0.95});
+    // closed eyes zzz
+    ctx.fillStyle = '#4a2818';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('z z z', 260, 250+bob);
+    // peacock pecking
+    var peckY = rt.holdActive ? Math.sin(Date.now()/120)*6 : 0;
+    peacock(ctx, 560, 290+peckY, {scale:1.3, tailSpread: rt.holdActive?1.1:0.7});
+  }
+  function drawSceneDuel(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#f0e0ad','#d8ab5a');
+    ground(ctx,w,h,'#b98b3c',380);
+    person(ctx,220,300,'#e9c98a','#274a8a',{scale:0.95,crown:'#c9962c',armRX:60,armRY:20,sash:'#a02c2c'});
+    tigerHeadKing(ctx,570,300,{scale:0.95,fangs:true});
+    // timing bar drawn on canvas
+    var tm = scenes[6].timing;
+    var barX = 200, barY = 60, barW = 400, barH = 22;
+    ctx.fillStyle = '#eadfc4';
+    ctx.fillRect(barX,barY,barW,barH);
+    ctx.strokeStyle = '#4a2818'; ctx.lineWidth = 2;
+    ctx.strokeRect(barX,barY,barW,barH);
+    ctx.fillStyle = 'rgba(61,122,61,.55)';
+    ctx.fillRect(barX+tm.zoneStart*barW, barY, (tm.zoneEnd-tm.zoneStart)*barW, barH);
+    var markerX = barX + rt.timingT*barW;
+    ctx.fillStyle = rt.flashFail>0 ? '#a02c2c' : '#c9962c';
+    ctx.beginPath(); ctx.moveTo(markerX,barY-8); ctx.lineTo(markerX-8,barY-20); ctx.lineTo(markerX+8,barY-20); ctx.closePath(); ctx.fill();
+    ctx.fillRect(markerX-2,barY,4,barH);
+  }
+  function drawSceneTransformasi(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#eadcc0','#c9a45a');
+    ground(ctx,w,h,'#b98b3c',380);
+    var p = rt.transformP || 0;
+    if (rt.done && p < 1){ p = Math.min(1, p + 0.02); rt.transformP = p; }
+    person(ctx,250,270,'#e9c98a','#274a8a',{scale:0.85,crown:'#c9962c',armRX:60,armRY:30,sash:'#a02c2c'});
+    // sparkle at staff tip when not yet done
+    if (!rt.done){
+      var pulse = 3*Math.sin(Date.now()/200);
+      ctx.strokeStyle = 'rgba(160,44,44,.85)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(250,230,60+pulse,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = '#c9962c'; ctx.lineWidth = 5; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(290,290); ctx.lineTo(330,230); ctx.stroke();
+      ctx.fillStyle = '#fce9c8';
+      ctx.beginPath(); ctx.arc(330,225,6,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.strokeStyle = '#c9962c'; ctx.lineWidth = 5; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(290,290); ctx.lineTo(330,230); ctx.stroke();
+    }
+    // Singabarong morphing into reog mask
+    ctx.save();
+    ctx.globalAlpha = 1;
+    var scale = 0.75 + 0.25*p;
+    if (p < 1){
+      tigerHeadKing(ctx, 560, 300, {scale:0.95*(1-p)+0.001, fangs:true});
+    }
+    ctx.globalAlpha = p;
+    reogMask(ctx, 560, 300, {scale: 0.9*p, fan: p});
+    ctx.restore();
+  }
+  function drawSceneAkhir(ctx,w,h,rt,st){
+    bgSky(ctx,w,h,'#f7dfa0','#e3a24a');
+    ground(ctx,w,h,'#b98b3c',380);
+    palaceSilhouette(ctx,400,150,0.7,'#8a5a24');
+    princess(ctx,300,300,{scale:0.85});
+    person(ctx,470,300,'#e9c98a','#274a8a',{scale:0.85,crown:'#c9962c',smile:true,sash:'#a02c2c'});
+    // reog mask celebration in foreground
+    reogMask(ctx, 660, 340, {scale:0.55, fan:1});
+    // confetti
+    for (var i=0;i<24;i++){
+      var t = (Date.now()/12 + i*37) % 400;
+      ctx.fillStyle = i%3===0?'#a02c2c':(i%3===1?'#c9962c':'#3d7a3d');
+      ctx.beginPath();
+      ctx.arc(60 + (i*31)%680, t, 3.5, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  /* ===================== BUTTONS ===================== */
+  startBtn.addEventListener('click', function(){
+    startBtn.classList.add('hidden');
+    replayBtn.classList.add('hidden');
+    startScene(0);
+  });
+  replayBtn.addEventListener('click', function(){
+    replayBtn.classList.add('hidden');
+    startBtn.classList.add('hidden');
+    startScene(0);
+  });
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    try{ localStorage.setItem('reog_lang', state.lang); }catch(e){}
+    applyLanguage();
+    if (state.sceneIndex >= 0 && state.sceneIndex < scenes.length){
+      speak(tr(scenes[state.sceneIndex].narration));
+      if (scenes[state.sceneIndex].interaction === 'timing' && !overlayBtn.classList.contains('hidden')){
+        overlayBtn.textContent = state.lang === 'id' ? '\u2694 Serang!' : '\u2694 Strike!';
+      }
+    }
+  });
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('reog_mute', state.muted ? '1':'0'); }catch(e){}
+    muteBtn.textContent = state.muted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+    muteBtn.classList.toggle('active', state.muted);
+    if (state.muted) stopSpeech();
+  });
+
+  /* ===================== INIT ===================== */
+  buildDots();
+  muteBtn.textContent = state.muted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+  muteBtn.classList.toggle('active', state.muted);
+  applyLanguage();
+
+  function idleDraw(){
+    bgSky(ctx,CW,CH,'#f6d99a','#e8b96a');
+    ground(ctx,CW,CH,'#b98b3c',360);
+    palaceSilhouette(ctx, 400, 300, 1.05, '#8a5a24');
+    princess(ctx, 400, 210, {scale:0.75});
+    reogMask(ctx, 640, 340, {scale:0.4, fan:0.9});
+    reogMask(ctx, 160, 340, {scale:0.4, fan:0.9});
+  }
+  idleDraw();
+  window.addEventListener('resize', function(){
+    if (state.sceneIndex < 0) idleDraw();
+  });
+
+  setTimeout(reportHeight, 200);
+})();
+</script>
+</body>
+</html>
