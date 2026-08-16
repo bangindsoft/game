@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kisah Rangga Gading</title>
+<style>
+  :root{
+    --bg-dark:#1f1a12;
+    --panel:#2c2417;
+    --panel-2:#382c1b;
+    --wood:#5b4327;
+    --gold:#d9a441;
+    --gold-2:#f0c667;
+    --cream:#f3e7cd;
+    --cream-dim:#cbb98f;
+    --red:#8a3324;
+    --green:#4c6b3f;
+    --shadow:rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:Georgia,'Times New Roman',serif;
+    background:var(--bg-dark);
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid #4a3a22;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 6px 24px var(--shadow);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:rgba(0,0,0,.2);
+    border-bottom:1px solid #4a3a22;
+  }
+  header h1{
+    font-size:15px;
+    margin:0;
+    color:var(--gold-2);
+    letter-spacing:.5px;
+    font-weight:normal;
+  }
+  .icon-btn{
+    background:var(--wood);
+    border:1px solid #6b5232;
+    color:var(--cream);
+    width:34px;height:34px;
+    border-radius:8px;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:inherit;
+  }
+  .icon-btn:active{transform:scale(.94);}
+  .head-controls{display:flex;gap:6px;}
+  #stageWrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  #stage{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    padding:10px 8px 0 8px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#5b4d33;
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--gold-2);transform:scale(1.3);}
+  .dot.done{background:var(--gold);}
+  #narrationBox{
+    padding:12px 16px 4px 16px;
+    min-height:64px;
+  }
+  #narrationText{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--cream);
+    margin:0;
+  }
+  #instructionText{
+    font-size:12.5px;
+    color:var(--gold-2);
+    margin:8px 0 0 0;
+    font-family:Verdana,Arial,sans-serif;
+    font-style:italic;
+  }
+  #controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px 16px 18px 16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:Verdana,Arial,sans-serif;
+    font-size:13.5px;
+    font-weight:bold;
+    padding:11px 22px;
+    border-radius:24px;
+    border:none;
+    cursor:pointer;
+    background:linear-gradient(180deg,var(--gold-2),var(--gold));
+    color:#2c2008;
+    box-shadow:0 3px 0 #8a6624;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6624;}
+  .btn:disabled{
+    background:#5b5238;
+    color:#8a8266;
+    box-shadow:0 3px 0 #3a3524;
+    cursor:not-allowed;
+  }
+  .btn.secondary{
+    background:transparent;
+    color:var(--gold-2);
+    border:1.5px solid var(--gold);
+    box-shadow:none;
+  }
+  .choice-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:0 16px 16px 16px;
+  }
+  .choice-btn{
+    font-family:Verdana,Arial,sans-serif;
+    font-size:12.5px;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1.5px solid var(--gold);
+    background:rgba(217,164,65,.08);
+    color:var(--cream);
+    cursor:pointer;
+    max-width:260px;
+    text-align:left;
+    line-height:1.4;
+  }
+  .choice-btn:active{background:rgba(217,164,65,.25);}
+  #startScreen, #endWrap{
+    text-align:center;
+    padding:26px 20px 22px 20px;
+  }
+  #startScreen h2, #endWrap h2{
+    color:var(--gold-2);
+    font-size:20px;
+    margin:0 0 8px 0;
+  }
+  #startScreen p{
+    font-size:13.5px;
+    color:var(--cream-dim);
+    line-height:1.6;
+    margin:0 0 18px 0;
+    font-family:Verdana,Arial,sans-serif;
+  }
+  footer{
+    text-align:center;
+    padding:10px 10px 14px 10px;
+    font-size:10.5px;
+    color:#6f6549;
+    font-family:Verdana,Arial,sans-serif;
+  }
+  .hidden{display:none !important;}
+  #progressBarWrap{
+    width:88%;
+    max-width:340px;
+    height:14px;
+    background:#231d12;
+    border:1px solid #5b4d33;
+    border-radius:8px;
+    margin:10px auto 0 auto;
+    overflow:hidden;
+    display:none;
+  }
+  #progressBarFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--gold-2));
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1 id="titleText">Kisah Rangga Gading</h1>
+    <div class="head-controls">
+      <button class="icon-btn" id="langBtn" title="Ganti Bahasa">ID</button>
+      <button class="icon-btn" id="muteBtn" title="Bisukan Narasi">🔊</button>
+    </div>
+  </header>
+
+  <div id="startScreen">
+    <h2 id="startTitle">Kisah Rangga Gading</h2>
+    <p id="startDesc">Cerita rakyat Jawa Timur tentang seorang pemuda sakti mandraguna yang gemar mencuri, hingga suatu hari ia bertemu seorang kakek sakti yang mengubah jalan hidupnya.</p>
+    <button class="btn" id="startBtn">Mulai Cerita</button>
+  </div>
+
+  <div id="gameArea" class="hidden">
+    <div id="stageWrap">
+      <canvas id="stage" width="800" height="450"></canvas>
+    </div>
+
+    <div id="dots"></div>
+
+    <div id="progressBarWrap"><div id="progressBarFill"></div></div>
+
+    <div id="narrationBox">
+      <p id="narrationText"></p>
+      <p id="instructionText"></p>
+    </div>
+
+    <div id="choiceRow" class="choice-row hidden"></div>
+
+    <div id="controls">
+      <button class="btn secondary hidden" id="replayBtn2">Ulangi Cerita</button>
+      <button class="btn" id="nextBtn" disabled>Lanjut</button>
+    </div>
+  </div>
+
+  <div id="endWrap" class="hidden">
+    <h2 id="endTitle">Tamat</h2>
+    <p id="endDesc" style="font-size:13.5px;color:var(--cream-dim);font-family:Verdana,Arial,sans-serif;">Rangga Gading kini dikenal sebagai orang sakti yang baik hati.</p>
+    <button class="btn" id="replayBtn">Ulangi Cerita</button>
+  </div>
+
+  <footer id="footerText">Kisah rakyat Jawa Timur — dituturkan ulang secara interaktif.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     I18N TEXT
+  --------------------------------------------------------- */
+  var T = {
+    id:{
+      title:"Kisah Rangga Gading",
+      startTitle:"Kisah Rangga Gading",
+      startDesc:"Cerita rakyat Jawa Timur tentang seorang pemuda sakti mandraguna yang gemar mencuri, hingga suatu hari ia bertemu seorang kakek sakti yang mengubah jalan hidupnya.",
+      startBtn:"Mulai Cerita",
+      next:"Lanjut",
+      replay:"Ulangi Cerita",
+      finish:"Selesai",
+      endTitle:"Tamat",
+      endDesc:"Rangga Gading kini dikenal sebagai orang sakti yang baik hati.",
+      footer:"Kisah rakyat Jawa Timur — dituturkan ulang secara interaktif.",
+      muteOn:"Bisukan narasi",
+      muteOff:"Aktifkan narasi"
+    },
+    en:{
+      title:"The Tale of Rangga Gading",
+      startTitle:"The Tale of Rangga Gading",
+      startDesc:"A folktale from East Java about a powerful young man who loved to steal — until the day he met a wise old man who changed the course of his life.",
+      startBtn:"Start Story",
+      next:"Next",
+      replay:"Replay Story",
+      finish:"Finish",
+      endTitle:"The End",
+      endDesc:"Rangga Gading became known as a powerful yet kind-hearted man.",
+      footer:"An East Javanese folktale — retold interactively.",
+      muteOn:"Mute narration",
+      muteOff:"Unmute narration"
+    }
+  };
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var state = {
+    lang: 'id',
+    muted: false,
+    sceneIndex: -1, // -1 = start screen
+    voiceId: null,
+    voiceEn: null
+  };
+
+  try{
+    var savedLang = localStorage.getItem('ranggaGadingLang');
+    var savedMute = localStorage.getItem('ranggaGadingMuted');
+    if(savedLang) state.lang = savedLang;
+    if(savedMute) state.muted = savedMute === '1';
+  }catch(e){}
+
+  var urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('lang') === 'en') state.lang = 'en';
+  if(urlParams.get('lang') === 'id') state.lang = 'id';
+
+  /* ---------------------------------------------------------
+     DOM
+  --------------------------------------------------------- */
+  var el = {
+    app: document.getElementById('app'),
+    titleText: document.getElementById('titleText'),
+    langBtn: document.getElementById('langBtn'),
+    muteBtn: document.getElementById('muteBtn'),
+    startScreen: document.getElementById('startScreen'),
+    startTitle: document.getElementById('startTitle'),
+    startDesc: document.getElementById('startDesc'),
+    startBtn: document.getElementById('startBtn'),
+    gameArea: document.getElementById('gameArea'),
+    stage: document.getElementById('stage'),
+    dots: document.getElementById('dots'),
+    narrationText: document.getElementById('narrationText'),
+    instructionText: document.getElementById('instructionText'),
+    choiceRow: document.getElementById('choiceRow'),
+    nextBtn: document.getElementById('nextBtn'),
+    replayBtn2: document.getElementById('replayBtn2'),
+    endWrap: document.getElementById('endWrap'),
+    endTitle: document.getElementById('endTitle'),
+    endDesc: document.getElementById('endDesc'),
+    replayBtn: document.getElementById('replayBtn'),
+    footerText: document.getElementById('footerText'),
+    progressBarWrap: document.getElementById('progressBarWrap'),
+    progressBarFill: document.getElementById('progressBarFill')
+  };
+
+  var ctx = el.stage.getContext('2d');
+  var STAGE_W = 800, STAGE_H = 450;
+
+  /* ---------------------------------------------------------
+     DRAWING HELPERS (procedural, no external assets)
+  --------------------------------------------------------- */
+  function clear(){ ctx.clearRect(0,0,STAGE_W,STAGE_H); }
+
+  function sky(topColor,bottomColor){
+    var g = ctx.createLinearGradient(0,0,0,STAGE_H*0.7);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,STAGE_W,STAGE_H*0.72);
+  }
+
+  function ground(color, topY){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, topY);
+    ctx.quadraticCurveTo(STAGE_W/2, topY-18, STAGE_W, topY);
+    ctx.lineTo(STAGE_W, STAGE_H);
+    ctx.lineTo(0, STAGE_H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function sun(x,y,r,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function cloud(x,y,scale,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha===undefined?0.85:alpha;
+    ctx.fillStyle = '#fff8ea';
+    [[0,0,26],[22,-8,20],[-22,-6,18],[10,6,20],[-10,6,18]].forEach(function(p){
+      ctx.beginPath();
+      ctx.arc(x+p[0]*scale, y+p[1]*scale, p[2]*scale, 0, Math.PI*2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function tree(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2a';
+    ctx.fillRect(-6,-10,12,50);
+    ctx.fillStyle = '#3f6b34';
+    [[0,-55,42],[-22,-35,30],[22,-35,30]].forEach(function(c){
+      ctx.beginPath();
+      ctx.arc(c[0],c[1],c[2],0,Math.PI*2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function coconutTree(x,y,scale,bendPhase){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#6b4a2a';
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0,60);
+    var bend = bendPhase || 0;
+    ctx.quadraticCurveTo(10+bend,0,-4+bend,-70);
+    ctx.stroke();
+    var topX = -4+bend, topY = -70;
+    ctx.fillStyle = '#3f7a3a';
+    for(var i=0;i<6;i++){
+      var ang = (i/6)*Math.PI*2;
+      ctx.save();
+      ctx.translate(topX,topY);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.ellipse(28,0,30,9,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#caa23a';
+    ctx.beginPath(); ctx.arc(topX-8,topY+10,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(topX+4,topY+14,6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    return {topX:x+topX*scale, topY:y+topY*scale};
+  }
+
+  function house(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a6a3f';
+    ctx.fillRect(-30,-4,60,42);
+    ctx.fillStyle = '#5b3a24';
+    ctx.beginPath();
+    ctx.moveTo(-38,-4); ctx.lineTo(0,-38); ctx.lineTo(38,-4);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3a2c1a';
+    ctx.fillRect(-8,14,16,24);
+    ctx.restore();
+  }
+
+  function pond(x,y,w,h){
+    ctx.save();
+    ctx.fillStyle = '#3f7a8a';
+    ctx.beginPath();
+    ctx.ellipse(x,y,w,h,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x-w*0.2,y-h*0.2,w*0.35,h*0.25,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function buffalo(x,y,scale,opts){
+    opts = opts || {};
+    var skin = opts.skin || '#3a3a3a';
+    var hornsDown = !!opts.hornsDown;
+    var legsFlipped = !!opts.legsFlipped;
+    var faded = opts.faded ? 0.35 : 1;
+    ctx.save();
+    ctx.globalAlpha = faded;
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = 7;
+    ctx.lineCap='round';
+    var legY = legsFlipped ? 26 : 30;
+    [[-16,legY],[-4,legY],[10,legY],[22,legY]].forEach(function(l){
+      ctx.beginPath(); ctx.moveTo(l[0],10); ctx.lineTo(l[0]+(legsFlipped?-4:2),legY+14); ctx.stroke();
+    });
+    // body
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.ellipse(0,4,32,18,0,0,Math.PI*2);
+    ctx.fill();
+    // head
+    ctx.beginPath();
+    ctx.ellipse(38,0,15,12,0,0,Math.PI*2);
+    ctx.fill();
+    // horns
+    ctx.strokeStyle = '#e8dcc0';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    if(hornsDown){
+      ctx.moveTo(34,-10); ctx.quadraticCurveTo(24,-2,30,6);
+      ctx.moveTo(44,-10); ctx.quadraticCurveTo(54,-2,48,6);
+    }else{
+      ctx.moveTo(34,-10); ctx.quadraticCurveTo(24,-20,30,-26);
+      ctx.moveTo(44,-10); ctx.quadraticCurveTo(54,-20,48,-26);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function footprintMark(x,y,angleDeg,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(angleDeg*Math.PI/180);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(90,60,30,0.75)';
+    ctx.beginPath();
+    ctx.ellipse(0,0,8,12,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0,-16,4,5,0,0,Math.PI*2);
+    ctx.fill();
+    // arrow indicating direction
+    ctx.strokeStyle = '#d9a441';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(0,26); ctx.lineTo(0,4);
+    ctx.moveTo(-5,10); ctx.lineTo(0,4); ctx.lineTo(5,10);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function cat(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a4238';
+    ctx.beginPath(); ctx.ellipse(0,0,20,12,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20,-6,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(15,-13); ctx.lineTo(18,-20); ctx.lineTo(21,-13); ctx.closePath(); ctx.fill();
+    ctx.moveTo(23,-13); ctx.lineTo(26,-20); ctx.lineTo(29,-13); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-18,4); ctx.quadraticCurveTo(-32,-8,-24,-16);
+    ctx.lineWidth=6; ctx.strokeStyle='#4a4238'; ctx.lineCap='round'; ctx.stroke();
+    ctx.restore();
+  }
+
+  function sack(x,y,scale,fillRatio){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a5a34';
+    ctx.beginPath();
+    ctx.moveTo(-16,-20);
+    ctx.quadraticCurveTo(-24,10,-14,26);
+    ctx.quadraticCurveTo(0,34,14,26);
+    ctx.quadraticCurveTo(24,10,16,-20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#4a3520';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-17,-20); ctx.lineTo(17,-20); ctx.stroke();
+    if(fillRatio>0){
+      ctx.fillStyle = '#e6b93a';
+      var gy = 20 - (fillRatio*30);
+      for(var i=0;i<Math.min(9,Math.ceil(fillRatio*9));i++){
+        var gx = -8 + (i%3)*8;
+        var glineY = 10 - Math.floor(i/3)*8;
+        ctx.beginPath();
+        ctx.arc(gx, glineY, 4, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function person(x,y,scale,opts){
+    opts = opts || {};
+    var skin = '#c9975f';
+    var cloth = opts.cloth || '#8a3324';
+    var pose = opts.pose || 'stand';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.rotate((opts.rotate||0)*Math.PI/180);
+
+    // legs
+    ctx.strokeStyle = '#3a2c1a';
+    ctx.lineWidth = 6;
+    ctx.lineCap='round';
+    if(pose==='kneel'){
+      ctx.beginPath(); ctx.moveTo(-6,30); ctx.lineTo(-6,42); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6,30); ctx.lineTo(10,44); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.moveTo(-6,30); ctx.lineTo(-8,50); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6,30); ctx.lineTo(8,50); ctx.stroke();
+    }
+
+    // body
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    var bodyTopY = pose==='kneel' ? -6 : -14;
+    ctx.moveTo(-13,30); ctx.quadraticCurveTo(-14,bodyTopY,0,bodyTopY-4);
+    ctx.quadraticCurveTo(14,bodyTopY,13,30);
+    ctx.closePath();
+    ctx.fill();
+
+    // arms
+    ctx.strokeStyle = cloth;
+    ctx.lineWidth = 7;
+    if(pose==='sly' || pose==='sombong'){
+      ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(-24,-10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(24,-10); ctx.stroke();
+    }else if(pose==='weak' || pose==='kneel'){
+      ctx.beginPath(); ctx.moveTo(-12,4); ctx.lineTo(-20,18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,4); ctx.lineTo(20,18); ctx.stroke();
+    }else if(pose==='teach'){
+      ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(-22,4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,-4); ctx.lineTo(24,-16); ctx.stroke();
+    }else if(pose==='pray'){
+      ctx.beginPath(); ctx.moveTo(-10,4); ctx.lineTo(0,14); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10,4); ctx.lineTo(0,14); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.moveTo(-12,2); ctx.lineTo(-18,20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,2); ctx.lineTo(18,20); ctx.stroke();
+    }
+
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,bodyTopY-14,11,0,Math.PI*2);
+    ctx.fill();
+
+    if(opts.old){
+      // beard + headwrap for wise old man
+      ctx.fillStyle = '#eee7d8';
+      ctx.beginPath();
+      ctx.moveTo(-9,bodyTopY-10);
+      ctx.quadraticCurveTo(0,bodyTopY+6,9,bodyTopY-10);
+      ctx.quadraticCurveTo(0,bodyTopY-2,-9,bodyTopY-10);
+      ctx.fill();
+      ctx.fillStyle = '#f3e7cd';
+      ctx.beginPath();
+      ctx.ellipse(0,bodyTopY-22,12,7,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.save();
+      ctx.globalAlpha=0.9;
+      ctx.beginPath();
+      ctx.arc(0,bodyTopY-14,11,Math.PI*1.15,Math.PI*1.85);
+      ctx.strokeStyle='#f3e7cd'; ctx.lineWidth=8; ctx.stroke();
+      ctx.restore();
+    }else{
+      ctx.fillStyle = '#241c10';
+      ctx.beginPath();
+      ctx.arc(0,bodyTopY-17,10,Math.PI,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function schoolBuilding(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a6a3f';
+    ctx.fillRect(-50,-6,100,54);
+    ctx.fillStyle = '#5b3a24';
+    ctx.beginPath();
+    ctx.moveTo(-60,-6); ctx.lineTo(0,-46); ctx.lineTo(60,-6);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath();
+    ctx.moveTo(-10,-46); ctx.lineTo(0,-58); ctx.lineTo(10,-46);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3a2c1a';
+    ctx.fillRect(-12,18,24,30);
+    ctx.fillStyle = '#caa23a';
+    ctx.fillRect(-38,6,16,16);
+    ctx.fillRect(22,6,16,16);
+    ctx.restore();
+  }
+
+  function marketStall(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#5b3a24';
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(-30,20); ctx.lineTo(-30,-24); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(30,20); ctx.lineTo(30,-24); ctx.stroke();
+    ctx.fillStyle = '#8a3324';
+    ctx.beginPath();
+    ctx.moveTo(-36,-24); ctx.lineTo(36,-24); ctx.lineTo(28,-40); ctx.lineTo(-28,-40);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#caa23a';
+    ctx.fillRect(-28,10,56,10);
+    ctx.restore();
+  }
+
+  function sparkle(x,y,scale,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha===undefined?1:alpha;
+    ctx.fillStyle = '#f7e08a';
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.beginPath();
+    ctx.moveTo(0,-10); ctx.lineTo(3,-3); ctx.lineTo(10,0); ctx.lineTo(3,3);
+    ctx.lineTo(0,10); ctx.lineTo(-3,3); ctx.lineTo(-10,0); ctx.lineTo(-3,-3);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------
+     SCENE DEFINITIONS
+  --------------------------------------------------------- */
+  function makeHotspots(list){ return list.map(function(h){ return {x:h[0],y:h[1],r:h[2],done:false}; }); }
+
+  var SCENES = [
+    // 0 — INTRO (auto)
+    {
+      type:'auto',
+      narr:{
+        id:"Dahulu kala, hidup seorang pemuda sakti mandraguna bernama Rangga Gading. Ia mampu berubah menjadi apa saja — sayangnya, ia sering menyalahgunakan kesaktiannya untuk mencuri.",
+        en:"Once upon a time, there lived a powerful young man named Rangga Gading. He could transform into anything — but sadly, he often misused his powers to steal."
+      },
+      instr:{
+        id:"Ketuk tombol \"Lanjut\" untuk melanjutkan cerita.",
+        en:"Tap the \"Next\" button to continue the story."
+      },
+      draw:function(){
+        sky('#f4c78a','#f7e3b8');
+        ground('#7a9a5b', 300);
+        cloud(120,70,1,0.9); cloud(650,50,0.8,0.8);
+        sun(700,60,34,'#f5c144');
+        house(150,270,1.1); house(260,290,0.9);
+        tree(600,260,1);
+        person(390,290,1.5,{pose:'sly',cloth:'#8a3324'});
+        ctx.fillStyle='rgba(0,0,0,.25)';
+        ctx.beginPath(); ctx.ellipse(390,336,26,7,0,0,Math.PI*2); ctx.fill();
+      }
+    },
+    // 1 — STEAL BUFFALOES (multitap)
+    {
+      type:'multitap',
+      hotspots: makeHotspots([[190,300,42],[330,300,42],[470,300,42],[610,300,42],[610,190,42]]),
+      narr:{
+        id:"Suatu siang, Rangga Gading mencuri lima ekor kerbau milik warga — sengaja di siang hari agar semua orang tahu kesaktiannya.",
+        en:"One afternoon, Rangga Gading stole five buffaloes from the villagers — deliberately in broad daylight to show off his powers."
+      },
+      instr:{
+        id:"Ketuk setiap kerbau untuk mencurinya.",
+        en:"Tap each buffalo to steal it."
+      },
+      draw:function(scn){
+        sky('#a9d3e0','#eef0c8');
+        ground('#7a9a5b', 320);
+        cloud(120,60,0.8,0.7);
+        scn.hotspots.forEach(function(h){
+          buffalo(h.x,h.y,1.15,{skin: h.done ? '#2a2a2a' : '#3a3a3a', faded:h.done});
+          if(h.done){ sparkle(h.x+38,h.y-24,0.9,0.9); }
+        });
+        person(700,340,1.3,{pose:'sly',cloth:'#8a3324'});
+      },
+      onTap:function(scn,x,y){
+        var hit=null;
+        scn.hotspots.forEach(function(h){ if(!h.done && dist(x,y,h.x,h.y)<h.r) hit=h; });
+        if(hit){ hit.done=true; return true; }
+        return false;
+      },
+      isComplete:function(scn){ return scn.hotspots.every(function(h){return h.done;}); }
+    },
+    // 2 — REVERSE FOOTPRINTS (multitap)
+    {
+      type:'multitap',
+      hotspots: makeHotspots([[220,340,30],[340,300,30],[460,260,30],[580,220,30]]),
+      narr:{
+        id:"Warga memburu jejak kaki kerbau yang hilang. Rangga Gading membalik arah telapak kaki hewan-hewan itu agar warga tersesat.",
+        en:"The villagers chased the buffaloes' hoofprints. Rangga Gading reversed the direction of the tracks to lead them astray."
+      },
+      instr:{
+        id:"Ketuk setiap jejak kaki untuk membalik arahnya.",
+        en:"Tap each footprint to reverse its direction."
+      },
+      draw:function(scn){
+        sky('#f4c78a','#f7e3b8');
+        ground('#c9a876', 300);
+        tree(90,250,0.9); tree(700,240,1);
+        scn.hotspots.forEach(function(h){
+          footprintMark(h.x,h.y, h.done ? 180 : 0, 1.6);
+        });
+        person(660,300,1.2,{pose:'sly',cloth:'#8a3324'});
+        // villagers chasing from left, confused
+        person(60,320,1.0,{pose:'stand',cloth:'#4c6b3f'});
+        person(100,330,0.9,{pose:'stand',cloth:'#3a5a7a'});
+      },
+      onTap:function(scn,x,y){
+        var hit=null;
+        scn.hotspots.forEach(function(h){ if(!h.done && dist(x,y,h.x,h.y)<h.r) hit=h; });
+        if(hit){ hit.done=true; return true; }
+        return false;
+      },
+      isComplete:function(scn){ return scn.hotspots.every(function(h){return h.done;}); }
+    },
+    // 3 — DISGUISE AT MARKET (sequential tap: horns then skin)
+    {
+      type:'sequence',
+      steps:['horns','skin'],
+      stepDone:{horns:false, skin:false},
+      hornZone:[446,265,60],
+      skinZone:[385,305,85],
+      narr:{
+        id:"Warga mengepung pasar untuk menangkapnya. Rangga Gading buru-buru mengubah tanduk dan warna kulit kerbau curian agar tak dikenali.",
+        en:"The villagers surrounded the market to catch him. Rangga Gading quickly changed the horns and skin color of the stolen buffalo so it wouldn't be recognized."
+      },
+      instr:{
+        id:"Ketuk tanduk kerbau, lalu ketuk tubuhnya untuk mengubah warna.",
+        en:"Tap the buffalo's horns, then tap its body to change its color."
+      },
+      draw:function(scn){
+        sky('#a9d3e0','#eef0c8');
+        ground('#c9a876', 320);
+        marketStall(140,300,0.9); marketStall(660,300,0.9);
+        buffalo(380,300,1.7,{
+          skin: scn.stepDone.skin ? '#e8e2d4' : '#2a2a2a',
+          hornsDown: scn.stepDone.horns
+        });
+        if(!scn.stepDone.horns){
+          ctx.save(); ctx.strokeStyle='rgba(217,164,65,.85)'; ctx.lineWidth=3; ctx.setLineDash([5,5]);
+          ctx.beginPath(); ctx.arc(scn.hornZone[0],scn.hornZone[1],scn.hornZone[2],0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+        } else if(!scn.stepDone.skin){
+          ctx.save(); ctx.strokeStyle='rgba(217,164,65,.85)'; ctx.lineWidth=3; ctx.setLineDash([5,5]);
+          ctx.beginPath(); ctx.arc(scn.skinZone[0],scn.skinZone[1],scn.skinZone[2],0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+        }
+        person(150,330,1.1,{pose:'sly',cloth:'#4c6b3f'});
+        person(650,330,1.1,{pose:'stand',cloth:'#3a5a7a'});
+      },
+      onTap:function(scn,x,y){
+        if(!scn.stepDone.horns){
+          if(dist(x,y,scn.hornZone[0],scn.hornZone[1])<scn.hornZone[2]){ scn.stepDone.horns=true; return true; }
+        } else if(!scn.stepDone.skin){
+          if(dist(x,y,scn.skinZone[0],scn.skinZone[1])<scn.skinZone[2]){ scn.stepDone.skin=true; return true; }
+        }
+        return false;
+      },
+      isComplete:function(scn){ return scn.stepDone.horns && scn.stepDone.skin; }
+    },
+    // 4 — FLY WITH PALM FROND (drag & drop)
+    {
+      type:'drag',
+      dragPos:{x:150,y:150},
+      dragStart:{x:150,y:150},
+      dropZone:{x:660,y:320,r:70},
+      dropped:false,
+      narr:{
+        id:"Mendengar kabar tanah keramat berlimpah emas di desa Karangmunggal, Rangga Gading naik pohon kelapa dan terbang menggunakan sehelai pelepahnya.",
+        en:"Hearing about a sacred land full of gold in Karangmunggal village, Rangga Gading climbed a coconut tree and flew there on a single palm frond."
+      },
+      instr:{
+        id:"Seret pelepah kelapa menuju desa Karangmunggal di seberang.",
+        en:"Drag the palm frond toward Karangmunggal village on the other side."
+      },
+      draw:function(scn){
+        sky('#7bb8e0','#cfe8f0');
+        cloud(250,90,0.7,0.6); cloud(500,60,0.9,0.7);
+        ground('#7a9a5b', 340);
+        coconutTree(120,340,1.1,0);
+        // destination village marker
+        house(660,300,0.9);
+        ctx.save();
+        ctx.strokeStyle='rgba(217,164,65,.7)'; ctx.setLineDash([6,6]); ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(scn.dropZone.x,scn.dropZone.y,scn.dropZone.r,0,Math.PI*2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+        ctx.fillStyle='#f0c667'; ctx.font='11px Verdana';
+        ctx.textAlign='center';
+        ctx.fillText(state.lang==='id'?'Desa Karangmunggal':'Karangmunggal Village', scn.dropZone.x, scn.dropZone.y+scn.dropZone.r+16);
+        // draggable palm frond
+        ctx.save();
+        ctx.translate(scn.dragPos.x, scn.dragPos.y);
+        ctx.fillStyle='#3f7a3a';
+        for(var i=0;i<5;i++){
+          ctx.save();
+          ctx.rotate((i-2)*0.28);
+          ctx.beginPath();
+          ctx.ellipse(26,0,26,8,0,0,Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.fillStyle='#caa23a';
+        ctx.beginPath(); ctx.arc(0,0,7,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+        if(!scn.dropped){
+          person(scn.dragPos.x-30,scn.dragPos.y+18,1.0,{pose:'sly',cloth:'#8a3324'});
+        }else{
+          person(scn.dropZone.x-30,scn.dropZone.y-10,1.0,{pose:'stand',cloth:'#8a3324'});
+        }
+      },
+      isComplete:function(scn){ return scn.dropped; }
+    },
+    // 5 — DIG FOR GOLD (tap-mash progress)
+    {
+      type:'mash',
+      target:14,
+      count:0,
+      narr:{
+        id:"Ia menjelma menjadi kucing agar tak dicurigai penjaga, lalu diam-diam menggali tanah keramat dan mengisi karungnya dengan emas.",
+        en:"He transformed into a cat to avoid the guards' suspicion, then secretly dug up the sacred land and filled his sack with gold."
+      },
+      instr:{
+        id:"Ketuk berulang kali pada tanah untuk menggali emas.",
+        en:"Tap repeatedly on the ground to dig up gold."
+      },
+      digZone:[400,320,90],
+      draw:function(scn){
+        sky('#f4c78a','#f7e3b8');
+        ground('#8a7248', 300);
+        tree(700,240,0.9);
+        person(600,260,0.9,{pose:'stand',cloth:'#3a5a7a'});
+        person(650,270,0.85,{pose:'stand',cloth:'#4c6b3f'});
+        cat(400,320,2.0);
+        sack(300,300,1.4, scn.count/scn.target);
+        // dig sparkle
+        for(var i=0;i<Math.min(scn.count,6);i++){
+          sparkle(360+i*14, 350-((i%3)*10), 0.6, 0.7);
+        }
+      },
+      onTap:function(scn,x,y){
+        if(dist(x,y,scn.digZone[0],scn.digZone[1])<scn.digZone[2]){
+          scn.count = Math.min(scn.target, scn.count+1);
+          return true;
+        }
+        return false;
+      },
+      isComplete:function(scn){ return scn.count>=scn.target; },
+      progress:function(scn){ return scn.count/scn.target; }
+    },
+    // 6 — REST BY THE POND (auto)
+    {
+      type:'auto',
+      narr:{
+        id:"Dalam perjalanan pulang, Rangga Gading beristirahat di tepi telaga. Karung emas digantungnya di dahan, lalu ia mandi — tanpa sadar seorang kakek sakti mengawasinya dari kejauhan.",
+        en:"On his way home, Rangga Gading rested by a pond. He hung his sack of gold on a branch and bathed — unaware that a wise old man was watching from a distance."
+      },
+      instr:{
+        id:"Ketuk tombol \"Lanjut\" untuk melihat apa yang terjadi.",
+        en:"Tap \"Next\" to see what happens."
+      },
+      draw:function(){
+        sky('#f0d9a0','#f7e9c4');
+        ground('#7a9a5b', 320);
+        pond(400,360,150,40);
+        tree(120,260,1.0);
+        tree(650,250,0.9);
+        sack(160,220,1.1,1);
+        person(400,330,1.0,{pose:'stand',cloth:'#c9975f'});
+        ctx.save();
+        ctx.globalAlpha=0.85;
+        person(680,300,1.0,{old:true,pose:'teach',cloth:'#f3e7cd'});
+        ctx.restore();
+      }
+    },
+    // 7 — CONFRONTED BY THE OLD MAN (branching choice)
+    {
+      type:'choice',
+      chosen:null,
+      narr:{
+        id:"\"Mengapa kau mencuri, anak muda?\" tanya sang kakek sakti. Rangga Gading terkejut melihatnya berdiri di tepi telaga.",
+        en:"\"Why do you steal, young man?\" asked the wise old man. Rangga Gading was startled to see him standing by the pond."
+      },
+      instr:{
+        id:"Pilih jawaban Rangga Gading kepada sang kakek.",
+        en:"Choose Rangga Gading's reply to the old man."
+      },
+      choices:[
+        { id:"\"Jangan ganggu aku, orang tua! Tak tahukah kau aku ini sakti?\"", en:"\"Don't bother me, old man! Don't you know I'm powerful?\"" },
+        { id:"\"Siapa kau? Bagaimana kau tahu namaku?\"", en:"\"Who are you? How do you know my name?\"" }
+      ],
+      draw:function(scn){
+        sky('#f0d9a0','#f7e9c4');
+        ground('#7a9a5b', 320);
+        pond(400,360,150,40);
+        person(320,320,1.1,{pose: scn.chosen===null?'sombong':'weak', cloth:'#c9975f', rotate: scn.chosen===null?0:8});
+        person(500,300,1.1,{old:true,pose:'teach',cloth:'#f3e7cd'});
+        if(scn.chosen!==null){
+          ctx.save();
+          ctx.fillStyle='rgba(217,164,65,.5)';
+          for(var i=0;i<8;i++){
+            var ang = Math.random()*Math.PI*2, r = 20+Math.random()*30;
+            ctx.beginPath();
+            ctx.arc(320+Math.cos(ang)*r, 300+Math.sin(ang)*r, 2.5, 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      },
+      onChoice:function(scn, idx){
+        scn.chosen = idx;
+        scn.narr = {
+          id:"Rangga Gading menjawab dengan sombong. Seketika tubuhnya lemas tak berdaya — kesaktian sang kakek jauh lebih tinggi darinya.",
+          en:"Rangga Gading answered arrogantly. Instantly his body went weak — the old man's power was far greater than his own."
+        };
+      },
+      isComplete:function(scn){ return scn.chosen!==null; }
+    },
+    // 8 — BEG FORGIVENESS (press & hold)
+    {
+      type:'hold',
+      target:1.6, // seconds
+      progressVal:0,
+      holdZone:{x:400,y:396,w:190,h:48},
+      narr:{
+        id:"\"Ampun, Kakek... ampun!\" Rangga Gading memohon dengan tubuh lemas kesakitan, berjanji akan bertobat dan menjadi muridnya.",
+        en:"\"Forgive me, old man... forgive me!\" Rangga Gading begged, his body weak with pain, promising to repent and become his disciple."
+      },
+      instr:{
+        id:"Tahan tombol \"Mohon Ampun\" pada gambar hingga penuh.",
+        en:"Press and hold the \"Beg Forgiveness\" button on the picture until it fills up."
+      },
+      draw:function(scn){
+        sky('#f0d9a0','#f7e9c4');
+        ground('#7a9a5b', 320);
+        person(320,300,1.15,{pose:'kneel', cloth:'#c9975f'});
+        person(500,290,1.1,{old:true,pose:'teach',cloth:'#f3e7cd'});
+        // on-canvas hold button
+        var z = scn.holdZone;
+        var p = Math.min(1, scn.progressVal/scn.target);
+        ctx.save();
+        ctx.fillStyle = '#3a2c1a';
+        roundRect(z.x-z.w/2, z.y-z.h/2, z.w, z.h, 12);
+        ctx.fill();
+        ctx.fillStyle = '#d9a441';
+        roundRect(z.x-z.w/2, z.y-z.h/2, z.w*p, z.h, 12);
+        ctx.fill();
+        ctx.strokeStyle = '#f0c667'; ctx.lineWidth = 2;
+        roundRect(z.x-z.w/2, z.y-z.h/2, z.w, z.h, 12);
+        ctx.stroke();
+        ctx.fillStyle = '#f3e7cd';
+        ctx.font = 'bold 15px Verdana';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(state.lang==='id' ? 'Mohon Ampun' : 'Beg Forgiveness', z.x, z.y+1);
+        ctx.restore();
+      },
+      isComplete:function(scn){ return scn.progressVal>=scn.target; },
+      progress:function(scn){ return scn.progressVal/scn.target; }
+    },
+    // 9 — TRAINING (tap-mash)
+    {
+      type:'mash',
+      target:12,
+      count:0,
+      narr:{
+        id:"Rangga Gading pun tekun berlatih di perguruan sang kakek, menggunakan kesaktiannya untuk hal-hal baik dan menolong sesama.",
+        en:"Rangga Gading trained diligently at the old man's school, using his powers for good and to help others."
+      },
+      instr:{
+        id:"Ketuk berulang kali pada Rangga Gading untuk berlatih ilmu kebaikan.",
+        en:"Tap repeatedly on Rangga Gading to practice the art of goodness."
+      },
+      tapZone:[350,300,80],
+      draw:function(scn){
+        sky('#a9d3e0','#eef0c8');
+        ground('#7a9a5b', 320);
+        schoolBuilding(600,300,0.9);
+        person(500,320,1.0,{old:true,pose:'teach',cloth:'#f3e7cd'});
+        person(350,300,1.2,{pose:'stand',cloth:'#4c6b3f'});
+        for(var i=0;i<Math.min(scn.count,8);i++){
+          sparkle(300+ (i%4)*30, 250-Math.floor(i/4)*24, 0.6, 0.8);
+        }
+        // progress ring around student
+        ctx.save();
+        ctx.strokeStyle='rgba(217,164,65,.6)';
+        ctx.lineWidth=4;
+        ctx.beginPath();
+        ctx.arc(350,300,90,-Math.PI/2, -Math.PI/2 + (scn.count/scn.target)*Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      },
+      onTap:function(scn,x,y){
+        if(dist(x,y,scn.tapZone[0],scn.tapZone[1])<scn.tapZone[2]){
+          scn.count = Math.min(scn.target, scn.count+1);
+          return true;
+        }
+        return false;
+      },
+      isComplete:function(scn){ return scn.count>=scn.target; },
+      progress:function(scn){ return scn.count/scn.target; }
+    },
+    // 10 — ENDING (auto, replaces next with replay)
+    {
+      type:'end',
+      narr:{
+        id:"Ketika sang kakek wafat, Rangga Gading memimpin perguruan itu. Ia dikenal sebagai orang sakti yang baik hati, dihormati oleh murid-muridnya. Tamatlah kisah Rangga Gading dari Jawa Timur.",
+        en:"When the old man passed away, Rangga Gading led the school. He became known as a powerful yet kind-hearted man, respected by his many students. And so ends the tale of Rangga Gading from East Java."
+      },
+      instr:{
+        id:"Ketuk \"Ulangi Cerita\" untuk mendengarkan kisah ini lagi.",
+        en:"Tap \"Replay Story\" to hear this tale again."
+      },
+      draw:function(){
+        sky('#f4c78a','#f7e3b8');
+        ground('#7a9a5b', 300);
+        sun(700,60,34,'#f5c144');
+        schoolBuilding(400,300,1.3);
+        person(300,340,1.2,{old:false,pose:'teach',cloth:'#f3e7cd'});
+        person(500,350,0.8,{pose:'stand',cloth:'#4c6b3f'});
+        person(540,355,0.75,{pose:'stand',cloth:'#3a5a7a'});
+        person(260,355,0.75,{pose:'stand',cloth:'#8a3324'});
+      }
+    }
+  ];
+
+  function dist(x1,y1,x2,y2){ return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)); }
+
+  function roundRect(x,y,w,h,r){
+    if(w<=0) return;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function pointInRect(px,py,z){
+    return px>=z.x-z.w/2 && px<=z.x+z.w/2 && py>=z.y-z.h/2 && py<=z.y+z.h/2;
+  }
+
+  /* ---------------------------------------------------------
+     RENDER / REDRAW REFERENCE (fixes canvas-clear-on-resize bug)
+  --------------------------------------------------------- */
+  var ppkCurrentDraw = null;
+
+  function redraw(){
+    if(ppkCurrentDraw) ppkCurrentDraw();
+  }
+
+  function setDrawRef(fn){
+    ppkCurrentDraw = fn;
+    redraw();
+  }
+
+  /* ---------------------------------------------------------
+     SCENE FLOW CONTROL
+  --------------------------------------------------------- */
+  function buildDots(){
+    el.dots.innerHTML = '';
+    for(var i=0;i<SCENES.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.dataset.i = i;
+      el.dots.appendChild(d);
+    }
+  }
+
+  function updateDots(){
+    var nodes = el.dots.querySelectorAll('.dot');
+    nodes.forEach(function(n){
+      var i = parseInt(n.dataset.i,10);
+      n.className = 'dot' + (i===state.sceneIndex?' active':(i<state.sceneIndex?' done':''));
+    });
+  }
+
+  function resetSceneProgress(scn){
+    if(scn.type==='multitap'){ scn.hotspots.forEach(function(h){ h.done=false; }); }
+    if(scn.type==='sequence'){ scn.stepDone = {horns:false, skin:false}; }
+    if(scn.type==='drag'){ scn.dropped=false; scn.dragPos = {x:scn.dragStart.x, y:scn.dragStart.y}; }
+    if(scn.type==='mash'){ scn.count=0; }
+    if(scn.type==='hold'){ scn.progressVal=0; }
+    if(scn.type==='choice'){ scn.chosen=null; }
+  }
+
+  function renderScene(idx){
+    state.sceneIndex = idx;
+    var scn = SCENES[idx];
+    resetSceneProgress(scn);
+    el.choiceRow.classList.add('hidden');
+    el.choiceRow.innerHTML = '';
+    el.progressBarWrap.style.display = 'none';
+    el.replayBtn2.classList.add('hidden');
+    el.nextBtn.classList.remove('hidden');
+
+    el.narrationText.textContent = scn.narr[state.lang];
+    el.instructionText.textContent = scn.instr ? scn.instr[state.lang] : '';
+
+    setDrawRef(function(){ clear(); scn.draw(scn); });
+
+    updateDots();
+    speak(scn.narr[state.lang]);
+
+    if(scn.type==='auto'){
+      el.nextBtn.disabled = false;
+      el.nextBtn.textContent = T[state.lang].next;
+    } else if(scn.type==='choice'){
+      el.nextBtn.disabled = true;
+      el.nextBtn.textContent = T[state.lang].next;
+      scn.choices.forEach(function(c,i){
+        var b = document.createElement('button');
+        b.className='choice-btn';
+        b.textContent = c[state.lang];
+        b.addEventListener('click', function(){
+          scn.onChoice(scn,i);
+          el.narrationText.textContent = scn.narr[state.lang];
+          speak(scn.narr[state.lang]);
+          el.choiceRow.classList.add('hidden');
+          el.nextBtn.disabled = false;
+          redraw();
+        });
+        el.choiceRow.appendChild(b);
+      });
+      el.choiceRow.classList.remove('hidden');
+    } else if(scn.type==='mash' || scn.type==='hold'){
+      el.progressBarWrap.style.display='block';
+      el.progressBarFill.style.width='0%';
+      el.nextBtn.disabled = true;
+      el.nextBtn.textContent = T[state.lang].next;
+    } else if(scn.type==='end'){
+      el.nextBtn.classList.add('hidden');
+      el.replayBtn2.classList.remove('hidden');
+    } else {
+      el.nextBtn.disabled = true;
+      el.nextBtn.textContent = T[state.lang].next;
+    }
+
+    requestResize();
+  }
+
+  function checkCompletion(){
+    var scn = SCENES[state.sceneIndex];
+    if(scn.isComplete && scn.isComplete(scn)){
+      el.nextBtn.disabled = false;
+    }
+    if(scn.progress){
+      var p = Math.min(1, scn.progress(scn));
+      el.progressBarFill.style.width = (p*100)+'%';
+    }
+  }
+
+  function goNext(){
+    if(state.sceneIndex < SCENES.length-1){
+      renderScene(state.sceneIndex+1);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     POINTER HANDLING (canvas coordinate mapping)
+  --------------------------------------------------------- */
+  function getStageCoords(evt){
+    var rect = el.stage.getBoundingClientRect();
+    var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    var scaleX = STAGE_W / rect.width;
+    var scaleY = STAGE_H / rect.height;
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  var holdTimer = null;
+  var dragging = false;
+
+  el.stage.addEventListener('pointerdown', function(evt){
+    if(state.sceneIndex<0) return;
+    var scn = SCENES[state.sceneIndex];
+    var p = getStageCoords(evt);
+
+    if(scn.type==='multitap' || scn.type==='sequence' || scn.type==='mash'){
+      if(scn.onTap && scn.onTap(scn,p.x,p.y)){
+        redraw();
+        checkCompletion();
+      }
+    } else if(scn.type==='drag'){
+      if(!scn.dropped && dist(p.x,p.y,scn.dragPos.x,scn.dragPos.y) < 46){
+        dragging = true;
+      }
+    } else if(scn.type==='hold'){
+      if(pointInRect(p.x,p.y,scn.holdZone)){
+        if(holdTimer) clearInterval(holdTimer);
+        holdTimer = setInterval(function(){
+          scn.progressVal += 0.08;
+          checkCompletion();
+          redraw();
+          if(scn.progressVal>=scn.target){
+            clearInterval(holdTimer); holdTimer=null;
+          }
+        }, 80);
+      }
+    }
+  });
+
+  window.addEventListener('pointermove', function(evt){
+    if(!dragging || state.sceneIndex<0) return;
+    var scn = SCENES[state.sceneIndex];
+    if(scn.type!=='drag' || scn.dropped) return;
+    var p = getStageCoords(evt);
+    scn.dragPos.x = Math.max(30,Math.min(STAGE_W-30,p.x));
+    scn.dragPos.y = Math.max(30,Math.min(STAGE_H-30,p.y));
+    redraw();
+  });
+
+  function endDrag(){
+    if(!dragging || state.sceneIndex<0){ dragging=false; return; }
+    dragging = false;
+    var scn = SCENES[state.sceneIndex];
+    if(scn.type!=='drag' || scn.dropped) return;
+    if(dist(scn.dragPos.x,scn.dragPos.y,scn.dropZone.x,scn.dropZone.y) < scn.dropZone.r){
+      scn.dropped = true;
+      scn.dragPos.x = scn.dropZone.x;
+      scn.dragPos.y = scn.dropZone.y;
+    } else {
+      scn.dragPos.x = scn.dragStart.x;
+      scn.dragPos.y = scn.dragStart.y;
+    }
+    redraw();
+    checkCompletion();
+  }
+  window.addEventListener('pointerup', function(){
+    endDrag();
+    if(holdTimer){ clearInterval(holdTimer); holdTimer=null; }
+  });
+  el.stage.addEventListener('pointerleave', function(){
+    if(holdTimer){ clearInterval(holdTimer); holdTimer=null; }
+  });
+  window.addEventListener('pointercancel', function(){
+    endDrag();
+    if(holdTimer){ clearInterval(holdTimer); holdTimer=null; }
+  });
+
+  /* ---------------------------------------------------------
+     SPEECH SYNTHESIS (with mute toggle)
+  --------------------------------------------------------- */
+  var synth = window.speechSynthesis;
+  var voicesLoaded = false;
+
+  function loadVoices(){
+    if(!synth) return;
+    var voices = synth.getVoices();
+    if(!voices.length) return;
+    voicesLoaded = true;
+    state.voiceId = voices.find(function(v){ return v.lang==='id-ID'; }) ||
+                    voices.find(function(v){ return v.lang && v.lang.indexOf('id')===0; });
+    state.voiceEn = voices.find(function(v){ return v.lang==='en-US'; }) ||
+                    voices.find(function(v){ return v.lang && v.lang.indexOf('en')===0; });
+  }
+  if(synth){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+
+  function speak(text){
+    if(!synth || state.muted || !text) return;
+    try{
+      synth.cancel();
+      var utt = new SpeechSynthesisUtterance(text);
+      utt.lang = state.lang==='id' ? 'id-ID' : 'en-US';
+      var v = state.lang==='id' ? state.voiceId : state.voiceEn;
+      if(v) utt.voice = v;
+      utt.rate = 0.95;
+      utt.pitch = 1.0;
+      synth.speak(utt);
+    }catch(e){}
+  }
+
+  /* ---------------------------------------------------------
+     LANGUAGE / MUTE TOGGLES
+  --------------------------------------------------------- */
+  function applyLanguage(){
+    el.langBtn.textContent = state.lang==='id' ? 'ID' : 'EN';
+    el.titleText.textContent = T[state.lang].title;
+    el.startTitle.textContent = T[state.lang].startTitle;
+    el.startDesc.textContent = T[state.lang].startDesc;
+    el.startBtn.textContent = T[state.lang].startBtn;
+    el.replayBtn.textContent = T[state.lang].replay;
+    el.replayBtn2.textContent = T[state.lang].replay;
+    el.endTitle.textContent = T[state.lang].endTitle;
+    el.endDesc.textContent = T[state.lang].endDesc;
+    el.footerText.textContent = T[state.lang].footer;
+    el.muteBtn.title = state.muted ? T[state.lang].muteOff : T[state.lang].muteOn;
+    document.documentElement.lang = state.lang;
+
+    if(state.sceneIndex>=0){
+      var scn = SCENES[state.sceneIndex];
+      el.narrationText.textContent = scn.narr[state.lang];
+      el.instructionText.textContent = scn.instr ? scn.instr[state.lang] : '';
+      el.nextBtn.textContent = T[state.lang].next;
+      if(scn.type==='choice' && scn.chosen===null){
+        var btns = el.choiceRow.querySelectorAll('.choice-btn');
+        btns.forEach(function(b,i){ b.textContent = scn.choices[i][state.lang]; });
+      }
+      redraw();
+    }
+  }
+
+  el.langBtn.addEventListener('click', function(){
+    state.lang = state.lang==='id' ? 'en' : 'id';
+    try{ localStorage.setItem('ranggaGadingLang', state.lang); }catch(e){}
+    applyLanguage();
+    if(state.sceneIndex>=0){
+      var scn = SCENES[state.sceneIndex];
+      speak(scn.narr[state.lang]);
+    }
+  });
+
+  function applyMuteIcon(){
+    el.muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  }
+  el.muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('ranggaGadingMuted', state.muted ? '1':'0'); }catch(e){}
+    applyMuteIcon();
+    if(state.muted && synth) synth.cancel();
+    else if(state.sceneIndex>=0){
+      speak(SCENES[state.sceneIndex].narr[state.lang]);
+    }
+  });
+
+  /* ---------------------------------------------------------
+     BUTTONS
+  --------------------------------------------------------- */
+  el.startBtn.addEventListener('click', function(){
+    el.startScreen.classList.add('hidden');
+    el.gameArea.classList.remove('hidden');
+    buildDots();
+    renderScene(0);
+  });
+
+  el.nextBtn.addEventListener('click', function(){
+    if(el.nextBtn.disabled) return;
+    goNext();
+  });
+
+  function restart(){
+    el.endWrap.classList.add('hidden');
+    el.gameArea.classList.remove('hidden');
+    renderScene(0);
+  }
+  el.replayBtn.addEventListener('click', restart);
+  el.replayBtn2.addEventListener('click', restart);
+
+  /* ---------------------------------------------------------
+     IFRAME AUTO-RESIZE
+  --------------------------------------------------------- */
+  function requestResize(){
+    setTimeout(sendHeight, 50);
+  }
+  function sendHeight(){
+    var h = document.getElementById('app').scrollHeight + 20;
+    try{
+      window.parent.postMessage({ type:'ranggagadingHeight', height:h }, '*');
+    }catch(e){}
+  }
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ sendHeight(); });
+    ro.observe(document.getElementById('app'));
+  }
+  setInterval(sendHeight, 700);
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', redraw);
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  applyLanguage();
+  applyMuteIcon();
+  setDrawRef(function(){
+    clear();
+    sky('#f4c78a','#f7e3b8');
+    ground('#7a9a5b', 300);
+    sun(700,60,34,'#f5c144');
+    house(150,270,1.1);
+    person(390,290,1.5,{pose:'sly',cloth:'#8a3324'});
+  });
+  sendHeight();
+
+})();
+</script>
+</body>
+</html>
