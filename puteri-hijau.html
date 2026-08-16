@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Legenda Puteri Hijau</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Mulish:wght@400;600;700;800&display=swap');
+
+  :root{
+    --bg-deep:#0a1f1a;
+    --panel:#123328;
+    --panel-2:#0e2820;
+    --jade:#2f9e6a;
+    --jade-light:#5fcb95;
+    --gold:#d4af37;
+    --gold-light:#f2d878;
+    --cream:#f4ecd8;
+    --ember:#e0663e;
+    --ink:#07130f;
+    --font-display:'Cinzel', Georgia, 'Times New Roman', serif;
+    --font-body:'Mulish', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0; padding:0;
+    background:transparent;
+    font-family:var(--font-body);
+  }
+
+  .app{
+    width:100%;
+    max-width:820px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--panel) 0%, var(--panel-2) 100%);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+    color:var(--cream);
+    border:1px solid rgba(212,175,55,0.25);
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    background:linear-gradient(90deg, rgba(212,175,55,0.14), rgba(212,175,55,0.02));
+    border-bottom:1px solid rgba(212,175,55,0.25);
+  }
+
+  .title{
+    font-family:var(--font-display);
+    font-weight:700;
+    letter-spacing:0.02em;
+    font-size:clamp(16px,3.6vw,22px);
+    color:var(--gold-light);
+    text-shadow:0 1px 0 rgba(0,0,0,0.3);
+  }
+
+  .topbtns{display:flex; gap:8px;}
+
+  .iconbtn{
+    background:rgba(244,236,216,0.08);
+    border:1px solid rgba(212,175,55,0.4);
+    color:var(--cream);
+    border-radius:10px;
+    padding:7px 11px;
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+    min-width:40px;
+  }
+  .iconbtn:hover{background:rgba(212,175,55,0.22);}
+  .iconbtn:active{transform:scale(0.95);}
+  .iconbtn:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px;}
+
+  .stage{
+    width:100%;
+    background:#000;
+    position:relative;
+    line-height:0;
+  }
+
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+    aspect-ratio:8/5;
+    touch-action:none;
+    cursor:pointer;
+  }
+
+  .instruction{
+    margin:14px 16px 2px 16px;
+    padding:10px 12px;
+    background:rgba(212,175,55,0.12);
+    border-left:3px solid var(--gold);
+    border-radius:6px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--gold-light);
+    min-height:20px;
+  }
+
+  .narration{
+    margin:10px 16px 4px 16px;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--cream);
+    min-height:24px;
+  }
+
+  .narration .extra{
+    display:block;
+    margin-top:8px;
+    color:var(--jade-light);
+    font-style:italic;
+  }
+
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:6px 16px 4px 16px;
+  }
+
+  .dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:rgba(244,236,216,0.2);
+    border:1px solid rgba(212,175,55,0.4);
+    transition:all 0.2s ease;
+  }
+  .dot.active{ background:var(--gold); width:22px; border-radius:5px; }
+  .dot.done{ background:var(--jade); }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    padding:12px 16px 18px 16px;
+  }
+
+  .btn{
+    font-family:var(--font-body);
+    font-weight:800;
+    font-size:14px;
+    letter-spacing:0.01em;
+    padding:12px 22px;
+    border-radius:999px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform 0.1s ease, filter 0.15s ease;
+  }
+  .btn:active{transform:scale(0.96);}
+  .btn:focus-visible{outline:2px solid var(--gold-light); outline-offset:3px;}
+
+  .btn-primary{
+    background:linear-gradient(180deg, var(--gold-light), var(--gold));
+    color:#2b2308;
+  }
+  .btn-primary:hover{filter:brightness(1.06);}
+
+  .btn-secondary{
+    background:rgba(244,236,216,0.06);
+    color:var(--cream);
+    border:1px solid rgba(212,175,55,0.45);
+  }
+  .btn-secondary:hover{background:rgba(212,175,55,0.16);}
+
+  .btn-choice{
+    background:rgba(47,158,106,0.18);
+    color:var(--jade-light);
+    border:1px solid rgba(47,158,106,0.6);
+  }
+  .btn-choice:hover{background:rgba(47,158,106,0.32);}
+
+  .progressWrap{
+    width:100%;
+    max-width:520px;
+    margin:2px auto 0 auto;
+    height:12px;
+    background:rgba(244,236,216,0.12);
+    border-radius:999px;
+    overflow:hidden;
+    border:1px solid rgba(212,175,55,0.35);
+    display:none;
+  }
+  .progressWrap.show{display:block;}
+  .progressBar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--jade), var(--gold));
+    transition:width 0.08s linear;
+  }
+
+  .footer{
+    text-align:center;
+    font-size:11.5px;
+    color:rgba(244,236,216,0.55);
+    padding:0 16px 14px 16px;
+    letter-spacing:0.03em;
+  }
+
+  @media (max-width:420px){
+    .btn{padding:11px 16px; font-size:13px;}
+    .title{font-size:15px;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="title" id="titleText">Legenda Puteri Hijau</div>
+    <div class="topbtns">
+      <button class="iconbtn" id="langBtn" type="button">EN</button>
+      <button class="iconbtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+  </div>
+
+  <div class="progressWrap" id="progressWrap"><div class="progressBar" id="progressBar"></div></div>
+  <div class="instruction" id="instructionText"></div>
+  <p class="narration" id="narrationText"></p>
+  <div class="dots" id="dotsRow"></div>
+  <div class="controls" id="controlsRow"></div>
+  <div class="footer" id="footerText">Legenda Nusantara — Kisah dari Sumatera Utara</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ STATE ============ */
+  var qsLang = new URLSearchParams(location.search).get('lang');
+  var lang = localStorage.getItem('puteriHijau_lang') || qsLang || 'id';
+  if(lang !== 'id' && lang !== 'en') lang = 'id';
+  var muted = localStorage.getItem('puteriHijau_muted') === '1';
+  var phase = 'start'; // 'start' | 'scene'
+  var sceneIndex = 0;
+  var sceneState = {};
+  var activeInterval = null;
+  var rafId = null;
+  var voicesCache = [];
+
+  /* ============ DOM ============ */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var titleText = document.getElementById('titleText');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var instructionText = document.getElementById('instructionText');
+  var narrationText = document.getElementById('narrationText');
+  var dotsRow = document.getElementById('dotsRow');
+  var controlsRow = document.getElementById('controlsRow');
+  var footerText = document.getElementById('footerText');
+  var progressWrap = document.getElementById('progressWrap');
+  var progressBar = document.getElementById('progressBar');
+
+  var W = 800, H = 500;
+
+  /* ============ TEXT DICTIONARY ============ */
+  var T = {
+    title: {id:'Legenda Puteri Hijau', en:'The Legend of Puteri Hijau'},
+    footer: {id:'Legenda Nusantara — Kisah dari Sumatera Utara', en:'Legends of the Archipelago — A Tale from North Sumatra'},
+    startTitle: {id:'Legenda Puteri Hijau', en:'The Legend of Puteri Hijau'},
+    startSub: {id:'Kisah Sang Puteri dari Tanah Deli, Sumatera Utara', en:'The Tale of the Princess from the Land of Deli, North Sumatra'},
+    startInstruction: {id:'Ketuk tombol Mulai Cerita untuk memulai kisahnya.', en:'Tap the Start Story button to begin the tale.'},
+    startBtn: {id:'Mulai Cerita ▶', en:'Start Story ▶'},
+    nextBtn: {id:'Lanjut ▶', en:'Next ▶'},
+    replayBtn: {id:'Ulangi Cerita ↺', en:'Replay Story ↺'},
+    acceptBtn: {id:'Terima Pinangan', en:'Accept the Proposal'},
+    refuseBtn: {id:'Tolak Pinangan', en:'Refuse the Proposal'}
+  };
+
+  /* ============ SCENES ============ */
+  var scenes = [
+    {
+      id:'intro', type:'auto',
+      narration:{
+        id:'Di tanah Deli, Sumatera Utara, hiduplah seorang puteri yang sangat cantik jelita bernama Puteri Hijau. Kecantikannya termasyhur hingga ke negeri seberang laut.',
+        en:'In the land of Deli, North Sumatra, there lived a princess of extraordinary beauty named Puteri Hijau — the Green Princess. Her beauty was renowned even across the sea.'
+      },
+      instruction:{
+        id:'Ketuk tombol Lanjut untuk melanjutkan kisah Puteri Hijau.',
+        en:'Tap the Next button to continue Puteri Hijau\'s story.'
+      },
+      draw: drawIntroScene
+    },
+    {
+      id:'brothers', type:'multitap',
+      narration:{
+        id:'Puteri Hijau memiliki dua kakak laki-laki yang sangat sakti. Sang kakak sulung dapat menjelma menjadi meriam pusaka, sedangkan kakak keduanya dapat menjelma menjadi naga raksasa penjaga kerajaan.',
+        en:'Puteri Hijau had two powerful older brothers. The eldest could transform into a sacred cannon, while the second could transform into a giant guardian dragon.'
+      },
+      instruction:{
+        id:'Ketuk meriam sakti dan naga raksasa untuk mengenal kedua kakak Puteri Hijau.',
+        en:'Tap the sacred cannon and the guardian dragon to meet Puteri Hijau\'s two brothers.'
+      },
+      draw: drawBrothersScene
+    },
+    {
+      id:'proposal', type:'branch',
+      narration:{
+        id:'Suatu hari, seorang utusan dari Kesultanan Aceh datang ke istana Deli membawa pinangan untuk Puteri Hijau.',
+        en:'One day, an envoy from the Sultanate of Aceh arrived at the Deli palace bearing a proposal of marriage for Puteri Hijau.'
+      },
+      instruction:{
+        id:'Ketuk salah satu pilihan di bawah untuk menentukan jawaban kerajaan.',
+        en:'Tap one of the choices below to decide the kingdom\'s answer.'
+      },
+      draw: drawProposalScene
+    },
+    {
+      id:'battle', type:'mash',
+      narration:{
+        id:'Pinangan itu ditolak, dan Sultan Aceh murka. Kapal-kapal perangnya bergerak menuju pesisir Deli. Kakak sulung Puteri Hijau bersiap menembakkan meriam saktinya untuk mempertahankan kerajaan!',
+        en:'The proposal was refused, and the Sultan of Aceh was furious. His warships sailed toward the shores of Deli. Puteri Hijau\'s eldest brother prepared to fire his sacred cannon to defend the kingdom!'
+      },
+      instruction:{
+        id:'Ketuk meriam berulang kali untuk menembakkan peluru ke kapal-kapal musuh!',
+        en:'Tap the cannon repeatedly to fire cannonballs at the enemy ships!'
+      },
+      draw: drawBattleScene
+    },
+    {
+      id:'reload', type:'hold',
+      narration:{
+        id:'Setelah menembak tanpa henti, meriam itu mulai memanas dan retak. Namun sang kakak sulung nekat mengisi bubuk mesiu sekali lagi demi melindungi adiknya.',
+        en:'After firing without pause, the cannon began to overheat and crack. Still, the eldest brother recklessly loaded the gunpowder once more to protect his sister.'
+      },
+      instruction:{
+        id:'Tekan dan tahan meriam untuk mengisi bubuk mesiu.',
+        en:'Press and hold the cannon to load the gunpowder.'
+      },
+      draw: drawReloadScene
+    },
+    {
+      id:'escape', type:'drag',
+      narration:{
+        id:'Melihat pertahanan mulai runtuh, sang kakak kedua yang berwujud naga meminta Puteri Hijau segera menyelamatkan diri ke laut.',
+        en:'As the defenses began to fall, her second brother in dragon form urged Puteri Hijau to flee to the sea at once.'
+      },
+      instruction:{
+        id:'Seret Puteri Hijau menuju sang naga di tepi laut untuk melarikan diri.',
+        en:'Drag Puteri Hijau toward the dragon at the water\'s edge to escape.'
+      },
+      draw: drawEscapeScene
+    },
+    {
+      id:'ending', type:'auto',
+      narration:{
+        id:'Puteri Hijau dan sang naga menghilang ke dasar Selat Malaka. Konon hingga kini, kapal emas miliknya kerap terlihat muncul pada malam bulan purnama — mengingatkan orang-orang akan kisah cinta, keberanian, dan pengorbanan dari tanah Deli.',
+        en:'Puteri Hijau and the dragon vanished into the depths of the Malacca Strait. Even today, it is said her golden ship sometimes appears on full-moon nights — a reminder of the love, courage, and sacrifice from the land of Deli.'
+      },
+      instruction:{
+        id:'Ketuk tombol Ulangi Cerita untuk mendengar kisahnya kembali.',
+        en:'Tap the Replay Story button to hear the tale again.'
+      },
+      draw: drawEndingScene
+    }
+  ];
+
+  /* ============ UTIL ============ */
+  function tr(dict){ return dict[lang] || dict.id; }
+  function dist(ax,ay,bx,by){ return Math.hypot(ax-bx, ay-by); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+  function clearActiveInterval(){ if(activeInterval){ clearInterval(activeInterval); activeInterval = null; } }
+  function clearRaf(){ if(rafId){ cancelAnimationFrame(rafId); rafId = null; } }
+
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    var cx = (evt.clientX !== undefined) ? evt.clientX : (evt.touches && evt.touches[0] ? evt.touches[0].clientX : 0);
+    var cy = (evt.clientY !== undefined) ? evt.clientY : (evt.touches && evt.touches[0] ? evt.touches[0].clientY : 0);
+    return { x:(cx - rect.left) * scaleX, y:(cy - rect.top) * scaleY };
+  }
+
+  function reportHeight(){
+    try{
+      var h = document.getElementById('app').scrollHeight;
+      parent.postMessage({ type:'puteriHijauResize', height:h }, '*');
+    }catch(e){}
+  }
+
+  /* ============ SPEECH ============ */
+  function loadVoices(){
+    if('speechSynthesis' in window){ voicesCache = speechSynthesis.getVoices(); }
+  }
+  if('speechSynthesis' in window){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  } else {
+    muteBtn.style.display = 'none';
+  }
+
+  function pickVoice(){
+    if(!voicesCache || !voicesCache.length) return null;
+    var target = lang === 'id' ? 'id' : 'en';
+    var v = voicesCache.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(target) === 0; });
+    return v || null;
+  }
+
+  function speak(text){
+    if(muted || !text || !('speechSynthesis' in window)) return;
+    try{
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+      var v = pickVoice();
+      if(v) u.voice = v;
+      u.rate = 0.94;
+      u.pitch = 1.0;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function stopSpeech(){
+    if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+  }
+
+  /* ============ RENDER CHROME ============ */
+  function renderChrome(){
+    titleText.textContent = tr(T.title);
+    footerText.textContent = tr(T.footer);
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    langBtn.setAttribute('aria-label', lang === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia');
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-label', muted ? (lang==='id'?'Aktifkan suara':'Unmute narration') : (lang==='id'?'Bisukan suara':'Mute narration'));
+
+    if(phase === 'start'){
+      instructionText.textContent = tr(T.startInstruction);
+      narrationText.innerHTML = '<strong style="color:var(--gold-light);font-family:var(--font-display);font-size:17px;">' + tr(T.startTitle) + '</strong><br>' + tr(T.startSub);
+      dotsRow.style.display = 'none';
+      progressWrap.classList.remove('show');
+      renderStartControls();
+      return;
+    }
+
+    dotsRow.style.display = 'flex';
+    var sc = scenes[sceneIndex];
+    instructionText.textContent = tr(sc.instruction);
+    var html = tr(sc.narration);
+    if(sceneState.extraText){
+      html += '<span class="extra">' + tr(sceneState.extraText) + '</span>';
+    }
+    narrationText.innerHTML = html;
+    renderDots();
+    renderControlsForScene();
+  }
+
+  function renderDots(){
+    dotsRow.innerHTML = '';
+    for(var i=0;i<scenes.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i === sceneIndex ? ' active' : (i < sceneIndex ? ' done' : ''));
+      dotsRow.appendChild(d);
+    }
+  }
+
+  function renderStartControls(){
+    controlsRow.innerHTML = '';
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn btn-primary';
+    b.textContent = tr(T.startBtn);
+    b.onclick = startStory;
+    controlsRow.appendChild(b);
+  }
+
+  function makeBtn(label, cls, handler){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn ' + cls;
+    b.textContent = label;
+    b.onclick = handler;
+    return b;
+  }
+
+  function renderControlsForScene(){
+    controlsRow.innerHTML = '';
+    var sc = scenes[sceneIndex];
+
+    if(sc.type === 'auto'){
+      if(sc.id === 'ending'){
+        controlsRow.appendChild(makeBtn(tr(T.replayBtn), 'btn-primary', replayStory));
+      } else {
+        controlsRow.appendChild(makeBtn(tr(T.nextBtn), 'btn-primary', function(){ goToScene(sceneIndex + 1); }));
+      }
+      return;
+    }
+
+    if(sc.type === 'multitap'){
+      if(sceneState.cannonTapped && sceneState.dragonTapped){
+        controlsRow.appendChild(makeBtn(tr(T.nextBtn), 'btn-primary', function(){ goToScene(sceneIndex + 1); }));
+      }
+      return;
+    }
+
+    if(sc.type === 'branch'){
+      if(!sceneState.choiceMade){
+        controlsRow.appendChild(makeBtn(tr(T.refuseBtn), 'btn-choice', function(){ makeChoice('refuse'); }));
+        controlsRow.appendChild(makeBtn(tr(T.acceptBtn), 'btn-secondary', function(){ makeChoice('accept'); }));
+      } else {
+        controlsRow.appendChild(makeBtn(tr(T.nextBtn), 'btn-primary', function(){ goToScene(sceneIndex + 1); }));
+      }
+      return;
+    }
+
+    if(sc.type === 'mash'){
+      if(sceneState.completed){
+        controlsRow.appendChild(makeBtn(tr(T.nextBtn), 'btn-primary', function(){ goToScene(sceneIndex + 1); }));
+      }
+      return;
+    }
+
+    if(sc.type === 'hold'){
+      if(sceneState.exploded && sceneState.explosionDone){
+        controlsRow.appendChild(makeBtn(tr(T.nextBtn), 'btn-primary', function(){ goToScene(sceneIndex + 1); }));
+      }
+      return;
+    }
+
+    if(sc.type === 'drag'){
+      if(sceneState.success){
+        controlsRow.appendChild(makeBtn(tr(T.nextBtn), 'btn-primary', function(){ goToScene(sceneIndex + 1); }));
+      }
+      return;
+    }
+  }
+
+  function updateProgressUI(pct, show){
+    progressWrap.classList.toggle('show', !!show);
+    progressBar.style.width = clamp(pct,0,100) + '%';
+  }
+
+  /* ============ SCENE LIFECYCLE ============ */
+  function startStory(){
+    phase = 'scene';
+    goToScene(0);
+  }
+
+  function replayStory(){
+    goToScene(0);
+  }
+
+  function goToScene(idx){
+    clearActiveInterval();
+    clearRaf();
+    stopSpeech();
+    sceneIndex = idx;
+    sceneState = createInitialState(scenes[idx]);
+    phase = 'scene';
+    updateProgressUI(0, false);
+    drawCurrentScene();
+    renderChrome();
+    speak(tr(scenes[idx].narration));
+    reportHeight();
+  }
+
+  function createInitialState(sc){
+    var s = {};
+    if(sc.type === 'multitap'){
+      s.cannonTapped = false;
+      s.dragonTapped = false;
+      s.pulse = {cannon:0, dragon:0};
+    } else if(sc.type === 'branch'){
+      s.choiceMade = null;
+      s.extraText = null;
+    } else if(sc.type === 'mash'){
+      s.progress = 0;
+      s.completed = false;
+      s.fireFlash = 0;
+      s.shipsHit = 0;
+      startMashDecay();
+    } else if(sc.type === 'hold'){
+      s.holding = false;
+      s.progress = 0;
+      s.exploded = false;
+      s.explosionDone = false;
+      s.particles = [];
+      s.heat = 0;
+    } else if(sc.type === 'drag'){
+      s.princess = { x: 620, y: 150 };
+      s.homePos = { x: 620, y: 150 };
+      s.dragging = false;
+      s.success = false;
+      s.springing = false;
+    }
+    return s;
+  }
+
+  function drawCurrentScene(){
+    if(phase === 'start'){ drawStartScreen(ctx); return; }
+    scenes[sceneIndex].draw(ctx, sceneState);
+  }
+
+  /* ============ INTERACTION: MULTITAP ============ */
+  var cannonBroTarget = { x:230, y:300, r:60 };
+  var dragonBroTarget = { x:570, y:300, r:70 };
+
+  function handleMultitapDown(p){
+    var sc = scenes[sceneIndex];
+    if(sc.id !== 'brothers') return;
+    if(!sceneState.cannonTapped && dist(p.x,p.y,cannonBroTarget.x,cannonBroTarget.y) < cannonBroTarget.r){
+      sceneState.cannonTapped = true;
+      sceneState.pulse.cannon = 1;
+    }
+    if(!sceneState.dragonTapped && dist(p.x,p.y,dragonBroTarget.x,dragonBroTarget.y) < dragonBroTarget.r){
+      sceneState.dragonTapped = true;
+      sceneState.pulse.dragon = 1;
+    }
+    drawCurrentScene();
+    renderControlsForScene();
+  }
+
+  /* ============ INTERACTION: BRANCH ============ */
+  function makeChoice(choice){
+    sceneState.choiceMade = choice;
+    if(choice === 'accept'){
+      sceneState.extraText = {
+        id:'Namun raja mengetahui pinangan itu hanyalah tipu muslihat untuk menguasai Deli. Demi keselamatan rakyat, kerajaan akhirnya tetap menolaknya.',
+        en:'But the king realized the proposal was merely a scheme to seize Deli. For the safety of his people, the kingdom ultimately refused it after all.'
+      };
+    } else {
+      sceneState.extraText = {
+        id:'Kerajaan Deli dengan tegas menolak pinangan itu. Sultan Aceh murka mendengar penolakan tersebut.',
+        en:'The kingdom of Deli firmly refused the proposal. The Sultan of Aceh was enraged upon hearing the refusal.'
+      };
+    }
+    speak(tr(sceneState.extraText));
+    drawCurrentScene();
+    renderChrome();
+  }
+
+  /* ============ INTERACTION: MASH ============ */
+  var cannonMashTarget = { x:190, y:330, r:65 };
+
+  function startMashDecay(){
+    activeInterval = setInterval(function(){
+      if(scenes[sceneIndex].id !== 'battle') return;
+      if(sceneState.completed) return;
+      sceneState.progress = clamp(sceneState.progress - 1.1, 0, 100);
+      if(sceneState.fireFlash > 0) sceneState.fireFlash -= 0.12;
+      updateProgressUI(sceneState.progress, true);
+      drawCurrentScene();
+    }, 140);
+  }
+
+  function handleMashDown(p){
+    if(scenes[sceneIndex].id !== 'battle' || sceneState.completed) return;
+    if(dist(p.x,p.y,cannonMashTarget.x,cannonMashTarget.y) < cannonMashTarget.r){
+      sceneState.progress = clamp(sceneState.progress + 9, 0, 100);
+      sceneState.fireFlash = 1;
+      sceneState.shipsHit = Math.floor(sceneState.progress / 34);
+      updateProgressUI(sceneState.progress, true);
+      if(sceneState.progress >= 100 && !sceneState.completed){
+        sceneState.completed = true;
+        clearActiveInterval();
+        renderControlsForScene();
+        setTimeout(function(){
+          if(scenes[sceneIndex].id === 'battle' && sceneState.completed){
+            goToScene(sceneIndex + 1);
+          }
+        }, 2200);
+      }
+      drawCurrentScene();
+    }
+  }
+
+  /* ============ INTERACTION: HOLD ============ */
+  var cannonHoldTarget = { x:300, y:320, r:70 };
+
+  function handleHoldDown(p){
+    if(scenes[sceneIndex].id !== 'reload' || sceneState.exploded) return;
+    if(dist(p.x,p.y,cannonHoldTarget.x,cannonHoldTarget.y) < cannonHoldTarget.r){
+      sceneState.holding = true;
+      clearActiveInterval();
+      activeInterval = setInterval(function(){
+        if(!sceneState.holding || sceneState.exploded){ return; }
+        sceneState.progress = clamp(sceneState.progress + 3.4, 0, 100);
+        sceneState.heat = sceneState.progress;
+        updateProgressUI(sceneState.progress, true);
+        drawCurrentScene();
+        if(sceneState.progress >= 100){
+          sceneState.exploded = true;
+          sceneState.holding = false;
+          clearActiveInterval();
+          triggerExplosion();
+        }
+      }, 80);
+    }
+  }
+
+  function handleHoldUp(){
+    if(scenes[sceneIndex].id !== 'reload') return;
+    sceneState.holding = false;
+    if(!sceneState.exploded){
+      clearActiveInterval();
+      activeInterval = setInterval(function(){
+        sceneState.progress = clamp(sceneState.progress - 2.6, 0, 100);
+        sceneState.heat = sceneState.progress;
+        updateProgressUI(sceneState.progress, true);
+        drawCurrentScene();
+        if(sceneState.progress <= 0){ clearActiveInterval(); }
+      }, 80);
+    }
+  }
+
+  function triggerExplosion(){
+    var particles = [];
+    for(var i=0;i<38;i++){
+      var ang = Math.random() * Math.PI * 2;
+      var speed = 2 + Math.random() * 5;
+      particles.push({
+        x: cannonHoldTarget.x, y: cannonHoldTarget.y,
+        vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed - 1,
+        life: 1, size: 3 + Math.random() * 5
+      });
+    }
+    sceneState.particles = particles;
+    var start = Date.now();
+    function loop(){
+      var elapsed = Date.now() - start;
+      sceneState.particles.forEach(function(pt){
+        pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.12; pt.life -= 0.02;
+      });
+      drawCurrentScene();
+      if(elapsed < 1300){
+        rafId = requestAnimationFrame(loop);
+      } else {
+        sceneState.explosionDone = true;
+        sceneState.extraText = {
+          id:'Meriam itu meletus dengan dahsyat! Sang kakak sulung gugur, namun keberaniannya berhasil menahan gempuran musuh untuk sementara.',
+          en:'The cannon erupted with tremendous force! The eldest brother perished, but his courage held back the enemy assault for a while longer.'
+        };
+        speak(tr(sceneState.extraText));
+        renderChrome();
+        drawCurrentScene();
+      }
+    }
+    loop();
+  }
+
+  /* ============ INTERACTION: DRAG ============ */
+  var dragonDropZone = { x:150, y:330, r:80 };
+  var princessRadius = 46;
+
+  function handleDragDown(p){
+    if(scenes[sceneIndex].id !== 'escape' || sceneState.success) return;
+    if(dist(p.x,p.y,sceneState.princess.x,sceneState.princess.y) < princessRadius){
+      sceneState.dragging = true;
+    }
+  }
+
+  function handleDragMove(p){
+    if(scenes[sceneIndex].id !== 'escape' || !sceneState.dragging) return;
+    sceneState.princess.x = clamp(p.x, 40, W - 40);
+    sceneState.princess.y = clamp(p.y, 60, H - 40);
+    drawCurrentScene();
+  }
+
+  function handleDragUp(){
+    if(scenes[sceneIndex].id !== 'escape' || !sceneState.dragging) return;
+    sceneState.dragging = false;
+    if(dist(sceneState.princess.x, sceneState.princess.y, dragonDropZone.x, dragonDropZone.y) < dragonDropZone.r){
+      sceneState.success = true;
+      sceneState.princess.x = dragonDropZone.x + 55;
+      sceneState.princess.y = dragonDropZone.y - 10;
+      sceneState.extraText = {
+        id:'Puteri Hijau berhasil mencapai sang naga. Bersama-sama mereka bersiap menyelami lautan luas, meninggalkan kerajaan Deli untuk selamanya.',
+        en:'Puteri Hijau reached the dragon safely. Together they prepared to dive into the wide sea, leaving the kingdom of Deli behind forever.'
+      };
+      speak(tr(sceneState.extraText));
+      renderChrome();
+      drawCurrentScene();
+    } else {
+      springBack();
+    }
+  }
+
+  function springBack(){
+    var startX = sceneState.princess.x, startY = sceneState.princess.y;
+    var endX = sceneState.homePos.x, endY = sceneState.homePos.y;
+    var t0 = Date.now();
+    var dur = 380;
+    function step(){
+      var t = clamp((Date.now() - t0) / dur, 0, 1);
+      var ease = 1 - Math.pow(1 - t, 3);
+      sceneState.princess.x = startX + (endX - startX) * ease;
+      sceneState.princess.y = startY + (endY - startY) * ease;
+      drawCurrentScene();
+      if(t < 1){ rafId = requestAnimationFrame(step); }
+    }
+    step();
+  }
+
+  /* ============ POINTER WIRING ============ */
+  canvas.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    var p = getPos(e);
+    if(phase !== 'scene') return;
+    var type = scenes[sceneIndex].type;
+    if(type === 'multitap') handleMultitapDown(p);
+    else if(type === 'mash') handleMashDown(p);
+    else if(type === 'hold') handleHoldDown(p);
+    else if(type === 'drag') handleDragDown(p);
+  });
+
+  canvas.addEventListener('pointermove', function(e){
+    if(phase !== 'scene') return;
+    if(scenes[sceneIndex].type === 'drag'){
+      var p = getPos(e);
+      handleDragMove(p);
+    }
+  });
+
+  window.addEventListener('pointerup', function(e){
+    if(phase !== 'scene') return;
+    var type = scenes[sceneIndex].type;
+    if(type === 'hold') handleHoldUp();
+    else if(type === 'drag') handleDragUp();
+  });
+
+  canvas.addEventListener('pointerleave', function(){
+    if(phase !== 'scene') return;
+    if(scenes[sceneIndex].type === 'hold' && sceneState.holding){
+      handleHoldUp();
+    }
+  });
+
+  /* ============ TOP CONTROLS ============ */
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    localStorage.setItem('puteriHijau_lang', lang);
+    renderChrome();
+    reportHeight();
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('puteriHijau_muted', muted ? '1' : '0');
+    if(muted) stopSpeech();
+    renderChrome();
+  });
+
+  /* ================================================================ */
+  /* ============ DRAWING HELPERS ============ */
+  /* ================================================================ */
+
+  function bgGradient(c, top, bottom){
+    var g = c.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bottom);
+    c.fillStyle = g;
+    c.fillRect(0,0,W,H);
+  }
+
+  function drawGround(c, y, color){
+    c.fillStyle = color;
+    c.beginPath();
+    c.moveTo(0, y);
+    c.quadraticCurveTo(W/2, y - 22, W, y);
+    c.lineTo(W, H);
+    c.lineTo(0, H);
+    c.closePath();
+    c.fill();
+  }
+
+  function drawSea(c, y, colorTop, colorBottom){
+    var g = c.createLinearGradient(0,y,0,H);
+    g.addColorStop(0, colorTop);
+    g.addColorStop(1, colorBottom);
+    c.fillStyle = g;
+    c.fillRect(0,y,W,H-y);
+    c.strokeStyle = 'rgba(255,255,255,0.18)';
+    c.lineWidth = 2;
+    for(var i=0;i<4;i++){
+      var wy = y + 22 + i*26;
+      c.beginPath();
+      for(var x=0;x<=W;x+=40){
+        var off = Math.sin((x/60) + i) * 5;
+        if(x===0) c.moveTo(x, wy+off); else c.lineTo(x, wy+off);
+      }
+      c.stroke();
+    }
+  }
+
+  function drawPalace(c, cx, baseY, scale){
+    c.save();
+    c.translate(cx, baseY);
+    c.scale(scale, scale);
+    // steps
+    c.fillStyle = '#8a6d2b';
+    c.fillRect(-140, 10, 280, 14);
+    // main hall
+    c.fillStyle = '#c99a3a';
+    c.fillRect(-110, -70, 220, 80);
+    c.strokeStyle = '#6f4f18';
+    c.lineWidth = 3;
+    c.strokeRect(-110, -70, 220, 80);
+    // columns
+    c.fillStyle = '#e8cf8a';
+    for(var i=-90;i<=90;i+=36){
+      c.fillRect(i-6, -68, 12, 76);
+    }
+    // roof
+    c.fillStyle = '#7a3b2e';
+    c.beginPath();
+    c.moveTo(-130,-70);
+    c.lineTo(0,-140);
+    c.lineTo(130,-70);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = '#4a2015';
+    c.lineWidth = 3;
+    c.stroke();
+    // dome
+    c.fillStyle = '#d4af37';
+    c.beginPath();
+    c.arc(0,-150,16,Math.PI,0);
+    c.fill();
+    c.beginPath();
+    c.moveTo(0,-166); c.lineTo(0,-180);
+    c.stroke();
+    // side domes
+    [-92,92].forEach(function(dx){
+      c.fillStyle = '#7a3b2e';
+      c.beginPath();
+      c.moveTo(dx-30,-70);
+      c.lineTo(dx,-108);
+      c.lineTo(dx+30,-70);
+      c.closePath();
+      c.fill();
+      c.fillStyle = '#d4af37';
+      c.beginPath();
+      c.arc(dx,-112,8,Math.PI,0);
+      c.fill();
+    });
+    // banners
+    c.fillStyle = '#2f9e6a';
+    c.fillRect(-108,-66,10,50);
+    c.fillRect(98,-66,10,50);
+    c.restore();
+  }
+
+  function drawPrincess(c, x, y, scale, opts){
+    opts = opts || {};
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    // shadow
+    c.fillStyle = 'rgba(0,0,0,0.25)';
+    c.beginPath();
+    c.ellipse(0,58,26,7,0,0,Math.PI*2);
+    c.fill();
+    // dress
+    var grad = c.createLinearGradient(0,-10,0,55);
+    grad.addColorStop(0,'#3fb27f');
+    grad.addColorStop(1,'#1f6f4a');
+    c.fillStyle = grad;
+    c.beginPath();
+    c.moveTo(-9,-10);
+    c.lineTo(9,-10);
+    c.lineTo(30,55);
+    c.lineTo(-30,55);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = '#d4af37';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-9,-10); c.lineTo(-18,20);
+    c.moveTo(9,-10); c.lineTo(18,20);
+    c.stroke();
+    // arms
+    c.strokeStyle = '#e8b98a';
+    c.lineWidth = 6;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(-9,0); c.lineTo(-24,20);
+    c.moveTo(9,0); c.lineTo(24,20);
+    c.stroke();
+    // neck + head
+    c.fillStyle = '#e8b98a';
+    c.fillRect(-4,-16,8,10);
+    c.beginPath();
+    c.arc(0,-26,15,0,Math.PI*2);
+    c.fill();
+    // hair
+    c.fillStyle = '#211509';
+    c.beginPath();
+    c.arc(0,-28,17,Math.PI*0.9,Math.PI*2.15);
+    c.fill();
+    c.beginPath();
+    c.arc(0,-14,7,0,Math.PI*2);
+    c.fill();
+    // crown
+    c.fillStyle = '#d4af37';
+    c.beginPath();
+    c.moveTo(-11,-40); c.lineTo(-7,-49); c.lineTo(-2,-41);
+    c.lineTo(0,-50); c.lineTo(2,-41); c.lineTo(7,-49); c.lineTo(11,-40);
+    c.closePath();
+    c.fill();
+    // face hint
+    c.fillStyle = '#3a2416';
+    c.beginPath(); c.arc(-5,-26,1.6,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(5,-26,1.6,0,Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function drawEnvoy(c, x, y, scale){
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    c.fillStyle = 'rgba(0,0,0,0.25)';
+    c.beginPath(); c.ellipse(0,58,24,6,0,0,Math.PI*2); c.fill();
+    c.fillStyle = '#5a3a86';
+    c.beginPath();
+    c.moveTo(-8,-6); c.lineTo(8,-6); c.lineTo(26,55); c.lineTo(-26,55);
+    c.closePath(); c.fill();
+    c.fillStyle = '#e8b98a';
+    c.fillRect(-4,-14,8,10);
+    c.beginPath(); c.arc(0,-22,13,0,Math.PI*2); c.fill();
+    // turban
+    c.fillStyle = '#d4af37';
+    c.beginPath();
+    c.arc(0,-30,14,Math.PI,0);
+    c.fill();
+    c.beginPath(); c.arc(9,-33,5,0,Math.PI*2); c.fill();
+    // scroll
+    c.strokeStyle = '#e8b98a';
+    c.lineWidth = 6; c.lineCap='round';
+    c.beginPath(); c.moveTo(8,0); c.lineTo(22,14); c.stroke();
+    c.fillStyle = '#f2ead9';
+    c.fillRect(16,8,16,7);
+    c.strokeStyle = '#8a6d2b'; c.lineWidth=1.5;
+    c.strokeRect(16,8,16,7);
+    c.restore();
+  }
+
+  function drawCannonPrince(c, x, y, scale, heat){
+    heat = heat || 0;
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    c.fillStyle = 'rgba(0,0,0,0.25)';
+    c.beginPath(); c.ellipse(0,46,52,9,0,0,Math.PI*2); c.fill();
+    // glow aura
+    var g = c.createRadialGradient(0,6,10,0,6,78);
+    g.addColorStop(0, 'rgba(212,175,55,0.32)');
+    g.addColorStop(1, 'rgba(212,175,55,0)');
+    c.fillStyle = g;
+    c.beginPath(); c.arc(0,6,78,0,Math.PI*2); c.fill();
+
+    // carriage base
+    c.fillStyle = '#5c4526';
+    c.fillRect(-32,20,64,13);
+    // wheels
+    c.fillStyle = '#3a2b12';
+    c.beginPath(); c.arc(-24,40,16,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(24,40,16,0,Math.PI*2); c.fill();
+    c.fillStyle = '#8a6d2b';
+    c.beginPath(); c.arc(-24,40,6,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(24,40,6,0,Math.PI*2); c.fill();
+    c.strokeStyle = '#8a6d2b'; c.lineWidth = 2;
+    [-24,24].forEach(function(wx){
+      for(var a=0;a<Math.PI*2;a+=Math.PI/3){
+        c.beginPath();
+        c.moveTo(wx,40);
+        c.lineTo(wx+Math.cos(a)*14, 40+Math.sin(a)*14);
+        c.stroke();
+      }
+    });
+
+    var barrelColor = heat > 55 ? '#c1512c' : (heat > 20 ? '#b8802f' : '#8a6a2f');
+    var barrelDark = heat > 55 ? '#7a2f18' : '#4a3512';
+
+    c.save();
+    c.translate(-6,6);
+    // horizontal barrel, muzzle pointing right
+    c.fillStyle = barrelColor;
+    c.beginPath();
+    c.moveTo(-42,-15);
+    c.lineTo(38,-15);
+    c.quadraticCurveTo(50,-15,50,0);
+    c.quadraticCurveTo(50,15,38,15);
+    c.lineTo(-42,15);
+    c.quadraticCurveTo(-50,15,-50,0);
+    c.quadraticCurveTo(-50,-15,-42,-15);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = barrelDark;
+    c.lineWidth = 3;
+    c.stroke();
+    // reinforcement rings
+    c.strokeStyle = '#d4af37';
+    c.lineWidth = 3;
+    [-28,-4,18].forEach(function(rx){
+      c.beginPath(); c.moveTo(rx,-15); c.lineTo(rx,15); c.stroke();
+    });
+    // muzzle opening
+    c.fillStyle = '#1a1108';
+    c.beginPath(); c.ellipse(46,0,7,13,0,0,Math.PI*2); c.fill();
+    c.strokeStyle = '#d4af37'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(46,0,7,13,0,0,Math.PI*2); c.stroke();
+    // breech knob
+    c.fillStyle = barrelDark;
+    c.beginPath(); c.arc(-50,0,9,0,Math.PI*2); c.fill();
+    c.restore();
+
+    // small crown marking princely nature
+    c.fillStyle = '#d4af37';
+    c.beginPath();
+    c.moveTo(-14,-24); c.lineTo(-9,-36); c.lineTo(-3,-27);
+    c.lineTo(0,-39); c.lineTo(3,-27); c.lineTo(9,-36); c.lineTo(14,-24);
+    c.closePath(); c.fill();
+
+    // magical rune sparkles along the barrel
+    c.fillStyle = heat > 55 ? '#ffb37a' : '#f2d878';
+    [-24,-2,20].forEach(function(sx){
+      c.beginPath(); c.arc(sx-6,-4,2.1,0,Math.PI*2); c.fill();
+    });
+    c.restore();
+  }
+
+  function drawDragonPrince(c, x, y, scale){
+    c.save();
+    c.translate(x,y);
+    c.scale(scale,scale);
+    c.fillStyle = 'rgba(0,0,0,0.25)';
+    c.beginPath(); c.ellipse(20,52,50,9,0,0,Math.PI*2); c.fill();
+    var g = c.createRadialGradient(0,0,10,0,0,80);
+    g.addColorStop(0,'rgba(47,158,106,0.35)');
+    g.addColorStop(1,'rgba(47,158,106,0)');
+    c.fillStyle = g;
+    c.beginPath(); c.arc(0,0,80,0,Math.PI*2); c.fill();
+    // body (sinuous)
+    c.strokeStyle = '#1f6f4a';
+    c.lineWidth = 26;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(-40,40);
+    c.quadraticCurveTo(-10,0,20,20);
+    c.quadraticCurveTo(50,40,44,0);
+    c.stroke();
+    // scale texture
+    c.strokeStyle = 'rgba(212,175,55,0.5)';
+    c.lineWidth = 2;
+    for(var i=0;i<6;i++){
+      var t = i/6;
+      c.beginPath();
+      c.arc(-40 + t*84, 40 - t*10, 6, 0, Math.PI);
+      c.stroke();
+    }
+    // head
+    c.fillStyle = '#2f9e6a';
+    c.beginPath();
+    c.ellipse(52,-14,22,16,-0.4,0,Math.PI*2);
+    c.fill();
+    // horns
+    c.strokeStyle = '#d4af37';
+    c.lineWidth = 4; c.lineCap='round';
+    c.beginPath(); c.moveTo(46,-28); c.lineTo(38,-42); c.stroke();
+    c.beginPath(); c.moveTo(58,-30); c.lineTo(60,-46); c.stroke();
+    // snout
+    c.fillStyle = '#257a56';
+    c.beginPath();
+    c.ellipse(68,-8,12,8,-0.2,0,Math.PI*2);
+    c.fill();
+    // eye
+    c.fillStyle = '#f2d878';
+    c.beginPath(); c.arc(56,-18,4,0,Math.PI*2); c.fill();
+    c.fillStyle = '#1a1204';
+    c.beginPath(); c.arc(57,-18,1.8,0,Math.PI*2); c.fill();
+    // whiskers
+    c.strokeStyle = '#f2d878';
+    c.lineWidth = 1.6;
+    c.beginPath(); c.moveTo(74,-4); c.quadraticCurveTo(86,-2,90,6); c.stroke();
+    c.beginPath(); c.moveTo(72,-12); c.quadraticCurveTo(84,-16,90,-14); c.stroke();
+    c.restore();
+  }
+
+  function drawShip(c, x, y, scale, sunk){
+    sunk = sunk || 0;
+    c.save();
+    c.translate(x, y + sunk*30);
+    c.rotate(sunk*0.35);
+    c.scale(scale,scale);
+    c.globalAlpha = 1 - sunk*0.6;
+    // hull
+    c.fillStyle = '#3a2415';
+    c.beginPath();
+    c.moveTo(-40,0);
+    c.lineTo(40,0);
+    c.lineTo(28,18);
+    c.lineTo(-28,18);
+    c.closePath();
+    c.fill();
+    // mast
+    c.strokeStyle = '#5c3d1f';
+    c.lineWidth = 3;
+    c.beginPath(); c.moveTo(0,0); c.lineTo(0,-46); c.stroke();
+    // sail
+    c.fillStyle = '#8a2c1f';
+    c.beginPath();
+    c.moveTo(0,-44);
+    c.lineTo(30,-14);
+    c.lineTo(0,-14);
+    c.closePath();
+    c.fill();
+    c.fillStyle = '#c99a3a';
+    c.beginPath();
+    c.moveTo(0,-40);
+    c.lineTo(-22,-14);
+    c.lineTo(0,-14);
+    c.closePath();
+    c.fill();
+    c.restore();
+  }
+
+  function drawMoon(c, x, y, r){
+    var g = c.createRadialGradient(x,y,r*0.3,x,y,r*3.2);
+    g.addColorStop(0,'rgba(242,216,120,0.55)');
+    g.addColorStop(1,'rgba(242,216,120,0)');
+    c.fillStyle = g;
+    c.beginPath(); c.arc(x,y,r*3.2,0,Math.PI*2); c.fill();
+    c.fillStyle = '#f6ecc9';
+    c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+    c.fillStyle = 'rgba(200,180,130,0.4)';
+    c.beginPath(); c.arc(x-r*0.3,y-r*0.2,r*0.18,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(x+r*0.25,y+r*0.3,r*0.12,0,Math.PI*2); c.fill();
+  }
+
+  function drawGoldenShip(c, x, y, alphaPulse){
+    c.save();
+    c.translate(x,y);
+    var g = c.createRadialGradient(0,0,4,0,0,55);
+    g.addColorStop(0,'rgba(212,175,55,' + (0.5+alphaPulse*0.2) + ')');
+    g.addColorStop(1,'rgba(212,175,55,0)');
+    c.fillStyle = g;
+    c.beginPath(); c.arc(0,0,55,0,Math.PI*2); c.fill();
+    c.fillStyle = '#d4af37';
+    c.beginPath();
+    c.moveTo(-22,4); c.lineTo(22,4); c.lineTo(15,12); c.lineTo(-15,12);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#f2d878';
+    c.lineWidth = 2;
+    c.beginPath(); c.moveTo(0,4); c.lineTo(0,-22); c.stroke();
+    c.beginPath();
+    c.moveTo(0,-20); c.lineTo(14,0); c.lineTo(0,0);
+    c.closePath(); c.stroke();
+    c.restore();
+  }
+
+  function drawStars(c, seedCount, maxY){
+    c.fillStyle = 'rgba(244,236,216,0.85)';
+    var rnd = 1;
+    function pr(){ rnd = (rnd*9301+49297) % 233280; return rnd/233280; }
+    for(var i=0;i<seedCount;i++){
+      var sx = pr()*W, sy = pr()*maxY;
+      c.beginPath();
+      c.arc(sx, sy, 1.1 + pr()*1.1, 0, Math.PI*2);
+      c.fill();
+    }
+  }
+
+  function drawTapHint(c, x, y, r, pulse){
+    pulse = pulse || 0;
+    c.save();
+    c.strokeStyle = 'rgba(242,216,120,' + (0.55 - pulse*0.4) + ')';
+    c.lineWidth = 3;
+    c.setLineDash([6,6]);
+    c.beginPath();
+    c.arc(x,y,r + pulse*14,0,Math.PI*2);
+    c.stroke();
+    c.restore();
+  }
+
+  /* ============ START SCREEN ============ */
+  function drawStartScreen(c){
+    bgGradient(c, '#1a3f30', '#08160f');
+    drawStars(c, 40, 160);
+    drawMoon(c, 660, 90, 34);
+    drawSea(c, 360, '#123a42', '#061318');
+    drawPalace(c, 400, 340, 1.15);
+    drawPrincess(c, 400, 260, 1.3);
+    c.fillStyle = 'rgba(0,0,0,0.28)';
+    c.fillRect(0,0,W,H);
+    c.textAlign = 'center';
+    c.fillStyle = '#f2d878';
+    c.font = '700 40px Cinzel, Georgia, serif';
+    c.fillText(tr(T.startTitle), W/2, 210);
+    c.fillStyle = '#f4ecd8';
+    c.font = '600 17px Mulish, sans-serif';
+    c.fillText(tr(T.startSub), W/2, 244);
+    c.textAlign = 'left';
+  }
+
+  /* ============ SCENE 0: INTRO ============ */
+  function drawIntroScene(c){
+    bgGradient(c, '#f2d78a', '#c99a3a');
+    drawGround(c, 330, '#2f7d55');
+    drawSea(c, 420, '#1c6b7a', '#0b3b4a');
+    drawPalace(c, 400, 330, 1.25);
+    drawPrincess(c, 400, 250, 1.5);
+  }
+
+  /* ============ SCENE 1: BROTHERS ============ */
+  function drawBrothersScene(c, s){
+    bgGradient(c, '#f2d78a', '#c99a3a');
+    drawGround(c, 360, '#2f7d55');
+    drawSea(c, 430, '#1c6b7a', '#0b3b4a');
+    drawPalace(c, 400, 360, 0.72);
+    drawPrincess(c, 400, 300, 0.85);
+
+    if(!s.cannonTapped) drawTapHint(c, cannonBroTarget.x, cannonBroTarget.y, 48, 0.2);
+    drawCannonPrince(c, cannonBroTarget.x, cannonBroTarget.y, 1.05, 0);
+    if(s.cannonTapped){
+      c.fillStyle = '#2f9e6a';
+      c.beginPath(); c.arc(cannonBroTarget.x+46, cannonBroTarget.y-46, 13, 0, Math.PI*2); c.fill();
+      c.strokeStyle = '#fff'; c.lineWidth=2.5;
+      c.beginPath(); c.moveTo(cannonBroTarget.x+40,cannonBroTarget.y-46); c.lineTo(cannonBroTarget.x+45,cannonBroTarget.y-41); c.lineTo(cannonBroTarget.x+53,cannonBroTarget.y-53); c.stroke();
+    }
+
+    if(!s.dragonTapped) drawTapHint(c, dragonBroTarget.x, dragonBroTarget.y, 55, 0.2);
+    drawDragonPrince(c, dragonBroTarget.x, dragonBroTarget.y, 0.95);
+    if(s.dragonTapped){
+      c.fillStyle = '#2f9e6a';
+      c.beginPath(); c.arc(dragonBroTarget.x+64, dragonBroTarget.y-46, 13, 0, Math.PI*2); c.fill();
+      c.strokeStyle = '#fff'; c.lineWidth=2.5;
+      c.beginPath(); c.moveTo(dragonBroTarget.x+58,dragonBroTarget.y-46); c.lineTo(dragonBroTarget.x+63,dragonBroTarget.y-41); c.lineTo(dragonBroTarget.x+71,dragonBroTarget.y-53); c.stroke();
+    }
+  }
+
+  /* ============ SCENE 2: PROPOSAL ============ */
+  function drawProposalScene(c, s){
+    bgGradient(c, '#e8c25f', '#a67827');
+    drawGround(c, 380, '#245c3f');
+    // palace hall backdrop, zoomed
+    drawPalace(c, 400, 400, 1.2);
+    drawPrincess(c, 300, 320, 1.1);
+    drawEnvoy(c, 500, 320, 1.1);
+
+    // scroll being handed
+    c.strokeStyle = 'rgba(242,216,120,0.5)';
+    c.setLineDash([4,4]);
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(340,290); c.lineTo(460,290);
+    c.stroke();
+    c.setLineDash([]);
+  }
+
+  /* ============ SCENE 3: BATTLE (MASH) ============ */
+  function drawBattleScene(c, s){
+    bgGradient(c, '#5c6b6e', '#28353a');
+    drawSea(c, 260, '#1c5560', '#0a2530');
+    drawPalace(c, 640, 220, 0.55);
+
+    // enemy ships
+    var positions = [ {x:560,y:220}, {x:660,y:250}, {x:590,y:290} ];
+    positions.forEach(function(pos, i){
+      var sunk = i < s.shipsHit ? clamp((s.progress-34*i-10)/40,0,1) : 0;
+      drawShip(c, pos.x, pos.y, 0.62, sunk);
+    });
+
+    drawTapHint(c, cannonMashTarget.x, cannonMashTarget.y, 55, s.fireFlash);
+    drawCannonPrince(c, cannonMashTarget.x, cannonMashTarget.y, 1.1, 0);
+
+    if(s.fireFlash > 0){
+      var mzx = cannonMashTarget.x + 44, mzy = cannonMashTarget.y + 7;
+      c.save();
+      c.globalAlpha = clamp(s.fireFlash,0,1);
+      c.fillStyle = '#f2d878';
+      c.beginPath();
+      c.arc(mzx, mzy, 12, 0, Math.PI*2);
+      c.fill();
+      c.strokeStyle = '#e0663e';
+      c.lineWidth = 4;
+      c.beginPath();
+      c.moveTo(mzx, mzy);
+      c.lineTo(mzx + 320, mzy - 90);
+      c.stroke();
+      c.restore();
+    }
+  }
+
+  /* ============ SCENE 4: RELOAD (HOLD + EXPLODE) ============ */
+  function drawReloadScene(c, s){
+    bgGradient(c, '#6b3a2a', '#2a1410');
+    drawSea(c, 300, '#3a2018', '#160a08');
+    drawPalace(c, 640, 250, 0.45);
+
+    if(!s.exploded){
+      drawTapHint(c, cannonHoldTarget.x, cannonHoldTarget.y, 60, s.holding ? 0.35 : 0.12);
+      drawCannonPrince(c, cannonHoldTarget.x, cannonHoldTarget.y, 1.2, s.heat);
+      // gunpowder barrel
+      c.fillStyle = '#3a2b12';
+      c.fillRect(cannonHoldTarget.x-96, cannonHoldTarget.y+8, 34, 30);
+      c.strokeStyle = '#d4af37'; c.lineWidth=2;
+      c.strokeRect(cannonHoldTarget.x-96, cannonHoldTarget.y+8, 34, 30);
+      if(s.holding){
+        c.fillStyle = 'rgba(224,102,62,0.5)';
+        c.beginPath();
+        c.arc(cannonHoldTarget.x-79, cannonHoldTarget.y+8, 6 + Math.sin(Date.now()/80)*2, 0, Math.PI*2);
+        c.fill();
+      }
+    } else {
+      // scorched cannon remains
+      c.save();
+      c.translate(cannonHoldTarget.x, cannonHoldTarget.y);
+      c.fillStyle = 'rgba(0,0,0,0.4)';
+      c.beginPath(); c.ellipse(0,40,60,12,0,0,Math.PI*2); c.fill();
+      c.fillStyle = '#2b2018';
+      c.beginPath();
+      c.moveTo(-46,26); c.lineTo(30,10); c.lineTo(10,-28); c.lineTo(-40,-14);
+      c.closePath(); c.fill();
+      c.restore();
+
+      if(s.particles && s.particles.length){
+        s.particles.forEach(function(pt){
+          if(pt.life <= 0) return;
+          c.save();
+          c.globalAlpha = clamp(pt.life,0,1);
+          c.fillStyle = pt.life > 0.5 ? '#f2d878' : '#e0663e';
+          c.beginPath();
+          c.arc(pt.x, pt.y, pt.size, 0, Math.PI*2);
+          c.fill();
+          c.restore();
+        });
+      }
+      if(!s.explosionDone){
+        c.save();
+        c.globalAlpha = 0.5;
+        var g = c.createRadialGradient(cannonHoldTarget.x,cannonHoldTarget.y,4,cannonHoldTarget.x,cannonHoldTarget.y,90);
+        g.addColorStop(0,'#fff3c4');
+        g.addColorStop(1,'rgba(255,243,196,0)');
+        c.fillStyle = g;
+        c.beginPath(); c.arc(cannonHoldTarget.x,cannonHoldTarget.y,90,0,Math.PI*2); c.fill();
+        c.restore();
+      }
+    }
+  }
+
+  /* ============ SCENE 5: ESCAPE (DRAG) ============ */
+  function drawEscapeScene(c, s){
+    bgGradient(c, '#7a4f6e', '#1c1f3a');
+    drawSea(c, 300, '#1c4a5e', '#082230');
+    drawPalace(c, 640, 240, 0.5);
+
+    if(!s.success) drawTapHint(c, dragonDropZone.x, dragonDropZone.y, dragonDropZone.r*0.7, 0.15);
+    drawDragonPrince(c, dragonDropZone.x, dragonDropZone.y, 1.1);
+
+    if(!s.success && !s.dragging) drawTapHint(c, s.homePos.x, s.homePos.y, 46, 0.15);
+    drawPrincess(c, s.princess.x, s.princess.y, 1.1);
+  }
+
+  /* ============ SCENE 6: ENDING ============ */
+  function drawEndingScene(c, s){
+    bgGradient(c, '#0e1c33', '#040a14');
+    drawStars(c, 60, 280);
+    drawMoon(c, 660, 90, 40);
+    drawSea(c, 300, '#0e3a4a', '#020c12');
+    var pulse = (Math.sin(Date.now()/500) + 1) / 2;
+    drawGoldenShip(c, 430, 250, pulse);
+    c.save();
+    c.globalAlpha = 0.85;
+    drawDragonPrince(c, 190, 340, 0.9);
+    drawPrincess(c, 245, 300, 0.85);
+    c.restore();
+  }
+
+  /* ============ INIT ============ */
+  function init(){
+    phase = 'start';
+    sceneState = {};
+    renderChrome();
+    drawCurrentScene();
+    reportHeight();
+  }
+
+  window.addEventListener('load', function(){
+    setTimeout(reportHeight, 60);
+  });
+  window.addEventListener('resize', reportHeight);
+  if('ResizeObserver' in window){
+    var ro = new ResizeObserver(function(){ reportHeight(); });
+    ro.observe(document.getElementById('app'));
+  }
+  setInterval(reportHeight, 900);
+
+  init();
+
+})();
+</script>
+</body>
+</html>
