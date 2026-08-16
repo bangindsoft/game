@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Danau Si Losung dan Si Pinggan</title>
+<style>
+  :root{
+    --bg1:#0f2027;
+    --bg2:#203a43;
+    --panel:#1b2a2f;
+    --cream:#f3ecd8;
+    --gold:#d9a441;
+    --gold-dark:#a9762b;
+    --accent:#3f8e6d;
+    --danger:#b3452c;
+    --line:#4a3a24;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:'Segoe UI',Verdana,sans-serif;}
+  #wrap{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    border-radius:14px;
+    padding:14px 14px 18px;
+    color:var(--cream);
+    overflow:hidden;
+    border:1px solid #33484f;
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  #title{
+    font-size:15px;
+    font-weight:700;
+    color:var(--gold);
+    letter-spacing:.3px;
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+  }
+  .ctrl-btn{
+    background:#28393e;
+    border:1px solid #3f5a61;
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    user-select:none;
+  }
+  .ctrl-btn:hover{ background:#324850; }
+  .ctrl-btn.active{ border-color:var(--gold); color:var(--gold); }
+
+  #stage{
+    position:relative;
+    width:100%;
+    border-radius:10px;
+    overflow:hidden;
+    background:#0b1315;
+    border:1px solid #2c3f44;
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  #tapLayer{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+  }
+  .hotspot{
+    position:absolute;
+    cursor:pointer;
+  }
+
+  #narrationBox{
+    margin-top:10px;
+    background:var(--panel);
+    border:1px solid #33484f;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:14px;
+    line-height:1.5;
+    min-height:44px;
+  }
+  #instructionBox{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--gold);
+    background:rgba(217,164,65,0.08);
+    border:1px dashed var(--gold-dark);
+    border-radius:8px;
+    padding:8px 10px;
+    display:none;
+  }
+  #instructionBox.show{ display:block; }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#405357;
+    transition:background .2s, transform .2s;
+  }
+  .dot.done{ background:var(--accent); }
+  .dot.current{ background:var(--gold); transform:scale(1.3); }
+
+  #bottomRow{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .main-btn{
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#231a08;
+    border:none;
+    border-radius:24px;
+    padding:10px 22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a521c;
+  }
+  .main-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #7a521c; }
+  .main-btn.secondary{
+    background:#28393e;
+    color:var(--cream);
+    box-shadow:0 3px 0 #14201f;
+    border:1px solid #3f5a61;
+  }
+
+  #footer{
+    margin-top:14px;
+    text-align:center;
+    font-size:11px;
+    color:#7c8f93;
+    line-height:1.6;
+  }
+
+  /* progress bar element used for hold/mash/timing */
+  .barTrack{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    width:70%;
+    max-width:340px;
+    height:14px;
+    background:#0b1315;
+    border:1px solid #4a3a24;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .barFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--gold));
+  }
+
+  .actionBtn{
+    position:absolute;
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#231a08;
+    border:none;
+    border-radius:22px;
+    padding:10px 20px;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a521c;
+    user-select:none;
+  }
+  .actionBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 #7a521c; }
+
+  @media (max-width:480px){
+    #title{ font-size:13px; }
+    .ctrl-btn{ font-size:11px; padding:5px 8px; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="topbar">
+    <div id="title">Danau Si Losung &amp; Si Pinggan</div>
+    <div id="controls">
+      <button class="ctrl-btn" id="langBtn" type="button">EN</button>
+      <button class="ctrl-btn" id="muteBtn" type="button">🔊 Suara</button>
+    </div>
+  </div>
+
+  <div id="stage">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div id="tapLayer"></div>
+  </div>
+
+  <div id="instructionBox"></div>
+  <div id="narrationBox">Memuat cerita...</div>
+
+  <div id="dots"></div>
+
+  <div id="bottomRow">
+    <button class="main-btn" id="startBtn" type="button">▶ Mulai Cerita</button>
+    <button class="main-btn secondary" id="replayBtn" type="button" style="display:none;">↺ Ulangi Cerita</button>
+  </div>
+
+  <div id="footer">Asal Mula Danau Si Losung dan Si Pinggan — Cerita Rakyat Sumatra Utara</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================ STATE ============================ */
+  var LANG = localStorage.getItem('dsl_lang') || 'id';
+  var MUTED = localStorage.getItem('dsl_mute') === '1';
+  var qsLang = new URLSearchParams(location.search).get('lang');
+  if(qsLang === 'en' || qsLang === 'id') LANG = qsLang;
+
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var tapLayer = document.getElementById('tapLayer');
+  var narrationBox = document.getElementById('narrationBox');
+  var instructionBox = document.getElementById('instructionBox');
+  var dotsEl = document.getElementById('dots');
+  var startBtn = document.getElementById('startBtn');
+  var replayBtn = document.getElementById('replayBtn');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+
+  var W = 800, H = 500;
+  var sceneIndex = -1; // -1 = cover
+  var animId = null;
+  var animT = 0;
+  var currentUtterance = null;
+  var interactionState = {};
+
+  /* ============================ TEXT ============================ */
+  var T = {
+    id: {
+      coverTitle:"Asal Mula Danau Si Losung dan Si Pinggan",
+      coverSub:"Kisah dua saudara, sebilah tombak pusaka, dan dua danau yang lahir dari amarah.",
+      startBtn:"▶ Mulai Cerita",
+      replayBtn:"↺ Ulangi Cerita",
+      langLabel:"EN",
+      muteOn:"🔊 Suara",
+      muteOff:"🔇 Bisu",
+      footer:"Asal Mula Danau Si Losung dan Si Pinggan — Cerita Rakyat Sumatra Utara"
+    },
+    en:{
+      coverTitle:"The Origin of Lake Si Losung and Si Pinggan",
+      coverSub:"A tale of two siblings, a sacred spear, and two lakes born from anger.",
+      startBtn:"▶ Start Story",
+      replayBtn:"↺ Replay Story",
+      langLabel:"ID",
+      muteOn:"🔊 Sound",
+      muteOff:"🔇 Muted",
+      footer:"The Origin of Lake Si Losung and Si Pinggan — North Sumatran Folktale"
+    }
+  };
+
+  /* ============================ SCENES ============================ */
+  // Each scene: id, narration {id,en}, instruction {id,en} (optional),
+  // mechanic type, draw(progress), setup(), teardown()
+  var scenes = [];
+
+  function txt(id,en){ return {id:id, en:en}; }
+
+  /* ---------- Scene 1: Family intro ---------- */
+  scenes.push({
+    key:'family_intro',
+    mechanic:'advance',
+    narration: txt(
+      "Di sebuah kampung di Tapanuli Utara, hiduplah dua bersaudara, Datu Dalu dan Sangmaima. Orang tua mereka adalah ahli pengobatan yang juga mengajari kedua anaknya ilmu silat dan meramu obat.",
+      "In a village in North Tapanuli, lived two siblings, Datu Dalu and Sangmaima. Their parents were healers who also taught both children silat and herbal medicine."
+    ),
+    instruction: txt("Ketuk tombol \"Lanjut\" untuk melanjutkan cerita.","Tap the \"Next\" button to continue the story."),
+    draw:function(p){
+      drawSky(0.25);
+      drawHills();
+      drawHut(400,300,1.1);
+      drawCharacter(320,330,0.85,'#8a5a2b',{arm:'teach'});
+      drawCharacter(460,335,0.7,'#c98b3b',{arm:'wave'});
+      drawCharacter(500,340,0.62,'#e0a94f',{arm:'wave'});
+      drawGroundLabel();
+    },
+    onEnter:function(){ addAdvanceButton(); }
+  });
+
+  /* ---------- Scene 2: Parents go missing, search forest ---------- */
+  scenes.push({
+    key:'search_parents',
+    mechanic:'tapOnce',
+    narration: txt(
+      "Suatu hari, Ayah dan Ibu pergi ke hutan mencari tumbuhan obat namun tak kunjung pulang hingga sore. Datu Dalu dan Sangmaima cemas dan memutuskan menyusul ke hutan.",
+      "One day, their parents went into the forest to gather herbs but did not return by evening. Worried, Datu Dalu and Sangmaima decided to search for them."
+    ),
+    instruction: txt("Ketuk pepohonan di hutan untuk mencari Ayah dan Ibu.","Tap the trees in the forest to search for their parents."),
+    draw:function(p){
+      drawSky(0.55);
+      drawHills();
+      drawForestCluster(1);
+      drawCharacter(150,395,0.75,'#8a5a2b',{arm:'point'});
+      drawCharacter(200,405,0.65,'#c98b3b',{arm:'point'});
+      if(!interactionState.searchTapped){
+        drawTapPulse(650,410,50);
+      } else {
+        drawGlowCircle(650,410,60*Math.min(1,animT*2));
+      }
+    },
+    hotspots:function(){
+      return [{x:0.55,y:0.55,w:0.42,h:0.4,onTap:function(){
+        if(interactionState.searchTapped) return;
+        interactionState.searchTapped = true;
+        animT = 0;
+        setTimeout(function(){ goNext(); }, 900);
+      }}];
+    },
+    onEnter:function(){ interactionState = {}; }
+  });
+
+  /* ---------- Scene 3: Found parents, inheritance ---------- */
+  scenes.push({
+    key:'found_parents',
+    mechanic:'advance',
+    narration: txt(
+      "Sungguh malang, kedua orang tua mereka telah tewas diterkam harimau. Dengan sedih, Datu Dalu dan Sangmaima menguburkan mereka. Sesuai adat, warisan berupa tombak pusaka jatuh ke tangan Datu Dalu sebagai anak sulung.",
+      "Sadly, their parents had been killed by a tiger. Grieving, Datu Dalu and Sangmaima buried them. By custom, their only inheritance, a sacred spear, went to Datu Dalu as the eldest."
+    ),
+    instruction: txt("Ketuk tombol \"Lanjut\" untuk melanjutkan cerita.","Tap the \"Next\" button to continue the story."),
+    draw:function(p){
+      drawSky(0.7);
+      drawHills();
+      drawGraveMound(300,360);
+      drawGraveMound(360,368);
+      drawCharacter(470,330,0.8,'#8a5a2b',{arm:'sad'});
+      drawCharacter(520,335,0.68,'#c98b3b',{arm:'sad'});
+      drawSpear(430,270,0.9,-0.5);
+    },
+    onEnter:function(){ addAdvanceButton(); }
+  });
+
+  /* ---------- Scene 4: Hunting boar - timing bar ---------- */
+  scenes.push({
+    key:'hunt_boar',
+    mechanic:'timing',
+    narration: txt(
+      "Sangmaima meminjam tombak pusaka abangnya untuk berburu babi hutan. Ketika seekor babi melintas, ia harus melempar tombak tepat pada waktunya.",
+      "Sangmaima borrowed his brother's sacred spear to hunt a wild boar. When a boar passed by, he had to throw the spear at just the right moment."
+    ),
+    instruction: txt("Ketuk tombol \"Lempar!\" saat penanda berada di area hijau.","Tap the \"Throw!\" button when the marker is in the green zone."),
+    draw:function(p){
+      drawSky(0.85);
+      drawForestCluster(1);
+      drawCharacter(220,360,0.85,'#c98b3b',{arm:'throw'});
+      drawBoar(560,380,interactionState.boarHit ? 0 : 1);
+      if(interactionState.boarHit){
+        drawSpear(540,370,0.7, 0.9);
+      }
+    },
+    onEnter:function(){
+      interactionState = {marker:0, dir:1, hit:false, boarHit:false};
+      addTimingBar();
+    },
+    onTick:function(dt){
+      if(interactionState.hit) return;
+      interactionState.marker += interactionState.dir * dt * 0.9;
+      if(interactionState.marker > 1){ interactionState.marker = 1; interactionState.dir = -1; }
+      if(interactionState.marker < 0){ interactionState.marker = 0; interactionState.dir = 1; }
+      updateTimingBar(interactionState.marker);
+    }
+  });
+
+  /* ---------- Scene 5: Track footprints - sequential tap ---------- */
+  scenes.push({
+    key:'track_footprints',
+    mechanic:'sequence',
+    narration: txt(
+      "Tombak mengenai lambung si babi namun ia lari membawa mata tombak itu. Sangmaima menelusuri jejak kakinya masuk semakin dalam ke hutan.",
+      "The spear hit the boar's side but it ran off, carrying the spearhead with it. Sangmaima tracked its footprints deeper into the forest."
+    ),
+    instruction: txt("Ketuk tiga jejak kaki secara berurutan dari kiri ke kanan.","Tap the three footprints in order from left to right."),
+    draw:function(p){
+      drawSky(0.9);
+      drawForestCluster(1.1);
+      var steps = interactionState.stepsDone || 0;
+      drawFootprint(280,410, steps>=1);
+      drawFootprint(420,395, steps>=2);
+      drawFootprint(560,375, steps>=3);
+      drawCharacter(200,400,0.8,'#c98b3b',{arm:'walk'});
+    },
+    hotspots:function(){
+      return [
+        {x:0.30,y:0.75,w:0.10,h:0.14,step:1},
+        {x:0.48,y:0.70,w:0.10,h:0.14,step:2},
+        {x:0.66,y:0.66,w:0.10,h:0.14,step:3}
+      ].map(function(h){
+        h.onTap = function(){
+          var need = (interactionState.stepsDone||0)+1;
+          if(h.step !== need) return;
+          interactionState.stepsDone = h.step;
+          if(h.step === 3){ setTimeout(goNext, 700); }
+        };
+        return h;
+      });
+    },
+    onEnter:function(){ interactionState = {stepsDone:0}; }
+  });
+
+  /* ---------- Scene 6: Heal princess - press and hold ---------- */
+  scenes.push({
+    key:'heal_princess',
+    mechanic:'hold',
+    narration: txt(
+      "Jejak itu membawanya ke sebuah gua yang ternyata istana megah. Di dalamnya, ia menemukan seorang putri terluka oleh mata tombaknya. Sangmaima menggunakan ilmu pengobatannya untuk menyembuhkan sang putri.",
+      "The trail led to a cave that turned out to be a grand hidden palace. Inside, he found a princess wounded by his spearhead. Sangmaima used his healing knowledge to treat her wound."
+    ),
+    instruction: txt("Tekan dan tahan tombol \"Obati\" hingga penuh untuk menyembuhkan sang putri.","Press and hold the \"Heal\" button until it fills up to heal the princess."),
+    draw:function(p){
+      drawSky(1);
+      drawCaveInterior();
+      drawPrincess(560,360, !interactionState.healed);
+      drawCharacter(420,360,0.8,'#c98b3b',{arm:'heal'});
+    },
+    onEnter:function(){ interactionState = {healed:false}; addHoldButton(); }
+  });
+
+  /* ---------- Scene 7: Spear returned, party ---------- */
+  scenes.push({
+    key:'spear_party',
+    mechanic:'advance',
+    narration: txt(
+      "Sangmaima kembali dan mengembalikan tombak pusaka kepada Datu Dalu. Bergembira, Datu Dalu mengadakan pesta adat besar-besaran, namun ia lupa mengundang adiknya sendiri.",
+      "Sangmaima returned the sacred spear to Datu Dalu. Overjoyed, Datu Dalu held a grand traditional feast, but he forgot to invite his own brother."
+    ),
+    instruction: txt("Ketuk tombol \"Lanjut\" untuk melanjutkan cerita.","Tap the \"Next\" button to continue the story."),
+    draw:function(p){
+      drawSky(0.6);
+      drawHut(400,300,1.2);
+      drawPartyCrowd(0.9);
+      drawCharacter(430,330,0.85,'#8a5a2b',{arm:'wave'});
+      drawSpear(470,290,0.7,-0.3);
+    },
+    onEnter:function(){ addAdvanceButton(); }
+  });
+
+  /* ---------- Scene 8: Rival party - tap once ---------- */
+  scenes.push({
+    key:'rival_party',
+    mechanic:'tapOnce',
+    narration: txt(
+      "Merasa tersinggung, Sangmaima mengadakan pesta tandingan pada waktu bersamaan, menampilkan seorang wanita berhias menyerupai burung Ernga yang memukau warga.",
+      "Feeling slighted, Sangmaima held a rival feast at the same time, featuring a woman dressed as the mythical Ernga bird, which enchanted the villagers."
+    ),
+    instruction: txt("Ketuk panggung wanita burung Ernga untuk memulai pertunjukan.","Tap the Ernga bird performer's stage to begin the show."),
+    draw:function(p){
+      drawSky(0.55);
+      drawHut(240,320,0.9);
+      drawStage(560,320, interactionState.shown);
+      drawPartyCrowd(interactionState.shown ? 1.2 : 0.5);
+    },
+    hotspots:function(){
+      return [{x:0.55,y:0.35,w:0.35,h:0.45,onTap:function(){
+        if(interactionState.shown) return;
+        interactionState.shown = true;
+        setTimeout(goNext, 1000);
+      }}];
+    },
+    onEnter:function(){ interactionState = {shown:false}; }
+  });
+
+  /* ---------- Scene 9: Ernga disappears ---------- */
+  scenes.push({
+    key:'ernga_gone',
+    mechanic:'advance',
+    narration: txt(
+      "Pesta Sangmaima jauh lebih ramai. Datu Dalu pun meminjam pertunjukan burung Ernga untuk pestanya. Namun diam-diam, wanita itu pergi di pagi hari sesuai rencana Sangmaima, membuat Datu Dalu panik karena mengira ia hilang.",
+      "Sangmaima's feast drew a much bigger crowd. Datu Dalu then borrowed the Ernga bird performance for his own feast. But secretly, as Sangmaima planned, the woman left the next morning, leaving Datu Dalu panicked, believing she was truly lost."
+    ),
+    instruction: txt("Ketuk tombol \"Lanjut\" untuk melanjutkan cerita.","Tap the \"Next\" button to continue the story."),
+    draw:function(p){
+      drawSky(0.3);
+      drawHut(400,300,1.1);
+      drawCharacter(400,340,0.85,'#8a5a2b',{arm:'panic'});
+      drawEmptyStage(560,320);
+    },
+    onEnter:function(){ addAdvanceButton(); }
+  });
+
+  /* ---------- Scene 10: Fight - tap mash ---------- */
+  scenes.push({
+    key:'fight',
+    mechanic:'mash',
+    narration: txt(
+      "Sangmaima menagih burung Ernga miliknya. Pertengkaran pun meletus menjadi perkelahian sengit menggunakan jurus-jurus silat warisan orang tua mereka.",
+      "Sangmaima demanded his Ernga bird performer back. The argument erupted into a fierce fight using the silat techniques their parents once taught them."
+    ),
+    instruction: txt("Ketuk tombol \"Serang!\" berulang kali untuk mengisi penuh jurus silat mereka.","Tap the \"Attack!\" button repeatedly to fill up their silat energy."),
+    draw:function(p){
+      drawSky(0.2);
+      drawGroundPlain();
+      var wobble = Math.sin(animT*10)*8;
+      drawCharacter(320+wobble,350,0.9,'#8a5a2b',{arm:'fight'});
+      drawCharacter(480-wobble,350,0.9,'#c98b3b',{arm:'fight'});
+    },
+    onEnter:function(){ interactionState = {mash:0}; addMashButton(); }
+  });
+
+  /* ---------- Scene 11: Throw lesung ---------- */
+  scenes.push({
+    key:'throw_lesung',
+    mechanic:'tapOnce',
+    narration: txt(
+      "Datu Dalu mengambil lesung kayu dan melemparkannya sekuat tenaga ke arah Sangmaima. Sangmaima menghindar, lesung itu melayang jauh dan jatuh di kampung Sangmaima, seketika berubah menjadi sebuah danau.",
+      "Datu Dalu grabbed a wooden mortar (lesung) and hurled it with all his strength at Sangmaima. Sangmaima dodged, and the mortar flew far, landing in Sangmaima's village, instantly turning into a lake."
+    ),
+    instruction: txt("Ketuk gambar Lesung untuk melemparkannya.","Tap the Lesung (mortar) image to throw it."),
+    draw:function(p){
+      drawSky(0.25);
+      drawGroundPlain();
+      drawCharacter(280,350,0.9,'#8a5a2b',{arm:'throw'});
+      drawCharacter(560,350,0.9,'#c98b3b',{arm:'dodge'});
+      if(!interactionState.thrown){
+        drawTapPulse(300,320,52);
+        drawLesung(300,320,0.8);
+      } else {
+        var pr = Math.min(1, animT*1.3);
+        var lx = 300 + (620-300)*pr;
+        var ly = 320 - Math.sin(pr*Math.PI)*90;
+        if(pr < 1){
+          drawLesung(lx,ly,0.8);
+        } else {
+          drawLake(620,400,60);
+        }
+      }
+    },
+    hotspots:function(){
+      return [{x:0.27,y:0.51,w:0.20,h:0.26,onTap:function(){
+        if(interactionState.thrown) return;
+        interactionState.thrown = true;
+        animT = 0;
+        setTimeout(goNext, 1600);
+      }}];
+    },
+    onEnter:function(){ interactionState = {thrown:false}; }
+  });
+
+  /* ---------- Scene 12: Throw piring ---------- */
+  scenes.push({
+    key:'throw_piring',
+    mechanic:'tapOnce',
+    narration: txt(
+      "Tak mau kalah, Sangmaima mengambil sebuah piring dan melemparkannya ke arah Datu Dalu. Datu Dalu berhasil menghindar, dan piring itu jatuh di kampung Datu Dalu, berubah menjadi sebuah danau pula.",
+      "Not to be outdone, Sangmaima grabbed a plate and threw it at Datu Dalu. Datu Dalu managed to dodge, and the plate landed in his own village, also turning into a lake."
+    ),
+    instruction: txt("Ketuk gambar Piring untuk melemparkannya.","Tap the Piring (plate) image to throw it."),
+    draw:function(p){
+      drawSky(0.25);
+      drawGroundPlain();
+      drawCharacter(560,350,0.9,'#c98b3b',{arm:'throw'});
+      drawCharacter(280,350,0.9,'#8a5a2b',{arm:'dodge'});
+      if(!interactionState.thrown){
+        drawTapPulse(540,320,48);
+        drawPiring(540,320,0.8);
+      } else {
+        var pr = Math.min(1, animT*1.3);
+        var lx = 540 + (200-540)*pr;
+        var ly = 320 - Math.sin(pr*Math.PI)*90;
+        if(pr < 1){
+          drawPiring(lx,ly,0.8);
+        } else {
+          drawLake(200,400,60);
+        }
+      }
+    },
+    hotspots:function(){
+      return [{x:0.575,y:0.51,w:0.20,h:0.26,onTap:function(){
+        if(interactionState.thrown) return;
+        interactionState.thrown = true;
+        animT = 0;
+        setTimeout(goNext, 1600);
+      }}];
+    },
+    onEnter:function(){ interactionState = {thrown:false}; }
+  });
+
+  /* ---------- Scene 13: Ending ---------- */
+  scenes.push({
+    key:'ending',
+    mechanic:'end',
+    narration: txt(
+      "Masyarakat menamai danau di kampung Sangmaima dengan nama Danau Si Losung, dan danau di kampung Datu Dalu dengan nama Danau Si Pinggan. Keduanya tetap ada hingga kini sebagai pengingat kisah dua bersaudara di Tapanuli Utara.",
+      "The villagers named the lake in Sangmaima's village Lake Si Losung, and the one in Datu Dalu's village Lake Si Pinggan. Both lakes remain today as a reminder of the tale of two brothers in North Tapanuli."
+    ),
+    instruction: txt("Ketuk \"Ulangi Cerita\" untuk menonton kembali dari awal.","Tap \"Replay Story\" to watch it again from the beginning."),
+    draw:function(p){
+      drawSky(0.15);
+      drawGroundPlain();
+      drawLake(230,400,55);
+      drawLake(560,400,55);
+      drawTextLabelsEnding();
+    },
+    onEnter:function(){ showReplay(); }
+  });
+
+  var TOTAL_DOTS = scenes.length;
+
+  /* ============================ DRAWING HELPERS ============================ */
+  function clear(){ ctx.clearRect(0,0,W,H); }
+
+  function drawSky(darkness){
+    var g = ctx.createLinearGradient(0,0,0,H*0.65);
+    var top = lerpColor('#fce9c2','#1a2530', darkness);
+    var bot = lerpColor('#ffd9a0','#33495a', darkness*0.7);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bot);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.68);
+    ctx.fillStyle = '#3c5a3c';
+    ctx.fillRect(0,H*0.62,W,H*0.38);
+  }
+
+  function lerpColor(a,b,t){
+    var ca = hexToRgb(a), cb = hexToRgb(b);
+    var r = Math.round(ca.r + (cb.r-ca.r)*t);
+    var g = Math.round(ca.g + (cb.g-ca.g)*t);
+    var bl = Math.round(ca.b + (cb.b-ca.b)*t);
+    return 'rgb('+r+','+g+','+bl+')';
+  }
+  function hexToRgb(h){
+    h = h.replace('#','');
+    return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+  }
+
+  function drawHills(){
+    ctx.fillStyle = '#4a6b46';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.62);
+    ctx.quadraticCurveTo(150,H*0.5,320,H*0.6);
+    ctx.quadraticCurveTo(500,H*0.68,W,H*0.58);
+    ctx.lineTo(W,H*0.68);
+    ctx.lineTo(0,H*0.68);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawGroundPlain(){
+    ctx.fillStyle = '#3c5a3c';
+    ctx.fillRect(0,H*0.66,W,H*0.34);
+  }
+
+  function drawGroundLabel(){ /* decorative grass tufts */
+    ctx.strokeStyle = '#2c452c';
+    ctx.lineWidth = 2;
+    for(var i=0;i<14;i++){
+      var x = 30 + i*56;
+      ctx.beginPath();
+      ctx.moveTo(x,H*0.9);
+      ctx.lineTo(x-6,H*0.84);
+      ctx.moveTo(x,H*0.9);
+      ctx.lineTo(x+6,H*0.84);
+      ctx.stroke();
+    }
+  }
+
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // base
+    ctx.fillStyle = '#6b4a2b';
+    ctx.fillRect(-90,0,180,70);
+    // roof
+    ctx.fillStyle = '#8a5a2b';
+    ctx.beginPath();
+    ctx.moveTo(-110,0);
+    ctx.lineTo(0,-90);
+    ctx.lineTo(110,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5a3c1f';
+    ctx.beginPath();
+    ctx.moveTo(-110,0);
+    ctx.lineTo(0,-90);
+    ctx.lineTo(0,-70);
+    ctx.lineTo(-90,10);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = '#2c1c0e';
+    ctx.fillRect(-22,20,44,50);
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a3018';
+    ctx.fillRect(-8,0,16,50);
+    ctx.fillStyle = '#356b3a';
+    ctx.beginPath(); ctx.arc(0,-30,38,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2e5c33';
+    ctx.beginPath(); ctx.arc(-22,-10,26,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(24,-8,28,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawForestCluster(scale){
+    scale = scale || 1;
+    ctx.fillStyle = '#3c5a3c';
+    ctx.fillRect(0,H*0.66,W,H*0.34);
+    drawTree(90,400,1.1*scale);
+    drawTree(170,420,0.9*scale);
+    drawTree(650,410,1.2*scale);
+    drawTree(720,390,0.85*scale);
+    drawTree(600,440,0.7*scale);
+  }
+
+  function drawCaveInterior(){
+    ctx.fillStyle = '#241a12';
+    ctx.fillRect(0,0,W,H);
+    var g = ctx.createRadialGradient(W/2,H*0.4,20,W/2,H*0.4,420);
+    g.addColorStop(0,'#5a4326');
+    g.addColorStop(1,'#1a130c');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    // pillars
+    for(var i=0;i<2;i++){
+      var px = 140 + i*520;
+      ctx.fillStyle = '#7a5c33';
+      ctx.fillRect(px-18,80,36,320);
+      ctx.fillStyle = '#9c7a45';
+      ctx.fillRect(px-24,70,48,18);
+    }
+    ctx.fillStyle = '#4a3a24';
+    ctx.fillRect(0,H*0.78,W,H*0.22);
+  }
+
+  function drawGraveMound(x,y){
+    ctx.fillStyle = '#5a4a34';
+    ctx.beginPath();
+    ctx.ellipse(x,y,55,18,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#7a6a4a';
+    ctx.fillRect(x-4,y-55,8,45);
+  }
+
+  function drawSpear(x,y,scale,angle){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(angle);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#6b4a2b';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(-70,0); ctx.lineTo(60,0); ctx.stroke();
+    ctx.fillStyle = '#c9c9c9';
+    ctx.beginPath();
+    ctx.moveTo(60,0);
+    ctx.lineTo(85,-8);
+    ctx.lineTo(85,8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBoar(x,y,alpha){
+    if(alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#5a4030';
+    ctx.beginPath();
+    ctx.ellipse(x,y,55,32,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x-55,y-8,22,18,0,0,Math.PI*2);
+    ctx.fill();
+    // legs
+    ctx.fillRect(x-30,y+20,10,22);
+    ctx.fillRect(x+20,y+20,10,22);
+    // tusk
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x-72,y-2); ctx.lineTo(x-80,y+10); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFootprint(x,y,tapped){
+    ctx.save();
+    ctx.fillStyle = tapped ? 'rgba(217,164,65,0.85)' : 'rgba(230,220,190,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(x,y,14,20,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x-16,y-20,7,9,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x+16,y-20,7,9,0,0,Math.PI*2);
+    ctx.fill();
+    if(tapped){
+      ctx.strokeStyle = '#d9a441';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x,y,22,28,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPrincess(x,y,wounded){
+    ctx.save();
+    ctx.translate(x,y);
+    // reclining figure
+    ctx.fillStyle = '#caa15a';
+    ctx.beginPath();
+    ctx.ellipse(0,0,70,20,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#e0a94f';
+    ctx.beginPath(); ctx.arc(60,-10,18,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7a2e2e';
+    ctx.beginPath(); ctx.ellipse(0,-6,55,10,0,0,Math.PI*2); ctx.fill();
+    if(wounded){
+      ctx.fillStyle = '#8e2020';
+      ctx.beginPath(); ctx.arc(-10,-6,8,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#d9a441';
+      ctx.beginPath(); ctx.arc(-10,-6,8,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPartyCrowd(density){
+    var n = Math.round(6*density);
+    for(var i=0;i<n;i++){
+      var x = 60 + (i*(680/Math.max(n,1)));
+      var y = 420 + (i%2===0?0:10);
+      drawCharacter(x,y,0.4,'#b8895a',{arm:'wave'});
+    }
+  }
+
+  function drawStage(x,y,active){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#6b4a2b';
+    ctx.fillRect(-70,20,140,14);
+    if(active){
+      ctx.fillStyle = '#c94b6b';
+      ctx.beginPath(); ctx.arc(0,-30,20,0,Math.PI*2); ctx.fill();
+      // feathers
+      ctx.strokeStyle = '#e0483e';
+      ctx.lineWidth = 4;
+      for(var i=-2;i<=2;i++){
+        ctx.beginPath();
+        ctx.moveTo(0,-30);
+        ctx.lineTo(i*14, -70 - Math.abs(i)*4);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#caa15a';
+      ctx.fillRect(-14,-14,28,44);
+    } else {
+      ctx.strokeStyle = '#d9a441';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.arc(0,-10,26,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+
+  function drawEmptyStage(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#6b4a2b';
+    ctx.fillRect(-70,20,140,14);
+    ctx.strokeStyle = '#8a8a8a';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.ellipse(0,10,30,10,0,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  function drawLesung(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2b';
+    ctx.beginPath();
+    ctx.moveTo(-45,0);
+    ctx.quadraticCurveTo(0,40,45,0);
+    ctx.quadraticCurveTo(0,-14,-45,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#4a3018';
+    ctx.beginPath();
+    ctx.ellipse(0,-2,36,8,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPiring(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#e8dfc4';
+    ctx.beginPath();
+    ctx.ellipse(0,0,42,14,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#c9a441';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0,0,32,10,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLake(x,y,r){
+    ctx.save();
+    var g = ctx.createRadialGradient(x,y,4,x,y,r);
+    g.addColorStop(0,'#7fc7d9');
+    g.addColorStop(1,'#2a6d84');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(x,y,r,r*0.42,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x,y-4,r*0.6,r*0.15,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawTextLabelsEnding(){
+    ctx.save();
+    ctx.fillStyle = '#f3ecd8';
+    ctx.font = '600 15px Segoe UI, Verdana, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(LANG==='id' ? 'Danau Si Losung' : 'Lake Si Losung', 230, 460);
+    ctx.fillText(LANG==='id' ? 'Danau Si Pinggan' : 'Lake Si Pinggan', 560, 460);
+    ctx.restore();
+  }
+
+  function drawTapPulse(x,y,r){
+    ctx.save();
+    var pulse = (Math.sin(animT*3)+1)/2; // 0..1
+    ctx.globalAlpha = 0.35 + pulse*0.35;
+    ctx.strokeStyle = '#d9a441';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([7,6]);
+    ctx.beginPath();
+    ctx.arc(x,y,r + pulse*6,0,Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  function drawGlowCircle(x,y,r){
+    if(r<=0) return;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#d9a441';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Generic stylized character. pose affects arm gesture.
+  function drawCharacter(x,y,scale,shirtColor,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#2c2c2c';
+    ctx.fillRect(-14,20,10,34);
+    ctx.fillRect(4,20,10,34);
+    // body
+    ctx.fillStyle = shirtColor || '#8a5a2b';
+    ctx.fillRect(-20,-30,40,50);
+    // head
+    ctx.fillStyle = '#e0a94f';
+    ctx.beginPath();
+    ctx.arc(0,-48,18,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = '#241a10';
+    ctx.beginPath();
+    ctx.arc(0,-54,18,Math.PI,0);
+    ctx.fill();
+    // arms based on pose
+    ctx.strokeStyle = shirtColor || '#8a5a2b';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    var pose = opts.arm;
+    if(pose === 'teach'){
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-40,-30); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(40,-30); ctx.stroke();
+    } else if(pose === 'wave'){
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(40,-40); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-30,10); ctx.stroke();
+    } else if(pose === 'point'){
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(55,-25); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-30,10); ctx.stroke();
+    } else if(pose === 'sad'){
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-25,15); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(25,15); ctx.stroke();
+    } else if(pose === 'throw'){
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(48,-45); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-30,10); ctx.stroke();
+    } else if(pose === 'walk'){
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-35,0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(35,-30); ctx.stroke();
+    } else if(pose === 'heal'){
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(50,-5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-30,10); ctx.stroke();
+    } else if(pose === 'panic'){
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-38,-40); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(38,-40); ctx.stroke();
+    } else if(pose === 'fight'){
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(45,-20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-45,-20); ctx.stroke();
+    } else if(pose === 'dodge'){
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-40,-5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(20,10); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-18,-15); ctx.lineTo(-25,15); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-15); ctx.lineTo(25,15); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* ============================ AUDIO ============================ */
+  function speak(text){
+    if(MUTED) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
+  }
+
+  /* ============================ UI HELPERS ============================ */
+  function clearTapLayer(){ tapLayer.innerHTML = ''; }
+
+  function pctBox(xPct,yPct,wPct,hPct){
+    return {
+      left: (xPct*100)+'%',
+      top: (yPct*100)+'%',
+      width: (wPct*100)+'%',
+      height: (hPct*100)+'%'
+    };
+  }
+
+  function addAdvanceButton(){
+    clearTapLayer();
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'actionBtn';
+    btn.style.left = '50%';
+    btn.style.bottom = '4%';
+    btn.style.transform = 'translateX(-50%)';
+    btn.textContent = LANG==='id' ? 'Lanjut ▶' : 'Next ▶';
+    btn.onclick = function(){ goNext(); };
+    tapLayer.appendChild(btn);
+  }
+
+  function showHotspots(hotspots){
+    clearTapLayer();
+    hotspots.forEach(function(h){
+      var el = document.createElement('div');
+      el.className = 'hotspot';
+      var box = pctBox(h.x,h.y,h.w,h.h);
+      el.style.left = box.left;
+      el.style.top = box.top;
+      el.style.width = box.width;
+      el.style.height = box.height;
+      el.addEventListener('click', h.onTap);
+      tapLayer.appendChild(el);
+    });
+  }
+
+  var timingBarEls = null;
+  function addTimingBar(){
+    clearTapLayer();
+    var track = document.createElement('div');
+    track.className = 'barTrack';
+    track.style.bottom = '20%';
+    var green = document.createElement('div');
+    green.style.position='absolute';
+    green.style.left='40%';
+    green.style.width='20%';
+    green.style.top='0';
+    green.style.bottom='0';
+    green.style.background='rgba(63,142,109,0.6)';
+    track.appendChild(green);
+    var fill = document.createElement('div');
+    fill.style.position='absolute';
+    fill.style.top='0'; fill.style.bottom='0';
+    fill.style.width='4px';
+    fill.style.background='#f3ecd8';
+    fill.style.left='0%';
+    track.appendChild(fill);
+    tapLayer.appendChild(track);
+
+    var btn = document.createElement('button');
+    btn.type='button';
+    btn.className='actionBtn';
+    btn.style.left='50%';
+    btn.style.bottom='4%';
+    btn.style.transform='translateX(-50%)';
+    btn.textContent = LANG==='id' ? 'Lempar!' : 'Throw!';
+    btn.onclick = function(){
+      if(interactionState.hit) return;
+      var m = interactionState.marker;
+      if(m >= 0.4 && m <= 0.6){
+        interactionState.hit = true;
+        interactionState.boarHit = true;
+        setTimeout(goNext, 1000);
+      } else {
+        btn.style.background = '#b3452c';
+        setTimeout(function(){ btn.style.background=''; },250);
+      }
+    };
+    tapLayer.appendChild(btn);
+    timingBarEls = fill;
+  }
+  function updateTimingBar(m){
+    if(timingBarEls) timingBarEls.style.left = (m*96)+'%';
+  }
+
+  function addHoldButton(){
+    clearTapLayer();
+    var track = document.createElement('div');
+    track.className = 'barTrack';
+    track.style.bottom = '20%';
+    var fillEl = document.createElement('div');
+    fillEl.className = 'barFill';
+    track.appendChild(fillEl);
+    tapLayer.appendChild(track);
+
+    var btn = document.createElement('button');
+    btn.type='button';
+    btn.className='actionBtn';
+    btn.style.left='50%';
+    btn.style.bottom='4%';
+    btn.style.transform='translateX(-50%)';
+    btn.textContent = LANG==='id' ? 'Tekan & Tahan: Obati' : 'Press & Hold: Heal';
+
+    var holdProgress = 0;
+    var holding = false;
+    var raf = null;
+    function loop(){
+      if(holding && holdProgress < 1){
+        holdProgress += 0.018;
+        fillEl.style.width = (Math.min(holdProgress,1)*100)+'%';
+        if(holdProgress >= 1){
+          interactionState.healed = true;
+          holding = false;
+          setTimeout(goNext, 900);
+          return;
+        }
+        raf = requestAnimationFrame(loop);
+      }
+    }
+    function start(e){ e.preventDefault(); if(interactionState.healed) return; holding = true; raf = requestAnimationFrame(loop); }
+    function stop(){ holding = false; if(!interactionState.healed){ holdProgress = Math.max(0,holdProgress-0.15); fillEl.style.width=(holdProgress*100)+'%'; } }
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('touchstart', start, {passive:false});
+    btn.addEventListener('mouseup', stop);
+    btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchend', stop);
+    tapLayer.appendChild(btn);
+  }
+
+  function addMashButton(){
+    clearTapLayer();
+    var track = document.createElement('div');
+    track.className = 'barTrack';
+    track.style.bottom = '20%';
+    var fillEl = document.createElement('div');
+    fillEl.className = 'barFill';
+    track.appendChild(fillEl);
+    tapLayer.appendChild(track);
+
+    var btn = document.createElement('button');
+    btn.type='button';
+    btn.className='actionBtn';
+    btn.style.left='50%';
+    btn.style.bottom='4%';
+    btn.style.transform='translateX(-50%)';
+    btn.textContent = LANG==='id' ? 'Serang!' : 'Attack!';
+    btn.onclick = function(){
+      if(interactionState.done) return;
+      interactionState.mash += 0.09;
+      fillEl.style.width = (Math.min(interactionState.mash,1)*100)+'%';
+      if(interactionState.mash >= 1){
+        interactionState.done = true;
+        setTimeout(goNext, 700);
+      }
+    };
+    tapLayer.appendChild(btn);
+  }
+
+  function showReplay(){
+    clearTapLayer();
+    startBtn.style.display = 'none';
+    replayBtn.style.display = 'inline-block';
+  }
+
+  /* ============================ DOTS ============================ */
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    for(var i=0;i<TOTAL_DOTS;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var els = dotsEl.querySelectorAll('.dot');
+    els.forEach(function(el,i){
+      el.className = 'dot' + (i < sceneIndex ? ' done' : '') + (i === sceneIndex ? ' current' : '');
+    });
+  }
+
+  /* ============================ SCENE FLOW ============================ */
+  function renderCover(){
+    sceneIndex = -1;
+    stopSpeak();
+    clear();
+    drawSky(0.3);
+    drawHills();
+    drawLake(210,430,45);
+    drawLake(590,430,45);
+    drawHut(400,300,1);
+    ctx.save();
+    ctx.fillStyle = 'rgba(15,32,39,0.55)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#f3ecd8';
+    ctx.textAlign = 'center';
+    ctx.font = '700 26px Segoe UI, Verdana, sans-serif';
+    wrapText(T[LANG].coverTitle, W/2, H*0.42, 640, 32);
+    ctx.font = '400 15px Segoe UI, Verdana, sans-serif';
+    wrapText(T[LANG].coverSub, W/2, H*0.62, 560, 22);
+    ctx.restore();
+    narrationBox.textContent = '';
+    instructionBox.classList.remove('show');
+    clearTapLayer();
+    updateDots();
+  }
+
+  function wrapText(text,x,y,maxWidth,lineHeight){
+    var words = text.split(' ');
+    var line = '';
+    var lines = [];
+    for(var i=0;i<words.length;i++){
+      var test = line + words[i] + ' ';
+      if(ctx.measureText(test).width > maxWidth && line !== ''){
+        lines.push(line);
+        line = words[i] + ' ';
+      } else {
+        line = test;
+      }
+    }
+    lines.push(line);
+    var startY = y - (lines.length-1)*lineHeight/2;
+    lines.forEach(function(l,idx){
+      ctx.fillText(l.trim(), x, startY + idx*lineHeight);
+    });
+  }
+
+  function renderScene(){
+    var s = scenes[sceneIndex];
+    if(!s) return;
+    stopSpeak();
+    interactionState = {};
+    clear();
+    animT = 0;
+    s.draw(0);
+    narrationBox.textContent = s.narration[LANG];
+    if(s.instruction){
+      instructionBox.textContent = (LANG==='id'?'👉 ':'👉 ') + s.instruction[LANG];
+      instructionBox.classList.add('show');
+    } else {
+      instructionBox.classList.remove('show');
+    }
+    updateDots();
+    clearTapLayer();
+    if(s.onEnter) s.onEnter();
+    if(s.hotspots) showHotspots(s.hotspots());
+    speak(s.narration[LANG]);
+    startAnimLoop();
+  }
+
+  function goNext(){
+    if(sceneIndex >= scenes.length-1) return;
+    sceneIndex++;
+    renderScene();
+  }
+
+  function startAnimLoop(){
+    if(animId) cancelAnimationFrame(animId);
+    var last = performance.now();
+    function loop(now){
+      var dt = Math.min(0.05,(now-last)/1000);
+      last = now;
+      animT += dt;
+      var s = scenes[sceneIndex];
+      if(s){
+        clear();
+        s.draw(animT);
+        if(s.onTick) s.onTick(dt);
+      }
+      animId = requestAnimationFrame(loop);
+    }
+    animId = requestAnimationFrame(loop);
+  }
+
+  function stopAnimLoop(){
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+  }
+
+  /* ============================ CONTROLS ============================ */
+  function applyLangUI(){
+    langBtn.textContent = T[LANG].langLabel;
+    muteBtn.textContent = MUTED ? T[LANG].muteOff : T[LANG].muteOn;
+    muteBtn.className = 'ctrl-btn' + (MUTED ? ' active' : '');
+    startBtn.textContent = T[LANG].startBtn;
+    replayBtn.textContent = T[LANG].replayBtn;
+    document.getElementById('footer').textContent = T[LANG].footer;
+    document.title = T[LANG].coverTitle;
+    document.documentElement.lang = LANG;
+    if(sceneIndex === -1){
+      renderCover();
+    } else {
+      var s = scenes[sceneIndex];
+      narrationBox.textContent = s.narration[LANG];
+      if(s.instruction){ instructionBox.textContent = '👉 ' + s.instruction[LANG]; }
+      // refresh dynamic action button texts by re-rendering interaction
+      if(s.hotspots){ showHotspots(s.hotspots()); }
+      else if(s.mechanic==='advance'){ addAdvanceButton(); }
+      else if(s.mechanic==='timing'){ addTimingBar(); }
+      else if(s.mechanic==='hold'){ addHoldButton(); }
+      else if(s.mechanic==='mash'){ addMashButton(); }
+      else if(s.mechanic==='end'){ showReplay(); }
+    }
+  }
+
+  langBtn.addEventListener('click', function(){
+    LANG = LANG === 'id' ? 'en' : 'id';
+    localStorage.setItem('dsl_lang', LANG);
+    applyLangUI();
+  });
+
+  muteBtn.addEventListener('click', function(){
+    MUTED = !MUTED;
+    localStorage.setItem('dsl_mute', MUTED ? '1':'0');
+    if(MUTED) stopSpeak();
+    else if(sceneIndex>=0){ speak(scenes[sceneIndex].narration[LANG]); }
+    applyLangUI();
+  });
+
+  startBtn.addEventListener('click', function(){
+    startBtn.style.display = 'none';
+    sceneIndex = 0;
+    buildDots();
+    renderScene();
+  });
+
+  replayBtn.addEventListener('click', function(){
+    replayBtn.style.display = 'none';
+    startBtn.style.display = 'inline-block';
+    sceneIndex = -1;
+    buildDots();
+    renderCover();
+  });
+
+  /* ============================ RESIZE / IFRAME AUTO-RESIZE ============================ */
+  function resizeCanvasDisplay(){
+    // canvas internal resolution stays fixed logical 800x500; CSS scales it.
+  }
+
+  function postHeight(){
+    try{
+      var h = document.getElementById('wrap').offsetHeight + 16;
+      window.parent.postMessage({ type:'resize', height:h }, '*');
+    }catch(e){}
+  }
+
+  window.addEventListener('load', function(){
+    postHeight();
+    setTimeout(postHeight, 300);
+  });
+  window.addEventListener('resize', postHeight);
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ postHeight(); });
+    ro.observe(document.getElementById('wrap'));
+  }
+  setInterval(postHeight, 1500);
+
+  /* ============================ INIT ============================ */
+  buildDots();
+  applyLangUI();
+  renderCover();
+
+})();
+</script>
+</body>
+</html>
