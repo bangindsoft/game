@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Kisah Kelana Sakti</title>
+<style>
+  :root{
+    --bg1:#1a120a;
+    --bg2:#3a2416;
+    --panel:#fbf2df;
+    --panel-border:#8a5a2b;
+    --accent:#b3391d;
+    --accent2:#2f6b3f;
+    --gold:#d8a13a;
+    --ink:#2b1c10;
+    --muted:#7a5a3a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:640px;
+    background:linear-gradient(180deg,#2a1c10,#20140c);
+    border:3px solid var(--gold);
+    border-radius:16px;
+    padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+    gap:8px;
+  }
+  #title{
+    color:var(--gold);
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:.5px;
+    text-shadow:0 1px 2px rgba(0,0,0,.6);
+  }
+  #controls{display:flex;gap:6px;align-items:center;}
+  .iconbtn{
+    background:#3a2414;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    border-radius:8px;
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+    user-select:none;
+  }
+  .iconbtn:active{transform:scale(.94);}
+  #langbtn{
+    width:auto;
+    padding:0 10px;
+    font-size:12px;
+    font-weight:700;
+  }
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    border-radius:10px;
+    overflow:hidden;
+    border:2px solid #5c3a1e;
+    background:#0f0a06;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:10px 0 6px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#5c452c;
+    transition:all .25s;
+  }
+  .dot.active{background:var(--gold);width:20px;border-radius:5px;}
+  .dot.done{background:var(--accent2);}
+  #instrPanel{
+    background:var(--panel);
+    border:2px solid var(--panel-border);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-top:6px;
+    min-height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  #instrText{
+    color:var(--ink);
+    font-size:14.5px;
+    line-height:1.45;
+    font-weight:600;
+  }
+  #narrPanel{
+    background:#efe2c4;
+    border:2px solid var(--panel-border);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-top:8px;
+    max-height:110px;
+    overflow-y:auto;
+    display:none;
+  }
+  #narrText{
+    color:var(--ink);
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  #actionRow{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:12px;
+  }
+  .mainbtn{
+    background:linear-gradient(180deg,var(--accent),#8a2914);
+    color:#fff8ec;
+    border:none;
+    border-radius:24px;
+    padding:11px 26px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,.4);
+    letter-spacing:.3px;
+  }
+  .mainbtn:active{transform:translateY(1px) scale(.98);}
+  .mainbtn.secondary{
+    background:linear-gradient(180deg,#4a6b4f,#2f4a33);
+  }
+  footer{
+    text-align:center;
+    color:#8a6c47;
+    font-size:11px;
+    margin-top:12px;
+    letter-spacing:.3px;
+  }
+  #holdBtn{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    background:linear-gradient(180deg,var(--accent2),#1e4526);
+    color:#fff;
+    border:none;
+    border-radius:22px;
+    padding:12px 22px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,.4);
+    display:none;
+  }
+  .hidden{display:none !important;}
+  #choiceRow{
+    display:none;
+    gap:10px;
+    justify-content:center;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .choicebtn{
+    background:linear-gradient(180deg,#5a3d20,#3a2712);
+    border:1px solid var(--gold);
+    color:var(--panel);
+    border-radius:12px;
+    padding:10px 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    max-width:260px;
+  }
+  .choicebtn:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="title">Kisah Kelana Sakti</div>
+    <div id="controls">
+      <button class="iconbtn" id="langbtn" title="Language">ID</button>
+      <button class="iconbtn" id="muteBtn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="canvas" width="960" height="600"></canvas>
+    <button id="holdBtn"></button>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="instrPanel"><div id="instrText"></div></div>
+  <div id="narrPanel"><div id="narrText"></div></div>
+
+  <div id="actionRow">
+    <button class="mainbtn" id="startBtn"></button>
+  </div>
+  <div id="choiceRow"></div>
+
+  <footer id="footerText"></footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ i18n ============ */
+var LANG = (function(){
+  try{
+    var qp = new URLSearchParams(window.location.search);
+    if(qp.get('lang')==='en') return 'en';
+    if(qp.get('lang')==='id') return 'id';
+  }catch(e){}
+  var saved = null;
+  try{ saved = localStorage.getItem('kelanaLang'); }catch(e){}
+  return saved || 'id';
+})();
+
+var MUTED = false;
+try{ MUTED = localStorage.getItem('kelanaMuted') === '1'; }catch(e){}
+
+var T = {
+  id:{
+    title:"Kisah Kelana Sakti",
+    subtitle:"Legenda Kerajaan Purnama, Sumatera Utara",
+    start:"Mulai Cerita",
+    replay:"Ulangi Cerita",
+    next:"Lanjut",
+    footer:"Kisah Rakyat Nusantara — Sumatera Utara",
+    scenes:[
+      {
+        narr:"Pada zaman dahulu, berdirilah Kerajaan Purnama yang diperintah oleh Raja Indra Sakti. Rakyat hidup makmur, aman, dan damai di bawah pemerintahannya.",
+        instr:"Ketuk istana megah di kanvas untuk melihat kejayaan Kerajaan Purnama."
+      },
+      {
+        narr:"Namun kabar buruk datang. Raja Indra Sakti jatuh sakit keras. Berbagai tabib didatangkan, tetapi keadaan raja semakin memburuk.",
+        instr:"Ketuk pembaringan sang raja untuk mendengar pesannya."
+      },
+      {
+        narr:"Dengan suara lemah, sang raja menitipkan tampuk pemerintahan kepada Panglima Badau, sambil berpesan agar putranya kelak dinobatkan menjadi raja bila sudah dewasa.",
+        instr:"Ketuk mahkota untuk menyerahkan kekuasaan kepada Panglima Badau."
+      },
+      {
+        narr:"Panglima Badau yang angkuh dan sombong memerintah dengan berfoya-foya. Uang kas kerajaan dihamburkan untuk pesta dan minuman keras.",
+        instr:"Ketuk cepat koin-koin emas untuk melihat betapa borosnya Panglima Badau menghabiskan kas kerajaan."
+      },
+      {
+        narr:"Rakyat dipaksa membayar pajak tinggi. Ketika prajurit datang merampas harta keluarga Kelana, Kelana dan ayahnya berusaha melawan sekuat tenaga.",
+        instr:"Tekan dan tahan tombol \"Lindungi Keluarga\" selama mungkin untuk melawan prajurit."
+      },
+      {
+        narr:"Kelana pingsan setelah dipukuli prajurit. Ia siuman di sebuah gubuk asing, ditolong oleh seorang kakek tua yang baik hati.",
+        instr:"Ketuk tangan kakek yang terulur untuk menerima pertolongannya."
+      },
+      {
+        narr:"Sang kakek mengajarkan Kelana ilmu bela diri, ilmu pengobatan, dan seni perang. Kelana pun berlatih dengan tekun setiap hari.",
+        instr:"Ketuk tombol saat penanda berada di area hijau untuk melatih jurus Kelana. Lakukan tiga kali."
+      },
+      {
+        narr:"Kelana Sakti kini telah dewasa dan mahir. Ia menghimpun rakyat dan pemuda untuk menyerang istana Panglima Badau yang zalim.",
+        instr:"Ketuk tiap prajurit penjaga secara berurutan dari kiri ke kanan, lalu ketuk Panglima Badau untuk mengalahkannya."
+      },
+      {
+        narr:"Kelana berhasil membebaskan ayah dan ibunya serta mengalahkan Panglima Badau. Kini ia harus memutuskan sikapnya terhadap sang panglima yang telah dikalahkan.",
+        instr:"Pilih sikap Kelana Sakti terhadap Panglima Badau yang telah kalah.",
+        choices:[
+          {label:"Maafkan dan usir dengan damai", result:"Kelana memilih mengampuni Panglima Badau dan mengusirnya dari negeri, memilih jalan kebijaksanaan seperti Raja Indra Sakti."},
+          {label:"Adili sesuai hukum kerajaan", result:"Kelana menyerahkan Panglima Badau kepada dewan kerajaan untuk diadili secara adil, agar keadilan tetap ditegakkan."}
+        ]
+      },
+      {
+        narr:"Rakyat bersuka cita. Kelana Sakti diangkat menjadi raja dan memimpin dengan arif serta bijaksana, hingga akhirnya menyerahkan tahta kepada putra Raja Indra Sakti yang telah dewasa. Namanya tetap dikenang sebagai pahlawan Kerajaan Purnama.",
+        instr:"Ketuk mahkota keemasan untuk menutup kisah Kelana Sakti."
+      }
+    ]
+  },
+  en:{
+    title:"The Tale of Kelana Sakti",
+    subtitle:"A legend from the Kingdom of Purnama, North Sumatra",
+    start:"Start Story",
+    replay:"Play Again",
+    next:"Next",
+    footer:"Indonesian Folktale — North Sumatra",
+    scenes:[
+      {
+        narr:"Long ago, the Kingdom of Purnama was ruled by King Indra Sakti. The people lived prosperous, safe, and peaceful lives under his rule.",
+        instr:"Tap the grand palace on the canvas to see the glory of Purnama."
+      },
+      {
+        narr:"But bad news arrived. King Indra Sakti fell gravely ill. Many healers were summoned, yet the king's condition kept worsening.",
+        instr:"Tap the king's bed to hear his final words."
+      },
+      {
+        narr:"With a weak voice, the king entrusted the throne to General Badau, asking that his young son be crowned king once he came of age.",
+        instr:"Tap the crown to hand power over to General Badau."
+      },
+      {
+        narr:"The arrogant General Badau ruled through excess, squandering the treasury on feasts and drink.",
+        instr:"Tap the gold coins rapidly to see how recklessly Badau drains the treasury."
+      },
+      {
+        narr:"The people were forced to pay heavy taxes. When soldiers came to seize Kelana's family belongings, Kelana and his father fought back as hard as they could.",
+        instr:"Press and hold the \"Protect Family\" button as long as you can to resist the soldiers."
+      },
+      {
+        narr:"Kelana fainted after being beaten by the soldiers. He woke up in a strange hut, rescued by a kind old man.",
+        instr:"Tap the old man's outstretched hand to accept his help."
+      },
+      {
+        narr:"The old man taught Kelana martial arts, healing, and the art of war. Kelana trained diligently every day.",
+        instr:"Tap the button when the marker is in the green zone to train Kelana's technique. Do it three times."
+      },
+      {
+        narr:"Kelana Sakti has now grown skilled and strong. He gathers the villagers and youths to storm the palace of the cruel General Badau.",
+        instr:"Tap each guard in order from left to right, then tap General Badau to defeat him."
+      },
+      {
+        narr:"Kelana freed his parents and defeated General Badau. Now he must decide how to treat the fallen general.",
+        instr:"Choose Kelana Sakti's response to the defeated General Badau.",
+        choices:[
+          {label:"Forgive him and send him away in peace", result:"Kelana chooses to forgive General Badau and banish him, following the wisdom of King Indra Sakti."},
+          {label:"Hand him to the kingdom's court for trial", result:"Kelana hands General Badau to the royal court to be judged fairly, so justice is upheld."}
+        ]
+      },
+      {
+        narr:"The people rejoiced. Kelana Sakti was crowned king and ruled wisely, until he later returned the throne to King Indra Sakti's grown son. His name is still remembered as the hero of the Kingdom of Purnama.",
+        instr:"Tap the golden crown to close the tale of Kelana Sakti."
+      }
+    ]
+  }
+};
+
+function L(){ return T[LANG]; }
+
+/* ============ Speech ============ */
+var voices = [];
+function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+if(window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function speak(text){
+  if(MUTED || !window.speechSynthesis || !text) return;
+  try{
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+    var target = voices.find(function(v){ return v.lang === u.lang; }) ||
+                 voices.find(function(v){ return v.lang && v.lang.indexOf(LANG)===0; });
+    if(target) u.voice = target;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function stopSpeak(){ if(window.speechSynthesis){ try{ window.speechSynthesis.cancel(); }catch(e){} } }
+
+/* ============ Canvas setup ============ */
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var CW = 960, CH = 600;
+
+function resizeCanvasCSS(){
+  // canvas is responsive via CSS width:100%; internal resolution fixed for crisp draw
+}
+resizeCanvasCSS();
+
+/* ============ postMessage auto-resize ============ */
+function reportHeight(){
+  try{
+    var h = document.getElementById('app').getBoundingClientRect().height;
+    window.parent.postMessage({ kelanaSaktiHeight: Math.ceil(h) + 20 }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', function(){ setTimeout(reportHeight, 100); });
+window.addEventListener('resize', reportHeight);
+
+/* ============ State machine ============ */
+var sceneIndex = -1; // -1 = title screen
+var totalScenes = T.id.scenes.length;
+var running = false;
+var raf = null;
+
+var dotsEl = document.getElementById('dots');
+var instrText = document.getElementById('instrText');
+var narrPanel = document.getElementById('narrPanel');
+var narrText = document.getElementById('narrText');
+var startBtn = document.getElementById('startBtn');
+var actionRow = document.getElementById('actionRow');
+var choiceRow = document.getElementById('choiceRow');
+var holdBtn = document.getElementById('holdBtn');
+var titleEl = document.getElementById('title');
+var footerText = document.getElementById('footerText');
+var langBtn = document.getElementById('langbtn');
+var muteBtn = document.getElementById('muteBtn');
+
+function buildDots(){
+  dotsEl.innerHTML = '';
+  for(var i=0;i<totalScenes;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.i = i;
+    dotsEl.appendChild(d);
+  }
+}
+function updateDots(){
+  var els = dotsEl.querySelectorAll('.dot');
+  els.forEach(function(el,i){
+    el.className = 'dot' + (i===sceneIndex ? ' active' : (i<sceneIndex ? ' done' : ''));
+  });
+}
+
+function applyStaticText(){
+  titleEl.textContent = L().title;
+  footerText.textContent = L().footer;
+  langBtn.textContent = LANG === 'id' ? 'ID' : 'EN';
+  muteBtn.textContent = MUTED ? '🔇' : '🔊';
+  document.documentElement.lang = LANG;
+  document.title = L().title;
+}
+
+/* ============ Scene interaction engine ============ */
+// Each scene config in SCENES defines: draw(progressState), hotspots, type
+// Types: 'tap' (single hotspot), 'mash' (rapid tap counter), 'hold' (press+hold progress),
+//        'timing' (moving marker hit green zone x N), 'sequence' (ordered taps), 'choice', 'final'
+
+var sceneState = {}; // per-scene runtime state
+var locked = false; // guard to prevent double-advance
+
+function px(nx, ny){
+  return { x: nx * CW, y: ny * CH };
+}
+
+function eventToCanvasXY(evt){
+  var rect = canvas.getBoundingClientRect();
+  var clientX, clientY;
+  if(evt.touches && evt.touches.length){
+    clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+  } else if(evt.changedTouches && evt.changedTouches.length){
+    clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+  } else {
+    clientX = evt.clientX; clientY = evt.clientY;
+  }
+  var xr = (clientX - rect.left) / rect.width;
+  var yr = (clientY - rect.top) / rect.height;
+  return { x: xr * CW, y: yr * CH, nx:xr, ny:yr };
+}
+
+/* -------- Palette & helper draw fns -------- */
+var PAL = {
+  sky1:'#f6dfa3', sky2:'#f0b866', ground:'#5c7a3f', groundDark:'#3f5a2a',
+  stone:'#8a7a63', stoneDark:'#5c4f3d', gold:'#e0b038', goldDark:'#a87a1e',
+  wood:'#7a5230', woodDark:'#4e341e', skin:'#e0b487', skinDark:'#b98a5e',
+  cloth1:'#b3391d', cloth2:'#2f6b3f', cloth3:'#3a4f8a', cloth4:'#6b3f8a',
+  night1:'#1a2440', night2:'#2c3a5e'
+};
+
+function clearBG(topC, botC){
+  var g = ctx.createLinearGradient(0,0,0,CH);
+  g.addColorStop(0, topC); g.addColorStop(1, botC);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,CW,CH);
+}
+function drawGround(color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, CH*0.72);
+  ctx.quadraticCurveTo(CW*0.5, CH*0.68, CW, CH*0.74);
+  ctx.lineTo(CW, CH);
+  ctx.lineTo(0, CH);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawSun(x,y,r,c){
+  ctx.fillStyle = c || PAL.gold;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+}
+function drawCloud(x,y,s){
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  [[0,0,1],[0.5,-0.15,0.8],[1,0.05,0.75],[0.3,0.15,0.7],[0.75,0.15,0.65]].forEach(function(p){
+    ctx.beginPath();
+    ctx.ellipse(x+p[0]*s, y+p[1]*s, s*0.55*p[2], s*0.38*p[2], 0, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+function drawPerson(x,y,scale,skinC,clothC,opts){
+  opts = opts || {};
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // legs
+  ctx.fillStyle = opts.pantsC || PAL.woodDark;
+  ctx.fillRect(-10,30,8,26);
+  ctx.fillRect(2,30,8,26);
+  // body
+  ctx.fillStyle = clothC;
+  ctx.beginPath();
+  ctx.moveTo(-16,0);
+  ctx.lineTo(16,0);
+  ctx.lineTo(12,34);
+  ctx.lineTo(-12,34);
+  ctx.closePath();
+  ctx.fill();
+  // arms
+  ctx.strokeStyle = clothC;
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  var armAngle = opts.armAngle || 0;
+  ctx.beginPath();
+  ctx.moveTo(-13,4); ctx.lineTo(-22, 20 + Math.sin(armAngle)*6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(13,4); ctx.lineTo(22, 20 - Math.sin(armAngle)*6);
+  ctx.stroke();
+  // hands
+  ctx.fillStyle = skinC;
+  ctx.beginPath(); ctx.arc(-22, 20 + Math.sin(armAngle)*6, 4.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(22, 20 - Math.sin(armAngle)*6, 4.5, 0, Math.PI*2); ctx.fill();
+  // head
+  ctx.fillStyle = skinC;
+  ctx.beginPath(); ctx.arc(0,-12,13,0,Math.PI*2); ctx.fill();
+  // hair / headgear
+  if(opts.headgear === 'crown'){
+    ctx.fillStyle = PAL.gold;
+    ctx.beginPath();
+    ctx.moveTo(-12,-20); ctx.lineTo(-12,-28); ctx.lineTo(-6,-22); ctx.lineTo(0,-30); ctx.lineTo(6,-22); ctx.lineTo(12,-28); ctx.lineTo(12,-20);
+    ctx.closePath(); ctx.fill();
+  } else if(opts.headgear === 'hat'){
+    ctx.fillStyle = opts.hatC || '#4a3520';
+    ctx.beginPath(); ctx.ellipse(0,-22,15,6,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-26,9,Math.PI,0); ctx.fill();
+  } else if(opts.headgear === 'headband'){
+    ctx.fillStyle = opts.hatC || PAL.cloth1;
+    ctx.fillRect(-13,-17,26,5);
+  } else if(opts.headgear === 'oldhair'){
+    ctx.strokeStyle = '#d9d3c6';
+    ctx.lineWidth = 2;
+    for(var i=-10;i<=10;i+=4){ ctx.beginPath(); ctx.moveTo(i,-22); ctx.lineTo(i*1.3,-30); ctx.stroke(); }
+  } else {
+    ctx.fillStyle = '#2b1f14';
+    ctx.beginPath(); ctx.arc(0,-16,13,Math.PI,0); ctx.fill();
+  }
+  // face
+  ctx.fillStyle = '#2b1c10';
+  ctx.beginPath(); ctx.arc(-4,-11,1.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4,-11,1.4,0,Math.PI*2); ctx.fill();
+  if(opts.beard){
+    ctx.fillStyle = '#cfc7b8';
+    ctx.beginPath(); ctx.ellipse(0,-3,7,6,0,0,Math.PI); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawPalace(x,y,scale,glow){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  // base
+  ctx.fillStyle = PAL.stone;
+  ctx.fillRect(-90,-10,180,70);
+  ctx.fillStyle = PAL.stoneDark;
+  ctx.fillRect(-90,50,180,14);
+  // towers
+  [-70,70].forEach(function(tx){
+    ctx.fillStyle = PAL.stone;
+    ctx.fillRect(tx-16,-70,32,60);
+    ctx.fillStyle = glow ? PAL.gold : PAL.cloth1;
+    ctx.beginPath();
+    ctx.moveTo(tx-20,-70); ctx.lineTo(tx,-96); ctx.lineTo(tx+20,-70);
+    ctx.closePath(); ctx.fill();
+  });
+  // center dome
+  ctx.fillStyle = PAL.stone;
+  ctx.fillRect(-30,-50,60,40);
+  ctx.fillStyle = glow ? PAL.gold : PAL.cloth1;
+  ctx.beginPath(); ctx.arc(0,-50,32,Math.PI,0); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-8,-82); ctx.lineTo(0,-98); ctx.lineTo(8,-82); ctx.closePath(); ctx.fill();
+  // door
+  ctx.fillStyle = PAL.woodDark;
+  ctx.beginPath(); ctx.arc(0,20,14,Math.PI,0); ctx.fill();
+  ctx.fillRect(-14,20,28,40);
+  // windows
+  ctx.fillStyle = '#3a2a18';
+  [-50,50].forEach(function(wx){
+    ctx.beginPath(); ctx.arc(wx,10,8,Math.PI,0); ctx.fill();
+    ctx.fillRect(wx-8,10,16,18);
+  });
+  ctx.restore();
+}
+function drawTree(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = PAL.woodDark;
+  ctx.fillRect(-6,-10,12,45);
+  ctx.fillStyle = '#3f6b34';
+  [[0,-40,32],[-18,-25,24],[18,-25,24]].forEach(function(c){
+    ctx.beginPath(); ctx.arc(c[0],c[1],c[2],0,Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+}
+function drawCoin(x,y,r,shine){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = PAL.gold;
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = PAL.goldDark; ctx.lineWidth = r*0.15;
+  ctx.stroke();
+  ctx.fillStyle = PAL.goldDark;
+  ctx.font = (r*0.9)+'px serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('$', 0, 1);
+  if(shine){
+    ctx.fillStyle = 'rgba(255,255,255,.5)';
+    ctx.beginPath(); ctx.arc(-r*0.3,-r*0.3,r*0.25,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawBed(x,y,scale){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = PAL.woodDark; ctx.fillRect(-70,10,140,14);
+  ctx.fillStyle = '#7a1f1f'; ctx.fillRect(-70,-6,140,18);
+  ctx.fillStyle = '#c9382c'; ctx.fillRect(-70,-6,140,6);
+  ctx.fillStyle = '#4a3018'; ctx.fillRect(-78,-40,10,70); ctx.fillRect(68,-40,10,70);
+  ctx.restore();
+}
+function drawSoldier(x,y,scale,facing){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale*(facing||1), scale);
+  drawPerson(0,0,1, PAL.skin, '#5a5a5a', {headgear:'hat', hatC:'#333', armAngle: 0.6});
+  // spear
+  ctx.strokeStyle = '#7a5230'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(20,10); ctx.lineTo(20,-60); ctx.stroke();
+  ctx.fillStyle = '#cfd3d8';
+  ctx.beginPath(); ctx.moveTo(15,-60); ctx.lineTo(25,-60); ctx.lineTo(20,-76); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawHut(x,y,scale){
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = PAL.woodDark; ctx.fillRect(-55,-10,110,60);
+  ctx.fillStyle = '#8a6a3a';
+  ctx.beginPath(); ctx.moveTo(-70,-10); ctx.lineTo(0,-55); ctx.lineTo(70,-10); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3a2814'; ctx.fillRect(-15,20,30,30);
+  ctx.restore();
+}
+
+/* -------- Scene definitions -------- */
+var SCENES = [
+  // 0: intro palace - tap hotspot
+  {
+    type:'tap',
+    hotspot:{x:0.5,y:0.42,r:0.16},
+    draw:function(){
+      clearBG(PAL.sky1, PAL.sky2);
+      drawSun(830,90,42,'#ffdd88');
+      drawCloud(150,80,40); drawCloud(700,60,30);
+      drawGround(PAL.ground);
+      drawTree(90,470,1.1); drawTree(870,480,1.2);
+      drawPalace(CW/2, CH*0.55, 1.35, true);
+      drawPerson(CW*0.28, CH*0.78, 1.1, PAL.skin, PAL.cloth3, {});
+      drawPerson(CW*0.72, CH*0.78, 1.1, PAL.skin, PAL.cloth2, {});
+      pulseRing(CW*0.5, CH*0.42, 70);
+    }
+  },
+  // 1: king sick in bed - tap hotspot on bed
+  {
+    type:'tap',
+    hotspot:{x:0.5,y:0.55,r:0.22},
+    draw:function(){
+      clearBG(PAL.night1, PAL.night2);
+      drawGround('#241a10');
+      drawBed(CW/2, CH*0.56, 1.5);
+      // king lying
+      ctx.save();
+      ctx.translate(CW*0.42, CH*0.5);
+      ctx.fillStyle = PAL.skin;
+      ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = PAL.gold;
+      ctx.fillRect(-13,-24,26,8);
+      ctx.restore();
+      drawPerson(CW*0.72, CH*0.65, 1.1, PAL.skin, PAL.cloth4, {armAngle:0.8});
+      pulseRing(CW*0.5, CH*0.56, 90);
+    }
+  },
+  // 2: crown handover - tap hotspot on crown
+  {
+    type:'tap',
+    hotspot:{x:0.5,y:0.4,r:0.14},
+    draw:function(){
+      clearBG(PAL.night1,PAL.night2);
+      drawGround('#241a10');
+      drawPerson(CW*0.3, CH*0.68, 1.2, PAL.skin, '#5a5a5a', {headgear:'hat', hatC:'#3a3a3a'});
+      drawPerson(CW*0.7, CH*0.68, 1.2, PAL.skin, PAL.cloth4, {armAngle:0.6});
+      // floating crown
+      ctx.save();
+      ctx.translate(CW*0.5, CH*0.4);
+      ctx.fillStyle = PAL.gold;
+      ctx.beginPath();
+      ctx.moveTo(-30,10); ctx.lineTo(-30,-14); ctx.lineTo(-15,4); ctx.lineTo(0,-22); ctx.lineTo(15,4); ctx.lineTo(30,-14); ctx.lineTo(30,10);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      pulseRing(CW*0.5, CH*0.4, 60);
+    }
+  },
+  // 3: mash coins
+  {
+    type:'mash',
+    target:16,
+    draw:function(st){
+      clearBG('#3a2412','#241608');
+      drawGround('#2a1c0e');
+      drawPalace(CW*0.78, CH*0.62, 0.85, false);
+      drawPerson(CW*0.24, CH*0.64, 1.3, PAL.skin, PAL.cloth1, {headgear:'crown', armAngle: Math.sin(Date.now()/150)*1.4});
+      var remaining = Math.max(0, st.target - st.count);
+      for(var i=0;i<remaining;i++){
+        var cx = CW*0.5 + (i%5)*40;
+        var cy = CH*0.74 - Math.floor(i/5)*34;
+        drawCoin(cx, cy, 17, true);
+      }
+      if(remaining === 0){
+        ctx.save();
+        ctx.font = 'bold 20px Georgia, serif';
+        ctx.fillStyle = '#e0483e';
+        ctx.textAlign = 'center';
+        ctx.fillText(LANG==='id' ? 'Kas kerajaan habis!' : 'Treasury empty!', CW*0.62, CH*0.6);
+        ctx.restore();
+      }
+    }
+  },
+  // 4: hold to defend
+  {
+    type:'hold',
+    holdDuration: 3200,
+    draw:function(st){
+      clearBG('#caa25a','#8a6a34');
+      drawGround(PAL.ground);
+      drawHut(CW*0.2, CH*0.62, 0.85);
+      var shake = st.holding ? (Math.random()-0.5)*4 : 0;
+      drawPerson(CW*0.42+shake, CH*0.72, 1.15, PAL.skin, PAL.cloth2, {armAngle:1.2});
+      drawPerson(CW*0.34+shake, CH*0.62, 1.0, PAL.skin, '#6b4a2c', {armAngle:1.0});
+      drawSoldier(CW*0.62, CH*0.7, 1.0, -1);
+      drawSoldier(CW*0.74, CH*0.66, 0.95, -1);
+      drawSoldier(CW*0.85, CH*0.72, 0.9, -1);
+    }
+  },
+  // 5: old man rescue - tap hotspot on hand
+  {
+    type:'tap',
+    hotspot:{x:0.62,y:0.55,r:0.16},
+    draw:function(){
+      clearBG('#efd9a0','#c99a55');
+      drawGround(PAL.ground);
+      drawHut(CW*0.78, CH*0.55, 1.0);
+      // kelana lying
+      ctx.save();
+      ctx.translate(CW*0.32, CH*0.72);
+      ctx.fillStyle = PAL.cloth3; ctx.fillRect(-30,-6,60,14);
+      ctx.fillStyle = PAL.skin; ctx.beginPath(); ctx.arc(-28,0,12,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      drawPerson(CW*0.58, CH*0.62, 1.1, PAL.skin, '#8a7a5a', {headgear:'oldhair', beard:true, armAngle:1.1});
+      pulseRing(CW*0.62, CH*0.55, 60);
+    }
+  },
+  // 6: timing training
+  {
+    type:'timing',
+    reps:3,
+    speed:0.0032,
+    zone:[0.42,0.58],
+    draw:function(st){
+      clearBG('#8fc0e0','#c9e0b0');
+      drawGround(PAL.ground);
+      drawHut(CW*0.82, CH*0.65, 0.7);
+      drawPerson(CW*0.3, CH*0.66, 1.2, PAL.skin, PAL.cloth1, {armAngle: st.hitFlash ? 2.4 : Math.sin(Date.now()/200)*0.5, headgear:'headband', hatC:PAL.cloth1});
+      // wooden dummy target
+      ctx.save();
+      ctx.translate(CW*0.58, CH*0.6);
+      ctx.fillStyle = PAL.woodDark;
+      ctx.fillRect(-8,-50,16,90);
+      ctx.beginPath(); ctx.arc(0,-60,16,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  },
+  // 7: sequence tap
+  {
+    type:'sequence',
+    order:['s1','s2','s3','badau'],
+    positions:{
+      s1:{x:0.3,y:0.62},
+      s2:{x:0.48,y:0.66},
+      s3:{x:0.66,y:0.6},
+      badau:{x:0.82,y:0.5}
+    },
+    draw:function(st){
+      clearBG('#3a2412','#1e1408');
+      drawGround('#241c10');
+      drawPalace(CW*0.86, CH*0.42, 0.55, false);
+      var order = SCENES[7].order;
+      order.forEach(function(id){
+        var p = SCENES[7].positions[id];
+        var pt = px(p.x, p.y);
+        var beaten = st.beaten.indexOf(id) > -1;
+        if(id === 'badau'){
+          if(!beaten) drawPerson(pt.x, pt.y, 1.25, PAL.skin, PAL.cloth1, {headgear:'crown', armAngle:0.8});
+        } else {
+          if(!beaten) drawSoldier(pt.x, pt.y, 1.0, -1);
+        }
+        if(!beaten) pulseRing(pt.x, pt.y, id==='badau'?55:45);
+      });
+      drawPerson(CW*0.1, CH*0.75, 1.1, PAL.skin, PAL.cloth2, {headgear:'headband', hatC:PAL.cloth2, armAngle: Math.sin(Date.now()/180)});
+    }
+  },
+  // 8: choice
+  {
+    type:'choice',
+    draw:function(){
+      clearBG('#f6dfa3','#f0b866');
+      drawGround(PAL.ground);
+      drawPerson(CW*0.35, CH*0.68, 1.3, PAL.skin, PAL.cloth1, {headgear:'headband', hatC:PAL.cloth1});
+      drawPerson(CW*0.68, CH*0.72, 1.1, PAL.skin, '#5a5a5a', {armAngle:1.4});
+    }
+  },
+  // 9: final crown tap
+  {
+    type:'tap',
+    hotspot:{x:0.5,y:0.35,r:0.15},
+    draw:function(){
+      clearBG('#ffe9a8','#ffbf5e');
+      drawSun(CW*0.5,CH*0.28,55,'#fff2c0');
+      drawGround(PAL.ground);
+      drawPalace(CW*0.5, CH*0.62, 1.3, true);
+      drawPerson(CW*0.5, CH*0.8, 1.4, PAL.skin, PAL.cloth1, {headgear:'crown', armAngle:0.9});
+      pulseRing(CW*0.5, CH*0.35, 55);
+    }
+  }
+];
+
+function pulseRing(x,y,r){
+  var t = (Date.now()/500) % 1;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,220,120,' + (1-t) + ')';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(x,y,r*0.6 + r*0.5*t,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+/* ============ Scene runtime control ============ */
+function resetSceneState(idx){
+  var cfg = SCENES[idx];
+  var st = {};
+  if(cfg.type === 'mash'){ st.count = 0; st.target = cfg.target; }
+  if(cfg.type === 'hold'){ st.progress = 0; st.holding = false; st.success=false; }
+  if(cfg.type === 'timing'){ st.pos = 0; st.dir = 1; st.hits = 0; st.hitFlash=false; }
+  if(cfg.type === 'sequence'){ st.beaten = []; }
+  sceneState = st;
+  locked = false;
+}
+
+function renderInstr(){
+  var sc = L().scenes[sceneIndex];
+  instrText.textContent = sc.instr;
+}
+
+function showScene(idx){
+  stopSpeak();
+  sceneIndex = idx;
+  updateDots();
+  resetSceneState(idx);
+  renderInstr();
+  var sc = L().scenes[idx];
+  narrPanel.style.display = 'block';
+  narrText.textContent = sc.narr;
+  speak(sc.narr);
+  choiceRow.style.display = 'none';
+  choiceRow.innerHTML = '';
+  holdBtn.style.display = 'none';
+  actionRow.style.display = 'none';
+
+  var cfg = SCENES[idx];
+  if(cfg.type === 'hold'){
+    holdBtn.style.display = 'block';
+    holdBtn.textContent = LANG==='id' ? 'Lindungi Keluarga' : 'Protect Family';
+  }
+  if(cfg.type === 'choice'){
+    var sc2 = L().scenes[idx];
+    sc2.choices.forEach(function(ch, i){
+      var b = document.createElement('button');
+      b.className = 'choicebtn';
+      b.textContent = ch.label;
+      b.onclick = function(){ handleChoice(i); };
+      choiceRow.appendChild(b);
+    });
+    choiceRow.style.display = 'flex';
+  }
+  reportHeight();
+}
+
+function handleChoice(i){
+  if(locked) return;
+  locked = true;
+  var sc = L().scenes[sceneIndex];
+  var res = sc.choices[i].result;
+  narrText.textContent = res;
+  speak(res);
+  choiceRow.style.display = 'none';
+  setTimeout(function(){ advanceScene(); }, 3600);
+}
+
+function advanceScene(){
+  if(sceneIndex + 1 < totalScenes){
+    showScene(sceneIndex + 1);
+  } else {
+    endStory();
+  }
+}
+
+function endStory(){
+  stopSpeak();
+  instrText.textContent = LANG==='id' ? 'Kisah Kelana Sakti telah berakhir. Terima kasih telah menyimak!' : 'The tale of Kelana Sakti has ended. Thank you for reading!';
+  narrPanel.style.display = 'none';
+  holdBtn.style.display = 'none';
+  choiceRow.style.display = 'none';
+  actionRow.style.display = 'flex';
+  startBtn.textContent = L().replay;
+  startBtn.onclick = restartStory;
+  actionRow.style.display = 'flex';
+  reportHeight();
+}
+
+function restartStory(){
+  showTitleScreen();
+}
+
+function showTitleScreen(){
+  sceneIndex = -1;
+  running = false;
+  stopSpeak();
+  updateDots();
+  narrPanel.style.display = 'none';
+  choiceRow.style.display = 'none';
+  holdBtn.style.display = 'none';
+  actionRow.style.display = 'flex';
+  startBtn.textContent = L().start;
+  startBtn.onclick = beginStory;
+  instrText.textContent = LANG==='id'
+    ? 'Ketuk "Mulai Cerita" untuk memulai petualangan Kelana Sakti.'
+    : 'Tap "Start Story" to begin the adventure of Kelana Sakti.';
+  drawTitleArt();
+  reportHeight();
+}
+
+function beginStory(){
+  running = true;
+  showScene(0);
+}
+
+function drawTitleArt(){
+  clearBG(PAL.sky1, PAL.sky2);
+  drawSun(830,90,42,'#ffdd88');
+  drawCloud(150,80,40); drawCloud(650,60,30);
+  drawGround(PAL.ground);
+  drawTree(90,470,1.1); drawTree(870,480,1.2);
+  drawPalace(CW/2, CH*0.58, 1.3, true);
+  drawPerson(CW*0.5, CH*0.85, 1.5, PAL.skin, PAL.cloth1, {headgear:'headband', hatC:PAL.cloth1, armAngle:0.6});
+  ctx.save();
+  ctx.font = 'bold 40px Georgia, serif';
+  ctx.textAlign='center';
+  ctx.fillStyle = 'rgba(30,15,5,.55)';
+  ctx.fillText(L().title, CW/2+3, 83);
+  ctx.fillStyle = '#fff3d0';
+  ctx.fillText(L().title, CW/2, 80);
+  ctx.font='16px Georgia, serif';
+  ctx.fillStyle='rgba(40,20,5,.7)';
+  ctx.fillText(L().subtitle, CW/2, 112);
+  ctx.restore();
+}
+
+/* ============ Main loop ============ */
+function loop(){
+  if(sceneIndex === -1){
+    drawTitleArt();
+  } else if(sceneIndex >= 0 && sceneIndex < totalScenes){
+    ctx.clearRect(0,0,CW,CH);
+    var cfg = SCENES[sceneIndex];
+    cfg.draw(sceneState);
+    if(cfg.type === 'timing'){
+      stepTiming(cfg);
+      drawTimingBar(cfg);
+    }
+    if(cfg.type === 'hold'){
+      drawHoldBar();
+    }
+  }
+  raf = requestAnimationFrame(loop);
+}
+raf = requestAnimationFrame(loop);
+
+/* ---- timing bar mechanics ---- */
+function stepTiming(cfg){
+  var st = sceneState;
+  st.pos += cfg.speed * st.dir;
+  if(st.pos > 1){ st.pos = 1; st.dir = -1; }
+  if(st.pos < 0){ st.pos = 0; st.dir = 1; }
+  if(st.hitFlash){
+    st.hitFlashT = (st.hitFlashT||0) + 1;
+    if(st.hitFlashT > 12){ st.hitFlash = false; st.hitFlashT = 0; }
+  }
+}
+function drawTimingBar(cfg){
+  var barX = CW*0.15, barY = CH*0.86, barW = CW*0.7, barH = 22;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.fillRect(barX-4,barY-4,barW+8,barH+8);
+  ctx.fillStyle = '#3a2a18';
+  ctx.fillRect(barX,barY,barW,barH);
+  ctx.fillStyle = 'rgba(80,180,90,.85)';
+  ctx.fillRect(barX + cfg.zone[0]*barW, barY, (cfg.zone[1]-cfg.zone[0])*barW, barH);
+  var mx = barX + sceneState.pos*barW;
+  ctx.fillStyle = '#ffe066';
+  ctx.beginPath(); ctx.moveTo(mx,barY-8); ctx.lineTo(mx-8,barY-20); ctx.lineTo(mx+8,barY-20); ctx.closePath(); ctx.fill();
+  // reps display
+  for(var i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.arc(barX + barW + 20, barY - 10 - i*0, 0,0,0); // noop keep lints happy
+  }
+  ctx.restore();
+  // reps dots to the right
+  ctx.save();
+  for(var j=0;j<3;j++){
+    ctx.fillStyle = j < sceneState.hits ? '#d8a13a' : 'rgba(255,255,255,.35)';
+    ctx.beginPath();
+    ctx.arc(barX + barW + 16, barY - 4 + j*0, 6, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawHoldBar(){
+  var cfg = SCENES[sceneIndex];
+  var barX = CW*0.15, barY = 24, barW = CW*0.7, barH = 16;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.fillRect(barX-3,barY-3,barW+6,barH+6);
+  ctx.fillStyle = '#3a2a18';
+  ctx.fillRect(barX,barY,barW,barH);
+  var pct = Math.min(1, sceneState.progress / cfg.holdDuration);
+  ctx.fillStyle = '#2f6b3f';
+  ctx.fillRect(barX,barY,barW*pct,barH);
+  ctx.restore();
+}
+
+/* ============ Input handling ============ */
+function onCanvasTap(evt){
+  evt.preventDefault();
+  if(sceneIndex < 0 || sceneIndex >= totalScenes || locked) return;
+  var cfg = SCENES[sceneIndex];
+  var pt = eventToCanvasXY(evt);
+
+  if(cfg.type === 'tap'){
+    var hp = px(cfg.hotspot.x, cfg.hotspot.y);
+    var rr = cfg.hotspot.r * Math.min(CW,CH);
+    var dx = pt.x - hp.x, dy = pt.y - hp.y;
+    if(dx*dx + dy*dy <= rr*rr){
+      locked = true;
+      setTimeout(advanceScene, 350);
+    }
+    return;
+  }
+  if(cfg.type === 'mash'){
+    sceneState.count++;
+    if(sceneState.count >= cfg.target){
+      locked = true;
+      setTimeout(advanceScene, 400);
+    }
+    return;
+  }
+  if(cfg.type === 'sequence'){
+    var order = cfg.order;
+    var nextIdx = sceneState.beaten.length;
+    if(nextIdx >= order.length) return;
+    var expectedId = order[nextIdx];
+    var p = cfg.positions[expectedId];
+    var cpt = px(p.x, p.y);
+    var ddx = pt.x - cpt.x, ddy = pt.y - cpt.y;
+    var thresh = 60;
+    if(ddx*ddx + ddy*ddy <= thresh*thresh){
+      sceneState.beaten.push(expectedId);
+      if(sceneState.beaten.length >= order.length){
+        locked = true;
+        setTimeout(advanceScene, 500);
+      }
+    }
+    return;
+  }
+  if(cfg.type === 'timing'){
+    var st = sceneState;
+    if(st.pos >= cfg.zone[0] && st.pos <= cfg.zone[1]){
+      st.hits++;
+      st.hitFlash = true;
+      st.hitFlashT = 0;
+      if(st.hits >= cfg.reps){
+        locked = true;
+        setTimeout(advanceScene, 450);
+      }
+    }
+    return;
+  }
+}
+canvas.addEventListener('click', onCanvasTap);
+canvas.addEventListener('touchend', function(e){ onCanvasTap(e); }, {passive:false});
+
+/* ---- hold button ---- */
+var holdTimer = null;
+function startHold(e){
+  e.preventDefault();
+  if(sceneIndex<0 || sceneIndex>=totalScenes) return;
+  var cfg = SCENES[sceneIndex];
+  if(cfg.type !== 'hold' || locked) return;
+  sceneState.holding = true;
+  var last = Date.now();
+  clearInterval(holdTimer);
+  holdTimer = setInterval(function(){
+    var now = Date.now();
+    var dt = now - last; last = now;
+    if(sceneState.holding){
+      sceneState.progress += dt;
+      if(sceneState.progress >= cfg.holdDuration){
+        sceneState.progress = cfg.holdDuration;
+        clearInterval(holdTimer);
+        locked = true;
+        setTimeout(advanceScene, 400);
+      }
+    }
+  }, 60);
+}
+function stopHold(){
+  sceneState.holding = false;
+  clearInterval(holdTimer);
+}
+holdBtn.addEventListener('mousedown', startHold);
+holdBtn.addEventListener('touchstart', startHold, {passive:false});
+['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){
+  holdBtn.addEventListener(ev, stopHold);
+});
+
+/* ============ Controls: lang & mute ============ */
+langBtn.addEventListener('click', function(){
+  LANG = LANG === 'id' ? 'en' : 'id';
+  try{ localStorage.setItem('kelanaLang', LANG); }catch(e){}
+  applyStaticText();
+  if(sceneIndex === -1){
+    showTitleScreen();
+  } else if(sceneIndex >= totalScenes){
+    endStory();
+  } else {
+    renderInstr();
+    var sc = L().scenes[sceneIndex];
+    narrText.textContent = sc.narr;
+    if(SCENES[sceneIndex].type === 'hold'){
+      holdBtn.textContent = LANG==='id' ? 'Lindungi Keluarga' : 'Protect Family';
+    }
+    if(SCENES[sceneIndex].type === 'choice' && !locked){
+      choiceRow.innerHTML='';
+      sc.choices.forEach(function(ch,i){
+        var b=document.createElement('button');
+        b.className='choicebtn'; b.textContent=ch.label;
+        b.onclick=function(){handleChoice(i);};
+        choiceRow.appendChild(b);
+      });
+    }
+  }
+  reportHeight();
+});
+
+muteBtn.addEventListener('click', function(){
+  MUTED = !MUTED;
+  try{ localStorage.setItem('kelanaMuted', MUTED ? '1':'0'); }catch(e){}
+  muteBtn.textContent = MUTED ? '🔇' : '🔊';
+  if(MUTED) stopSpeak();
+  else if(sceneIndex >= 0 && sceneIndex < totalScenes) speak(L().scenes[sceneIndex].narr);
+});
+
+/* ============ Init ============ */
+applyStaticText();
+buildDots();
+showTitleScreen();
+
+})();
+</script>
+</body>
+</html>
