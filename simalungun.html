@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Nama Simalungun</title>
+<style>
+  :root{
+    --bg1:#2b1810;
+    --bg2:#4a2818;
+    --panel:#fff8ee;
+    --panel-border:#d8c4a0;
+    --accent:#b5482c;
+    --accent-dark:#8a331e;
+    --gold:#d8a13a;
+    --ink:#3a2a1c;
+    --muted:#7a6a58;
+    --dot-off:#d8c4a0;
+    --dot-on:#b5482c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Tahoma,sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 20px;
+  }
+  .game-wrap{
+    width:100%;
+    max-width:760px;
+    background:var(--panel);
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+    overflow:hidden;
+    border:1px solid var(--panel-border);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 16px;
+    background:linear-gradient(120deg,var(--accent-dark),var(--accent));
+    color:#fff8ee;
+  }
+  header h1{
+    font-size:16px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.3px;
+  }
+  .header-btns{
+    display:flex;
+    gap:8px;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fff8ee;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background .15s ease;
+    font-family:inherit;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.28);}
+  .icon-btn:active{transform:scale(0.96);}
+
+  .stage-wrap{
+    position:relative;
+    background:#000;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+
+  .instruction-bar{
+    background:var(--gold);
+    color:#3a2410;
+    font-weight:700;
+    font-size:14px;
+    padding:9px 16px;
+    text-align:center;
+    border-bottom:1px solid var(--panel-border);
+  }
+
+  .narration-panel{
+    padding:14px 18px;
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--ink);
+    min-height:64px;
+    background:var(--panel);
+    border-bottom:1px solid var(--panel-border);
+  }
+
+  .dots-row{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:12px 10px 4px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--dot-off);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{background:var(--dot-on); transform:scale(1.3);}
+  .dot.done{background:var(--accent-dark);}
+
+  .controls{
+    display:flex;
+    justify-content:center;
+    padding:10px 16px 18px;
+  }
+  .main-btn{
+    background:var(--accent);
+    color:#fff8ee;
+    border:none;
+    border-radius:30px;
+    padding:12px 28px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.25);
+    font-family:inherit;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .main-btn:hover{background:var(--accent-dark);}
+  .main-btn:active{transform:scale(0.96);}
+  .main-btn.hidden{display:none;}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    padding:6px 10px 14px;
+  }
+
+  @media (max-width:420px){
+    header h1{font-size:13.5px;}
+    .icon-btn{font-size:11.5px;padding:5px 8px;}
+    .instruction-bar{font-size:12.5px;}
+    .narration-panel{font-size:13px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="game-wrap" id="gameWrap">
+  <header>
+    <h1 id="gameTitle">Asal Mula Nama Simalungun</h1>
+    <div class="header-btns">
+      <button class="icon-btn" id="langBtn" title="Ganti bahasa">🌐 <span id="langLabel">EN</span></button>
+      <button class="icon-btn" id="muteBtn" title="Bisukan suara">🔊</button>
+    </div>
+  </header>
+
+  <div class="stage-wrap">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  </div>
+
+  <div class="instruction-bar" id="instructionBar">Ketuk "Mulai Cerita" untuk memulai.</div>
+  <div class="narration-panel" id="narrationPanel">Selamat datang di kisah rakyat Sumatera Utara.</div>
+
+  <div class="dots-row" id="dotsRow"></div>
+
+  <div class="controls">
+    <button class="main-btn" id="mainBtn">Mulai Cerita</button>
+  </div>
+
+  <footer id="footerText">Cerita Rakyat Nusantara &mdash; Legenda Simalungun, Sumatera Utara</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================= I18N TEXT ======================= */
+  var UI = {
+    id:{
+      title:"Asal Mula Nama Simalungun",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      mute:"Bisukan",
+      unmute:"Suarakan",
+      lang:"EN",
+      footer:"Cerita Rakyat Nusantara — Legenda Simalungun, Sumatera Utara",
+      welcomeNarration:"Selamat datang di kisah rakyat dari Sumatera Utara. Simak baik-baik asal mula nama \u201cSimalungun\u201d.",
+      welcomeInstruction:"Ketuk tombol \u201cMulai Cerita\u201d di bawah untuk memulai petualangan.",
+      choiceStay:"Tetap di Samosir",
+      choiceReturn:"Kembali ke Nagur",
+      tryAgain:"Coba lagi!",
+      wrongOrder:"Bukan itu, coba urutan lain.",
+      endTitle:"Tamat",
+      endNarration:"Begitulah asal mula nama Simalungun, yang berarti daerah yang sunyi dan sepi, kini menjadi salah satu Kabupaten di Provinsi Sumatera Utara.",
+      endInstruction:"Ketuk \u201cUlangi Cerita\u201d untuk mendengarkan kisah ini lagi."
+    },
+    en:{
+      title:"The Origin of the Name Simalungun",
+      start:"Start Story",
+      replay:"Replay Story",
+      mute:"Mute",
+      unmute:"Unmute",
+      lang:"ID",
+      footer:"Indonesian Folktales — The Legend of Simalungun, North Sumatra",
+      welcomeNarration:"Welcome to a folktale from North Sumatra. Listen closely to discover the origin of the name \u201cSimalungun\u201d.",
+      welcomeInstruction:"Tap the \u201cStart Story\u201d button below to begin the adventure.",
+      choiceStay:"Stay in Samosir",
+      choiceReturn:"Return to Nagur",
+      tryAgain:"Try again!",
+      wrongOrder:"Not that one, try a different order.",
+      endTitle:"The End",
+      endNarration:"That is how the name Simalungun came to be, meaning a quiet, lonely land — today one of the regencies of North Sumatra Province.",
+      endInstruction:"Tap \u201cReplay Story\u201d to hear this tale again."
+    }
+  };
+
+  /* ======================= SCENE DATA ======================= */
+  var SCENES = [
+    {
+      key:"nagur",
+      mechanic:"tap",
+      narration:{
+        id:"Pada zaman dahulu, daerah ini bernama Kampung Nagur. Di sana berdiri kerajaan kecil bernama Tanah Djawo, yang dipimpin raja bijaksana bermarga Sinaga dan bersuku Batak. Rakyatnya hidup aman dan tenteram.",
+        en:"Long ago, this land was called Kampung Nagur. There stood a small kingdom named Tanah Djawo, ruled by a wise Batak king of the Sinaga clan. Its people lived in peace and safety."
+      },
+      instruction:{
+        id:"Ketuk istana Kerajaan Tanah Djawo untuk melanjutkan.",
+        en:"Tap the Tanah Djawo palace to continue."
+      }
+    },
+    {
+      key:"tiga_kerajaan",
+      mechanic:"sequence",
+      narration:{
+        id:"Di luar Kampung Nagur berdiri dua kerajaan sahabat: Kerajaan Silou bermarga Purba Tambak, dan Kerajaan Raya bermarga Saragih Garingging. Ketiganya hidup rukun dan bersahabat erat.",
+        en:"Outside Kampung Nagur stood two allied kingdoms: Silou of the Purba Tambak clan, and Raya of the Saragih Garingging clan. All three lived in close friendship."
+      },
+      instruction:{
+        id:"Ketuk ketiga panji kerajaan secara berurutan: Tanah Djawo, lalu Silou, lalu Raya.",
+        en:"Tap the three kingdom banners in order: Tanah Djawo, then Silou, then Raya."
+      },
+      order:["Tanah Djawo","Silou","Raya"]
+    },
+    {
+      key:"majapahit",
+      mechanic:"mash",
+      narration:{
+        id:"Suatu ketika, Kerajaan Majapahit dari Pulau Jawa datang menyerang. Ketiga kerajaan bersatu padu mempertahankan tanah mereka dan berhasil mengusir pasukan Majapahit.",
+        en:"One day, the mighty Majapahit Kingdom from Java came to attack. The three kingdoms united to defend their land and drove the Majapahit forces away."
+      },
+      instruction:{
+        id:"Ketuk perisai berkali-kali untuk menangkis serangan Majapahit!",
+        en:"Tap the shield rapidly to fend off the Majapahit attack!"
+      },
+      target:16
+    },
+    {
+      key:"aceh",
+      mechanic:"timing",
+      narration:{
+        id:"Di lain waktu, Kerajaan Aceh menyerang Kerajaan Silou. Sekali lagi, ketiga kerajaan saling membahu dan berhasil mengalahkan pasukan Aceh.",
+        en:"Another time, the Aceh Kingdom attacked Silou. Once again the three kingdoms joined forces and defeated the Aceh army."
+      },
+      instruction:{
+        id:"Ketuk tombol SERANG saat penanda berada di zona hijau.",
+        en:"Tap the STRIKE button when the marker is in the green zone."
+      }
+    },
+    {
+      key:"kalah",
+      mechanic:"hold",
+      narration:{
+        id:"Namun kemudian, ribuan tentara tak dikenal menyerang ketiga kerajaan itu bergantian. Tanah Djawo, Silou, lalu Raya diserang satu per satu. Meski bertahan sekuat tenaga, akhirnya mereka takluk oleh jumlah musuh yang jauh lebih besar.",
+        en:"Then thousands of unknown soldiers attacked the three kingdoms one after another — Tanah Djawo, then Silou, then Raya. Despite their fierce resistance, they were finally overwhelmed by the much larger enemy force."
+      },
+      instruction:{
+        id:"Tekan dan tahan perisai untuk bertahan sekuat tenaga.",
+        en:"Press and hold the shield to resist with all your strength."
+      }
+    },
+    {
+      key:"samosir_pindah",
+      mechanic:"drag",
+      narration:{
+        id:"Rakyat Kampung Nagur pun mengungsi. Setelah berpindah-pindah, mereka menemukan tempat aman bernama Sahili Misir — kini dikenal sebagai Pulau Samosir di tengah Danau Toba.",
+        en:"The people of Kampung Nagur fled their home. After wandering for a while, they found a safe place called Sahili Misir — known today as Samosir Island, in the middle of Lake Toba."
+      },
+      instruction:{
+        id:"Seret perahu menuju Pulau Samosir di seberang danau.",
+        en:"Drag the boat across the lake to Samosir Island."
+      }
+    },
+    {
+      key:"samosir_hidup",
+      mechanic:"hold2",
+      narration:{
+        id:"Di Sahili Misir, warga membuka ladang dan bertani. Kehidupan mereka berangsur tertata dan semakin sejahtera dibanding sebelumnya.",
+        en:"In Sahili Misir, the villagers opened fields and began farming. Their lives gradually became stable and even more prosperous than before."
+      },
+      instruction:{
+        id:"Tekan dan tahan ladang untuk mulai bercocok tanam.",
+        en:"Press and hold the field to begin farming."
+      }
+    },
+    {
+      key:"musyawarah",
+      mechanic:"choice",
+      narration:{
+        id:"Meski hidup makmur, mereka rindu Kampung Nagur. Seorang sesepuh bertanya, \u201cSiapa yang ingin kembali ke Kampung Nagur?\u201d Warga pun bermusyawarah menentukan pilihan masing-masing.",
+        en:"Yet even in prosperity, they longed for Kampung Nagur. An elder asked, \u201cWho wishes to return to Kampung Nagur?\u201d The villagers gathered to decide, each following their own heart."
+      },
+      instruction:{
+        id:"Pilih salah satu: tetap di Samosir, atau ikut kembali ke Nagur.",
+        en:"Choose one: stay in Samosir, or join those returning to Nagur."
+      }
+    },
+    {
+      key:"kembali",
+      mechanic:"tap",
+      narration:{
+        id:"Sebagian warga memilih tetap di Samosir bersama ternak dan anak cucu mereka. Sebagian lain bersiap kembali, menempuh perjalanan panjang menuju kampung halaman yang dirindukan.",
+        en:"Some chose to remain in Samosir with their livestock and children. Others prepared to return, undertaking a long journey back to the homeland they missed so dearly."
+      },
+      instruction:{
+        id:"Ketuk reruntuhan Kampung Nagur untuk melihat keadaannya sekarang.",
+        en:"Tap the ruins of Kampung Nagur to see its condition now."
+      }
+    },
+    {
+      key:"nama",
+      mechanic:"multitap",
+      narration:{
+        id:"Betapa terkejutnya mereka. Kampung yang dulu ramai kini hanya semak belukar sunyi, tanpa tanda kehidupan. Dengan sedih mereka berkata berulang kali, \u201cSima-sima nalungun\u2026\u201d — yang berarti daerah yang sunyi sepi.",
+        en:"How shocked they were. The once-lively village was now only silent, overgrown bushes, with no sign of life. Sorrowfully, they repeated again and again, \u201cSima-sima nalungun\u2026\u201d — meaning a quiet, lonely land."
+      },
+      instruction:{
+        id:"Ketuk warga sebanyak tiga kali untuk mendengar mereka berkata \u201cSima-sima nalungun\u201d.",
+        en:"Tap the villagers three times to hear them say \u201cSima-sima nalungun\u201d."
+      },
+      target:3
+    }
+  ];
+
+  var TOTAL_DOTS = SCENES.length;
+
+  /* ======================= STATE ======================= */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  var state = {
+    mode:"title", // title | story | end
+    sceneIndex:0,
+    lang:"id",
+    muted:false,
+    t:0,
+    hitboxes:[],
+    mech:{}
+  };
+
+  try{
+    var savedMute = localStorage.getItem('simalungunGameMuted');
+    if(savedMute === '1') state.muted = true;
+  }catch(e){}
+
+  var params = new URLSearchParams(location.search);
+  if(params.get('lang') === 'en') state.lang = 'en';
+
+  function T(){ return UI[state.lang]; }
+  function currentScene(){ return SCENES[state.sceneIndex]; }
+
+  /* ======================= DOM REFS ======================= */
+  var elTitle = document.getElementById('gameTitle');
+  var elInstruction = document.getElementById('instructionBar');
+  var elNarration = document.getElementById('narrationPanel');
+  var elDots = document.getElementById('dotsRow');
+  var elMainBtn = document.getElementById('mainBtn');
+  var elMuteBtn = document.getElementById('muteBtn');
+  var elLangBtn = document.getElementById('langBtn');
+  var elLangLabel = document.getElementById('langLabel');
+  var elFooter = document.getElementById('footerText');
+
+  /* ======================= DOTS ======================= */
+  function buildDots(){
+    elDots.innerHTML = "";
+    for(var i=0;i<TOTAL_DOTS;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      elDots.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = elDots.children;
+    for(var i=0;i<dots.length;i++){
+      dots[i].className = 'dot' +
+        (state.mode==='story' && i===state.sceneIndex ? ' active' : '') +
+        ((state.mode==='story' && i<state.sceneIndex) || state.mode==='end' ? ' done' : '');
+    }
+  }
+
+  /* ======================= SPEECH ======================= */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    var pref = lang === 'id' ? 'id' : 'en';
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf(pref) === 0) return voices[i];
+    }
+    return null;
+  }
+  function speak(text){
+    if(!window.speechSynthesis || state.muted || !text) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+      var v = pickVoice(state.lang);
+      if(v) u.voice = v;
+      u.rate = 0.92;
+      u.pitch = 1.02;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+  }
+
+  /* ======================= TEXT UPDATE ======================= */
+  function refreshTexts(){
+    var t = T();
+    elTitle.textContent = t.title;
+    document.title = t.title;
+    elFooter.textContent = t.footer;
+    elLangLabel.textContent = t.lang;
+    elMuteBtn.textContent = (state.muted ? "🔇 " : "🔊 ") + (state.muted ? t.unmute : t.mute);
+
+    if(state.mode === 'title'){
+      elInstruction.textContent = t.welcomeInstruction;
+      elNarration.textContent = t.welcomeNarration;
+      elMainBtn.textContent = t.start;
+      elMainBtn.classList.remove('hidden');
+    } else if(state.mode === 'story'){
+      var sc = currentScene();
+      elInstruction.textContent = sc.instruction[state.lang];
+      elNarration.textContent = sc.narration[state.lang];
+      elMainBtn.classList.add('hidden');
+    } else if(state.mode === 'end'){
+      elInstruction.textContent = t.endInstruction;
+      elNarration.textContent = t.endNarration;
+      elMainBtn.textContent = t.replay;
+      elMainBtn.classList.remove('hidden');
+    }
+    updateDots();
+  }
+
+  function narrateCurrent(){
+    if(state.mode === 'title') speak(T().welcomeNarration);
+    else if(state.mode === 'story') speak(currentScene().narration[state.lang]);
+    else if(state.mode === 'end') speak(T().endNarration);
+  }
+
+  /* ======================= NAVIGATION ======================= */
+  function goToScene(index){
+    stopSpeak();
+    state.sceneIndex = index;
+    state.mode = 'story';
+    state.t = 0;
+    state.mech = {};
+    state.locked = false;
+    initMech(currentScene());
+    refreshTexts();
+    narrateCurrent();
+  }
+  function nextScene(){
+    if(state.sceneIndex >= SCENES.length - 1){
+      goToEnd();
+    } else {
+      goToScene(state.sceneIndex + 1);
+    }
+  }
+  // Guards against a mechanic firing nextScene() more than once for the
+  // same scene (e.g. rapid extra taps during the success window), which
+  // would otherwise stack multiple delayed advances and skip scenes.
+  function advanceOnce(delay){
+    if(state.locked) return;
+    state.locked = true;
+    setTimeout(nextScene, delay || 0);
+  }
+  function goToEnd(){
+    stopSpeak();
+    state.mode = 'end';
+    state.locked = false;
+    refreshTexts();
+    narrateCurrent();
+  }
+  function goToTitle(){
+    stopSpeak();
+    state.mode = 'title';
+    state.sceneIndex = 0;
+    state.mech = {};
+    state.locked = false;
+    refreshTexts();
+  }
+
+  function initMech(sc){
+    if(sc.mechanic === 'sequence'){
+      state.mech = { step:0, flash:-1, flashUntil:0 };
+    } else if(sc.mechanic === 'mash'){
+      state.mech = { count:0, shake:0 };
+    } else if(sc.mechanic === 'timing'){
+      state.mech = { pos:0, dir:1, speed:0.9, zoneStart:0.62, zoneEnd:0.85, msg:"" , msgUntil:0};
+    } else if(sc.mechanic === 'hold' || sc.mechanic === 'hold2'){
+      state.mech = { holding:false, progress:0 };
+    } else if(sc.mechanic === 'drag'){
+      state.mech = { boatX:120, boatY:300, dragging:false, offX:0, offY:0, done:false };
+    } else if(sc.mechanic === 'multitap'){
+      state.mech = { count:0, bubble:0 };
+    } else {
+      state.mech = {};
+    }
+  }
+
+  /* ======================= INPUT HELPERS ======================= */
+  function getPointerPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if(evt.touches && evt.touches.length){ clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY; }
+    else if(evt.changedTouches && evt.changedTouches.length){ clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY; }
+    else { clientX = evt.clientX; clientY = evt.clientY; }
+    var x = (clientX - rect.left) * (W / rect.width);
+    var y = (clientY - rect.top) * (H / rect.height);
+    return {x:x, y:y};
+  }
+  function pointInBox(x,y,box){
+    return x >= box.x && x <= box.x+box.w && y >= box.y && y <= box.y+box.h;
+  }
+  function findHit(x,y){
+    for(var i=state.hitboxes.length-1;i>=0;i--){
+      if(pointInBox(x,y,state.hitboxes[i])) return state.hitboxes[i];
+    }
+    return null;
+  }
+
+  /* ======================= POINTER EVENTS ======================= */
+  var isPressing = false;
+
+  canvas.addEventListener('mousedown', function(e){ handleDown(getPointerPos(e)); });
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); handleDown(getPointerPos(e)); }, {passive:false});
+  window.addEventListener('mousemove', function(e){ if(isPressing) handleMove(getPointerPos(e)); });
+  window.addEventListener('touchmove', function(e){ if(isPressing){ e.preventDefault(); handleMove(getPointerPos(e)); } }, {passive:false});
+  window.addEventListener('mouseup', function(e){ handleUp(getPointerPos(e)); });
+  window.addEventListener('touchend', function(e){ handleUp(getPointerPos(e)); });
+
+  function handleDown(p){
+    isPressing = true;
+    if(state.mode !== 'story') return;
+    var sc = currentScene();
+    var hit = findHit(p.x,p.y);
+
+    if(sc.mechanic === 'tap'){
+      if(hit && hit.id === 'target'){ advanceOnce(0); }
+    } else if(sc.mechanic === 'sequence'){
+      if(hit && hit.id === 'banner'){
+        var expected = sc.order[state.mech.step];
+        if(hit.name === expected){
+          state.mech.step++;
+          state.mech.flash = hit.index;
+          state.mech.flashUntil = state.t + 20;
+          if(state.mech.step >= sc.order.length){
+            advanceOnce(450);
+          }
+        } else {
+          state.mech.flash = -2;
+          state.mech.flashUntil = state.t + 20;
+        }
+      }
+    } else if(sc.mechanic === 'mash'){
+      if(hit && hit.id === 'shield'){
+        state.mech.count++;
+        state.mech.shake = 8;
+        if(state.mech.count >= sc.target){ advanceOnce(350); }
+      }
+    } else if(sc.mechanic === 'timing'){
+      if(hit && hit.id === 'strikeBtn'){
+        var pos = state.mech.pos;
+        if(pos >= state.mech.zoneStart && pos <= state.mech.zoneEnd){
+          state.mech.msg = "success";
+          advanceOnce(500);
+        } else {
+          state.mech.msg = "retry";
+          state.mech.msgUntil = state.t + 40;
+        }
+      }
+    } else if(sc.mechanic === 'hold' || sc.mechanic === 'hold2'){
+      if(hit && (hit.id === 'shield' || hit.id === 'field')){
+        state.mech.holding = true;
+      }
+    } else if(sc.mechanic === 'drag'){
+      if(hit && hit.id === 'boat'){
+        state.mech.dragging = true;
+        state.mech.offX = p.x - state.mech.boatX;
+        state.mech.offY = p.y - state.mech.boatY;
+      }
+    } else if(sc.mechanic === 'choice'){
+      if(hit && hit.id === 'choiceStay'){ advanceOnce(350); }
+      if(hit && hit.id === 'choiceReturn'){ advanceOnce(350); }
+    } else if(sc.mechanic === 'multitap'){
+      if(hit && hit.id === 'villagers'){
+        state.mech.count++;
+        state.mech.bubble = 40;
+        speak(state.lang==='id' ? "Sima-sima nalungun..." : "Sima-sima nalungun...");
+        if(state.mech.count >= sc.target){ advanceOnce(900); }
+      }
+    }
+  }
+  function handleMove(p){
+    if(state.mode !== 'story') return;
+    var sc = currentScene();
+    if(sc.mechanic === 'drag' && state.mech.dragging){
+      state.mech.boatX = Math.max(60, Math.min(W-60, p.x - state.mech.offX));
+    }
+  }
+  function handleUp(p){
+    isPressing = false;
+    if(state.mode !== 'story') return;
+    var sc = currentScene();
+    if(sc.mechanic === 'hold' || sc.mechanic === 'hold2'){
+      state.mech.holding = false;
+    }
+    if(sc.mechanic === 'drag' && state.mech.dragging){
+      state.mech.dragging = false;
+      if(state.mech.boatX > W - 180){
+        state.mech.done = true;
+        advanceOnce(500);
+      } else {
+        state.mech.boatX = 120;
+      }
+    }
+  }
+
+  /* ======================= BUTTONS ======================= */
+  elMainBtn.addEventListener('click', function(){
+    if(state.mode === 'title'){ goToScene(0); }
+    else if(state.mode === 'end'){ goToScene(0); }
+  });
+  elMuteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('simalungunGameMuted', state.muted ? '1':'0'); }catch(e){}
+    if(state.muted) stopSpeak();
+    refreshTexts();
+  });
+  elLangBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    refreshTexts();
+    narrateCurrent();
+  });
+
+  /* ======================= DRAWING HELPERS ======================= */
+  function sky(g1,g2){
+    var grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,g1);
+    grad.addColorStop(1,g2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+  }
+  function ground(y,color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,y,W,H-y);
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function batakHouse(x,y,scale,roofColor){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // stilts
+    ctx.fillStyle = "#5b3a24";
+    ctx.fillRect(-38,30,10,40);
+    ctx.fillRect(28,30,10,40);
+    // body
+    ctx.fillStyle = "#8a5a34";
+    roundRect(-50,0,100,40,4); ctx.fill();
+    ctx.strokeStyle="#4a2f1c"; ctx.lineWidth=2; ctx.stroke();
+    // roof (saddle-shaped Batak roof)
+    ctx.fillStyle = roofColor || "#2b2320";
+    ctx.beginPath();
+    ctx.moveTo(-65,0);
+    ctx.quadraticCurveTo(0,-70,65,0);
+    ctx.quadraticCurveTo(0,-40,-65,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#181410"; ctx.lineWidth=2; ctx.stroke();
+    // roof accent stripes
+    ctx.strokeStyle = "#d8a13a";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-50,-6); ctx.quadraticCurveTo(0,-56,50,-6); ctx.stroke();
+    ctx.restore();
+  }
+  function drawPerson(x,y,scale,shirtColor){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = "#e8b98a";
+    ctx.beginPath(); ctx.arc(0,-24,8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = shirtColor || "#b5482c";
+    roundRect(-9,-16,18,26,6); ctx.fill();
+    ctx.fillStyle = "#3a2a1c";
+    ctx.fillRect(-8,10,7,16);
+    ctx.fillRect(1,10,7,16);
+    ctx.restore();
+  }
+  function drawTree(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle="#5b3a24";
+    ctx.fillRect(-4,0,8,26);
+    ctx.fillStyle="#3f6b2f";
+    ctx.beginPath(); ctx.arc(0,-14,20,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-14,-4,14,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14,-4,14,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawMountains(){
+    ctx.fillStyle="#5c4a63";
+    ctx.beginPath();
+    ctx.moveTo(0,260);
+    ctx.lineTo(120,170);
+    ctx.lineTo(230,260);
+    ctx.lineTo(340,190);
+    ctx.lineTo(470,260);
+    ctx.lineTo(600,180);
+    ctx.lineTo(720,260);
+    ctx.lineTo(800,220);
+    ctx.lineTo(800,300);
+    ctx.lineTo(0,300);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* ======================= SCENE RENDERERS ======================= */
+  var renderers = {};
+
+  renderers.title = function(){
+    sky("#f4d58a","#e0a45a");
+    drawMountains();
+    ground(300,"#4a7a3c");
+    drawTree(90,300,1.4);
+    drawTree(700,300,1.5);
+    batakHouse(400,270,1.6,"#241d1a");
+    batakHouse(220,290,1.1,"#241d1a");
+    batakHouse(590,295,1.0,"#241d1a");
+    drawPerson(330,330,1.3,"#b5482c");
+    drawPerson(470,335,1.3,"#3a6b8a");
+    ctx.fillStyle="rgba(0,0,0,0.35)";
+    ctx.fillRect(0,0,W,H);
+    ctx.textAlign="center";
+    ctx.fillStyle="#fff8ee";
+    ctx.font="bold 34px Georgia, serif";
+    ctx.fillText(state.lang==='id'?"Asal Mula Nama":"The Origin of the Name", W/2, 195);
+    ctx.font="bold 46px Georgia, serif";
+    ctx.fillStyle="#d8a13a";
+    ctx.fillText("Simalungun", W/2, 245);
+    ctx.font="16px Georgia, serif";
+    ctx.fillStyle="#f0e6d2";
+    ctx.fillText(state.lang==='id'?"Cerita Rakyat Sumatera Utara":"A Folktale from North Sumatra", W/2, 275);
+    state.hitboxes = [];
+  };
+
+  renderers.nagur = function(){
+    sky("#bfe0f0","#e8f4d8");
+    drawMountains();
+    ground(300,"#4a8a3c");
+    drawTree(60,300,1.2);
+    drawTree(740,300,1.2);
+    drawPerson(200,340,1.1,"#b5482c");
+    drawPerson(560,345,1.1,"#3a6b8a");
+    drawPerson(650,335,1.0,"#d8a13a");
+
+    var glow = 0.5 + 0.5*Math.sin(state.t/12);
+    ctx.save();
+    ctx.shadowColor = "rgba(255,220,140,"+ (0.4+0.3*glow) +")";
+    ctx.shadowBlur = 25;
+    batakHouse(400,250,2.2,"#241d1a");
+    ctx.restore();
+
+    ctx.fillStyle="#3a2a1c";
+    ctx.font="bold 13px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(state.lang==='id'?"Kerajaan Tanah Djawo":"Tanah Djawo Kingdom", 400, 110);
+
+    state.hitboxes = [{x:290,y:150,w:220,h:150,id:'target',name:'istana'}];
+  };
+
+  var kingdomColors = {"Tanah Djawo":"#b5482c","Silou":"#3a6b8a","Raya":"#4a8a3c"};
+  renderers.tiga_kerajaan = function(){
+    sky("#cfe6ea","#f0e0b8");
+    drawMountains();
+    ground(300,"#5a8a4c");
+    var sc = currentScene();
+    var names = ["Tanah Djawo","Silou","Raya"];
+    var xs = [180,400,620];
+    state.hitboxes = [];
+    for(var i=0;i<3;i++){
+      var flashOn = state.mech.flash===i && state.t < state.mech.flashUntil;
+      var doneOn = i < state.mech.step;
+      drawBanner(xs[i],120,names[i],kingdomColors[names[i]],flashOn||doneOn);
+      state.hitboxes.push({x:xs[i]-55,y:100,w:110,h:170,id:'banner',name:names[i],index:i});
+    }
+    if(state.mech.flash===-2 && state.t < state.mech.flashUntil){
+      ctx.fillStyle="rgba(200,40,20,0.85)";
+      ctx.font="bold 16px sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText(T().wrongOrder, W/2, 60);
+    }
+    ctx.fillStyle="#3a2a1c";
+    ctx.font="bold 14px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText((state.mech.step)+" / 3", W/2, 320);
+  };
+  function drawBanner(x,y,label,color,active){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle="#5b3a24";
+    ctx.fillRect(-4,0,8,180);
+    ctx.fillStyle = active ? "#ffe9a8" : color;
+    ctx.beginPath();
+    ctx.moveTo(-4,10);
+    ctx.lineTo(70,40);
+    ctx.lineTo(-4,70);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#241d1a"; ctx.lineWidth=2; ctx.stroke();
+    if(active){
+      ctx.strokeStyle="#d8a13a"; ctx.lineWidth=4;
+      ctx.strokeRect(-40,-10,120,110);
+    }
+    ctx.restore();
+    ctx.fillStyle="#3a2a1c";
+    ctx.font="bold 13px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(label, x+20, y+205);
+  }
+
+  renderers.majapahit = function(){
+    sky("#5a2c1c","#8a4128");
+    ground(300,"#4a3a2a");
+    drawTree(60,300,1.1);
+    drawTree(730,300,1.1);
+    ctx.fillStyle="rgba(20,10,5,0.25)";
+    ctx.fillRect(0,0,W,300);
+
+    var shakeX = state.mech.shake > 0 ? (Math.random()-0.5)*state.mech.shake : 0;
+    ctx.save();
+    ctx.translate(W/2 + shakeX, 190);
+    // shield
+    var grad = ctx.createRadialGradient(0,0,10,0,0,90);
+    grad.addColorStop(0,"#e8c878");
+    grad.addColorStop(1,"#a5742e");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0,-90);
+    ctx.bezierCurveTo(70,-90,80,0,0,90);
+    ctx.bezierCurveTo(-80,0,-70,-90,0,-90);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#5b3a1a"; ctx.lineWidth=5; ctx.stroke();
+    ctx.fillStyle="#8a1c1c";
+    ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    if(state.mech.shake>0) state.mech.shake -= 1;
+
+    // progress ring
+    var pct = Math.min(1, state.mech.count / currentScene().target);
+    ctx.strokeStyle="#3a2a1c";
+    ctx.lineWidth=10;
+    ctx.beginPath(); ctx.arc(W/2,190,110,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle="#d8a13a";
+    ctx.beginPath(); ctx.arc(W/2,190,110,-Math.PI/2, -Math.PI/2 + pct*Math.PI*2); ctx.stroke();
+
+    ctx.fillStyle="#fff8ee";
+    ctx.font="bold 15px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(state.mech.count + " / " + currentScene().target, W/2, 330);
+
+    state.hitboxes = [{x:W/2-90,y:100,w:180,h:180,id:'shield'}];
+  };
+
+  renderers.aceh = function(){
+    sky("#3a2418","#6a3820");
+    ground(320,"#4a3a2a");
+    ctx.fillStyle="rgba(10,5,0,0.2)";
+    ctx.fillRect(0,0,W,320);
+
+    var m = state.mech;
+    m.pos += m.dir * m.speed * 0.012;
+    if(m.pos > 1){ m.pos=1; m.dir=-1; }
+    if(m.pos < 0){ m.pos=0; m.dir=1; }
+
+    var barX=150, barW=500, barY=150;
+    ctx.fillStyle="#3a2a1c";
+    roundRect(barX,barY,barW,26,13); ctx.fill();
+    ctx.fillStyle="#4a8a3c";
+    roundRect(barX+barW*m.zoneStart, barY, barW*(m.zoneEnd-m.zoneStart), 26, 10); ctx.fill();
+    var markerX = barX + barW*m.pos;
+    ctx.fillStyle="#d8a13a";
+    ctx.beginPath(); ctx.arc(markerX, barY+13, 16, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#fff8ee"; ctx.lineWidth=2; ctx.stroke();
+
+    // strike button
+    ctx.fillStyle="#b5482c";
+    roundRect(W/2-90,230,180,60,14); ctx.fill();
+    ctx.strokeStyle="#5b1a10"; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle="#fff8ee";
+    ctx.font="bold 20px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(state.lang==='id'?"SERANG":"STRIKE", W/2, 268);
+
+    if(m.msg==="retry" && state.t < m.msgUntil){
+      ctx.fillStyle="#ffdca0";
+      ctx.font="bold 15px sans-serif";
+      ctx.fillText(T().tryAgain, W/2, 340);
+    }
+
+    state.hitboxes = [{x:W/2-90,y:230,w:180,h:60,id:'strikeBtn'}];
+  };
+
+  renderers.kalah = function(){
+    sky("#2a1810","#4a2818");
+    ground(300,"#3a2a1a");
+    ctx.fillStyle="rgba(80,20,10,0.25)";
+    ctx.fillRect(0,0,W,300);
+
+    var m = state.mech;
+    if(m.holding && m.progress < 100){
+      m.progress += 1.1;
+      if(m.progress >= 100 && !m.completed){
+        m.completed = true;
+        m.progress = 100;
+        advanceOnce(500);
+      }
+    }
+    if(!m.holding && m.progress > 0 && !m.completed) m.progress -= 0.6;
+
+    var shakeX = m.holding ? (Math.random()-0.5)*4 : 0;
+    ctx.save();
+    ctx.translate(W/2+shakeX,190);
+    var grad = ctx.createRadialGradient(0,0,10,0,0,90);
+    grad.addColorStop(0,"#c8b088");
+    grad.addColorStop(1,"#6a4a28");
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.moveTo(0,-90);
+    ctx.bezierCurveTo(70,-90,80,0,0,90);
+    ctx.bezierCurveTo(-80,0,-70,-90,0,-90);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#2a1a0a"; ctx.lineWidth=5; ctx.stroke();
+    ctx.restore();
+
+    ctx.fillStyle="#3a2a1c";
+    ctx.fillRect(W/2-100,320,200,18);
+    ctx.fillStyle="#d8a13a";
+    ctx.fillRect(W/2-100,320,200*(m.progress/100),18);
+    ctx.strokeStyle="#fff8ee"; ctx.lineWidth=2; ctx.strokeRect(W/2-100,320,200,18);
+
+    state.hitboxes = [{x:W/2-90,y:100,w:180,h:180,id:'shield'}];
+  };
+
+  renderers.samosir_pindah = function(){
+    sky("#bfe0f0","#eaf6d8");
+    drawMountains();
+    ctx.fillStyle="#3a7ea8";
+    ctx.fillRect(0,270,W,H-270);
+    ground(390,"#4a8a3c");
+    // island target
+    ctx.fillStyle="#5a9a4c";
+    ctx.beginPath();
+    ctx.ellipse(680,320,90,45,0,0,Math.PI*2);
+    ctx.fill();
+    drawTree(650,300,0.9);
+    drawTree(710,295,0.9);
+    ctx.fillStyle="#3a2a1c";
+    ctx.font="bold 13px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(state.lang==='id'?"Pulau Samosir":"Samosir Island", 680, 260);
+
+    ctx.fillStyle="#5a9a4c";
+    ctx.fillRect(0,340,140,H-340);
+    ctx.fillStyle="#3a2a1c";
+    ctx.fillText(state.lang==='id'?"Kampung Nagur":"Kampung Nagur", 70,260);
+
+    var m = state.mech;
+    ctx.save();
+    ctx.translate(m.boatX, m.boatY);
+    ctx.fillStyle="#8a5a34";
+    ctx.beginPath();
+    ctx.moveTo(-40,0);
+    ctx.lineTo(40,0);
+    ctx.lineTo(28,20);
+    ctx.lineTo(-28,20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#3a2a1c"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="#5b3a24";
+    ctx.fillRect(-2,-40,4,40);
+    ctx.fillStyle="#d8a13a";
+    ctx.beginPath();
+    ctx.moveTo(0,-40); ctx.lineTo(26,-24); ctx.lineTo(0,-8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#e8b98a";
+    ctx.beginPath(); ctx.arc(-12,-8,7,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    state.hitboxes = [{x:m.boatX-40,y:m.boatY-45,w:80,h:65,id:'boat'}];
+  };
+
+  renderers.samosir_hidup = function(){
+    sky("#cfe6ea","#f0e0b8");
+    ground(260,"#4a8a3c");
+    // rice field patch
+    var m = state.mech;
+    if(m.holding && m.progress < 100){
+      m.progress += 1.0;
+      if(m.progress >= 100 && !m.completed){
+        m.completed = true;
+        m.progress = 100;
+        advanceOnce(500);
+      }
+    }
+    if(!m.holding && m.progress > 0 && !m.completed) m.progress -= 0.5;
+
+    ctx.fillStyle="#6a8a3a";
+    roundRect(W/2-160,190,320,150,10); ctx.fill();
+    ctx.strokeStyle="#3a2a1c"; ctx.lineWidth=2; ctx.stroke();
+
+    var rows = 6, cols = 10;
+    var grown = Math.floor((m.progress/100) * rows * cols);
+    var count=0;
+    for(var r=0;r<rows;r++){
+      for(var c=0;c<cols;c++){
+        var px = W/2-150 + c*30 + 10;
+        var py = 205 + r*22 + 10;
+        if(count < grown){
+          ctx.fillStyle="#d8a13a";
+          ctx.fillRect(px-2,py-14,4,14);
+          ctx.beginPath(); ctx.arc(px,py-16,4,0,Math.PI*2); ctx.fill();
+        } else {
+          ctx.fillStyle="#4a3a2a";
+          ctx.fillRect(px-1,py-4,2,4);
+        }
+        count++;
+      }
+    }
+
+    drawPerson(W/2, 190, 1.1, "#b5482c");
+
+    ctx.fillStyle="#3a2a1c";
+    ctx.fillRect(W/2-100,360,200,18);
+    ctx.fillStyle="#4a8a3c";
+    ctx.fillRect(W/2-100,360,200*(m.progress/100),18);
+    ctx.strokeStyle="#fff8ee"; ctx.lineWidth=2; ctx.strokeRect(W/2-100,360,200,18);
+
+    state.hitboxes = [{x:W/2-160,y:150,w:320,h:190,id:'field'}];
+  };
+
+  renderers.musyawarah = function(){
+    sky("#e8d8a8","#d8b878");
+    ground(300,"#8a7a4c");
+    drawPerson(280,340,1.2,"#b5482c");
+    drawPerson(340,345,1.1,"#3a6b8a");
+    drawPerson(460,345,1.1,"#4a8a3c");
+    drawPerson(520,340,1.2,"#d8a13a");
+
+    var t = T();
+    drawCard(180,120,220,120,t.choiceStay,"#4a8a3c");
+    drawCard(420,120,220,120,t.choiceReturn,"#b5482c");
+
+    state.hitboxes = [
+      {x:180,y:120,w:220,h:120,id:'choiceStay'},
+      {x:420,y:120,w:220,h:120,id:'choiceReturn'}
+    ];
+  };
+  function drawCard(x,y,w,h,label,color){
+    ctx.fillStyle="#fff8ee";
+    roundRect(x,y,w,h,14); ctx.fill();
+    ctx.strokeStyle=color; ctx.lineWidth=4; ctx.stroke();
+    ctx.fillStyle=color;
+    ctx.font="bold 17px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(label, x+w/2, y+h/2+6);
+  }
+
+  renderers.kembali = function(){
+    sky("#5a4838","#7a6448");
+    ground(300,"#5a4a30");
+    for(var i=0;i<10;i++){
+      var bx = 60 + i*70 + (i%3)*10;
+      drawShrub(bx, 300 - (i%2)*10, 0.8+((i%3)*0.1));
+    }
+    var oldHouseGray = "#3a332e";
+    ctx.save(); ctx.globalAlpha=0.55;
+    batakHouse(400,255,1.8,"#1a1512");
+    ctx.restore();
+    ctx.fillStyle="rgba(20,15,10,0.35)";
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#fff8ee";
+    ctx.font="bold 15px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(state.lang==='id'?"Kampung Nagur, kini sunyi...":"Kampung Nagur, now silent...", W/2, 60);
+
+    state.hitboxes = [{x:250,y:120,w:300,h:180,id:'target'}];
+  };
+  function drawShrub(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle="#3a4a2a";
+    ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-12,4,10,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12,4,10,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  renderers.nama = function(){
+    sky("#6a5240","#8a6a48");
+    ground(300,"#5a4a30");
+    for(var i=0;i<6;i++) drawShrub(80+i*130, 300, 0.7);
+
+    var group = [ {x:320,y:340,c:"#b5482c"}, {x:400,y:345,c:"#3a6b8a"}, {x:480,y:340,c:"#d8a13a"} ];
+    for(var j=0;j<group.length;j++) drawPerson(group[j].x, group[j].y, 1.15, group[j].c);
+
+    var m = state.mech;
+    if(m.bubble>0){
+      m.bubble--;
+      ctx.fillStyle="#fff8ee";
+      roundRect(280,240,240,60,12); ctx.fill();
+      ctx.strokeStyle="#3a2a1c"; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle="#3a2a1c";
+      ctx.font="italic bold 15px sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText("\u201cSima-sima nalungun\u2026\u201d", 400, 275);
+    }
+
+    ctx.fillStyle="#fff8ee";
+    ctx.font="bold 15px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(m.count + " / " + currentScene().target, W/2, 100);
+
+    state.hitboxes = [{x:250,y:260,w:300,h:130,id:'villagers'}];
+  };
+
+  renderers.end = function(){
+    sky("#f4d58a","#e0a45a");
+    drawMountains();
+    ground(300,"#4a7a3c");
+    drawTree(90,300,1.3);
+    drawTree(700,300,1.3);
+    batakHouse(400,265,1.7,"#241d1a");
+    drawPerson(300,330,1.1,"#b5482c");
+    drawPerson(500,330,1.1,"#3a6b8a");
+
+    ctx.fillStyle="rgba(0,0,0,0.4)";
+    ctx.fillRect(0,0,W,H);
+    ctx.textAlign="center";
+    ctx.fillStyle="#d8a13a";
+    ctx.font="bold 40px Georgia, serif";
+    ctx.fillText("Simalungun", W/2, 210);
+    ctx.fillStyle="#fff8ee";
+    ctx.font="bold 16px Georgia, serif";
+    ctx.fillText(T().endTitle, W/2, 245);
+    state.hitboxes = [];
+  };
+
+  /* ======================= MAIN LOOP ======================= */
+  function draw(){
+    state.t++;
+    ctx.clearRect(0,0,W,H);
+    if(state.mode === 'title'){
+      renderers.title();
+    } else if(state.mode === 'story'){
+      var key = currentScene().key;
+      if(renderers[key]) renderers[key]();
+    } else if(state.mode === 'end'){
+      renderers.end();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  /* ======================= RESIZE / EMBED ======================= */
+  function reportHeight(){
+    try{
+      var h = document.getElementById('gameWrap').offsetHeight;
+      window.parent.postMessage({ type:'simalungunHeight', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('resize', reportHeight);
+  window.addEventListener('load', function(){ setTimeout(reportHeight,150); });
+  if(typeof ResizeObserver !== 'undefined'){
+    try{
+      var ro = new ResizeObserver(reportHeight);
+      ro.observe(document.getElementById('gameWrap'));
+    }catch(e){}
+  }
+
+  /* ======================= INIT ======================= */
+  buildDots();
+  refreshTexts();
+  requestAnimationFrame(draw);
+  setTimeout(reportHeight, 300);
+  setInterval(reportHeight, 1500);
+
+})();
+</script>
+</body>
+</html>
