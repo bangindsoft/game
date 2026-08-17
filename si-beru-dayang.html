@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Beru Dayang - Asal Mula Padi</title>
+<style>
+  :root{
+    --bg-1:#2b1e10;
+    --bg-2:#4a3418;
+    --panel:#fff8ea;
+    --panel-border:#c9a35a;
+    --ink:#3b2a14;
+    --gold:#d99b2b;
+    --gold-dark:#a9701b;
+    --green:#4c7a3a;
+    --green-dark:#345225;
+    --red:#b5502f;
+    --cream:#f6ecd4;
+    --sky-top:#ffe3a1;
+    --sky-bottom:#ffb95e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-2));
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:14px;
+  }
+  #app{
+    width:100%;
+    max-width:640px;
+    background:var(--panel);
+    border:3px solid var(--panel-border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  header{
+    padding:14px 16px 8px;
+    text-align:center;
+    background:linear-gradient(180deg,#fffaf0,var(--panel));
+    border-bottom:2px solid var(--panel-border);
+  }
+  header h1{
+    margin:0;
+    font-size:20px;
+    color:var(--gold-dark);
+    letter-spacing:.5px;
+  }
+  header p{
+    margin:4px 0 0;
+    font-size:12.5px;
+    color:#7a5b2e;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:6px 12px;
+    gap:8px;
+  }
+  .iconbtn{
+    background:var(--cream);
+    border:2px solid var(--gold-dark);
+    color:var(--gold-dark);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .iconbtn:hover{background:#fff2d1;}
+  .iconbtn:active{transform:scale(.95);}
+  .iconbtn.active{background:var(--gold-dark);color:#fff;}
+
+  #stage-wrap{
+    position:relative;
+    padding:0 12px;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));
+    border-radius:12px;
+    border:2px solid var(--gold-dark);
+    touch-action:manipulation;
+  }
+  #hint{
+    margin:10px 0 4px;
+    padding:10px 12px;
+    background:var(--cream);
+    border:2px dashed var(--gold-dark);
+    border-radius:12px;
+    font-size:13.5px;
+    line-height:1.5;
+    color:#5b3f18;
+    min-height:38px;
+    text-align:center;
+    font-weight:600;
+  }
+  #narration-panel{
+    margin:8px 12px 4px;
+    padding:12px 14px;
+    background:#fffdf6;
+    border:1px solid #e4cf9c;
+    border-radius:12px;
+    font-size:14px;
+    line-height:1.6;
+    color:#3b2a14;
+    min-height:60px;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 0 4px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d8c49a;
+    transition:all .25s ease;
+  }
+  .dot.active{background:var(--gold-dark);width:22px;border-radius:6px;}
+  .dot.done{background:var(--green);}
+  #controls{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:10px 14px 16px;
+  }
+  .mainbtn{
+    background:linear-gradient(180deg,#e8b34c,var(--gold-dark));
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:11px 22px;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 #7a5115;
+    transition:transform .1s ease;
+  }
+  .mainbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #7a5115;}
+  .mainbtn.secondary{
+    background:linear-gradient(180deg,#8fae7d,var(--green-dark));
+    box-shadow:0 4px 0 #26401b;
+  }
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:#9c8250;
+    padding:6px 0 12px;
+  }
+  #cover, #ending{
+    padding:26px 20px 10px;
+    text-align:center;
+  }
+  #cover h2, #ending h2{
+    color:var(--gold-dark);
+    margin:6px 0 10px;
+  }
+  #cover p, #ending p{
+    font-size:14px;
+    line-height:1.6;
+    margin:0 0 16px;
+  }
+  .hidden{display:none !important;}
+  #progressbar-wrap{
+    width:100%;height:10px;background:#e6d6ac;border-radius:6px;overflow:hidden;border:1px solid var(--gold-dark);
+  }
+  #progressbar-fill{
+    height:100%;width:0%;background:var(--green);transition:width .05s linear;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1 id="title-text">🌾 Si Beru Dayang</h1>
+    <p id="subtitle-text">Legenda Asal Mula Padi &mdash; Tanah Karo, Sumatera Utara</p>
+  </header>
+
+  <div class="topbar">
+    <button class="iconbtn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+    <button class="iconbtn" id="muteBtn">🔊 <span id="muteLabel">Suara Aktif</span></button>
+  </div>
+
+  <div id="cover">
+    <h2 id="cover-title">Si Beru Dayang</h2>
+    <p id="cover-desc">Dahulu kala di Tanah Karo, sebutir kesedihan berubah menjadi berkat bagi seluruh negeri. Ikuti kisahnya dan temukan asal mula padi.</p>
+    <button class="mainbtn" id="startBtn">▶ Mulai Cerita</button>
+  </div>
+
+  <div id="game-area" class="hidden">
+    <div id="stage-wrap">
+      <canvas id="stage" width="600" height="420"></canvas>
+    </div>
+    <div id="hint">Instruksi akan muncul di sini.</div>
+    <div id="narration-panel">Narasi akan muncul di sini.</div>
+    <div id="dots"></div>
+    <div id="controls">
+      <button class="mainbtn secondary hidden" id="replayBtn">↻ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="ending" class="hidden">
+    <h2 id="ending-title">Tamat</h2>
+    <p id="ending-desc"></p>
+    <button class="mainbtn" id="replayBtn2">↻ Ulangi Cerita</button>
+  </div>
+
+  <footer id="footer-text">Kisah rakyat Nusantara &mdash; diceritakan kembali untuk anak-anak.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- STATE ---------------- */
+  var state = {
+    lang: 'id',
+    muted: false,
+    sceneIndex: 0,
+    started: false
+  };
+
+  try{
+    var savedMute = localStorage.getItem('sbd_muted');
+    if(savedMute === 'true') state.muted = true;
+    var savedLang = localStorage.getItem('sbd_lang');
+    if(savedLang === 'en' || savedLang === 'id') state.lang = savedLang;
+  }catch(e){}
+
+  /* ---------------- DOM ---------------- */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var hintEl = document.getElementById('hint');
+  var narrationEl = document.getElementById('narration-panel');
+  var dotsEl = document.getElementById('dots');
+  var replayBtn = document.getElementById('replayBtn');
+  var replayBtn2 = document.getElementById('replayBtn2');
+  var startBtn = document.getElementById('startBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var muteLabel = document.getElementById('muteLabel');
+  var langBtn = document.getElementById('langBtn');
+  var langLabel = document.getElementById('langLabel');
+  var coverEl = document.getElementById('cover');
+  var gameAreaEl = document.getElementById('game-area');
+  var endingEl = document.getElementById('ending');
+
+  var titleText = document.getElementById('title-text');
+  var subtitleText = document.getElementById('subtitle-text');
+  var coverTitle = document.getElementById('cover-title');
+  var coverDesc = document.getElementById('cover-desc');
+  var endingTitle = document.getElementById('ending-title');
+  var endingDesc = document.getElementById('ending-desc');
+  var footerText = document.getElementById('footer-text');
+
+  /* ---------------- I18N ---------------- */
+  var STR = {
+    id:{
+      title:"🌾 Si Beru Dayang",
+      subtitle:"Legenda Asal Mula Padi — Tanah Karo, Sumatera Utara",
+      coverTitle:"Si Beru Dayang",
+      coverDesc:"Dahulu kala di Tanah Karo, sebutir kesedihan berubah menjadi berkat bagi seluruh negeri. Ikuti kisahnya dan temukan asal mula padi.",
+      start:"▶ Mulai Cerita",
+      replay:"↻ Ulangi Cerita",
+      muteOn:"Suara Aktif",
+      muteOff:"Suara Nonaktif",
+      footer:"Kisah rakyat Nusantara — diceritakan kembali untuk anak-anak.",
+      endingTitle:"Tamat",
+      endingDesc:"Sejak saat itu, masyarakat Tanah Karo mengenal padi sebagai makanan pokok. Setiap kali menanak nasi dan menyantapnya bersama ikan, mereka mengenang Beru Dayang dan ibunya. Pesan dari cerita ini: gotong royong dan rasa syukur dapat mengubah kesulitan menjadi berkat.",
+      langSwitch:"ID"
+    },
+    en:{
+      title:"🌾 Si Beru Dayang",
+      subtitle:"The Legend of the First Rice — Karo Land, North Sumatra",
+      coverTitle:"Si Beru Dayang",
+      coverDesc:"Long ago in Karo Land, a moment of sorrow turned into a blessing for an entire kingdom. Follow the story and discover the origin of rice.",
+      start:"▶ Start Story",
+      replay:"↻ Replay Story",
+      muteOn:"Sound On",
+      muteOff:"Sound Off",
+      footer:"An Indonesian folktale — retold for children.",
+      endingTitle:"The End",
+      endingDesc:"From that day on, the people of Karo Land knew rice as their staple food. Whenever they cooked rice and ate it together with fish, they remembered Beru Dayang and her mother. The message of this story: working together and gratitude can turn hardship into blessing.",
+      langSwitch:"EN"
+    }
+  };
+
+  /* ---------------- SPEECH ---------------- */
+  var synth = window.speechSynthesis;
+  function speak(text){
+    if(state.muted || !synth) return;
+    try{
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.92;
+      u.pitch = 1.02;
+      synth.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){ if(synth){ try{ synth.cancel(); }catch(e){} } }
+
+  /* ---------------- IFRAME RESIZE ---------------- */
+  function reportHeight(){
+    var h = document.getElementById('app').offsetHeight;
+    try{
+      window.parent.postMessage({ type:'sbd-resize', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+
+  /* ---------------- CANVAS SETUP ---------------- */
+  var CW = 600, CH = 420;
+  function resizeCanvasCSS(){
+    // canvas backing store stays fixed; CSS scales it responsively
+  }
+
+  /* ---------------- DRAWING HELPERS ---------------- */
+  function clear(skyTop, skyBottom){
+    var g = ctx.createLinearGradient(0,0,0,CH);
+    g.addColorStop(0, skyTop || '#ffe3a1');
+    g.addColorStop(1, skyBottom || '#ffb95e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,CW,CH);
+  }
+  function ground(color, y){
+    ctx.fillStyle = color || '#8a6a3a';
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.quadraticCurveTo(CW/2, y-18, CW, y);
+    ctx.lineTo(CW, CH);
+    ctx.lineTo(0, CH);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function circle(x,y,r,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+  }
+  function roundRect(x,y,w,h,r,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawSun(x,y,r,color){
+    circle(x,y,r,color || '#ffd35c');
+    ctx.strokeStyle = color || '#ffd35c';
+    ctx.lineWidth = 4;
+    for(var i=0;i<8;i++){
+      var a = i*Math.PI/4;
+      ctx.beginPath();
+      ctx.moveTo(x+Math.cos(a)*(r+6), y+Math.sin(a)*(r+6));
+      ctx.lineTo(x+Math.cos(a)*(r+16), y+Math.sin(a)*(r+16));
+      ctx.stroke();
+    }
+  }
+  function drawPerson(x,y,scale,skin,cloth,sad){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#5b3f22';
+    roundRect(-10,30,8,26,3,'#5b3f22');
+    roundRect(2,30,8,26,3,'#5b3f22');
+    // body
+    roundRect(-16,0,32,34,10, cloth || '#b5502f');
+    // arms
+    ctx.strokeStyle = skin || '#e0ab72';
+    ctx.lineWidth = 7;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(-14,8); ctx.lineTo(-24, sad? 20: 24);
+    ctx.moveTo(14,8); ctx.lineTo(24, sad? 20: 24);
+    ctx.stroke();
+    // head
+    circle(0,-14,16, skin || '#e0ab72');
+    // hair
+    ctx.fillStyle = '#2a1c10';
+    ctx.beginPath();
+    ctx.arc(0,-18,16,Math.PI,Math.PI*2);
+    ctx.fill();
+    // face
+    ctx.fillStyle = '#2a1c10';
+    if(sad){
+      circle(-5,-14,1.6,'#2a1c10');
+      circle(5,-14,1.6,'#2a1c10');
+      ctx.beginPath();
+      ctx.arc(0,-4,5,Math.PI*1.15,Math.PI*1.85,true);
+      ctx.strokeStyle='#2a1c10'; ctx.lineWidth=1.6; ctx.stroke();
+    } else {
+      circle(-5,-14,1.6,'#2a1c10');
+      circle(5,-14,1.6,'#2a1c10');
+      ctx.beginPath();
+      ctx.arc(0,-8,5,0.15*Math.PI,0.85*Math.PI,false);
+      ctx.strokeStyle='#2a1c10'; ctx.lineWidth=1.6; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawTree(x,y,scale,withered){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = withered? '#6b5638':'#7a4a26';
+    roundRect(-8,-10,16,60,6, withered? '#6b5636':'#7a4a26');
+    if(withered){
+      ctx.strokeStyle='#8c7346';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(0,-10); ctx.lineTo(-24,-46);
+      ctx.moveTo(0,-14); ctx.lineTo(22,-50);
+      ctx.moveTo(0,-6); ctx.lineTo(18,-38);
+      ctx.stroke();
+    } else {
+      circle(0,-40,38,'#4c7a3a');
+      circle(-24,-24,24,'#4c7a3a');
+      circle(24,-24,24,'#4c7a3a');
+      // fruit
+      circle(-14,-38,7,'#e0483e');
+      circle(16,-30,7,'#e0483e');
+      circle(2,-52,7,'#e0483e');
+    }
+    ctx.restore();
+  }
+  function drawRiver(y,h){
+    var g = ctx.createLinearGradient(0,y,0,y+h);
+    g.addColorStop(0,'#8fc9e0');
+    g.addColorStop(1,'#4f8fae');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,y,CW,h);
+    ctx.strokeStyle='rgba(255,255,255,.5)';
+    ctx.lineWidth=2;
+    for(var i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.moveTo(20+i*140, y+16+ (i%2)*10);
+      ctx.quadraticCurveTo(60+i*140, y+8+(i%2)*10, 120+i*140, y+16+(i%2)*10);
+      ctx.stroke();
+    }
+  }
+  function drawFish(x,y,scale,color){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#e8b34c';
+    ctx.beginPath();
+    ctx.ellipse(0,0,20,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-18,0); ctx.lineTo(-32,-10); ctx.lineTo(-32,10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle='#2a1c10';
+    circle(10,-2,1.6,'#2a1c10');
+    ctx.restore();
+  }
+  function drawHut(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle='#caa15b';
+    roundRect(-24,0,48,30,3,'#caa15b');
+    ctx.fillStyle='#7a4a26';
+    ctx.beginPath();
+    ctx.moveTo(-30,0); ctx.lineTo(0,-30); ctx.lineTo(30,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle='#4a2e18';
+    roundRect(-6,14,12,16,2,'#4a2e18');
+    ctx.restore();
+  }
+  function drawCloud(x,y,scale,color){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = color || '#ffffff';
+    circle(0,0,18,ctx.fillStyle);
+    circle(18,4,14,ctx.fillStyle);
+    circle(-18,4,14,ctx.fillStyle);
+    circle(0,10,16,ctx.fillStyle);
+    ctx.restore();
+  }
+  function drawGiantFruit(x,y,scale,glow){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    if(glow){
+      var g = ctx.createRadialGradient(0,0,10,0,0,70);
+      g.addColorStop(0,'rgba(255,230,150,.9)');
+      g.addColorStop(1,'rgba(255,230,150,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(0,0,70,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle='#d99b2b';
+    ctx.beginPath();
+    ctx.ellipse(0,0,34,40,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='#a9701b';
+    ctx.lineWidth=2;
+    for(var i=-1;i<=1;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*14,-38);
+      ctx.quadraticCurveTo(i*20,0,i*14,38);
+      ctx.stroke();
+    }
+    ctx.fillStyle='#4c7a3a';
+    roundRect(-6,-48,12,10,3,'#4c7a3a');
+    ctx.restore();
+  }
+  function drawKnife(x,y,scale,rot){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.rotate(rot||0); ctx.scale(scale,scale);
+    ctx.fillStyle='#3b2a14';
+    roundRect(-4,0,8,26,3,'#3b2a14');
+    ctx.fillStyle='#cfd8dd';
+    ctx.beginPath();
+    ctx.moveTo(-7,-2); ctx.lineTo(7,-2); ctx.lineTo(3,-36); ctx.lineTo(-3,-36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawRicePlant(x,y,scale,grown){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle='#4c7a3a';
+    ctx.lineWidth=3;
+    ctx.lineCap='round';
+    var h = grown? 46: 14;
+    ctx.beginPath();
+    ctx.moveTo(0,0); ctx.quadraticCurveTo(-6,-h*0.6,-2,-h);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0,0); ctx.quadraticCurveTo(6,-h*0.6,2,-h);
+    ctx.stroke();
+    if(grown){
+      ctx.fillStyle='#e8c96b';
+      circle(-2,-h,5,'#e8c96b');
+      circle(2,-h-6,4,'#e8c96b');
+    }
+    ctx.restore();
+  }
+  function drawRainDrop(x,y,len){
+    ctx.strokeStyle='rgba(140,190,230,.85)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x-4,y+len);
+    ctx.stroke();
+  }
+  function drawKing(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    drawPerson(0,0,1,'#e0ab72','#a9701b',false);
+    ctx.fillStyle='#d99b2b';
+    ctx.beginPath();
+    ctx.moveTo(-14,-30); ctx.lineTo(14,-30); ctx.lineTo(10,-40); ctx.lineTo(0,-32); ctx.lineTo(-10,-40);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawButton(x,y,w,h,label,active,color){
+    roundRect(x,y,w,h,10, color || (active? '#4c7a3a':'#c9a35a'));
+    ctx.fillStyle='#fff8ea';
+    ctx.font='bold 15px Segoe UI';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(label, x+w/2, y+h/2);
+  }
+  function drawProgressBar(x,y,w,h,pct,markerPct,zoneStart,zoneEnd){
+    roundRect(x,y,w,h,h/2,'#e6d6ac');
+    if(zoneStart!==undefined){
+      var zx = x + zoneStart*w;
+      var zw = (zoneEnd-zoneStart)*w;
+      ctx.fillStyle='rgba(76,122,58,.5)';
+      ctx.fillRect(zx,y,zw,h);
+    }
+    roundRect(x,y,w*pct,h,h/2,'#4c7a3a');
+    if(markerPct!==undefined){
+      circle(x+markerPct*w, y+h/2, h*0.8, '#e0483e');
+    }
+  }
+
+  /* ---------------- SCENES ---------------- */
+  // Each scene: id, narration {id,en}, instruction {id,en}, setup(), draw(t), handlers
+  var scenes = [];
+  var sceneState = {}; // transient per-scene mutable data
+  var rafId = null;
+  var lastTime = 0;
+
+  function T(idText, enText){ return state.lang==='id'? idText: enText; }
+
+  /* ---- Scene 1: Prosperous kingdom, eats tree fruit ---- */
+  scenes.push({
+    key:'kingdom',
+    narration:{
+      id:"Dahulu kala, di Tanah Karo berdiri sebuah kerajaan yang dipimpin raja bijaksana. Rakyatnya hidup makmur, memakan buah-buahan dari pohon di hutan.",
+      en:"Long ago in Karo Land, there stood a kingdom led by a wise king. Its people lived happily, eating fruit from the trees of the forest."
+    },
+    instruction:{
+      id:"Ketuk pohon buah untuk melihat kehidupan rakyat Tanah Karo.",
+      en:"Tap the fruit tree to see how the people of Karo Land lived."
+    },
+    setup:function(s){ s.tapped=false; },
+    draw:function(s,t){
+      clear('#ffe3a1','#ffb95e');
+      ground('#8a6a3a', 300);
+      drawHut(120,240,0.9);
+      drawHut(480,250,0.8);
+      drawTree(320,270,1.1,false);
+      drawPerson(210,300,0.8,'#e0ab72','#b5502f',false);
+      drawPerson(430,300,0.8,'#e0ab72','#4c7a3a',false);
+      s.treeHit = {x:320-60,y:270-140,w:120,h:160};
+      if(s.tapped){
+        ctx.fillStyle='rgba(255,255,255,.85)';
+        roundRect(180,60,240,50,10,'rgba(255,255,255,.9)');
+        ctx.fillStyle='#3b2a14';
+        ctx.font='bold 14px Segoe UI';
+        ctx.textAlign='center';
+        ctx.fillText(T('Rakyat hidup damai dan makmur','The people lived in peace and plenty'),300,90);
+      }
+    },
+    onClick:function(s,x,y){
+      var r = s.treeHit;
+      if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){
+        s.tapped = true;
+        if(!s._done){ s._done=true; advanceSoon(); }
+      }
+    }
+  });
+
+  /* ---- Scene 2: Long drought - tap-mash the sun/heat ---- */
+  scenes.push({
+    key:'drought',
+    narration:{
+      id:"Namun suatu ketika, kemarau panjang melanda. Pohon-pohon layu, buah-buahan habis, dan rakyat mulai kelaparan.",
+      en:"But then a long drought struck. The trees withered, the fruit disappeared, and the people began to starve."
+    },
+    instruction:{
+      id:"Ketuk matahari berkali-kali untuk menunjukkan betapa panas dan panjangnya kemarau itu.",
+      en:"Tap the sun repeatedly to show how long and harsh the drought was."
+    },
+    setup:function(s){ s.count=0; s.needed=10; },
+    draw:function(s,t){
+      clear('#ffd27a','#ff9a4a');
+      ground('#7a6440', 300);
+      drawSun(300,90,44,'#ffd35c');
+      s.sunHit = {x:300-60,y:90-60,w:120,h:120};
+      drawTree(170,270,0.9,true);
+      drawTree(430,270,0.9,true);
+      drawPerson(300,300,0.85,'#e0ab72','#b5502f',true);
+      var pct = Math.min(1, s.count/s.needed);
+      drawProgressBar(150,360,300,16,pct);
+      ctx.fillStyle='#3b2a14';
+      ctx.font='bold 12px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(T('Panasnya kemarau: '+Math.round(pct*100)+'%','Drought intensity: '+Math.round(pct*100)+'%'),300,352);
+    },
+    onClick:function(s,x,y){
+      var r = s.sunHit;
+      if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){
+        s.count++;
+        if(s.count>=s.needed && !s._done){ s._done=true; advanceSoon(); }
+      }
+    }
+  });
+
+  /* ---- Scene 3: Beru Dayang hungry, mother comforts - press and hold ---- */
+  scenes.push({
+    key:'hungry',
+    narration:{
+      id:"Di sebuah gubuk kecil, hiduplah seorang anak yatim bernama Beru Dayang bersama ibunya. Beru Dayang menangis menahan lapar di pangkuan sang ibu.",
+      en:"In a small hut lived an orphan girl named Beru Dayang with her mother. Weak with hunger, Beru Dayang wept in her mother's arms."
+    },
+    instruction:{
+      id:"Tekan dan tahan tombol dekapan untuk menenangkan Beru Dayang yang kelaparan.",
+      en:"Press and hold the embrace button to comfort hungry little Beru Dayang."
+    },
+    setup:function(s){ s.hold=0; s.needed=100; s.holding=false; },
+    draw:function(s,t){
+      clear('#f0d9a0','#dba85c');
+      ground('#7a6440', 320);
+      drawHut(500,260,0.7);
+      drawPerson(250,300,1.0,'#e0ab72','#8a5a3a',true); // mother
+      drawPerson(320,320,0.6,'#e6bb8c','#c9a35a',true); // child
+      var bx=230,by=380,bw=140,bh=34;
+      s.btnHit={x:bx,y:by,w:bw,h:bh};
+      drawButton(bx,by,bw,bh, T('Dekap Beru Dayang','Hold Beru Dayang'), s.holding);
+      var pct = Math.min(1,s.hold/s.needed);
+      drawProgressBar(150,345,300,10,pct);
+    },
+    onDown:function(s,x,y){
+      var r=s.btnHit;
+      if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){ s.holding=true; }
+    },
+    onUp:function(s){ s.holding=false; },
+    tick:function(s,dt){
+      if(s.holding && s.hold<s.needed){
+        s.hold += dt*60;
+        if(s.hold>=s.needed && !s._done){ s._done=true; advanceSoon(); }
+      }
+    }
+  });
+
+  /* ---- Scene 4: Beru Dayang passes away, mother's grief, transformation into fish (gentle) ---- */
+  scenes.push({
+    key:'transform',
+    narration:{
+      id:"Sayang sekali, tubuh Beru Dayang terlalu lemah, dan ia pun meninggal dengan tenang di pelukan ibunya. Sang ibu sangat sedih, hingga suatu hari ia pergi ke sungai dan menurut cerita, ia berubah wujud menjadi seekor ikan yang hidup tenang di air.",
+      en:"Sadly, Beru Dayang's body grew too weak, and she passed away peacefully in her mother's arms. Her mother was overcome with sorrow. According to the legend, she later went to the river and was transformed into a fish that lived peacefully in the water."
+    },
+    instruction:{
+      id:"Ketuk permukaan sungai untuk melihat ke mana ibu Beru Dayang pergi.",
+      en:"Tap the surface of the river to see where Beru Dayang's mother went."
+    },
+    setup:function(s){ s.revealed=false; },
+    draw:function(s,t){
+      clear('#cfe3ea','#9cc4d6');
+      drawRiver(260,140);
+      s.riverHit={x:0,y:260,w:CW,h:140};
+      drawTree(90,260,0.7,true);
+      drawTree(510,260,0.7,true);
+      if(!s.revealed){
+        drawPerson(300,240,0.8,'#e0ab72','#8a5a3a',true);
+      } else {
+        drawFish(300+Math.sin(t/400)*30, 320+Math.cos(t/500)*8, 1.3, '#e8b34c');
+        ctx.fillStyle='rgba(255,255,255,.85)';
+        roundRect(150,60,300,44,10,'rgba(255,255,255,.9)');
+        ctx.fillStyle='#3b2a14';
+        ctx.font='bold 13px Segoe UI';
+        ctx.textAlign='center';
+        ctx.fillText(T('Sang ibu tenang di dalam air, menjelma seekor ikan','Her mother rests peacefully in the water, as a fish'),300,86);
+      }
+    },
+    onClick:function(s,x,y){
+      var r=s.riverHit;
+      if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){
+        s.revealed=true;
+        if(!s._done){ s._done=true; advanceSoon(1400); }
+      }
+    }
+  });
+
+  /* ---- Scene 5: Children find giant fruit - drag to king ---- */
+  scenes.push({
+    key:'fruit',
+    narration:{
+      id:"Sementara itu, kelaparan makin parah. Suatu hari, anak-anak yang bermain di hutan menemukan sebuah buah raksasa yang aneh dan bercahaya.",
+      en:"Meanwhile the famine grew worse. One day, children playing in the forest discovered a strange, glowing, giant fruit."
+    },
+    instruction:{
+      id:"Seret buah raksasa itu menuju sang raja agar bisa diperiksa bersama.",
+      en:"Drag the giant fruit toward the king so it can be examined together."
+    },
+    setup:function(s){ s.fx=150; s.fy=300; s.dragging=false; s.done=false; },
+    draw:function(s,t){
+      clear('#d7e8bd','#a9cf8a');
+      ground('#6f8f4a', 330);
+      drawKing(480,300,0.9);
+      s.targetHit={x:480-40,y:300-100,w:80,h:100};
+      drawGiantFruit(s.fx,s.fy,0.9,true);
+      s.fruitHit={x:s.fx-40,y:s.fy-50,w:80,h:100};
+      ctx.fillStyle='#3b2a14';
+      ctx.font='12px Segoe UI';
+      ctx.textAlign='center';
+    },
+    onDown:function(s,x,y){
+      var r=s.fruitHit;
+      if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){ s.dragging=true; }
+    },
+    onMove:function(s,x,y){
+      if(s.dragging){ s.fx=x; s.fy=y; }
+    },
+    onUp:function(s){
+      s.dragging=false;
+      var dx = s.fx-480, dy=s.fy-300;
+      if(Math.sqrt(dx*dx+dy*dy) < 70 && !s._done){
+        s._done=true;
+        s.fx=480; s.fy=300;
+        advanceSoon(500);
+      }
+    }
+  });
+
+  /* ---- Scene 6: Magic voice instructs - sequential tap (knife then soil) ---- */
+  scenes.push({
+    key:'voice',
+    narration:{
+      id:"Tiba-tiba terdengar suara gaib dari langit: buah itu adalah penjelmaan Beru Dayang. Suara itu meminta agar buah dipotong halus lalu ditanam ke tanah.",
+      en:"Suddenly a magical voice spoke from the sky: the fruit was Beru Dayang herself, transformed. The voice asked the people to cut it into small pieces and plant it in the soil."
+    },
+    instruction:{
+      id:"Ikuti urutannya: ketuk pisau untuk memotong buah, lalu ketuk tanah untuk menanamnya.",
+      en:"Follow the order: tap the knife to cut the fruit, then tap the soil to plant it."
+    },
+    setup:function(s){ s.step=0; },
+    draw:function(s,t){
+      clear('#eadcae','#cdae6b');
+      ground('#6b4a26', 320);
+      // sky glow
+      var g = ctx.createRadialGradient(300,60,10,300,60,160);
+      g.addColorStop(0,'rgba(255,240,190,.9)');
+      g.addColorStop(1,'rgba(255,240,190,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(300,60,160,0,Math.PI*2); ctx.fill();
+
+      drawGiantFruit(220,260,s.step>=1? 0.5:0.8,false);
+      drawKnife(400,240,1, s.step>=1? -0.6: 0);
+      s.knifeHit={x:400-30,y:240-50,w:60,h:80};
+      // soil patch
+      roundRect(150,330,220,30,8,'#4a3418');
+      s.soilHit={x:150,y:330,w:220,h:30};
+
+      drawButton(400-40, 350, 80, 30, s.step===0? '1':'✓', s.step>=1, s.step>=1? '#4c7a3a':'#c9a35a');
+      drawButton(150+70, 300, 80, 30, s.step<1? '2': (s.step===1? '2':'✓'), s.step>=2, s.step>=2? '#4c7a3a':'#c9a35a');
+
+      ctx.fillStyle='#3b2a14';
+      ctx.font='bold 12px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(T('1. Potong','1. Cut'),400,230-60);
+      ctx.fillText(T('2. Tanam','2. Plant'),260,330-14);
+    },
+    onClick:function(s,x,y){
+      if(s.step===0){
+        var r=s.knifeHit;
+        if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){ s.step=1; speakStep(1); }
+      } else if(s.step===1){
+        var r2=s.soilHit;
+        if(x>=r2.x&&x<=r2.x+r2.w&&y>=r2.y&&y<=r2.y+r2.h){
+          s.step=2;
+          if(!s._done){ s._done=true; advanceSoon(600); }
+        }
+      }
+    }
+  });
+  function speakStep(){}
+
+  /* ---- Scene 7: Rain and growth - timing bar ---- */
+  scenes.push({
+    key:'grow',
+    narration:{
+      id:"Tak lama setelah ditanam, hujan pun turun membasahi tanah yang kering. Tunas mulai tumbuh dari potongan buah itu.",
+      en:"Soon after it was planted, rain began to fall on the dry earth. Shoots started to sprout from the pieces of fruit."
+    },
+    instruction:{
+      id:"Ketuk tombol tepat saat penanda berada di zona hijau untuk menyiram tanaman dengan hujan.",
+      en:"Tap the button exactly when the marker is in the green zone to water the plant with rain."
+    },
+    setup:function(s){ s.pos=0; s.dir=1; s.hits=0; s.needed=3; s.zoneStart=0.4; s.zoneEnd=0.6; s.rain=[]; s.grown=false;
+      for(var i=0;i<14;i++){ s.rain.push({x:Math.random()*CW, y:Math.random()*-CH, speed:2+Math.random()*3}); }
+    },
+    tick:function(s,dt){
+      s.pos += s.dir*dt*0.6;
+      if(s.pos>1){ s.pos=1; s.dir=-1; }
+      if(s.pos<0){ s.pos=0; s.dir=1; }
+      for(var i=0;i<s.rain.length;i++){
+        var d=s.rain[i];
+        d.y += d.speed;
+        if(d.y>CH){ d.y = -10; d.x = Math.random()*CW; }
+      }
+    },
+    draw:function(s,t){
+      clear('#9fb9c9','#6f95ab');
+      ground('#5a4327', 330);
+      for(var i=0;i<s.rain.length;i++){ drawRainDrop(s.rain[i].x,s.rain[i].y,12); }
+      drawRicePlant(300,330,1.6,s.grown);
+      var bx=200,by=360,bw=200,bh=34;
+      s.btnHit={x:bx,y:by,w:bw,h:bh};
+      drawProgressBar(bx,by-16,bw,10,0,s.pos,s.zoneStart,s.zoneEnd);
+      drawButton(bx,by,bw,bh, T('Siram (ketuk saat hijau)','Water (tap on green)'), false);
+      ctx.fillStyle='#fff';
+      ctx.font='bold 12px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(T('Berhasil: '+s.hits+'/'+s.needed,'Success: '+s.hits+'/'+s.needed),300,405);
+    },
+    onClick:function(s,x,y){
+      var r=s.btnHit;
+      if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){
+        if(s.pos>=s.zoneStart && s.pos<=s.zoneEnd){
+          s.hits++;
+          if(s.hits>=s.needed){
+            s.grown=true;
+            if(!s._done){ s._done=true; advanceSoon(1200); }
+          }
+        }
+      }
+    }
+  });
+
+  /* ---- Scene 8: Harvest - multi tap ---- */
+  scenes.push({
+    key:'harvest',
+    narration:{
+      id:"Tanaman itu tumbuh subur dan berbuah lebat, menghasilkan bulir-bulir yang kemudian dikenal sebagai padi. Rakyat pun bergotong royong memanennya.",
+      en:"The plant grew tall and full, producing grains that would come to be known as rice. The people worked together to harvest it."
+    },
+    instruction:{
+      id:"Ketuk batang-batang padi satu per satu untuk memanennya bersama warga.",
+      en:"Tap each rice stalk one by one to harvest it together with the villagers."
+    },
+    setup:function(s){
+      s.plants=[];
+      var xs=[140,220,300,380,460];
+      for(var i=0;i<xs.length;i++){ s.plants.push({x:xs[i], y:320, cut:false}); }
+      s.doneCount=0;
+    },
+    draw:function(s,t){
+      clear('#dcecc0','#b8d896');
+      ground('#6f8f4a', 340);
+      drawPerson(90,300,0.7,'#e0ab72','#b5502f',false);
+      drawPerson(520,300,0.7,'#e0ab72','#4c7a3a',false);
+      s.plantHits=[];
+      for(var i=0;i<s.plants.length;i++){
+        var p=s.plants[i];
+        if(!p.cut){
+          drawRicePlant(p.x,p.y,2.0,true);
+          s.plantHits.push({x:p.x-30,y:p.y-70,w:60,h:80,idx:i});
+        } else {
+          ctx.fillStyle='#4a3418';
+          roundRect(p.x-14,p.y-4,28,8,3,'#4a3418');
+        }
+      }
+      ctx.fillStyle='#3b2a14';
+      ctx.font='bold 13px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(T('Panen: '+s.doneCount+'/5','Harvested: '+s.doneCount+'/5'),300,380);
+    },
+    onClick:function(s,x,y){
+      for(var i=0;i<s.plantHits.length;i++){
+        var r=s.plantHits[i];
+        if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){
+          s.plants[r.idx].cut=true;
+          s.doneCount++;
+          if(s.doneCount>=5 && !s._done){ s._done=true; advanceSoon(900); }
+          break;
+        }
+      }
+    }
+  });
+
+  /* ---- Scene 9: Ending - reunion meal ---- */
+  scenes.push({
+    key:'reunion',
+    narration:{
+      id:"Rakyat Tanah Karo pun terbebas dari kelaparan. Setiap kali makan nasi, mereka menyantapnya bersama ikan, sebagai cara mempertemukan kembali Beru Dayang dengan ibunya.",
+      en:"The people of Karo Land were finally freed from famine. Whenever they ate rice, they served it together with fish — a way of reuniting Beru Dayang with her mother."
+    },
+    instruction:{
+      id:"Ketuk piring nasi dan ikan untuk melihat perayaan rakyat Tanah Karo.",
+      en:"Tap the plate of rice and fish to see the people of Karo Land celebrate."
+    },
+    setup:function(s){ s.tapped=false; },
+    draw:function(s,t){
+      clear('#ffe9b8','#ffc06e');
+      ground('#8a6a3a', 320);
+      drawPerson(180,290,0.75,'#e0ab72','#b5502f',false);
+      drawPerson(300,300,0.8,'#e0ab72','#4c7a3a',false);
+      drawPerson(420,290,0.75,'#e0ab72','#8a5a3a',false);
+      // plate
+      circle(300,370,44,'#fff8ea');
+      circle(300,370,38,'#f6ecd4');
+      circle(288,364,10,'#fff');
+      circle(305,368,10,'#fff');
+      circle(296,376,10,'#fff');
+      drawFish(320,372,0.45,'#e8b34c');
+      s.plateHit={x:300-44,y:370-44,w:88,h:88};
+      if(s.tapped){
+        ctx.fillStyle='rgba(255,255,255,.9)';
+        roundRect(140,50,320,50,10,'rgba(255,255,255,.92)');
+        ctx.fillStyle='#3b2a14';
+        ctx.font='bold 13px Segoe UI';
+        ctx.textAlign='center';
+        ctx.fillText(T('Beru Dayang dan ibunya kembali bersama','Beru Dayang and her mother are together again'),300,80);
+      }
+    },
+    onClick:function(s,x,y){
+      var r=s.plateHit;
+      var dx=x-300, dy=y-370;
+      if(Math.sqrt(dx*dx+dy*dy)<=44){
+        s.tapped=true;
+        if(!s._done){ s._done=true; advanceSoon(1600); }
+      }
+    }
+  });
+
+  /* ---------------- SCENE ENGINE ---------------- */
+  var currentSceneData = null;
+  var advanceTimer = null;
+
+  function advanceSoon(delay){
+    if(advanceTimer) clearTimeout(advanceTimer);
+    advanceTimer = setTimeout(function(){ nextScene(); }, delay || 1600);
+  }
+
+  function buildDots(){
+    dotsEl.innerHTML='';
+    for(var i=0;i<scenes.length;i++){
+      var d = document.createElement('div');
+      d.className='dot';
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var ds = dotsEl.children;
+    for(var i=0;i<ds.length;i++){
+      ds[i].className = 'dot' + (i===state.sceneIndex? ' active': (i<state.sceneIndex? ' done':''));
+    }
+  }
+
+  function loadScene(idx){
+    if(idx>=scenes.length){ showEnding(); return; }
+    state.sceneIndex = idx;
+    var def = scenes[idx];
+    currentSceneData = {};
+    if(def.setup) def.setup(currentSceneData);
+    hintEl.textContent = T(def.instruction.id, def.instruction.en);
+    narrationEl.textContent = T(def.narration.id, def.narration.en);
+    speak(T(def.narration.id, def.narration.en));
+    updateDots();
+    replayBtn.classList.add('hidden');
+    reportHeight();
+  }
+
+  function nextScene(){
+    loadScene(state.sceneIndex+1);
+  }
+
+  function loop(ts){
+    if(!lastTime) lastTime = ts;
+    var dt = (ts-lastTime)/16.67; // ~frames
+    lastTime = ts;
+    var def = scenes[state.sceneIndex];
+    if(def && currentSceneData){
+      if(def.tick) def.tick(currentSceneData, dt);
+      ctx.clearRect(0,0,CW,CH);
+      def.draw(currentSceneData, ts);
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ---------------- INPUT ---------------- */
+  function getCanvasCoords(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    var scaleX = CW/rect.width;
+    var scaleY = CH/rect.height;
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  canvas.addEventListener('mousedown', function(e){
+    var p = getCanvasCoords(e);
+    var def = scenes[state.sceneIndex];
+    if(def && def.onDown) def.onDown(currentSceneData, p.x, p.y);
+  });
+  canvas.addEventListener('mousemove', function(e){
+    var p = getCanvasCoords(e);
+    var def = scenes[state.sceneIndex];
+    if(def && def.onMove) def.onMove(currentSceneData, p.x, p.y);
+  });
+  window.addEventListener('mouseup', function(e){
+    var def = scenes[state.sceneIndex];
+    if(def && def.onUp) def.onUp(currentSceneData);
+  });
+  canvas.addEventListener('click', function(e){
+    var p = getCanvasCoords(e);
+    var def = scenes[state.sceneIndex];
+    if(def && def.onClick) def.onClick(currentSceneData, p.x, p.y);
+  });
+  canvas.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    var p = getCanvasCoords(e);
+    var def = scenes[state.sceneIndex];
+    if(def && def.onDown) def.onDown(currentSceneData, p.x, p.y);
+  }, {passive:false});
+  canvas.addEventListener('touchmove', function(e){
+    e.preventDefault();
+    var p = getCanvasCoords(e);
+    var def = scenes[state.sceneIndex];
+    if(def && def.onMove) def.onMove(currentSceneData, p.x, p.y);
+  }, {passive:false});
+  canvas.addEventListener('touchend', function(e){
+    e.preventDefault();
+    var p = getCanvasCoords(e);
+    var def = scenes[state.sceneIndex];
+    if(def && def.onUp) def.onUp(currentSceneData);
+    if(def && def.onClick) def.onClick(currentSceneData, p.x, p.y);
+  }, {passive:false});
+
+  /* ---------------- UI FLOW ---------------- */
+  function applyLangUI(){
+    var s = STR[state.lang];
+    titleText.textContent = s.title;
+    subtitleText.textContent = s.subtitle;
+    coverTitle.textContent = s.coverTitle;
+    coverDesc.textContent = s.coverDesc;
+    startBtn.textContent = s.start;
+    replayBtn.textContent = s.replay;
+    replayBtn2.textContent = s.replay;
+    footerText.textContent = s.footer;
+    endingTitle.textContent = s.endingTitle;
+    endingDesc.textContent = s.endingDesc;
+    muteLabel.textContent = state.muted? s.muteOff : s.muteOn;
+    langLabel.textContent = state.lang==='id' ? 'EN' : 'ID';
+    document.documentElement.lang = state.lang;
+    if(state.started && currentSceneData){
+      var def = scenes[state.sceneIndex];
+      hintEl.textContent = T(def.instruction.id, def.instruction.en);
+      narrationEl.textContent = T(def.narration.id, def.narration.en);
+    }
+  }
+
+  function showEnding(){
+    stopSpeak();
+    gameAreaEl.classList.add('hidden');
+    endingEl.classList.remove('hidden');
+    updateDotsAllDone();
+    var s = STR[state.lang];
+    endingTitle.textContent = s.endingTitle;
+    endingDesc.textContent = s.endingDesc;
+    speak(s.endingDesc);
+    reportHeight();
+  }
+  function updateDotsAllDone(){
+    var ds = dotsEl.children;
+    for(var i=0;i<ds.length;i++){ ds[i].className='dot done'; }
+  }
+
+  startBtn.addEventListener('click', function(){
+    state.started = true;
+    coverEl.classList.add('hidden');
+    gameAreaEl.classList.remove('hidden');
+    buildDots();
+    loadScene(0);
+    if(!rafId){ rafId = requestAnimationFrame(loop); }
+    reportHeight();
+  });
+
+  function restart(){
+    endingEl.classList.add('hidden');
+    coverEl.classList.add('hidden');
+    gameAreaEl.classList.remove('hidden');
+    buildDots();
+    loadScene(0);
+    reportHeight();
+  }
+  replayBtn.addEventListener('click', restart);
+  replayBtn2.addEventListener('click', restart);
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('sbd_muted', state.muted? 'true':'false'); }catch(e){}
+    muteBtn.classList.toggle('active', state.muted);
+    applyLangUI();
+    if(state.muted) stopSpeak();
+  });
+
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang==='id' ? 'en':'id';
+    try{ localStorage.setItem('sbd_lang', state.lang); }catch(e){}
+    applyLangUI();
+    if(state.started && currentSceneData && !endingEl.classList.contains('hidden')===false){
+      // re-speak current narration in new language if game running
+    }
+    if(state.started && !gameAreaEl.classList.contains('hidden')){
+      var def = scenes[state.sceneIndex];
+      speak(T(def.narration.id, def.narration.en));
+    }
+  });
+
+  /* ---------------- INIT ---------------- */
+  muteBtn.classList.toggle('active', state.muted);
+  applyLangUI();
+  reportHeight();
+
+})();
+</script>
+</body>
+</html>
