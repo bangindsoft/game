@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Lau Kawar</title>
+<style>
+  :root{
+    --bg-dark:#241408;
+    --bg-panel:#2f1c0f;
+    --wood:#4a2c17;
+    --cream:#f3e6c9;
+    --gold:#d9a441;
+    --gold-bright:#f0c266;
+    --red:#a8402c;
+    --green:#4a7c3f;
+    --sky-day:#f6d68a;
+    --sky-storm:#1c1d2b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--bg-dark);
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    background:linear-gradient(180deg,#2f1c0f,#241408);
+    border:3px solid var(--wood);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 6px 24px rgba(0,0,0,.5);
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    background:var(--wood);
+  }
+  #topbar .title{
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.5px;
+    color:var(--gold-bright);
+  }
+  #topControls{display:flex;gap:6px;}
+  .iconBtn{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background .15s;
+  }
+  .iconBtn:hover{background:rgba(255,255,255,.18);}
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#000;
+    touch-action:manipulation;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    padding:10px 8px 4px 8px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(255,255,255,.2);
+    border:1px solid rgba(255,255,255,.35);
+    transition:background .2s,transform .2s;
+  }
+  .dot.active{background:var(--gold-bright);transform:scale(1.25);}
+  .dot.done{background:var(--gold);}
+  #instructionPanel{
+    padding:6px 18px 4px 18px;
+    text-align:center;
+    min-height:38px;
+  }
+  #instructionText{
+    margin:0;
+    font-size:14px;
+    color:var(--gold-bright);
+    font-weight:600;
+  }
+  #narrationPanel{
+    padding:0 18px 10px 18px;
+    text-align:center;
+  }
+  #narrationText{
+    margin:0;
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--cream);
+    opacity:.92;
+  }
+  #controls{
+    display:flex;
+    justify-content:center;
+    padding:6px 16px 16px 16px;
+  }
+  #startBtn{
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    border:none;
+    color:#2a1707;
+    font-weight:800;
+    font-size:15px;
+    padding:11px 28px;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #8a5f1c, 0 6px 10px rgba(0,0,0,.4);
+    letter-spacing:.3px;
+  }
+  #startBtn:active{transform:translateY(2px);box-shadow:0 2px 0 #8a5f1c;}
+  #footer{
+    text-align:center;
+    font-size:10.5px;
+    color:rgba(255,255,255,.35);
+    padding:6px 10px 12px 10px;
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="titleLabel">Legenda Lau Kawar</div>
+    <div id="topControls">
+      <button class="iconBtn" id="langBtn" type="button">EN</button>
+      <button class="iconBtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="instructionPanel">
+    <p id="instructionText"></p>
+  </div>
+  <div id="narrationPanel">
+    <p id="narrationText"></p>
+  </div>
+
+  <div id="controls">
+    <button id="startBtn" type="button">Mulai Cerita</button>
+  </div>
+
+  <div id="footer">Legenda Lau Kawar — Cerita Rakyat Karo, Sumatera Utara</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- language ---------- */
+  var params = new URLSearchParams(window.location.search);
+  var LANG = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var UI = {
+    id:{
+      title:"Legenda Lau Kawar",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      footer:"Legenda Lau Kawar — Cerita Rakyat Karo, Sumatera Utara",
+      langBtn:"EN",
+      preInstruction:"Ketuk \"Mulai Cerita\" untuk memulai dongeng"
+    },
+    en:{
+      title:"The Legend of Lau Kawar",
+      start:"Start Story",
+      replay:"Replay Story",
+      footer:"The Legend of Lau Kawar — Karo Folktale, North Sumatra",
+      langBtn:"ID",
+      preInstruction:"Tap \"Start Story\" to begin the tale"
+    }
+  };
+
+  /* ---------- mute ---------- */
+  var muted = localStorage.getItem('laukawar_muted') === 'true';
+
+  /* ---------- canvas setup ---------- */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function fitCanvas(){
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  fitCanvas();
+
+  /* ---------- scene state ---------- */
+  var current = -1; // -1 = idle/title
+  var locked = false;
+  var t0 = performance.now();
+  var holdActive=false, holdStart=0, holdNeeded=1600, holdProgress=0;
+  var mashCount=0, mashTarget=9, mashDecay=0, lastMashTime=0;
+  var choiceMade = null;
+  var earthquakeStart = null;
+  var endingShown = false;
+
+  /* ---------- narration ---------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    var target = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = voices.find(function(v){return v.lang === target;});
+    if(!v) v = voices.find(function(v){return v.lang && v.lang.indexOf(lang) === 0;});
+    return v;
+  }
+  function speak(text){
+    if(!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if(muted || !text) return;
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice(LANG);
+    if(v) u.voice = v;
+    u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  /* ---------- scenes data ---------- */
+  var SCENES = [
+    { // 0 tap - rice field
+      type:'tap',
+      hotspot:{x:400,y:300,r:120},
+      narration:{
+        id:"Dahulu kala, berdirilah Desa Kawar yang subur. Tanahnya menghasilkan panen berlipat ganda, hingga lumbung padi pun tak sanggup menampungnya.",
+        en:"Long ago, the village of Kawar flourished with fertile soil. Its harvest doubled and doubled again, until the rice barns could no longer hold it all."
+      },
+      instruction:{
+        id:"Ketuk sawah yang menguning untuk melihat hasil panen desa",
+        en:"Tap the golden rice field to see the village harvest"
+      },
+      draw: drawSceneField
+    },
+    { // 1 tap - grandma alone
+      type:'tap',
+      hotspot:{x:230,y:270,r:90},
+      narration:{
+        id:"Penduduk mengadakan pesta panen raya yang meriah. Namun di sebuah rumah, seorang nenek tua yang lumpuh hanya bisa berbaring sendirian, tak seorang pun mengajaknya.",
+        en:"The villagers held a grand harvest feast. But in one house, a paralyzed old woman lay alone, forgotten by everyone."
+      },
+      instruction:{
+        id:"Ketuk nenek yang berbaring sendirian di rumah",
+        en:"Tap the grandmother lying alone at home"
+      },
+      draw: drawSceneAlone
+    },
+    { // 2 hold - crawl to kitchen
+      type:'hold',
+      hotspot:{x:260,y:300,r:80},
+      narration:{
+        id:"Perutnya lapar sejak pagi. Dengan tubuh lemah dan gemetar, sang nenek memaksakan diri merangkak menuju dapur, berharap menemukan sesuatu untuk dimakan.",
+        en:"Her stomach had been empty since morning. With a weak, trembling body, the grandmother forced herself to crawl toward the kitchen, hoping to find something to eat."
+      },
+      instruction:{
+        id:"Tekan dan tahan gambar nenek untuk membantunya merangkak ke dapur",
+        en:"Press and hold the grandmother to help her crawl to the kitchen"
+      },
+      draw: drawSceneCrawl
+    },
+    { // 3 tap - empty kitchen
+      type:'tap',
+      hotspot:{x:400,y:270,r:100},
+      narration:{
+        id:"Sesampainya di dapur, tak ada sebutir nasi pun tersisa. Anak dan menantunya sengaja tidak memasak, karena berniat menyantap makanan lezat di pesta.",
+        en:"When she reached the kitchen, not a single grain of rice remained. Her children had deliberately cooked nothing, planning to feast at the celebration instead."
+      },
+      instruction:{
+        id:"Ketuk periuk dapur untuk melihat apakah ada makanan tersisa",
+        en:"Tap the cooking pot to check for leftover food"
+      },
+      draw: drawSceneEmptyKitchen
+    },
+    { // 4 mash - grandson eats on the way
+      type:'mash',
+      hotspot:{x:420,y:260,r:90},
+      narration:{
+        id:"Sang anak akhirnya teringat ibunya dan mengirim bekal makanan lewat cucunya. Namun di tengah jalan, sang cucu diam-diam memakan habis bekal itu.",
+        en:"Her son finally remembered his mother and sent a portion of food with his grandson. But along the way, the boy secretly ate it all."
+      },
+      instruction:{
+        id:"Ketuk berulang kali gambar cucu yang diam-diam memakan bekal nenek",
+        en:"Tap repeatedly on the grandson secretly eating grandma's food"
+      },
+      draw: drawSceneGrandsonEats
+    },
+    { // 5 tap - open bundle, only bones
+      type:'tap',
+      hotspot:{x:400,y:290,r:90},
+      narration:{
+        id:"Nenek membuka bungkusan dengan penuh harap. Betapa terkejut dan sedihnya dia, isinya hanyalah tulang dan sisa nasi yang telah dimakan.",
+        en:"The grandmother opened the bundle full of hope. To her shock and sorrow, it held only bones and leftover rice that had already been eaten."
+      },
+      instruction:{
+        id:"Ketuk bungkusan makanan yang diberikan cucu kepada nenek",
+        en:"Tap the food bundle given to grandma by her grandson"
+      },
+      draw: drawSceneBundle
+    },
+    { // 6 hold - curse
+      type:'hold',
+      hotspot:{x:400,y:290,r:100},
+      narration:{
+        id:"Dengan hati hancur dan amarah yang memuncak, sang nenek berdoa memohon kepada Tuhan agar anak dan menantunya yang durhaka itu diberi kutukan.",
+        en:"Heartbroken and consumed with anger, the grandmother prayed, asking that her ungrateful children be cursed."
+      },
+      instruction:{
+        id:"Tekan dan tahan gambar nenek yang berdoa untuk melepaskan kutukannya",
+        en:"Press and hold the praying grandmother to release her curse"
+      },
+      draw: drawSceneCurse
+    },
+    { // 7 tap then auto animation - earthquake
+      type:'quake',
+      hotspot:{x:400,y:260,r:180},
+      narration:{
+        id:"Seketika bumi berguncang hebat. Angin mengamuk, langit menggelap, dan petir menyambar. Desa Kawar pun runtuh dan tenggelam ditelan bumi.",
+        en:"Instantly the earth shook violently. Wind roared, the sky turned dark, and lightning struck. The village of Kawar collapsed and sank into the ground."
+      },
+      instruction:{
+        id:"Ketuk desa yang bergetar untuk melihat akibat kutukan nenek",
+        en:"Tap the trembling village to see the result of the curse"
+      },
+      draw: drawSceneQuake
+    },
+    { // 8 choice - moral
+      type:'choice',
+      choices:[
+        {x:210,y:400,w:300,h:56,id:'respect'},
+        {x:530,y:400,w:300,h:56,id:'feast'}
+      ],
+      narration:{
+        id:"Dari reruntuhan desa itu munculah sebuah danau besar yang kini dikenal sebagai Danau Lau Kawar. Menurutmu, apa pelajaran dari kisah ini?",
+        en:"From the ruins of the village rose a great lake, now known as Lake Lau Kawar. What do you think is the lesson of this story?"
+      },
+      instruction:{
+        id:"Ketuk salah satu tombol pilihan di bawah untuk memilih pelajaran cerita",
+        en:"Tap one of the buttons below to choose the story's lesson"
+      },
+      draw: drawSceneChoice
+    }
+  ];
+
+  var CHOICE_LABEL = {
+    respect:{id:"Selalu menghormati dan merawat orang tua",en:"Always respect and care for our elders"},
+    feast:{id:"Pesta lebih penting dari keluarga",en:"Feasting matters more than family"}
+  };
+  var CHOICE_FEEDBACK = {
+    respect:{
+      id:"Benar sekali. Menghormati dan merawat orang tua adalah kewajiban yang tak boleh dilupakan.",
+      en:"Exactly right. Respecting and caring for our elders is a duty that must never be forgotten."
+    },
+    feast:{
+      id:"Cerita ini justru mengingatkan kita untuk tidak melupakan orang tua demi kesenangan sesaat.",
+      en:"This story reminds us never to forget our elders for the sake of fleeting pleasure."
+    }
+  };
+
+  var ENDING_NARR = {
+    id:"Demikianlah asal mula Danau Lau Kawar di Kabupaten Karo, Sumatera Utara. Semoga kisah ini menjadi pengingat untuk selalu menyayangi orang tua kita.",
+    en:"Thus began the legend of Lake Lau Kawar in Karo, North Sumatra. May this story remind us to always cherish our elders."
+  };
+
+  /* ================= DRAW HELPERS ================= */
+  function grad(x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0],s[1]); });
+    return g;
+  }
+  function drawSky(dark){
+    ctx.fillStyle = dark ? grad(0,0,0,H,[[0,'#161226'],[1,'#3a2a3f']]) : grad(0,0,0,H,[[0,'#f6d68a'],[0.55,'#f0b96a'],[1,'#d98f4e']]);
+    ctx.fillRect(0,0,W,H);
+  }
+  function drawSun(){
+    ctx.save();
+    ctx.fillStyle='rgba(255,235,180,.9)';
+    ctx.beginPath();ctx.arc(680,80,42,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  function drawMountains(){
+    ctx.fillStyle='#5c4a3a';
+    ctx.beginPath();
+    ctx.moveTo(0,220);
+    ctx.lineTo(120,130);ctx.lineTo(230,220);
+    ctx.lineTo(340,110);ctx.lineTo(470,220);
+    ctx.lineTo(600,140);ctx.lineTo(720,220);
+    ctx.lineTo(800,190);ctx.lineTo(800,260);ctx.lineTo(0,260);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle='#6d5945';
+    ctx.beginPath();
+    ctx.moveTo(0,250);ctx.lineTo(160,190);ctx.lineTo(320,250);
+    ctx.lineTo(480,180);ctx.lineTo(650,250);ctx.lineTo(800,220);
+    ctx.lineTo(800,270);ctx.lineTo(0,270);ctx.closePath();ctx.fill();
+  }
+  function drawGroundBand(y,color){
+    ctx.fillStyle=color;
+    ctx.fillRect(0,y,W,H-y);
+  }
+  function pulseRing(x,y,r,time,color){
+    var p = (time % 1200)/1200;
+    ctx.save();
+    ctx.globalAlpha = 1-p;
+    ctx.strokeStyle = color || '#f0c266';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x,y,r*0.55 + p*22,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.strokeStyle = color || '#f0c266';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,6]);
+    ctx.globalAlpha=.8;
+    ctx.beginPath();
+    ctx.arc(x,y,r*0.55,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawHouse(x,y,scale,litWindow){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle='#7a4a2a';
+    ctx.fillRect(-40,-10,80,60);
+    ctx.fillStyle='#3f2716';
+    ctx.beginPath();
+    ctx.moveTo(-52,-10);ctx.lineTo(0,-52);ctx.lineTo(52,-10);ctx.closePath();ctx.fill();
+    ctx.fillStyle= litWindow ? '#f5d98a' : '#2a1c12';
+    ctx.fillRect(-20,10,16,16);
+    ctx.fillRect(6,10,16,16);
+    ctx.fillStyle='#241608';
+    ctx.fillRect(-8,30,16,20);
+    ctx.restore();
+  }
+  function drawVillageRow(litIdx){
+    drawHouse(140,235,0.85, litIdx===0);
+    drawHouse(230,240,0.9, litIdx===1);
+    drawHouse(330,232,0.8, litIdx===2);
+    drawHouse(560,236,0.9, litIdx===3);
+    drawHouse(650,230,0.8, litIdx===4);
+  }
+  function drawRiceRows(y0,h,glow){
+    for(var row=0; row<6; row++){
+      var ry = y0 + row*(h/6);
+      for(var i=0;i<26;i++){
+        var rx = 20 + i*30 + (row%2===0?0:12);
+        if(rx>W-20) continue;
+        ctx.strokeStyle = glow ? '#f4d878' : '#c9a13c';
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.moveTo(rx,ry+18);
+        ctx.quadraticCurveTo(rx-4,ry+6,rx,ry-6);
+        ctx.stroke();
+        ctx.fillStyle= glow ? '#ffe9a8':'#e0b955';
+        ctx.beginPath();
+        ctx.ellipse(rx,ry-6,4,7,0,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+  function drawGrandma(x,y,scale,pose){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // simple seated/lying figure, procedural
+    ctx.fillStyle='#caa06a';
+    if(pose==='lying'){
+      ctx.fillStyle='#8a5a3a';
+      ctx.fillRect(-60,20,140,14); // mat
+      ctx.fillStyle='#d8c49a';
+      ctx.beginPath();ctx.ellipse(0,10,55,16,0,0,Math.PI*2);ctx.fill(); // blanket body
+      ctx.fillStyle='#caa06a';
+      ctx.beginPath();ctx.arc(-48,4,14,0,Math.PI*2);ctx.fill(); // head
+      ctx.fillStyle='#4a4038';
+      ctx.beginPath();ctx.arc(-52,0,10,Math.PI,Math.PI*2);ctx.fill(); // hair
+    } else if(pose==='crawl'){
+      ctx.fillStyle='#8a5a3a';
+      ctx.fillRect(-70,30,160,8); // floor line
+      ctx.strokeStyle='#caa06a';
+      ctx.lineWidth=10;
+      ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-30,26);ctx.lineTo(0,10);ctx.lineTo(30,26);ctx.stroke(); // body arch
+      ctx.beginPath();ctx.arc(-34,26,12,0,Math.PI*2);ctx.fillStyle='#caa06a';ctx.fill(); // head
+      ctx.fillStyle='#4a4038';
+      ctx.beginPath();ctx.arc(-38,20,8,Math.PI,Math.PI*2);ctx.fill();
+    } else if(pose==='pray'){
+      ctx.fillStyle='#8a5a3a';
+      ctx.fillRect(-50,50,110,10);
+      ctx.fillStyle='#d8c49a';
+      ctx.beginPath();ctx.moveTo(-30,50);ctx.lineTo(30,50);ctx.lineTo(14,0);ctx.lineTo(-14,0);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#caa06a';
+      ctx.beginPath();ctx.arc(0,-14,16,0,Math.PI*2);ctx.fill(); // head
+      ctx.fillStyle='#4a4038';
+      ctx.beginPath();ctx.arc(0,-20,12,Math.PI,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#caa06a';
+      ctx.lineWidth=8;
+      ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-14,10);ctx.quadraticCurveTo(-4,-14,4,-6);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(14,10);ctx.quadraticCurveTo(4,-14,-4,-6);ctx.stroke();
+    } else { // sit
+      ctx.fillStyle='#d8c49a';
+      ctx.beginPath();ctx.moveTo(-28,50);ctx.lineTo(28,50);ctx.lineTo(14,0);ctx.lineTo(-14,0);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#caa06a';
+      ctx.beginPath();ctx.arc(0,-14,15,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#4a4038';
+      ctx.beginPath();ctx.arc(0,-19,11,Math.PI,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawBoy(x,y,scale,eating){
+    scale=scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle='#4a7c3f';
+    ctx.beginPath();ctx.moveTo(-16,44);ctx.lineTo(16,44);ctx.lineTo(12,4);ctx.lineTo(-12,4);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#d8a878';
+    ctx.beginPath();ctx.arc(0,-10,13,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#2c2018';
+    ctx.beginPath();ctx.arc(0,-16,10,Math.PI,Math.PI*2);ctx.fill();
+    if(eating){
+      ctx.fillStyle='#e0b955';
+      ctx.beginPath();ctx.arc(14,-4,7,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#7a4a2a';
+      ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(8,4);ctx.lineTo(14,-4);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawBundle(x,y,open){
+    ctx.save();
+    ctx.translate(x,y);
+    if(!open){
+      ctx.fillStyle='#e0483e';
+      ctx.beginPath();ctx.ellipse(0,0,44,30,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#7a2018';ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(-30,-10);ctx.lineTo(0,-38);ctx.lineTo(30,-10);ctx.stroke();
+    } else {
+      ctx.fillStyle='#e0483e';
+      ctx.beginPath();ctx.ellipse(0,10,46,20,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#e8e0c8';
+      ctx.beginPath();ctx.ellipse(-8,0,14,8,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(6,-6);ctx.lineTo(24,-10);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(6,4);ctx.lineTo(26,2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(6,14);ctx.lineTo(22,16);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawPot(x,y,empty){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle='#3a3a3a';
+    ctx.beginPath();ctx.ellipse(0,10,42,16,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#242424';
+    ctx.beginPath();ctx.ellipse(0,-6,40,14,0,0,Math.PI*2);ctx.fill();
+    if(!empty){
+      ctx.fillStyle='#e8e0c8';
+      ctx.beginPath();ctx.ellipse(0,-8,30,9,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawStorm(intensity){
+    if(intensity<=0) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(intensity,1)*0.5;
+    ctx.fillStyle='#0d0c16';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    if(Math.random() < intensity*0.06){
+      ctx.save();
+      ctx.strokeStyle='#f5f0d0';
+      ctx.lineWidth=3;
+      ctx.globalAlpha=0.9;
+      var sx = 100+Math.random()*600;
+      ctx.beginPath();
+      ctx.moveTo(sx,0);
+      ctx.lineTo(sx-20,90);
+      ctx.lineTo(sx+15,110);
+      ctx.lineTo(sx-10,220);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+  function shakeOffset(intensity,time){
+    if(intensity<=0) return {x:0,y:0};
+    return { x:(Math.sin(time*0.09)+Math.sin(time*0.17))*intensity*4,
+             y:(Math.cos(time*0.13)+Math.sin(time*0.05))*intensity*3 };
+  }
+
+  /* ================= SCENE DRAW FUNCTIONS ================= */
+  function drawSceneField(time){
+    drawSky(false);
+    drawSun();
+    drawMountains();
+    drawGroundBand(230,'#6b8f3a');
+    drawRiceRows(250,150,false);
+    drawVillageRow(-1);
+    labelBanner(LANG==='en' ? 'Village of Kawar' : 'Desa Kawar');
+    if(current===0 && !locked){
+      pulseRing(400,300,120,time,'#fff2c0');
+    }
+  }
+  function drawSceneAlone(time){
+    drawSky(false);
+    drawGroundBand(230,'#6b8f3a');
+    // festival on the right
+    drawHouse(600,230,1.1,true);
+    ctx.save();ctx.font='26px sans-serif';ctx.fillText('🎉',630,190);ctx.fillText('🥁',560,200);ctx.restore();
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.font='12px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(LANG==='en'?'Harvest Feast':'Pesta Panen', 600, 320);
+    // grandma's house left, dim
+    ctx.save();
+    ctx.fillStyle='#5a3a22';
+    ctx.fillRect(60,180,240,140);
+    ctx.fillStyle='#2c1c10';
+    ctx.beginPath();ctx.moveTo(50,180);ctx.lineTo(180,110);ctx.lineTo(310,180);ctx.closePath();ctx.fill();
+    ctx.restore();
+    drawGrandma(230,300,1.1,'lying');
+    if(current===1 && !locked) pulseRing(230,270,90,time,'#f0c266');
+    labelBanner(LANG==='en' ? 'Grandma is left alone' : 'Nenek ditinggal sendirian');
+  }
+  function drawSceneCrawl(time,progress){
+    drawSky(false);
+    ctx.fillStyle='#3a2416';
+    ctx.fillRect(0,190,W,H-190);
+    ctx.fillStyle='#5a3a22';
+    ctx.fillRect(0,140,W,60);
+    var startX=560, endX=260, y=300;
+    var x = startX + (endX-startX)*progress;
+    drawKitchenDoor(150,180);
+    drawGrandma(x,y,1.05,'crawl');
+    if(current===2 && !locked){
+      pulseRing(x,y-20,60,time,'#f0c266');
+    }
+    drawProgressBar(progress);
+    labelBanner(LANG==='en' ? 'Crawling to the kitchen' : 'Merangkak menuju dapur');
+  }
+  function drawKitchenDoor(x,y){
+    ctx.save();
+    ctx.fillStyle='#2a1c10';
+    ctx.fillRect(x-40,y,80,120);
+    ctx.strokeStyle='#7a4a2a';ctx.lineWidth=6;
+    ctx.strokeRect(x-40,y,80,120);
+    ctx.restore();
+  }
+  function drawSceneEmptyKitchen(time){
+    drawSky(false);
+    ctx.fillStyle='#3a2416';
+    ctx.fillRect(0,190,W,H-190);
+    ctx.fillStyle='#5a3a22';
+    ctx.fillRect(0,140,W,60);
+    drawPot(400,300,true);
+    ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.font='34px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('?', 400, 260);
+    drawGrandma(160,330,0.8,'sit');
+    if(current===3 && !locked) pulseRing(400,290,90,time,'#f0c266');
+    labelBanner(LANG==='en' ? 'The kitchen is empty' : 'Dapur yang kosong');
+  }
+  function drawSceneGrandsonEats(time,count,target){
+    drawSky(false);
+    drawGroundBand(230,'#6b8f3a');
+    drawMountains();
+    // path
+    ctx.fillStyle='#c9a86a';
+    ctx.beginPath();
+    ctx.moveTo(0,320);ctx.quadraticCurveTo(400,260,800,320);
+    ctx.lineTo(800,360);ctx.quadraticCurveTo(400,300,0,360);
+    ctx.closePath();ctx.fill();
+    drawBoy(420,300,1.3,true);
+    if(current===4 && !locked) pulseRing(420,260,90,time,'#f0c266');
+    drawMashBar(count,target);
+    labelBanner(LANG==='en' ? 'The grandson eats the food' : 'Cucu memakan bekal di jalan');
+  }
+  function drawSceneBundle(time,open){
+    drawSky(false);
+    ctx.fillStyle='#3a2416';
+    ctx.fillRect(0,190,W,H-190);
+    ctx.fillStyle='#5a3a22';
+    ctx.fillRect(0,140,W,60);
+    drawGrandma(160,330,0.8,'sit');
+    drawBundle(400,290, !!open);
+    if(current===5 && !locked) pulseRing(400,290,90,time,'#f0c266');
+    labelBanner(open ? (LANG==='en'?'Only bones remain...':'Hanya tersisa tulang...') : (LANG==='en'?'A bundle of food':'Sebungkus makanan'));
+  }
+  function drawSceneCurse(time,progress){
+    var dark = progress>0.15;
+    drawSky(dark);
+    if(dark){ drawStorm(progress); }
+    else { drawMountains(); drawGroundBand(230,'#6b8f3a'); }
+    drawGrandma(400,340,1.2,'pray');
+    if(progress>0.05){
+      ctx.save();
+      ctx.strokeStyle='rgba(240,194,102,'+Math.min(0.9,progress)+')';
+      ctx.lineWidth=3;
+      for(var i=0;i<3;i++){
+        var rad = 30 + progress*70 + i*18;
+        ctx.globalAlpha = 1-progress*0.6;
+        ctx.beginPath();ctx.arc(400,300,rad,0,Math.PI*2);ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if(current===6 && !locked) pulseRing(400,290,100,time,'#f0c266');
+    drawProgressBar(progress);
+    labelBanner(LANG==='en' ? 'A grieving prayer' : 'Doa yang penuh kepedihan');
+  }
+  function drawSceneQuake(time,anim){
+    // anim: 0 = idle waiting for tap, 0..1 during quake, 'sunk' after
+    var intensity = 0;
+    var offset = {x:0,y:0};
+    if(anim==='idle'){
+      drawSky(false);
+      drawMountains();
+      drawGroundBand(230,'#6b8f3a');
+      drawVillageRow(-1);
+      if(current===7 && !locked) pulseRing(400,260,170,time,'#f0c266');
+      labelBanner(LANG==='en' ? 'The village of Kawar':'Desa Kawar');
+    } else if(typeof anim === 'number'){
+      intensity = anim;
+      offset = shakeOffset(intensity,time);
+      ctx.save();
+      ctx.translate(offset.x,offset.y);
+      drawSky(true);
+      drawMountains();
+      drawGroundBand(230,'#4a3020');
+      drawVillageRow(-1);
+      ctx.restore();
+      drawStorm(intensity);
+      labelBanner(LANG==='en' ? 'The earth trembles!':'Bumi berguncang!');
+    } else if(anim==='sunk'){
+      drawSceneLake(time);
+    }
+  }
+  function drawSceneLake(time){
+    drawSky(false);
+    drawMountains();
+    ctx.fillStyle = grad(0,230,0,H,[[0,'#3f7fa6'],[1,'#1e4f6b']]);
+    ctx.fillRect(0,230,W,H-230);
+    // shimmer
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,.25)';
+    ctx.lineWidth=2;
+    for(var i=0;i<6;i++){
+      var yy = 260 + i*28 + Math.sin(time/500+i)*3;
+      ctx.beginPath();
+      ctx.moveTo(40+ (i%2)*20,yy);
+      ctx.lineTo(760- (i%2)*20,yy);
+      ctx.stroke();
+    }
+    ctx.restore();
+    labelBanner(LANG==='en' ? 'Lake Lau Kawar' : 'Danau Lau Kawar');
+  }
+  function drawSceneChoice(time){
+    drawSceneLake(time);
+    ctx.save();
+    ctx.fillStyle='rgba(20,12,6,.55)';
+    ctx.fillRect(0,370,W,80);
+    ctx.restore();
+    SCENES[8].choices.forEach(function(c){
+      var isChosen = choiceMade===c.id;
+      ctx.save();
+      ctx.fillStyle = isChosen ? '#e0483e' : 'rgba(255,255,255,.12)';
+      ctx.strokeStyle = '#f0c266';
+      ctx.lineWidth=2;
+      roundRect(c.x-c.w/2,c.y-c.h/2,c.w,c.h,10);
+      ctx.fill();ctx.stroke();
+      ctx.fillStyle='#fff';
+      ctx.font='13px sans-serif';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      wrapText(CHOICE_LABEL[c.id][LANG], c.x, c.y, c.w-24, 16);
+      ctx.restore();
+    });
+    if(!choiceMade && current===8 && !locked){
+      SCENES[8].choices.forEach(function(c){
+        pulseRing(c.x,c.y,Math.max(c.w,c.h)/1.6,time+((c.id==='feast')?300:0),'#fff2c0');
+      });
+    }
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function wrapText(text,cx,cy,maxWidth,lineHeight){
+    var words = text.split(' ');
+    var lines=[]; var line='';
+    for(var i=0;i<words.length;i++){
+      var test = line + words[i] + ' ';
+      if(ctx.measureText(test).width > maxWidth && line!==''){
+        lines.push(line); line = words[i]+' ';
+      } else { line = test; }
+    }
+    lines.push(line);
+    var startY = cy - (lines.length-1)*lineHeight/2;
+    lines.forEach(function(l,i){ ctx.fillText(l.trim(), cx, startY + i*lineHeight); });
+  }
+  function labelBanner(text){
+    ctx.save();
+    ctx.fillStyle='rgba(20,12,6,.55)';
+    ctx.fillRect(0,0,W,34);
+    ctx.fillStyle='#f0c266';
+    ctx.font='bold 15px sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(text,W/2,17);
+    ctx.restore();
+  }
+  function drawProgressBar(p){
+    var x=W/2-110,y=H-30,w=220,h=14;
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,.15)';
+    roundRect(x,y,w,h,7);ctx.fill();
+    ctx.fillStyle='#f0c266';
+    roundRect(x,y,w*Math.max(0,Math.min(1,p)),h,7);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1.5;
+    roundRect(x,y,w,h,7);ctx.stroke();
+    ctx.restore();
+  }
+  function drawMashBar(count,target){
+    var x=W/2-110,y=H-30,w=220,h=14;
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,.15)';
+    roundRect(x,y,w,h,7);ctx.fill();
+    ctx.fillStyle='#e0483e';
+    roundRect(x,y,w*Math.max(0,Math.min(1,count/target)),h,7);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1.5;
+    roundRect(x,y,w,h,7);ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ================= RENDER LOOP ================= */
+  function render(now){
+    var time = now - t0;
+    ctx.clearRect(0,0,W,H);
+    if(current === -1){
+      drawSceneField(time);
+      ctx.save();
+      ctx.fillStyle='rgba(10,6,2,.35)';
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+    } else {
+      var scene = SCENES[current];
+      if(scene.type==='hold'){
+        var p = holdActive ? Math.min(1,(now-holdStart)/holdNeeded) : holdProgress;
+        scene.draw(time,p);
+      } else if(scene.type==='mash'){
+        scene.draw(time,mashCount,mashTarget);
+      } else if(scene.type==='quake'){
+        if(earthquakeStart===null){
+          scene.draw(time,'idle');
+        } else {
+          var qp = (now-earthquakeStart)/2600;
+          if(qp>=1){
+            scene.draw(time,'sunk');
+          } else {
+            scene.draw(time, Math.min(1,qp));
+          }
+        }
+      } else if(scene.type==='choice'){
+        scene.draw(time);
+      } else {
+        scene.draw(time);
+      }
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  /* ================= INTERACTION ================= */
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+    return { x: cx * (W/rect.width), y: cy * (H/rect.height) };
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  canvas.addEventListener('pointerdown', function(e){
+    if(locked || current<0) return;
+    var pos = getPos(e);
+    var scene = SCENES[current];
+    if(scene.type==='tap'){
+      if(dist(pos.x,pos.y,scene.hotspot.x,scene.hotspot.y) <= scene.hotspot.r){
+        completeScene();
+      }
+    } else if(scene.type==='hold'){
+      if(dist(pos.x,pos.y,scene.hotspot.x,scene.hotspot.y) <= scene.hotspot.r){
+        holdActive = true;
+        holdStart = performance.now();
+        canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+      }
+    } else if(scene.type==='mash'){
+      if(dist(pos.x,pos.y,scene.hotspot.x,scene.hotspot.y) <= scene.hotspot.r){
+        mashCount = Math.min(mashTarget, mashCount+1);
+        lastMashTime = performance.now();
+        if(mashCount>=mashTarget){ completeScene(); }
+      }
+    } else if(scene.type==='quake'){
+      if(earthquakeStart===null && dist(pos.x,pos.y,scene.hotspot.x,scene.hotspot.y) <= scene.hotspot.r){
+        earthquakeStart = performance.now();
+        locked = true;
+        stopSpeak();
+        setTimeout(function(){
+          completeScene();
+        }, 2700);
+      }
+    } else if(scene.type==='choice'){
+      if(choiceMade) return;
+      scene.choices.forEach(function(c){
+        if(pos.x>c.x-c.w/2 && pos.x<c.x+c.w/2 && pos.y>c.y-c.h/2 && pos.y<c.y+c.h/2){
+          choiceMade = c.id;
+          locked = true;
+          stopSpeak();
+          speak(CHOICE_FEEDBACK[c.id][LANG]);
+          setTimeout(function(){ completeScene(); }, 3200);
+        }
+      });
+    }
+  });
+  window.addEventListener('pointerup', function(){
+    if(current<0) return;
+    var scene = SCENES[current];
+    if(scene.type==='hold' && holdActive){
+      var elapsed = performance.now()-holdStart;
+      holdActive=false;
+      if(elapsed>=holdNeeded){
+        holdProgress=1;
+        completeScene();
+      } else {
+        holdProgress = 0;
+      }
+    }
+  });
+  // hold progress check every frame via requestAnimationFrame in render(); trigger completion when reaches threshold while still held
+  setInterval(function(){
+    if(current<0) return;
+    var scene = SCENES[current];
+    if(scene.type==='hold' && holdActive){
+      var elapsed = performance.now()-holdStart;
+      if(elapsed>=holdNeeded){
+        holdActive=false;
+        holdProgress=1;
+        completeScene();
+      }
+    }
+    if(scene.type==='mash' && mashCount>0 && mashCount<mashTarget){
+      if(performance.now()-lastMashTime > 1400){
+        mashCount = Math.max(0,mashCount-1);
+      }
+    }
+  }, 120);
+
+  /* ================= SCENE FLOW ================= */
+  function updateDots(){
+    var dotsEl = document.getElementById('dots');
+    dotsEl.innerHTML='';
+    SCENES.forEach(function(s,i){
+      var d = document.createElement('div');
+      d.className='dot' + (i===current ? ' active' : (i<current ? ' done':''));
+      dotsEl.appendChild(d);
+    });
+  }
+  function setTexts(){
+    if(current<0){
+      document.getElementById('instructionText').textContent = UI[LANG].preInstruction;
+      document.getElementById('narrationText').textContent = '';
+      return;
+    }
+    var scene = SCENES[current];
+    document.getElementById('instructionText').textContent = scene.instruction[LANG];
+    document.getElementById('narrationText').textContent = scene.narration[LANG];
+  }
+  function goToScene(idx){
+    current = idx;
+    locked = false;
+    holdActive=false; holdProgress=0;
+    mashCount=0; earthquakeStart=null; choiceMade=null;
+    updateDots();
+    setTexts();
+    speak(SCENES[idx].narration[LANG]);
+  }
+  function completeScene(){
+    locked = true;
+    stopSpeak();
+    setTimeout(function(){
+      if(current < SCENES.length-1){
+        goToScene(current+1);
+      } else {
+        showEnding();
+      }
+    }, 900);
+  }
+  function showEnding(){
+    endingShown = true;
+    document.getElementById('instructionText').textContent =
+      LANG==='en' ? 'The tale has ended. Tap "Replay Story" to hear it again.' : 'Cerita telah berakhir. Ketuk "Ulangi Cerita" untuk mendengarnya lagi.';
+    document.getElementById('narrationText').textContent = ENDING_NARR[LANG];
+    speak(ENDING_NARR[LANG]);
+    var btn = document.getElementById('startBtn');
+    btn.textContent = UI[LANG].replay;
+    btn.classList.remove('hidden');
+  }
+  function startOrReplay(){
+    endingShown = false;
+    document.getElementById('startBtn').textContent = UI[LANG].replay;
+    goToScene(0);
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startOrReplay);
+
+  /* ================= LANG / MUTE BUTTONS ================= */
+  function applyLangUI(){
+    document.getElementById('titleLabel').textContent = UI[LANG].title;
+    document.getElementById('footer').textContent = UI[LANG].footer;
+    document.getElementById('langBtn').textContent = UI[LANG].langBtn;
+    document.getElementById('startBtn').textContent = (current>=0 || endingShown) ? UI[LANG].replay : UI[LANG].start;
+    document.documentElement.lang = LANG;
+    setTexts();
+    if(endingShown){
+      document.getElementById('narrationText').textContent = ENDING_NARR[LANG];
+    }
+  }
+  document.getElementById('langBtn').addEventListener('click', function(){
+    LANG = LANG==='id' ? 'en' : 'id';
+    applyLangUI();
+  });
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('laukawar_muted', muted);
+    document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+    if(muted) stopSpeak();
+  });
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+
+  applyLangUI();
+
+  /* ================= RESIZE / POSTMESSAGE ================= */
+  function reportHeight(){
+    var h = document.getElementById('app').getBoundingClientRect().height;
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({ type:'laukawarResize', height: Math.ceil(h) + 4 }, '*');
+    }
+  }
+  window.addEventListener('resize', function(){ fitCanvas(); reportHeight(); });
+  window.addEventListener('load', reportHeight);
+  setTimeout(reportHeight, 300);
+  setTimeout(reportHeight, 1000);
+  var ro = window.ResizeObserver ? new ResizeObserver(reportHeight) : null;
+  if(ro) ro.observe(document.getElementById('app'));
+
+})();
+</script>
+</body>
+</html>
