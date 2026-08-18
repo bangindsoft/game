@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yong Tu dan Benih Tanaman dari Raja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fbf1de;
+    --panel:#fffaf0;
+    --ink:#3b2b20;
+    --brown:#7a4a24;
+    --brown-dark:#5c3618;
+    --gold:#d4a437;
+    --gold-dark:#b8862a;
+    --leaf:#4d7c3f;
+    --leaf-dark:#365c2b;
+    --sad:#a6553b;
+    --shadow: rgba(59,43,32,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Nunito',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    padding:14px 14px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  h1.game-title{
+    font-family:'Baloo 2',sans-serif;
+    font-size:1.3rem;
+    text-align:center;
+    color:var(--brown-dark);
+    margin:2px 0 0;
+  }
+  .subtitle{
+    text-align:center;
+    font-size:0.85rem;
+    color:var(--brown);
+    margin:0 0 4px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .dots{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:center;
+    flex:1;
+  }
+  .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:#e3d3b3;
+    border:1px solid var(--gold-dark);
+    transition:all .25s ease;
+  }
+  .dot.active{
+    background:var(--gold);
+    transform:scale(1.25);
+    box-shadow:0 0 0 3px rgba(212,164,55,0.25);
+  }
+  .dot.done{ background:var(--leaf); border-color:var(--leaf-dark);}
+  .icon-btn{
+    display:flex;align-items:center;justify-content:center;gap:5px;
+    background:var(--panel);
+    border:2px solid var(--gold-dark);
+    color:var(--brown-dark);
+    border-radius:999px;
+    padding:7px 12px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    cursor:pointer;
+    user-select:none;
+  }
+  .icon-btn:active{transform:scale(0.96);}
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:16px;
+    overflow:hidden;
+    border:3px solid var(--gold-dark);
+    box-shadow:0 6px 18px var(--shadow);
+    background:#eee2c4;
+  }
+  canvas#stage{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .hotspot{
+    position:absolute;
+    background:rgba(255,250,240,0.16);
+    border:2.5px solid var(--gold);
+    border-radius:12px;
+    box-shadow:0 0 0 3px rgba(212,164,55,0.28), 0 0 14px rgba(255,220,120,0.55);
+    color:var(--brown-dark);
+    font-family:'Nunito',sans-serif;
+    font-weight:800;
+    font-size:0.72rem;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    padding-bottom:5px;
+    cursor:pointer;
+    animation:pulseHot 1.4s ease-in-out infinite;
+    text-shadow:0 1px 3px rgba(255,255,255,0.9), 0 0 2px #fff;
+  }
+  .hotspot span{
+    background:rgba(255,250,240,0.85);
+    padding:2px 8px;
+    border-radius:8px;
+    border:1px solid var(--gold-dark);
+  }
+  .hotspot.tapped{
+    opacity:0.35;
+    animation:none;
+    cursor:default;
+    box-shadow:none;
+  }
+  @keyframes pulseHot{
+    0%,100%{ box-shadow:0 0 0 3px rgba(212,164,55,0.28), 0 0 14px rgba(255,220,120,0.55);}
+    50%{ box-shadow:0 0 0 6px rgba(212,164,55,0.15), 0 0 22px rgba(255,220,120,0.85);}
+  }
+  .controls-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    min-height:56px;
+    justify-content:center;
+  }
+  .primary-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    color:#fffaf0;
+    background:linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border:none;
+    border-radius:14px;
+    padding:12px 26px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #8f6a1c, 0 6px 10px var(--shadow);
+    letter-spacing:.3px;
+  }
+  .primary-btn:active{
+    transform:translateY(3px);
+    box-shadow:0 1px 0 #8f6a1c;
+  }
+  .primary-btn:disabled{
+    opacity:0.5;
+    cursor:default;
+  }
+  .secondary-btn{
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--brown-dark);
+    background:var(--panel);
+    border:2px solid var(--gold-dark);
+    border-radius:12px;
+    padding:9px 18px;
+    cursor:pointer;
+  }
+  .choice-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .choice-btn{
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--brown-dark);
+    background:var(--panel);
+    border:2px solid var(--gold-dark);
+    border-radius:12px;
+    padding:10px 14px;
+    cursor:pointer;
+    max-width:260px;
+    text-align:center;
+  }
+  .choice-btn:active{ transform:scale(0.97); }
+  .choice-feedback{
+    font-size:0.82rem;
+    color:var(--sad);
+    font-weight:700;
+    text-align:center;
+    min-height:18px;
+  }
+  .hold-wrap{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .hold-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+    color:#fffaf0;
+    background:var(--leaf);
+    border:none;
+    border-radius:14px;
+    padding:12px 24px;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 4px 0 var(--leaf-dark);
+    touch-action:none;
+  }
+  .hold-fill{
+    position:absolute;left:0;top:0;bottom:0;
+    width:0%;
+    background:rgba(255,255,255,0.35);
+  }
+  .hold-btn span{position:relative;z-index:1;}
+  .mash-wrap{ display:flex;flex-direction:column;align-items:center;gap:6px; }
+  .mash-count{ font-weight:700; font-size:0.85rem; color:var(--brown-dark); }
+  .drag-zone-note{
+    font-size:0.78rem;
+    color:var(--brown);
+    text-align:center;
+  }
+  #dragPot{
+    position:absolute;
+    touch-action:none;
+    cursor:grab;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #dragPot:active{cursor:grabbing;}
+  .narration-panel{
+    background:var(--panel);
+    border:2px solid var(--gold-dark);
+    border-radius:14px;
+    padding:12px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .instruction-text{
+    font-weight:800;
+    font-size:0.86rem;
+    color:var(--brown-dark);
+    background:#f3e6c5;
+    border-left:4px solid var(--gold);
+    border-radius:6px;
+    padding:7px 10px;
+  }
+  .narration-text{
+    font-size:0.9rem;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  .bottom-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  footer.credits{
+    text-align:center;
+    font-size:0.72rem;
+    color:#a3927b;
+    margin-top:4px;
+  }
+  .start-overlay, .end-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(59,43,32,0.55), rgba(59,43,32,0.72));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:20px;
+    text-align:center;
+    z-index:5;
+  }
+  .start-overlay h2, .end-overlay h2{
+    font-family:'Baloo 2',sans-serif;
+    color:#fffaf0;
+    font-size:1.25rem;
+    margin:0;
+    text-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  .start-overlay p, .end-overlay p{
+    color:#fdf3dd;
+    font-size:0.88rem;
+    max-width:420px;
+    margin:0;
+  }
+  @media (max-width:420px){
+    h1.game-title{font-size:1.1rem;}
+    .primary-btn{font-size:0.9rem;padding:11px 20px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1 class="game-title" id="titleText">Yong Tu dan Benih Tanaman dari Raja</h1>
+  <p class="subtitle" id="subtitleText">Dongeng Rakyat Korea — Sebuah Petualangan Interaktif</p>
+
+  <div class="topbar">
+    <button class="icon-btn" id="langBtn" type="button" title="Ganti Bahasa">🌐 <span id="langLabel">EN</span></button>
+    <div class="dots" id="dots"></div>
+    <button class="icon-btn" id="muteBtn" type="button" title="Bisukan narasi">🔊 <span id="muteLabel">Suara</span></button>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <canvas id="stage" width="800" height="460"></canvas>
+    <div id="hotspotLayer"></div>
+    <div class="start-overlay" id="startOverlay">
+      <h2 id="startTitle">Yong Tu dan Benih Tanaman dari Raja</h2>
+      <p id="startDesc">Ikuti perjalanan Yong Tu, seorang pemuda jujur yang diuji oleh seorang raja lewat sebutir benih. Ketuk tombol di bawah untuk memulai kisahnya.</p>
+      <button class="primary-btn" id="startBtn" type="button">▶ Mulai Cerita</button>
+    </div>
+    <div class="end-overlay" id="endOverlay" style="display:none;">
+      <h2 id="endTitle">Tamat</h2>
+      <p id="endDesc">Kejujuran Yong Tu membawanya menjadi anak angkat raja. Kejujuran akan mendatangkan keberuntungan, dan kebohongan akan mendatangkan malapetaka.</p>
+      <button class="primary-btn" id="replayBtn" type="button">🔄 Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="controls-panel" id="controlsPanel"></div>
+
+  <div class="narration-panel">
+    <div class="instruction-text" id="instructionText">Ketuk "Mulai Cerita" untuk memulai.</div>
+    <div class="narration-text" id="narrationText"></div>
+  </div>
+
+  <footer class="credits" id="footerCredits">Dongeng Rakyat Korea — Diceritakan Ulang Secara Interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var qp = new URLSearchParams(window.location.search);
+  var state = {
+    lang: (qp.get('lang') === 'en') ? 'en' : (localStorage.getItem('yongtu_lang') || 'id'),
+    muted: localStorage.getItem('yongtu_muted') === '1',
+    sceneIndex: -1, // -1 = start overlay
+    transitioning: false,
+    days: 0,
+    tappedYouths: {0:false,1:false},
+    holdActive: false,
+    holdProgress: 0,
+    holdRAF: null,
+    potPlaced: false
+  };
+
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  var dotsEl = document.getElementById('dots');
+  var hotspotLayer = document.getElementById('hotspotLayer');
+  var controlsPanel = document.getElementById('controlsPanel');
+  var instructionText = document.getElementById('instructionText');
+  var narrationText = document.getElementById('narrationText');
+  var startOverlay = document.getElementById('startOverlay');
+  var endOverlay = document.getElementById('endOverlay');
+  var stageWrap = document.getElementById('stageWrap');
+
+  /* ---------------------------------------------------------
+     TEXT (ID / EN)
+  --------------------------------------------------------- */
+  var TXT = {
+    id:{
+      title:"Yong Tu dan Benih Tanaman dari Raja",
+      subtitle:"Dongeng Rakyat Korea — Sebuah Petualangan Interaktif",
+      startTitle:"Yong Tu dan Benih Tanaman dari Raja",
+      startDesc:"Ikuti perjalanan Yong Tu, seorang pemuda jujur yang diuji oleh seorang raja lewat sebutir benih. Ketuk tombol di bawah untuk memulai kisahnya.",
+      startBtn:"▶ Mulai Cerita",
+      endTitle:"Tamat",
+      endDesc:"Kejujuran Yong Tu membawanya menjadi anak angkat raja. Kejujuran akan mendatangkan keberuntungan, dan kebohongan akan mendatangkan malapetaka.",
+      replayBtn:"🔄 Ulangi Cerita",
+      mute:"Suara", unmute:"Bisu",
+      footer:"Dongeng Rakyat Korea — Diceritakan Ulang Secara Interaktif",
+      next:"Lanjut ➜",
+      water:"Tahan untuk Siram",
+      watered:"Tersiram!",
+      tend:"Rawat Tanaman",
+      go:"Berangkat ke Istana",
+      hear:"Dengar Keputusan Raja",
+      dragNote:"Seret pot kecil ke dalam wadah besar",
+      choiceHonest:"Berkata jujur bahwa benihnya tidak tumbuh",
+      choiceLie:"Diam-diam menukar dengan tanaman lain",
+      choiceWrongFeedback:"Yong Tu bukan pemuda yang suka berbohong. Coba pilih jawaban yang jujur.",
+      scenes:[
+        {
+          instruction:"Ketuk sang raja untuk mendengar keinginannya.",
+          narration:"Di sebuah kerajaan Korea, hiduplah seorang raja yang gundah gulana. Ia tidak memiliki putra, hanya putri-putri yang cantik. Raja itu ingin mengangkat seorang anak laki-laki yang jujur untuk menjadi penerusnya.",
+          hotLabel:"Dengar"
+        },
+        {
+          instruction:"Ketuk pot benih untuk mengambilnya, seperti yang dilakukan Yong Tu.",
+          narration:"Atas saran para penasehat, raja menggelar sayembara. Ia membagikan benih tanaman dalam pot kepada para pemuda negeri, dan berjanji akan mengangkat anak siapa pun yang berhasil merawatnya menjadi tanaman yang subur.",
+          hotLabel:"Ambil"
+        },
+        {
+          instruction:"Tahan tombol \"Tahan untuk Siram\" hingga penuh untuk menyirami benih.",
+          narration:"Yong Tu, seorang pemuda desa, membawa pulang benihnya. Dengan telaten ia menyiraminya setiap hari, berharap benih itu tumbuh menjadi tanaman yang indah."
+        },
+        {
+          instruction:"Seret pot kecil ke dalam wadah yang lebih besar, sesuai saran ibu Yong Tu.",
+          narration:"Sebulan berlalu, namun benih itu tak kunjung tumbuh. Ibu Yong Tu menyarankan agar ia mengganti pot dengan yang lebih besar, siapa tahu itu penyebabnya."
+        },
+        {
+          instruction:"Ketuk matahari sebanyak 5 kali untuk melewati hari demi hari.",
+          narration:"Yong Tu mengganti wadahnya, namun tanaman itu tetap tidak tumbuh. Hari demi hari berlalu, dan ia terus merawatnya dengan sabar meski hasilnya tetap sama."
+        },
+        {
+          instruction:"Ketuk tombol \"Berangkat ke Istana\" untuk melanjutkan perjalanan Yong Tu.",
+          narration:"Hari yang ditentukan pun tiba. Dengan sedih, Yong Tu berpamitan kepada ibunya dan membawa pot yang hanya berisi tanah kosong itu menuju istana."
+        },
+        {
+          instruction:"Ketuk masing-masing pemuda untuk mendengar ejekan mereka.",
+          narration:"Di istana, para pemuda lain membawa tanaman yang subur dan indah. Melihat pot kosong Yong Tu, mereka menertawakan dan mengejeknya, namun Yong Tu hanya diam.",
+          taunts:["Hei Yong Tu, raja tidak akan senang melihat potmu yang kosong itu!","Ha ha, kamu bernasib sial! Raja pasti jijik dengan hasil tanamanmu."]
+        },
+        {
+          instruction:"Pilih jawaban Yong Tu kepada raja.",
+          narration:"Raja memeriksa satu per satu tanaman, wajahnya semakin tidak senang. Hingga akhirnya ia melihat Yong Tu yang berdiri sedih di ujung barisan dan bertanya, 'Mana tanamanmu?'"
+        },
+        {
+          instruction:"Ketuk tombol \"Dengar Keputusan Raja\" untuk mengetahui akhir cerita.",
+          narration:"Raja tersenyum bangga. Ia mengungkapkan bahwa semua benih dalam sayembara telah direbus terlebih dahulu, sehingga mustahil tumbuh. Hanya Yong Tu yang jujur, sementara pemuda lain diam-diam menukar tanaman mereka. Yong Tu pun diangkat menjadi anak raja, dan kelak tumbuh menjadi pemimpin yang jujur dan disukai semua orang."
+        }
+      ]
+    },
+    en:{
+      title:"Yong Tu and the King's Seed",
+      subtitle:"A Korean Folktale — An Interactive Adventure",
+      startTitle:"Yong Tu and the King's Seed",
+      startDesc:"Follow Yong Tu, an honest young man tested by a king through a single seed. Tap the button below to begin the story.",
+      startBtn:"▶ Start Story",
+      endTitle:"The End",
+      endDesc:"Yong Tu's honesty led him to become the king's adopted son. Honesty brings good fortune, while lies bring misfortune.",
+      replayBtn:"🔄 Replay Story",
+      mute:"Sound", unmute:"Muted",
+      footer:"A Korean Folktale — Retold Interactively",
+      next:"Continue ➜",
+      water:"Hold to Water",
+      watered:"Watered!",
+      tend:"Tend the Plant",
+      go:"Head to the Palace",
+      hear:"Hear the King's Decision",
+      dragNote:"Drag the small pot into the bigger container",
+      choiceHonest:"Honestly tell the king his seed never grew",
+      choiceLie:"Secretly swap it for another plant",
+      choiceWrongFeedback:"Yong Tu is not one to lie. Try choosing the honest answer.",
+      scenes:[
+        {
+          instruction:"Tap the king to hear his wish.",
+          narration:"In a kingdom in Korea, there lived a king troubled in heart. He had no son, only daughters. He wished to adopt an honest young man to become his heir.",
+          hotLabel:"Listen"
+        },
+        {
+          instruction:"Tap the potted seed to take it, just as Yong Tu did.",
+          narration:"On his advisors' suggestion, the king held a contest. He gave every young man in the kingdom a potted seed, promising to adopt whoever grew it into the finest plant.",
+          hotLabel:"Take"
+        },
+        {
+          instruction:"Hold the \"Hold to Water\" button until it fills up to water the seed.",
+          narration:"Yong Tu, a village youth, brought his seed home. Faithfully, he watered it every day, hoping it would grow into a beautiful plant."
+        },
+        {
+          instruction:"Drag the small pot into the bigger container, as Yong Tu's mother suggested.",
+          narration:"A month passed, but the seed never sprouted. Yong Tu's mother suggested he change to a bigger pot — perhaps that was the problem."
+        },
+        {
+          instruction:"Tap the sun 5 times to let the days pass by.",
+          narration:"Yong Tu changed the pot, but still nothing grew. Day after day passed, and he kept caring for it patiently, though the result never changed."
+        },
+        {
+          instruction:"Tap the \"Head to the Palace\" button to continue Yong Tu's journey.",
+          narration:"The appointed day arrived. Sadly, Yong Tu bid his mother farewell and carried his empty pot of soil toward the palace."
+        },
+        {
+          instruction:"Tap each young man to hear their taunts.",
+          narration:"At the palace, the other young men carried lush, thriving plants. Seeing Yong Tu's empty pot, they laughed and mocked him — but Yong Tu stayed silent.",
+          taunts:["Hey Yong Tu, the king won't be pleased with that empty pot of yours!","Ha ha, bad luck! The king will surely be disgusted by your plant."]
+        },
+        {
+          instruction:"Choose Yong Tu's answer to the king.",
+          narration:"The king inspected each plant, his face growing more displeased. At last he saw Yong Tu standing sadly at the end of the line and asked, 'Where is your plant?'"
+        },
+        {
+          instruction:"Tap the \"Hear the King's Decision\" button to learn how the story ends.",
+          narration:"The king smiled with pride. He revealed that every seed in the contest had been boiled beforehand, making it impossible to grow. Only Yong Tu had been honest, while the others had secretly swapped their plants. Yong Tu was adopted as the king's son, and grew into an honest leader loved by all."
+        }
+      ]
+    }
+  };
+  var SCENE_COUNT = TXT.id.scenes.length;
+
+  /* ---------------------------------------------------------
+     SPEECH SYNTHESIS
+  --------------------------------------------------------- */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    if(!voices || !voices.length) return null;
+    var exact = voices.filter(function(v){ return v.lang === langCode; });
+    if(exact.length) return exact[0];
+    var prefix = langCode.split('-')[0];
+    var loose = voices.filter(function(v){ return v.lang && v.lang.indexOf(prefix) === 0; });
+    if(loose.length) return loose[0];
+    return null;
+  }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if(state.muted || !text) return;
+    var langCode = state.lang === 'en' ? 'en-US' : 'id-ID';
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langCode;
+    var v = pickVoice(langCode);
+    if(v) utter.voice = v;
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    window.speechSynthesis.speak(utter);
+  }
+  function stopSpeech(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------------------------------------------------
+     RESIZE / POSTMESSAGE TO PARENT
+  --------------------------------------------------------- */
+  function reportHeight(){
+    var h = document.getElementById('app').offsetHeight + 20;
+    try{
+      window.parent.postMessage({ type:'yongtu-resize', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  if(window.ResizeObserver){
+    new ResizeObserver(reportHeight).observe(document.getElementById('app'));
+  }
+
+  /* ---------------------------------------------------------
+     CANVAS DRAW HELPERS
+  --------------------------------------------------------- */
+  function clear(){ ctx.clearRect(0,0,W,H); }
+
+  function drawSky(topColor, bottomColor){
+    var g = ctx.createLinearGradient(0,0,0,H*0.62);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.62);
+  }
+
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(0,0,34,16,0,0,Math.PI*2);
+    ctx.ellipse(22,-6,22,14,0,0,Math.PI*2);
+    ctx.ellipse(-22,-4,20,13,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSun(x,y,r,glow){
+    ctx.save();
+    if(glow){
+      var gr = ctx.createRadialGradient(x,y,r*0.2,x,y,r*2.2);
+      gr.addColorStop(0,'rgba(255,214,110,0.55)');
+      gr.addColorStop(1,'rgba(255,214,110,0)');
+      ctx.fillStyle = gr;
+      ctx.beginPath(); ctx.arc(x,y,r*2.2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#ffcf5c';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGroundGrass(colorTop, colorBottom){
+    var g = ctx.createLinearGradient(0,H*0.58,0,H);
+    g.addColorStop(0, colorTop);
+    g.addColorStop(1, colorBottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,H*0.58,W,H*0.42);
+  }
+
+  function drawFloorTile(){
+    ctx.fillStyle = '#c9a25f';
+    ctx.fillRect(0,H*0.58,W,H*0.42);
+    ctx.strokeStyle = 'rgba(122,74,36,0.25)';
+    ctx.lineWidth = 2;
+    for(var i=0;i<10;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*(W/9), H*0.58);
+      ctx.lineTo(i*(W/9) - 30, H);
+      ctx.stroke();
+    }
+  }
+
+  function drawRoadPath(){
+    drawGroundGrass('#8fbf5f','#6a9a45');
+    ctx.fillStyle = '#d8bd85';
+    ctx.beginPath();
+    ctx.moveTo(W*0.42,H*0.6);
+    ctx.quadraticCurveTo(W*0.55,H*0.78,W*0.5,H);
+    ctx.lineTo(W*0.78,H);
+    ctx.quadraticCurveTo(W*0.7,H*0.78,W*0.62,H*0.6);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawColumn(x,y,h,w){
+    ctx.fillStyle = '#c94f3a';
+    ctx.fillRect(x-w/2,y,w,h);
+    ctx.fillStyle = '#a63a28';
+    ctx.fillRect(x-w/2-4,y,w+8,10);
+    ctx.fillRect(x-w/2-4,y+h-10,w+8,10);
+  }
+
+  function drawThroneRoomBg(){
+    drawSky('#f7dfb0','#f3c98a');
+    drawFloorTile();
+    drawColumn(W*0.08,H*0.06,H*0.55,26);
+    drawColumn(W*0.92,H*0.06,H*0.55,26);
+    drawColumn(W*0.24,H*0.1,H*0.5,20);
+    drawColumn(W*0.76,H*0.1,H*0.5,20);
+    // back wall banner
+    ctx.fillStyle = '#8a2f22';
+    ctx.fillRect(W*0.5-70,H*0.08,140,H*0.42);
+    ctx.strokeStyle = '#d4a437';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(W*0.5-70,H*0.08,140,H*0.42);
+  }
+
+  function drawThrone(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a4a24';
+    ctx.fillRect(-46,-10,92,110);
+    ctx.fillStyle = '#5c3618';
+    ctx.fillRect(-52,-70,104,68);
+    ctx.fillStyle = '#d4a437';
+    for(var i=-1;i<=1;i++){
+      ctx.beginPath();
+      ctx.arc(i*32,-72,9,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // generic simple person figure
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    var robeColor = opts.robeColor || '#3b6e91';
+    var skin = '#e8b98a';
+    var expression = opts.expression || 'neutral'; // neutral, sad, happy, mocking, worried
+    var crown = !!opts.crown;
+    var pose = opts.pose || 'stand'; // stand, sit, walk
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+
+    // shadow
+    ctx.fillStyle = 'rgba(59,43,32,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(0,6,34,9,0,0,Math.PI*2);
+    ctx.fill();
+
+    // robe/body
+    ctx.fillStyle = robeColor;
+    ctx.beginPath();
+    if(pose === 'sit'){
+      ctx.moveTo(-30,0);
+      ctx.lineTo(30,0);
+      ctx.lineTo(22,-70);
+      ctx.lineTo(-22,-70);
+      ctx.closePath();
+    } else {
+      ctx.moveTo(-26,0);
+      ctx.lineTo(26,0);
+      ctx.lineTo(18,-86);
+      ctx.lineTo(-18,-86);
+      ctx.closePath();
+    }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // sash
+    ctx.strokeStyle = opts.sashColor || '#d4a437';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(-14,-80); ctx.lineTo(10,-6);
+    ctx.stroke();
+
+    // arms
+    ctx.strokeStyle = robeColor;
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    var armLift = opts.armsUp ? -30 : 0;
+    ctx.beginPath();
+    ctx.moveTo(-16,-70); ctx.lineTo(-32,-40+armLift);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(16,-70); ctx.lineTo(32,-40+armLift);
+    ctx.stroke();
+
+    // head
+    var headY = -100;
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,headY,20,0,Math.PI*2);
+    ctx.fill();
+
+    // hair
+    ctx.fillStyle = opts.hairColor || '#2b2119';
+    ctx.beginPath();
+    ctx.arc(0,headY-4,21,Math.PI*1.05,Math.PI*1.95);
+    ctx.fill();
+
+    // crown
+    if(crown){
+      ctx.fillStyle = '#d4a437';
+      ctx.beginPath();
+      ctx.moveTo(-18,headY-18);
+      ctx.lineTo(-18,headY-32);
+      ctx.lineTo(-8,headY-20);
+      ctx.lineTo(0,headY-34);
+      ctx.lineTo(8,headY-20);
+      ctx.lineTo(18,headY-32);
+      ctx.lineTo(18,headY-18);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // face
+    ctx.strokeStyle = '#3b2b20';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    // eyes
+    ctx.beginPath();
+    if(expression === 'happy'){
+      ctx.moveTo(-8,headY-2); ctx.quadraticCurveTo(-5,headY-6,-2,headY-2);
+      ctx.moveTo(2,headY-2); ctx.quadraticCurveTo(5,headY-6,8,headY-2);
+    } else if(expression === 'sad' || expression === 'worried'){
+      ctx.moveTo(-9,headY-4); ctx.lineTo(-2,headY-1);
+      ctx.moveTo(9,headY-4); ctx.lineTo(2,headY-1);
+    } else if(expression === 'mocking'){
+      ctx.moveTo(-9,headY-3); ctx.lineTo(-1,headY-3);
+      ctx.moveTo(9,headY-3); ctx.lineTo(1,headY-3);
+    } else {
+      ctx.moveTo(-6,headY-2); ctx.lineTo(-2,headY-2);
+      ctx.moveTo(6,headY-2); ctx.lineTo(2,headY-2);
+    }
+    ctx.stroke();
+
+    // mouth
+    ctx.beginPath();
+    if(expression === 'happy' || expression === 'mocking'){
+      ctx.arc(0,headY+8,6,0,Math.PI,false);
+    } else if(expression === 'sad'){
+      ctx.arc(0,headY+14,6,Math.PI,0,false);
+    } else {
+      ctx.moveTo(-4,headY+9); ctx.lineTo(4,headY+9);
+    }
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawPot(x,y,scale,opts){
+    opts = opts || {};
+    var size = opts.size || 'small'; // small, big
+    var stage = opts.stage || 'seed'; // seed, sprout, empty, lush
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+
+    var potW = size === 'big' ? 76 : 50;
+    var potH = size === 'big' ? 54 : 38;
+
+    // shadow
+    ctx.fillStyle = 'rgba(59,43,32,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0,potH*0.55,potW*0.62,10,0,0,Math.PI*2);
+    ctx.fill();
+
+    // pot body
+    ctx.fillStyle = '#c25a34';
+    ctx.beginPath();
+    ctx.moveTo(-potW/2,0);
+    ctx.lineTo(potW/2,0);
+    ctx.lineTo(potW/2-8,potH);
+    ctx.lineTo(-potW/2+8,potH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#a8492b';
+    ctx.fillRect(-potW/2-4,-8,potW+8,12);
+
+    // soil
+    ctx.fillStyle = '#5a3b26';
+    ctx.beginPath();
+    ctx.ellipse(0,-6,potW/2-4,8,0,0,Math.PI*2);
+    ctx.fill();
+
+    if(stage === 'sprout' || stage === 'lush'){
+      var leafScale = stage === 'lush' ? 1.5 : 0.8;
+      ctx.strokeStyle = '#3f7a35';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0,-8);
+      ctx.lineTo(0,-8-24*leafScale);
+      ctx.stroke();
+      ctx.fillStyle = '#4d9a41';
+      ctx.beginPath();
+      ctx.ellipse(-10*leafScale,-8-20*leafScale,10*leafScale,6*leafScale,-0.5,0,Math.PI*2);
+      ctx.ellipse(10*leafScale,-8-16*leafScale,10*leafScale,6*leafScale,0.5,0,Math.PI*2);
+      ctx.fill();
+      if(stage === 'lush'){
+        ctx.beginPath();
+        ctx.ellipse(0,-8-34,13,8,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#e58fb0';
+        ctx.beginPath();
+        ctx.arc(0,-8-34,4,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#c9a877';
+    ctx.fillRect(-60,-40,120,70);
+    ctx.fillStyle = '#8a5a2f';
+    ctx.beginPath();
+    ctx.moveTo(-72,-40);
+    ctx.lineTo(0,-92);
+    ctx.lineTo(72,-40);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5c3618';
+    ctx.fillRect(-16,-4,32,34);
+    ctx.fillStyle = '#e8c98a';
+    ctx.fillRect(-46,-24,20,20);
+    ctx.fillRect(26,-24,20,20);
+    ctx.restore();
+  }
+
+  function drawTreeSimple(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4226';
+    ctx.fillRect(-6,-10,12,40);
+    ctx.fillStyle = color || '#4d7c3f';
+    ctx.beginPath();
+    ctx.arc(0,-40,34,0,Math.PI*2);
+    ctx.arc(-22,-20,22,0,Math.PI*2);
+    ctx.arc(22,-20,22,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceExterior(){
+    drawSky('#f9e6bd','#f0c383');
+    drawGroundGrass('#8fbf5f','#69963f');
+    // palace silhouette
+    ctx.fillStyle = '#c94f3a';
+    ctx.fillRect(W*0.28,H*0.22,W*0.44,H*0.4);
+    ctx.fillStyle = '#8a2f22';
+    ctx.beginPath();
+    ctx.moveTo(W*0.24,H*0.22);
+    ctx.lineTo(W*0.5,H*0.06);
+    ctx.lineTo(W*0.76,H*0.22);
+    ctx.closePath();
+    ctx.fill();
+    drawColumn(W*0.34,H*0.3,H*0.3,16);
+    drawColumn(W*0.5,H*0.3,H*0.3,16);
+    drawColumn(W*0.66,H*0.3,H*0.3,16);
+  }
+
+  /* ---------------------------------------------------------
+     UI HELPERS
+  --------------------------------------------------------- */
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    for(var i=0;i<SCENE_COUNT;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.dataset.i = i;
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var kids = dotsEl.children;
+    for(var i=0;i<kids.length;i++){
+      kids[i].classList.remove('active','done');
+      if(i < state.sceneIndex) kids[i].classList.add('done');
+      else if(i === state.sceneIndex) kids[i].classList.add('active');
+    }
+  }
+
+  function clearHotspots(){ hotspotLayer.innerHTML = ''; }
+  function addHotspot(id, xPct,yPct,wPct,hPct,label,onTap){
+    var el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'hotspot';
+    el.style.left = xPct+'%';
+    el.style.top = yPct+'%';
+    el.style.width = wPct+'%';
+    el.style.height = hPct+'%';
+    el.setAttribute('aria-label', label);
+    var span = document.createElement('span');
+    span.textContent = label;
+    el.appendChild(span);
+    el.addEventListener('click', function(){
+      if(el.classList.contains('tapped')) return;
+      onTap(el);
+    });
+    hotspotLayer.appendChild(el);
+    return el;
+  }
+
+  function clearControls(){ controlsPanel.innerHTML = ''; }
+
+  function setTexts(instr, narr){
+    instructionText.textContent = instr;
+    narrationText.textContent = narr;
+  }
+
+  function t(key){ return TXT[state.lang][key]; }
+
+  /* ---------------------------------------------------------
+     SCENE RENDER (drawing per scene index)
+  --------------------------------------------------------- */
+  function drawScene(idx){
+    clear();
+    if(idx === 0){
+      drawThroneRoomBg();
+      drawThrone(W*0.5, H*0.4, 1.05);
+      drawPerson(W*0.5, H*0.5, 1.15, {robeColor:'#8a2f22', sashColor:'#d4a437', crown:true, pose:'sit', expression:'worried'});
+    } else if(idx === 1){
+      drawThroneRoomBg();
+      drawThrone(W*0.72, H*0.4, 0.9);
+      drawPerson(W*0.72, H*0.5, 1.0, {robeColor:'#8a2f22', sashColor:'#d4a437', crown:true, pose:'sit', expression:'neutral', armsUp:true});
+      drawPot(W*0.32, H*0.72, 1.3, {size:'small', stage:'seed'});
+    } else if(idx === 2){
+      drawSky('#cdeaf5','#eaf6e0');
+      drawGroundGrass('#8fbf5f','#69963f');
+      drawHut(W*0.76,H*0.62,0.9);
+      drawPerson(W*0.32,H*0.68,1.15,{robeColor:'#3b6e91', expression: state.holdProgress>=100?'happy':'neutral'});
+      drawPot(W*0.32,H*0.82,1.3,{size:'small', stage: state.holdProgress>=100 ? 'sprout' : 'seed'});
+      if(state.holdActive){
+        drawSun(W*0.15,H*0.15,26,true);
+      }
+    } else if(idx === 3){
+      drawSky('#cdeaf5','#eaf6e0');
+      drawGroundGrass('#8fbf5f','#69963f');
+      drawHut(W*0.76,H*0.6,0.9);
+      drawPerson(W*0.62,H*0.66,1.0,{robeColor:'#b06a9a', expression:'neutral'});
+      // big target pot (drawn), stays fixed
+      drawPot(W*0.30,H*0.82,1.5,{size:'big', stage:'empty'});
+      // small pot drawn only if not yet placed (placed pot handled via DOM overlay drag)
+    } else if(idx === 4){
+      drawSky('#cdeaf5','#eaf6e0');
+      drawGroundGrass('#8fbf5f','#69963f');
+      drawHut(W*0.78,H*0.62,0.85);
+      drawPerson(W*0.32,H*0.7,1.1,{robeColor:'#3b6e91', expression: state.days>=5 ? 'sad' : 'neutral'});
+      drawPot(W*0.32,H*0.84,1.5,{size:'big', stage:'empty'});
+      drawSun(W*0.82,H*0.16,22,false);
+      // day markers
+      ctx.save();
+      ctx.font = '700 16px Nunito, sans-serif';
+      ctx.fillStyle = '#7a4a24';
+      ctx.textAlign = 'left';
+      ctx.fillText((state.lang==='en'?'Day ':'Hari ke-') + state.days, 20, 30);
+      ctx.restore();
+    } else if(idx === 5){
+      drawRoadPath();
+      drawHut(W*0.14,H*0.58,0.7);
+      drawPerson(W*0.14,H*0.72,0.9,{robeColor:'#b06a9a', expression:'sad'});
+      drawPerson(W*0.4,H*0.78,1.0,{robeColor:'#3b6e91', expression:'sad', pose:'walk'});
+      drawPot(W*0.48,H*0.86,0.9,{size:'big', stage:'empty'});
+      drawPalaceSmall(W*0.86,H*0.42);
+    } else if(idx === 6){
+      drawPalaceExterior();
+      drawFieldGround();
+      drawPerson(W*0.5,H*0.86,1.05,{robeColor:'#3b6e91', expression:'sad'});
+      drawPot(W*0.5,H*0.94,0.8,{size:'big', stage:'empty'});
+      drawPerson(W*0.22,H*0.84,1.0,{robeColor:'#7a9e3f', expression:'mocking'});
+      drawPot(W*0.22,H*0.94,0.9,{size:'small', stage:'lush'});
+      drawPerson(W*0.78,H*0.84,1.0,{robeColor:'#c97b3a', expression:'mocking'});
+      drawPot(W*0.78,H*0.94,0.9,{size:'small', stage:'lush'});
+    } else if(idx === 7){
+      drawPalaceExterior();
+      drawFieldGround();
+      drawPerson(W*0.62,H*0.78,1.1,{robeColor:'#8a2f22', sashColor:'#d4a437', crown:true, expression:'worried'});
+      drawPerson(W*0.34,H*0.86,1.0,{robeColor:'#3b6e91', expression:'sad'});
+      drawPot(W*0.34,H*0.95,0.85,{size:'big', stage:'empty'});
+    } else if(idx === 8){
+      drawPalaceExterior();
+      drawFieldGround();
+      drawPerson(W*0.5,H*0.76,1.15,{robeColor:'#8a2f22', sashColor:'#d4a437', crown:true, expression:'happy', armsUp:true});
+      drawPerson(W*0.28,H*0.86,1.05,{robeColor:'#3b6e91', expression:'happy'});
+      drawPot(W*0.28,H*0.95,0.9,{size:'big', stage:'sprout'});
+    }
+  }
+
+  function drawPalaceSmall(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#c94f3a';
+    ctx.fillRect(-40,-10,80,50);
+    ctx.fillStyle = '#8a2f22';
+    ctx.beginPath();
+    ctx.moveTo(-48,-10); ctx.lineTo(0,-46); ctx.lineTo(48,-10);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFieldGround(){
+    ctx.fillStyle = '#8fbf5f';
+    ctx.fillRect(0,H*0.6,W,H*0.4);
+  }
+
+  /* ---------------------------------------------------------
+     SCENE LOGIC / INTERACTIONS
+  --------------------------------------------------------- */
+  function goToScene(idx){
+    state.transitioning = false;
+    state.sceneIndex = idx;
+    updateDots();
+    clearHotspots();
+    clearControls();
+    var sc = t('scenes')[idx];
+    setTexts(sc.instruction, sc.narration);
+    speak(sc.narration);
+    drawScene(idx);
+    setupInteraction(idx);
+    reportHeight();
+  }
+
+  function lockAdvance(next){
+    if(state.transitioning) return;
+    state.transitioning = true;
+    setTimeout(function(){
+      if(next >= SCENE_COUNT){ showEnd(); }
+      else { goToScene(next); }
+    }, 450);
+  }
+
+  function setupInteraction(idx){
+    if(idx === 0){
+      var sc = t('scenes')[0];
+      addHotspot('king', 40, 18, 20, 55, sc.hotLabel, function(el){
+        el.classList.add('tapped');
+        lockAdvance(1);
+      });
+    } else if(idx === 1){
+      var sc1 = t('scenes')[1];
+      addHotspot('pot', 24, 66, 16, 24, sc1.hotLabel, function(el){
+        el.classList.add('tapped');
+        lockAdvance(2);
+      });
+    } else if(idx === 2){
+      setupHoldWater();
+    } else if(idx === 3){
+      setupDragPot();
+    } else if(idx === 4){
+      setupMashSun();
+    } else if(idx === 5){
+      setupGoButton();
+    } else if(idx === 6){
+      setupTaunts();
+    } else if(idx === 7){
+      setupChoice();
+    } else if(idx === 8){
+      setupHearDecision();
+    }
+  }
+
+  function setupHoldWater(){
+    state.holdProgress = 0;
+    var wrap = document.createElement('div');
+    wrap.className = 'hold-wrap';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'hold-btn';
+    var fill = document.createElement('div');
+    fill.className = 'hold-fill';
+    var label = document.createElement('span');
+    label.textContent = t('water');
+    btn.appendChild(fill);
+    btn.appendChild(label);
+    wrap.appendChild(btn);
+    controlsPanel.appendChild(wrap);
+
+    var raf = null;
+    var startTime = null;
+    var DURATION = 1400;
+
+    function step(ts){
+      if(startTime === null) startTime = ts;
+      var elapsed = ts - startTime;
+      var pct = Math.min(100, (elapsed/DURATION)*100);
+      state.holdProgress = pct;
+      fill.style.width = pct+'%';
+      if(pct >= 100){
+        label.textContent = t('watered');
+        drawScene(2);
+        cancelHold();
+        setTimeout(function(){ lockAdvance(3); }, 550);
+        return;
+      }
+      drawScene(2);
+      raf = requestAnimationFrame(step);
+    }
+    function startHold(e){
+      e.preventDefault();
+      if(state.holdProgress >= 100) return;
+      state.holdActive = true;
+      startTime = null;
+      raf = requestAnimationFrame(step);
+    }
+    function cancelHold(){
+      state.holdActive = false;
+      if(raf) cancelAnimationFrame(raf);
+      raf = null;
+      startTime = null;
+      if(state.holdProgress < 100){
+        state.holdProgress = 0;
+        fill.style.width = '0%';
+      }
+    }
+    btn.addEventListener('pointerdown', startHold);
+    btn.addEventListener('pointerup', cancelHold);
+    btn.addEventListener('pointerleave', cancelHold);
+    btn.addEventListener('pointercancel', cancelHold);
+  }
+
+  function setupDragPot(){
+    state.potPlaced = false;
+    var note = document.createElement('div');
+    note.className = 'drag-zone-note';
+    note.textContent = t('dragNote');
+    controlsPanel.appendChild(note);
+
+    // draggable small pot as DOM element, positioned relative to stageWrap
+    var dragEl = document.createElement('div');
+    dragEl.id = 'dragPot';
+    dragEl.setAttribute('aria-label', t('dragNote'));
+    dragEl.style.left = '60%';
+    dragEl.style.top = '52%';
+    dragEl.style.width = '15%';
+    dragEl.style.height = '22%';
+    dragEl.innerHTML = '<svg viewBox="0 0 60 46" width="100%" height="100%"><path d="M5 0 L55 0 L47 40 L13 40 Z" fill="#c25a34" stroke="#7a3a20" stroke-width="2"/><ellipse cx="30" cy="6" rx="24" ry="6" fill="#5a3b26"/></svg>';
+    hotspotLayer.appendChild(dragEl);
+
+    var targetX0 = 0.30-0.14, targetX1 = 0.30+0.14, targetY0=0.68, targetY1=0.98; // relative to canvas, big pot around 30%,82%
+
+    var dragging = false, offX=0, offY=0;
+    function getRect(){ return stageWrap.getBoundingClientRect(); }
+
+    function onDown(e){
+      dragging = true;
+      dragEl.setPointerCapture(e.pointerId);
+      var r = getRect();
+      var px = (e.clientX - r.left)/r.width;
+      var py = (e.clientY - r.top)/r.height;
+      var elRect = dragEl.getBoundingClientRect();
+      offX = (e.clientX - elRect.left);
+      offY = (e.clientY - elRect.top);
+    }
+    function onMove(e){
+      if(!dragging) return;
+      var r = getRect();
+      var leftPx = e.clientX - r.left - offX;
+      var topPx = e.clientY - r.top - offY;
+      dragEl.style.left = (leftPx / r.width * 100) + '%';
+      dragEl.style.top = (topPx / r.height * 100) + '%';
+    }
+    function onUp(e){
+      if(!dragging) return;
+      dragging = false;
+      var r = getRect();
+      var cx = (dragEl.offsetLeft + dragEl.offsetWidth/2) / r.width;
+      var cy = (dragEl.offsetTop + dragEl.offsetHeight/2) / r.height;
+      if(cx > targetX0 && cx < targetX1 && cy > targetY0 && cy < targetY1){
+        dragEl.style.left = '24%';
+        dragEl.style.top = '58%';
+        dragEl.style.pointerEvents = 'none';
+        dragEl.style.opacity = '0.0';
+        state.potPlaced = true;
+        drawScene(3);
+        // draw sprout appearing in big pot as confirmation via canvas overlay
+        setTimeout(function(){
+          ctx.save();
+          drawScene(3);
+          drawPot(W*0.30,H*0.82,1.6,{size:'big', stage:'sprout'});
+          ctx.restore();
+        }, 60);
+        setTimeout(function(){ lockAdvance(4); }, 700);
+      } else {
+        dragEl.style.left = '60%';
+        dragEl.style.top = '52%';
+      }
+    }
+    dragEl.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    dragEl._cleanup = function(){
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }
+
+  function setupMashSun(){
+    state.days = 0;
+    var wrap = document.createElement('div');
+    wrap.className = 'mash-wrap';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'primary-btn';
+    btn.textContent = '☀ ' + t('tend');
+    var count = document.createElement('div');
+    count.className = 'mash-count';
+    count.textContent = (state.lang==='en'?'Day ':'Hari ke-') + state.days + ' / 5';
+    wrap.appendChild(btn);
+    wrap.appendChild(count);
+    controlsPanel.appendChild(wrap);
+
+    btn.addEventListener('click', function(){
+      if(state.days >= 5) return;
+      state.days++;
+      count.textContent = (state.lang==='en'?'Day ':'Hari ke-') + state.days + ' / 5';
+      drawScene(4);
+      if(state.days >= 5){
+        btn.disabled = true;
+        setTimeout(function(){ lockAdvance(5); }, 600);
+      }
+    });
+  }
+
+  function setupGoButton(){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'primary-btn';
+    btn.textContent = '🚶 ' + t('go');
+    controlsPanel.appendChild(btn);
+    btn.addEventListener('click', function(){
+      btn.disabled = true;
+      lockAdvance(6);
+    });
+  }
+
+  function setupTaunts(){
+    state.tappedYouths = {0:false,1:false};
+    var sc = t('scenes')[6];
+    var h0 = addHotspot('y0', 12, 62, 18, 30, '👆', function(el){
+      el.classList.add('tapped');
+      state.tappedYouths[0] = true;
+      narrationText.textContent = sc.taunts[0];
+      speak(sc.taunts[0]);
+      checkTauntsDone();
+    });
+    var h1 = addHotspot('y1', 68, 62, 18, 30, '👆', function(el){
+      el.classList.add('tapped');
+      state.tappedYouths[1] = true;
+      narrationText.textContent = sc.taunts[1];
+      speak(sc.taunts[1]);
+      checkTauntsDone();
+    });
+    var nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'secondary-btn';
+    nextBtn.textContent = t('next');
+    nextBtn.disabled = true;
+    controlsPanel.appendChild(nextBtn);
+    nextBtn.addEventListener('click', function(){
+      lockAdvance(7);
+    });
+    function checkTauntsDone(){
+      if(state.tappedYouths[0] && state.tappedYouths[1]){
+        nextBtn.disabled = false;
+      }
+    }
+  }
+
+  function setupChoice(){
+    var row = document.createElement('div');
+    row.className = 'choice-row';
+    var honestBtn = document.createElement('button');
+    honestBtn.type = 'button';
+    honestBtn.className = 'choice-btn';
+    honestBtn.textContent = t('choiceHonest');
+    var lieBtn = document.createElement('button');
+    lieBtn.type = 'button';
+    lieBtn.className = 'choice-btn';
+    lieBtn.textContent = t('choiceLie');
+    row.appendChild(honestBtn);
+    row.appendChild(lieBtn);
+
+    var feedback = document.createElement('div');
+    feedback.className = 'choice-feedback';
+
+    controlsPanel.appendChild(row);
+    controlsPanel.appendChild(feedback);
+
+    lieBtn.addEventListener('click', function(){
+      feedback.textContent = t('choiceWrongFeedback');
+      speak(t('choiceWrongFeedback'));
+    });
+    honestBtn.addEventListener('click', function(){
+      honestBtn.disabled = true;
+      lieBtn.disabled = true;
+      feedback.textContent = '';
+      lockAdvance(8);
+    });
+  }
+
+  function setupHearDecision(){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'primary-btn';
+    btn.textContent = '👑 ' + t('hear');
+    controlsPanel.appendChild(btn);
+    btn.addEventListener('click', function(){
+      btn.disabled = true;
+      lockAdvance(9);
+    });
+  }
+
+  /* ---------------------------------------------------------
+     START / END
+  --------------------------------------------------------- */
+  function showStart(){
+    stopSpeech();
+    state.sceneIndex = -1;
+    startOverlay.style.display = 'flex';
+    endOverlay.style.display = 'none';
+    clearHotspots();
+    clearControls();
+    updateDots();
+    setTexts('', '');
+    clear();
+    drawThroneRoomBg();
+    drawThrone(W*0.5, H*0.42, 1.0);
+    drawPerson(W*0.5, H*0.52, 1.1, {robeColor:'#8a2f22', sashColor:'#d4a437', crown:true, pose:'sit', expression:'neutral'});
+    reportHeight();
+  }
+
+  function showEnd(){
+    state.transitioning = false;
+    state.sceneIndex = SCENE_COUNT;
+    updateDots();
+    clearHotspots();
+    clearControls();
+    stopSpeech();
+    endOverlay.style.display = 'flex';
+    setTexts('', '');
+    reportHeight();
+  }
+
+  /* ---------------------------------------------------------
+     LANGUAGE / MUTE / STATIC TEXT APPLY
+  --------------------------------------------------------- */
+  function applyStaticTexts(){
+    document.getElementById('titleText').textContent = t('title');
+    document.getElementById('subtitleText').textContent = t('subtitle');
+    document.getElementById('startTitle').textContent = t('startTitle');
+    document.getElementById('startDesc').textContent = t('startDesc');
+    document.getElementById('startBtn').textContent = t('startBtn');
+    document.getElementById('endTitle').textContent = t('endTitle');
+    document.getElementById('endDesc').textContent = t('endDesc');
+    document.getElementById('replayBtn').textContent = t('replayBtn');
+    document.getElementById('footerCredits').textContent = t('footer');
+    document.getElementById('langLabel').textContent = state.lang === 'id' ? 'EN' : 'ID';
+    document.getElementById('muteLabel').textContent = state.muted ? t('unmute') : t('mute');
+    document.getElementById('muteBtn').querySelector('span') && (document.getElementById('muteBtn').firstChild.textContent = state.muted ? '🔇 ' : '🔊 ');
+    document.documentElement.lang = state.lang;
+  }
+
+  document.getElementById('langBtn').addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('yongtu_lang', state.lang);
+    applyStaticTexts();
+    if(state.sceneIndex === -1){ showStart(); }
+    else if(state.sceneIndex >= SCENE_COUNT){ showEnd(); }
+    else { goToScene(state.sceneIndex); }
+  });
+
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('yongtu_muted', state.muted ? '1' : '0');
+    applyStaticTexts();
+    if(state.muted) stopSpeech();
+  });
+
+  document.getElementById('startBtn').addEventListener('click', function(){
+    startOverlay.style.display = 'none';
+    goToScene(0);
+  });
+
+  document.getElementById('replayBtn').addEventListener('click', function(){
+    endOverlay.style.display = 'none';
+    state.days = 0;
+    state.holdProgress = 0;
+    state.potPlaced = false;
+    goToScene(0);
+  });
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  buildDots();
+  applyStaticTexts();
+  showStart();
+})();
+</script>
+</body>
+</html>
