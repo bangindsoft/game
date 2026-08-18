@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simcheong dan Ayahnya yang Buta</title>
+<style>
+  :root{
+    --bg-deep:#0f1f33;
+    --bg-panel:#16283f;
+    --bg-panel-2:#1d3552;
+    --gold:#d9a94f;
+    --gold-soft:#e8c987;
+    --cream:#f3ead6;
+    --jade:#3f8f7a;
+    --red-accent:#c65b4e;
+    --dot-off:#2a496e;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI',Tahoma,Verdana,sans-serif;
+    background:var(--bg-deep);
+    color:var(--cream);
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    padding:14px 14px 18px;
+    background:linear-gradient(180deg,var(--bg-deep),#0b1626);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-size:17px;
+    margin:0;
+    color:var(--gold-soft);
+    letter-spacing:.3px;
+    font-weight:600;
+  }
+  .icon-btn{
+    background:var(--bg-panel-2);
+    border:1px solid #345279;
+    color:var(--cream);
+    border-radius:8px;
+    padding:7px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .15s ease;
+  }
+  .icon-btn:hover{background:#274568;}
+  .icon-btn:active{transform:translateY(1px);}
+  .top-controls{display:flex;gap:8px;}
+
+  .stage-wrap{
+    position:relative;
+    background:var(--bg-panel);
+    border-radius:14px;
+    padding:10px;
+    border:1px solid #274365;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  #gameCanvas{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:10px;
+    background:linear-gradient(180deg,#12253d,#0c1a2c);
+    touch-action:none;
+    cursor:pointer;
+  }
+
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:12px 0 4px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#2c496e;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.25);}
+  .dot.done{background:var(--jade);}
+
+  .narration-box{
+    margin-top:10px;
+    background:var(--bg-panel-2);
+    border-left:3px solid var(--gold);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14.5px;
+    line-height:1.5;
+    min-height:52px;
+  }
+  .instruction-box{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--gold-soft);
+    font-style:italic;
+    text-align:center;
+    min-height:18px;
+  }
+
+  .controls-area{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .primary-btn{
+    background:linear-gradient(180deg,var(--gold),#b98a35);
+    color:#241505;
+    border:none;
+    border-radius:10px;
+    padding:12px 22px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 #8a651f;
+    transition:transform .08s ease;
+  }
+  .primary-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a651f;}
+  .primary-btn:disabled{opacity:.5;cursor:default;}
+  .secondary-btn{
+    background:var(--bg-panel-2);
+    color:var(--cream);
+    border:1px solid var(--jade);
+    border-radius:10px;
+    padding:10px 18px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .secondary-btn:active{transform:translateY(1px);}
+
+  .hold-bar-wrap{
+    width:220px;
+    height:14px;
+    background:#0c1a2c;
+    border-radius:7px;
+    overflow:hidden;
+    border:1px solid #345279;
+  }
+  .hold-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--jade),var(--gold));
+  }
+
+  .mash-counter{
+    font-size:13px;
+    color:var(--gold-soft);
+  }
+
+  footer{
+    margin-top:16px;
+    text-align:center;
+    font-size:11.5px;
+    color:#5f7a9c;
+  }
+
+  @media (max-width:480px){
+    h1{font-size:15px;}
+    .narration-box{font-size:13.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="titleText">Simcheong dan Ayahnya yang Buta</h1>
+    <div class="top-controls">
+      <button class="icon-btn" id="langBtn" type="button">EN</button>
+      <button class="icon-btn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </header>
+
+  <div class="stage-wrap">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  </div>
+
+  <div class="dots" id="dotsRow"></div>
+
+  <div class="narration-box" id="narrationBox"></div>
+  <div class="instruction-box" id="instructionBox"></div>
+
+  <div class="controls-area" id="controlsArea"></div>
+
+  <footer id="footerText">Kisah rakyat Korea, dihadirkan dalam bentuk permainan interaktif.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- STRINGS ---------- */
+  var STR = {
+    id:{
+      title:"Simcheong dan Ayahnya yang Buta",
+      footer:"Kisah rakyat Korea, dihadirkan dalam bentuk permainan interaktif.",
+      startBtn:"Mulai Cerita",
+      replayBtn:"Ulangi Cerita",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      langLabel:"EN",
+      titleScreenNarration:"Sebuah kisah tentang bakti seorang anak kepada ayahnya yang buta. Ketuk tombol di bawah untuk memulai.",
+      scenes:[
+        {
+          narration:"Di sebuah desa yang terpencil, tinggallah seorang gadis bernama Simcheong bersama ayahnya yang buta. Mereka hidup miskin, namun Simcheong selalu sabar dan berbakti kepada ayahnya.",
+          instruction:"Ketuk gambar Simcheong untuk memulai kisahnya."
+        },
+        {
+          narration:"Simcheong pergi ke kota mencari pekerjaan. Saat pulang, badai salju datang dan ia tak kunjung tiba. Sang ayah resah dan nekat pergi menjemputnya menembus badai.",
+          instruction:"Tahan tombol \u201cTerjang Badai\u201d agar Ayah bisa berjalan melawan badai salju."
+        },
+        {
+          narration:"Karena keadaan yang tak memungkinkan, ayah Simcheong tergelincir dan jatuh ke sungai. Untunglah seorang biksu menolongnya. Sang biksu berkata ia bisa membantu ayah melihat kembali, asalkan menyumbangkan 300 karung beras ke kuil.",
+          instruction:"Ketuk berkali-kali tombol \u201cBerenang ke Tepi\u201d untuk membantu Ayah, lalu ketuk tombol \u201cTerima Syarat Biksu\u201d."
+        },
+        {
+          narration:"Mendengar cerita ayahnya, Simcheong bertekad membantu meski mereka miskin. Ia pun berangkat kembali ke kota untuk mencari cara mengumpulkan 300 karung beras.",
+          instruction:"Seret gambar Simcheong dari rumah menuju gerbang kota."
+        },
+        {
+          narration:"Di kota, Simcheong bertemu saudagar kapal yang mencari seorang gadis sebagai tumbal agar kapalnya dapat berlayar dengan selamat. Simcheong pun menawarkan dirinya, asalkan 300 karung beras dikirim ke rumah ayahnya.",
+          instruction:"Ketuk tombol \u201cJadi Tumbal Pelayaran\u201d untuk menyanggupi permintaan Simcheong."
+        },
+        {
+          narration:"Simcheong berlayar bersama kapal itu sambil terus berdoa untuk keselamatan ayahnya. Ketika waktunya tiba, ia pun diceburkan ke laut yang ganas sebagai persembahan.",
+          instruction:"Ketuk tombol \u201cLompat\u201d tepat saat penunjuk berada di area hijau."
+        },
+        {
+          narration:"Ajaibnya, Simcheong tidak tenggelam. Ia bertemu Raja Laut yang menyelamatkannya karena baktinya kepada orang tua. Raja Laut pun mengabulkan permintaan Simcheong untuk kembali kepada ayahnya.",
+          instruction:"Ketuk gambar Raja Laut untuk mendengar perkataannya, lalu ketuk tombol \u201cPejamkan Mata\u201d."
+        },
+        {
+          narration:"Simcheong terdampar di pantai dan ditemukan oleh seorang pangeran yang membawanya ke istana. Ia pun bertemu kembali dengan ayahnya yang telah dapat melihat, dan menikah dengan sang pangeran. Mereka hidup bahagia selamanya.",
+          instruction:"Ketuk tombol \u201cBuka Mata\u201d untuk melihat akhir kisah Simcheong."
+        }
+      ],
+      btnHold:"Terjang Badai",
+      btnMash:"Berenang ke Tepi",
+      btnAcceptMonk:"Terima Syarat Biksu",
+      btnOffer:"Jadi Tumbal Pelayaran",
+      btnLeap:"Lompat",
+      btnCloseEyes:"Pejamkan Mata",
+      btnOpenEyes:"Buka Mata",
+      leapFail:"Belum tepat, coba lagi saat penunjuk di area hijau.",
+      leapSuccess:"Simcheong melompat pada saat yang tepat.",
+      dragHint:"Seret Simcheong ke gerbang kota!",
+      seaKingLine:"\u201cAku Raja Laut. Kau kuselamatkan karena telah berbakti kepada orang tuamu,\u201d kata sang Raja Laut."
+    },
+    en:{
+      title:"Simcheong and Her Blind Father",
+      footer:"A Korean folktale, brought to life as an interactive story.",
+      startBtn:"Start the Story",
+      replayBtn:"Replay the Story",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      langLabel:"ID",
+      titleScreenNarration:"A story about a daughter's devotion to her blind father. Tap the button below to begin.",
+      scenes:[
+        {
+          narration:"In a remote village lived a girl named Simcheong with her blind father. They lived in poverty, but Simcheong was always patient and devoted to him.",
+          instruction:"Tap the picture of Simcheong to begin her story."
+        },
+        {
+          narration:"Simcheong went to the city to find work. On her way home, a snowstorm struck and she did not arrive. Her worried father braved the storm to go find her.",
+          instruction:"Hold the \u201cPush Through the Storm\u201d button to help Father walk against the snowstorm."
+        },
+        {
+          narration:"Struggling in the storm, Simcheong's father slipped and fell into the river. Luckily, a monk saved him. The monk said he could restore his sight if he donated 300 sacks of rice to the temple.",
+          instruction:"Tap the \u201cSwim to Shore\u201d button repeatedly to help Father, then tap the \u201cAccept the Monk's Request\u201d button."
+        },
+        {
+          narration:"Hearing her father's story, Simcheong resolved to help him despite their poverty. She set off again for the city to find a way to gather 300 sacks of rice.",
+          instruction:"Drag the picture of Simcheong from the house to the city gate."
+        },
+        {
+          narration:"In the city, Simcheong met a ship merchant seeking a maiden to be offered so his ship could sail safely. She offered herself, on the condition that 300 sacks of rice be sent to her father's home.",
+          instruction:"Tap the \u201cBecome the Voyage Offering\u201d button to agree to Simcheong's request."
+        },
+        {
+          narration:"Simcheong sailed with the ship, praying for her father's safety. When the moment came, she was cast into the raging sea as an offering.",
+          instruction:"Tap the \u201cLeap\u201d button exactly when the indicator is in the green zone."
+        },
+        {
+          narration:"Miraculously, Simcheong did not drown. She met the Sea King, who saved her for her devotion to her father. He granted her wish to return to him.",
+          instruction:"Tap the picture of the Sea King to hear what he says, then tap the \u201cClose Your Eyes\u201d button."
+        },
+        {
+          narration:"Simcheong washed ashore and was found by a prince who brought her to the palace. She was reunited with her father, whose sight had been restored, and married the prince. They lived happily ever after.",
+          instruction:"Tap the \u201cOpen Your Eyes\u201d button to see the ending of Simcheong's story."
+        }
+      ],
+      btnHold:"Push Through the Storm",
+      btnMash:"Swim to Shore",
+      btnAcceptMonk:"Accept the Monk's Request",
+      btnOffer:"Become the Voyage Offering",
+      btnLeap:"Leap",
+      btnCloseEyes:"Close Your Eyes",
+      btnOpenEyes:"Open Your Eyes",
+      leapFail:"Not quite, try again when the indicator is in the green zone.",
+      leapSuccess:"Simcheong leapt at just the right moment.",
+      dragHint:"Drag Simcheong to the city gate!",
+      seaKingLine:"\u201cI am the Sea King. I saved you for your devotion to your father,\u201d said the Sea King."
+    }
+  };
+
+  /* ---------- STATE ---------- */
+  var state = {
+    lang: (localStorage.getItem('simcheong_lang') || 'id'),
+    muted: (localStorage.getItem('simcheong_muted') === '1'),
+    scene: 0,          // 0 = title screen, 1..8 = story scenes
+    completed: new Array(9).fill(false),
+    locked: false,
+    holdTimer: null,
+    holdProgress: 0,
+    mashCount: 0,
+    mashTarget: 8,
+    monkAccepted:false,
+    dragging:false,
+    dragPos:{x:0,y:0},
+    dragDone:false,
+    leapRaf:null,
+    leapPos:0,
+    leapDir:1,
+    seaKingTapped:false,
+    eyesClosed:false,
+    eyesOpen:false,
+    animT:0
+  };
+
+  var TOTAL_SCENES = 8;
+
+  /* ---------- DOM ---------- */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var narrationBox = document.getElementById('narrationBox');
+  var instructionBox = document.getElementById('instructionBox');
+  var controlsArea = document.getElementById('controlsArea');
+  var dotsRow = document.getElementById('dotsRow');
+  var titleText = document.getElementById('titleText');
+  var footerText = document.getElementById('footerText');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+
+  function T(){ return STR[state.lang]; }
+
+  /* ---------- RESIZE / DPI ---------- */
+  var LOGICAL_W = 800, LOGICAL_H = 450;
+  function fitCanvas(){
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = canvas.clientWidth || LOGICAL_W;
+    var cssH = cssW * (LOGICAL_H / LOGICAL_W);
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(LOGICAL_W * dpr);
+    canvas.height = Math.round(LOGICAL_H * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw();
+  }
+  window.addEventListener('resize', fitCanvas);
+
+  function notifyResize(){
+    try{
+      var h = document.getElementById('app').scrollHeight + 20;
+      window.parent.postMessage({ type:'simcheong-resize', height:h }, '*');
+    }catch(e){}
+  }
+
+  /* ---------- SPEECH ---------- */
+  var currentUtterance = null;
+  function speak(text){
+    if(state.muted) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeech(){
+    if('speechSynthesis' in window){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
+  }
+
+  /* ---------- UI: LANG / MUTE ---------- */
+  function applyStaticText(){
+    var t = T();
+    document.documentElement.lang = state.lang;
+    titleText.textContent = t.title;
+    footerText.textContent = t.footer;
+    langBtn.textContent = t.langLabel;
+    muteBtn.textContent = state.muted ? t.muteOff : t.muteOn;
+  }
+
+  langBtn.addEventListener('click', function(){
+    state.lang = (state.lang === 'id') ? 'en' : 'id';
+    localStorage.setItem('simcheong_lang', state.lang);
+    applyStaticText();
+    renderScene(true);
+  });
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('simcheong_muted', state.muted ? '1':'0');
+    applyStaticText();
+    if(state.muted) stopSpeech();
+    else speakCurrentNarration();
+  });
+
+  function speakCurrentNarration(){
+    if(state.scene === 0){
+      speak(T().titleScreenNarration);
+    } else {
+      speak(T().scenes[state.scene-1].narration);
+    }
+  }
+
+  /* ---------- DOTS ---------- */
+  function renderDots(){
+    dotsRow.innerHTML = '';
+    for(var i=1;i<=TOTAL_SCENES;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      if(state.completed[i]) d.className += ' done';
+      if(state.scene === i) d.className += ' active';
+      dotsRow.appendChild(d);
+    }
+  }
+
+  /* ---------- CANVAS ART HELPERS ---------- */
+  function bgGradient(c1,c2){
+    var g = ctx.createLinearGradient(0,0,0,LOGICAL_H);
+    g.addColorStop(0,c1);
+    g.addColorStop(1,c2);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+  }
+
+  function drawGround(y,color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,y,LOGICAL_W,LOGICAL_H-y);
+  }
+
+  function drawPerson(x,y,scale,opts){
+    opts = opts||{};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    var robeColor = opts.robeColor || '#c65b4e';
+    var skin = '#e8c19a';
+    // legs
+    ctx.fillStyle = '#2c2116';
+    ctx.fillRect(-9,40,7,18);
+    ctx.fillRect(3,40,7,18);
+    // robe
+    ctx.beginPath();
+    ctx.moveTo(-16,42);
+    ctx.lineTo(-20,0);
+    ctx.quadraticCurveTo(0,-10,20,0);
+    ctx.lineTo(16,42);
+    ctx.closePath();
+    ctx.fillStyle = robeColor;
+    ctx.fill();
+    // sash
+    ctx.fillStyle = opts.sashColor || '#d9a94f';
+    ctx.fillRect(-16,14,32,5);
+    // head
+    ctx.beginPath();
+    ctx.arc(0,-16,13,0,Math.PI*2);
+    ctx.fillStyle = skin;
+    ctx.fill();
+    // hair
+    ctx.beginPath();
+    ctx.arc(0,-20,13,Math.PI,Math.PI*2);
+    ctx.fillStyle = '#241a12';
+    ctx.fill();
+    if(opts.bun){
+      ctx.beginPath();
+      ctx.arc(0,-31,4,0,Math.PI*2);
+      ctx.fillStyle = '#241a12';
+      ctx.fill();
+    }
+    // eyes
+    ctx.fillStyle = '#241a12';
+    if(opts.blind){
+      ctx.beginPath();
+      ctx.moveTo(-6,-16); ctx.lineTo(-1,-16);
+      ctx.moveTo(2,-16); ctx.lineTo(7,-16);
+      ctx.strokeStyle = '#241a12';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(-4,-17,1.6,0,Math.PI*2);
+      ctx.arc(4,-17,1.6,0,Math.PI*2);
+      ctx.fill();
+    }
+    if(opts.arms==='raised'){
+      ctx.strokeStyle = robeColor;
+      ctx.lineWidth = 6;
+      ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(-14,6); ctx.lineTo(-26,-16);
+      ctx.moveTo(14,6); ctx.lineTo(26,-16);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHut(){
+    // roof
+    ctx.fillStyle = '#7a5a34';
+    ctx.beginPath();
+    ctx.moveTo(80,230);
+    ctx.lineTo(180,170);
+    ctx.lineTo(280,230);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5b4023';
+    ctx.fillRect(90,230,180,90);
+    ctx.fillStyle = '#3a2a17';
+    ctx.fillRect(160,270,40,50);
+    ctx.fillStyle = '#d9a94f';
+    ctx.fillRect(105,245,30,25);
+  }
+
+  function drawCityGate(x){
+    ctx.fillStyle = '#7a5a34';
+    ctx.fillRect(x-6,220,14,110);
+    ctx.fillRect(x+56,220,14,110);
+    ctx.fillStyle = '#c65b4e';
+    ctx.fillRect(x-14,195,96,28);
+    ctx.fillStyle = '#0f1f33';
+    ctx.fillRect(x+18,260,28,70);
+  }
+
+  function drawSnow(t){
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    for(var i=0;i<70;i++){
+      var sx = (i*57 + t*40) % LOGICAL_W;
+      var sy = (i*83 + t*90) % LOGICAL_H;
+      ctx.beginPath();
+      ctx.arc(sx,sy,1.6,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawRiver(){
+    bgGradient('#1c2f45','#0f1f33');
+    ctx.fillStyle = '#274a63';
+    ctx.beginPath();
+    ctx.ellipse(400,320,340,90,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawWaves(t,y,amp,color){
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for(var x=0;x<=LOGICAL_W;x+=10){
+      var yy = y + Math.sin((x*0.03)+t)*amp;
+      if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+
+  function drawShip(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b4023';
+    ctx.beginPath();
+    ctx.moveTo(-90,20);
+    ctx.lineTo(90,20);
+    ctx.lineTo(60,55);
+    ctx.lineTo(-60,55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#3a2a17';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(0,20); ctx.lineTo(0,-70);
+    ctx.stroke();
+    ctx.fillStyle = '#e8ded0';
+    ctx.beginPath();
+    ctx.moveTo(4,-66); ctx.lineTo(70,-10); ctx.lineTo(4,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMonkFigure(x,y,scale){
+    drawPerson(x,y,scale,{robeColor:'#8a7a5a',sashColor:'#d9a94f'});
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#d9a94f';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-18,50); ctx.lineTo(-18,-30);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSeaKing(x,y,scale,t){
+    ctx.save();
+    ctx.translate(x,y+Math.sin(t)*4);
+    ctx.scale(scale,scale);
+    // tail glow
+    ctx.fillStyle = 'rgba(63,143,122,.5)';
+    ctx.beginPath();
+    ctx.ellipse(0,50,50,16,0,0,Math.PI*2);
+    ctx.fill();
+    drawPerson(0,0,1.3,{robeColor:'#3f8f7a',sashColor:'#d9a94f'});
+    // crown
+    ctx.fillStyle = '#d9a94f';
+    ctx.beginPath();
+    ctx.moveTo(-14,-40); ctx.lineTo(-14,-52);
+    ctx.lineTo(-4,-42); ctx.lineTo(0,-56);
+    ctx.lineTo(4,-42); ctx.lineTo(14,-52);
+    ctx.lineTo(14,-40);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFish(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0,0,14,7,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14,0); ctx.lineTo(-22,-7); ctx.lineTo(-22,7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCoral(x,y,color){
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(x,y); ctx.lineTo(x-8,y-26);
+    ctx.moveTo(x,y); ctx.lineTo(x+10,y-34);
+    ctx.moveTo(x,y); ctx.lineTo(x+2,y-18);
+    ctx.stroke();
+  }
+
+  function drawPalace(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#274a63';
+    ctx.fillRect(-70,-10,140,90);
+    ctx.fillStyle = '#3f8f7a';
+    ctx.beginPath();
+    ctx.moveTo(-90,-10);
+    ctx.lineTo(0,-70);
+    ctx.lineTo(90,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#d9a94f';
+    for(var i=-2;i<=2;i++){
+      ctx.fillRect(i*24-4,0,8,70);
+    }
+    ctx.restore();
+  }
+
+  function drawBeach(){
+    bgGradient('#7fb3c9','#c9dfe6');
+    ctx.fillStyle = '#e8d8ad';
+    ctx.beginPath();
+    ctx.ellipse(400,380,420,110,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawCastle(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#c9a15a';
+    ctx.fillRect(-60,-10,120,80);
+    ctx.fillStyle = '#8a5a3a';
+    ctx.beginPath();
+    ctx.moveTo(-75,-10); ctx.lineTo(0,-60); ctx.lineTo(75,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#c65b4e';
+    ctx.fillRect(-8,20,16,50);
+    ctx.restore();
+  }
+
+  function pulseRing(x,y,r,t,color){
+    ctx.save();
+    var a = 0.35 + 0.25*Math.sin(t*3);
+    ctx.strokeStyle = color || ('rgba(217,169,79,'+a+')');
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x,y,r + Math.sin(t*3)*3,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- SCENE DRAWERS ---------- */
+  function drawTitleScreen(t){
+    bgGradient('#16283f','#0b1626');
+    // moonlit village
+    ctx.fillStyle = 'rgba(217,169,79,.9)';
+    ctx.beginPath();
+    ctx.arc(680,90,36,0,Math.PI*2);
+    ctx.fill();
+    drawGround(340,'#1c3049');
+    drawHut();
+    drawPerson(150,300,1,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+    drawPerson(210,300,1,{robeColor:'#5c7286',sashColor:'#8a7a5a',blind:true});
+    drawSnow(t*0.2);
+  }
+
+  function drawScene1(t){
+    bgGradient('#1c3049','#0b1626');
+    ctx.fillStyle = 'rgba(217,169,79,.85)';
+    ctx.beginPath();
+    ctx.arc(700,80,30,0,Math.PI*2);
+    ctx.fill();
+    drawGround(340,'#22405e');
+    drawHut();
+    drawPerson(230,300,1,{robeColor:'#5c7286',sashColor:'#8a7a5a',blind:true});
+    var px = 145, py = 300;
+    pulseRing(px,py+8,44,t,'rgba(217,169,79,.7)');
+    drawPerson(px,py,1.05,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+    state._simcheongHit = {x:px,y:py-10,r:48};
+  }
+
+  function drawScene2(t,progress){
+    bgGradient('#26374d','#111f33');
+    drawGround(360,'#2e4863');
+    // wind streaks
+    ctx.strokeStyle='rgba(255,255,255,.35)';
+    ctx.lineWidth=1.5;
+    for(var i=0;i<10;i++){
+      var yy=40+i*38;
+      ctx.beginPath();
+      ctx.moveTo(0,yy);
+      ctx.lineTo(60+ (t*160)%LOGICAL_W,yy-14);
+      ctx.stroke();
+    }
+    var walkX = 140 + progress*430;
+    drawPerson(walkX,320,1.05,{robeColor:'#5c7286',sashColor:'#8a7a5a',blind:true,arms:'raised'});
+    drawCityGate(620);
+    drawSnow(t*0.6);
+  }
+
+  function drawScene3(t,mashProgress,monkAccepted){
+    drawRiver();
+    drawWaves(t*2,300,6,'rgba(255,255,255,.25)');
+    drawWaves(t*2+1,315,5,'rgba(255,255,255,.18)');
+    var fx = 260 + mashProgress*90;
+    var bob = Math.sin(t*6)*4;
+    drawPerson(fx,300+bob,0.95,{robeColor:'#5c7286',sashColor:'#8a7a5a',blind:true,arms:'raised'});
+    drawMonkFigure(520,270,1);
+    if(monkAccepted){
+      ctx.fillStyle='rgba(217,169,79,.9)';
+      ctx.beginPath();
+      ctx.arc(520,215,10,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawScene4(dragX,dragY,dragDone){
+    bgGradient('#22405e','#0f1f33');
+    drawGround(340,'#274863');
+    drawHut();
+    drawCityGate(600);
+    if(!dragDone){
+      pulseRing(dragX,dragY,40,performance.now()/500,'rgba(217,169,79,.7)');
+    }
+    drawPerson(dragX,dragY,1,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+  }
+
+  function drawScene5(){
+    bgGradient('#1c3049','#0d1a2b');
+    drawGround(340,'#233c54');
+    drawShip(560,330,0.9);
+    drawPerson(220,320,1,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+    drawPerson(330,320,1,{robeColor:'#5b4023',sashColor:'#d9a94f'});
+  }
+
+  function drawScene6(t,leapPos,phase){
+    bgGradient('#0e1b2c','#050d18');
+    drawWaves(t*1.5,340,14,'rgba(120,170,200,.35)');
+    drawWaves(t*1.5+1,355,10,'rgba(120,170,200,.25)');
+    drawShip(400,270,0.85);
+    if(phase!=='jumped'){
+      drawPerson(430,235,0.95,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+    } else {
+      var jt = state.animT;
+      var jy = 250 + jt*140;
+      drawPerson(430,jy,0.95,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+    }
+    // timing bar
+    var barX = 220, barY = 60, barW = 360, barH = 16;
+    ctx.fillStyle = '#132437';
+    ctx.fillRect(barX,barY,barW,barH);
+    var zoneW = barW*0.22;
+    var zoneX = barX + barW*0.39;
+    ctx.fillStyle = 'rgba(63,143,122,.9)';
+    ctx.fillRect(zoneX,barY,zoneW,barH);
+    ctx.strokeStyle = '#345279';
+    ctx.strokeRect(barX,barY,barW,barH);
+    var indX = barX + leapPos*barW;
+    ctx.fillStyle = '#d9a94f';
+    ctx.beginPath();
+    ctx.moveTo(indX,barY-8);
+    ctx.lineTo(indX-7,barY-18);
+    ctx.lineTo(indX+7,barY-18);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawScene7(t,seaKingTapped,eyesClosed){
+    bgGradient('#0a3a4a','#031824');
+    drawPalace(400,300,1.4);
+    drawCoral(150,410,'#3f8f7a');
+    drawCoral(650,410,'#c65b4e');
+    drawCoral(700,420,'#3f8f7a');
+    var fbx = 90 + ((t*40)%700);
+    drawFish(fbx,150,1,'#e8c19a');
+    drawFish(LOGICAL_W-((t*55)%700),200,1.2,'#d9a94f');
+    var skx=400, sky=250;
+    if(!eyesClosed){
+      pulseRing(skx,sky+30,58,t,'rgba(217,169,79,.75)');
+    }
+    drawSeaKing(skx,sky,1,t);
+    drawPerson(280,340,1,{robeColor: eyesClosed? '#8fa8c0' : '#c65b4e', sashColor:'#d9a94f', bun:true});
+    state._seaKingHit = {x:skx,y:sky,r:70};
+  }
+
+  function drawScene8(t,eyesOpen,animT){
+    if(!eyesOpen){
+      bgGradient('#0d1c2b','#040c16');
+      drawBeach();
+      drawPerson(400,340,1.1,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+      ctx.fillStyle='rgba(6,12,20,'+(0.55)+')';
+      ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+      return;
+    }
+    var a = Math.min(1, animT);
+    drawBeach();
+    drawCastle(620,270,0.9);
+    drawPerson(360,340,1.1,{robeColor:'#c65b4e',sashColor:'#d9a94f',bun:true});
+    drawPerson(430,340,1.05,{robeColor:'#3a5aa0',sashColor:'#d9a94f'});
+    var fx = 260 - (1-a)*80;
+    drawPerson(fx,340,1.05,{robeColor:'#5c7286',sashColor:'#8a7a5a',blind:false});
+    if(a>0.4){
+      ctx.fillStyle='rgba(255,235,180,'+((a-0.4)*1.2)+')';
+      ctx.beginPath();
+      ctx.arc(400,60,4+((a-0.4)*40),0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  /* ---------- MAIN DRAW ---------- */
+  var lastFrameTime = performance.now();
+  function draw(){
+    var t = performance.now()/1000;
+    ctx.clearRect(0,0,LOGICAL_W,LOGICAL_H);
+    switch(state.scene){
+      case 0: drawTitleScreen(t); break;
+      case 1: drawScene1(t); break;
+      case 2: drawScene2(t, state.holdProgress); break;
+      case 3: drawScene3(t, Math.min(1,state.mashCount/state.mashTarget), state.monkAccepted); break;
+      case 4: drawScene4(state.dragPos.x, state.dragPos.y, state.dragDone); break;
+      case 5: drawScene5(); break;
+      case 6: drawScene6(t, state.leapPos, state.leapPhase); break;
+      case 7: drawScene7(t, state.seaKingTapped, state.eyesClosed); break;
+      case 8: drawScene8(t, state.eyesOpen, state.animT); break;
+    }
+  }
+
+  var rafId = null;
+  function loop(){
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ---------- SCENE TRANSITIONS ---------- */
+  function goToScene(n){
+    if(state.locked) return;
+    state.locked = true;
+    stopSpeech();
+    // reset per-scene state
+    state.holdProgress = 0;
+    state.mashCount = 0;
+    state.monkAccepted = false;
+    state.dragDone = false;
+    state.dragging = false;
+    state.seaKingTapped = false;
+    state.eyesClosed = false;
+    state.eyesOpen = false;
+    state.leapPos = 0;
+    state.leapDir = 1;
+    state.leapPhase = 'idle';
+    state.animT = 0;
+    if(state.leapRaf){ cancelAnimationFrame(state.leapRaf); state.leapRaf=null; }
+    if(state.holdTimer){ clearInterval(state.holdTimer); state.holdTimer=null; }
+
+    state.scene = n;
+    if(n>=1 && n<=TOTAL_SCENES){
+      state.dragPos = {x:145,y:300};
+    }
+    renderScene(false);
+    setTimeout(function(){ state.locked = false; }, 350);
+  }
+
+  function markComplete(n){
+    state.completed[n] = true;
+    renderDots();
+  }
+
+  /* ---------- RENDER SCENE (narration + controls) ---------- */
+  function renderScene(langSwitchOnly){
+    renderDots();
+    var t = T();
+    if(state.scene === 0){
+      narrationBox.textContent = t.titleScreenNarration;
+      instructionBox.textContent = '';
+      renderTitleControls();
+    } else {
+      var sc = t.scenes[state.scene-1];
+      narrationBox.textContent = sc.narration;
+      instructionBox.textContent = sc.instruction;
+      renderControlsForScene(state.scene);
+    }
+    if(!langSwitchOnly || true){
+      speakCurrentNarration();
+    }
+    notifyResize();
+  }
+
+  function renderTitleControls(){
+    controlsArea.innerHTML = '';
+    var btn = document.createElement('button');
+    btn.className = 'primary-btn';
+    btn.type = 'button';
+    btn.textContent = T().startBtn;
+    btn.addEventListener('click', function(){
+      goToScene(1);
+    });
+    controlsArea.appendChild(btn);
+  }
+
+  function clearControls(){ controlsArea.innerHTML=''; }
+
+  function renderControlsForScene(n){
+    clearControls();
+    var t = T();
+    if(n===1){
+      // tap on canvas only; no extra button needed, but show a hint label
+    } else if(n===2){
+      var wrap = document.createElement('div');
+      wrap.style.display='flex';
+      wrap.style.flexDirection='column';
+      wrap.style.alignItems='center';
+      wrap.style.gap='8px';
+
+      var barWrap = document.createElement('div');
+      barWrap.className='hold-bar-wrap';
+      var barFill = document.createElement('div');
+      barFill.className='hold-bar-fill';
+      barFill.id='holdBarFill';
+      barWrap.appendChild(barFill);
+
+      var btn = document.createElement('button');
+      btn.className='primary-btn';
+      btn.type='button';
+      btn.textContent = t.btnHold;
+
+      function startHold(e){
+        e.preventDefault();
+        if(state.holdTimer) return;
+        state.holdTimer = setInterval(function(){
+          state.holdProgress = Math.min(1, state.holdProgress + 0.02);
+          barFill.style.width = (state.holdProgress*100)+'%';
+          if(state.holdProgress>=1){
+            clearInterval(state.holdTimer);
+            state.holdTimer = null;
+            markComplete(2);
+            setTimeout(function(){ goToScene(3); }, 500);
+          }
+        }, 60);
+      }
+      function stopHold(){
+        if(state.holdTimer){ clearInterval(state.holdTimer); state.holdTimer=null; }
+      }
+      btn.addEventListener('pointerdown', startHold);
+      btn.addEventListener('pointerup', stopHold);
+      btn.addEventListener('pointerleave', stopHold);
+      btn.addEventListener('pointercancel', stopHold);
+
+      wrap.appendChild(btn);
+      wrap.appendChild(barWrap);
+      controlsArea.appendChild(wrap);
+    } else if(n===3){
+      var wrap3 = document.createElement('div');
+      wrap3.style.display='flex';
+      wrap3.style.flexDirection='column';
+      wrap3.style.alignItems='center';
+      wrap3.style.gap='8px';
+
+      var mashBtn = document.createElement('button');
+      mashBtn.className='primary-btn';
+      mashBtn.type='button';
+      mashBtn.textContent = t.btnMash;
+
+      var counter = document.createElement('div');
+      counter.className='mash-counter';
+      counter.textContent = state.mashCount+' / '+state.mashTarget;
+
+      mashBtn.addEventListener('click', function(){
+        if(state.mashCount>=state.mashTarget) return;
+        state.mashCount++;
+        counter.textContent = state.mashCount+' / '+state.mashTarget;
+        if(state.mashCount>=state.mashTarget){
+          mashBtn.disabled = true;
+          showAcceptButton();
+        }
+      });
+
+      wrap3.appendChild(mashBtn);
+      wrap3.appendChild(counter);
+      controlsArea.appendChild(wrap3);
+
+      function showAcceptButton(){
+        var acceptBtn = document.createElement('button');
+        acceptBtn.className='primary-btn';
+        acceptBtn.type='button';
+        acceptBtn.style.marginTop='6px';
+        acceptBtn.textContent = t.btnAcceptMonk;
+        acceptBtn.addEventListener('click', function(){
+          state.monkAccepted = true;
+          acceptBtn.disabled = true;
+          markComplete(3);
+          setTimeout(function(){ goToScene(4); }, 500);
+        });
+        wrap3.appendChild(acceptBtn);
+      }
+    } else if(n===4){
+      var hint = document.createElement('div');
+      hint.className='instruction-box';
+      hint.style.marginTop='0';
+      hint.textContent = t.dragHint;
+      controlsArea.appendChild(hint);
+    } else if(n===5){
+      var offerBtn = document.createElement('button');
+      offerBtn.className='primary-btn';
+      offerBtn.type='button';
+      offerBtn.textContent = t.btnOffer;
+      offerBtn.addEventListener('click', function(){
+        offerBtn.disabled = true;
+        markComplete(5);
+        setTimeout(function(){ goToScene(6); }, 500);
+      });
+      controlsArea.appendChild(offerBtn);
+    } else if(n===6){
+      state.leapPhase = 'aiming';
+      animateLeapBar();
+      var leapBtn = document.createElement('button');
+      leapBtn.className='primary-btn';
+      leapBtn.type='button';
+      leapBtn.textContent = t.btnLeap;
+
+      var msg = document.createElement('div');
+      msg.className='mash-counter';
+      msg.style.minHeight='16px';
+
+      leapBtn.addEventListener('click', function(){
+        if(state.leapPhase!=='aiming') return;
+        var zoneStart = 0.39, zoneEnd = 0.61;
+        if(state.leapPos>=zoneStart && state.leapPos<=zoneEnd){
+          state.leapPhase = 'jumped';
+          if(state.leapRaf){ cancelAnimationFrame(state.leapRaf); state.leapRaf=null; }
+          msg.textContent = t.leapSuccess;
+          leapBtn.disabled = true;
+          animateJump(function(){
+            markComplete(6);
+            setTimeout(function(){ goToScene(7); }, 400);
+          });
+        } else {
+          msg.textContent = t.leapFail;
+        }
+      });
+
+      controlsArea.appendChild(leapBtn);
+      controlsArea.appendChild(msg);
+    } else if(n===7){
+      if(state.seaKingTapped){
+        showCloseEyesButton();
+      }
+    } else if(n===8){
+      if(!state.eyesOpen){
+        var openBtn = document.createElement('button');
+        openBtn.className='primary-btn';
+        openBtn.type='button';
+        openBtn.textContent = t.btnOpenEyes;
+        openBtn.addEventListener('click', function(){
+          openBtn.disabled = true;
+          state.eyesOpen = true;
+          markComplete(8);
+          animateEnding();
+        });
+        controlsArea.appendChild(openBtn);
+      } else {
+        showReplayButton();
+      }
+    }
+  }
+
+  function showCloseEyesButton(){
+    clearControls();
+    var closeBtn = document.createElement('button');
+    closeBtn.className='primary-btn';
+    closeBtn.type='button';
+    closeBtn.textContent = T().btnCloseEyes;
+    closeBtn.addEventListener('click', function(){
+      closeBtn.disabled = true;
+      state.eyesClosed = true;
+      markComplete(7);
+      setTimeout(function(){ goToScene(8); }, 500);
+    });
+    controlsArea.appendChild(closeBtn);
+  }
+
+  function showReplayButton(){
+    clearControls();
+    var btn = document.createElement('button');
+    btn.className='secondary-btn';
+    btn.type='button';
+    btn.textContent = T().replayBtn;
+    btn.addEventListener('click', function(){
+      state.completed = new Array(9).fill(false);
+      goToScene(0);
+    });
+    controlsArea.appendChild(btn);
+  }
+
+  /* ---------- LEAP BAR ANIMATION ---------- */
+  function animateLeapBar(){
+    function step(){
+      if(state.leapPhase!=='aiming') return;
+      state.leapPos += 0.012*state.leapDir;
+      if(state.leapPos>=1){ state.leapPos=1; state.leapDir=-1; }
+      if(state.leapPos<=0){ state.leapPos=0; state.leapDir=1; }
+      state.leapRaf = requestAnimationFrame(step);
+    }
+    state.leapRaf = requestAnimationFrame(step);
+  }
+
+  function animateJump(cb){
+    state.animT = 0;
+    function step(){
+      state.animT += 0.04;
+      if(state.animT<1){
+        requestAnimationFrame(step);
+      } else {
+        cb();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function animateEnding(){
+    renderControlsForScene(8);
+    state.animT = 0;
+    function step(){
+      state.animT += 0.02;
+      if(state.animT<1){
+        requestAnimationFrame(step);
+      } else {
+        state.animT = 1;
+        showReplayButton();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- CANVAS INTERACTIONS (tap / drag) ---------- */
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX = (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX;
+    var clientY = (evt.touches && evt.touches[0]) ? evt.touches[0].clientY : evt.clientY;
+    var scaleX = LOGICAL_W / rect.width;
+    var scaleY = LOGICAL_H / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    var pos = getCanvasPos(e);
+    if(state.scene === 1 && state._simcheongHit){
+      var h = state._simcheongHit;
+      var d = Math.hypot(pos.x-h.x,pos.y-h.y);
+      if(d<=h.r){
+        markComplete(1);
+        goToScene(2);
+      }
+    } else if(state.scene === 4 && !state.dragDone){
+      var d2 = Math.hypot(pos.x-state.dragPos.x,pos.y-state.dragPos.y);
+      if(d2<=42){
+        state.dragging = true;
+        canvas.setPointerCapture(e.pointerId);
+      }
+    } else if(state.scene === 7 && state._seaKingHit && !state.seaKingTapped){
+      var h2 = state._seaKingHit;
+      var d3 = Math.hypot(pos.x-h2.x,pos.y-h2.y);
+      if(d3<=h2.r){
+        state.seaKingTapped = true;
+        narrationBox.textContent = T().seaKingLine;
+        speak(T().seaKingLine);
+        renderControlsForScene(7);
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', function(e){
+    if(state.scene===4 && state.dragging && !state.dragDone){
+      var pos = getCanvasPos(e);
+      state.dragPos.x = Math.max(30,Math.min(LOGICAL_W-30,pos.x));
+      state.dragPos.y = Math.max(60,Math.min(LOGICAL_H-30,pos.y));
+    }
+  });
+
+  function endDrag(e){
+    if(state.scene===4 && state.dragging){
+      state.dragging = false;
+      var gate = {x:635,y:300};
+      var d = Math.hypot(state.dragPos.x-gate.x, state.dragPos.y-gate.y);
+      if(d<90){
+        state.dragPos = {x:gate.x,y:gate.y};
+        state.dragDone = true;
+        markComplete(4);
+        setTimeout(function(){ goToScene(5); }, 500);
+      }
+    }
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  /* ---------- INIT ---------- */
+  function init(){
+    applyStaticText();
+    fitCanvas();
+    renderScene(false);
+    loop();
+    window.addEventListener('load', notifyResize);
+    setTimeout(notifyResize, 400);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
