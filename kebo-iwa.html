@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerita Kebo Iwa - Game Interaktif</title>
+<style>
+  :root{
+    --bg-top:#fdf3df;
+    --bg-bottom:#f3e2bd;
+    --panel:#fffaf0;
+    --ink:#3c2a1e;
+    --gold:#c98a2b;
+    --gold-dark:#a86c1a;
+    --terracotta:#c1502e;
+    --terracotta-dark:#9a3d21;
+    --green:#3f6b3a;
+    --green-dark:#2b4a28;
+    --stone:#8d8a83;
+    --sky1:#bfe3f0;
+    --sky2:#eaf6e0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Tahoma,sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:12px 10px 18px;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:var(--panel);
+    border-radius:18px;
+    border:1px solid #e6d4ad;
+    box-shadow:0 6px 18px rgba(90,60,20,0.12);
+    padding:14px 14px 16px;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .title-wrap{flex:1;min-width:0;}
+  h1{
+    font-size:1.05rem;
+    margin:0;
+    color:var(--terracotta-dark);
+    letter-spacing:.3px;
+  }
+  .subtitle{
+    font-size:.72rem;
+    color:#8a6a3d;
+    margin-top:2px;
+  }
+  .icon-btn{
+    border:1px solid #d9bd85;
+    background:#fff6e2;
+    color:var(--ink);
+    border-radius:10px;
+    width:38px;
+    height:36px;
+    font-size:1rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .icon-btn:active{transform:scale(0.92);}
+  .icon-btn.on{background:var(--gold);color:#fff;border-color:var(--gold-dark);}
+  .lang-btn{
+    font-size:.72rem;
+    font-weight:700;
+    width:auto;
+    padding:0 10px;
+  }
+  .stage{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    border:2px solid #e0c58a;
+    background:#eaf6e0;
+    touch-action:none;
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:10px 0 4px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#e2cfa1;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{background:var(--terracotta);transform:scale(1.3);}
+  .dot.done{background:var(--green);}
+  .instruction-panel{
+    background:#fbf0d6;
+    border:1px dashed #d9b876;
+    border-radius:12px;
+    padding:9px 12px;
+    margin-top:6px;
+    font-size:.86rem;
+    line-height:1.4;
+    min-height:2.6em;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .instruction-panel .icon{font-size:1.1rem;flex-shrink:0;}
+  .narration-panel{
+    font-size:.82rem;
+    color:#5a462e;
+    line-height:1.5;
+    margin-top:8px;
+    padding:0 2px;
+    min-height:1.5em;
+  }
+  .controls{
+    display:flex;
+    justify-content:center;
+    margin-top:12px;
+  }
+  .primary-btn{
+    background:linear-gradient(180deg,var(--terracotta),var(--terracotta-dark));
+    color:#fff;
+    border:none;
+    padding:11px 26px;
+    border-radius:999px;
+    font-size:.95rem;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 #7a2f18;
+    letter-spacing:.3px;
+  }
+  .primary-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #7a2f18;}
+  .primary-btn:disabled{opacity:.55;cursor:default;box-shadow:none;}
+  footer{
+    text-align:center;
+    font-size:.68rem;
+    color:#a4906a;
+    margin-top:12px;
+  }
+  @media (max-width:420px){
+    h1{font-size:.92rem;}
+    .subtitle{font-size:.65rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title-wrap">
+      <h1 id="titleText">Cerita Kebo Iwa</h1>
+      <div class="subtitle" id="subtitleText">Legenda Rakyat dari Bali</div>
+    </div>
+    <button class="icon-btn lang-btn" id="langBtn" title="Ganti bahasa / Switch language">EN</button>
+    <button class="icon-btn" id="muteBtn" title="Bisukan narasi / Mute narration">🔊</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="instruction-panel">
+    <span class="icon">👉</span>
+    <span id="instructionText">Ketuk tombol mulai untuk memulai cerita.</span>
+  </div>
+
+  <div class="narration-panel" id="narrationText"></div>
+
+  <div class="controls">
+    <button class="primary-btn" id="mainBtn">Mulai Cerita</button>
+  </div>
+
+  <footer id="footerText">Kisah rakyat Nusantara &mdash; diceritakan ulang secara interaktif.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- i18n strings ---------------- */
+  var STR = {
+    id:{
+      title:"Cerita Kebo Iwa",
+      subtitle:"Legenda Rakyat dari Bali",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      next:"Lanjut",
+      footer:"Kisah rakyat Nusantara \u2014 diceritakan ulang secara interaktif.",
+      langBtn:"EN",
+      introInstruction:"Ketuk tombol \u201cMulai Cerita\u201d di bawah untuk memulai.",
+      endMoral:"Keserakahan dan amarah Kebo Iwa akhirnya membawa akibat buruk bagi dirinya sendiri. Menurut kepercayaan warga Bali, Danau Batur dan Gunung Batur berasal dari kisah ini."
+    },
+    en:{
+      title:"The Legend of Kebo Iwa",
+      subtitle:"A Folktale from Bali",
+      start:"Start Story",
+      replay:"Play Again",
+      next:"Continue",
+      footer:"An Indonesian folktale \u2014 retold as an interactive story.",
+      langBtn:"ID",
+      introInstruction:"Tap \u201cStart Story\u201d below to begin.",
+      endMoral:"Kebo Iwa's greed and anger eventually led to his own downfall. According to Balinese belief, Lake Batur and Mount Batur were formed from this very story."
+    }
+  };
+
+  /* ---------------- scene data ---------------- */
+  var scenes = [
+    {
+      key:"birth",
+      narration:{
+        id:"Dahulu kala, hiduplah sepasang suami istri yang telah lama menikah namun belum dikaruniai anak. Setelah berdoa dengan tekun, lahirlah seorang bayi laki-laki. Namun sejak bayi, nafsu makannya sangat luar biasa besar.",
+        en:"Long ago, a married couple longed for a child. After much prayer, a baby boy was finally born. But even as an infant, his appetite was extraordinarily huge."
+      },
+      instruction:{
+        id:"Ketuk mulut bayi Kebo Iwa berulang kali untuk memberinya makan!",
+        en:"Tap baby Kebo Iwa's mouth again and again to feed him!"
+      }
+    },
+    {
+      key:"rampage",
+      narration:{
+        id:"Kebo Iwa tumbuh menjadi raksasa yang sangat besar dan rakus. Bila lapar dan marah, ia mengamuk dan menghancurkan rumah-rumah warga desa.",
+        en:"Kebo Iwa grew into a huge, gluttonous giant. Whenever he was hungry and angry, he rampaged and smashed the villagers' houses."
+      },
+      instruction:{
+        id:"Cepat ketuk ketiga rumah itu sebelum dihancurkan Kebo Iwa!",
+        en:"Quickly tap all three houses before Kebo Iwa smashes them!"
+      }
+    },
+    {
+      key:"meeting",
+      narration:{
+        id:"Warga desa ketakutan dan mengadakan musyawarah. Kepala desa pun berani mendatangi Kebo Iwa untuk berbicara dan mencari jalan keluar.",
+        en:"The frightened villagers held a meeting. The village chief bravely went to speak with Kebo Iwa to find a solution."
+      },
+      instruction:{
+        id:"Ketuk kepala desa untuk berbicara dengan Kebo Iwa.",
+        en:"Tap the village chief to talk with Kebo Iwa."
+      }
+    },
+    {
+      key:"dig",
+      narration:{
+        id:"Kepala desa meminta Kebo Iwa menggali sebuah sumur besar agar warga memiliki air untuk bertani, dengan imbalan makanan berlimpah. Kebo Iwa pun bersemangat menggali.",
+        en:"The chief asked Kebo Iwa to dig a huge well so the village would have water for farming, in exchange for plenty of food. Kebo Iwa eagerly agreed to dig."
+      },
+      instruction:{
+        id:"Tekan dan tahan tombol GALI untuk membantu Kebo Iwa menggali sumur!",
+        en:"Press and hold the DIG button to help Kebo Iwa dig the well!"
+      }
+    },
+    {
+      key:"stones",
+      narration:{
+        id:"Sementara Kebo Iwa sibuk menggali, warga diam-diam mengumpulkan batu-batu kapur di dekat sumur, dengan alasan untuk membangun rumah baginya.",
+        en:"While Kebo Iwa was busy digging, the villagers secretly gathered limestone rocks near the well, claiming it was to build him a house."
+      },
+      instruction:{
+        id:"Seret setiap batu kapur ke tumpukan di dekat sumur!",
+        en:"Drag each limestone rock to the pile beside the well!"
+      }
+    },
+    {
+      key:"feast",
+      narration:{
+        id:"Sumur yang digali Kebo Iwa memancarkan mata air jernih yang deras. Kebo Iwa yang kelelahan pun diberi makanan dalam jumlah sangat banyak oleh warga.",
+        en:"The well Kebo Iwa dug gushed with clear, flowing water. Exhausted, Kebo Iwa was given an enormous feast by the villagers."
+      },
+      instruction:{
+        id:"Ketuk tombol SUAP saat penunjuk berada di area hijau!",
+        en:"Tap the FEED button when the pointer is inside the green zone!"
+      }
+    },
+    {
+      key:"stoning",
+      narration:{
+        id:"Karena kekenyangan, Kebo Iwa tertidur pulas sambil mendengkur keras. Warga desa segera melempari tubuhnya dengan batu-batu kapur yang telah dikumpulkan.",
+        en:"Full and exhausted, Kebo Iwa fell into a deep sleep, snoring loudly. The villagers quickly threw the gathered limestone rocks at his body."
+      },
+      instruction:{
+        id:"Ketuk tumpukan batu kapur berulang kali untuk melemparkannya ke Kebo Iwa!",
+        en:"Tap the pile of limestone rocks again and again to throw them at Kebo Iwa!"
+      }
+    },
+    {
+      key:"ending",
+      narration:{
+        id:"Kebo Iwa terbangun, namun sudah terlambat. Ia tertimbun batu-batu kapur. Air dari sumur itu meluap menjadi Danau Batur, sedangkan gundukan tanah galiannya menjadi Gunung Batur.",
+        en:"Kebo Iwa woke up, but it was too late. He was buried beneath the limestone rocks. Water from the well overflowed into Lake Batur, while the mound of earth he had dug became Mount Batur."
+      },
+      instruction:{
+        id:"Ketuk layar untuk melihat akhir dari cerita ini.",
+        en:"Tap the screen to see how this story ends."
+      }
+    }
+  ];
+
+  /* ---------------- state ---------------- */
+  var state = {
+    lang: (function(){
+      try{
+        var p = new URLSearchParams(window.location.search);
+        if(p.get('lang')==='en') return 'en';
+      }catch(e){}
+      return 'id';
+    })(),
+    muted: (function(){
+      try{ return localStorage.getItem('keboIwaMuted')==='1'; }catch(e){ return false; }
+    })(),
+    sceneIndex: -1, // -1 = intro not started
+    started:false,
+    locked:false,
+    completedScenes:[]
+  };
+
+  /* ---------------- DOM refs ---------------- */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var mainBtn = document.getElementById('mainBtn');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var instructionText = document.getElementById('instructionText');
+  var narrationText = document.getElementById('narrationText');
+  var dotsWrap = document.getElementById('dots');
+  var titleText = document.getElementById('titleText');
+  var subtitleText = document.getElementById('subtitleText');
+  var footerText = document.getElementById('footerText');
+
+  /* ---------------- helpers ---------------- */
+  function t(){ return STR[state.lang]; }
+
+  function setInstruction(str){ instructionText.textContent = str; }
+  function setNarration(str){ narrationText.textContent = str; }
+
+  function speak(str){
+    if(state.muted) return;
+    try{
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(str);
+      u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function stopSpeak(){
+    try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  }
+
+  function updateStaticText(){
+    titleText.textContent = t().title;
+    subtitleText.textContent = t().subtitle;
+    langBtn.textContent = t().langBtn;
+    footerText.textContent = t().footer;
+    if(!state.started){
+      mainBtn.textContent = t().start;
+      setInstruction(t().introInstruction);
+    } else {
+      mainBtn.textContent = t().replay;
+    }
+  }
+
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<scenes.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.dataset.idx = i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  function refreshDots(){
+    var els = dotsWrap.children;
+    for(var i=0;i<els.length;i++){
+      els[i].className = 'dot' +
+        (i < state.sceneIndex ? ' done' : '') +
+        (i === state.sceneIndex ? ' active' : '');
+    }
+  }
+
+  function sendHeight(){
+    try{
+      var h = document.getElementById('app').offsetHeight + 24;
+      window.parent.postMessage({ keboIwaHeight: h }, '*');
+    }catch(e){}
+  }
+
+  function resizeCanvasCss(){
+    // canvas internal resolution fixed at 800x450; CSS handles scaling
+    sendHeight();
+  }
+  window.addEventListener('resize', resizeCanvasCss);
+
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    var clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  /* ---------------- generic drawing helpers ---------------- */
+  function drawSky(g){
+    var grad = ctx.createLinearGradient(0,0,0,g);
+    grad.addColorStop(0,'#bfe3f0');
+    grad.addColorStop(1,'#eaf6e0');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,800,g);
+  }
+  function drawGround(y){
+    ctx.fillStyle = '#7fae5a';
+    ctx.fillRect(0,y,800,450-y);
+    ctx.fillStyle = '#6d9c4c';
+    for(var i=0;i<800;i+=40){
+      ctx.beginPath();
+      ctx.ellipse(i+ (i%80===0?10:0), y+ (i%3)*4, 22,8,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle='#ffd77a';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,215,122,.5)';
+    ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(x,y,r+10,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  function drawCloud(x,y,s){
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(x,y,28*s,16*s,0,0,Math.PI*2);
+    ctx.ellipse(x+22*s,y-8*s,20*s,14*s,0,0,Math.PI*2);
+    ctx.ellipse(x-22*s,y-6*s,18*s,13*s,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawHouse(x,y,scale,broken){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(broken){
+      // rubble
+      ctx.fillStyle = '#a9895f';
+      ctx.beginPath();
+      ctx.moveTo(-38,20); ctx.lineTo(-18,-6); ctx.lineTo(0,14); ctx.lineTo(20,-10); ctx.lineTo(40,20);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#8a6a44';
+      ctx.fillRect(-40,16,80,8);
+    } else {
+      // walls
+      ctx.fillStyle = '#e8d3a0';
+      ctx.fillRect(-32,-6,64,32);
+      // roof (alang-alang thatch, balinese style)
+      ctx.fillStyle = '#8a5a2b';
+      ctx.beginPath();
+      ctx.moveTo(-42,-6); ctx.lineTo(0,-46); ctx.lineTo(42,-6);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#6f4520';
+      ctx.beginPath();
+      ctx.moveTo(-42,-6); ctx.lineTo(0,-46); ctx.lineTo(0,-36); ctx.lineTo(-34,-6);
+      ctx.closePath(); ctx.fill();
+      // door
+      ctx.fillStyle = '#5a3a1e';
+      ctx.fillRect(-8,8,16,18);
+    }
+    ctx.restore();
+  }
+  function drawVillager(x,y,scale,colorShirt){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#f0c48f';
+    ctx.beginPath(); ctx.arc(0,-24,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = colorShirt || '#c1502e';
+    ctx.beginPath();
+    ctx.moveTo(-9,-16); ctx.lineTo(9,-16); ctx.lineTo(11,10); ctx.lineTo(-11,10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3c2a1e';
+    ctx.fillRect(-6,10,5,14);
+    ctx.fillRect(1,10,5,14);
+    ctx.restore();
+  }
+  function drawChief(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // udeng (headcloth)
+    ctx.fillStyle = '#c98a2b';
+    ctx.beginPath(); ctx.moveTo(-11,-30); ctx.lineTo(11,-30); ctx.lineTo(8,-38); ctx.lineTo(-8,-38); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f0c48f';
+    ctx.beginPath(); ctx.arc(0,-24,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(-10,-16); ctx.lineTo(10,-16); ctx.lineTo(12,12); ctx.lineTo(-12,12);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#c98a2b';
+    ctx.fillRect(-12,-2,24,5);
+    ctx.fillStyle = '#3c2a1e';
+    ctx.fillRect(-7,12,5,14);
+    ctx.fillRect(2,12,5,14);
+    ctx.restore();
+  }
+
+  function drawKeboIwa(x,y,scale,mouthOpen,angry,asleep){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // body
+    ctx.fillStyle = angry ? '#a85a3a' : '#c48354';
+    ctx.beginPath();
+    ctx.ellipse(0,40,58,46,0,0,Math.PI*2);
+    ctx.fill();
+    // arms
+    ctx.fillStyle = angry ? '#a85a3a' : '#c48354';
+    ctx.beginPath(); ctx.ellipse(-58,30,16,34,0.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(58,30,16,34,-0.4,0,Math.PI*2); ctx.fill();
+    // head
+    ctx.fillStyle = angry ? '#b8683f' : '#d3966a';
+    ctx.beginPath();
+    ctx.ellipse(0,-24,42,38,0,0,Math.PI*2);
+    ctx.fill();
+    // horns (kerbau/buffalo)
+    ctx.strokeStyle = '#efe6cf';
+    ctx.lineWidth = 9;
+    ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-18,-50); ctx.quadraticCurveTo(-44,-70,-40,-46); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(18,-50); ctx.quadraticCurveTo(44,-70,40,-46); ctx.stroke();
+    // ears
+    ctx.fillStyle = '#b8703f';
+    ctx.beginPath(); ctx.ellipse(-40,-20,10,16,0.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(40,-20,10,16,-0.5,0,Math.PI*2); ctx.fill();
+    // eyes
+    if(asleep){
+      ctx.strokeStyle = '#3c2a1e';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-20,-30); ctx.quadraticCurveTo(-14,-25,-8,-30); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(8,-30); ctx.quadraticCurveTo(14,-25,20,-30); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(-14,-30,7,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(14,-30,7,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#3c2a1e';
+      var eyeOff = angry ? 2 : 0;
+      ctx.beginPath(); ctx.arc(-14+eyeOff,-30,3.3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(14+eyeOff,-30,3.3,0,Math.PI*2); ctx.fill();
+      if(angry){
+        ctx.strokeStyle = '#5a2a1a';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-24,-42); ctx.lineTo(-8,-38); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(24,-42); ctx.lineTo(8,-38); ctx.stroke();
+      }
+    }
+    // snout / mouth
+    ctx.fillStyle = '#a86c48';
+    ctx.beginPath(); ctx.ellipse(0,-8,20,14,0,0,Math.PI*2); ctx.fill();
+    var mouthH = mouthOpen ? 16 : 4;
+    ctx.fillStyle = '#5a2016';
+    ctx.beginPath();
+    ctx.ellipse(0,-2+mouthH/2,13, mouthH/2 + 2,0,0,Math.PI*2);
+    ctx.fill();
+    if(asleep){
+      ctx.fillStyle='#3c2a1e';
+      ctx.font='bold 20px sans-serif';
+      ctx.fillText('Z',44,-60);
+      ctx.font='bold 15px sans-serif';
+      ctx.fillText('z',60,-72);
+    }
+    ctx.restore();
+  }
+
+  function drawWell(x,y,depthProgress){
+    ctx.save();
+    ctx.translate(x,y);
+    // rim
+    ctx.fillStyle = '#8d8a83';
+    ctx.beginPath(); ctx.ellipse(0,0,58,20,0,0,Math.PI*2); ctx.fill();
+    // hole
+    var holeCol = depthProgress > 0.85 ? '#2f6f9e' : '#3a2a1c';
+    ctx.fillStyle = holeCol;
+    ctx.beginPath(); ctx.ellipse(0,0,44,14,0,0,Math.PI*2); ctx.fill();
+    if(depthProgress > 0.85){
+      ctx.fillStyle='rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.ellipse(-10,-2,14,4,0,0,Math.PI*2); ctx.fill();
+    }
+    // stone ring
+    ctx.strokeStyle = '#5f5c56';
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.ellipse(0,0,52,17,0,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRock(x,y,r){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#c9c6bd';
+    ctx.beginPath();
+    ctx.moveTo(-r,r*0.3);
+    ctx.lineTo(-r*0.5,-r*0.9);
+    ctx.lineTo(r*0.3,-r);
+    ctx.lineTo(r,r*0.1);
+    ctx.lineTo(r*0.6,r);
+    ctx.lineTo(-r*0.4,r*0.9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#9a978d';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMountainBg(){
+    ctx.fillStyle = '#a9c9a4';
+    ctx.beginPath();
+    ctx.moveTo(0,180); ctx.lineTo(140,70); ctx.lineTo(280,180); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#96bb90';
+    ctx.beginPath();
+    ctx.moveTo(520,180); ctx.lineTo(660,60); ctx.lineTo(800,180); ctx.closePath();
+    ctx.fill();
+  }
+
+  /* ---------------- animation loop control ---------------- */
+  var rafId = null;
+  var animStart = performance.now();
+  var currentFrame = function(){};
+
+  function loop(ts){
+    currentFrame(ts - animStart);
+    rafId = requestAnimationFrame(loop);
+  }
+  function startLoop(){
+    if(rafId) cancelAnimationFrame(rafId);
+    animStart = performance.now();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ---------------- interaction cleanup ---------------- */
+  var activeCleanup = function(){};
+  function clearInteraction(){
+    activeCleanup();
+    activeCleanup = function(){};
+  }
+
+  /* ================= SCENE SETUP FUNCTIONS ================= */
+
+  function setupBirth(){
+    var feed = 0; // 0..1
+    var needed = 14;
+    var taps = 0;
+    var mouthOpenUntil = 0;
+    var babyScale = 0;
+    var doneFlag = false;
+
+    function draw(tms){
+      drawSky(300);
+      drawSun(700,60,34);
+      drawCloud(120,50,1); drawCloud(620,90,0.8);
+      drawGround(300);
+      drawHouse(120,320,0.9,false);
+      drawHouse(680,330,0.85,false);
+      var bob = Math.sin(tms/300)*3;
+      var scaleUp = 0.6 + Math.min(feed,1)*0.35;
+      ctx.save();
+      ctx.translate(400,260+bob);
+      ctx.scale(scaleUp,scaleUp);
+      // simple baby version of kebo iwa: rounder head, small body
+      ctx.fillStyle = '#e0b58a';
+      ctx.beginPath(); ctx.ellipse(0,60,50,40,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f0c99a';
+      ctx.beginPath(); ctx.ellipse(0,0,46,42,0,0,Math.PI*2); ctx.fill();
+      // tiny horn buds
+      ctx.strokeStyle = '#efe6cf'; ctx.lineWidth=6; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-14,-34); ctx.lineTo(-20,-46); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,-34); ctx.lineTo(20,-46); ctx.stroke();
+      // eyes
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(-15,-4,8,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(15,-4,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#3c2a1e';
+      ctx.beginPath(); ctx.arc(-15,-4,3.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(15,-4,3.6,0,Math.PI*2); ctx.fill();
+      // mouth (hotspot target)
+      var open = tms < mouthOpenUntil;
+      var mh = open ? 20 : 6;
+      ctx.fillStyle = '#7a2e1e';
+      ctx.beginPath(); ctx.ellipse(0,20,17,mh,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      // food bowl icon
+      ctx.save();
+      ctx.translate(400,392);
+      ctx.fillStyle = '#c98a2b';
+      ctx.beginPath(); ctx.ellipse(0,0,42,14,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#e8b95a';
+      ctx.beginPath(); ctx.ellipse(0,-4,34,10,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      // progress bar
+      var barW = 260;
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillRect(400-barW/2, 30, barW, 16);
+      ctx.strokeStyle = '#c98a2b'; ctx.lineWidth=2;
+      ctx.strokeRect(400-barW/2, 30, barW, 16);
+      ctx.fillStyle = '#3f6b3a';
+      ctx.fillRect(400-barW/2+2, 32, (barW-4)*Math.min(feed,1), 12);
+      ctx.fillStyle = '#3c2a1e';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign='center';
+      var label = state.lang==='en' ? 'Hunger satisfied' : 'Rasa lapar terpenuhi';
+      ctx.fillText(label, 400, 26);
+      ctx.textAlign='left';
+    }
+
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      var d = dist(p.x,p.y,400,280);
+      if(d < 90){
+        taps++;
+        feed = Math.min(1, taps/needed);
+        mouthOpenUntil = (performance.now()-animStart) + 160;
+        if(taps >= needed && !doneFlag){
+          doneFlag = true;
+          setTimeout(function(){ advanceScene(); }, 500);
+        }
+      }
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    activeCleanup = function(){ canvas.removeEventListener('pointerdown', onDown); };
+    currentFrame = draw;
+  }
+
+  function setupRampage(){
+    var houses = [
+      {x:150,y:300,saved:false,broken:false},
+      {x:400,y:320,saved:false,broken:false},
+      {x:650,y:300,saved:false,broken:false}
+    ];
+    var doneFlag = false;
+    var startT = null;
+
+    function draw(tms){
+      if(startT===null) startT = tms;
+      var el = tms - startT;
+      drawSky(300);
+      drawSun(80,50,28);
+      drawGround(300);
+      var shake = Math.sin(tms/60)*3;
+      houses.forEach(function(h){
+        drawHouse(h.x + (h.broken?0:shake*0), h.y, 1.0, h.broken);
+      });
+      var bob = Math.sin(tms/250)*4;
+      drawKeboIwa(400,150+bob,1.15,true,true,false);
+      // auto-break houses over time if not saved
+      houses.forEach(function(h,i){
+        var threshold = 2600 + i*1400;
+        if(!h.saved && !h.broken && el > threshold){
+          h.broken = true;
+        }
+      });
+      if(!doneFlag && houses.every(function(h){ return h.saved || h.broken; })){
+        doneFlag = true;
+        setTimeout(function(){ advanceScene(); }, 600);
+      }
+    }
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      houses.forEach(function(h){
+        if(!h.saved && !h.broken && dist(p.x,p.y,h.x,h.y-6) < 55){
+          h.saved = true;
+        }
+      });
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    activeCleanup = function(){ canvas.removeEventListener('pointerdown', onDown); };
+    currentFrame = draw;
+  }
+
+  function setupMeeting(){
+    var doneFlag = false;
+    function draw(tms){
+      drawSky(300);
+      drawSun(700,60,30);
+      drawGround(300);
+      drawHouse(120,320,0.8,false);
+      drawHouse(680,320,0.8,false);
+      var bob = Math.sin(tms/300)*3;
+      drawKeboIwa(600,230+bob,0.9,false,false,false);
+      drawVillager(280,320,1,'#3f6b3a');
+      drawVillager(320,326,0.9,'#c1502e');
+      var pulse = 1 + Math.sin(tms/220)*0.05;
+      ctx.save();
+      ctx.translate(200,300);
+      ctx.scale(pulse,pulse);
+      ctx.translate(-200,-300);
+      drawChief(200,300,1.05);
+      ctx.restore();
+      if(!doneFlag){
+        ctx.save();
+        ctx.strokeStyle = 'rgba(193,80,46,0.6)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(200,286,44 + Math.sin(tms/200)*4,0,Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      if(dist(p.x,p.y,200,290) < 60){
+        doneFlag = true;
+        setTimeout(function(){ advanceScene(); }, 500);
+      }
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    activeCleanup = function(){ canvas.removeEventListener('pointerdown', onDown); };
+    currentFrame = draw;
+  }
+
+  function setupDig(){
+    var progress = 0;
+    var holding = false;
+    var doneFlag = false;
+    var btn = { x:400, y:400, w:150, h:44 };
+
+    function draw(tms){
+      drawSky(260);
+      drawSun(700,50,26);
+      drawGround(260);
+      drawWell(400,260, progress);
+      var digBob = holding ? Math.sin(tms/90)*6 : Math.sin(tms/400)*2;
+      drawKeboIwa(230,200+digBob,0.95,holding, false,false);
+      // dirt pile growing
+      ctx.save();
+      ctx.fillStyle = '#8a6a44';
+      var pileW = 30 + progress*70;
+      ctx.beginPath();
+      ctx.moveTo(400-pileW,262);
+      ctx.quadraticCurveTo(400,262-progress*46,400+pileW,262);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      if(holding && !doneFlag){
+        progress = Math.min(1, progress + 0.012);
+        if(progress >= 1){
+          doneFlag = true;
+          setTimeout(function(){ advanceScene(); }, 700);
+        }
+      }
+
+      // progress ring
+      ctx.save();
+      ctx.strokeStyle = '#e2cfa1'; ctx.lineWidth = 10;
+      ctx.beginPath(); ctx.arc(680,120,34,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = '#3f6b3a'; ctx.lineWidth = 10;
+      ctx.beginPath(); ctx.arc(680,120,34, -Math.PI/2, -Math.PI/2 + progress*Math.PI*2); ctx.stroke();
+      ctx.restore();
+
+      // dig button
+      ctx.save();
+      ctx.fillStyle = holding ? '#9a3d21' : '#c1502e';
+      roundRect(ctx, btn.x-btn.w/2, btn.y-btn.h/2, btn.w, btn.h, 22);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline='middle';
+      ctx.fillText(state.lang==='en' ? 'DIG!' : 'GALI!', btn.x, btn.y+1);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+      ctx.restore();
+    }
+    function inBtn(p){
+      return p.x > btn.x-btn.w/2 && p.x < btn.x+btn.w/2 && p.y > btn.y-btn.h/2 && p.y < btn.y+btn.h/2;
+    }
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      if(inBtn(p)) holding = true;
+    }
+    function onUp(){ holding = false; }
+    canvas.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    activeCleanup = function(){
+      canvas.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+    currentFrame = draw;
+  }
+
+  function roundRect(c,x,y,w,h,r){
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+
+  function setupStones(){
+    var pile = { x:640, y:400 };
+    var rocks = [
+      {x:120,y:120,r:20,dragging:false,placed:false},
+      {x:220,y:160,r:22,dragging:false,placed:false},
+      {x:110,y:220,r:18,dragging:false,placed:false}
+    ];
+    var doneFlag = false;
+    var dragTarget = null;
+    var dragOffset = {x:0,y:0};
+
+    function draw(tms){
+      drawSky(260);
+      drawSun(700,50,24);
+      drawGround(260);
+      drawWell(400,260,1);
+      drawKeboIwa(230,210+Math.sin(tms/500)*3,0.85,false,false,false);
+      // pile marker
+      ctx.save();
+      ctx.setLineDash([6,5]);
+      ctx.strokeStyle = '#9a3d21';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(pile.x,pile.y,50,20,0,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+      var placedCount = 0;
+      rocks.forEach(function(r,i){
+        if(r.placed){
+          placedCount++;
+          drawRock(pile.x - 20 + i*20, pile.y - placedCount*4, r.r*0.9);
+        }
+      });
+      rocks.forEach(function(r){
+        if(!r.placed) drawRock(r.x, r.y, r.r);
+      });
+
+      if(!doneFlag && rocks.every(function(r){return r.placed;})){
+        doneFlag = true;
+        setTimeout(function(){ advanceScene(); }, 600);
+      }
+    }
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      for(var i=rocks.length-1;i>=0;i--){
+        var r = rocks[i];
+        if(!r.placed && dist(p.x,p.y,r.x,r.y) < r.r+10){
+          dragTarget = r;
+          dragOffset.x = r.x-p.x; dragOffset.y = r.y-p.y;
+          break;
+        }
+      }
+    }
+    function onMove(evt){
+      if(!dragTarget) return;
+      var p = getPos(evt);
+      dragTarget.x = p.x+dragOffset.x;
+      dragTarget.y = p.y+dragOffset.y;
+    }
+    function onUp(){
+      if(dragTarget){
+        if(dist(dragTarget.x,dragTarget.y,pile.x,pile.y) < 60){
+          dragTarget.placed = true;
+        }
+        dragTarget = null;
+      }
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    canvas.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    activeCleanup = function(){
+      canvas.removeEventListener('pointerdown', onDown);
+      canvas.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    currentFrame = draw;
+  }
+
+  function setupFeast(){
+    var doneFlag = false;
+    var hits = 0;
+    var needed = 3;
+    var markerPos = 0;
+    var dir = 1;
+    var greenStart = 0.6, greenEnd = 0.85;
+    var mouthOpenUntil = 0;
+    var btn = { x:400, y:404, w:150, h:40 };
+
+    function draw(tms){
+      drawSky(280);
+      drawSun(700,50,26);
+      drawGround(280);
+      markerPos += dir * 0.012;
+      if(markerPos > 1){ markerPos = 1; dir = -1; }
+      if(markerPos < 0){ markerPos = 0; dir = 1; }
+      var open = tms < mouthOpenUntil;
+      drawKeboIwa(400,230+Math.sin(tms/400)*3,1.05,open,false,false);
+
+      // timing bar
+      var bx = 400-150, by = 340, bw = 300, bh = 20;
+      ctx.fillStyle = '#e2cfa1';
+      ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle = '#8fd18f';
+      ctx.fillRect(bx+bw*greenStart, by, bw*(greenEnd-greenStart), bh);
+      ctx.strokeStyle = '#3c2a1e'; ctx.lineWidth=2;
+      ctx.strokeRect(bx,by,bw,bh);
+      var mx = bx + bw*markerPos;
+      ctx.fillStyle = '#c1502e';
+      ctx.beginPath(); ctx.moveTo(mx,by-8); ctx.lineTo(mx-8,by-18); ctx.lineTo(mx+8,by-18); ctx.closePath(); ctx.fill();
+
+      // hits dots
+      for(var i=0;i<needed;i++){
+        ctx.fillStyle = i < hits ? '#3f6b3a' : '#fff';
+        ctx.strokeStyle = '#3f6b3a'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(400-20+i*20, 90, 6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+
+      // feed button
+      ctx.save();
+      ctx.fillStyle = '#c1502e';
+      roundRect(ctx, btn.x-btn.w/2, btn.y-btn.h/2, btn.w, btn.h, 20);
+      ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.font='bold 16px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(state.lang==='en' ? 'FEED' : 'SUAP', btn.x, btn.y+1);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+      ctx.restore();
+    }
+    function inBtn(p){
+      return p.x > btn.x-btn.w/2 && p.x < btn.x+btn.w/2 && p.y > btn.y-btn.h/2 && p.y < btn.y+btn.h/2;
+    }
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      if(!inBtn(p)) return;
+      mouthOpenUntil = (performance.now()-animStart) + 200;
+      if(markerPos >= greenStart && markerPos <= greenEnd){
+        hits++;
+        if(hits >= needed){
+          doneFlag = true;
+          setTimeout(function(){ advanceScene(); }, 700);
+        }
+      }
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    activeCleanup = function(){ canvas.removeEventListener('pointerdown', onDown); };
+    currentFrame = draw;
+  }
+
+  function setupStoning(){
+    var pileX = 150, pileY = 380;
+    var needed = 10;
+    var thrown = 0;
+    var doneFlag = false;
+    var flyingRocks = [];
+
+    function draw(tms){
+      drawSky(280);
+      drawSun(700,50,22);
+      drawGround(280);
+      drawKeboIwa(500,240+Math.sin(tms/700)*2,1.15,false,false,true);
+
+      // rock pile (hotspot)
+      var pileSize = Math.max(0, needed-thrown);
+      for(var i=0;i<Math.min(pileSize,8);i++){
+        drawRock(pileX + (i%3)*14 - 14, pileY - Math.floor(i/3)*16, 16);
+      }
+      ctx.save();
+      ctx.setLineDash([5,4]);
+      ctx.strokeStyle = '#9a3d21'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(pileX,pileY-10,46,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // flying rocks animation
+      for(var j=flyingRocks.length-1;j>=0;j--){
+        var fr = flyingRocks[j];
+        var el = tms - fr.start;
+        var prog = Math.min(1, el/380);
+        var fx = fr.x0 + (fr.x1-fr.x0)*prog;
+        var fy = fr.y0 + (fr.y1-fr.y0)*prog - Math.sin(prog*Math.PI)*60;
+        drawRock(fx,fy,12);
+        if(prog>=1) flyingRocks.splice(j,1);
+      }
+
+      // landed rocks on Kebo Iwa body (visual pile count)
+      for(var k=0;k<thrown;k++){
+        drawRock(470 + (k%5)*16, 300 - Math.floor(k/5)*14, 10);
+      }
+
+      // progress text
+      ctx.fillStyle = '#3c2a1e';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign='center';
+      var lbl = (state.lang==='en' ? 'Rocks thrown: ' : 'Batu dilempar: ') + thrown + '/' + needed;
+      ctx.fillText(lbl, 400, 40);
+      ctx.textAlign='left';
+    }
+    function onDown(evt){
+      if(doneFlag) return;
+      var p = getPos(evt);
+      if(dist(p.x,p.y,pileX,pileY-10) < 55 && thrown < needed){
+        thrown++;
+        flyingRocks.push({x0:pileX,y0:pileY-10,x1:480+Math.random()*60,y1:270+Math.random()*40,start:performance.now()-animStart});
+        if(thrown >= needed){
+          doneFlag = true;
+          setTimeout(function(){ advanceScene(); }, 700);
+        }
+      }
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    activeCleanup = function(){ canvas.removeEventListener('pointerdown', onDown); };
+    currentFrame = draw;
+  }
+
+  function setupEnding(){
+    var revealed = false;
+    function draw(tms){
+      drawSky(260);
+      drawSun(400,70,36);
+      drawMountainBg();
+      drawGround(260);
+      // lake
+      ctx.save();
+      var lakeGrad = ctx.createLinearGradient(0,240,0,320);
+      lakeGrad.addColorStop(0,'#7fc4e0');
+      lakeGrad.addColorStop(1,'#3f8fb8');
+      ctx.fillStyle = lakeGrad;
+      ctx.beginPath();
+      ctx.ellipse(260,300,150,55,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle='#e8f6fb';
+      for(var i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.ellipse(220+i*40, 290+Math.sin(tms/500+i)*3, 20,4,0,0,Math.PI*2);
+        ctx.fill();
+      }
+      // mountain (Gunung Batur)
+      ctx.fillStyle = '#8a7256';
+      ctx.beginPath();
+      ctx.moveTo(500,320); ctx.lineTo(600,150); ctx.lineTo(700,320);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#6f5c43';
+      ctx.beginPath();
+      ctx.moveTo(600,150); ctx.lineTo(630,200); ctx.lineTo(570,200);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.5)';
+      ctx.beginPath();
+      ctx.moveTo(600,150); ctx.lineTo(612,178); ctx.lineTo(588,178);
+      ctx.closePath(); ctx.fill();
+
+      ctx.fillStyle = '#3c2a1e';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(state.lang==='en' ? 'Lake Batur' : 'Danau Batur', 260, 380);
+      ctx.fillText(state.lang==='en' ? 'Mount Batur' : 'Gunung Batur', 600, 380);
+      ctx.textAlign='left';
+    }
+    function onDown(){
+      if(revealed) return;
+      revealed = true;
+      setNarration(t().endMoral);
+      speak(t().endMoral);
+      finishStory();
+    }
+    canvas.addEventListener('pointerdown', onDown);
+    activeCleanup = function(){ canvas.removeEventListener('pointerdown', onDown); };
+    currentFrame = draw;
+  }
+
+  var sceneSetups = [
+    setupBirth, setupRampage, setupMeeting, setupDig,
+    setupStones, setupFeast, setupStoning, setupEnding
+  ];
+
+  /* ---------------- scene flow control ---------------- */
+  function goToScene(idx){
+    clearInteraction();
+    state.sceneIndex = idx;
+    refreshDots();
+    var sc = scenes[idx];
+    setInstruction(sc.instruction[state.lang]);
+    setNarration(sc.narration[state.lang]);
+    speak(sc.narration[state.lang]);
+    mainBtn.disabled = true;
+    sceneSetups[idx]();
+    sendHeight();
+  }
+
+  function advanceScene(){
+    if(state.sceneIndex < scenes.length-1){
+      goToScene(state.sceneIndex+1);
+    }
+  }
+
+  function finishStory(){
+    clearInteraction();
+    mainBtn.disabled = false;
+    mainBtn.textContent = t().replay;
+    sendHeight();
+  }
+
+  function startStory(){
+    state.started = true;
+    stopSpeak();
+    goToScene(0);
+  }
+
+  /* ---------------- main button ---------------- */
+  mainBtn.addEventListener('click', function(){
+    startStory();
+  });
+
+  /* ---------------- lang toggle ---------------- */
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    updateStaticText();
+    if(state.sceneIndex >= 0 && state.sceneIndex < scenes.length){
+      var sc = scenes[state.sceneIndex];
+      setInstruction(sc.instruction[state.lang]);
+      setNarration(sc.narration[state.lang]);
+      stopSpeak();
+      speak(sc.narration[state.lang]);
+    }
+    sendHeight();
+  });
+
+  /* ---------------- mute toggle ---------------- */
+  function refreshMuteBtn(){
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    muteBtn.className = 'icon-btn' + (state.muted ? ' on' : '');
+  }
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('keboIwaMuted', state.muted ? '1':'0'); }catch(e){}
+    if(state.muted) stopSpeak();
+    refreshMuteBtn();
+  });
+
+  /* ---------------- idle intro frame ---------------- */
+  function idleFrame(tms){
+    drawSky(300);
+    drawSun(650,60,32);
+    drawCloud(140,60,1);
+    drawGround(300);
+    drawHouse(140,320,0.9,false);
+    drawHouse(660,330,0.85,false);
+    var bob = Math.sin(tms/500)*4;
+    drawKeboIwa(400,230+bob,1.0,false,false,false);
+  }
+
+  /* ---------------- init ---------------- */
+  function init(){
+    buildDots();
+    updateStaticText();
+    refreshMuteBtn();
+    refreshDots();
+    currentFrame = idleFrame;
+    startLoop();
+    sendHeight();
+    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 900);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
