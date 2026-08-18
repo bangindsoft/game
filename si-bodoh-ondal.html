@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Si Bodoh Ondal - Legenda Korea</title>
+<style>
+  :root{
+    --sky1:#fdeee0;
+    --sky2:#f7d9c4;
+    --panel:#fffaf3;
+    --ink:#3b2a20;
+    --accent:#c0392b;
+    --accent2:#1f6f5c;
+    --gold:#d4a13d;
+    --line:#e7d6bf;
+    --dot-off:#e2d3bb;
+    --dot-on:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:transparent;
+    color:var(--ink);
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    padding:14px 14px 20px;
+  }
+  .top-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  .title-block h1{
+    margin:0;
+    font-size:20px;
+    color:var(--accent);
+    letter-spacing:.3px;
+  }
+  .title-block p{
+    margin:2px 0 0;
+    font-size:12px;
+    color:#7a6650;
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+  }
+  .icon-btn{
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--ink);
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .icon-btn:hover{background:#fff0e0;}
+  .icon-btn:active{transform:scale(.95);}
+  .icon-btn.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .stage{
+    position:relative;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 4px 18px rgba(60,30,10,.10);
+  }
+  canvas{
+    display:block;
+    width:100%;
+    aspect-ratio:800/450;
+    touch-action:none;
+    cursor:pointer;
+  }
+  .overlay-btn-wrap{
+    position:absolute;
+    left:0;right:0;bottom:0;top:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+  }
+  .story-btn{
+    pointer-events:auto;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:13px 26px;
+    border-radius:30px;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(192,57,43,.35);
+    transition:transform .12s ease;
+  }
+  .story-btn:hover{transform:translateY(-2px);}
+  .story-btn:active{transform:scale(.96);}
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:none;
+    border-radius:0 0 16px 16px;
+    padding:14px 16px 10px;
+  }
+  .narration{
+    font-size:14.5px;
+    line-height:1.55;
+    color:#4a382a;
+    min-height:44px;
+  }
+  .instruction{
+    margin-top:8px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--accent2);
+    background:#eaf5f1;
+    border:1px dashed #b7ddd0;
+    border-radius:10px;
+    padding:8px 10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:14px 0 4px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--dot-off);
+    transition:background .25s ease, transform .25s ease;
+  }
+  .dot.on{background:var(--dot-on);transform:scale(1.25);}
+  .dot.current{outline:2px solid var(--gold);outline-offset:2px;}
+  .bottom-row{
+    display:flex;
+    justify-content:center;
+    margin-top:8px;
+  }
+  .replay-btn{
+    display:none;
+    background:var(--accent2);
+    color:#fff;
+    border:none;
+    padding:10px 22px;
+    border-radius:24px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .replay-btn.show{display:inline-block;}
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:#9c8a75;
+    margin-top:14px;
+    line-height:1.5;
+  }
+  .hint-pulse{
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:.55;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="top-row">
+    <div class="title-block">
+      <h1 id="mainTitle">Si Bodoh Ondal</h1>
+      <p id="subTitle">Legenda dari Korea</p>
+    </div>
+    <div class="controls">
+      <button class="icon-btn" id="langBtn" type="button" aria-label="Ganti bahasa">🌐 <span id="langLabel">ID</span></button>
+      <button class="icon-btn" id="muteBtn" type="button" aria-label="Bisukan narasi">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    <div class="overlay-btn-wrap" id="overlayWrap">
+      <button class="story-btn" id="startBtn" type="button">Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="narration" id="narrationText"></div>
+    <div class="instruction" id="instructionText" style="display:none;"></div>
+    <div class="dots" id="dotsRow"></div>
+    <div class="bottom-row">
+      <button class="replay-btn" id="replayBtn" type="button">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <footer id="footerText">Kisah rakyat Korea &mdash; Si Bodoh Ondal</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     I18N
+  --------------------------------------------------------- */
+  var STR = {
+    id:{
+      mainTitle:"Si Bodoh Ondal",
+      subTitle:"Legenda dari Korea",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      footer:"Kisah rakyat Korea &mdash; Si Bodoh Ondal",
+      langLabel:"ID",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      scenes:[
+        {
+          narration:"Pada zaman dahulu, di Kerajaan Kaguryeo, hiduplah seorang pemuda bernama Ondal. Ia dikenal sangat bodoh, tetapi sangat menyayangi ibunya, seorang janda yang hidup serba kekurangan.",
+          instruction:"👉 Ketuk Ondal untuk melihatnya menghibur ibunya."
+        },
+        {
+          narration:"Ondal suka menirukan gaya binatang untuk menghibur para tetangga. Mereka tertawa terpingkal-pingkal dan memberinya upah makanan.",
+          instruction:"👉 Ketuk monyet dahulu, lalu ketuk harimau."
+        },
+        {
+          narration:"Di istana, Putri Pyeongkang sering menangis. Untuk menenangkannya, sang raja selalu berkata akan menikahkannya dengan Si Ondal.",
+          instruction:"👉 Tekan dan tahan sapu tangan untuk menenangkan sang putri."
+        },
+        {
+          narration:"Ketika dewasa, sang putri menolak dinikahkan dengan pangeran lain. Ia hanya mau menikah dengan Ondal, sehingga raja marah dan mengusirnya dari istana.",
+          instruction:"👉 Seret Putri Pyeongkang menuju rumah Si Ondal."
+        },
+        {
+          narration:"Putri Pyeongkang menjual perhiasannya, lalu dengan sabar mengajari Ondal ilmu pengetahuan, bahasa, dan berhitung.",
+          instruction:"👉 Ketuk buku berulang kali untuk membantu Ondal belajar."
+        },
+        {
+          narration:"Kerajaan Kaguryeo diserang musuh. Seorang pemuda tak dikenal tampil gagah berani memimpin pertempuran dan membawa kemenangan.",
+          instruction:"👉 Ketuk pedang saat penunjuk berada di zona hijau."
+        },
+        {
+          narration:"Sang raja terkejut. Pahlawan misterius itu ternyata Si Ondal, yang kini telah menjadi pemuda cerdas dan pemberani.",
+          instruction:"👉 Ketuk mahkota untuk mengungkap kejutan sang raja."
+        },
+        {
+          narration:"Raja pun mengangkat Ondal menjadi panglima tertinggi, dan menikahkannya dengan Putri Pyeongkang. Mereka hidup bahagia selamanya. Pesan ceritanya: tidak ada orang yang bodoh selamanya, karena siapa pun bisa menjadi pandai jika mau belajar, dan jangan pernah meremehkan orang lain.",
+          instruction:""
+        }
+      ]
+    },
+    en:{
+      mainTitle:"Ondal the Fool",
+      subTitle:"A Legend from Korea",
+      start:"Start Story",
+      replay:"Replay Story",
+      footer:"A Korean folktale &mdash; Ondal the Fool",
+      langLabel:"EN",
+      muteOn:"🔊",
+      muteOff:"🔇",
+      scenes:[
+        {
+          narration:"Long ago, in the Kingdom of Goguryeo, there lived a young man named Ondal. He was known as very foolish, yet he deeply loved his mother, a poor widow.",
+          instruction:"👉 Tap Ondal to see him entertain his mother."
+        },
+        {
+          narration:"Ondal loved imitating animals to entertain the neighbors. They laughed heartily and rewarded him with food.",
+          instruction:"👉 Tap the monkey first, then tap the tiger."
+        },
+        {
+          narration:"At the palace, Princess Pyeongkang often cried. To calm her, the king always said he would marry her off to Ondal the Fool.",
+          instruction:"👉 Press and hold the handkerchief to calm the princess."
+        },
+        {
+          narration:"When she grew up, the princess refused to marry another prince. She wanted only Ondal, so the furious king banished her from the palace.",
+          instruction:"👉 Drag the princess toward Ondal's house."
+        },
+        {
+          narration:"Princess Pyeongkang sold her jewelry and patiently taught Ondal knowledge, language, and arithmetic.",
+          instruction:"👉 Tap the book repeatedly to help Ondal study."
+        },
+        {
+          narration:"The Kingdom of Goguryeo was attacked by enemies. An unknown young warrior bravely led the battle and brought victory.",
+          instruction:"👉 Tap the sword when the marker is in the green zone."
+        },
+        {
+          narration:"The king was astonished. The mysterious hero turned out to be Ondal himself, now a clever and courageous young man.",
+          instruction:"👉 Tap the crown to reveal the king's surprise."
+        },
+        {
+          narration:"The king made Ondal the supreme general and married him to Princess Pyeongkang. They lived happily ever after. The moral: no one is foolish forever, for anyone can become wise through learning, and one should never look down on others.",
+          instruction:""
+        }
+      ]
+    }
+  };
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var qs = new URLSearchParams(location.search);
+  var lang = (qs.get('lang')==='en') ? 'en' : (localStorage.getItem('ondal_lang') || 'id');
+  if(lang!=='en' && lang!=='id') lang='id';
+  var muted = localStorage.getItem('ondal_muted') === '1';
+  var started = false;
+  var currentScene = 0; // 0..6 story scenes (7 total), then "done" state
+  var TOTAL_SCENES = STR.id.scenes.length; // 8 including ending
+  var sceneLocked = false; // prevents double-trigger during transition
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+  var dpr = Math.max(1, window.devicePixelRatio || 1);
+  var pointer = {down:false, x:0, y:0, id:null};
+  var lastTime = 0;
+
+  var els = {
+    mainTitle: document.getElementById('mainTitle'),
+    subTitle: document.getElementById('subTitle'),
+    langBtn: document.getElementById('langBtn'),
+    langLabel: document.getElementById('langLabel'),
+    muteBtn: document.getElementById('muteBtn'),
+    startBtn: document.getElementById('startBtn'),
+    overlayWrap: document.getElementById('overlayWrap'),
+    narrationText: document.getElementById('narrationText'),
+    instructionText: document.getElementById('instructionText'),
+    dotsRow: document.getElementById('dotsRow'),
+    replayBtn: document.getElementById('replayBtn'),
+    footerText: document.getElementById('footerText'),
+  };
+
+  /* ---------------------------------------------------------
+     RESIZE / HIDPI
+  --------------------------------------------------------- */
+  function resizeCanvas(){
+    dpr = Math.max(1, window.devicePixelRatio || 1);
+    var rect = canvas.getBoundingClientRect();
+    var cssW = rect.width || W;
+    var cssH = cssW * (H/W);
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr * (cssW/W), 0, 0, dpr * (cssW/W), 0, 0);
+    notifyResize();
+  }
+
+  function notifyResize(){
+    try{
+      var h = document.getElementById('app').getBoundingClientRect().height + 24;
+      window.parent.postMessage({type:'ondal-resize', height: Math.ceil(h)}, '*');
+    }catch(e){}
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+
+  /* ---------------------------------------------------------
+     SPEECH
+  --------------------------------------------------------- */
+  var voicesReady = false;
+  var chosenVoice = {id:null, en:null};
+
+  function pickVoices(){
+    if(!('speechSynthesis' in window)) return;
+    var vs = window.speechSynthesis.getVoices();
+    if(!vs || !vs.length) return;
+    voicesReady = true;
+    for(var i=0;i<vs.length;i++){
+      var v = vs[i];
+      if(!chosenVoice.id && /id[-_]?ID|Indonesia/i.test(v.lang+v.name)) chosenVoice.id = v;
+      if(!chosenVoice.en && /en[-_]?US/i.test(v.lang)) chosenVoice.en = v;
+    }
+  }
+  if('speechSynthesis' in window){
+    pickVoices();
+    window.speechSynthesis.onvoiceschanged = pickVoices;
+  }
+
+  function speak(text){
+    if(muted || !text) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang==='en' ? 'en-US' : 'id-ID';
+      var v = lang==='en' ? chosenVoice.en : chosenVoice.id;
+      if(v) u.voice = v;
+      u.rate = 0.95;
+      u.pitch = 1.02;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
+  }
+
+  /* ---------------------------------------------------------
+     UI TEXT REFRESH
+  --------------------------------------------------------- */
+  function applyStaticText(){
+    var t = STR[lang];
+    els.mainTitle.textContent = t.mainTitle;
+    els.subTitle.textContent = t.subTitle;
+    els.startBtn.textContent = t.start;
+    els.replayBtn.textContent = t.replay;
+    els.footerText.innerHTML = t.footer;
+    els.langLabel.textContent = t.langLabel;
+    els.muteBtn.textContent = muted ? t.muteOff : t.muteOn;
+    els.muteBtn.classList.toggle('active', muted);
+    document.documentElement.lang = lang;
+    document.title = t.mainTitle + (lang==='id' ? ' - Legenda Korea' : ' - Korean Legend');
+  }
+
+  function renderDots(){
+    els.dotsRow.innerHTML = '';
+    for(var i=0;i<TOTAL_SCENES;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      if(started && i < currentScene) d.classList.add('on');
+      if(started && i === currentScene) d.classList.add('on','current');
+      els.dotsRow.appendChild(d);
+    }
+  }
+
+  function setNarrationAndInstruction(idx){
+    var t = STR[lang];
+    var sc = t.scenes[idx];
+    els.narrationText.textContent = sc.narration;
+    if(sc.instruction){
+      els.instructionText.style.display = 'flex';
+      els.instructionText.textContent = sc.instruction;
+    } else {
+      els.instructionText.style.display = 'none';
+      els.instructionText.textContent = '';
+    }
+  }
+
+  /* ---------------------------------------------------------
+     PALETTE
+  --------------------------------------------------------- */
+  var PAL = {
+    skyTop:'#fbe6d0', skyBottom:'#f4c9a8',
+    skyEveTop:'#f6c9a0', skyEveBottom:'#e79a7a',
+    ground:'#cfe3b8', groundLine:'#b6cf98',
+    houseWall:'#e9dcc0', houseRoof:'#7a4a3a', houseRoofDk:'#5f372a',
+    palaceWall:'#f1e1c0', palaceRoofRed:'#a5342a', palaceRoofDk:'#7c2119',
+    skin:'#f0c49a', skinSh:'#dba576',
+    robeOndal:'#8a6b4f', robeOndalDk:'#6c5138',
+    robeMom:'#9a7a8f',
+    robePrincess:'#c34f5e', robePrincessDk:'#9c3745',
+    robeKing:'#3a5c78', robeKingDk:'#2c455c',
+    hair:'#241a14',
+    gold:'#d9ab4a',
+    ink:'#3b2a20',
+    green:'#3f9e6d',
+    monkey:'#9a6b47', tiger:'#e0912f'
+  };
+
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  /* ---------------------------------------------------------
+     GENERIC DRAW HELPERS
+  --------------------------------------------------------- */
+  function drawSky(top,bottom){
+    var g = ctx.createLinearGradient(0,0,0,H*0.72);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.72);
+  }
+  function drawGround(){
+    ctx.fillStyle = PAL.ground;
+    ctx.fillRect(0,H*0.68,W,H*0.32);
+    ctx.strokeStyle = PAL.groundLine;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.68);
+    ctx.lineTo(W,H*0.68);
+    ctx.stroke();
+  }
+  function drawCloud(x,y,s){
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.beginPath();
+    ctx.ellipse(x,y,28*s,14*s,0,0,Math.PI*2);
+    ctx.ellipse(x+22*s,y+4*s,20*s,11*s,0,0,Math.PI*2);
+    ctx.ellipse(x-22*s,y+5*s,18*s,10*s,0,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawHill(x,y,rw,rh,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x,y,rw,rh,0,Math.PI,0,false);
+    ctx.fill();
+  }
+
+  function drawPerson(x,y,scale,opt){
+    opt = opt || {};
+    var robe = opt.robe || PAL.robeOndal;
+    var robeDk = opt.robeDk || PAL.robeOndalDk;
+    var pose = opt.pose || 'stand'; // stand, wave, bow, sit, cry, run
+    var bob = opt.bob || 0;
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.scale(scale, scale);
+
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,.13)';
+    ctx.beginPath();
+    ctx.ellipse(0, 62, 22, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // legs
+    ctx.fillStyle = robeDk;
+    if(pose==='sit'){
+      ctx.fillRect(-16,40,32,18);
+    } else {
+      ctx.fillRect(-13,42,10,20);
+      ctx.fillRect(3,42,10,20);
+    }
+
+    // robe body
+    ctx.fillStyle = robe;
+    ctx.beginPath();
+    ctx.moveTo(-20,44);
+    ctx.quadraticCurveTo(-22,10,-12,-6);
+    ctx.lineTo(12,-6);
+    ctx.quadraticCurveTo(22,10,20,44);
+    ctx.closePath();
+    ctx.fill();
+
+    // sash
+    ctx.strokeStyle = opt.sash || PAL.gold;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-18,20); ctx.lineTo(18,20);
+    ctx.stroke();
+
+    // arms
+    ctx.fillStyle = robe;
+    var armAngle = 0;
+    if(pose==='wave'){ armAngle = -0.9; }
+    if(pose==='cheer'){ armAngle = -1.1; }
+    ctx.save();
+    ctx.translate(16,2);
+    ctx.rotate(armAngle);
+    ctx.fillRect(-5,0,10,26);
+    ctx.restore();
+
+    ctx.save();
+    var armAngle2 = pose==='cheer' ? 1.1 : 0.15;
+    ctx.translate(-16,2);
+    ctx.rotate(armAngle2);
+    ctx.fillRect(-5,0,10,26);
+    ctx.restore();
+
+    // head
+    ctx.fillStyle = PAL.skin;
+    ctx.beginPath();
+    ctx.arc(0,-20,15,0,Math.PI*2);
+    ctx.fill();
+
+    // hair
+    ctx.fillStyle = PAL.hair;
+    ctx.beginPath();
+    ctx.arc(0,-24,15.5,Math.PI, Math.PI*2.02);
+    ctx.fill();
+    if(opt.topKnot){
+      ctx.beginPath();
+      ctx.arc(0,-38,4,0,Math.PI*2);
+      ctx.fill();
+    }
+    if(opt.bun){
+      ctx.beginPath();
+      ctx.arc(0,-40,6,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // face
+    ctx.fillStyle = PAL.ink;
+    if(pose==='cry'){
+      ctx.beginPath();
+      ctx.arc(-5,-20,1.6,0,Math.PI*2);
+      ctx.arc(5,-20,1.6,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#5aa0d8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-5,-18); ctx.lineTo(-6,-10);
+      ctx.moveTo(5,-18); ctx.lineTo(6,-10);
+      ctx.stroke();
+      ctx.strokeStyle = PAL.ink;
+      ctx.beginPath();
+      ctx.arc(0,-13,3,0,Math.PI);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(-5,-20,1.6,0,Math.PI*2);
+      ctx.arc(5,-20,1.6,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = PAL.ink;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if(pose==='wave' || pose==='cheer'){
+        ctx.arc(0,-15,4,0,Math.PI);
+      } else {
+        ctx.arc(0,-14,3,0.15*Math.PI,0.85*Math.PI);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHanokHouse(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // wall
+    ctx.fillStyle = PAL.houseWall;
+    ctx.fillRect(-70,-10,140,70);
+    // door
+    ctx.fillStyle = '#5b4530';
+    ctx.fillRect(-16,20,32,40);
+    // window
+    ctx.strokeStyle = '#8a6b4f';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-58,4,26,26);
+    ctx.beginPath();
+    ctx.moveTo(-58,17); ctx.lineTo(-32,17);
+    ctx.moveTo(-45,4); ctx.lineTo(-45,30);
+    ctx.stroke();
+    // roof (curved hanok style)
+    ctx.fillStyle = PAL.houseRoofDk;
+    ctx.beginPath();
+    ctx.moveTo(-92,-8);
+    ctx.quadraticCurveTo(0,-70,92,-8);
+    ctx.quadraticCurveTo(0,-30,-92,-8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = PAL.houseRoof;
+    ctx.beginPath();
+    ctx.moveTo(-88,-12);
+    ctx.quadraticCurveTo(0,-64,88,-12);
+    ctx.quadraticCurveTo(0,-36,-88,-12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalace(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // base platform
+    ctx.fillStyle = '#c8b48a';
+    ctx.fillRect(-130,52,260,14);
+    // wall
+    ctx.fillStyle = PAL.palaceWall;
+    ctx.fillRect(-110,-6,220,58);
+    // red pillars
+    ctx.fillStyle = PAL.palaceRoofRed;
+    for(var i=-100;i<=100;i+=40){
+      ctx.fillRect(i-4,-6,8,58);
+    }
+    // door
+    ctx.fillStyle = '#7c2119';
+    ctx.fillRect(-22,18,44,34);
+    // roof
+    ctx.fillStyle = PAL.palaceRoofDk;
+    ctx.beginPath();
+    ctx.moveTo(-150,-4);
+    ctx.quadraticCurveTo(0,-86,150,-4);
+    ctx.quadraticCurveTo(0,-40,-150,-4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = PAL.palaceRoofRed;
+    ctx.beginPath();
+    ctx.moveTo(-144,-8);
+    ctx.quadraticCurveTo(0,-78,144,-8);
+    ctx.quadraticCurveTo(0,-46,-144,-8);
+    ctx.closePath();
+    ctx.fill();
+    // gold trim
+    ctx.strokeStyle = PAL.gold;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-140,-10);
+    ctx.quadraticCurveTo(0,-76,140,-10);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMonkey(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){
+      ctx.shadowColor = PAL.gold;
+      ctx.shadowBlur = 22;
+    }
+    ctx.fillStyle = PAL.monkey;
+    ctx.beginPath();
+    ctx.ellipse(0,6,20,22,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-22,16,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#e8cba0';
+    ctx.beginPath();
+    ctx.ellipse(0,-19,9,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = PAL.ink;
+    ctx.beginPath();
+    ctx.arc(-4,-22,1.6,0,Math.PI*2);
+    ctx.arc(4,-22,1.6,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = PAL.monkey;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(16,10);
+    ctx.quadraticCurveTo(38,4,34,-16);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawTiger(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){
+      ctx.shadowColor = PAL.gold;
+      ctx.shadowBlur = 22;
+    }
+    ctx.fillStyle = PAL.tiger;
+    ctx.beginPath();
+    ctx.ellipse(0,10,28,18,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-14,18,0,Math.PI*2);
+    ctx.fill();
+    // ears
+    ctx.beginPath();
+    ctx.arc(-13,-26,6,0,Math.PI*2);
+    ctx.arc(13,-26,6,0,Math.PI*2);
+    ctx.fill();
+    // stripes
+    ctx.strokeStyle = '#7a4415';
+    ctx.lineWidth = 3;
+    for(var i=-16;i<=16;i+=8){
+      ctx.beginPath();
+      ctx.moveTo(i,-2);
+      ctx.lineTo(i+4,16);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#fff3df';
+    ctx.beginPath();
+    ctx.ellipse(0,-10,9,8,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = PAL.ink;
+    ctx.beginPath();
+    ctx.arc(-5,-15,1.8,0,Math.PI*2);
+    ctx.arc(5,-15,1.8,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBook(x,y,scale,openAmt){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#dfcda2';
+    ctx.fillRect(-30,-4,60,8);
+    ctx.fillStyle = '#fdf7e8';
+    var flip = Math.sin(openAmt*Math.PI*6)*10;
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(-28+flip,-24);
+    ctx.lineTo(-28+flip,-2);
+    ctx.lineTo(0,-2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(28-flip,-24);
+    ctx.lineTo(28-flip,-2);
+    ctx.lineTo(0,-2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#c9b385';
+    ctx.lineWidth = 1;
+    for(var i=-24;i<0;i+=6){
+      ctx.beginPath(); ctx.moveTo(i,-6); ctx.lineTo(i+4,-20); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawSword(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.rotate(-0.78);
+    ctx.fillStyle = '#cfd6dc';
+    ctx.beginPath();
+    ctx.moveTo(0,-40);
+    ctx.lineTo(6,0);
+    ctx.lineTo(-6,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = PAL.gold;
+    ctx.fillRect(-12,0,24,6);
+    ctx.fillStyle = '#5b4025';
+    ctx.fillRect(-3,6,6,18);
+    ctx.restore();
+  }
+
+  function drawCrown(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){ ctx.shadowColor = PAL.gold; ctx.shadowBlur = 26; }
+    ctx.fillStyle = PAL.gold;
+    ctx.beginPath();
+    ctx.moveTo(-24,10);
+    ctx.lineTo(-24,-4);
+    ctx.lineTo(-12,10);
+    ctx.lineTo(-4,-14);
+    ctx.lineTo(4,10);
+    ctx.lineTo(12,-14);
+    ctx.lineTo(24,10);
+    ctx.lineTo(24,10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(-24,8,48,8);
+    ctx.fillStyle = '#b5344a';
+    ctx.beginPath();
+    ctx.arc(0,-10,3.4,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHeart(x,y,scale,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha!=null?alpha:1;
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#d84f63';
+    ctx.beginPath();
+    ctx.moveTo(0,6);
+    ctx.bezierCurveTo(-14,-6,-14,-16,0,-8);
+    ctx.bezierCurveTo(14,-16,14,-6,0,6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function roundRectPath(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  /* ---------------------------------------------------------
+     SCENE DEFINITIONS
+  --------------------------------------------------------- */
+  var t0 = 0; // scene-local elapsed time
+  var scenes = [];
+
+  // ---- Scene 0: village_intro (tap-once) ----
+  scenes.push({
+    reset:function(){ this.tapped=false; this.anim=0; },
+    tapped:false, anim:0,
+    hitTest:function(x,y){
+      return dist(x,y, 300, 300) < 46;
+    },
+    onDown:function(x,y){
+      if(sceneLocked) return;
+      if(!this.tapped && this.hitTest(x,y)){
+        this.tapped = true;
+        this.anim = 0;
+        finishInteraction();
+      }
+    },
+    update:function(dt){
+      if(this.tapped) this.anim += dt;
+    },
+    draw:function(){
+      drawSky(PAL.skyTop, PAL.skyBottom);
+      drawCloud(120,60,1); drawCloud(650,90,1.2);
+      drawGround();
+      drawHanokHouse(560,300,0.9);
+      var bob = this.tapped ? Math.sin(this.anim*10)*8 : Math.sin(t0*2)*2;
+      drawPerson(300,300,1.15,{pose:this.tapped?'cheer':'stand', bob:bob, robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true});
+      drawPerson(400,320,0.9,{pose:'sit', robe:PAL.robeMom, robeDk:'#7a5f70', bun:true});
+      if(!this.tapped){
+        ctx.save();
+        ctx.globalAlpha = 0.55 + Math.sin(t0*4)*0.25;
+        ctx.strokeStyle = PAL.gold;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(300,300,50,0,Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  });
+
+  // ---- Scene 1: mimic_animals (sequential tap) ----
+  scenes.push({
+    reset:function(){ this.step=0; this.shake=0; },
+    step:0, shake:0,
+    hitMonkey:function(x,y){ return dist(x,y,240,300) < 50; },
+    hitTiger:function(x,y){ return dist(x,y,560,300) < 55; },
+    onDown:function(x,y){
+      if(sceneLocked) return;
+      if(this.step===0){
+        if(this.hitMonkey(x,y)){ this.step=1; }
+        else if(this.hitTiger(x,y)){ this.shake=1; }
+      } else if(this.step===1){
+        if(this.hitTiger(x,y)){ this.step=2; finishInteraction(); }
+        else if(this.hitMonkey(x,y)){ this.shake=1; }
+      }
+    },
+    update:function(dt){ if(this.shake>0) this.shake=Math.max(0,this.shake-dt*3); },
+    draw:function(){
+      drawSky(PAL.skyTop,PAL.skyBottom);
+      drawCloud(700,50,0.9);
+      drawGround();
+      drawPerson(400,320,1.0,{pose:'cheer', robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true, bob:Math.sin(t0*3)*3});
+      var shk = this.shake>0 ? Math.sin(t0*40)*this.shake*4 : 0;
+      drawMonkey(240+ (this.step===0?shk:0),300,1.1,this.step===0);
+      drawTiger(560+ (this.step===1?shk:0),300,1.0,this.step===1);
+      if(this.step===2){
+        drawHeart(400,220,0.9,1);
+      }
+    }
+  });
+
+  // ---- Scene 2: palace_princess_cry (press & hold) ----
+  scenes.push({
+    reset:function(){ this.hold=0; this.holding=false; this.needed=1.4; this.done=false; },
+    hold:0, holding:false, needed:1.4, done:false,
+    hitTest:function(x,y){ return dist(x,y,430,300) < 40; },
+    onDown:function(x,y){
+      if(sceneLocked || this.done) return;
+      if(this.hitTest(x,y)) this.holding = true;
+    },
+    onUp:function(){ this.holding = false; },
+    update:function(dt){
+      if(this.done) return;
+      if(this.holding){
+        this.hold += dt;
+        if(this.hold >= this.needed){
+          this.done = true;
+          this.holding = false;
+          finishInteraction();
+        }
+      } else {
+        this.hold = Math.max(0, this.hold - dt*1.5);
+      }
+    },
+    draw:function(){
+      drawSky('#f3e6d6','#e9cfae');
+      drawGround();
+      drawPalace(400,260,0.72);
+      drawPerson(240,320,0.95,{pose:'stand', robe:PAL.robeKing, robeDk:PAL.robeKingDk, topKnot:true});
+      drawPerson(320,320,0.95,{pose: this.done?'stand':'cry', robe:PAL.robePrincess, robeDk:PAL.robePrincessDk, bun:true});
+      // handkerchief object
+      ctx.save();
+      ctx.translate(430,300);
+      var wobble = this.holding ? Math.sin(t0*20)*3 : 0;
+      ctx.rotate(wobble*0.02);
+      ctx.fillStyle = '#fdf7e8';
+      roundRectPathLocal(-18,-14,36,28,4);
+      ctx.fill();
+      ctx.strokeStyle = '#d8c49a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-18,-14,36,28);
+      ctx.restore();
+      // progress ring
+      var pct = clamp(this.hold/this.needed,0,1);
+      ctx.save();
+      ctx.translate(430,300);
+      ctx.strokeStyle = '#e2d3bb';
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(0,0,34,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = PAL.accent2 || '#1f6f5c';
+      ctx.strokeStyle = '#1f6f5c';
+      ctx.beginPath(); ctx.arc(0,0,34,-Math.PI/2,-Math.PI/2 + pct*Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  });
+  function roundRectPathLocal(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  // ---- Scene 3: princess_leaves (drag and drop) ----
+  scenes.push({
+    reset:function(){
+      this.px = 220; this.py = 300;
+      this.dragging=false; this.done=false;
+      this.startX=220; this.startY=300;
+      this.targetX=580; this.targetY=300;
+    },
+    onDown:function(x,y){
+      if(sceneLocked || this.done) return;
+      if(dist(x,y,this.px,this.py) < 40) this.dragging = true;
+    },
+    onMove:function(x,y){
+      if(this.dragging){ this.px = x; this.py = clamp(y,260,340); }
+    },
+    onUp:function(){
+      if(!this.dragging) return;
+      this.dragging = false;
+      if(dist(this.px,this.py,this.targetX,this.targetY) < 55){
+        this.px = this.targetX; this.py = this.targetY;
+        this.done = true;
+        finishInteraction();
+      } else {
+        this.px = this.startX; this.py = this.startY;
+      }
+    },
+    update:function(){},
+    draw:function(){
+      drawSky('#f3e6d6','#e9cfae');
+      drawGround();
+      drawPalace(140,250,0.42);
+      drawHanokHouse(620,290,0.8);
+      // target zone marker
+      ctx.save();
+      ctx.setLineDash([6,6]);
+      ctx.strokeStyle = '#c0392b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.targetX,this.targetY,50,0,Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+      drawPerson(this.px,this.py,0.95,{pose:this.dragging?'wave':'stand', robe:PAL.robePrincess, robeDk:PAL.robePrincessDk, bun:true});
+    }
+  });
+
+  // ---- Scene 4: learning (tap-mash) ----
+  scenes.push({
+    reset:function(){ this.progress=0; this.needed=8; this.done=false; this.pulse=0; },
+    onDown:function(x,y){
+      if(sceneLocked || this.done) return;
+      if(dist(x,y,400,300) < 55){
+        this.progress++;
+        this.pulse = 1;
+        if(this.progress >= this.needed){
+          this.done = true;
+          finishInteraction();
+        }
+      }
+    },
+    update:function(dt){ if(this.pulse>0) this.pulse = Math.max(0,this.pulse-dt*3); },
+    draw:function(){
+      drawSky(PAL.skyTop,PAL.skyBottom);
+      drawGround();
+      drawPerson(260,320,0.85,{pose:'sit', robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true});
+      drawPerson(540,320,0.85,{pose:'sit', robe:PAL.robePrincess, robeDk:PAL.robePrincessDk, bun:true});
+      var scl = 1 + this.pulse*0.15;
+      drawBook(400,300,scl, (t0*1.5)%1);
+      // progress bar
+      var pct = this.progress/this.needed;
+      ctx.fillStyle = '#e2d3bb';
+      roundRectPath(300,360,200,16,8); ctx.fill();
+      ctx.fillStyle = '#1f6f5c';
+      roundRectPath(300,360,200*pct,16,8); ctx.fill();
+    }
+  });
+
+  // ---- Scene 5: war (timing bar) ----
+  scenes.push({
+    reset:function(){ this.hits=0; this.needed=3; this.done=false; this.marker=0; this.dir=1; this.flash=0; },
+    onDown:function(x,y){
+      if(sceneLocked || this.done) return;
+      if(dist(x,y,650,330) < 46){
+        var pos = (Math.sin(this.marker)+1)/2; // 0..1
+        if(pos > 0.38 && pos < 0.62){
+          this.hits++;
+          this.flash = 1;
+          if(this.hits >= this.needed){
+            this.done = true;
+            finishInteraction();
+          }
+        } else {
+          this.flash = -1;
+        }
+      }
+    },
+    update:function(dt){
+      this.marker += dt*3.2;
+      if(this.flash!==0){
+        this.flash += this.flash>0 ? -dt*3 : dt*3;
+        if(Math.abs(this.flash) < 0.02) this.flash = 0;
+      }
+    },
+    draw:function(){
+      drawSky('#e7d9c9','#cfa98a');
+      drawGround();
+      drawPerson(300,330,1.0,{pose:'cheer', robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true, sash:'#b5344a'});
+      // timing bar
+      var bx=200,by=250,bw=400,bh=18;
+      ctx.fillStyle = '#e2d3bb';
+      roundRectPath(bx,by,bw,bh,9); ctx.fill();
+      ctx.fillStyle = 'rgba(63,158,109,.55)';
+      roundRectPath(bx+bw*0.38,by,bw*0.24,bh,4); ctx.fill();
+      var pos = (Math.sin(this.marker)+1)/2;
+      ctx.fillStyle = '#c0392b';
+      ctx.beginPath();
+      ctx.arc(bx+bw*pos, by+bh/2, 10, 0, Math.PI*2);
+      ctx.fill();
+      // hits pips
+      for(var i=0;i<this.needed;i++){
+        ctx.fillStyle = i < this.hits ? '#1f6f5c' : '#e2d3bb';
+        ctx.beginPath();
+        ctx.arc(360 + i*30, 210, 7, 0, Math.PI*2);
+        ctx.fill();
+      }
+      // sword button
+      var swScale = 1 + (this.flash>0? this.flash*0.3 : 0);
+      ctx.save();
+      if(this.flash!==0){
+        ctx.shadowColor = this.flash>0 ? '#3f9e6d' : '#c0392b';
+        ctx.shadowBlur = 20;
+      }
+      drawSword(650,330,swScale);
+      ctx.restore();
+    }
+  });
+
+  // ---- Scene 6: hero_reveal (tap-once on crown) ----
+  scenes.push({
+    reset:function(){ this.tapped=false; this.anim=0; },
+    hitTest:function(x,y){ return dist(x,y,400,260) < 46; },
+    onDown:function(x,y){
+      if(sceneLocked || this.tapped) return;
+      if(this.hitTest(x,y)){
+        this.tapped = true;
+        finishInteraction();
+      }
+    },
+    update:function(dt){ if(this.tapped) this.anim += dt; },
+    draw:function(){
+      drawSky('#f3e6d6','#e9cfae');
+      drawGround();
+      drawPalace(400,270,0.75);
+      drawPerson(260,330,0.9,{pose: this.tapped?'cheer':'stand', robe:PAL.robeKing, robeDk:PAL.robeKingDk, topKnot:true});
+      drawPerson(540,330,0.9,{pose: this.tapped?'cheer':'stand', robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true, sash:'#b5344a'});
+      if(!this.tapped){
+        ctx.save();
+        ctx.globalAlpha = 0.6 + Math.sin(t0*4)*0.3;
+        ctx.strokeStyle = PAL.gold;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(400,260,48,0,Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      drawCrown(400,260, this.tapped ? 1.3+Math.sin(this.anim*6)*0.08 : 1.15, true);
+    }
+  });
+
+  // ---- Scene 7: ending (no interaction) ----
+  scenes.push({
+    reset:function(){ this.t=0; },
+    onDown:function(){},
+    update:function(dt){ this.t += dt; },
+    draw:function(){
+      drawSky('#fdeadb','#f6cfa8');
+      drawGround();
+      drawHanokHouse(400,300,1.0);
+      drawPerson(345,300,1.0,{pose:'cheer', robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true, sash:'#b5344a', bob:Math.sin(this.t*2)*4});
+      drawPerson(455,300,1.0,{pose:'cheer', robe:PAL.robePrincess, robeDk:PAL.robePrincessDk, bun:true, bob:Math.sin(this.t*2+1)*4});
+      for(var i=0;i<3;i++){
+        var ph = (this.t*0.6 + i*0.6) % 2.4;
+        drawHeart(400 + (i-1)*40, 220 - ph*40, 0.7, clamp(1-ph/2.4,0,1));
+      }
+    }
+  });
+
+  /* ---------------------------------------------------------
+     SCENE FLOW CONTROL
+  --------------------------------------------------------- */
+  function finishInteraction(){
+    if(sceneLocked) return;
+    sceneLocked = true;
+    setTimeout(function(){
+      goToScene(currentScene+1);
+    }, 1100);
+  }
+
+  function goToScene(idx){
+    if(idx >= TOTAL_SCENES){
+      showEndingUI();
+      return;
+    }
+    currentScene = idx;
+    sceneLocked = false;
+    t0 = 0;
+    scenes[idx].reset();
+    setNarrationAndInstruction(idx);
+    renderDots();
+    speak(STR[lang].scenes[idx].narration);
+    if(idx === TOTAL_SCENES-1){
+      setTimeout(function(){
+        els.replayBtn.classList.add('show');
+      }, 600);
+    }
+    notifyResize();
+  }
+
+  function showEndingUI(){
+    els.replayBtn.classList.add('show');
+  }
+
+  function startStory(){
+    started = true;
+    els.overlayWrap.style.display = 'none';
+    goToScene(0);
+  }
+
+  function restartStory(){
+    els.replayBtn.classList.remove('show');
+    stopSpeak();
+    goToScene(0);
+  }
+
+  /* ---------------------------------------------------------
+     MAIN LOOP
+  --------------------------------------------------------- */
+  function loop(ts){
+    var dt = lastTime ? Math.min(0.05,(ts-lastTime)/1000) : 0;
+    lastTime = ts;
+    t0 += dt;
+    ctx.clearRect(0,0,W,H);
+    if(started && scenes[currentScene]){
+      scenes[currentScene].update(dt);
+      scenes[currentScene].draw();
+    } else {
+      drawTitleScene();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function drawTitleScene(){
+    drawSky(PAL.skyTop,PAL.skyBottom);
+    drawCloud(140,70,1); drawCloud(640,50,1.1); drawCloud(400,110,0.8);
+    drawGround();
+    drawPalace(590,290,0.55);
+    drawHanokHouse(190,310,0.65);
+    drawPerson(400,330,1.15,{pose:'wave', robe:PAL.robeOndal, robeDk:PAL.robeOndalDk, topKnot:true, bob:Math.sin(t0*2)*4});
+  }
+
+  /* ---------------------------------------------------------
+     POINTER HANDLING
+  --------------------------------------------------------- */
+  function toLocal(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.clientX!=null ? evt.clientX : (evt.touches && evt.touches[0].clientX));
+    var cy = (evt.clientY!=null ? evt.clientY : (evt.touches && evt.touches[0].clientY));
+    var x = (cx - rect.left) / rect.width * W;
+    var y = (cy - rect.top) / rect.height * H;
+    return {x:x,y:y};
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    if(!started) return;
+    var p = toLocal(e);
+    pointer.down = true;
+    var sc = scenes[currentScene];
+    if(sc && sc.onDown) sc.onDown(p.x,p.y);
+  });
+  canvas.addEventListener('pointermove', function(e){
+    if(!started || !pointer.down) return;
+    var p = toLocal(e);
+    var sc = scenes[currentScene];
+    if(sc && sc.onMove) sc.onMove(p.x,p.y);
+  });
+  window.addEventListener('pointerup', function(e){
+    if(!started) return;
+    pointer.down = false;
+    var sc = scenes[currentScene];
+    if(sc && sc.onUp) sc.onUp();
+  });
+  window.addEventListener('pointercancel', function(){
+    pointer.down = false;
+    var sc = scenes[currentScene];
+    if(sc && sc.onUp) sc.onUp();
+  });
+
+  /* ---------------------------------------------------------
+     BUTTON HANDLERS
+  --------------------------------------------------------- */
+  els.startBtn.addEventListener('click', startStory);
+  els.replayBtn.addEventListener('click', restartStory);
+
+  els.muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('ondal_muted', muted ? '1':'0');
+    applyStaticText();
+    if(muted) stopSpeak();
+    else if(started && currentScene < TOTAL_SCENES) speak(STR[lang].scenes[currentScene].narration);
+  });
+
+  els.langBtn.addEventListener('click', function(){
+    lang = lang==='id' ? 'en' : 'id';
+    localStorage.setItem('ondal_lang', lang);
+    applyStaticText();
+    if(started){
+      setNarrationAndInstruction(currentScene);
+      speak(STR[lang].scenes[currentScene].narration);
+    }
+  });
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  applyStaticText();
+  renderDots();
+  els.narrationText.textContent = lang==='id'
+    ? 'Ketuk "Mulai Cerita" untuk memulai petualangan Si Bodoh Ondal.'
+    : 'Tap "Start Story" to begin the adventure of Ondal the Fool.';
+
+  scenes.forEach(function(s){ if(s.reset) s.reset(); });
+
+  resizeCanvas();
+  requestAnimationFrame(loop);
+  window.addEventListener('load', resizeCanvas);
+  setTimeout(notifyResize, 300);
+  setTimeout(notifyResize, 1000);
+
+})();
+</script>
+</body>
+</html>
