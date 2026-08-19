@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itik Buruk Rupa - Dongeng Interaktif</title>
+<style>
+  :root{
+    --sky-top:#bfe3f0;
+    --sky-bottom:#eaf6ee;
+    --panel-border:#e7d9b8;
+    --text-dark:#3a3226;
+    --text-mute:#7a6f5c;
+    --accent:#d98a3d;
+    --accent-dark:#b56b26;
+    --dot-inactive:#d8cbaa;
+    --dot-active:#d98a3d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:transparent;
+    display:flex;
+    justify-content:center;
+    padding:10px;
+    font-family:'Segoe UI',Verdana,Tahoma,sans-serif;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));
+    border-radius:18px;
+    border:1px solid var(--panel-border);
+    box-shadow:0 4px 18px rgba(0,0,0,0.10);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:rgba(255,255,255,0.4);
+  }
+  .title{
+    font-weight:700;
+    color:var(--text-dark);
+    font-size:15px;
+  }
+  .top-controls{display:flex;gap:8px;}
+  .icon-btn{
+    border:1px solid var(--panel-border);
+    background:#fff;
+    border-radius:20px;
+    padding:6px 11px;
+    font-size:12.5px;
+    cursor:pointer;
+    color:var(--text-dark);
+  }
+  .icon-btn:hover{background:#fff6e6;}
+  .stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    background:transparent;
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:100%;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+  .narration{
+    padding:12px 16px 4px 16px;
+    color:var(--text-dark);
+    font-size:14.5px;
+    line-height:1.55;
+    min-height:64px;
+  }
+  .instruction{
+    margin:0 16px 10px 16px;
+    padding:8px 12px;
+    background:#fff3da;
+    border:1.5px dashed var(--accent);
+    border-radius:10px;
+    color:var(--accent-dark);
+    font-size:13.5px;
+    font-weight:600;
+    display:none;
+    align-items:center;
+    gap:7px;
+  }
+  .controls{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:4px 16px 14px 16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    border:none;
+    border-radius:24px;
+    padding:11px 24px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--accent);
+    color:#fff;
+    box-shadow:0 3px 0 var(--accent-dark);
+    transition:transform .05s;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--accent-dark);}
+  .btn[disabled]{
+    background:#cfc3a4;
+    box-shadow:0 3px 0 #a89a75;
+    cursor:not-allowed;
+    opacity:0.85;
+  }
+  .hold-btn{position:relative;overflow:hidden;}
+  .hold-btn .fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:rgba(255,255,255,0.38);
+    pointer-events:none;
+  }
+  .hold-btn .label{position:relative;}
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding-bottom:10px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--dot-inactive);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--dot-active);transform:scale(1.3);}
+  .dot.done{background:var(--accent-dark);}
+  .footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-mute);
+    padding:4px 10px 12px 10px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title" id="titleText">Itik Buruk Rupa</div>
+    <div class="top-controls">
+      <button class="icon-btn" id="langBtn" title="Ganti bahasa / Change language">EN</button>
+      <button class="icon-btn" id="muteBtn" title="Suara narasi / Narration sound">🔊</button>
+    </div>
+  </div>
+  <div class="stage">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+  <div class="narration" id="narrationText"></div>
+  <div class="instruction" id="instructionBox">
+    <span>👉</span><span id="instructionText"></span>
+  </div>
+  <div class="controls" id="controlsBox"></div>
+  <div class="dots" id="dotsBox"></div>
+  <div class="footer" id="footerText">✦ Dongeng Interaktif ✦</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ TEKS & NARASI ============ */
+  var TEXT = {
+    id:{
+      title:"Itik Buruk Rupa",
+      footer:"✦ Dongeng Interaktif ✦",
+      startBtn:"Mulai Cerita",
+      replayBtn:"Ulangi Cerita",
+      nextBtn:"Lanjut",
+      holdBtn:"Tahan untuk Menghangatkan",
+      scenes:[
+        { narration:"Di sebuah peternakan yang tenang, seekor induk itik sedang menantikan telur-telurnya menetas. Satu di antaranya tampak sedikit berbeda dari yang lain...", instruction:"" },
+        { narration:"Satu demi satu, telur-telur itu mulai retak. Itik-itik kecil yang lucu keluar dengan bulu kuning yang lembut. Namun telur terakhir menetaskan seekor itik yang tampak besar, berwarna abu-abu, dan berbeda dari saudara-saudaranya.", instruction:"Ketuk setiap telur di kanvas untuk menetaskannya." },
+        { narration:"Saudara-saudaranya menertawakan itik abu-abu itu karena penampilannya yang berbeda. Merasa sedih dan tidak diterima, sang itik memutuskan untuk pergi mencari tempat yang lebih ramah baginya.", instruction:"Ketuk itik abu-abu di kanvas untuk membuatnya pergi." },
+        { narration:"Musim dingin tiba. Sang itik sendirian di tengah kolam yang membeku, kedinginan dan lelah. Ia harus bertahan hingga musim semi datang.", instruction:"Tahan tombol \u201cTahan untuk Menghangatkan\u201d di bawah kanvas." },
+        { narration:"Musim semi pun tiba, membawa kehangatan dan kehidupan baru. Di sebuah kolam yang indah, sang itik melihat sekawanan angsa yang anggun sedang berenang.", instruction:"Ketuk permukaan kolam di kanvas agar itik mendekati para angsa." },
+        { narration:"Dengan ragu, sang itik mendekati air dan melihat pantulannya sendiri. Betapa terkejutnya ia \u2014 pantulan itu bukan itik abu-abu yang buruk rupa, melainkan seekor angsa yang indah!", instruction:"Ketuk permukaan air di kanvas untuk melihat pantulan itik." },
+        { narration:"Sang itik buruk rupa telah tumbuh menjadi angsa yang cantik. Ia belajar bahwa perbedaan bukanlah kekurangan, melainkan keistimewaan yang akan bersinar pada waktunya. Tamat.", instruction:"" }
+      ]
+    },
+    en:{
+      title:"The Ugly Duckling",
+      footer:"✦ Interactive Folktale ✦",
+      startBtn:"Start Story",
+      replayBtn:"Replay Story",
+      nextBtn:"Next",
+      holdBtn:"Hold to Keep Warm",
+      scenes:[
+        { narration:"On a quiet farm, a mother duck waited for her eggs to hatch. One of them looked just a little different from the rest...", instruction:"" },
+        { narration:"One by one, the eggs began to crack. Cute little ducklings emerged with soft yellow feathers. But the last egg hatched a duckling that looked bigger, gray, and different from its siblings.", instruction:"Tap each egg on the canvas to hatch it." },
+        { narration:"His siblings laughed at the gray duckling because he looked different. Feeling sad and unwelcome, the duckling decided to leave and find a kinder place.", instruction:"Tap the gray duckling on the canvas to make it leave." },
+        { narration:"Winter arrived. The duckling was alone on a freezing pond, cold and tired. He had to survive until spring came.", instruction:"Press and hold the \u201cHold to Keep Warm\u201d button below the canvas." },
+        { narration:"Spring finally came, bringing warmth and new life. On a beautiful pond, the duckling saw a group of graceful swans swimming.", instruction:"Tap the pond's surface on the canvas for the duckling to approach the swans." },
+        { narration:"Hesitantly, the duckling approached the water and saw his own reflection. To his surprise, the reflection was not an ugly gray duckling, but a beautiful swan!", instruction:"Tap the water's surface on the canvas to see the duckling's reflection." },
+        { narration:"The ugly duckling had grown into a beautiful swan. He learned that being different isn't a flaw, but a special quality that will shine in its own time. The End.", instruction:"" }
+      ]
+    }
+  };
+
+  var COLORS = {
+    duckYellow:'#f4d35e', duckYellowDark:'#e0b83f',
+    duckGray:'#a9a196', duckGrayDark:'#878075',
+    swanWhite:'#ffffff', swanShade:'#e7eef2',
+    beak:'#e8963f',
+    eggShell:'#fff6e0', eggShade:'#e9d9ad',
+    grass:'#8fbf6b', grassDark:'#6fa14e',
+    pond:'#7fc4d6', pondDark:'#4c9bb0',
+    sun:'#ffe9a8',
+    skyTop:'#bfe3f0', skyBottom:'#eaf6ee'
+  };
+
+  /* ============ ELEMEN DOM ============ */
+  var titleText = document.getElementById('titleText');
+  var footerText = document.getElementById('footerText');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var narrationText = document.getElementById('narrationText');
+  var instructionBox = document.getElementById('instructionBox');
+  var instructionText = document.getElementById('instructionText');
+  var controlsBox = document.getElementById('controlsBox');
+  var dotsBox = document.getElementById('dotsBox');
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+
+  /* ============ STATE ============ */
+  var lang = 'id';
+  var muted = (localStorage.getItem('itikMuted') === '1');
+  var currentScene = 0; // 0 intro, 1-5 interaktif, 6 akhir
+  var isGoingToScene = false;
+
+  var eggPositions = [0.28,0.4,0.5,0.6,0.72];
+  var eggs = [false,false,false,false,false];
+
+  var scene2Done = false, scene2WalkT = 0;
+  var warmth = 0, holding = false, holdLastTs = null, coolInterval = null;
+  var scene4Done = false, scene4SwimT = 0;
+  var scene5Done = false, scene5MorphT = 0;
+
+  var nextBtnRef = null;
+
+  var cssW = 0, cssH = 0;
+  var voices = [];
+
+  /* ============ UKURAN & RESIZE ============ */
+  function X(f){ return f * cssW; }
+  function Y(f){ return f * cssH; }
+
+  function resizeCanvas(){
+    var stage = canvas.parentElement;
+    cssW = stage.clientWidth;
+    cssH = stage.clientHeight;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    notifyResize();
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function notifyResize(){
+    try{
+      var h = document.getElementById('app').scrollHeight;
+      window.parent.postMessage({ type:'resize', height:h }, '*');
+    }catch(e){}
+  }
+
+  /* ============ NARASI SUARA ============ */
+  function loadVoices(){
+    voices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
+  }
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+  }
+  function pickVoice(langCode){
+    if(!voices || voices.length === 0) return null;
+    var v = null, i;
+    for(i=0;i<voices.length;i++){ if(voices[i].lang === langCode){ v = voices[i]; break; } }
+    if(!v){
+      var base = langCode.split('-')[0];
+      for(i=0;i<voices.length;i++){ if(voices[i].lang && voices[i].lang.indexOf(base) === 0){ v = voices[i]; break; } }
+    }
+    return v;
+  }
+  function speak(text){
+    if(muted || !('speechSynthesis' in window) || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = (lang === 'id') ? 'id-ID' : 'en-US';
+    var v = pickVoice(u.lang);
+    if(v) u.voice = v;
+    u.rate = 0.92;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('itikMuted', muted ? '1' : '0');
+    updateMuteBtn();
+    if(muted) stopSpeak();
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    applyLangUI();
+  });
+
+  function applyLangUI(){
+    var T = TEXT[lang];
+    titleText.textContent = T.title;
+    footerText.textContent = T.footer;
+    langBtn.textContent = (lang === 'id') ? 'EN' : 'ID';
+    setupControlsForScene(currentScene);
+    syncControlStateForScene(currentScene);
+    renderTextForScene(currentScene, true);
+    setTimeout(notifyResize, 60);
+  }
+
+  /* ============ NARASI TEKS + INSTRUKSI ============ */
+  function renderTextForScene(n, doSpeak){
+    var T = TEXT[lang];
+    var sc = T.scenes[n];
+    narrationText.textContent = sc.narration;
+    if(sc.instruction){
+      instructionBox.style.display = 'flex';
+      instructionText.textContent = sc.instruction;
+    } else {
+      instructionBox.style.display = 'none';
+    }
+    if(doSpeak) speak(sc.narration);
+  }
+
+  /* ============ DOT PROGRES ============ */
+  (function buildDots(){
+    for(var i=0;i<5;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      dotsBox.appendChild(d);
+    }
+  })();
+  function updateDots(n){
+    var els = dotsBox.children;
+    for(var i=0;i<els.length;i++){
+      var sceneNum = i + 1;
+      els[i].classList.remove('active','done');
+      if(n > sceneNum || n === 6) els[i].classList.add('done');
+      else if(n === sceneNum) els[i].classList.add('active');
+    }
+  }
+
+  /* ============ KONTROL / TOMBOL ============ */
+  function setupControlsForScene(n){
+    controlsBox.innerHTML = '';
+    nextBtnRef = null;
+    var T = TEXT[lang];
+
+    if(n === 0){
+      var startB = document.createElement('button');
+      startB.className = 'btn';
+      startB.textContent = T.startBtn;
+      startB.onclick = function(){ startB.disabled = true; goToScene(1); };
+      controlsBox.appendChild(startB);
+
+    } else if(n === 3){
+      var holdB = document.createElement('button');
+      holdB.className = 'btn hold-btn';
+      holdB.innerHTML = '<span class="fill" id="holdFill"></span><span class="label">' + T.holdBtn + '</span>';
+      controlsBox.appendChild(holdB);
+      attachHoldEvents(holdB);
+
+      var nextB3 = document.createElement('button');
+      nextB3.className = 'btn';
+      nextB3.textContent = T.nextBtn;
+      nextB3.disabled = true;
+      nextB3.onclick = function(){ nextB3.disabled = true; goToScene(4); };
+      nextBtnRef = nextB3;
+      controlsBox.appendChild(nextB3);
+
+    } else if(n >= 1 && n <= 5){
+      var nextB = document.createElement('button');
+      nextB.className = 'btn';
+      nextB.textContent = T.nextBtn;
+      nextB.disabled = true;
+      nextB.onclick = function(){ nextB.disabled = true; goToScene(n + 1); };
+      nextBtnRef = nextB;
+      controlsBox.appendChild(nextB);
+
+    } else if(n === 6){
+      var replayB = document.createElement('button');
+      replayB.className = 'btn';
+      replayB.textContent = T.replayBtn;
+      replayB.onclick = function(){ resetGame(); goToScene(0); };
+      controlsBox.appendChild(replayB);
+    }
+  }
+
+  function syncControlStateForScene(n){
+    if(!nextBtnRef) return;
+    var done = false;
+    if(n === 1) done = eggs.every(function(e){ return e; });
+    else if(n === 2) done = scene2Done;
+    else if(n === 3) done = (warmth >= 100);
+    else if(n === 4) done = scene4Done;
+    else if(n === 5) done = scene5Done;
+    nextBtnRef.disabled = !done;
+    if(n === 3) updateHoldFill();
+  }
+
+  function enableNext(){
+    if(nextBtnRef) nextBtnRef.disabled = false;
+  }
+
+  /* ============ TAHAN UNTUK MENGHANGATKAN (Scene 3) ============ */
+  function attachHoldEvents(btn){
+    btn.addEventListener('pointerdown', function(e){ e.preventDefault(); startHold(); });
+    btn.addEventListener('pointerup', stopHold);
+    btn.addEventListener('pointerleave', stopHold);
+    btn.addEventListener('pointercancel', stopHold);
+  }
+  function startHold(){
+    if(warmth >= 100) return;
+    holding = true;
+    holdLastTs = performance.now();
+    if(coolInterval){ clearInterval(coolInterval); coolInterval = null; }
+    requestAnimationFrame(holdStep);
+  }
+  function holdStep(now){
+    if(!holding) return;
+    var dt = now - (holdLastTs || now);
+    holdLastTs = now;
+    warmth = Math.min(100, warmth + dt / 30);
+    updateHoldFill();
+    if(warmth >= 100){
+      holding = false;
+      enableNext();
+      return;
+    }
+    requestAnimationFrame(holdStep);
+  }
+  function stopHold(){
+    if(!holding) return;
+    holding = false;
+    holdLastTs = null;
+    if(warmth < 100) startCoolDown();
+  }
+  function startCoolDown(){
+    if(coolInterval) return;
+    coolInterval = setInterval(function(){
+      if(holding){ clearInterval(coolInterval); coolInterval = null; return; }
+      warmth = Math.max(0, warmth - 2);
+      updateHoldFill();
+      if(warmth <= 0){ clearInterval(coolInterval); coolInterval = null; }
+    }, 100);
+  }
+  function updateHoldFill(){
+    var fillEl = document.getElementById('holdFill');
+    if(fillEl) fillEl.style.width = warmth + '%';
+  }
+
+  /* ============ TRANSISI ANTAR ADEGAN ============ */
+  function goToScene(n){
+    if(isGoingToScene) return;
+    isGoingToScene = true;
+    currentScene = n;
+    setupControlsForScene(n);
+    syncControlStateForScene(n);
+    updateDots(n);
+    renderTextForScene(n, true);
+    setTimeout(notifyResize, 60);
+    isGoingToScene = false;
+  }
+
+  function resetGame(){
+    eggs = [false,false,false,false,false];
+    scene2Done = false; scene2WalkT = 0;
+    warmth = 0; holding = false;
+    if(coolInterval){ clearInterval(coolInterval); coolInterval = null; }
+    scene4Done = false; scene4SwimT = 0;
+    scene5Done = false; scene5MorphT = 0;
+    stopSpeak();
+  }
+
+  /* ============ ANIMASI BANTUAN ============ */
+  function animateValue(duration, onUpdate, onComplete){
+    var start = performance.now();
+    function step(now){
+      var t = Math.min(1, (now - start) / duration);
+      onUpdate(t);
+      if(t < 1) requestAnimationFrame(step);
+      else if(onComplete) onComplete();
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ============ GAMBAR DASAR ============ */
+  function drawSky(horizon){
+    var g = ctx.createLinearGradient(0,0,0,Y(horizon));
+    g.addColorStop(0, COLORS.skyTop);
+    g.addColorStop(1, COLORS.skyBottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,cssW,Y(horizon));
+  }
+  function drawSun(){
+    ctx.beginPath();
+    ctx.fillStyle = COLORS.sun;
+    ctx.arc(X(0.85), Y(0.15), X(0.055), 0, Math.PI*2);
+    ctx.fill();
+  }
+  function drawGrassGround(horizon){
+    ctx.fillStyle = COLORS.grass;
+    ctx.fillRect(0, Y(horizon), cssW, cssH - Y(horizon));
+    ctx.strokeStyle = COLORS.grassDark;
+    ctx.lineWidth = 2;
+    for(var i=0;i<16;i++){
+      var gx = (i/16)*cssW + (i%2)*6;
+      var gy = Y(horizon) + (i%3)*5 + 6;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy+9);
+      ctx.lineTo(gx+3, gy);
+      ctx.moveTo(gx+5, gy+9);
+      ctx.lineTo(gx+5, gy+1);
+      ctx.stroke();
+    }
+  }
+  function drawSnowBackground(){
+    var g = ctx.createLinearGradient(0,0,0,Y(0.55));
+    g.addColorStop(0,'#dceefc');
+    g.addColorStop(1,'#f4f9fb');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,cssW,Y(0.55));
+    ctx.fillStyle = '#eef6f8';
+    ctx.fillRect(0,Y(0.55),cssW,cssH-Y(0.55));
+  }
+  function drawSnowParticles(t){
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    for(var i=0;i<24;i++){
+      var fx = (i*53 % 100) / 100;
+      var fy = ((i*97 + t*35) % 100) / 100;
+      ctx.beginPath();
+      ctx.arc(X(fx), Y(fy*0.55), 2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  function drawPond(cxF,cyF,rxF,ryF,t){
+    var cx=X(cxF), cy=Y(cyF), rx=X(rxF), ry=Y(ryF);
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+    var g = ctx.createLinearGradient(cx,cy-ry,cx,cy+ry);
+    g.addColorStop(0, COLORS.pond);
+    g.addColorStop(1, COLORS.pondDark);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for(var i=-2;i<3;i++){
+      ctx.beginPath();
+      var yy = cy + i*ry*0.3;
+      ctx.moveTo(cx-rx, yy + Math.sin(t*1.5+i)*4);
+      ctx.bezierCurveTo(cx-rx*0.3, yy+Math.sin(t*1.5+i+1)*4+6, cx+rx*0.3, yy+Math.sin(t*1.5+i+2)*4-6, cx+rx, yy+Math.sin(t*1.5+i+3)*4);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawEgg(xF,yF,s,cracked){
+    var x=X(xF), y=Y(yF), w=32*s, h=42*s;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.beginPath();
+    ctx.moveTo(0,-h/2);
+    ctx.bezierCurveTo(w/2,-h/2, w/2,h/3, 0,h/2);
+    ctx.bezierCurveTo(-w/2,h/3, -w/2,-h/2, 0,-h/2);
+    ctx.closePath();
+    ctx.fillStyle = COLORS.eggShell;
+    ctx.fill();
+    ctx.strokeStyle = COLORS.eggShade;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    if(cracked){
+      ctx.strokeStyle = COLORS.eggShade;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-6,-8); ctx.lineTo(2,-2); ctx.lineTo(-3,4); ctx.lineTo(5,10);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawDuckling(xF,yF,s,colorMain,colorDark,facing){
+    facing = facing || 1;
+    var x=X(xF), y=Y(yF);
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(facing,1);
+    ctx.beginPath();
+    ctx.ellipse(0,0,22*s,16*s,0,0,Math.PI*2);
+    ctx.fillStyle = colorMain;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-2*s,3*s,10*s,7*s,0.3,0,Math.PI*2);
+    ctx.fillStyle = colorDark;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(16*s,-10*s,10*s,0,Math.PI*2);
+    ctx.fillStyle = colorMain;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(24*s,-10*s);
+    ctx.lineTo(34*s,-8*s);
+    ctx.lineTo(24*s,-5*s);
+    ctx.closePath();
+    ctx.fillStyle = COLORS.beak;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(19*s,-12*s,1.6*s,0,Math.PI*2);
+    ctx.fillStyle = '#3a3226';
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawSwan(xF,yF,s,bobPx){
+    var x=X(xF), y=Y(yF) + (bobPx||0);
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.beginPath();
+    ctx.ellipse(0,0,26*s,17*s,0,0,Math.PI*2);
+    ctx.fillStyle = COLORS.swanWhite;
+    ctx.fill();
+    ctx.strokeStyle = COLORS.swanShade;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(14*s,-6*s);
+    ctx.bezierCurveTo(26*s,-18*s, 10*s,-30*s, 22*s,-38*s);
+    ctx.lineWidth = 6*s;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = COLORS.swanWhite;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(22*s,-38*s,6*s,0,Math.PI*2);
+    ctx.fillStyle = COLORS.swanWhite;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(27*s,-38*s);
+    ctx.lineTo(35*s,-36*s);
+    ctx.lineTo(27*s,-34*s);
+    ctx.closePath();
+    ctx.fillStyle = '#e8963f';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(24*s,-40*s,1.2*s,0,Math.PI*2);
+    ctx.fillStyle = '#3a3226';
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawSparkles(t,cxF,cyF){
+    for(var i=0;i<8;i++){
+      var ang = t*2 + i*(Math.PI*2/8);
+      var r = 40 + Math.sin(t*3+i)*6;
+      var sx = X(cxF) + Math.cos(ang)*r;
+      var sy = Y(cyF) + Math.sin(ang)*r*0.6;
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,230,150,0.9)';
+      ctx.arc(sx,sy,2.2,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  /* ============ GAMBAR PER ADEGAN ============ */
+  function renderIntro(t){
+    drawSky(0.55); drawSun(); drawGrassGround(0.55);
+    drawPond(0.5,0.8,0.42,0.12,t);
+    drawDuckling(0.3,0.44,1.6,COLORS.duckYellow,COLORS.duckYellowDark,1);
+    for(var i=0;i<5;i++) drawEgg(0.45+i*0.06,0.52,0.9,false);
+  }
+  function renderScene1(t){
+    drawSky(0.5); drawSun(); drawGrassGround(0.5);
+    for(var i=0;i<5;i++){
+      var fx = eggPositions[i];
+      if(eggs[i]){
+        var isOdd = (i === 4);
+        drawDuckling(fx,0.62,1.1, isOdd?COLORS.duckGray:COLORS.duckYellow, isOdd?COLORS.duckGrayDark:COLORS.duckYellowDark, 1);
+      } else {
+        drawEgg(fx,0.6,1,false);
+      }
+    }
+  }
+  function renderScene2(t){
+    drawSky(0.5); drawSun(); drawGrassGround(0.5);
+    drawDuckling(0.16,0.4,1.3,COLORS.duckYellow,COLORS.duckYellowDark,1);
+    var kids = [0.27,0.34,0.41,0.48];
+    for(var i=0;i<kids.length;i++) drawDuckling(kids[i],0.6,1,COLORS.duckYellow,COLORS.duckYellowDark,1);
+    var grayX = 0.72 + scene2WalkT*0.42;
+    var alpha = Math.max(0.12, 1 - scene2WalkT);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    drawDuckling(grayX,0.6,1.1,COLORS.duckGray,COLORS.duckGrayDark,-1);
+    ctx.restore();
+  }
+  function renderScene3(t){
+    drawSnowBackground();
+    drawPond(0.5,0.76,0.4,0.12,t*0.3);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(X(0.5),Y(0.76),X(0.4),Y(0.12),0,0,Math.PI*2);
+    ctx.fill();
+    drawSnowParticles(t);
+    var shakeAmt = (warmth < 100) ? Math.sin(t*20)*(1-warmth/100)*0.004 : 0;
+    drawDuckling(0.5+shakeAmt,0.68,1.1,COLORS.duckGray,COLORS.duckGrayDark,1);
+  }
+  function renderScene4(t){
+    drawSky(0.45); drawGrassGround(0.45);
+    drawPond(0.55,0.72,0.4,0.2,t);
+    drawSwan(0.55,0.68,0.9, Math.sin(t*2)*3);
+    drawSwan(0.68,0.74,0.8, Math.sin(t*2+1)*3);
+    drawSwan(0.42,0.77,0.8, Math.sin(t*2+2)*3);
+    var sx = 0.18 + (0.5-0.18)*scene4SwimT;
+    var sy = 0.62 + (0.72-0.62)*scene4SwimT;
+    drawDuckling(sx,sy,1,COLORS.duckGray,COLORS.duckGrayDark,1);
+  }
+  function renderScene5(t){
+    drawSky(0.45); drawGrassGround(0.45);
+    drawPond(0.5,0.68,0.42,0.22,t);
+    var grayAlpha = 1 - scene5MorphT;
+    var whiteAlpha = scene5MorphT;
+    ctx.save(); ctx.globalAlpha = grayAlpha;
+    drawDuckling(0.42,0.55,1.1,COLORS.duckGray,COLORS.duckGrayDark,1);
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = whiteAlpha;
+    drawSwan(0.42,0.6,0.9,0);
+    ctx.restore();
+    ctx.save();
+    var waterLineY = Y(0.6);
+    ctx.beginPath();
+    ctx.rect(0, waterLineY, cssW, cssH - waterLineY);
+    ctx.clip();
+    ctx.translate(0, waterLineY*2);
+    ctx.scale(1,-1);
+    ctx.globalAlpha = 0.35*grayAlpha;
+    drawDuckling(0.42,0.55,1.1,COLORS.duckGray,COLORS.duckGrayDark,1);
+    ctx.globalAlpha = 0.5*whiteAlpha;
+    drawSwan(0.42,0.6,0.9,0);
+    ctx.restore();
+    if(scene5MorphT > 0.6) drawSparkles(t,0.42,0.5);
+  }
+  function renderEnd(t){
+    drawSky(0.45); drawGrassGround(0.45);
+    drawPond(0.5,0.7,0.42,0.2,t);
+    drawSwan(0.5,0.62,1.3, Math.sin(t*2)*3);
+    drawSparkles(t,0.5,0.5);
+  }
+
+  function render(t){
+    ctx.clearRect(0,0,cssW,cssH);
+    switch(currentScene){
+      case 0: renderIntro(t); break;
+      case 1: renderScene1(t); break;
+      case 2: renderScene2(t); break;
+      case 3: renderScene3(t); break;
+      case 4: renderScene4(t); break;
+      case 5: renderScene5(t); break;
+      case 6: renderEnd(t); break;
+    }
+  }
+
+  /* ============ INTERAKSI KANVAS ============ */
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  canvas.addEventListener('click', function(e){
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = cssW / rect.width;
+    var scaleY = cssH / rect.height;
+    var x = (e.clientX - rect.left) * scaleX;
+    var y = (e.clientY - rect.top) * scaleY;
+    handleCanvasClick(x,y);
+  });
+
+  function handleCanvasClick(x,y){
+    if(currentScene === 1){
+      for(var i=0;i<5;i++){
+        if(eggs[i]) continue;
+        var ex = X(eggPositions[i]), ey = Y(0.6);
+        if(dist(x,y,ex,ey) < X(0.08)){
+          eggs[i] = true;
+          if(eggs.every(function(e){ return e; })) enableNext();
+          return;
+        }
+      }
+    } else if(currentScene === 2){
+      if(scene2Done) return;
+      var gx = X(0.72), gy = Y(0.6);
+      if(dist(x,y,gx,gy) < X(0.09)){
+        scene2Done = true;
+        animateValue(1000, function(tt){ scene2WalkT = tt; }, function(){ enableNext(); });
+      }
+    } else if(currentScene === 4){
+      if(scene4Done) return;
+      var cx4=X(0.55), cy4=Y(0.72), rx4=X(0.4), ry4=Y(0.2);
+      var nx4=(x-cx4)/rx4, ny4=(y-cy4)/ry4;
+      if(nx4*nx4 + ny4*ny4 <= 1){
+        scene4Done = true;
+        animateValue(1400, function(tt){ scene4SwimT = tt; }, function(){ enableNext(); });
+      }
+    } else if(currentScene === 5){
+      if(scene5Done) return;
+      var cx5=X(0.5), cy5=Y(0.68), rx5=X(0.42), ry5=Y(0.22);
+      var nx5=(x-cx5)/rx5, ny5=(y-cy5)/ry5;
+      if(nx5*nx5 + ny5*ny5 <= 1){
+        scene5Done = true;
+        animateValue(1800, function(tt){ scene5MorphT = tt; }, function(){ enableNext(); });
+      }
+    }
+  }
+
+  /* ============ LOOP ANIMASI UTAMA ============ */
+  function loop(ts){
+    render(ts/1000);
+    requestAnimationFrame(loop);
+  }
+
+  /* ============ INISIALISASI ============ */
+  function init(){
+    var params = new URLSearchParams(window.location.search);
+    if(params.get('lang') === 'en') lang = 'en';
+
+    titleText.textContent = TEXT[lang].title;
+    footerText.textContent = TEXT[lang].footer;
+    langBtn.textContent = (lang === 'id') ? 'EN' : 'ID';
+    updateMuteBtn();
+
+    resizeCanvas();
+    setupControlsForScene(0);
+    updateDots(0);
+    renderTextForScene(0, false);
+
+    requestAnimationFrame(loop);
+    window.addEventListener('load', function(){ resizeCanvas(); setTimeout(notifyResize,150); });
+    setTimeout(notifyResize, 200);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
