@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Legenda Asal Mula Desa Trunyan</title>
+<style>
+  :root{
+    --gold:#c9a227;
+    --gold-light:#e8c766;
+    --maroon:#7a2e2e;
+    --maroon-dark:#5a1f1f;
+    --green:#2d5a3d;
+    --green-dark:#1d3d29;
+    --cream:#f6ecd2;
+    --ink:#2b2013;
+    --sky:#a9d6e8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Arial,sans-serif;
+    background:linear-gradient(180deg,#3a2418,#1d130c);
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:640px;
+    background:linear-gradient(180deg,#2b1c12,#1a1109);
+    border:3px solid var(--gold);
+    border-radius:16px;
+    padding:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  h1{
+    font-size:16px;
+    margin:0;
+    color:var(--gold-light);
+    letter-spacing:.3px;
+    line-height:1.25;
+  }
+  .icon-btn{
+    background:var(--maroon);
+    border:2px solid var(--gold);
+    color:var(--cream);
+    border-radius:10px;
+    width:38px;
+    height:38px;
+    font-size:16px;
+    cursor:pointer;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:active{transform:scale(.92);}
+  .icon-btn.lang{width:auto;padding:0 10px;font-weight:700;font-size:13px;}
+  .header-actions{display:flex;gap:6px;}
+
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    border-radius:12px;
+    overflow:hidden;
+    border:2px solid #4a3419;
+    background:#000;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+    cursor:pointer;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:10px 0 4px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#5a4a30;
+    border:1px solid var(--gold);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--gold-light);transform:scale(1.25);}
+  .dot.done{background:var(--green);}
+
+  #narrationPanel{
+    margin-top:8px;
+    background:rgba(0,0,0,.35);
+    border:1px solid #4a3419;
+    border-radius:10px;
+    padding:10px 12px;
+    min-height:56px;
+  }
+  #narrationText{
+    font-size:14px;
+    line-height:1.5;
+    margin:0 0 6px;
+    color:var(--cream);
+  }
+  #instructionText{
+    font-size:13px;
+    color:var(--gold-light);
+    margin:0;
+    font-style:italic;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  #instructionText:before{
+    content:"👉";
+    font-style:normal;
+  }
+
+  #controls{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:12px;
+  }
+  .main-btn{
+    background:linear-gradient(180deg,var(--gold-light),var(--gold));
+    color:var(--maroon-dark);
+    border:none;
+    border-radius:24px;
+    padding:11px 26px;
+    font-size:14px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 0 #8a6c1a;
+    letter-spacing:.3px;
+  }
+  .main-btn:active{
+    transform:translateY(3px);
+    box-shadow:0 1px 0 #8a6c1a;
+  }
+  .main-btn.secondary{
+    background:transparent;
+    color:var(--gold-light);
+    border:2px solid var(--gold);
+    box-shadow:none;
+  }
+
+  footer{
+    margin-top:14px;
+    text-align:center;
+    font-size:11px;
+    color:#8a7a5c;
+    line-height:1.6;
+  }
+
+  #titleScreen{
+    text-align:center;
+    padding:20px 10px 6px;
+  }
+  #titleScreen h2{
+    color:var(--gold-light);
+    font-size:20px;
+    margin:6px 0 4px;
+  }
+  #titleScreen p{
+    font-size:13px;
+    color:#d8c9a3;
+    margin:0 0 16px;
+    line-height:1.5;
+  }
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    background:var(--green);
+    color:var(--cream);
+    padding:3px 10px;
+    border-radius:12px;
+    margin-bottom:10px;
+    letter-spacing:.5px;
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="gameTitle">Legenda Desa Trunyan</h1>
+    <div class="header-actions">
+      <button class="icon-btn lang" id="langBtn" title="Ganti bahasa / Change language">ID</button>
+      <button class="icon-btn" id="muteBtn" title="Mute/unmute narasi">🔊</button>
+    </div>
+  </header>
+
+  <div id="titleScreen">
+    <span class="badge" id="badgeText">CERITA RAKYAT BALI</span>
+    <h2 id="titleMain">Legenda Asal Mula Desa Trunyan</h2>
+    <p id="titleDesc">Ikuti perjalanan putra-putri Keraton Surakarta yang mengembara mencari sumber wangi harum, hingga menemukan asal mula Desa Trunyan, Kedisan, dan Abang Dukuh di Bali.</p>
+    <button class="main-btn" id="startBtn">▶ Mulai Cerita</button>
+  </div>
+
+  <div id="gameArea" class="hidden">
+    <div id="canvasWrap">
+      <canvas id="stage" width="640" height="420"></canvas>
+    </div>
+
+    <div id="dots"></div>
+
+    <div id="narrationPanel">
+      <p id="narrationText">...</p>
+      <p id="instructionText"><span id="instructionSpan">...</span></p>
+    </div>
+
+    <div id="controls">
+      <button class="main-btn secondary" id="replayBtn">⟲ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <footer>
+    Legenda rakyat Bali &mdash; diceritakan ulang secara interaktif.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     I18N TEXT
+  --------------------------------------------------------- */
+  var T = {
+    id:{
+      gameTitle:"Legenda Desa Trunyan",
+      badge:"CERITA RAKYAT BALI",
+      titleMain:"Legenda Asal Mula Desa Trunyan",
+      titleDesc:"Ikuti perjalanan putra-putri Keraton Surakarta yang mengembara mencari sumber wangi harum, hingga menemukan asal mula Desa Trunyan, Kedisan, dan Abang Dukuh di Bali.",
+      startBtn:"▶ Mulai Cerita",
+      replayBtn:"⟲ Ulangi Cerita",
+      finishBtn:"⟲ Dengarkan Lagi",
+      footer:"Legenda rakyat Bali &mdash; diceritakan ulang secara interaktif.",
+      scenes:[
+        {
+          narration:"Pada zaman dahulu, raja Keraton Surakarta memiliki empat orang anak: tiga pangeran dan seorang putri bungsu. Suatu hari mereka mencium wangi harum yang tak biasa, datang dari arah timur.",
+          instruction:"Ketuk hidung sang pangeran untuk mencium wangi itu."
+        },
+        {
+          narration:"Dengan izin sang raja, keempat anak itu berangkat ke arah timur. Mereka menyeberangi sungai, menghadapi hewan buas, dan mendaki perbukitan demi mengikuti wangi yang semakin semerbak.",
+          instruction:"Ketuk sosok pengembara untuk melangkah maju melewati rintangan."
+        },
+        {
+          narration:"Setelah berbulan-bulan menempuh perjalanan, mereka tiba di sebuah selat yang kini bernama Selat Bali. Mereka pun menyeberang menuju Pulau Bali.",
+          instruction:"Seret perahu dari Jawa menuju Pulau Bali."
+        },
+        {
+          narration:"Di kaki selatan Gunung Batur, sang putri bungsu terpesona oleh pemandangan yang tenang. Ia meminta izin kakaknya untuk tinggal di tempat itu, dan sang kakak pun mengizinkan.",
+          instruction:"Ketuk sang putri bungsu agar ia tinggal di kaki Gunung Batur."
+        },
+        {
+          narration:"Di Desa Kedisan, pangeran ketiga berteriak kegirangan mendengar merdunya suara burung. Sang kakak sulung tidak menyukai sikap itu dan menendangnya hingga jatuh. Pangeran ketiga pun berubah menjadi patung batu yang bersemayam di Kedisan.",
+          instruction:"Ketuk burung untuk mendengar suaranya, lalu ketuk sang pangeran ketiga."
+        },
+        {
+          narration:"Kedua kakak melanjutkan perjalanan menyusuri Danau Batur. Pangeran kedua menyapa gadis-gadis cantik di tepi danau, hingga bertengkar dengan kakaknya. Ia pun menjadi kepala desa di tempat itu, yang kemudian disebut Desa Abang Dukuh.",
+          instruction:"Ketuk gadis-gadis di tepi danau untuk menyapa mereka."
+        },
+        {
+          narration:"Pangeran sulung melanjutkan perjalanan seorang diri hingga bertemu seorang dewi jelita yang duduk di bawah pohon taru menyan. Wangi harum itu ternyata berasal dari pohon tersebut. Sang pangeran pun jatuh cinta dan melamarnya.",
+          instruction:"Ketuk pohon menyan untuk menemukan sang dewi, lalu ketuk sang dewi untuk melamarnya."
+        },
+        {
+          narration:"Lamaran diterima. Pangeran sulung menikahi sang dewi dan diangkat menjadi pemimpin desa bergelar Ratu Sakti Pancering Jagat. Desa itu dinamakan Trunyan, dari kata taru (pohon) dan menyan (harum). Sejak itu, warga Trunyan meletakkan jenazah leluhur di bawah pohon menyan yang harum, sebuah tradisi unik yang masih dijaga hingga kini.",
+          instruction:"Ketuk mahkota untuk menobatkan sang pangeran sebagai pemimpin Desa Trunyan."
+        }
+      ],
+      theEnd:"~ Tamat ~",
+      endSub:"Demikianlah legenda asal mula Desa Trunyan, Kedisan, dan Abang Dukuh."
+    },
+    en:{
+      gameTitle:"Legend of Trunyan Village",
+      badge:"BALINESE FOLKTALE",
+      titleMain:"The Legend of Trunyan Village",
+      titleDesc:"Follow the royal children of the Surakarta Palace as they wander east chasing a mysterious fragrance, discovering the origins of Trunyan, Kedisan, and Abang Dukuh villages in Bali.",
+      startBtn:"▶ Start Story",
+      replayBtn:"⟲ Replay Story",
+      finishBtn:"⟲ Listen Again",
+      footer:"A Balinese folktale &mdash; retold interactively.",
+      scenes:[
+        {
+          narration:"Long ago, the king of Surakarta Palace had four children: three princes and a youngest princess. One day they noticed an unusual sweet fragrance drifting from the east.",
+          instruction:"Tap the prince's nose to catch the scent."
+        },
+        {
+          narration:"With the king's blessing, the four siblings set off eastward. They crossed rivers, faced wild beasts, and climbed hills, following the fragrance that grew stronger each day.",
+          instruction:"Tap the traveler to step forward past each obstacle."
+        },
+        {
+          narration:"After months of travel, they reached a strait now known as the Bali Strait. They crossed it to reach the island of Bali.",
+          instruction:"Drag the boat from Java across to Bali."
+        },
+        {
+          narration:"At the southern foot of Mount Batur, the youngest princess was captivated by the peaceful scenery. She asked her brother's permission to stay, and he agreed.",
+          instruction:"Tap the youngest princess so she stays at Mount Batur."
+        },
+        {
+          narration:"In Kedisan village, the third prince cheered joyfully at the beautiful birdsong. His eldest brother, displeased, kicked him down in anger. The third prince turned to stone, becoming a statue that still rests in Kedisan.",
+          instruction:"Tap the bird to hear its song, then tap the third prince."
+        },
+        {
+          narration:"The two remaining brothers continued along Lake Batur. The second prince greeted beautiful maidens by the lake, sparking a quarrel with his brother. He became the head of that village, later called Abang Dukuh.",
+          instruction:"Tap the maidens by the lake to greet them."
+        },
+        {
+          narration:"The eldest prince journeyed on alone until he met a radiant goddess sitting beneath a taru menyan tree. The fragrance had come from that very tree all along. He fell in love and proposed marriage.",
+          instruction:"Tap the menyan tree to reveal the goddess, then tap her to propose."
+        },
+        {
+          narration:"The proposal was accepted. The eldest prince married the goddess and was crowned village leader, titled Ratu Sakti Pancering Jagat. The village was named Trunyan, from taru (tree) and menyan (fragrant). Since then, the people of Trunyan have laid their departed beneath the fragrant menyan tree, a unique tradition still honored today.",
+          instruction:"Tap the crown to crown the prince as leader of Trunyan village."
+        }
+      ],
+      theEnd:"~ The End ~",
+      endSub:"Thus is the legend of the origin of Trunyan, Kedisan, and Abang Dukuh villages."
+    }
+  };
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var state = {
+    lang: (function(){
+      try{
+        var p = new URLSearchParams(window.location.search);
+        if(p.get('lang')==='en') return 'en';
+        if(p.get('lang')==='id') return 'id';
+      }catch(e){}
+      return 'id';
+    })(),
+    muted: false,
+    scene: -1, // -1 = title screen
+    locked: false,
+    sub: 0, // sub-step within a scene
+    finished: false,
+    dragging: false,
+    dragProgress: 0
+  };
+
+  try{
+    var storedMute = localStorage.getItem('trunyan_muted');
+    if(storedMute === '1') state.muted = true;
+  }catch(e){}
+
+  var TOTAL_SCENES = 8;
+
+  /* ---------------------------------------------------------
+     DOM REFS
+  --------------------------------------------------------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var titleScreen = $('titleScreen');
+  var gameArea = $('gameArea');
+  var canvas = $('stage');
+  var ctx = canvas.getContext('2d');
+  var dotsWrap = $('dots');
+  var narrationText = $('narrationText');
+  var instructionSpan = $('instructionSpan');
+  var langBtn = $('langBtn');
+  var muteBtn = $('muteBtn');
+  var startBtn = $('startBtn');
+  var replayBtn = $('replayBtn');
+
+  /* ---------------------------------------------------------
+     RESPONSIVE CANVAS
+  --------------------------------------------------------- */
+  var BASE_W = 640, BASE_H = 420;
+  function fitCanvas(){
+    // internal resolution fixed; CSS handles scaling. Just redraw.
+    render();
+  }
+  window.addEventListener('resize', function(){
+    fitCanvas();
+    notifyResize();
+  });
+
+  /* ---------------------------------------------------------
+     IFRAME AUTO-RESIZE (postMessage)
+  --------------------------------------------------------- */
+  function notifyResize(){
+    try{
+      var h = document.getElementById('app').offsetHeight + 20;
+      window.parent.postMessage({ type: 'trunyan-game-resize', height: h }, '*');
+    }catch(e){}
+  }
+
+  /* ---------------------------------------------------------
+     SPEECH SYNTHESIS
+  --------------------------------------------------------- */
+  var synth = window.speechSynthesis || null;
+  function speak(text){
+    if(!synth || state.muted || !text) return;
+    try{
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      synth.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if(synth){ try{ synth.cancel(); }catch(e){} }
+  }
+
+  /* ---------------------------------------------------------
+     UI TEXT APPLY
+  --------------------------------------------------------- */
+  function applyStaticText(){
+    var t = T[state.lang];
+    $('gameTitle').textContent = t.gameTitle;
+    $('badgeText').textContent = t.badge;
+    $('titleMain').textContent = t.titleMain;
+    $('titleDesc').textContent = t.titleDesc;
+    startBtn.textContent = t.startBtn;
+    replayBtn.textContent = state.finished ? t.finishBtn : t.replayBtn;
+    langBtn.textContent = state.lang === 'en' ? 'EN' : 'ID';
+    document.documentElement.lang = state.lang;
+  }
+
+  function updateNarrationPanel(){
+    var t = T[state.lang];
+    if(state.scene < 0){ return; }
+    if(state.finished){
+      narrationText.textContent = t.endSub;
+      instructionSpan.textContent = state.lang==='en' ? "Tap 'Replay Story' to watch again." : "Ketuk 'Ulangi Cerita' untuk menonton lagi.";
+      return;
+    }
+    var sc = t.scenes[state.scene];
+    narrationText.textContent = sc.narration;
+    instructionSpan.textContent = sc.instruction;
+  }
+
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<TOTAL_SCENES;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.id = 'dot'+i;
+      dotsWrap.appendChild(d);
+    }
+    refreshDots();
+  }
+  function refreshDots(){
+    for(var i=0;i<TOTAL_SCENES;i++){
+      var d = $('dot'+i);
+      if(!d) continue;
+      d.className = 'dot';
+      if(i < state.scene || state.finished) d.className += ' done';
+      else if(i === state.scene) d.className += ' active';
+    }
+  }
+
+  /* ---------------------------------------------------------
+     SCENE FLOW
+  --------------------------------------------------------- */
+  function startGame(){
+    state.scene = 0;
+    state.sub = 0;
+    state.locked = false;
+    state.finished = false;
+    state.dragProgress = 0;
+    titleScreen.classList.add('hidden');
+    gameArea.classList.remove('hidden');
+    buildDots();
+    enterScene(0);
+    notifyResize();
+  }
+
+  function enterScene(idx){
+    state.scene = idx;
+    state.sub = 0;
+    state.locked = false;
+    state.dragProgress = 0;
+    state.dragging = false;
+    refreshDots();
+    updateNarrationPanel();
+    render();
+    var t = T[state.lang];
+    speak(t.scenes[idx].narration + ' ' + t.scenes[idx].instruction);
+  }
+
+  function advanceScene(){
+    if(state.scene + 1 < TOTAL_SCENES){
+      setTimeout(function(){ enterScene(state.scene + 1); }, 900);
+    } else {
+      setTimeout(finishStory, 900);
+    }
+  }
+
+  function finishStory(){
+    state.finished = true;
+    state.locked = true;
+    refreshDots();
+    updateNarrationPanel();
+    applyStaticText();
+    render();
+    var t = T[state.lang];
+    speak(t.theEnd + '. ' + t.endSub);
+  }
+
+  function restart(){
+    stopSpeak();
+    state.scene = 0;
+    state.sub = 0;
+    state.locked = false;
+    state.finished = false;
+    state.dragProgress = 0;
+    buildDots();
+    applyStaticText();
+    enterScene(0);
+  }
+
+  /* ---------------------------------------------------------
+     CANVAS DRAW HELPERS
+  --------------------------------------------------------- */
+  function clear(bgTop, bgBottom){
+    var g = ctx.createLinearGradient(0,0,0,BASE_H);
+    g.addColorStop(0, bgTop);
+    g.addColorStop(1, bgBottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,BASE_W,BASE_H);
+  }
+
+  function drawGround(color, y){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.quadraticCurveTo(BASE_W/2, y-18, BASE_W, y);
+    ctx.lineTo(BASE_W, BASE_H);
+    ctx.lineTo(0, BASE_H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color || 'rgba(255,230,150,.85)';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.beginPath();
+    ctx.ellipse(x,y,22*scale,13*scale,0,0,Math.PI*2);
+    ctx.ellipse(x+18*scale,y+4*scale,16*scale,10*scale,0,0,Math.PI*2);
+    ctx.ellipse(x-18*scale,y+4*scale,14*scale,9*scale,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMountain(cx, baseY, w, h, color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(cx-w/2, baseY);
+    ctx.lineTo(cx, baseY-h);
+    ctx.lineTo(cx+w/2, baseY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // simple stylised person: head + robe triangle + arms
+  function drawPerson(x,y,scale,robeColor,skin,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shadow
+    ctx.fillStyle='rgba(0,0,0,.2)';
+    ctx.beginPath(); ctx.ellipse(0,62,26,7,0,0,Math.PI*2); ctx.fill();
+    // robe
+    ctx.fillStyle = robeColor;
+    ctx.beginPath();
+    ctx.moveTo(0,-10);
+    ctx.lineTo(-28,60);
+    ctx.lineTo(28,60);
+    ctx.closePath();
+    ctx.fill();
+    // sash
+    if(opts.sash){
+      ctx.fillStyle = opts.sash;
+      ctx.fillRect(-16,10,32,8);
+    }
+    // arms
+    ctx.strokeStyle = robeColor;
+    ctx.lineWidth = 10;
+    ctx.lineCap='round';
+    var armLift = opts.armUp ? -18 : 8;
+    ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(-26,armLift); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(26,armLift); ctx.stroke();
+    // head
+    ctx.fillStyle = skin || '#e8b98a';
+    ctx.beginPath(); ctx.arc(0,-26,16,0,Math.PI*2); ctx.fill();
+    // hair / headpiece
+    ctx.fillStyle = opts.hair || '#2a1a10';
+    if(opts.crown){
+      ctx.fillStyle = 'gold';
+      ctx.beginPath();
+      ctx.moveTo(-14,-38); ctx.lineTo(-14,-46); ctx.lineTo(-6,-38);
+      ctx.lineTo(0,-50); ctx.lineTo(6,-38); ctx.lineTo(14,-46); ctx.lineTo(14,-38);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(0,-30,17,Math.PI*0.05,Math.PI*0.95,true); ctx.fill();
+    }
+    // face
+    ctx.fillStyle='#2b2013';
+    ctx.beginPath(); ctx.arc(-5,-25,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-25,1.6,0,Math.PI*2); ctx.fill();
+    if(opts.smile !== false){
+      ctx.strokeStyle='#2b2013'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(0,-20,4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    }
+    // nose highlight (for scene 1 tap target)
+    if(opts.nose){
+      ctx.fillStyle= opts.noseGlow ? '#ffd76a' : '#d99a68';
+      ctx.beginPath(); ctx.arc(0,-22,3,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawBird(x,y,scale,flap){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#2f7a5a';
+    ctx.beginPath(); ctx.ellipse(0,0,10,7,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e0483e';
+    ctx.beginPath(); ctx.arc(9,-2,4,0,Math.PI*2); ctx.fill();
+    // wing
+    ctx.fillStyle='#1d5c40';
+    ctx.beginPath();
+    var w = flap ? -14 : -6;
+    ctx.moveTo(-2,-2); ctx.quadraticCurveTo(-10,w,-16,-2); ctx.quadraticCurveTo(-8,2,-2,-2);
+    ctx.fill();
+    // beak
+    ctx.fillStyle='#e8c766';
+    ctx.beginPath(); ctx.moveTo(15,-2); ctx.lineTo(20,0); ctx.lineTo(15,2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle='#5a3d22';
+    ctx.lineWidth=10;
+    ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,40); ctx.lineTo(0,-10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,10); ctx.lineTo(-22,-20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(24,-24); ctx.stroke();
+    if(glow){
+      var g = ctx.createRadialGradient(0,-40,10,0,-40,70);
+      g.addColorStop(0,'rgba(255,220,150,.55)');
+      g.addColorStop(1,'rgba(255,220,150,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,-40,70,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#2d6b46';
+    ctx.beginPath(); ctx.arc(-24,-24,26,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-42,30,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(28,-20,24,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStatue(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a8a86';
+    ctx.beginPath();
+    ctx.ellipse(0,20,30,10,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#9c9c96';
+    ctx.beginPath();
+    ctx.moveTo(-22,20); ctx.quadraticCurveTo(-26,-14,0,-18); ctx.quadraticCurveTo(26,-14,22,20);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-30,14,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#77776f'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(14,0); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle='#8a5a2e';
+    ctx.fillRect(-24,0,48,30);
+    ctx.fillStyle='#c9772e';
+    ctx.beginPath();
+    ctx.moveTo(-32,0); ctx.lineTo(0,-28); ctx.lineTo(32,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#3a2414';
+    ctx.fillRect(-7,10,14,20);
+    ctx.restore();
+  }
+
+  function drawBoat(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a4a24';
+    ctx.beginPath();
+    ctx.moveTo(-30,0); ctx.quadraticCurveTo(0,16,30,0); ctx.quadraticCurveTo(0,10,-30,0);
+    ctx.fill();
+    ctx.strokeStyle='#e8c766'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-26); ctx.stroke();
+    ctx.fillStyle='rgba(240,240,240,.9)';
+    ctx.beginPath(); ctx.moveTo(0,-24); ctx.lineTo(0,-2); ctx.lineTo(-16,-2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCrown(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){
+      var g = ctx.createRadialGradient(0,0,4,0,0,60);
+      g.addColorStop(0,'rgba(255,220,120,.7)');
+      g.addColorStop(1,'rgba(255,220,120,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(0,0,60,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#e8c766';
+    ctx.beginPath();
+    ctx.moveTo(-26,10); ctx.lineTo(-26,-6); ctx.lineTo(-13,8); ctx.lineTo(0,-16);
+    ctx.lineTo(13,8); ctx.lineTo(26,-6); ctx.lineTo(26,10); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle='#c9302e';
+    ctx.beginPath(); ctx.arc(0,-6,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWater(y, h, colorA, colorB){
+    var g = ctx.createLinearGradient(0,y,0,y+h);
+    g.addColorStop(0, colorA);
+    g.addColorStop(1, colorB);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,y,BASE_W,h);
+    ctx.strokeStyle='rgba(255,255,255,.25)';
+    ctx.lineWidth=1.5;
+    for(var i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.moveTo(20+i*110, y+20+((i%2)*10));
+      ctx.quadraticCurveTo(60+i*110, y+14+((i%2)*10), 100+i*110, y+20+((i%2)*10));
+      ctx.stroke();
+    }
+  }
+
+  function centerLabel(text, y, size, color){
+    ctx.save();
+    ctx.textAlign='center';
+    ctx.font = '700 '+(size||18)+'px Segoe UI, Arial';
+    ctx.fillStyle = color || '#2b2013';
+    ctx.fillText(text, BASE_W/2, y);
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------
+     RENDER PER SCENE
+  --------------------------------------------------------- */
+  var animT = 0;
+  function render(){
+    ctx.clearRect(0,0,BASE_W,BASE_H);
+    if(state.scene < 0) return;
+    if(state.finished){ renderEnding(); return; }
+    switch(state.scene){
+      case 0: renderScene0(); break;
+      case 1: renderScene1(); break;
+      case 2: renderScene2(); break;
+      case 3: renderScene3(); break;
+      case 4: renderScene4(); break;
+      case 5: renderScene5(); break;
+      case 6: renderScene6(); break;
+      case 7: renderScene7(); break;
+    }
+  }
+
+  // Scene 0: Istana - cium wangi
+  var hotspot0 = {x:BASE_W/2, y:200, r:60};
+  function renderScene0(){
+    clear('#f3d9a3','#e8b96f');
+    drawGround('#c98a4a', 340);
+    // palace towers
+    ctx.fillStyle='#7a2e2e';
+    ctx.fillRect(90,150,60,190);
+    ctx.fillRect(490,150,60,190);
+    ctx.beginPath(); ctx.moveTo(90,150); ctx.lineTo(120,110); ctx.lineTo(150,150); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(490,150); ctx.lineTo(520,110); ctx.lineTo(550,150); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c9a227';
+    ctx.fillRect(200,180,240,160);
+    ctx.beginPath(); ctx.moveTo(190,180); ctx.lineTo(320,120); ctx.lineTo(450,180); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#5a1f1f';
+    ctx.fillRect(300,260,40,80);
+
+    // four siblings row
+    drawPerson(220,300,0.85,'#7a2e2e','#e8b98a',{sash:'#e8c766'});
+    drawPerson(280,300,0.85,'#2d5a3d','#e8b98a',{sash:'#e8c766',nose:true,noseGlow: state.sub>=1, armUp:true});
+    drawPerson(360,300,0.85,'#5a3d8a','#e8b98a',{sash:'#e8c766'});
+    drawPerson(420,300,0.85,'#a03a5e','#f0c9a0',{sash:'#e8c766'});
+
+    if(state.sub>=1){
+      // scent lines
+      ctx.strokeStyle='rgba(255,255,255,.7)';
+      ctx.lineWidth=2;
+      for(var i=0;i<3;i++){
+        var yy = 250 - i*14 - (animT%20);
+        ctx.beginPath();
+        ctx.moveTo(280+i*6,yy);
+        ctx.quadraticCurveTo(300+i*6,yy-10,280+i*6,yy-20);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Scene 1: perjalanan - tap traveler to step (tap-mash, 5 steps)
+  var STEP_TARGET = 5;
+  function renderScene1(){
+    clear('#bfe3ef','#e9d29a');
+    drawSun(560,60,34,'rgba(255,230,150,.9)');
+    drawMountain(120,320,220,140,'#7a9a6a');
+    drawMountain(300,330,260,110,'#5f8a58');
+    drawMountain(500,320,240,150,'#6f9464');
+    drawGround('#c9a862', 340);
+    // river
+    drawWater(330,20,'#7fc8de','#4fa2c2');
+
+    // progress bar
+    var progress = state.sub / STEP_TARGET;
+    ctx.fillStyle='rgba(0,0,0,.25)';
+    ctx.fillRect(60,60,BASE_W-120,14);
+    ctx.fillStyle='#e8c766';
+    ctx.fillRect(60,60,(BASE_W-120)*progress,14);
+    ctx.strokeStyle='#5a3d22'; ctx.lineWidth=2;
+    ctx.strokeRect(60,60,BASE_W-120,14);
+
+    var px = 90 + (BASE_W-180) * progress;
+    drawPerson(px,300,0.8,'#7a2e2e','#e8b98a',{sash:'#e8c766', armUp: (animT%20<10)});
+    centerLabel(state.lang==='en' ? 'Tap to walk east' : 'Ketuk untuk berjalan ke timur', 40, 14, '#3a2414');
+  }
+
+  // Scene 2: drag boat across selat
+  function renderScene2(){
+    clear('#a9d6e8','#dff0d8');
+    drawSun(80,60,30,'rgba(255,230,150,.9)');
+    drawWater(160,220,'#6fc0da','#2f7fa0');
+    // java shore
+    ctx.fillStyle='#7a9a6a';
+    ctx.beginPath(); ctx.moveTo(0,160); ctx.lineTo(0,260); ctx.lineTo(90,200); ctx.closePath(); ctx.fill();
+    centerLabel(state.lang==='en'?'Java':'Jawa', 220, 13, '#1d3d29');
+    // bali shore
+    ctx.fillStyle='#5f8a58';
+    ctx.beginPath(); ctx.moveTo(BASE_W,150); ctx.lineTo(BASE_W,270); ctx.lineTo(BASE_W-110,210); ctx.closePath(); ctx.fill();
+    ctx.save();
+    ctx.textAlign='center'; ctx.font='700 13px Segoe UI'; ctx.fillStyle='#1d3d29';
+    ctx.fillText(state.lang==='en'?'Bali':'Bali', BASE_W-70, 225);
+    ctx.restore();
+
+    var startX = 90, endX = BASE_W-100;
+    var bx = startX + (endX-startX) * state.dragProgress;
+    var by = 260 - Math.sin(state.dragProgress*Math.PI)*10;
+    drawBoat(bx,by,1);
+    if(!state.dragging && state.dragProgress===0){
+      // pulse hint circle
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,.8)';
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(startX,260,26+((animT%30)/2),0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Scene 3: Putri bungsu di Gunung Batur
+  var hotspot3 = {x:0,y:0,r:70};
+  function renderScene3(){
+    clear('#cfeaf5','#9fd6c0');
+    drawSun(560,50,28,'rgba(255,240,180,.9)');
+    drawMountain(BASE_W/2,260,320,190,'#5b7a53');
+    drawMountain(BASE_W/2,260,180,120,'#4a6a44');
+    drawGround('#7fae72',320);
+    // small lake hint
+    drawWater(320,26,'#7fc8de','#3f8fae');
+
+    var px = BASE_W/2, py = 300;
+    hotspot3.x = px; hotspot3.y = py-30; hotspot3.r = 60;
+    drawPerson(px,py,1.05,'#a03a5e','#f0c9a0',{sash:'#e8c766',armUp: state.sub>=1});
+    if(state.sub>=1){
+      centerLabel(state.lang==='en'?'She stays here \u2764':'Ia tinggal di sini \u2764', 130, 16, '#1d3d29');
+    }
+  }
+
+  // Scene 4: Kedisan - burung + pangeran ketiga -> patung
+  function renderScene4(){
+    clear('#cdeadf','#f6e6b8');
+    drawMountain(120,300,200,120,'#4a6a44');
+    drawGround('#8fae72',320);
+    drawTree(90,300,0.8,false);
+    drawTree(560,300,0.8,false);
+
+    var flap = (animT%16<8);
+    drawBird(400,150, state.sub>=2?0:1.4, flap);
+
+    if(state.sub < 2){
+      // waiting for bird tap
+    }
+
+    if(state.sub===0){
+      drawPerson(260,300,0.9,'#5a3d8a','#e8b98a',{sash:'#e8c766'});
+    } else if(state.sub>=1 && state.sub<3){
+      drawPerson(260,300,0.9,'#5a3d8a','#e8b98a',{sash:'#e8c766', armUp:true, smile:true});
+      drawPerson(340,300,0.85,'#7a2e2e','#e8b98a',{sash:'#e8c766'});
+    }
+    if(state.sub>=3){
+      drawStatue(280,300,0.9);
+      centerLabel(state.lang==='en'?'Turned to stone':'Berubah menjadi patung', 130, 15, '#3a2414');
+    }
+  }
+
+  // Scene 5: Abang Dukuh - gadis-gadis
+  function renderScene5(){
+    clear('#bfe3ef','#dff0d8');
+    drawWater(260,90,'#7fc8de','#3f8fae');
+    drawMountain(500,270,220,120,'#5b7a53');
+    drawGround('#8fae72',350);
+
+    drawPerson(150,320,0.85,'#a86a2e','#f0c9a0',{sash:'#c9a227', crown:false});
+    drawPerson(220,320,0.85,'#c98a5e','#f0c9a0',{sash:'#c9a227'});
+
+    drawPerson(420,320,0.9,'#7a2e2e','#e8b98a',{sash:'#e8c766'});
+    drawPerson(500,320,0.85,'#2d5a3d','#e8b98a',{sash:'#e8c766', armUp: state.sub>=1});
+
+    if(state.sub>=2){
+      drawHut(500,300,0.7);
+      centerLabel(state.lang==='en'?'Becomes village head':'Menjadi kepala desa', 130, 15, '#1d3d29');
+    }
+  }
+
+  // Scene 6: Pohon menyan - dewi
+  function renderScene6(){
+    clear('#e9d29a','#c9a862');
+    drawMountain(500,300,220,140,'#5b7a53');
+    drawGround('#a88a52',340);
+    drawTree(240,320,1.1, state.sub>=1);
+
+    drawPerson(420,320,0.95,'#7a2e2e','#e8b98a',{sash:'#e8c766', armUp: state.sub>=2});
+
+    if(state.sub>=1){
+      drawPerson(200,330,0.75,'#e8c766','#f6e0c0',{sash:'#c9302e', hair:'#1a1109'});
+    }
+    if(state.sub>=2){
+      centerLabel(state.lang==='en'?'He proposes to her':'Sang pangeran melamarnya', 60, 15, '#3a2414');
+    }
+  }
+
+  // Scene 7: mahkota - pemimpin
+  var hotspot7 = {x:BASE_W/2,y:150,r:60};
+  function renderScene7(){
+    clear('#f3d9a3','#c9772e');
+    drawMountain(BASE_W/2,300,320,150,'#5b7a53');
+    drawGround('#a88a52',340);
+    drawTree(120,320,0.9,false);
+    drawTree(540,320,0.9,false);
+
+    drawPerson(BASE_W/2-40,320,1,'#7a2e2e','#e8b98a',{sash:'#e8c766', crown: state.sub>=1});
+    drawPerson(BASE_W/2+40,320,0.95,'#e8c766','#f6e0c0',{sash:'#c9302e'});
+
+    drawCrown(BASE_W/2, 150, state.sub>=1?0.001:1, false);
+    if(state.sub===0){
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,.7)';
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(BASE_W/2,150,40+((animT%30)/2),0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+    if(state.sub>=1){
+      centerLabel(state.lang==='en'?'Ratu Sakti Pancering Jagat':'Ratu Sakti Pancering Jagat', 90, 15, '#3a2414');
+    }
+  }
+
+  function renderEnding(){
+    clear('#3a2414','#1d130c');
+    drawTree(BASE_W/2, 300, 1.3, true);
+    var t = T[state.lang];
+    centerLabel(t.theEnd, 100, 26, '#e8c766');
+    ctx.save();
+    ctx.textAlign='center';
+    ctx.font='13px Segoe UI';
+    ctx.fillStyle='#e8d9b0';
+    wrapText(t.endSub, BASE_W/2, 350, BASE_W-80, 18);
+    ctx.restore();
+  }
+
+  function wrapText(text,x,y,maxWidth,lineHeight){
+    var words = text.split(' ');
+    var line = '';
+    var yy = y;
+    for(var n=0;n<words.length;n++){
+      var test = line + words[n] + ' ';
+      if(ctx.measureText(test).width > maxWidth && n>0){
+        ctx.fillText(line, x, yy);
+        line = words[n]+' ';
+        yy += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line, x, yy);
+  }
+
+  /* ---------------------------------------------------------
+     ANIMATION LOOP
+  --------------------------------------------------------- */
+  function tick(){
+    animT++;
+    render();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ---------------------------------------------------------
+     INPUT HANDLING
+  --------------------------------------------------------- */
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    var scaleX = BASE_W / rect.width;
+    var scaleY = BASE_H / rect.height;
+    return { x: (clientX-rect.left)*scaleX, y: (clientY-rect.top)*scaleY };
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  function advanceOnce(fn){
+    if(state.locked) return;
+    state.locked = true;
+    fn();
+  }
+
+  function handleTap(pos){
+    if(state.finished) return;
+    switch(state.scene){
+      case 0:
+        if(state.sub===0 && dist(pos.x,pos.y,280,285)<50){
+          state.sub=1;
+          advanceOnce(function(){ advanceScene(); });
+        }
+        break;
+      case 1:
+        var px = 90 + (BASE_W-180) * (state.sub/STEP_TARGET);
+        if(dist(pos.x,pos.y,px,300)<60 && state.sub<STEP_TARGET){
+          state.sub++;
+          if(state.sub>=STEP_TARGET){
+            advanceOnce(function(){ advanceScene(); });
+          }
+        }
+        break;
+      case 3:
+        if(state.sub===0 && dist(pos.x,pos.y,hotspot3.x,hotspot3.y)<hotspot3.r){
+          state.sub=1;
+          advanceOnce(function(){ advanceScene(); });
+        }
+        break;
+      case 4:
+        if(state.sub===0 && dist(pos.x,pos.y,400,150)<60){
+          state.sub=1;
+        } else if(state.sub===1 && dist(pos.x,pos.y,260,285)<55){
+          state.sub=2;
+          setTimeout(function(){ state.sub=3; advanceOnce(function(){ advanceScene(); }); }, 500);
+        }
+        break;
+      case 5:
+        if(state.sub===0 && (dist(pos.x,pos.y,150,300)<55 || dist(pos.x,pos.y,220,300)<55)){
+          state.sub=1;
+          setTimeout(function(){ state.sub=2; advanceOnce(function(){ advanceScene(); }); }, 500);
+        }
+        break;
+      case 6:
+        if(state.sub===0 && dist(pos.x,pos.y,240,290)<70){
+          state.sub=1;
+        } else if(state.sub===1 && dist(pos.x,pos.y,200,315)<55){
+          state.sub=2;
+          advanceOnce(function(){ advanceScene(); });
+        }
+        break;
+      case 7:
+        if(state.sub===0 && dist(pos.x,pos.y,BASE_W/2,150)<60){
+          state.sub=1;
+          advanceOnce(function(){ advanceScene(); });
+        }
+        break;
+    }
+  }
+
+  function handleDown(evt){
+    if(state.scene !== 2 || state.finished) return;
+    var pos = getCanvasPos(evt);
+    var bx = 90 + (BASE_W-190) * state.dragProgress;
+    if(dist(pos.x,pos.y,bx,260) < 45 || (state.dragProgress===0 && dist(pos.x,pos.y,90,260)<45)){
+      state.dragging = true;
+      evt.preventDefault();
+    }
+  }
+  function handleMove(evt){
+    if(!state.dragging) return;
+    evt.preventDefault();
+    var pos = getCanvasPos(evt);
+    var startX=90, endX=BASE_W-100;
+    var p = (pos.x - startX) / (endX-startX);
+    p = Math.max(0, Math.min(1,p));
+    state.dragProgress = p;
+  }
+  function handleUp(evt){
+    if(state.scene !== 2) return;
+    if(state.dragging){
+      state.dragging = false;
+      if(state.dragProgress > 0.9){
+        state.dragProgress = 1;
+        advanceOnce(function(){ advanceScene(); });
+      } else if(state.dragProgress < 0.15){
+        state.dragProgress = 0;
+      }
+    }
+  }
+
+  canvas.addEventListener('click', function(evt){
+    handleTap(getCanvasPos(evt));
+  });
+  canvas.addEventListener('touchend', function(evt){
+    if(state.scene===2) return; // handled by drag
+    var pos = getCanvasPos(evt);
+    handleTap(pos);
+  }, {passive:true});
+
+  canvas.addEventListener('mousedown', handleDown);
+  canvas.addEventListener('mousemove', handleMove);
+  window.addEventListener('mouseup', handleUp);
+  canvas.addEventListener('touchstart', handleDown, {passive:false});
+  canvas.addEventListener('touchmove', handleMove, {passive:false});
+  canvas.addEventListener('touchend', handleUp);
+
+  /* ---------------------------------------------------------
+     BUTTONS
+  --------------------------------------------------------- */
+  startBtn.addEventListener('click', function(){
+    startGame();
+  });
+  replayBtn.addEventListener('click', function(){
+    restart();
+  });
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    try{ localStorage.setItem('trunyan_muted', state.muted ? '1':'0'); }catch(e){}
+    if(state.muted) stopSpeak();
+  });
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    applyStaticText();
+    updateNarrationPanel();
+    if(state.scene>=0 && !state.finished){
+      var t = T[state.lang];
+      speak(t.scenes[state.scene].narration + ' ' + t.scenes[state.scene].instruction);
+    } else if(state.finished){
+      var t2 = T[state.lang];
+      speak(t2.theEnd+'. '+t2.endSub);
+    }
+    notifyResize();
+  });
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  applyStaticText();
+  window.addEventListener('load', notifyResize);
+  setTimeout(notifyResize, 300);
+  setTimeout(notifyResize, 1000);
+
+})();
+</script>
+</body>
+</html>
