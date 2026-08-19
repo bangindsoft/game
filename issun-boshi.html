@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issun Boshi - Cerita Interaktif</title>
+<style>
+  :root{
+    --paper:#f6ead0;
+    --paper-dark:#ecd9ad;
+    --ink:#3a2b1c;
+    --red:#b3312c;
+    --red-dark:#8a231f;
+    --gold:#d9a441;
+    --gold-dark:#b7842c;
+    --green:#4c7a4c;
+    --river:#3f7896;
+    --sky1:#fbe3c0;
+    --sky2:#f3b981;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Tahoma,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    background:#fffaf0;
+    border:3px solid var(--gold-dark);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 4px 18px rgba(80,50,20,0.18);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(135deg,var(--red),var(--red-dark));
+    color:#fff8ea;
+  }
+  header h1{
+    font-size:17px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  .ctrl-group{display:flex;gap:6px;}
+  .ctrl-btn{
+    background:rgba(255,255,255,0.18);
+    border:1px solid rgba(255,255,255,0.5);
+    color:#fff8ea;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background .15s;
+  }
+  .ctrl-btn:hover{background:rgba(255,255,255,0.32);}
+  .ctrl-btn.active{background:#fff8ea;color:var(--red-dark);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  #stage{
+    display:block;
+    width:100%;
+    height:auto;
+    aspect-ratio: 8 / 5;
+  }
+  #overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:linear-gradient(160deg,rgba(30,15,10,0.72),rgba(60,25,15,0.82));
+    color:#fff8ea;
+    padding:24px;
+    gap:14px;
+  }
+  #overlay.hidden{display:none;}
+  #overlay h2{margin:0;font-size:22px;}
+  #overlay p{margin:0;font-size:14px;max-width:480px;line-height:1.5;opacity:0.95;}
+  .big-btn{
+    background:var(--gold);
+    color:#3a2b1c;
+    border:none;
+    border-radius:30px;
+    padding:12px 28px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--gold-dark);
+    transition:transform .1s;
+  }
+  .big-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gold-dark);}
+
+  #panel{
+    padding:12px 16px 6px;
+    min-height:64px;
+  }
+  #instruction{
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--red-dark);
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  #instruction::before{content:"👉";}
+  #narration{
+    font-size:13.5px;
+    color:#5a4630;
+    margin:0;
+    line-height:1.5;
+    font-style:italic;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 0 4px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#e2cfa0;
+    border:1px solid var(--gold-dark);
+    transition:background .2s, transform .2s;
+  }
+  .dot.done{background:var(--gold);}
+  .dot.current{background:var(--red);transform:scale(1.25);}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7757;
+    padding:8px 0 12px;
+    letter-spacing:0.3px;
+  }
+
+  @media (max-width:480px){
+    header h1{font-size:14px;}
+    .ctrl-btn{padding:5px 8px;font-size:11px;}
+    #overlay h2{font-size:18px;}
+    #overlay p{font-size:12.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="title-text">🎎 Issun Boshi</h1>
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="lang-btn" type="button">EN</button>
+      <button class="ctrl-btn" id="mute-btn" type="button">🔊</button>
+    </div>
+  </header>
+
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+    <div id="overlay">
+      <h2 id="overlay-title">Issun Boshi</h2>
+      <p id="overlay-text">Sebuah dongeng dari Jepang tentang pemuda kecil dengan hati yang besar.</p>
+      <button class="big-btn" id="overlay-btn" type="button">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="panel">
+    <p id="instruction"></p>
+    <p id="narration"></p>
+  </div>
+  <div id="dots"></div>
+  <footer id="footer-text">Dongeng Interaktif · Cerita Rakyat Jepang</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- language & basic setup ---------------- */
+var urlLang = new URLSearchParams(location.search).get('lang');
+var savedLang = localStorage.getItem('issunboshi-lang');
+var lang = (urlLang === 'en' || urlLang === 'id') ? urlLang : (savedLang || 'id');
+
+var savedMute = localStorage.getItem('issunboshi-muted');
+var muted = savedMute === '1';
+
+var canvas = document.getElementById('stage');
+var ctx = canvas.getContext('2d');
+var W = canvas.width, H = canvas.height;
+
+var uiText = {
+  id:{
+    title:"🎎 Issun Boshi",
+    overlayTitle:"Issun Boshi",
+    overlayText:"Sebuah dongeng dari Jepang tentang pemuda kecil setinggi ibu jari, namun memiliki keberanian yang besar.",
+    startBtn:"▶ Mulai Cerita",
+    replayBtn:"↻ Ulangi Cerita",
+    footer:"Dongeng Interaktif · Cerita Rakyat Jepang",
+    endTitle:"Tamat 🌸",
+    langBtn:"EN"
+  },
+  en:{
+    title:"🎎 Issun Boshi",
+    overlayTitle:"Issun Boshi",
+    overlayText:"A Japanese folktale about a boy no taller than a thumb, but with a heart full of courage.",
+    startBtn:"▶ Start Story",
+    replayBtn:"↻ Replay Story",
+    footer:"Interactive Folktale · Japanese Legend",
+    endTitle:"The End 🌸",
+    langBtn:"ID"
+  }
+};
+
+/* ---------------- scene data ---------------- */
+var scenes = [
+  {
+    key:"prayer",
+    narr:{id:"Di sebuah kuil kecil di Jepang, sepasang suami istri berdoa dengan khusyuk memohon dikaruniai seorang anak.",
+          en:"At a small temple in Japan, a husband and wife prayed earnestly for a child of their own."},
+    instr:{id:"Ketuk lonceng kuil untuk membantu mereka berdoa.",
+           en:"Tap the temple bell to help them pray."},
+    type:"tap"
+  },
+  {
+    key:"bush",
+    narr:{id:"Dalam perjalanan pulang, mereka mendengar suara tangisan bayi dari balik semak-semak.",
+          en:"On the way home, they heard a baby crying from behind the bushes."},
+    narr2:{id:"Ternyata seorang bayi mungil setinggi ibu jari terbaring di sana. Mereka menamainya Issun Boshi, sang biksu satu sun.",
+           en:"There lay a tiny baby, no taller than a thumb. They named him Issun Boshi, the one-inch boy."},
+    instr:{id:"Ketuk semak-semak untuk mencari sumber suara tangisan.",
+           en:"Tap the bushes to find where the crying is coming from."},
+    type:"tap"
+  },
+  {
+    key:"supplies",
+    narr:{id:"Issun Boshi tumbuh menjadi pemuda ceria yang tak pernah minder. Kini ia hendak mengembara, dan ibunya membekalinya tiga benda penting.",
+          en:"Issun Boshi grew into a cheerful young man who never felt small at heart. Now he was setting off on a journey, and his mother gave him three important things."},
+    instr:{id:"Seret mangkuk, sumpit, dan jarum ke dalam tas Issun Boshi.",
+           en:"Drag the bowl, chopsticks, and needle into Issun Boshi's bag."},
+    type:"drag"
+  },
+  {
+    key:"row",
+    narr:{id:"Dengan mangkuk sebagai perahu dan sumpit sebagai dayung, Issun Boshi berlayar menyusuri sungai menuju dunia luas.",
+          en:"With a bowl as his boat and chopsticks as his oars, Issun Boshi sailed down the river toward the wide world."},
+    instr:{id:"Tekan dan tahan tombol dayung agar perahu mangkuk terus melaju.",
+           en:"Press and hold the paddle button to keep the little boat moving."},
+    type:"hold"
+  },
+  {
+    key:"frog",
+    narr:{id:"Tiba-tiba seekor katak besar melompat dan menabrak perahunya! Issun Boshi terjatuh ke sungai.",
+          en:"Suddenly a big frog leapt and crashed into his boat! Issun Boshi tumbled into the river."},
+    instr:{id:"Ketuk berulang kali agar Issun Boshi bisa berenang ke tepi sungai.",
+           en:"Tap rapidly to help Issun Boshi swim to the riverbank."},
+    type:"mash"
+  },
+  {
+    key:"palace",
+    narr:{id:"Setelah selamat, ia menemukan istana megah. Dengan berani, Issun Boshi menghadap sang raja untuk melamar pekerjaan.",
+          en:"After reaching safety, he found a magnificent palace. Bravely, Issun Boshi approached the king to ask for a job."},
+    instr:{id:"Ketuk Issun Boshi untuk berbicara kepada raja.",
+           en:"Tap Issun Boshi to speak with the king."},
+    type:"dialogue",
+    lines:{
+      id:["\"Permisi Tuan, bolehkah aku bekerja di sini?\"","\"Aku memang kerdil, tapi kemampuan bela diriku tinggi!\"","Raja tersenyum, \"Kau akan menjadi pengawal putriku.\""],
+      en:["\"Excuse me, sir, may I work here?\"","\"I may be tiny, but my skills in combat are great!\"","The king smiled, \"You shall be my daughter's guard.\""]
+    }
+  },
+  {
+    key:"escort",
+    narr:{id:"Issun Boshi dan sang putri menjadi sahabat baik. Suatu hari, ia mengawal sang putri untuk beribadah ke kuil.",
+          en:"Issun Boshi and the princess became good friends. One day, he escorted her to worship at a temple."},
+    instr:{id:"Ketuk gerbang kuil untuk mengawal sang putri masuk.",
+           en:"Tap the temple gate to escort the princess inside."},
+    type:"tap"
+  },
+  {
+    key:"oni",
+    narr:{id:"Tiba-tiba seekor setan hijau bertongkat palu ajaib muncul dan berusaha menculik sang putri!",
+          en:"Suddenly a green oni carrying a magic hammer appeared and tried to kidnap the princess!"},
+    instr:{id:"Ketuk pedang jarum berulang kali untuk mengalahkan setan hijau.",
+           en:"Tap the needle sword rapidly to defeat the green oni."},
+    type:"mash",
+    mashTarget:14
+  },
+  {
+    key:"hammer",
+    narr:{id:"Setan hijau kabur ketakutan dan meninggalkan palu ajaibnya. Sang putri pun mengambilnya untuk membuat sebuah permintaan.",
+          en:"The frightened oni fled, leaving his magic hammer behind. The princess picked it up to make a wish."},
+    instr:{id:"Ketuk palu ajaib untuk mengabulkan permintaan sang putri.",
+           en:"Tap the magic hammer to grant the princess's wish."},
+    type:"tap"
+  }
+];
+
+var endNarr = {
+  id:"Tubuh Issun Boshi berubah menjadi manusia dewasa yang tampan! Sang raja pun merestui pernikahannya dengan sang putri. Mereka hidup bahagia selamanya.\n\nPesan cerita: jangan biarkan kekurangan menjadi penghalang untuk berbuat kebaikan.",
+  en:"Issun Boshi's body transformed into a handsome grown man! The king blessed his marriage to the princess, and they lived happily ever after.\n\nMoral: never let your shortcomings stop you from doing good."
+};
+
+/* ---------------- state ---------------- */
+var state = {
+  appState:"start", // start | playing | ended
+  sceneIndex:0,
+  locked:false,
+  dialogueStep:0,
+  mashCount:0,
+  holdProgress:0,
+  holding:false,
+  bagCount:0,
+  items:[],
+  draggingItem:null,
+  dragPos:{x:0,y:0},
+  transformT:0,
+  animT:0
+};
+
+var rafId = null;
+
+/* ---------------- DOM refs ---------------- */
+var elInstruction = document.getElementById('instruction');
+var elNarration = document.getElementById('narration');
+var elDots = document.getElementById('dots');
+var elOverlay = document.getElementById('overlay');
+var elOverlayTitle = document.getElementById('overlay-title');
+var elOverlayText = document.getElementById('overlay-text');
+var elOverlayBtn = document.getElementById('overlay-btn');
+var elLangBtn = document.getElementById('lang-btn');
+var elMuteBtn = document.getElementById('mute-btn');
+var elTitle = document.getElementById('title-text');
+var elFooter = document.getElementById('footer-text');
+
+/* build progress dots */
+function buildDots(){
+  elDots.innerHTML = "";
+  for(var i=0;i<scenes.length;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.setAttribute('data-i', i);
+    elDots.appendChild(d);
+  }
+}
+buildDots();
+
+function updateDots(){
+  var dots = elDots.querySelectorAll('.dot');
+  for(var i=0;i<dots.length;i++){
+    dots[i].classList.remove('current','done');
+    if(state.appState === 'ended'){ dots[i].classList.add('done'); continue; }
+    if(i < state.sceneIndex) dots[i].classList.add('done');
+    else if(i === state.sceneIndex && state.appState === 'playing') dots[i].classList.add('current');
+  }
+}
+
+/* ---------------- speech synthesis ---------------- */
+var voicesReady = false;
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = function(){ voicesReady = true; };
+}
+function speak(text){
+  if(muted) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = (lang === 'en') ? 'en-US' : 'id-ID';
+    utter.rate = 0.98;
+    utter.pitch = 1.05;
+    window.speechSynthesis.speak(utter);
+  }catch(e){ /* ignore */ }
+}
+function stopSpeak(){
+  if('speechSynthesis' in window){
+    try{ window.speechSynthesis.cancel(); }catch(e){}
+  }
+}
+
+/* ---------------- UI text updates ---------------- */
+function setNarration(text){
+  elNarration.textContent = text;
+  speak(text);
+}
+function setInstruction(text){
+  elInstruction.textContent = text;
+}
+function refreshStaticText(){
+  var t = uiText[lang];
+  elTitle.textContent = t.title;
+  elOverlayText.textContent = t.overlayText;
+  elFooter.textContent = t.footer;
+  elLangBtn.textContent = t.langBtn;
+  if(state.appState === 'start'){
+    elOverlayTitle.textContent = t.overlayTitle;
+    elOverlayBtn.textContent = t.startBtn;
+  } else if(state.appState === 'ended'){
+    elOverlayTitle.textContent = t.endTitle;
+    elOverlayBtn.textContent = t.replayBtn;
+  }
+  if(state.appState === 'playing'){
+    var sc = scenes[state.sceneIndex];
+    if(sc){
+      setInstruction(sc.instr[lang]);
+    }
+  }
+  document.documentElement.lang = lang;
+}
+
+/* ---------------- lang & mute toggles ---------------- */
+elLangBtn.addEventListener('click', function(){
+  lang = (lang === 'id') ? 'en' : 'id';
+  localStorage.setItem('issunboshi-lang', lang);
+  refreshStaticText();
+  // re-announce current narration in new language without re-triggering logic
+  if(state.appState === 'playing'){
+    var sc = scenes[state.sceneIndex];
+    var text = (sc.key === 'bush' && state.bushRevealed) ? sc.narr2[lang] : sc.narr[lang];
+    setNarration(text);
+  } else if(state.appState === 'ended'){
+    setNarration(endNarr[lang]);
+  }
+});
+
+function updateMuteBtn(){
+  elMuteBtn.textContent = muted ? "🔇" : "🔊";
+  elMuteBtn.classList.toggle('active', muted);
+}
+elMuteBtn.addEventListener('click', function(){
+  muted = !muted;
+  localStorage.setItem('issunboshi-muted', muted ? '1':'0');
+  updateMuteBtn();
+  if(muted) stopSpeak();
+});
+updateMuteBtn();
+
+/* ---------------- iframe auto-resize (postMessage) ---------------- */
+function reportHeight(){
+  try{
+    var h = document.getElementById('app').offsetHeight;
+    window.parent.postMessage({ type:'issunboshi-resize', height: h }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', reportHeight);
+window.addEventListener('resize', reportHeight);
+if(window.ResizeObserver){
+  var ro = new ResizeObserver(function(){ reportHeight(); });
+  ro.observe(document.getElementById('app'));
+}
+
+/* ================= DRAWING HELPERS ================= */
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawSky(top,bottom){
+  var g = ctx.createLinearGradient(0,0,0,H*0.65);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H*0.65);
+}
+
+function drawGround(color){
+  ctx.fillStyle = color || '#8fae5c';
+  ctx.beginPath();
+  ctx.moveTo(0,H*0.62);
+  ctx.quadraticCurveTo(W*0.5, H*0.58, W, H*0.63);
+  ctx.lineTo(W,H);
+  ctx.lineTo(0,H);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCloud(x,y,s){
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.ellipse(x,y,28*s,14*s,0,0,Math.PI*2);
+  ctx.ellipse(x+22*s,y+4*s,20*s,11*s,0,0,Math.PI*2);
+  ctx.ellipse(x-22*s,y+5*s,18*s,10*s,0,0,Math.PI*2);
+  ctx.fill();
+}
+
+function drawSun(x,y,r){
+  ctx.fillStyle = 'rgba(230,90,60,0.85)';
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fill();
+}
+
+// simple cute character: head + robe body
+function drawPerson(x,y,scale,opts){
+  opts = opts || {};
+  var robeColor = opts.robe || '#7a4a9b';
+  var skin = '#f0c397';
+  var hair = opts.hair || '#2b2320';
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.beginPath();
+  ctx.ellipse(0,58,26,7,0,0,Math.PI*2);
+  ctx.fill();
+  // robe
+  ctx.fillStyle = robeColor;
+  ctx.beginPath();
+  ctx.moveTo(-24,54);
+  ctx.quadraticCurveTo(-30,10,-14,-4);
+  ctx.lineTo(14,-4);
+  ctx.quadraticCurveTo(30,10,24,54);
+  ctx.closePath();
+  ctx.fill();
+  // sash
+  if(opts.sash){
+    ctx.fillStyle = opts.sash;
+    ctx.fillRect(-16,18,32,7);
+  }
+  // arms
+  ctx.strokeStyle = robeColor;
+  ctx.lineWidth = 10;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-14,4); ctx.lineTo(opts.armLOffset ? -14+opts.armLOffset[0]: -26, opts.armLOffset ? 22+opts.armLOffset[1] : 26);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(14,4); ctx.lineTo(opts.armROffset ? 14+opts.armROffset[0]: 26, opts.armROffset ? 22+opts.armROffset[1] : 26);
+  ctx.stroke();
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(0,-18,17,0,Math.PI*2);
+  ctx.fill();
+  // hair
+  ctx.fillStyle = hair;
+  ctx.beginPath();
+  ctx.arc(0,-22,17.5,Math.PI, Math.PI*2);
+  ctx.fill();
+  if(opts.crown){
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath();
+    ctx.moveTo(-14,-34); ctx.lineTo(-14,-42); ctx.lineTo(-6,-33);
+    ctx.lineTo(0,-44); ctx.lineTo(6,-33); ctx.lineTo(14,-42); ctx.lineTo(14,-34);
+    ctx.closePath();
+    ctx.fill();
+  }
+  if(opts.female){
+    ctx.strokeStyle = hair; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-16,-16); ctx.quadraticCurveTo(-22,10,-18,26); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(16,-16); ctx.quadraticCurveTo(22,10,18,26); ctx.stroke();
+  }
+  // face
+  ctx.fillStyle = '#2b2320';
+  ctx.beginPath(); ctx.arc(-6,-18,1.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6,-18,1.6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#a85a3f'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.arc(0,-12,4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawIssun(x,y,scale,opts){
+  opts = opts || {};
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(0,20,10,3,0,0,Math.PI*2); ctx.fill();
+  // robe (small)
+  ctx.fillStyle = '#3f7d6b';
+  ctx.beginPath();
+  ctx.moveTo(-8,18); ctx.quadraticCurveTo(-10,2,-5,-3);
+  ctx.lineTo(5,-3); ctx.quadraticCurveTo(10,2,8,18);
+  ctx.closePath(); ctx.fill();
+  // head
+  ctx.fillStyle = '#f0c397';
+  ctx.beginPath(); ctx.arc(0,-9,6.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#2b2320';
+  ctx.beginPath(); ctx.arc(0,-11.5,6.7,Math.PI,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2b2320';
+  ctx.beginPath(); ctx.arc(-2.4,-9,0.8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(2.4,-9,0.8,0,Math.PI*2); ctx.fill();
+  // needle sword
+  if(opts.sword){
+    ctx.strokeStyle='#c9c9c9'; ctx.lineWidth=1.4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(8,4); ctx.lineTo(20,-10); ctx.stroke();
+    ctx.strokeStyle='#8a5a2b'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(8,4); ctx.lineTo(11,1); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawTorii(x,y,s,color){
+  color = color || '#b3312c';
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle = color;
+  ctx.fillRect(-40,-10,10,90);
+  ctx.fillRect(30,-10,10,90);
+  ctx.fillRect(-52,-24,114,14);
+  ctx.fillRect(-44,-4,98,10);
+  ctx.fillStyle = '#8a231f';
+  ctx.fillRect(-52,-24,114,4);
+  ctx.restore();
+}
+
+function drawPagoda(x,y,s){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  var levels = [ [90,20,0],[70,18,-46],[50,16,-84] ];
+  ctx.fillStyle = '#c96b4a';
+  for(var i=0;i<levels.length;i++){
+    var w=levels[i][0], h=levels[i][1], yy=levels[i][2];
+    ctx.fillStyle = '#a13c30';
+    ctx.beginPath();
+    ctx.moveTo(-w/2-8, yy);
+    ctx.lineTo(w/2+8, yy);
+    ctx.lineTo(w/2-10, yy-16);
+    ctx.lineTo(-w/2+10, yy-16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e8c98a';
+    ctx.fillRect(-w/2+10, yy-16, w-20, h);
+  }
+  ctx.fillStyle='#e8c98a';
+  ctx.fillRect(-6,20,12,30);
+  ctx.restore();
+}
+
+function drawPalace(x,y,s){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle = '#e8c98a';
+  ctx.fillRect(-120,-10,240,80);
+  ctx.fillStyle = '#a13c30';
+  ctx.beginPath();
+  ctx.moveTo(-140,-10); ctx.lineTo(0,-60); ctx.lineTo(140,-10);
+  ctx.lineTo(110,-10); ctx.lineTo(0,-40); ctx.lineTo(-110,-10);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#7a2822';
+  for(var i=-90;i<=90;i+=45){
+    ctx.fillRect(i-10,10,20,50);
+  }
+  ctx.fillStyle='#d9a441';
+  ctx.fillRect(-130,-14,260,6);
+  ctx.restore();
+}
+
+function drawBushes(x,y,s,revealed){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle = '#4f8a4f';
+  for(var i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.arc(-40+i*20, 0, 22 - Math.abs(2-i)*3, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#3f7040';
+  ctx.beginPath();
+  ctx.ellipse(0,14,60,10,0,0,Math.PI*2);
+  ctx.fill();
+  if(revealed){
+    ctx.fillStyle = '#f0c397';
+    ctx.beginPath(); ctx.arc(0,-2,7,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,235,180,0.55)';
+    ctx.beginPath(); ctx.arc(0,-2,18,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBell(x,y,s,rung){
+  ctx.save();
+  ctx.translate(x,y+ (rung? Math.sin(state.animT*20)*3:0)); ctx.scale(s,s);
+  ctx.fillStyle = '#c9932f';
+  ctx.beginPath();
+  ctx.moveTo(-16,-30); ctx.lineTo(16,-30);
+  ctx.quadraticCurveTo(20,10,0,26);
+  ctx.quadraticCurveTo(-20,10,-16,-30);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle='#8a651c'; ctx.lineWidth=2;
+  ctx.stroke();
+  ctx.fillStyle='#8a651c';
+  ctx.fillRect(-3,-40,6,12);
+  ctx.restore();
+}
+
+function drawRiver(){
+  var g = ctx.createLinearGradient(0,H*0.6,0,H);
+  g.addColorStop(0,'#5a9dbd');
+  g.addColorStop(1,'#2f5d7c');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,H*0.58,W,H*0.42);
+  ctx.strokeStyle='rgba(255,255,255,0.35)';
+  ctx.lineWidth=2;
+  for(var i=0;i<6;i++){
+    var yy = H*0.65 + i*22 + Math.sin(state.animT*2+i)*3;
+    ctx.beginPath();
+    ctx.moveTo(0,yy);
+    for(var xx=0;xx<=W;xx+=40){
+      ctx.quadraticCurveTo(xx+20, yy+8, xx+40, yy);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawBowlBoat(x,y,s){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle = '#e8c98a';
+  ctx.beginPath();
+  ctx.ellipse(0,0,34,14,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#b3312c'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.ellipse(0,0,34,14,0,0,Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawFrog(x,y,s){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle='#5fa050';
+  ctx.beginPath(); ctx.ellipse(0,0,20,14,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-9,-10,7,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-10,7,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2b2320';
+  ctx.beginPath(); ctx.arc(-9,-10,2.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-10,2.6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawOni(x,y,s,hp){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(0,74,40,9,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4c7a4c';
+  ctx.beginPath();
+  ctx.moveTo(-34,70); ctx.quadraticCurveTo(-44,10,-24,-14);
+  ctx.lineTo(24,-14); ctx.quadraticCurveTo(44,10,34,70);
+  ctx.closePath(); ctx.fill();
+  // head
+  ctx.beginPath(); ctx.arc(0,-30,26,0,Math.PI*2); ctx.fill();
+  // horns
+  ctx.fillStyle='#e8dcc0';
+  ctx.beginPath(); ctx.moveTo(-14,-50); ctx.lineTo(-22,-70); ctx.lineTo(-8,-54); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(14,-50); ctx.lineTo(22,-70); ctx.lineTo(8,-54); ctx.closePath(); ctx.fill();
+  // eyes
+  ctx.fillStyle='#fff'; 
+  ctx.beginPath(); ctx.arc(-10,-32,6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(10,-32,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#b3312c';
+  ctx.beginPath(); ctx.arc(-10,-32,3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(10,-32,3,0,Math.PI*2); ctx.fill();
+  // mouth
+  ctx.strokeStyle='#2b2320'; ctx.lineWidth=2.4;
+  ctx.beginPath(); ctx.arc(0,-16,10,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+  ctx.restore();
+  // hp bar
+  ctx.save();
+  var maxHp = 14;
+  var bw = 90;
+  ctx.translate(x-bw/2, y-108);
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  rr(0,0,bw,10,5); ctx.fill();
+  ctx.fillStyle='#b3312c';
+  var pct = Math.max(0,(maxHp-hp)/maxHp);
+  rr(0,0,bw*(1-pct),10,5); ctx.fill();
+  ctx.restore();
+}
+
+function drawHammer(x,y,s,glow){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  if(glow){
+    ctx.fillStyle='rgba(255,220,120,0.5)';
+    ctx.beginPath(); ctx.arc(0,0,40,0,Math.PI*2); ctx.fill();
+  }
+  ctx.strokeStyle='#8a5a2b'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,-6); ctx.lineTo(0,30); ctx.stroke();
+  ctx.fillStyle='#d9a441';
+  rr(-20,-26,40,24,6); ctx.fill();
+  ctx.strokeStyle='#8a651c'; ctx.lineWidth=2; ctx.stroke();
+  ctx.restore();
+}
+
+function drawBag(x,y,s,count){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle = '#7a5230';
+  ctx.beginPath();
+  ctx.moveTo(-26,-6);
+  ctx.quadraticCurveTo(-30,30,0,34);
+  ctx.quadraticCurveTo(30,30,26,-6);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#5a3a1f'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-20,-6); ctx.quadraticCurveTo(0,4,20,-6); ctx.stroke();
+  ctx.fillStyle='#fff8ea'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(count+"/3", 0, 20);
+  ctx.restore();
+}
+
+function drawItemBowl(x,y,s){
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle='#e8c98a';
+  ctx.beginPath(); ctx.ellipse(0,0,20,9,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#b3312c'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.ellipse(0,0,20,9,0,0,Math.PI); ctx.stroke();
+  ctx.restore();
+}
+function drawItemChopsticks(x,y,s){
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.strokeStyle='#8a5a2b'; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-8,-18); ctx.lineTo(-2,18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(8,-18); ctx.lineTo(2,18); ctx.stroke();
+  ctx.restore();
+}
+function drawItemNeedle(x,y,s){
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.strokeStyle='#c9c9c9'; ctx.lineWidth=2.5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-14,14); ctx.lineTo(14,-14); ctx.stroke();
+  ctx.beginPath(); ctx.arc(-15,15,2.4,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+function drawButton(x,y,w,h,label,active){
+  ctx.save();
+  ctx.fillStyle = active ? '#b3312c' : '#d9a441';
+  rr(x,y,w,h,h/2); ctx.fill();
+  ctx.strokeStyle = '#8a651c'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle = '#fff8ea';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label, x+w/2, y+h/2+1);
+  ctx.restore();
+}
+
+function drawProgressBar(x,y,w,h,pct,color){
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  rr(x,y,w,h,h/2); ctx.fill();
+  ctx.fillStyle = color || '#4c9a4c';
+  rr(x,y,Math.max(h,w*pct),h,h/2); ctx.fill();
+  ctx.strokeStyle='#3a2b1c'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.restore();
+}
+
+function drawDialogueBubble(x,y,w,text){
+  ctx.save();
+  ctx.font='14px sans-serif';
+  var words = text.split(' ');
+  var lines=[]; var cur='';
+  for(var i=0;i<words.length;i++){
+    var t = cur ? cur+' '+words[i] : words[i];
+    if(ctx.measureText(t).width > w-30){ lines.push(cur); cur = words[i]; }
+    else cur = t;
+  }
+  if(cur) lines.push(cur);
+  var h = 26 + lines.length*20;
+  ctx.fillStyle='#fff8ea';
+  rr(x-w/2,y-h,w,h,12); ctx.fill();
+  ctx.strokeStyle='#b3312c'; ctx.lineWidth=2; ctx.stroke();
+  // tail
+  ctx.beginPath();
+  ctx.moveTo(x-10,y); ctx.lineTo(x+10,y); ctx.lineTo(x,y+12); ctx.closePath();
+  ctx.fillStyle='#fff8ea'; ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#3a2b1c';
+  ctx.textAlign='center';
+  for(var j=0;j<lines.length;j++){
+    ctx.fillText(lines[j], x, y-h+22+j*20);
+  }
+  ctx.restore();
+}
+
+/* ================= SCENE RENDERERS ================= */
+function renderScene0(){ // prayer
+  drawSky('#fbe3c0','#f3b981');
+  drawSun(660,90,46);
+  drawCloud(120,70,1); drawCloud(560,50,0.8);
+  drawGround('#8fae5c');
+  drawPagoda(400,H*0.62,1.1);
+  drawTorii(230,H*0.6,0.9,'#b3312c');
+  drawPerson(360, H*0.72, 1, {robe:'#5a4a8a', sash:'#d9a441'});
+  drawPerson(430, H*0.72, 1, {robe:'#8a4a5a', sash:'#d9a441', female:true});
+  drawBell(230, H*0.4, 1, state.bellRung);
+  // hit zone highlight (subtle)
+  if(!state.bellRung){
+    ctx.save();
+    ctx.strokeStyle='rgba(217,164,65,0.65)';
+    ctx.lineWidth=3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.arc(230,H*0.4,42,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function renderScene1(){ // bush
+  drawSky('#fbe3c0','#f3b981');
+  drawSun(680,80,40);
+  drawCloud(150,70,1);
+  drawGround('#8fae5c');
+  drawPerson(560, H*0.7, 0.9, {robe:'#5a4a8a', sash:'#d9a441'});
+  drawPerson(620, H*0.7, 0.9, {robe:'#8a4a5a', sash:'#d9a441', female:true});
+  drawBushes(300, H*0.68, 1.3, state.bushRevealed);
+  if(!state.bushRevealed){
+    ctx.save();
+    ctx.strokeStyle='rgba(217,164,65,0.65)';
+    ctx.lineWidth=3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.arc(300,H*0.68,70,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function renderScene2(){ // supplies drag
+  drawSky('#fbe3c0','#f3b981');
+  drawGround('#8fae5c');
+  drawPerson(150,H*0.7,1,{robe:'#8a4a5a', sash:'#d9a441', female:true});
+  drawIssun(650,H*0.72,3.2,{});
+  drawBag(650, H*0.55, 1.6, state.bagCount);
+  for(var i=0;i<state.items.length;i++){
+    var it = state.items[i];
+    if(it.placed) continue;
+    var px = (state.draggingItem===i) ? state.dragPos.x : it.x;
+    var py = (state.draggingItem===i) ? state.dragPos.y : it.y;
+    if(it.type==='bowl') drawItemBowl(px,py,1.3);
+    else if(it.type==='chopsticks') drawItemChopsticks(px,py,1.3);
+    else drawItemNeedle(px,py,1.3);
+  }
+}
+
+function renderScene3(){ // row / hold
+  drawSky('#cfe7f2','#9fcfe0');
+  drawCloud(140,70,1); drawCloud(600,50,0.7);
+  drawRiver();
+  var travel = state.holdProgress; // 0..1
+  var bx = 130 + travel*540;
+  drawBowlBoat(bx, H*0.75, 1.6);
+  drawIssun(bx, H*0.75-8, 2.6, {});
+  // paddle button
+  var bw=220,bh=54;
+  drawButton(W/2-bw/2, H-78, bw, bh, lang==='id' ? "TAHAN UNTUK MENDAYUNG" : "HOLD TO PADDLE", state.holding);
+  drawProgressBar(W/2-160,H-100,320,10, travel, '#d9a441');
+}
+
+function renderScene4(){ // frog mash
+  drawSky('#cfe7f2','#9fcfe0');
+  drawRiver();
+  var target = 16;
+  var t = Math.min(1, state.mashCount/target);
+  var bx = 120 + t*560;
+  drawFrog(bx-70, H*0.62, 1.3+Math.sin(state.animT*6)*0.05);
+  drawIssun(bx, H*0.8, 2.6, {});
+  ctx.save();
+  ctx.fillStyle='#fff8ea';
+  ctx.strokeStyle='#2f5d7c';
+  ctx.font='bold 20px sans-serif';
+  ctx.textAlign='center';
+  ctx.lineWidth=4;
+  ctx.strokeText(lang==='id'?"KETUK LAYAR!":"TAP THE SCREEN!", W/2, 60);
+  ctx.fillText(lang==='id'?"KETUK LAYAR!":"TAP THE SCREEN!", W/2, 60);
+  ctx.restore();
+  drawProgressBar(W/2-160,80,320,12, t, '#4c9a4c');
+}
+
+function renderScene5(){ // palace dialogue
+  drawSky('#fbe3c0','#f3b981');
+  drawGround('#8fae5c');
+  drawPalace(400, H*0.55, 1.05);
+  drawPerson(520,H*0.78,1.05,{robe:'#6a4a2a', sash:'#d9a441', crown:true});
+  drawIssun(300, H*0.82, 3.2, {});
+  var step = Math.min(state.dialogueStep, scenes[5].lines[lang].length-1);
+  drawDialogueBubble(300, H*0.68, 280, scenes[5].lines[lang][step]);
+  if(!state.dialogueDone){
+    ctx.save();
+    ctx.strokeStyle='rgba(217,164,65,0.65)';
+    ctx.lineWidth=3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.arc(300,H*0.82,54,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function renderScene6(){ // escort to temple
+  drawSky('#fbe3c0','#f3b981');
+  drawGround('#8fae5c');
+  drawTorii(430, H*0.58, 1.15, '#b3312c');
+  drawPerson(280,H*0.78,1,{robe:'#8a4a5a', sash:'#d9a441', female:true});
+  drawIssun(210, H*0.82, 3, {sword:true});
+  if(!state.gateOpened){
+    ctx.save();
+    ctx.strokeStyle='rgba(217,164,65,0.65)';
+    ctx.lineWidth=3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.arc(430,H*0.5,80,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function renderScene7(){ // oni battle
+  drawSky('#e3c7a0','#c98a5a');
+  drawGround('#8fae5c');
+  var target = scenes[7].mashTarget || 14;
+  var hpLeft = Math.max(0, target - state.mashCount);
+  drawOni(560, H*0.62, 1.1 + (hpLeft<=0?0:0), hpLeft);
+  drawPerson(660,H*0.86,0.85,{robe:'#8a4a5a', sash:'#d9a441', female:true});
+  var shake = state.mashCount>0 ? Math.sin(state.animT*30)*4 : 0;
+  drawIssun(280+shake, H*0.82, 3.4, {sword:true});
+  ctx.save();
+  ctx.fillStyle='#fff8ea'; ctx.strokeStyle='#7a2822'; ctx.lineWidth=4;
+  ctx.font='bold 20px sans-serif'; ctx.textAlign='center';
+  ctx.strokeText(lang==='id'?"KETUK LAYAR!":"TAP THE SCREEN!", W/2, 60);
+  ctx.fillText(lang==='id'?"KETUK LAYAR!":"TAP THE SCREEN!", W/2, 60);
+  ctx.restore();
+}
+
+function renderScene8(){ // hammer wish
+  drawSky('#fbe3c0','#f3b981');
+  drawGround('#8fae5c');
+  drawTorii(560,H*0.56,0.85,'#b3312c');
+  drawPerson(300,H*0.78,1.05,{robe:'#8a4a5a', sash:'#d9a441', female:true});
+  drawHammer(430, H*0.72, 1.6, !state.hammerUsed);
+  if(!state.hammerUsed){
+    ctx.save();
+    ctx.strokeStyle='rgba(217,164,65,0.65)';
+    ctx.lineWidth=3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.arc(430,H*0.72,50,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  var s = 3.4 * (1 - state.transformT*0.75);
+  drawIssun(430, H*0.86, Math.max(0.6,s), {});
+}
+
+function renderEnding(){
+  drawSky('#fbe3c0','#f3b981');
+  drawSun(650,80,40);
+  drawCloud(150,70,1); drawCloud(560,50,0.8);
+  drawGround('#8fae5c');
+  drawPalace(400,H*0.5,1.0);
+  drawPerson(360,H*0.8,1.15,{robe:'#4a6a9b', sash:'#d9a441'});
+  drawPerson(440,H*0.8,1.15,{robe:'#8a4a5a', sash:'#d9a441', female:true});
+  drawPerson(520,H*0.82,1.0,{robe:'#6a4a2a', sash:'#d9a441', crown:true});
+  // sparkle
+  for(var i=0;i<10;i++){
+    var ang = state.animT*1.2 + i;
+    var rx = 400 + Math.cos(ang)*160;
+    var ry = H*0.55 + Math.sin(ang*1.3)*40;
+    ctx.fillStyle='rgba(217,164,65,'+(0.4+0.3*Math.sin(ang*3))+')';
+    ctx.beginPath(); ctx.arc(rx,ry,3,0,Math.PI*2); ctx.fill();
+  }
+}
+
+var sceneRenderers = [renderScene0,renderScene1,renderScene2,renderScene3,renderScene4,renderScene5,renderScene6,renderScene7,renderScene8];
+
+/* ================= MAIN RENDER LOOP ================= */
+function render(){
+  ctx.clearRect(0,0,W,H);
+  if(state.appState === 'playing'){
+    var fn = sceneRenderers[state.sceneIndex];
+    if(fn) fn();
+  } else if(state.appState === 'ended'){
+    renderEnding();
+  } else {
+    // start state - draw scene0 background as a teaser
+    renderScene0();
+  }
+}
+
+function loop(){
+  state.animT += 0.02;
+  render();
+  rafId = requestAnimationFrame(loop);
+}
+
+/* ================= SCENE TRANSITION LOGIC ================= */
+function goToScene(i){
+  state.sceneIndex = i;
+  state.locked = false;
+  state.dialogueStep = 0;
+  state.dialogueDone = false;
+  state.mashCount = 0;
+  state.holdProgress = 0;
+  state.holding = false;
+  state.bagCount = 0;
+  state.draggingItem = null;
+  state.transformT = 0;
+  state.bellRung = false;
+  state.bushRevealed = false;
+  state.gateOpened = false;
+  state.hammerUsed = false;
+
+  if(i === 2){ setupItems(); }
+
+  updateDots();
+  var sc = scenes[i];
+  setInstruction(sc.instr[lang]);
+  setNarration(sc.narr[lang]);
+}
+
+function advanceOnce(delay){
+  if(state.locked) return;
+  state.locked = true;
+  setTimeout(function(){
+    if(state.sceneIndex + 1 < scenes.length){
+      goToScene(state.sceneIndex + 1);
+    } else {
+      endStory();
+    }
+  }, delay || 1400);
+}
+
+function endStory(){
+  state.appState = 'ended';
+  updateDots();
+  refreshStaticText();
+  setInstruction("");
+  setNarration(endNarr[lang]);
+  elOverlay.classList.remove('hidden');
+}
+
+function startStory(){
+  state.appState = 'playing';
+  elOverlay.classList.add('hidden');
+  goToScene(0);
+}
+
+elOverlayBtn.addEventListener('click', function(){
+  stopSpeak();
+  if(state.appState === 'ended'){
+    startStory();
+  } else {
+    startStory();
+  }
+});
+
+/* ================= ITEM DRAG SETUP ================= */
+function setupItems(){
+  state.items = [
+    {type:'bowl', x:120, y:130, placed:false},
+    {type:'chopsticks', x:120, y:230, placed:false},
+    {type:'needle', x:W-120, y:130, placed:false}
+  ];
+}
+
+/* ================= POINTER HANDLING ================= */
+function getCanvasPos(evt){
+  var rect = canvas.getBoundingClientRect();
+  var clientX, clientY;
+  if(evt.touches && evt.touches.length){
+    clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+  } else if(evt.changedTouches && evt.changedTouches.length){
+    clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+  } else {
+    clientX = evt.clientX; clientY = evt.clientY;
+  }
+  var scaleX = W / rect.width;
+  var scaleY = H / rect.height;
+  return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+}
+
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+var pointerActive = false;
+
+function onPointerDown(evt){
+  if(state.appState !== 'playing') return;
+  var p = getCanvasPos(evt);
+  var sc = scenes[state.sceneIndex];
+
+  if(sc.type === 'tap'){
+    handleTap(sc.key, p);
+  } else if(sc.type === 'drag'){
+    for(var i=0;i<state.items.length;i++){
+      var it = state.items[i];
+      if(it.placed) continue;
+      if(dist(p.x,p.y,it.x,it.y) < 28){
+        state.draggingItem = i;
+        state.dragPos = {x:p.x,y:p.y};
+        pointerActive = true;
+        break;
+      }
+    }
+  } else if(sc.type === 'hold'){
+    var bw=220,bh=54;
+    var bx = W/2-bw/2, by = H-78;
+    if(p.x>=bx && p.x<=bx+bw && p.y>=by && p.y<=by+bh){
+      state.holding = true;
+      pointerActive = true;
+    }
+  } else if(sc.type === 'mash'){
+    if(state.locked) return;
+    state.mashCount++;
+    var target = sc.mashTarget || 16;
+    if(state.mashCount >= target){
+      if(sc.key === 'frog'){
+        setNarration(lang==='id' ? "Issun Boshi berhasil mencapai tepi sungai dengan selamat!" : "Issun Boshi safely reached the riverbank!");
+      } else if(sc.key === 'oni'){
+        setNarration(lang==='id' ? "Setan hijau berteriak kesakitan dan kabur, meninggalkan palu ajaibnya!" : "The oni howled in pain and fled, leaving his magic hammer behind!");
+      }
+      advanceOnce(1600);
+    }
+  } else if(sc.type === 'dialogue'){
+    if(state.dialogueDone) return;
+    if(dist(p.x,p.y,300,H*0.82) < 60 || dist(p.x,p.y,300,H*0.68) < 90){
+      state.dialogueStep++;
+      var lines = sc.lines[lang];
+      if(state.dialogueStep >= lines.length){
+        state.dialogueStep = lines.length-1;
+        state.dialogueDone = true;
+        setNarration(lang==='id' ? "Sang raja mengangkat Issun Boshi sebagai pengawal pribadi sang putri." : "The king appointed Issun Boshi as the princess's personal guard.");
+        advanceOnce(1800);
+      } else {
+        speak(lines[state.dialogueStep]);
+      }
+    }
+  }
+}
+
+function handleTap(key, p){
+  if(state.locked) return;
+  if(key === 'prayer'){
+    if(dist(p.x,p.y,230,H*0.4) < 46){
+      state.bellRung = true;
+      setNarration(lang==='id' ? "Lonceng berbunyi. Semoga doa mereka terkabul." : "The bell rang. May their prayer be answered.");
+      advanceOnce(1500);
+    }
+  } else if(key === 'bush'){
+    if(dist(p.x,p.y,300,H*0.68) < 72){
+      state.bushRevealed = true;
+      setNarration(scenes[1].narr2[lang]);
+      advanceOnce(1900);
+    }
+  } else if(key === 'escort'){
+    if(dist(p.x,p.y,430,H*0.5) < 84){
+      state.gateOpened = true;
+      setNarration(lang==='id' ? "Mereka pun memasuki kuil dengan tenang." : "They entered the temple peacefully.");
+      advanceOnce(1500);
+    }
+  } else if(key === 'hammer'){
+    if(dist(p.x,p.y,430,H*0.72) < 54){
+      state.hammerUsed = true;
+      animateTransform();
+    }
+  }
+}
+
+function animateTransform(){
+  state.locked = true;
+  setNarration(lang==='id' ? "Sebuah cahaya keemasan menyelimuti Issun Boshi..." : "A golden light enveloped Issun Boshi...");
+  var start = null;
+  function step(ts){
+    if(!start) start = ts;
+    var p = Math.min(1, (ts-start)/1400);
+    state.transformT = p;
+    if(p < 1){
+      requestAnimationFrame(step);
+    } else {
+      setTimeout(function(){ endStory(); }, 600);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function onPointerMove(evt){
+  if(!pointerActive) return;
+  var p = getCanvasPos(evt);
+  var sc = scenes[state.sceneIndex];
+  if(sc.type === 'drag' && state.draggingItem !== null){
+    state.dragPos = p;
+  } else if(sc.type === 'hold'){
+    // keep holding while pointer is down; nothing else needed here
+  }
+  evt.preventDefault && evt.preventDefault();
+}
+
+function onPointerUp(evt){
+  if(state.appState !== 'playing'){ pointerActive=false; return; }
+  var sc = scenes[state.sceneIndex];
+  if(sc.type === 'drag' && state.draggingItem !== null){
+    var i = state.draggingItem;
+    var it = state.items[i];
+    var bagX = 650, bagY = H*0.55;
+    if(dist(state.dragPos.x,state.dragPos.y,bagX,bagY) < 60){
+      it.placed = true;
+      state.bagCount++;
+      if(state.bagCount === 1){
+        setNarration(lang==='id' ? "Mangkuk untuk berlayar." : "A bowl to sail with.");
+      } else if(state.bagCount === 2){
+        setNarration(lang==='id' ? "Sepasang sumpit untuk mendayung." : "A pair of chopsticks to row with.");
+      } else {
+        setNarration(lang==='id' ? "Sebuah jarum untuk dijadikan pedang. Perbekalan lengkap!" : "A needle to use as a sword. Supplies complete!");
+        advanceOnce(1700);
+      }
+    }
+    state.draggingItem = null;
+  }
+  state.holding = false;
+  pointerActive = false;
+}
+
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('touchstart', function(e){ onPointerDown(e); e.preventDefault(); }, {passive:false});
+canvas.addEventListener('touchmove', function(e){ onPointerMove(e); e.preventDefault(); }, {passive:false});
+canvas.addEventListener('touchend', function(e){ onPointerUp(e); e.preventDefault(); }, {passive:false});
+
+/* hold-to-paddle progress update inside main tick */
+function tickHold(){
+  if(state.appState === 'playing' && scenes[state.sceneIndex].type === 'hold'){
+    if(state.holding && state.holdProgress < 1){
+      state.holdProgress = Math.min(1, state.holdProgress + 0.012);
+      if(state.holdProgress >= 1 && !state.locked){
+        setNarration(lang==='id' ? "Perahu mangkuk melaju cepat menyusuri sungai!" : "The little bowl-boat sailed swiftly down the river!");
+        advanceOnce(1300);
+      }
+    }
+  }
+}
+setInterval(tickHold, 30);
+
+/* ================= INIT ================= */
+refreshStaticText();
+updateDots();
+loop();
+
+})();
+</script>
+</body>
+</html>
