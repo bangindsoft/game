@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hasil dari Sebatang Jerami</title>
+<style>
+  :root{
+    --cream:#f6ecd6;
+    --panel:#fffaf1;
+    --ink:#3e2c1c;
+    --ink-soft:#6b503a;
+    --gold:#c9932f;
+    --gold-dark:#a5741d;
+    --red:#b5382f;
+    --red-dark:#8f2c25;
+    --line:#e2d2ac;
+    --success:#4f7942;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--cream);
+    font-family:Georgia,'Noto Serif',serif;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    padding:14px 14px 18px;
+  }
+  .headerbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .title{
+    font-size:17px;
+    font-weight:700;
+    color:var(--red-dark);
+    letter-spacing:.3px;
+  }
+  .headerbtns{
+    display:flex;
+    gap:6px;
+  }
+  .iconbtn{
+    font-family:system-ui,sans-serif;
+    font-size:13px;
+    background:var(--panel);
+    border:1.5px solid var(--line);
+    color:var(--ink);
+    border-radius:8px;
+    padding:6px 9px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    line-height:1;
+  }
+  .iconbtn:active{transform:scale(.96);}
+  .iconbtn.active{
+    background:var(--gold);
+    border-color:var(--gold-dark);
+    color:#fff;
+  }
+  .stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:800/450;
+    background:#dfe9e3;
+    border-radius:14px;
+    overflow:hidden;
+    border:3px solid var(--gold-dark);
+    box-shadow:0 4px 14px rgba(60,40,10,.18);
+  }
+  #scene{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  .overlay-el{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+    font-family:system-ui,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    cursor:pointer;
+    z-index:5;
+  }
+  .tapbtn{
+    background:rgba(255,250,240,.94);
+    border:2px solid var(--gold-dark);
+    border-radius:50%;
+    width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  .tapbtn:active{transform:scale(.92);}
+  @keyframes pulse{
+    0%,100%{box-shadow:0 3px 8px rgba(0,0,0,.25),0 0 0 0 rgba(201,147,47,.5);}
+    50%{box-shadow:0 3px 8px rgba(0,0,0,.25),0 0 0 8px rgba(201,147,47,0);}
+  }
+  .taglabel{
+    background:rgba(62,44,28,.85);
+    color:#fff;
+    font-size:11px;
+    padding:2px 7px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .dropzone{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    width:88px;height:88px;
+    border-radius:16px;
+    border:3px dashed rgba(181,56,47,.55);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
+    color:var(--red-dark);
+    font-family:system-ui,sans-serif;
+    background:rgba(255,250,240,.35);
+    z-index:3;
+    pointer-events:none;
+  }
+  .dropzone.hot{
+    border-color:var(--success);
+    background:rgba(79,121,66,.18);
+  }
+  .draggable{
+    z-index:6;
+    cursor:grab;
+  }
+  .draggable.dragging{
+    cursor:grabbing;
+    z-index:10;
+  }
+  .holdwrap{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .holdbtn{
+    background:rgba(255,250,240,.94);
+    border:2px solid var(--gold-dark);
+    border-radius:50%;
+    width:78px;height:78px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
+    position:relative;
+    overflow:hidden;
+  }
+  .holdbtn .fill{
+    position:absolute;left:0;bottom:0;width:100%;height:0%;
+    background:rgba(201,147,47,.55);
+    transition:height .05s linear;
+  }
+  .holdbtn .glyph{position:relative;z-index:2;}
+  .progressbar-outer{
+    width:96px;height:8px;background:rgba(255,255,255,.5);
+    border:1px solid var(--gold-dark);border-radius:5px;overflow:hidden;
+  }
+  .progressbar-inner{height:100%;width:0%;background:var(--red);}
+  .checkburst{
+    position:absolute;
+    font-size:38px;
+    animation:pop .9s ease-out forwards;
+    pointer-events:none;
+    z-index:20;
+  }
+  @keyframes pop{
+    0%{transform:translate(-50%,-50%) scale(.3);opacity:0;}
+    30%{transform:translate(-50%,-50%) scale(1.15);opacity:1;}
+    100%{transform:translate(-50%,-70%) scale(1);opacity:0;}
+  }
+  .instruction{
+    margin-top:10px;
+    background:var(--panel);
+    border:1.5px solid var(--line);
+    border-left:5px solid var(--red);
+    border-radius:8px;
+    padding:9px 12px;
+    font-family:system-ui,sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--red-dark);
+  }
+  .narration{
+    margin-top:8px;
+    background:var(--panel);
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    padding:11px 13px;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--ink);
+    min-height:26px;
+  }
+  .controlsrow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+    gap:10px;
+  }
+  .dots{
+    display:flex;
+    gap:6px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--line);
+    border:1px solid var(--gold-dark);
+    transition:background .2s;
+  }
+  .dot.done{background:var(--gold-dark);}
+  .dot.now{background:var(--red);border-color:var(--red-dark);}
+  .mainbtn{
+    font-family:system-ui,sans-serif;
+    font-weight:700;
+    font-size:14px;
+    background:var(--red);
+    color:#fff;
+    border:none;
+    border-radius:9px;
+    padding:10px 18px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--red-dark);
+  }
+  .mainbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--red-dark);}
+  .startscreen{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,#f2e2b8,#e7c98a);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:20px;
+    z-index:30;
+  }
+  .startscreen h2{
+    margin:0 0 6px;
+    font-size:22px;
+    color:var(--red-dark);
+  }
+  .startscreen p{
+    margin:0 0 16px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    font-family:system-ui,sans-serif;
+    max-width:420px;
+  }
+  footer{
+    margin-top:14px;
+    text-align:center;
+    font-family:system-ui,sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    opacity:.7;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="headerbar">
+    <div class="title" id="titleText">Hasil dari Sebatang Jerami</div>
+    <div class="headerbtns">
+      <button class="iconbtn" id="langBtn" type="button">EN</button>
+      <button class="iconbtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="scene" width="800" height="450"></canvas>
+    <div class="startscreen" id="startScreen">
+      <h2 id="startTitle">Hasil dari Sebatang Jerami</h2>
+      <p id="startDesc">Ikuti perjalanan Taro, pemuda miskin yang mengubah nasibnya berawal dari sebatang jerami. Ketuk, tahan, dan seret untuk membantu ceritanya berjalan.</p>
+      <button class="mainbtn" id="startBtn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div class="instruction" id="instructionText"></div>
+  <div class="narration" id="narrationText"></div>
+
+  <div class="controlsrow">
+    <div class="dots" id="dots"></div>
+    <button class="mainbtn" id="replayBtn" style="display:none;" type="button">🔄 Ulangi Cerita</button>
+  </div>
+
+  <footer>Dongeng interaktif &mdash; kisah rakyat Jepang</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- language & persistence ---------- */
+var params = new URLSearchParams(location.search);
+var lang = params.get('lang') === 'en' ? 'en' : 'id';
+var muted = false;
+try{ muted = localStorage.getItem('jerami_muted') === '1'; }catch(e){}
+
+/* ---------- iframe autoresize ---------- */
+function sendHeight(){
+  var h = document.documentElement.scrollHeight;
+  try{ window.parent.postMessage({ type:'jerami-resize', height:h }, '*'); }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+if(window.ResizeObserver){
+  new ResizeObserver(sendHeight).observe(document.body);
+}
+
+/* ---------- speech ---------- */
+var synth = window.speechSynthesis;
+function speak(text){
+  if(!synth) return;
+  try{ synth.cancel(); }catch(e){}
+  if(muted || !text) return;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  synth.speak(u);
+}
+function stopSpeak(){ try{ synth && synth.cancel(); }catch(e){} }
+
+/* ---------- canvas setup ---------- */
+var canvas = document.getElementById('scene');
+var ctx = canvas.getContext('2d');
+var W = 800, H = 450;
+
+/* ================= drawing helpers ================= */
+function sky(top,bottom){
+  var g = ctx.createLinearGradient(0,0,0,H*0.72);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+}
+function ground(color, horizon){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,horizon);
+  ctx.quadraticCurveTo(W/2,horizon-14,W,horizon);
+  ctx.lineTo(W,H);
+  ctx.lineTo(0,H);
+  ctx.closePath();
+  ctx.fill();
+}
+function sun(x,y,r,color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fill();
+}
+function cloud(x,y,s,color){
+  ctx.fillStyle = color || 'rgba(255,255,255,.8)';
+  [[0,0,1],[0.5,-0.15,0.8],[-0.5,-0.1,0.75],[1,0.05,0.65],[-1,0.08,0.6]].forEach(function(p){
+    ctx.beginPath();
+    ctx.arc(x+p[0]*s, y+p[1]*s, s*0.5*p[2], 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+function tree(x,y,s,leaf){
+  ctx.fillStyle = '#7a5433';
+  ctx.fillRect(x-s*0.06, y-s*0.5, s*0.12, s*0.5);
+  ctx.fillStyle = leaf || '#5c7a3e';
+  ctx.beginPath();
+  ctx.arc(x, y-s*0.62, s*0.42, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x-s*0.28, y-s*0.48, s*0.3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x+s*0.28, y-s*0.48, s*0.3, 0, Math.PI*2);
+  ctx.fill();
+}
+
+/* --- person builder --- */
+function person(x,y,opt){
+  opt = opt || {};
+  var scale = opt.scale || 1;
+  var robe = opt.robe || '#8a6a45';
+  var robe2 = opt.robe2 || '#6f4e2f';
+  var skin = '#e8b98a';
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,.15)';
+  ctx.beginPath();
+  ctx.ellipse(0,4,26,7,0,0,Math.PI*2);
+  ctx.fill();
+  // robe body
+  ctx.fillStyle = robe;
+  ctx.beginPath();
+  ctx.moveTo(-22,0);
+  ctx.quadraticCurveTo(-26,-58,0,-64);
+  ctx.quadraticCurveTo(26,-58,22,0);
+  ctx.closePath();
+  ctx.fill();
+  // sash
+  ctx.fillStyle = robe2;
+  ctx.fillRect(-22,-30,44,9);
+  // arms
+  ctx.fillStyle = robe;
+  ctx.beginPath();
+  ctx.ellipse(-24,-30,7,20,0.3,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(24,-30,7,20,-0.3,0,Math.PI*2);
+  ctx.fill();
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(0,-74,16,0,Math.PI*2);
+  ctx.fill();
+  // hair
+  ctx.fillStyle = opt.hair || '#2b2117';
+  ctx.beginPath();
+  ctx.arc(0,-78,16.5,Math.PI,Math.PI*2);
+  ctx.fill();
+  if(opt.bun){
+    ctx.beginPath();
+    ctx.arc(0,-94,5,0,Math.PI*2);
+    ctx.fill();
+  }
+  // face
+  ctx.fillStyle = '#3e2c1c';
+  ctx.beginPath(); ctx.arc(-5,-74,1.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,-74,1.6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3e2c1c';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(0,-69,4, 0.15*Math.PI, 0.85*Math.PI);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function temple(x,y,s){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(s,s);
+  // torii gate
+  ctx.fillStyle = '#a3402f';
+  ctx.fillRect(-70,-120,10,120);
+  ctx.fillRect(60,-120,10,120);
+  ctx.fillRect(-82,-128,174,14);
+  ctx.fillRect(-70,-104,150,10);
+  // building
+  ctx.fillStyle = '#7a5433';
+  ctx.fillRect(-55,-40,110,40);
+  ctx.fillStyle = '#5c3d24';
+  ctx.beginPath();
+  ctx.moveTo(-70,-40);
+  ctx.lineTo(0,-78);
+  ctx.lineTo(70,-40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#3e2c1c';
+  ctx.fillRect(-10,-24,20,24);
+  ctx.restore();
+}
+
+function straw(x,y,scale,rot){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(rot||0);
+  ctx.scale(scale||1,scale||1);
+  ctx.strokeStyle = '#c9a94a';
+  ctx.lineWidth = 3;
+  for(var i=-2;i<=2;i++){
+    ctx.beginPath();
+    ctx.moveTo(i*3,10);
+    ctx.quadraticCurveTo(i*3+4,0,i*3+2,-16);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#8f7433';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-8,4); ctx.lineTo(8,4);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function fly(x,y,t){
+  ctx.save();
+  ctx.translate(x,y);
+  var wob = Math.sin(t*8)*3;
+  ctx.translate(wob,Math.cos(t*6)*2);
+  ctx.fillStyle = '#2b2117';
+  ctx.beginPath();
+  ctx.ellipse(0,0,6,4.5,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(220,235,255,.7)';
+  ctx.beginPath();
+  ctx.ellipse(-5,-4,6,3,0.5,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(5,-4,6,3,-0.5,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function oranges(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale||1,scale||1);
+  [[-13,0],[13,0],[0,-13]].forEach(function(p){
+    ctx.fillStyle = '#e2811f';
+    ctx.beginPath();
+    ctx.arc(p[0],p[1],11,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#4f7942';
+    ctx.beginPath();
+    ctx.arc(p[0],p[1]-10,2.4,0,Math.PI*2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function clothRoll(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale||1,scale||1);
+  var colors=['#b5382f','#c9932f','#5c7a3e'];
+  colors.forEach(function(c,i){
+    ctx.fillStyle = c;
+    ctx.fillRect(-22, -8+i*11, 44, 8);
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.fillRect(-22, -8+i*11, 44, 2);
+  });
+  ctx.restore();
+}
+
+function horse(x,y,scale,sick){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale||1,scale||1);
+  ctx.fillStyle = 'rgba(0,0,0,.15)';
+  ctx.beginPath();
+  ctx.ellipse(0,42,44,9,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = sick ? '#8a7a68' : '#6b4a2f';
+  // body
+  ctx.beginPath();
+  ctx.ellipse(0,20,42,20,0,0,Math.PI*2);
+  ctx.fill();
+  // legs
+  ctx.fillRect(-30,30,8,20);
+  ctx.fillRect(20,30,8,20);
+  // neck & head
+  ctx.beginPath();
+  ctx.moveTo(30,10);
+  ctx.quadraticCurveTo(50,-10,52,-28);
+  ctx.quadraticCurveTo(56,-34,50,-36);
+  ctx.quadraticCurveTo(40,-24,26,4);
+  ctx.closePath();
+  ctx.fill();
+  // mane
+  ctx.strokeStyle = '#3e2c1c';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(34,-2); ctx.lineTo(40,-22);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function samuraiPerson(x,y,scale){
+  person(x,y,{scale:scale,robe:'#2c3e50',robe2:'#b5382f',hair:'#111'});
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.strokeStyle = '#c9932f';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(20,-40); ctx.lineTo(34,-70);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function merchantPerson(x,y,scale){
+  person(x,y,{scale:scale,robe:'#6f4e2f',robe2:'#3e2c1c',hair:'#2b2117'});
+}
+
+function houseFinal(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#8a6a45';
+  ctx.fillRect(-60,-40,120,40);
+  ctx.fillStyle = '#5c3d24';
+  ctx.beginPath();
+  ctx.moveTo(-75,-40);
+  ctx.lineTo(0,-85);
+  ctx.lineTo(75,-40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#3e2c1c';
+  ctx.fillRect(-12,-24,24,24);
+  ctx.fillStyle = '#cfe6f5';
+  ctx.fillRect(-45,-24,16,14);
+  ctx.fillRect(28,-24,16,14);
+  ctx.restore();
+}
+
+function field(x,y,w,h,color){
+  ctx.save();
+  ctx.fillStyle = color || '#c7d98a';
+  ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle = 'rgba(90,110,50,.4)';
+  ctx.lineWidth = 2;
+  for(var i=0;i<=6;i++){
+    var yy = y + (h/6)*i;
+    ctx.beginPath();
+    ctx.moveTo(x,yy);
+    ctx.lineTo(x+w,yy);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function road(y){
+  ctx.fillStyle = '#d8c79a';
+  ctx.beginPath();
+  ctx.ellipse(W/2,y,W*0.55,26,0,0,Math.PI*2);
+  ctx.fill();
+}
+
+/* ================= text content ================= */
+var T = {
+  id:{
+    title:'Hasil dari Sebatang Jerami',
+    startTitle:'Hasil dari Sebatang Jerami',
+    startDesc:'Ikuti perjalanan Taro, pemuda miskin yang mengubah nasibnya berawal dari sebatang jerami. Ketuk, tahan, dan seret untuk membantu ceritanya berjalan.',
+    startBtn:'▶ Mulai Cerita',
+    replayBtn:'🔄 Ulangi Cerita',
+    scenes:[
+      {
+        narr:'Di sebuah desa, hiduplah pemuda miskin bernama Taro. Setiap hari ia berdoa di kuil agar hidupnya berubah menjadi sejahtera. Karena lelah berdoa, ia pun tertidur dan bermimpi mendengar suara gaib.',
+        instr:'Tekan dan tahan lentera untuk membantu Taro berdoa dengan khusyuk.'
+      },
+      {
+        narr:'Taro terbangun dan melangkah keluar kuil. Suara dalam mimpinya menyuruh ia mengambil barang pertama yang ditemukan. Ia hanya menemukan sebatang jerami tergeletak di tanah.',
+        instr:'Ketuk jerami di tanah untuk mengambilnya.'
+      },
+      {
+        narr:'Seekor lalat terbang berputar-putar mengganggu Taro. Ia pun menangkapnya dan mengikatnya pada jerami itu.',
+        instr:'Ketuk lalat berulang kali sampai berhasil ditangkap!'
+      },
+      {
+        narr:'Seorang anak kecil melihat mainan lalat-jerami Taro dan sangat menginginkannya. Ibunya menukarnya dengan tiga buah jeruk yang manis dan segar.',
+        instr:'Seret mainan lalat-jerami ke arah anak kecil untuk menukarnya.'
+      },
+      {
+        narr:'Di perjalanan, Taro bertemu nenek tua yang kehausan. Taro memberikan tiga jeruknya, dan sang nenek membalasnya dengan tiga gulung kain tenun yang indah.',
+        instr:'Seret jeruk ke arah nenek untuk memberikannya.'
+      },
+      {
+        narr:'Taro melihat seorang samurai yang kudanya terjatuh dan tak berdaya. Taro menukarkan kain tenunnya dengan kuda tersebut.',
+        instr:'Seret kain tenun ke arah samurai untuk menukarnya dengan kuda.'
+      },
+      {
+        narr:'Kuda itu lemah dan sakit. Dengan sabar, Taro merawatnya hingga sehat kembali seperti sediakala.',
+        instr:'Tekan dan tahan tombol untuk merawat kuda hingga sehat.'
+      },
+      {
+        narr:'Seorang saudagar yang sedang pindah rumah membutuhkan kuda untuk mengangkut barang-barangnya. Ia menukarkan sawah dan ladangnya dengan kuda sehat milik Taro.',
+        instr:'Seret kuda ke arah saudagar untuk menukarnya dengan sawah ladang.'
+      }
+    ],
+    ending:'Taro kini memiliki sawah dan ladang yang luas. Dengan kerja keras dan hati yang tulus, ia hidup sejahtera dan menikah dengan gadis desa yang baik hati. Semua berawal dari sebatang jerami.'
+  },
+  en:{
+    title:'What Came From a Single Straw',
+    startTitle:'What Came From a Single Straw',
+    startDesc:'Follow Taro, a poor young man whose fortune changed starting with a single piece of straw. Tap, hold, and drag to help his story unfold.',
+    startBtn:'▶ Start Story',
+    replayBtn:'🔄 Replay Story',
+    scenes:[
+      {
+        narr:'In a small village lived a poor young man named Taro. Every day he prayed at the temple, hoping his life would change for the better. Tired from praying, he fell asleep and dreamed of a mysterious voice.',
+        instr:'Press and hold the lantern to help Taro pray with devotion.'
+      },
+      {
+        narr:'Taro woke up and stepped outside the temple. The voice in his dream told him to take the first thing he found. All he found was a single straw lying on the ground.',
+        instr:'Tap the straw on the ground to pick it up.'
+      },
+      {
+        narr:'A buzzing fly kept circling around Taro, annoying him. He caught it and tied it to the straw.',
+        instr:'Tap the fly repeatedly until Taro catches it!'
+      },
+      {
+        narr:'A little child saw Taro\'s fly-and-straw toy and wanted it badly. The child\'s mother offered three sweet, fresh oranges in exchange.',
+        instr:'Drag the fly-straw toy to the child to trade it.'
+      },
+      {
+        narr:'Along the way, Taro met a thirsty old woman. He gave her his three oranges, and she rewarded him with three beautiful rolls of woven cloth.',
+        instr:'Drag the oranges to the old woman to give them to her.'
+      },
+      {
+        narr:'Taro saw a samurai whose horse had collapsed and couldn\'t get up. Taro traded his woven cloth for the horse.',
+        instr:'Drag the woven cloth to the samurai to trade it for the horse.'
+      },
+      {
+        narr:'The horse was weak and sick. Patiently, Taro nursed it back to full health.',
+        instr:'Press and hold the button to nurse the horse back to health.'
+      },
+      {
+        narr:'A merchant who was moving house needed a horse to carry his belongings. He traded his rice fields for Taro\'s healthy horse.',
+        instr:'Drag the horse to the merchant to trade it for the rice field.'
+      }
+    ],
+    ending:'Taro now owned wide rice fields. Through hard work and a sincere heart, he lived prosperously and married a kind village girl. It all began with a single straw.'
+  }
+};
+
+/* ================= state ================= */
+var sceneIndex = 0;
+var locked = false;
+var animFrame = null;
+var overlay = document.getElementById('stage');
+var startScreen = document.getElementById('startScreen');
+
+function texts(){ return T[lang]; }
+
+/* build overlay element helper */
+function addOverlay(el, xPct, yPct){
+  el.style.left = xPct + '%';
+  el.style.top = yPct + '%';
+  overlay.appendChild(el);
+  return el;
+}
+function clearOverlayElems(){
+  var els = overlay.querySelectorAll('.overlay-el, .dropzone, .checkburst');
+  els.forEach(function(e){ e.remove(); });
+}
+
+function burst(xPct,yPct,emoji){
+  var b = document.createElement('div');
+  b.className='checkburst';
+  b.style.left=xPct+'%';
+  b.style.top=yPct+'%';
+  b.textContent = emoji || '✨';
+  overlay.appendChild(b);
+  setTimeout(function(){ b.remove(); },900);
+}
+
+/* ================= UI text update ================= */
+function updateChrome(){
+  document.getElementById('titleText').textContent = texts().title;
+  document.getElementById('startTitle').textContent = texts().startTitle;
+  document.getElementById('startDesc').textContent = texts().startDesc;
+  document.getElementById('startBtn').textContent = texts().startBtn;
+  document.getElementById('replayBtn').textContent = texts().replayBtn;
+  document.getElementById('langBtn').textContent = lang === 'en' ? 'ID' : 'EN';
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  document.getElementById('muteBtn').classList.toggle('active', muted);
+  document.documentElement.lang = lang;
+}
+
+function buildDots(){
+  var wrap = document.getElementById('dots');
+  wrap.innerHTML = '';
+  var n = texts().scenes.length;
+  for(var i=0;i<n;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    wrap.appendChild(d);
+  }
+}
+function refreshDots(){
+  var dots = document.querySelectorAll('#dots .dot');
+  dots.forEach(function(d,i){
+    d.classList.remove('done','now');
+    if(i < sceneIndex) d.classList.add('done');
+    else if(i === sceneIndex) d.classList.add('now');
+  });
+}
+
+/* ================= scene render dispatch ================= */
+var flyTime = 0;
+var horsePos = {x:520,y:250};
+
+function renderBackgroundCommon(skyTop,skyBottom,groundColor,horizonY){
+  sky(skyTop,skyBottom);
+  cloud(120,60,26);
+  cloud(650,45,20);
+  sun(720,50,26,'rgba(255,225,150,.9)');
+  ground(groundColor, horizonY);
+}
+
+function drawScene(idx){
+  ctx.clearRect(0,0,W,H);
+  if(idx===0){
+    renderBackgroundCommon('#fbe3b0','#f4c96a','#c9d98f',320);
+    tree(90,330,140,'#5c7a3e');
+    tree(700,335,150,'#4a6b34');
+    temple(400,330,1.05);
+    person(400,255,{scale:1.1,robe:'#8a6a45'});
+  } else if(idx===1){
+    renderBackgroundCommon('#fcefc9','#f6da8e','#d8c79a',320);
+    tree(670,330,120,'#5c7a3e');
+    temple(120,300,0.7);
+    person(430,250,{scale:1.1,robe:'#8a6a45'});
+    straw(500,300,1.4,0.2);
+  } else if(idx===2){
+    renderBackgroundCommon('#fcefc9','#f6da8e','#d8c79a',320);
+    road(360);
+    person(400,255,{scale:1.1,robe:'#8a6a45'});
+    straw(432,290,1.2,0.1);
+    fly(520,230, flyTime);
+  } else if(idx===3){
+    renderBackgroundCommon('#fce4c6','#f6c98e','#d8c79a',330);
+    road(370);
+    person(220,260,{scale:1.05,robe:'#8a6a45'});
+    straw(255,290,0.9,0.1);
+    fly(268,272, flyTime*0.6);
+    person(560,255,{scale:1.05,robe:'#c9932f',robe2:'#8f5a2f'});
+    person(600,300,{scale:0.65,robe:'#e0a85c',hair:'#2b2117'});
+  } else if(idx===4){
+    renderBackgroundCommon('#f7e6c2','#f3cf8f','#d8c79a',335);
+    road(375);
+    person(220,260,{scale:1.05,robe:'#8a6a45'});
+    oranges(255,300,1.1);
+    person(590,260,{scale:1.0,robe:'#e7e2d0',robe2:'#a5741d',hair:'#cfcfcf',bun:true});
+  } else if(idx===5){
+    renderBackgroundCommon('#efe0c0','#e9c98a','#c7d1a0',335);
+    tree(80,335,110,'#4a6b34');
+    road(375);
+    person(220,255,{scale:1.05,robe:'#8a6a45'});
+    clothRoll(258,300,1.1);
+    samuraiPerson(580,255,1.05);
+    horse(560,340,0.9,true);
+  } else if(idx===6){
+    renderBackgroundCommon('#efe0c0','#e9c98a','#c7d1a0',340);
+    person(230,255,{scale:1.05,robe:'#8a6a45'});
+    horse(440,320,1.15,true);
+  } else if(idx===7){
+    renderBackgroundCommon('#eee0c4','#e6c886','#cdd79f',340);
+    road(378);
+    person(220,255,{scale:1.05,robe:'#8a6a45'});
+    horse(300,330,0.85,false);
+    merchantPerson(600,260,1.05);
+    ctx.save();
+    ctx.strokeStyle='#5c3d24';
+    ctx.lineWidth=4;
+    ctx.strokeRect(630,290,60,40);
+    ctx.restore();
+  } else if(idx===8){
+    renderBackgroundCommon('#d7ecd0','#bfe0b6','#a9c98d',340);
+    field(60,300,300,110,'#b8d688');
+    field(440,300,300,110,'#c3de8f');
+    houseFinal(690,300,0.8);
+    person(150,300,{scale:0.95,robe:'#8a6a45'});
+    person(200,305,{scale:0.85,robe:'#c9932f',robe2:'#b5382f',hair:'#2b2117'});
+  }
+}
+
+/* ================= scene setup logic ================= */
+function narrateAndInstruct(idx, textOverride){
+  var s = texts().scenes[idx];
+  document.getElementById('narrationText').textContent = textOverride || s.narr;
+  document.getElementById('instructionText').textContent = s.instr;
+  speak(textOverride || s.narr);
+}
+
+function advanceScene(){
+  if(locked) return;
+  locked = true;
+  clearOverlayElems();
+  sceneIndex++;
+  refreshDots();
+  if(sceneIndex >= texts().scenes.length){
+    setTimeout(showEnding, 300);
+  } else {
+    setTimeout(function(){ setupScene(sceneIndex); }, 300);
+  }
+}
+
+function setupScene(idx){
+  locked = false;
+  drawScene(idx);
+  narrateAndInstruct(idx);
+  refreshDots();
+
+  if(idx===0){
+    setupHold(50,72,'🏮', function(){
+      burst(50,72,'✨');
+      var holdEl = overlay.querySelector('.holdwrap');
+      if(holdEl) holdEl.style.pointerEvents = 'none';
+      var s2 = texts().scenes[0];
+      document.getElementById('narrationText').textContent = lang==='en'
+        ? '"Taro, take the first thing you find when you wake up. It will change your life," said the voice.'
+        : '"Taro, ambillah barang pertama yang kau temukan setelah bangun. Ia akan mengubah hidupmu," kata suara itu.';
+      speak(document.getElementById('narrationText').textContent);
+      setTimeout(advanceScene, 2600);
+    });
+  } else if(idx===1){
+    setupTap(64,68,'🌾', advanceScene);
+  } else if(idx===2){
+    setupTapMash(65,54,'🪰', 6, advanceScene);
+  } else if(idx===3){
+    setupDrag(32,60,'🌾🪰', 70,64, advanceScene);
+  } else if(idx===4){
+    setupDrag(32,68,'🍊', 74,58, advanceScene);
+  } else if(idx===5){
+    setupDrag(33,68,'🧵', 73,58, advanceScene);
+  } else if(idx===6){
+    setupHold(50,80,'🐴', advanceScene);
+  } else if(idx===7){
+    setupDrag(38,74,'🐴', 75,60, advanceScene);
+  }
+
+  sendHeight();
+}
+
+/* ---- interaction builders ---- */
+function setupTap(xPct,yPct,emoji,onDone){
+  var wrap = document.createElement('div');
+  wrap.className = 'overlay-el';
+  wrap.innerHTML = '<div class="tapbtn">'+emoji+'</div><div class="taglabel">'+(lang==='en'?'Tap':'Ketuk')+'</div>';
+  addOverlay(wrap,xPct,yPct);
+  wrap.addEventListener('click', function(){
+    if(locked) return;
+    burst(xPct,yPct,'✅');
+    onDone();
+  });
+}
+
+function setupTapMash(xPct,yPct,emoji,target,onDone){
+  var count = 0;
+  var wrap = document.createElement('div');
+  wrap.className = 'overlay-el';
+  wrap.innerHTML = '<div class="tapbtn">'+emoji+'</div><div class="taglabel">'+(lang==='en'?'Tap fast! (0/'+target+')':'Ketuk cepat! (0/'+target+')')+'</div>';
+  addOverlay(wrap,xPct,yPct);
+  var label = wrap.querySelector('.taglabel');
+  wrap.addEventListener('click', function(){
+    if(locked) return;
+    count++;
+    flyTime += 1;
+    drawScene(sceneIndex);
+    label.textContent = (lang==='en'?'Tap fast! (':'Ketuk cepat! (')+count+'/'+target+')';
+    if(count >= target){
+      burst(xPct,yPct,'🪢');
+      onDone();
+    }
+  });
+}
+
+function setupHold(xPct,yPct,emoji,onDone){
+  var wrap = document.createElement('div');
+  wrap.className = 'overlay-el holdwrap';
+  wrap.innerHTML =
+    '<div class="holdbtn"><div class="fill"></div><div class="glyph">'+emoji+'</div></div>'+
+    '<div class="taglabel">'+(lang==='en'?'Hold':'Tahan')+'</div>'+
+    '<div class="progressbar-outer"><div class="progressbar-inner"></div></div>';
+  addOverlay(wrap,xPct,yPct);
+  var fill = wrap.querySelector('.fill');
+  var bar = wrap.querySelector('.progressbar-inner');
+  var btn = wrap.querySelector('.holdbtn');
+  var holding = false, progress = 0, raf = null;
+  var DURATION = 1400;
+  var startT = 0;
+
+  function step(ts){
+    if(!holding) return;
+    if(!startT) startT = ts;
+    progress = Math.min(1, (ts-startT)/DURATION);
+    fill.style.height = (progress*100)+'%';
+    bar.style.width = (progress*100)+'%';
+    if(progress >= 1){
+      holding = false;
+      burst(xPct,yPct,'✨');
+      onDone();
+      return;
+    }
+    raf = requestAnimationFrame(step);
+  }
+  function start(e){
+    if(locked) return;
+    e.preventDefault();
+    holding = true; startT = 0;
+    raf = requestAnimationFrame(step);
+  }
+  function stop(){
+    holding = false;
+    progress = 0;
+    fill.style.height='0%';
+    bar.style.width='0%';
+    if(raf) cancelAnimationFrame(raf);
+  }
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', stop);
+  btn.addEventListener('pointerleave', stop);
+  btn.addEventListener('pointercancel', stop);
+}
+
+function setupDrag(xPct,yPct,emoji,zoneXPct,zoneYPct,onDone){
+  var zone = document.createElement('div');
+  zone.className = 'dropzone';
+  zone.style.left = zoneXPct+'%';
+  zone.style.top = zoneYPct+'%';
+  zone.textContent = lang==='en' ? 'Drop here' : 'Lepas di sini';
+  overlay.appendChild(zone);
+
+  var wrap = document.createElement('div');
+  wrap.className = 'overlay-el draggable';
+  wrap.innerHTML = '<div class="tapbtn">'+emoji+'</div><div class="taglabel">'+(lang==='en'?'Drag':'Seret')+'</div>';
+  addOverlay(wrap,xPct,yPct);
+  var btn = wrap.querySelector('.tapbtn');
+
+  var dragging = false;
+  var stageRect;
+
+  function toPct(clientX, clientY){
+    stageRect = overlay.getBoundingClientRect();
+    var x = ((clientX - stageRect.left)/stageRect.width)*100;
+    var y = ((clientY - stageRect.top)/stageRect.height)*100;
+    return {x:x,y:y};
+  }
+
+  function pointerDown(e){
+    if(locked) return;
+    dragging = true;
+    wrap.classList.add('dragging');
+    btn.setPointerCapture && btn.setPointerCapture(e.pointerId);
+  }
+  function pointerMove(e){
+    if(!dragging) return;
+    var p = toPct(e.clientX, e.clientY);
+    wrap.style.left = p.x+'%';
+    wrap.style.top = p.y+'%';
+    var dx = p.x - zoneXPct, dy = p.y - zoneYPct;
+    var dist = Math.sqrt(dx*dx+dy*dy);
+    zone.classList.toggle('hot', dist < 12);
+  }
+  function pointerUp(e){
+    if(!dragging) return;
+    dragging = false;
+    wrap.classList.remove('dragging');
+    var p = toPct(e.clientX, e.clientY);
+    var dx = p.x - zoneXPct, dy = p.y - zoneYPct;
+    var dist = Math.sqrt(dx*dx+dy*dy);
+    if(dist < 12){
+      wrap.style.left = zoneXPct+'%';
+      wrap.style.top = zoneYPct+'%';
+      zone.classList.remove('hot');
+      burst(zoneXPct,zoneYPct,'🤝');
+      setTimeout(onDone, 200);
+    } else {
+      wrap.style.left = xPct+'%';
+      wrap.style.top = yPct+'%';
+      zone.classList.remove('hot');
+    }
+  }
+  btn.addEventListener('pointerdown', pointerDown);
+  window.addEventListener('pointermove', pointerMove);
+  window.addEventListener('pointerup', pointerUp);
+}
+
+/* ================= ending ================= */
+function showEnding(){
+  clearOverlayElems();
+  drawScene(8);
+  document.getElementById('instructionText').textContent = lang==='en'
+    ? 'The story has ended. Tap "Replay Story" to hear it again.'
+    : 'Cerita telah berakhir. Ketuk "Ulangi Cerita" untuk mendengarnya kembali.';
+  document.getElementById('narrationText').textContent = texts().ending;
+  speak(texts().ending);
+  document.getElementById('replayBtn').style.display = 'inline-block';
+  refreshDots();
+  var dots = document.querySelectorAll('#dots .dot');
+  dots.forEach(function(d){ d.classList.add('done'); d.classList.remove('now'); });
+  sendHeight();
+}
+
+/* ================= fly animation loop ================= */
+function tickFly(){
+  if(sceneIndex===2 || sceneIndex===3){
+    flyTime += 0.05;
+    drawScene(sceneIndex);
+  }
+  animFrame = requestAnimationFrame(tickFly);
+}
+
+/* ================= start / replay ================= */
+function startStory(){
+  startScreen.style.display = 'none';
+  sceneIndex = 0;
+  buildDots();
+  setupScene(0);
+}
+function replayStory(){
+  stopSpeak();
+  clearOverlayElems();
+  document.getElementById('replayBtn').style.display = 'none';
+  sceneIndex = 0;
+  buildDots();
+  setupScene(0);
+}
+
+/* ================= header controls ================= */
+function toggleLang(){
+  lang = lang === 'en' ? 'id' : 'en';
+  updateChrome();
+  buildDots();
+  if(startScreen.style.display !== 'none'){
+    // still on start screen
+  } else if(document.getElementById('replayBtn').style.display === 'inline-block'){
+    showEnding();
+  } else {
+    drawScene(sceneIndex);
+    narrateAndInstruct(sceneIndex);
+    refreshDots();
+  }
+}
+function toggleMute(){
+  muted = !muted;
+  try{ localStorage.setItem('jerami_muted', muted ? '1':'0'); }catch(e){}
+  updateChrome();
+  if(muted) stopSpeak();
+}
+
+/* ================= init ================= */
+document.getElementById('startBtn').addEventListener('click', startStory);
+document.getElementById('replayBtn').addEventListener('click', replayStory);
+document.getElementById('langBtn').addEventListener('click', toggleLang);
+document.getElementById('muteBtn').addEventListener('click', toggleMute);
+
+updateChrome();
+buildDots();
+drawScene(0);
+animFrame = requestAnimationFrame(tickFly);
+sendHeight();
+
+})();
+</script>
+</body>
+</html>
