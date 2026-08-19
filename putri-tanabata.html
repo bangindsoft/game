@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Putri Tanabata - Cerita Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#0e1440;
+    --sky-mid:#1c2464;
+    --sky-glow:#3a2f6e;
+    --gold:#f4c95d;
+    --gold-soft:#f7dfa0;
+    --sakura:#e893a3;
+    --bamboo:#4f8a5b;
+    --bamboo-dark:#356144;
+    --cream:#f7f0e3;
+    --ink:#241d33;
+    --river:#5fa3c9;
+    --panel-bg:#191330;
+    --panel-edge:#352a55;
+    --danger:#d8664f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Zen Maru Gothic',-apple-system,sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg,var(--sky-top),var(--sky-mid) 55%,var(--panel-bg) 55%);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  #canvas-wrap{
+    position:relative;
+    width:100%;
+    background:var(--sky-top);
+  }
+  #game{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  #dots{
+    position:absolute;
+    top:10px;
+    left:0;
+    right:0;
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    pointer-events:none;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(247,240,227,.28);
+    transition:background .25s, transform .25s;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.25);}
+  .dot.done{background:var(--sakura);}
+
+  #topbar{
+    position:absolute;
+    top:8px;
+    right:8px;
+    display:flex;
+    gap:6px;
+  }
+  .iconbtn{
+    background:rgba(20,15,40,.55);
+    border:1px solid rgba(247,240,227,.25);
+    color:var(--cream);
+    width:34px;height:34px;
+    border-radius:50%;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s, transform .15s;
+  }
+  .iconbtn:hover{background:rgba(20,15,40,.85);}
+  .iconbtn:active{transform:scale(.92);}
+  .iconbtn.wide{width:auto;padding:0 10px;border-radius:17px;font-family:'Zen Maru Gothic';font-weight:700;font-size:12px;}
+
+  #narration-panel{
+    background:var(--panel-bg);
+    border-top:1px solid var(--panel-edge);
+    padding:14px 18px 16px;
+    min-height:120px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  #instruction{
+    color:var(--gold-soft);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.02em;
+    min-height:18px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  #instruction::before{
+    content:"👉";
+    font-size:13px;
+  }
+  #instruction:empty::before{content:"";}
+  #narration-text{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--cream);
+    min-height:44px;
+  }
+  #controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:4px;
+    flex-wrap:wrap;
+  }
+  #primaryBtn{
+    background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+    color:#332608;
+    border:none;
+    font-family:'Shippori Mincho',serif;
+    font-weight:700;
+    font-size:15px;
+    padding:10px 22px;
+    border-radius:24px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #b5892b;
+    transition:transform .12s;
+  }
+  #primaryBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #b5892b;}
+  #primaryBtn:disabled{opacity:0;pointer-events:none;}
+  #secondary-controls{display:flex;gap:8px;}
+
+  #footer{
+    text-align:center;
+    font-size:11px;
+    color:rgba(247,240,227,.4);
+    padding:8px 10px 12px;
+    background:var(--panel-bg);
+  }
+
+  .hint-pulse{animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+
+  @media (max-width:420px){
+    #narration-text{font-size:14px;}
+    #instruction{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="canvas-wrap">
+    <canvas id="game" width="1280" height="800"></canvas>
+    <div id="dots"></div>
+    <div id="topbar">
+      <button class="iconbtn wide" id="langBtn" title="Ganti bahasa / Change language">EN</button>
+      <button class="iconbtn" id="muteBtn" title="Bisukan narasi">🔊</button>
+    </div>
+  </div>
+  <div id="narration-panel">
+    <div id="instruction"></div>
+    <div id="narration-text"></div>
+    <div id="controls">
+      <button id="primaryBtn"></button>
+      <div id="secondary-controls"></div>
+    </div>
+  </div>
+  <div id="footer">Kisah rakyat Jepang, dihadirkan ulang secara interaktif ✦ Japanese folktale, retold interactively</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ I18N ============ */
+const I18N = {
+  id:{
+    start:"Mulai Cerita",
+    replay:"Ulangi Cerita",
+    continue:"Lanjutkan",
+    muteOn:"🔇", muteOff:"🔊",
+    coverTitle:"Putri Tanabata",
+    coverSub:"Cerita Rakyat Jepang",
+    scenes:[
+      {
+        // 0 cover
+        narr:"Pada zaman dahulu, hiduplah seorang pemuda yang rajin bekerja di dekat hutan dan sungai desanya. Ketuk \"Mulai Cerita\" untuk memulai petualangannya.",
+        instr:""
+      },
+      {
+        narr:"Di suatu pagi yang cerah, sang pemuda berjalan menuju hutan. Langkahnya terhenti ketika ia melihat sehelai baju indah tersangkut di tepi sungai. Itu adalah baju bidadari!",
+        instr:"Ketuk baju bidadari di tepi sungai"
+      },
+      {
+        narr:"Seorang wanita cantik menghampiri sang pemuda. \"Permisi, apakah engkau menemukan baju bidadariku?\" tanyanya cemas. Karena telah jatuh cinta pada pandangan pertama, sang pemuda berbohong.",
+        instr:"Ketuk pemuda untuk mendengar jawabannya"
+      },
+      {
+        narr:"\"Jika kamu tak bisa kembali ke kahyangan, tinggallah bersamaku. Aku akan menikahimu,\" kata sang pemuda. Sang bidadari pun setuju. Mereka menikah dan dikenal sebagai Putri Tanabata.",
+        instr:"Ketuk tombol untuk melanjutkan kisah"
+      },
+      {
+        narr:"Waktu berlalu. Suatu hari, seekor merpati bermain-main di rumah mereka dan mematuk-matuk sesuatu yang terkubur di tanah... baju bidadari itu ternyata masih tersimpan di sana!",
+        instr:"Ketuk merpati berulang kali agar ia menemukan baju bidadari"
+      },
+      {
+        narr:"Putri Tanabata pun berkata, \"Suamiku, buatlah 1000 pasang sendal jerami dan kuburkan di bawah pohon bambu. Itu syarat agar kita bisa bertemu kembali.\" Sang pemuda bekerja tanpa henti selama berbulan-bulan.",
+        instr:"Ketuk tumpukan jerami berulang-ulang untuk menganyam 1000 pasang sendal"
+      },
+      {
+        narr:"Pohon bambu itu tumbuh menjulang tinggi ke langit! Sang pemuda mulai memanjatnya sekuat tenaga menuju kahyangan untuk bertemu istrinya kembali.",
+        instr:"Tekan dan tahan gambar bambu untuk memanjat"
+      },
+      {
+        narr:"Ternyata ia hanya membuat 999 pasang sendal, kurang satu langkah untuk mencapai kahyangan! Namun dengan semangat pantang menyerah, ia berhasil meraih pucuk bambu dan memanggil istrinya.",
+        instr:"Ketuk pemuda untuk memanggil Putri Tanabata"
+      },
+      {
+        narr:"Ayah Putri Tanabata mengizinkan sang pemuda tinggal, dengan syarat menjaga kebun labu selama 3 hari tanpa memakannya. Namun cuaca sangat panas menyiksa tenggorokannya...",
+        instr:"Tekan dan tahan untuk bertahan dari panas selama 3 hari"
+      },
+      {
+        narr:"Karena kehausan yang tak tertahankan, sang pemuda akhirnya memakan sebuah labu untuk melepas dahaga.",
+        instr:"Ketuk labu untuk memakannya"
+      },
+      {
+        narr:"Dari dalam labu itu, air mengalir deras hingga menjadi sungai besar yang menggenangi kahyangan. Ayah mertuanya murka dan mengusir sang pemuda kembali ke bumi. Sungai itu memisahkan mereka selamanya — kecuali setiap tanggal 17 Juli, ketika mereka diizinkan bertemu kembali. Hikmahnya: jangan melanggar janji, karena akibatnya bisa memisahkan apa yang paling kita cintai.",
+        instr:""
+      }
+    ]
+  },
+  en:{
+    start:"Start Story",
+    replay:"Replay Story",
+    continue:"Continue",
+    muteOn:"🔇", muteOff:"🔊",
+    coverTitle:"Princess Tanabata",
+    coverSub:"A Japanese Folktale",
+    scenes:[
+      {
+        narr:"Long ago, a hardworking young man lived near a forest and a river in his village. Tap \"Start Story\" to begin his adventure.",
+        instr:""
+      },
+      {
+        narr:"On a bright morning, the young man walked toward the forest. He stopped when he spotted a beautiful robe caught by the riverbank. It was a celestial maiden's robe!",
+        instr:"Tap the celestial robe by the river"
+      },
+      {
+        narr:"A lovely woman approached him. \"Excuse me, have you seen my celestial robe?\" she asked anxiously. Having fallen in love at first sight, the young man lied to her.",
+        instr:"Tap the young man to hear his answer"
+      },
+      {
+        narr:"\"If you cannot return to the heavens, stay with me. I will marry you,\" said the young man. The maiden agreed. They married and she became known as Princess Tanabata.",
+        instr:"Tap the button to continue the story"
+      },
+      {
+        narr:"Time passed. One day, a dove played around their home and pecked at something buried in the ground... the celestial robe had been hidden there all along!",
+        instr:"Tap the dove repeatedly to help it find the robe"
+      },
+      {
+        narr:"Princess Tanabata said, \"My husband, weave 1000 pairs of straw sandals and bury them beneath a bamboo tree. That is the condition for us to meet again.\" He worked tirelessly for months.",
+        instr:"Tap the straw pile repeatedly to weave 1000 pairs of sandals"
+      },
+      {
+        narr:"The bamboo tree grew and grew, soaring into the sky! The young man began climbing with all his strength, hoping to reach the heavens and see his wife again.",
+        instr:"Press and hold the bamboo to climb"
+      },
+      {
+        narr:"It turned out he had only made 999 pairs — one step short of reaching the heavens! But with unyielding spirit, he reached the very top and called out to his wife.",
+        instr:"Tap the young man to call out to Princess Tanabata"
+      },
+      {
+        narr:"Princess Tanabata's father allowed the young man to stay, on one condition: guard the pumpkin field for 3 days without eating any. But the scorching heat tormented his throat...",
+        instr:"Press and hold to endure the heat for 3 days"
+      },
+      {
+        narr:"Overcome by unbearable thirst, the young man finally ate one of the pumpkins to quench it.",
+        instr:"Tap the pumpkin to eat it"
+      },
+      {
+        narr:"Water gushed out from within the pumpkin, forming a great river that flooded the heavens. His father-in-law, furious, banished him back to earth. That river separates them forever — except on July 17th each year, when they are allowed to meet again. The lesson: never break a promise, for it may separate you from what you love most.",
+        instr:""
+      }
+    ]
+  }
+};
+
+/* ============ STATE ============ */
+const state = {
+  lang: (new URLSearchParams(location.search).get('lang') === 'en') ? 'en' : 'id',
+  muted: localStorage.getItem('tanabata_muted') === '1',
+  scene: 0,
+  locked: false,
+  peckCount: 0,
+  peckNeeded: 8,
+  weaveCount: 0,
+  weaveNeeded: 1000,
+  weaveStep: 45,
+  climbProgress: 0,
+  climbHolding: false,
+  climbNearTop: false,
+  enduranceDay: 1,
+  enduranceProgress: 0,
+  enduranceHolding: false,
+  enduranceMaxDay: 3,
+  floodLevel: 0,
+  t: 0,
+  robeFound: false,
+  doveX: 0.62, doveDir: 1
+};
+
+const TOTAL_STORY_SCENES = 9; // scenes 1..9 shown as dots (cover excluded)
+
+/* ============ DOM ============ */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const dotsWrap = document.getElementById('dots');
+const instrEl = document.getElementById('instruction');
+const narrEl = document.getElementById('narration-text');
+const primaryBtn = document.getElementById('primaryBtn');
+const secondaryControls = document.getElementById('secondary-controls');
+const muteBtn = document.getElementById('muteBtn');
+const langBtn = document.getElementById('langBtn');
+
+/* ============ DOTS ============ */
+function buildDots(){
+  dotsWrap.innerHTML = '';
+  for(let i=1;i<=TOTAL_STORY_SCENES;i++){
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.idx = i;
+    dotsWrap.appendChild(d);
+  }
+}
+function updateDots(){
+  const children = dotsWrap.children;
+  for(let i=0;i<children.length;i++){
+    const idx = i+1;
+    children[i].classList.toggle('active', idx === state.scene);
+    children[i].classList.toggle('done', idx < state.scene);
+  }
+}
+buildDots();
+
+/* ============ SPEECH ============ */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices ? speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(lang){
+  const target = lang === 'en' ? 'en' : 'id';
+  let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(target));
+  if(!v && target === 'id') v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+  return v || null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if(state.muted || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+  const v = pickVoice(state.lang);
+  if(v) u.voice = v;
+  u.rate = 0.95;
+  u.pitch = 1.02;
+  speechSynthesis.speak(u);
+}
+
+/* ============ RESIZE / IFRAME AUTORESIZE ============ */
+function fitCanvas(){
+  const wrap = document.getElementById('canvas-wrap');
+  const cssWidth = wrap.clientWidth;
+  const ratio = 800/1280;
+  canvas.style.height = (cssWidth*ratio) + 'px';
+}
+function notifyHeight(){
+  requestAnimationFrame(()=>{
+    const h = document.getElementById('app').offsetHeight;
+    try{
+      window.parent.postMessage({ type:'tanabata-resize', height:h }, '*');
+    }catch(e){}
+  });
+}
+window.addEventListener('resize', ()=>{ fitCanvas(); notifyHeight(); });
+fitCanvas();
+
+/* ============ HELPERS ============ */
+function T(){ return I18N[state.lang]; }
+function sceneData(i){ return T().scenes[i]; }
+
+function setUIForScene(){
+  const d = sceneData(state.scene);
+  instrEl.textContent = d.instr || '';
+  instrEl.classList.toggle('hint-pulse', !!d.instr);
+  narrEl.textContent = d.narr;
+
+  secondaryControls.innerHTML = '';
+  primaryBtn.style.visibility = 'hidden';
+
+  if(state.scene === 0){
+    primaryBtn.textContent = T().start;
+    primaryBtn.style.visibility = 'visible';
+    primaryBtn.onclick = () => { advanceOnce(); };
+  } else if(state.scene === TOTAL_STORY_SCENES+1){
+    primaryBtn.textContent = T().replay;
+    primaryBtn.style.visibility = 'visible';
+    primaryBtn.onclick = () => { restart(); };
+  } else if(state.scene === 3){
+    // simple continue narrative scene
+    primaryBtn.textContent = T().continue;
+    primaryBtn.style.visibility = 'visible';
+    primaryBtn.onclick = () => { advanceOnce(); };
+  }
+
+  updateDots();
+  speak(d.narr);
+  notifyHeight();
+}
+
+function advanceOnce(){
+  if(state.locked) return;
+  state.locked = true;
+  state.scene++;
+  resetSceneMechanics();
+  setUIForScene();
+  setTimeout(()=>{ state.locked = false; }, 350);
+}
+
+function resetSceneMechanics(){
+  if(state.scene === 4){ state.peckCount = 0; state.doveX = 0.62; state.doveDir = 1; }
+  if(state.scene === 5){ state.weaveCount = 0; }
+  if(state.scene === 6){ state.climbProgress = 0; state.climbNearTop = false; }
+  if(state.scene === 8){ state.enduranceDay = 1; state.enduranceProgress = 0; }
+  if(state.scene === 9){ state.floodLevel = 0; }
+}
+
+function restart(){
+  state.scene = 0;
+  state.locked = false;
+  state.robeFound = false;
+  resetSceneMechanics();
+  setUIForScene();
+}
+
+/* ============ MUTE / LANG ============ */
+function refreshMuteBtn(){
+  muteBtn.textContent = state.muted ? T().muteOn : T().muteOff;
+  muteBtn.title = state.muted ? 'Aktifkan narasi' : 'Bisukan narasi';
+}
+muteBtn.addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  localStorage.setItem('tanabata_muted', state.muted ? '1':'0');
+  refreshMuteBtn();
+  if(state.muted) speechSynthesis.cancel();
+  else speak(sceneData(state.scene).narr);
+});
+langBtn.addEventListener('click', ()=>{
+  state.lang = state.lang === 'id' ? 'en' : 'id';
+  langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+  refreshMuteBtn();
+  setUIForScene();
+});
+langBtn.textContent = state.lang === 'id' ? 'EN' : 'ID';
+refreshMuteBtn();
+
+/* ============ POINTER HANDLING ============ */
+function getPos(evt){
+  const rect = canvas.getBoundingClientRect();
+  const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+  const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+  return { x: (cx/rect.width)*1280, y: (cy/rect.height)*800 };
+}
+
+let holding = false;
+canvas.addEventListener('pointerdown', (e)=>{
+  const p = getPos(e);
+  holding = true;
+  handleDown(p);
+});
+canvas.addEventListener('pointerup', ()=>{ holding = false; handleUp(); });
+canvas.addEventListener('pointerleave', ()=>{ holding = false; handleUp(); });
+canvas.addEventListener('pointermove', (e)=>{ if(holding){ /* used only for hold scenes via loop */ } });
+
+function inRect(p, rect){
+  return p.x>=rect.x && p.x<=rect.x+rect.w && p.y>=rect.y && p.y<=rect.y+rect.h;
+}
+function dist(p,x,y){ return Math.hypot(p.x-x,p.y-y); }
+
+function handleDown(p){
+  if(state.locked) return;
+  switch(state.scene){
+    case 1: // find robe
+      if(dist(p, 860, 560) < 90){ state.robeFound = true; advanceOnce(); }
+      break;
+    case 2: // tap young man to answer
+      if(inRect(p, {x:420,y:330,w:220,h:340})){ advanceOnce(); }
+      break;
+    case 4: // dove tap-mash
+      if(dist(p, doveScreenX(), 430) < 80){
+        state.peckCount++;
+        if(state.peckCount >= state.peckNeeded){ advanceOnce(); }
+      }
+      break;
+    case 5: // weave sandals
+      if(inRect(p, {x:480,y:430,w:320,h:220})){
+        state.weaveCount = Math.min(state.weaveNeeded, state.weaveCount + state.weaveStep);
+        if(state.weaveCount >= state.weaveNeeded){ advanceOnce(); }
+      }
+      break;
+    case 6: // press-hold climb bamboo
+      if(inRect(p, {x:520,y:120,w:240,h:640})){ state.climbHolding = true; }
+      break;
+    case 7: // tap young man to call
+      if(inRect(p, {x:560,y:380,w:200,h:300})){ advanceOnce(); }
+      break;
+    case 8: // press-hold endure heat
+      if(inRect(p, {x:440,y:520,w:400,h:150})){ state.enduranceHolding = true; }
+      break;
+    case 9: // tap pumpkin to eat
+      if(dist(p, 640, 560) < 100){ advanceOnce(); }
+      break;
+  }
+}
+function handleUp(){
+  state.climbHolding = false;
+  state.enduranceHolding = false;
+}
+function doveScreenX(){ return state.doveX * 1280; }
+
+/* ============ DRAWING ============ */
+function bgGradient(){
+  const g = ctx.createLinearGradient(0,0,0,800);
+  g.addColorStop(0,'#0e1440');
+  g.addColorStop(0.55,'#1c2464');
+  g.addColorStop(1,'#2a2456');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,1280,800);
+}
+function drawStars(count, speedFactor){
+  ctx.save();
+  for(let i=0;i<count;i++){
+    const sx = (i*97 % 1280);
+    const sy = (i*53 % 500);
+    const tw = 0.5 + 0.5*Math.sin(state.t*0.002*speedFactor + i);
+    ctx.globalAlpha = 0.25 + 0.5*tw;
+    ctx.fillStyle = '#f7dfa0';
+    const r = (i%5===0)?1.8:1;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawMoon(x,y,r){
+  ctx.save();
+  ctx.fillStyle = '#f7dfa0';
+  ctx.shadowColor = 'rgba(247,223,160,.6)';
+  ctx.shadowBlur = 40;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawGround(color){
+  ctx.fillStyle = color || '#2c4a34';
+  ctx.beginPath();
+  ctx.moveTo(0,650);
+  ctx.quadraticCurveTo(640,600,1280,650);
+  ctx.lineTo(1280,800); ctx.lineTo(0,800);
+  ctx.closePath(); ctx.fill();
+}
+function drawRiver(){
+  ctx.save();
+  ctx.fillStyle = '#3f7fa6';
+  ctx.beginPath();
+  ctx.moveTo(700,800);
+  ctx.quadraticCurveTo(880,620,780,430);
+  ctx.quadraticCurveTo(690,300,760,150);
+  ctx.lineTo(980,150);
+  ctx.quadraticCurveTo(900,320,1000,470);
+  ctx.quadraticCurveTo(1100,630,1000,800);
+  ctx.closePath();
+  ctx.globalAlpha = 0.85;
+  ctx.fill();
+  ctx.restore();
+  // shimmer
+  ctx.save();
+  ctx.strokeStyle='rgba(247,240,227,.35)';
+  ctx.lineWidth=2;
+  for(let i=0;i<5;i++){
+    const yy = 200 + i*110 + Math.sin(state.t*0.002+i)*6;
+    ctx.beginPath();
+    ctx.moveTo(760+i*10, yy);
+    ctx.lineTo(830+i*10, yy);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawTree(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#3d2c22';
+  ctx.fillRect(-14,-10,28,140);
+  ctx.fillStyle = '#3a6b45';
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.ellipse(0,-30-i*55, 90-i*15, 60-i*8, 0,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawPerson(x,y,scale,opts){
+  opts = opts||{};
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.beginPath(); ctx.ellipse(0,175,45,12,0,0,Math.PI*2); ctx.fill();
+  // legs
+  ctx.fillStyle = opts.legColor || '#2c3a52';
+  ctx.fillRect(-24,90,18,80);
+  ctx.fillRect(6,90,18,80);
+  // robe/body
+  ctx.fillStyle = opts.bodyColor || '#7a5a3a';
+  ctx.beginPath();
+  ctx.moveTo(-40,90);
+  ctx.quadraticCurveTo(0,60,40,90);
+  ctx.lineTo(34,10);
+  ctx.quadraticCurveTo(0,-10,-34,10);
+  ctx.closePath();
+  ctx.fill();
+  if(opts.sash){
+    ctx.fillStyle = opts.sash;
+    ctx.fillRect(-34,40,68,14);
+  }
+  // arms
+  ctx.strokeStyle = opts.bodyColor || '#7a5a3a';
+  ctx.lineWidth = 16;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-30,20); ctx.lineTo(opts.armOutL ? -70 : -46, opts.armOutL ? -10 : 50);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(30,20); ctx.lineTo(opts.armOutR ? 70 : 46, opts.armOutR ? -10 : 50);
+  ctx.stroke();
+  // head
+  ctx.fillStyle = '#e9c6a0';
+  ctx.beginPath(); ctx.arc(0,-25,30,0,Math.PI*2); ctx.fill();
+  // hair
+  ctx.fillStyle = opts.hair || '#231b16';
+  ctx.beginPath();
+  ctx.arc(0,-32,31,Math.PI,Math.PI*2);
+  ctx.fill();
+  if(opts.female){
+    ctx.beginPath();
+    ctx.moveTo(-30,-32); ctx.quadraticCurveTo(-34,10,-20,20);
+    ctx.quadraticCurveTo(-30,-10,-30,-32);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(30,-32); ctx.quadraticCurveTo(34,10,20,20);
+    ctx.quadraticCurveTo(30,-10,30,-32);
+    ctx.fill();
+  }
+  // face
+  ctx.fillStyle = '#241d33';
+  ctx.beginPath(); ctx.arc(-9,-25,2.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-25,2.6,0,Math.PI*2); ctx.fill();
+  if(opts.mouthOpen){
+    ctx.beginPath(); ctx.ellipse(0,-14,5,7,0,0,Math.PI*2); ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(-7,-14); ctx.quadraticCurveTo(0,-9,7,-14);
+    ctx.strokeStyle='#241d33'; ctx.lineWidth=2.2; ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawRobe(x,y,glow){
+  ctx.save();
+  ctx.translate(x,y);
+  if(glow){
+    ctx.shadowColor='rgba(247,223,160,.9)';
+    ctx.shadowBlur = 25 + 8*Math.sin(state.t*0.005);
+  }
+  ctx.fillStyle = '#e3c8ea';
+  ctx.beginPath();
+  ctx.moveTo(-38,-30); ctx.quadraticCurveTo(0,-50,38,-30);
+  ctx.lineTo(30,45); ctx.quadraticCurveTo(0,60,-30,45);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#f7dfa0';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+}
+function drawDove(x,y,flap){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = '#eef0f5';
+  ctx.beginPath(); ctx.ellipse(0,0,26,18,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(22,-8,10,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e0a24a';
+  ctx.beginPath(); ctx.moveTo(32,-8); ctx.lineTo(42,-5); ctx.lineTo(32,-2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#d8dde6';
+  const wingY = flap ? -6 : 6;
+  ctx.beginPath();
+  ctx.ellipse(-6,wingY,20,10,-0.3,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#241d33';
+  ctx.beginPath(); ctx.arc(26,-10,1.8,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawMound(x,y,dug){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = '#5a4530';
+  ctx.beginPath();
+  ctx.ellipse(0,0,70,dug?18:26,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+function drawStrawPile(x,y,pressed){
+  ctx.save();
+  ctx.translate(x,y+ (pressed?4:0));
+  ctx.fillStyle = '#c9a24a';
+  for(let i=0;i<7;i++){
+    ctx.save();
+    ctx.rotate((i-3)*0.18);
+    ctx.fillRect(-3,-70,6,140);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawSandalCounter(x,y,val,needed){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle='rgba(25,19,48,.55)';
+  ctx.fillRect(-120,-28,240,56);
+  ctx.strokeStyle='var(--gold)';
+  ctx.fillStyle='#f7dfa0';
+  ctx.font='700 22px Zen Maru Gothic, sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(val + ' / ' + needed, 0, 0);
+  ctx.restore();
+}
+function drawBambooStalk(x, topY, baseY, sway){
+  ctx.save();
+  ctx.strokeStyle = '#4f8a5b';
+  ctx.lineWidth = 26;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(x, baseY);
+  ctx.quadraticCurveTo(x+sway, (baseY+topY)/2, x, topY);
+  ctx.stroke();
+  // segments
+  ctx.strokeStyle = '#356144';
+  ctx.lineWidth = 4;
+  const segs = 10;
+  for(let i=1;i<segs;i++){
+    const yy = baseY + (topY-baseY)*(i/segs);
+    const xx = x + sway * Math.sin((i/segs)*Math.PI);
+    ctx.beginPath();
+    ctx.moveTo(xx-13,yy); ctx.lineTo(xx+13,yy);
+    ctx.stroke();
+  }
+  // leaves
+  ctx.fillStyle='#5fa06c';
+  for(let i=0;i<6;i++){
+    const yy = topY + i*40;
+    const xx = x + sway*Math.sin(i);
+    ctx.save();
+    ctx.translate(xx,yy);
+    ctx.rotate((i%2===0? -0.6:0.6));
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,9,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawPumpkin(x,y,r,glow){
+  ctx.save();
+  ctx.translate(x,y);
+  if(glow){ ctx.shadowColor='rgba(230,140,60,.8)'; ctx.shadowBlur=25; }
+  ctx.fillStyle = '#e0803a';
+  for(let i=-2;i<=2;i++){
+    ctx.beginPath();
+    ctx.ellipse(i*(r*0.32), 0, r*0.42, r, 0,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle='#6b4a2a';
+  ctx.fillRect(-5,-r-14,10,18);
+  ctx.restore();
+}
+function drawProgressBar(x,y,w,h,pct,color){
+  ctx.save();
+  ctx.fillStyle='rgba(25,19,48,.55)';
+  roundRect(x,y,w,h,h/2); ctx.fill();
+  ctx.fillStyle = color || '#f4c95d';
+  const fw = Math.max(h, w*Math.min(1,pct));
+  ctx.save();
+  ctx.beginPath();
+  roundRectPath(x,y,w,h,h/2);
+  ctx.clip();
+  ctx.fillRect(x,y,fw,h);
+  ctx.restore();
+  ctx.restore();
+}
+function roundRectPath(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function roundRect(x,y,w,h,r){ roundRectPath(x,y,w,h,r); }
+function drawFlood(level){
+  if(level<=0) return;
+  ctx.save();
+  ctx.fillStyle='rgba(63,127,166,.85)';
+  const h = 800*level;
+  ctx.fillRect(0,800-h,1280,h);
+  ctx.strokeStyle='rgba(247,240,227,.4)';
+  ctx.lineWidth=3;
+  for(let i=0;i<6;i++){
+    ctx.beginPath();
+    const yy = 800-h+ (i*14)%h;
+    ctx.moveTo(0,yy); ctx.quadraticCurveTo(320,yy-10,640,yy); ctx.quadraticCurveTo(960,yy+10,1280,yy);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function label(text,x,y,size,color,align){
+  ctx.save();
+  ctx.font = (size||18)+'px "Shippori Mincho", serif';
+  ctx.fillStyle = color || '#f7f0e3';
+  ctx.textAlign = align || 'center';
+  ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+/* ============ SCENE RENDERERS ============ */
+function renderScene(){
+  ctx.clearRect(0,0,1280,800);
+  bgGradient();
+  drawStars(70,1);
+
+  switch(state.scene){
+    case 0: renderCover(); break;
+    case 1: renderScene1(); break;
+    case 2: renderScene2(); break;
+    case 3: renderScene3(); break;
+    case 4: renderScene4(); break;
+    case 5: renderScene5(); break;
+    case 6: renderScene6(); break;
+    case 7: renderScene7(); break;
+    case 8: renderScene8(); break;
+    case 9: renderScene9(); break;
+    case 10: renderScene10(); break;
+  }
+}
+
+function renderCover(){
+  drawMoon(1050,150,70);
+  drawGround('#2c4a34');
+  drawTree(180,660,1.1);
+  drawTree(1120,680,1.3);
+  drawPerson(640,560,1.15,{bodyColor:'#7a5a3a',sash:'#c94c4c'});
+  label(T().coverTitle, 640, 210, 56, '#f4c95d');
+  label(T().coverSub, 640, 260, 22, '#e893a3');
+}
+
+function renderScene1(){
+  drawMoon(1080,110,50);
+  drawGround('#28472f');
+  drawRiver();
+  drawTree(140,640,1.0);
+  drawTree(1150,660,0.9);
+  drawPerson(320,600,1.05,{bodyColor:'#5c6b8a',sash:'#c94c4c'});
+  const pulse = 1 + 0.06*Math.sin(state.t*0.006);
+  ctx.save();
+  ctx.translate(860,560); ctx.scale(pulse,pulse); ctx.translate(-860,-560);
+  drawRobe(860,560,true);
+  ctx.restore();
+}
+
+function renderScene2(){
+  drawGround('#28472f');
+  drawTree(100,650,0.9);
+  drawTree(1180,650,0.9);
+  drawPerson(500,570,1.15,{bodyColor:'#5c6b8a',sash:'#c94c4c', armOutR:true});
+  drawPerson(760,540,1.15,{bodyColor:'#e893a3',hair:'#3a2b20', sash:'#f4c95d', female:true, armOutL:true});
+  // speech bubble
+  const bx=470, by=140, bw=420, bh=130;
+  ctx.save();
+  ctx.fillStyle='rgba(247,240,227,.95)';
+  roundRect(bx,by,bw,bh,20); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(720,by+bh); ctx.lineTo(745,by+bh+34); ctx.lineTo(770,by+bh); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#241d33';
+  ctx.font='600 21px Zen Maru Gothic, sans-serif';
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
+  const q = state.lang==='id' ? 'Permisi, apakah engkau menemukan baju bidadariku?' : 'Excuse me, have you seen my celestial robe?';
+  wrapText(q, bx+26, by+42, bw-52, 30);
+  ctx.restore();
+}
+function wrapText(text,x,y,maxWidth,lineHeight){
+  const words = text.split(' ');
+  let line=''; let yy=y;
+  const lines=[];
+  for(let n=0;n<words.length;n++){
+    const test = line+words[n]+' ';
+    if(ctx.measureText(test).width>maxWidth && n>0){
+      lines.push(line); line=words[n]+' ';
+    } else { line=test; }
+  }
+  lines.push(line);
+  lines.forEach((l,i)=> ctx.fillText(l.trim(), x, yy+i*lineHeight));
+}
+
+function renderScene3(){
+  drawGround('#28472f');
+  drawTree(150,650,1.0);
+  drawTree(1140,650,1.0);
+  label(state.lang==='id'?'💮':'💮', 640, 150, 44);
+  drawPerson(540,560,1.15,{bodyColor:'#5c6b8a',sash:'#c94c4c'});
+  drawPerson(740,560,1.15,{bodyColor:'#e893a3',hair:'#3a2b20',sash:'#f4c95d',female:true});
+}
+
+function renderScene4(){
+  drawGround('#28472f');
+  drawTree(140,660,1.0);
+  drawTree(1150,660,1.0);
+  drawPerson(340,580,1.0,{bodyColor:'#7a5a3a',sash:'#c94c4c'});
+  drawPerson(560,570,1.0,{bodyColor:'#e893a3',hair:'#3a2b20',sash:'#f4c95d',female:true});
+  drawMound(900,600, state.peckCount>=state.peckNeeded);
+  state.doveX += 0.0009*state.doveDir;
+  if(state.doveX>0.78||state.doveX<0.55) state.doveDir*=-1;
+  const flap = Math.sin(state.t*0.02)>0;
+  drawDove(doveScreenX(), 430 + Math.sin(state.t*0.01)*10, flap);
+  drawProgressBar(440,720,400,22, state.peckCount/state.peckNeeded, '#e893a3');
+}
+
+function renderScene5(){
+  drawGround('#28472f');
+  drawTree(150,660,0.9);
+  drawPerson(300,590,1.0,{bodyColor:'#7a5a3a',sash:'#c94c4c'});
+  const pressed = holding;
+  drawStrawPile(700,560,pressed);
+  drawSandalCounter(700,700, state.weaveCount, state.weaveNeeded);
+  drawProgressBar(440,740,400,18, state.weaveCount/state.weaveNeeded, '#c9a24a');
+}
+
+function renderScene6(){
+  const g = ctx.createLinearGradient(0,0,0,800);
+  g.addColorStop(0,'#0e1440'); g.addColorStop(1,'#1c2464');
+  ctx.fillStyle=g; ctx.fillRect(0,0,1280,800);
+  drawStars(90,1.4);
+  if(state.climbHolding){
+    state.climbProgress += 0.006;
+    if(state.climbProgress>0.82 && state.climbProgress<0.9){
+      state.climbProgress += 0.0006; // slows near top (999 not 1000)
+      state.climbNearTop = true;
+    }
+  }
+  state.climbProgress = Math.min(1,state.climbProgress);
+  drawGround('#233a2a');
+  const sway = Math.sin(state.t*0.003)*10;
+  drawBambooStalk(640, 60, 700, sway);
+  const climberY = 700 - state.climbProgress*600;
+  drawPerson(640+sway*(1-state.climbProgress), climberY, 0.85,{bodyColor:'#7a5a3a',sash:'#c94c4c',armOutR:true});
+  drawProgressBar(440,760,400,20, state.climbProgress, '#4f8a5b');
+  if(state.climbNearTop && state.climbProgress<1){
+    label(state.lang==='id' ? 'Hampir sampai... kurang satu langkah!' : 'Almost there... one step short!', 640, 90, 20, '#f4c95d');
+  }
+  if(state.climbProgress>=1){ advanceOnce(); }
+}
+
+function renderScene7(){
+  const g = ctx.createLinearGradient(0,0,0,800);
+  g.addColorStop(0,'#241f52'); g.addColorStop(1,'#3a2f6e');
+  ctx.fillStyle=g; ctx.fillRect(0,0,1280,800);
+  drawStars(100,1.2);
+  drawGround('#2a3f60');
+  drawPerson(660,540,1.2,{bodyColor:'#7a5a3a',sash:'#c94c4c',mouthOpen:true,armOutR:true});
+  const appear = Math.min(1,(state.t%4000)/2000);
+  ctx.save();
+  ctx.globalAlpha = 0.5+0.5*Math.sin(state.t*0.004);
+  drawPerson(900,480,1.0,{bodyColor:'#e893a3',hair:'#3a2b20',sash:'#f4c95d',female:true, armOutL:true});
+  ctx.restore();
+}
+
+function renderScene8(){
+  const heat = 0.3 + 0.5*(state.enduranceDay/state.enduranceMaxDay);
+  const g = ctx.createLinearGradient(0,0,0,800);
+  g.addColorStop(0,'#5a3420'); g.addColorStop(1,'#8a4a24');
+  ctx.fillStyle=g; ctx.fillRect(0,0,1280,800);
+  const sun = 90+10*Math.sin(state.t*0.01);
+  ctx.save(); ctx.fillStyle='#ffd66b'; ctx.shadowColor='#ffb347'; ctx.shadowBlur=60;
+  ctx.beginPath(); ctx.arc(1000,140,sun,0,Math.PI*2); ctx.fill(); ctx.restore();
+  drawGround('#6a4a2a');
+  for(let i=0;i<3;i++){ drawPumpkin(420+i*180,640,55,false); }
+  drawPerson(660,560,1.0,{bodyColor:'#7a5a3a',sash:'#c94c4c'});
+  label((state.lang==='id'?'Hari ke-':'Day ') + state.enduranceDay + '/' + state.enduranceMaxDay, 640, 90, 22, '#f7dfa0');
+  if(state.enduranceHolding){
+    state.enduranceProgress += 0.01;
+    if(state.enduranceProgress>=1){
+      state.enduranceProgress=0;
+      state.enduranceDay++;
+      if(state.enduranceDay>state.enduranceMaxDay){ advanceOnce(); }
+    }
+  }
+  drawProgressBar(440,760,400,20, state.enduranceProgress, '#d8664f');
+}
+
+function renderScene9(){
+  const g = ctx.createLinearGradient(0,0,0,800);
+  g.addColorStop(0,'#5a3420'); g.addColorStop(1,'#8a4a24');
+  ctx.fillStyle=g; ctx.fillRect(0,0,1280,800);
+  drawGround('#6a4a2a');
+  drawPerson(880,560,1.0,{bodyColor:'#7a5a3a',sash:'#c94c4c'});
+  const pulse = 1+0.08*Math.sin(state.t*0.006);
+  ctx.save(); ctx.translate(640,600); ctx.scale(pulse,pulse); ctx.translate(-640,-600);
+  drawPumpkin(640,600,70,true);
+  ctx.restore();
+}
+
+function renderScene10(){
+  const g = ctx.createLinearGradient(0,0,0,800);
+  g.addColorStop(0,'#0e1440'); g.addColorStop(1,'#1c2464');
+  ctx.fillStyle=g; ctx.fillRect(0,0,1280,800);
+  drawStars(90,1);
+  drawGround('#233a2a');
+  state.floodLevel = Math.min(0.55, state.floodLevel + 0.0025);
+  drawPerson(300,560,1.0,{bodyColor:'#7a5a3a',sash:'#c94c4c'});
+  drawPerson(950,420,0.9,{bodyColor:'#e893a3',hair:'#3a2b20',sash:'#f4c95d',female:true});
+  drawFlood(state.floodLevel);
+  label(state.lang==='id' ? '17 Juli' : 'July 17th', 640, 120, 30, '#f4c95d');
+}
+
+/* ============ LOOP ============ */
+function loop(ts){
+  state.t = ts;
+  renderScene();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ============ INIT ============ */
+setUIForScene();
+notifyHeight();
+window.addEventListener('load', notifyHeight);
+
+
+
+})();
+</script>
+</body>
+</html>
