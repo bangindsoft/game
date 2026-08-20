@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mentiko Betuah</title>
+<style>
+  :root{
+    --sky-top:#173a2e;
+    --sky-bottom:#e0964f;
+    --ground:#2f5233;
+    --ground-dark:#20381f;
+    --panel-bg:#fdf6e8;
+    --panel-border:#b5842a;
+    --ink:#2e2a1f;
+    --accent:#2f7a4d;
+    --accent-dark:#1f5233;
+    --gold:#d9a441;
+    --btn-shadow:#173a1f;
+    --dot-off:#d8c6a1;
+    --dot-on:#2f7a4d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Trebuchet MS','Segoe UI',sans-serif;
+    background:linear-gradient(180deg,#efe2c3,#e4d3a8);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    background:var(--panel-bg);
+    border:3px solid var(--panel-border);
+    border-radius:16px;
+    padding:14px 14px 10px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.18);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-size:1.15rem;
+    margin:0;
+    color:var(--accent-dark);
+    letter-spacing:0.3px;
+  }
+  .top-controls{ display:flex; gap:6px; }
+  .icon-btn{
+    background:var(--panel-bg);
+    border:2px solid var(--panel-border);
+    color:var(--ink);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:0.85rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-weight:bold;
+    transition:background 0.15s;
+  }
+  .icon-btn:hover{background:#f3e6c8;}
+  .icon-btn:active{transform:translateY(1px);}
+
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:8/5;
+    border-radius:12px;
+    overflow:hidden;
+    border:3px solid var(--ground-dark);
+    background:#000;
+    touch-action:manipulation;
+  }
+  canvas{ display:block; width:100%; height:100%; }
+
+  #instructionPanel{
+    margin-top:10px;
+    background:#fff8e8;
+    border:2px dashed var(--gold);
+    border-radius:10px;
+    padding:10px 12px;
+    min-height:44px;
+    font-size:0.95rem;
+    line-height:1.4;
+  }
+  #instructionPanel .label{
+    font-weight:bold;
+    color:var(--accent-dark);
+    margin-right:4px;
+  }
+
+  #narrationPanel{
+    margin-top:8px;
+    background:#f3ecd0;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:0.88rem;
+    line-height:1.45;
+    color:#4a3a26;
+    min-height:20px;
+  }
+
+  #controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  #dots{ display:flex; gap:5px; flex-wrap:wrap; max-width:60%; }
+  .dot{
+    width:10px; height:10px; border-radius:50%;
+    background:var(--dot-off);
+    transition:background 0.2s, transform 0.2s;
+  }
+  .dot.active{ background:var(--dot-on); transform:scale(1.25); }
+  .dot.done{ background:var(--gold); }
+
+  #mainBtn{
+    background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:10px 22px;
+    font-size:1rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--btn-shadow);
+    letter-spacing:0.3px;
+  }
+  #mainBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--btn-shadow); }
+  #mainBtn:disabled{ opacity:0.4; cursor:default; box-shadow:0 4px 0 #999; background:#aaa; }
+
+  footer{
+    margin-top:10px;
+    text-align:center;
+    font-size:0.72rem;
+    color:#9a8460;
+  }
+
+  .hidden{ display:none !important; }
+
+  .helpBtn{
+    position:absolute;
+    background:linear-gradient(180deg,#fff8e8,#f0dcae);
+    border:2px solid var(--gold);
+    color:var(--ink);
+    border-radius:24px;
+    padding:10px 18px;
+    font-size:0.85rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 3px 0 #a9832f;
+  }
+  .helpBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 #a9832f; }
+
+  .holdBtn{
+    position:absolute;
+    width:96px;
+    height:96px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #4fae7a, var(--accent-dark));
+    border:4px solid #fff3d8;
+    color:#fff;
+    font-weight:bold;
+    font-size:0.72rem;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
+    line-height:1.15;
+    padding:4px;
+  }
+  .holdBtn:disabled{ opacity:0.5; }
+  .holdBtn:active{ transform:scale(0.95); }
+
+  .animalBtn{
+    position:absolute;
+    background:rgba(58,42,28,0.06);
+    border:none;
+    cursor:pointer;
+    padding:0;
+  }
+
+  @media (max-width:420px){
+    h1{font-size:0.98rem;}
+    .icon-btn{padding:5px 8px;font-size:0.75rem;}
+    #instructionPanel,#narrationPanel{font-size:0.82rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="titleText">Mentiko Betuah</h1>
+    <div class="top-controls">
+      <button class="icon-btn" id="langBtn" type="button">EN</button>
+      <button class="icon-btn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </header>
+
+  <div id="canvasWrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+  </div>
+
+  <div id="instructionPanel">
+    <span class="label" id="instrLabel">Instruksi:</span><span id="instrText">Ketuk tombol "Mulai Cerita" untuk memulai.</span>
+  </div>
+
+  <div id="narrationPanel"><span id="narrText"></span></div>
+
+  <div id="controls">
+    <div id="dots"></div>
+    <button id="mainBtn" type="button">Mulai Cerita</button>
+  </div>
+
+  <footer>Cerita rakyat Aceh &middot; dongeng interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ STRINGS ============ */
+  const STR = {
+    id: {
+      title: "Mentiko Betuah",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      instrLabel: "Instruksi:",
+      startInstr: 'Ketuk tombol "Mulai Cerita" untuk memulai.',
+      muteOn: "🔇",
+      muteOff: "🔊",
+      langSwitch: "EN",
+      helpText: "Lanjutkan",
+      sedekahBtn: "SEDEKAH",
+      requestBtn: "UCAPKAN\nPERMINTAAN",
+      tickleBtn: "GELITIK\nHIDUNG",
+      animalNames: ["Anjing","Kucing","Tikus"],
+      moral: "Pesan moral: berbuatlah baik kepada sesama makhluk hidup, dan jauhilah sikap licik, karena kelicikan hanya akan menimbulkan permusuhan.",
+      scenes: [
+        { // 1
+          narration: "Pada zaman dahulu, berdirilah sebuah kerajaan di Simeulue, Aceh. Sang raja sangat menyayangi putranya, Rohib, hingga segala keinginannya selalu dikabulkan.",
+          instruction: 'Ketuk sosok Rohib di halaman istana untuk mengenalnya.'
+        },
+        { // 2
+          narration: 'Rohib disekolahkan ke kota, namun sifat manjanya membuat ia pulang sebelum tamat belajar. Sang raja naik pitam, namun karena permaisuri memohon, Rohib hanya diusir dari istana dengan berbekal sedikit uang.',
+          instruction: 'Ketuk tombol "Lanjutkan" untuk melihat kemarahan sang raja.'
+        },
+        { // 3
+          narration: "Rohib pun mengembara dari kampung ke kampung tanpa tujuan. Ia tidur di bawah pohon, di gubuk kosong, atau di rumah penduduk yang bersedia menerimanya.",
+          instruction: "Ketuk pohon rindang untuk membantu Rohib beristirahat di sana."
+        },
+        { // 4
+          narration: 'Dalam perjalanan, Rohib melihat sekelompok anak menembaki seekor burung dengan ketapel. "Janganlah kalian menembaki burung itu, ia juga berhak hidup bebas," tegurnya sambil bergegas menyelamatkan burung tersebut.',
+          instruction: "Ketuk burung itu berulang kali untuk menyelamatkannya dari bidikan ketapel!"
+        },
+        { // 5
+          narration: "Rohib lalu membagikan uang bekalnya kepada anak-anak, pengemis, dan siapa saja yang ia temui yang membutuhkan, hingga tak tersisa sepeser pun.",
+          instruction: 'Tahan tombol "SEDEKAH" untuk membagikan uang bekal Rohib kepada mereka yang membutuhkan.'
+        },
+        { // 6
+          narration: 'Tanpa bekal lagi, Rohib kelelahan dan tertidur di bawah pohon rindang. Tiba-tiba muncul seekor ular besar yang berkata seperti manusia, "Jangan takut, aku adalah raja ular di hutan ini."',
+          instruction: "Ketuk Raja Ular untuk mendekatinya dengan tenang."
+        },
+        { // 7
+          narration: 'Setelah mendengar kisah Rohib yang gemar menolong sesama, sang raja ular kagum dan memberinya sebuah benda bernama Mentiko Betuah, yang dapat mengabulkan apa saja yang diminta pemiliknya.',
+          instruction: 'Tahan tombol "UCAPKAN PERMINTAAN" agar Mentiko Betuah mengabulkan keinginan Rohib.'
+        },
+        { // 8
+          narration: "Seketika uang yang sangat banyak muncul di hadapan Rohib. Ia kembali ke istana dan membuat ayahnya bahagia. Namun ketika Mentiko Betuah dibawa ke tukang pembuat cincin, si tukang cincin yang mengetahui keajaibannya justru membawa benda itu kabur.",
+          instruction: 'Ketuk tombol "Lanjutkan" untuk melihat kelanjutan kisah Mentiko Betuah.'
+        },
+        { // 9
+          narration: "Mengetahui Mentiko Betuah dicuri, Rohib mengutus tiga sahabatnya, anjing, kucing, dan tikus, untuk melacak dan mengambilnya kembali.",
+          instruction: "Ketuk hewan secara berurutan: Anjing, lalu Kucing, lalu Tikus, untuk mengejar tukang cincin."
+        },
+        { // 10
+          narration: "Sang anjing berhasil melacak tukang cincin yang tertidur di pinggir sungai, dengan Mentiko Betuah disembunyikan di dalam mulutnya. Kucing pun menjulurkan ekornya ke hidung si tukang cincin agar ia bersin dan memuntahkan benda itu.",
+          instruction: 'Tahan tombol "GELITIK HIDUNG" agar tukang cincin bersin dan memuntahkan Mentiko Betuah.'
+        },
+        { // 11
+          narration: "Mentiko Betuah pun berhasil dikeluarkan, namun si tikus diam-diam menangkapnya lebih dulu tanpa sepengetahuan anjing dan kucing, lalu berbohong bahwa benda itu jatuh ke sungai sebelum menyerahkannya sendiri kepada Rohib. Anjing dan kucing yang akhirnya mengetahui kelicikan itu pun membenci tikus sejak saat itu.",
+          instruction: 'Ketuk "Ulangi Cerita" untuk menonton kembali, atau renungkan pesan moralnya.'
+        }
+      ]
+    },
+    en: {
+      title: "The Magic Ring of Mentiko Betuah",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      instrLabel: "Instruction:",
+      startInstr: 'Tap "Start Story" to begin.',
+      muteOn: "🔇",
+      muteOff: "🔊",
+      langSwitch: "ID",
+      helpText: "Continue",
+      sedekahBtn: "GIVE ALMS",
+      requestBtn: "MAKE A\nWISH",
+      tickleBtn: "TICKLE\nHIS NOSE",
+      animalNames: ["Dog","Cat","Mouse"],
+      moral: "Moral of the story: always be kind to others, and stay away from deceit, for trickery only breeds enmity.",
+      scenes: [
+        { // 1
+          narration: "Long ago, a kingdom stood in Simeulue, Aceh. The king loved his son Rohib so dearly that every one of his wishes was always granted.",
+          instruction: "Tap Rohib in the palace yard to meet him."
+        },
+        { // 2
+          narration: "Rohib was sent to school in the city, but his spoiled nature made him return home before finishing his studies. The furious king almost punished him harshly, but at the queen's plea, Rohib was only banished from the palace with a little money for the road.",
+          instruction: 'Tap "Continue" to see the king\'s anger.'
+        },
+        { // 3
+          narration: "Rohib wandered from village to village with no destination, sleeping under trees, in empty huts, or in the homes of villagers willing to take him in.",
+          instruction: "Tap the shady tree to help Rohib rest there."
+        },
+        { // 4
+          narration: '"Please don\'t shoot that bird, it deserves to live free too," Rohib scolded a group of children shooting a bird with slingshots, and hurried to save it.',
+          instruction: "Tap the bird repeatedly to save it from the slingshots!"
+        },
+        { // 5
+          narration: "Rohib then gave away his travel money to the children, to beggars, and to anyone in need he met along the way, until not a single coin was left.",
+          instruction: 'Hold the "GIVE ALMS" button to share Rohib\'s remaining money with those in need.'
+        },
+        { // 6
+          narration: 'With no supplies left, Rohib grew exhausted and fell asleep beneath a shady tree. Suddenly a huge snake appeared and spoke like a person, "Don\'t be afraid, I am the king of snakes in this forest."',
+          instruction: "Tap the Snake King to calmly approach him."
+        },
+        { // 7
+          narration: "Moved by Rohib's story of helping others, the snake king admired him and gave him an object called Mentiko Betuah, which could grant anything its owner wished for.",
+          instruction: 'Hold the "MAKE A WISH" button so Mentiko Betuah grants Rohib\'s request.'
+        },
+        { // 8
+          narration: "A great pile of money instantly appeared before Rohib. He returned to the palace and made his father proud. But when Mentiko Betuah was taken to a ring-maker to be set into a ring, the craftsman, sensing its magic, ran off with it.",
+          instruction: 'Tap "Continue" to see what happens to Mentiko Betuah next.'
+        },
+        { // 9
+          narration: "Learning that Mentiko Betuah had been stolen, Rohib sent his three friends, the dog, the cat, and the mouse, to track it down and bring it back.",
+          instruction: "Tap the animals in order: the Dog, then the Cat, then the Mouse, to chase after the ring-maker."
+        },
+        { // 10
+          narration: "The dog tracked the ring-maker, who was sleeping by the riverbank with Mentiko Betuah hidden in his mouth. The cat then poked its tail into his nose to make him sneeze it out.",
+          instruction: 'Hold the "TICKLE HIS NOSE" button so the ring-maker sneezes out Mentiko Betuah.'
+        },
+        { // 11
+          narration: "Mentiko Betuah popped out, but the mouse secretly snatched it first without the dog or cat knowing, and lied that it had fallen into the river, before handing it to Rohib itself. When the dog and cat learned of this trickery, they came to despise the mouse from that day on.",
+          instruction: 'Tap "Replay Story" to watch again, or reflect on its moral lesson.'
+        }
+      ]
+    }
+  };
+
+  const TOTAL_SCENES = 11;
+
+  /* ============ STATE ============ */
+  const state = {
+    lang: 'id',
+    muted: false,
+    scene: 0,
+    locked: false,
+    mash: { count:0, needed:10, active:false, birdX:300, birdY:260 },
+    alms: { charge:0, holding:false, given:0, needed:1 },
+    wish: { charge:0, holding:false, done:false },
+    seq: { picks:[] },
+    tickle: { charge:0, holding:false, sneeze:0 }
+  };
+
+  /* ============ DOM ============ */
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const instrText = document.getElementById('instrText');
+  const instrLabel = document.getElementById('instrLabel');
+  const narrText = document.getElementById('narrText');
+  const mainBtn = document.getElementById('mainBtn');
+  const dotsWrap = document.getElementById('dots');
+  const titleText = document.getElementById('titleText');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+
+  let overlayEls = [];
+
+  /* ============ INIT LANG / MUTE ============ */
+  function initSettings(){
+    try{
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      const savedMute = localStorage.getItem('mentiko_muted');
+      if(urlLang === 'en' || urlLang === 'id'){ state.lang = urlLang; }
+      else {
+        const savedLang = localStorage.getItem('mentiko_lang');
+        if(savedLang === 'en' || savedLang === 'id') state.lang = savedLang;
+      }
+      if(savedMute === 'true') state.muted = true;
+    }catch(e){}
+  }
+  initSettings();
+
+  function T(){ return STR[state.lang]; }
+
+  /* ============ RESIZE / POSTMESSAGE ============ */
+  function notifyResize(){
+    try{
+      const h = document.getElementById('app').offsetHeight + 24;
+      window.parent.postMessage({ type:'mentiko-resize', height:h }, '*');
+    }catch(e){}
+  }
+
+  /* ============ SPEECH ============ */
+  let voices = [];
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    if(!voices || !voices.length) return null;
+    let v = voices.find(v=>v.lang === langCode);
+    if(v) return v;
+    const prefix = langCode.split('-')[0];
+    v = voices.find(v=>v.lang && v.lang.indexOf(prefix)===0);
+    return v || null;
+  }
+  function speak(text){
+    if(state.muted) return;
+    if(!window.speechSynthesis) return;
+    try{
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const langCode = state.lang === 'id' ? 'id-ID' : 'en-US';
+      utter.lang = langCode;
+      const v = pickVoice(langCode);
+      if(v) utter.voice = v;
+      utter.rate = 0.98;
+      utter.pitch = 1.0;
+      window.speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ============ UI HELPERS ============ */
+  function setInstruction(text){ instrText.textContent = text; }
+  function setNarration(text){ narrText.textContent = text; }
+  function clearOverlays(){
+    overlayEls.forEach(el=>el.remove());
+    overlayEls = [];
+  }
+  function addOverlayBtn(className, label, style, onClick){
+    const b = document.createElement('button');
+    b.className = className;
+    b.type = 'button';
+    b.textContent = label;
+    Object.assign(b.style, style);
+    b.addEventListener('click', onClick);
+    canvasWrap.appendChild(b);
+    overlayEls.push(b);
+    return b;
+  }
+
+  function renderDots(){
+    dotsWrap.innerHTML = '';
+    for(let i=1;i<=TOTAL_SCENES;i++){
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if(i < state.scene) d.classList.add('done');
+      if(i === state.scene) d.classList.add('active');
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function applyStaticStrings(){
+    document.documentElement.lang = state.lang;
+    titleText.textContent = T().title;
+    instrLabel.textContent = T().instrLabel;
+    langBtn.textContent = T().langSwitch;
+    muteBtn.textContent = state.muted ? T().muteOn : T().muteOff;
+    if(state.scene === 0){
+      mainBtn.textContent = T().startBtn;
+      setInstruction(T().startInstr);
+      setNarration('');
+    }
+  }
+
+  /* ============ DRAWING HELPERS ============ */
+  function clearCanvas(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+  function drawSky(topColor, bottomColor){
+    const g = ctx.createLinearGradient(0,0,0,canvas.height*0.62);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height*0.62);
+  }
+  function drawGround(){
+    ctx.fillStyle = '#3a2b1c';
+    ctx.fillRect(0, canvas.height*0.60, canvas.width, canvas.height*0.42);
+    const g = ctx.createLinearGradient(0,canvas.height*0.60,0,canvas.height);
+    g.addColorStop(0,'#6b9a4e');
+    g.addColorStop(1,'#2f5233');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, canvas.height*0.60, canvas.width, canvas.height*0.40);
+  }
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawRiver(y,h){
+    const g = ctx.createLinearGradient(0,y,0,y+h);
+    g.addColorStop(0,'#5a9ec9');
+    g.addColorStop(1,'#2f6a8f');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,y,canvas.width,h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      const yy = y + 12 + i*14;
+      ctx.moveTo(0,yy);
+      for(let x=0;x<=canvas.width;x+=40){
+        ctx.lineTo(x+20, yy + Math.sin((x+Date.now()/300)/40)*4);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b3a22';
+    ctx.fillRect(-8,-10,16,70);
+    ctx.fillStyle = '#2e6b32';
+    ctx.beginPath(); ctx.arc(0,-42,40,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-30,-22,28,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(30,-22,28,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawPalace(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#e8d9a8';
+    ctx.fillRect(-90,-20,180,90);
+    ctx.fillStyle = '#8f5a1d';
+    ctx.beginPath();
+    ctx.moveTo(-110,-20); ctx.lineTo(0,-95); ctx.lineTo(110,-20);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath(); ctx.arc(0,-100,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#6b3a22';
+    ctx.fillRect(-16,30,32,40);
+    ctx.fillStyle = '#3a6b8f';
+    ctx.fillRect(-70,0,26,26);
+    ctx.fillRect(44,0,26,26);
+    ctx.restore();
+  }
+  function drawHut(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#caa66b';
+    ctx.fillRect(-40,-10,80,55);
+    ctx.fillStyle = '#7a5a2f';
+    ctx.beginPath();
+    ctx.moveTo(-50,-10); ctx.lineTo(0,-55); ctx.lineTo(50,-10);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawLabel(text,x,y,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.font = (opts.font || 'bold 15px Trebuchet MS, sans-serif');
+    ctx.textAlign = opts.align || 'center';
+    const w = ctx.measureText(text).width + 20;
+    ctx.fillStyle = opts.bg || 'rgba(46,42,31,0.85)';
+    roundRect(x - w/2, y-14, w, 26, 8);
+    ctx.fill();
+    ctx.fillStyle = opts.color || '#fdf6e8';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  // Stylized person (reused for Rohib, king, queen, ring-maker)
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    const shirt = opts.shirt || '#2f7a4d';
+    const skin = '#e0a877';
+    const pants = opts.pants || '#3a3226';
+    const flip = opts.flip ? -1 : 1;
+    const armSwing = opts.armSwing || 0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*flip, scale);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0,4,24,7,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.strokeStyle = pants;
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-6,-20); ctx.lineTo(-10,2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,-20); ctx.lineTo(10,2); ctx.stroke();
+
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-16,-70); ctx.lineTo(16,-70); ctx.lineTo(14,-20); ctx.lineTo(-14,-20);
+    ctx.closePath(); ctx.fill();
+
+    const elbowLX = -14 - 20*Math.cos(armSwing), elbowLY = -64 - 16*Math.sin(armSwing);
+    const handLX  = -14 - 32*Math.cos(armSwing), handLY  = -64 - 26*Math.sin(armSwing);
+    const elbowRX = 14 + 20*Math.cos(armSwing),  elbowRY = -64 - 16*Math.sin(armSwing);
+    const handRX  = 14 + 32*Math.cos(armSwing),  handRY  = -64 - 26*Math.sin(armSwing);
+
+    ctx.strokeStyle = shirt;
+    ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(-14,-64); ctx.lineTo(elbowLX, elbowLY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,-64); ctx.lineTo(elbowRX, elbowRY); ctx.stroke();
+
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(elbowLX, elbowLY); ctx.lineTo(handLX, handLY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(elbowRX, elbowRY); ctx.lineTo(handRX, handRY); ctx.stroke();
+
+    ctx.fillStyle = skin;
+    ctx.fillRect(-5,-78,10,10);
+    ctx.beginPath(); ctx.arc(0,-88,16,0,Math.PI*2); ctx.fill();
+
+    if(opts.headwear === 'crown'){
+      ctx.fillStyle = '#d9a441';
+      ctx.beginPath();
+      ctx.moveTo(-16,-100); ctx.lineTo(-16,-112); ctx.lineTo(-8,-102);
+      ctx.lineTo(0,-116); ctx.lineTo(8,-102); ctx.lineTo(16,-112);
+      ctx.lineTo(16,-100); ctx.closePath(); ctx.fill();
+    } else if(opts.headwear === 'turban'){
+      ctx.fillStyle = opts.hatColor || '#e8d9a8';
+      ctx.beginPath(); ctx.ellipse(0,-98,16,10,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-6,-104,7,5,0.4,0,Math.PI*2); ctx.fill();
+    } else if(opts.headwear === 'headscarf'){
+      ctx.fillStyle = opts.hatColor || '#c1462f';
+      ctx.beginPath(); ctx.moveTo(-17,-90); ctx.quadraticCurveTo(0,-118,17,-90);
+      ctx.lineTo(17,-98); ctx.quadraticCurveTo(0,-108,-17,-98); ctx.closePath(); ctx.fill();
+    } else if(opts.headwear === 'peci'){
+      ctx.fillStyle = '#1c1c1c';
+      ctx.beginPath(); ctx.arc(0,-96,15,Math.PI,0); ctx.fill();
+      ctx.fillRect(-15,-98,30,6);
+    } else if(opts.headwear === 'ragged'){
+      ctx.fillStyle = opts.hatColor || '#8a7a5a';
+      ctx.beginPath(); ctx.moveTo(-16,-92); ctx.lineTo(-6,-108); ctx.lineTo(6,-96);
+      ctx.lineTo(16,-104); ctx.lineTo(14,-90); ctx.closePath(); ctx.fill();
+    }
+
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.arc(-5,-88,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-88,1.6,0,Math.PI*2); ctx.fill();
+    if(opts.sneeze){
+      ctx.strokeStyle = '#3a2a1c';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(-5,-84,2,0,Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(5,-84,2,0,Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawSnake(x,y,scale,mood){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#2f7a4d';
+    ctx.lineWidth = 26;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-90,40);
+    ctx.quadraticCurveTo(-40,-30, 0,10);
+    ctx.quadraticCurveTo(40,50, 70,-10);
+    ctx.stroke();
+    ctx.strokeStyle = '#1f5233';
+    ctx.lineWidth = 26;
+    for(let i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.arc(-70+i*38, i%2===0 ? 10 : -8, 5, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = '#2f7a4d';
+    ctx.beginPath();
+    ctx.ellipse(78,-20,22,16,-0.3,0,Math.PI*2);
+    ctx.fill();
+    if(mood === 'crown'){
+      ctx.fillStyle = '#d9a441';
+      ctx.beginPath(); ctx.arc(78,-38,7,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(84,-24,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1c1c1c';
+    ctx.beginPath(); ctx.arc(85,-24,2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#c1462f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(96,-16); ctx.lineTo(106,-16);
+    ctx.moveTo(106,-16); ctx.lineTo(112,-20);
+    ctx.moveTo(106,-16); ctx.lineTo(112,-12);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBird(x,y,scale,flap){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3a6b8f';
+    ctx.beginPath();
+    ctx.ellipse(0,0,16,11,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#5a94bd';
+    const wingY = Math.sin(flap||0)*8;
+    ctx.beginPath();
+    ctx.ellipse(-2,-2+wingY,11,6,0.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#3a6b8f';
+    ctx.beginPath(); ctx.arc(13,-6,7,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath(); ctx.moveTo(20,-6); ctx.lineTo(27,-4); ctx.lineTo(20,-2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSlingshotKid(x,y,scale){
+    drawPerson(x,y,scale,{shirt:'#c1462f',pants:'#3a3226'});
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#5b3a22';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(14,-64); ctx.lineTo(30,-90);
+    ctx.moveTo(22,-90); ctx.lineTo(38,-80);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRing(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){
+      ctx.shadowColor = '#ffe08a';
+      ctx.shadowBlur = 22;
+    }
+    ctx.strokeStyle = '#d9a441';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(0,10,14,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle = '#2f7a4d';
+    ctx.beginPath(); ctx.arc(0,-6,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath(); ctx.arc(-3,-9,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCoin(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#8f6a1d';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ============ HIT-TEST ============ */
+  function canvasPointFromEvent(evt){
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+  function inCircle(px,py,cx,cy,r){
+    const dx = px-cx, dy = py-cy;
+    return dx*dx+dy*dy <= r*r;
+  }
+
+  /* ============ SCENES ============ */
+  function backdropOutdoor(){
+    clearCanvas();
+    drawSky('#f3c98a','#e28a52');
+    drawSun(700,80,44,'#ffe08a');
+    drawGround();
+  }
+  function backdropForest(){
+    clearCanvas();
+    drawSky(getComputedStyle(document.documentElement).getPropertyValue('--sky-top'),
+            getComputedStyle(document.documentElement).getPropertyValue('--sky-bottom'));
+    drawSun(700,80,40,'#ffe08a');
+    drawGround();
+  }
+  function backdropRiver(){
+    clearCanvas();
+    drawSky('#a7c9d8','#e8d9a8');
+    drawSun(700,80,40,'#fff3c8');
+    drawGround();
+    drawRiver(canvas.height*0.60, canvas.height*0.16);
+  }
+
+  function scene1(){
+    backdropOutdoor();
+    drawPalace(400,300,1.15);
+    drawTree(70,340,0.9);
+    drawTree(730,340,0.9);
+    drawPerson(300,400,1.2,{shirt:'#8f5a1d',headwear:'crown',armSwing:0.1});
+    drawPerson(500,400,1.3,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing:0.2});
+    drawLabel(state.lang==='id'?'Sang Raja':'The King', 300, 250);
+    drawLabel('Rohib', 500, 250);
+  }
+
+  function scene2(){
+    backdropOutdoor();
+    drawPalace(400,300,1.15);
+    drawPerson(280,400,1.3,{shirt:'#8f2f1d',headwear:'crown',armSwing:0.6});
+    drawPerson(440,400,1.15,{shirt:'#c98a3f',pants:'#e8d9a8'});
+    drawPerson(560,400,1.2,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing:-0.2});
+    drawLabel(state.lang==='id'?'Sang Raja':'The King', 280, 250);
+    drawLabel(state.lang==='id'?'Permaisuri':'The Queen', 440, 260);
+    drawLabel('Rohib', 560, 250);
+  }
+
+  function scene3(){
+    backdropOutdoor();
+    drawHut(650,345,0.7);
+    drawTree(300,330,1.35);
+    const bob = Math.sin(Date.now()/500)*3;
+    drawPerson(500,400+bob,1.2,{shirt:'#8a7a5a',pants:'#5a4a36',headwear:'ragged',armSwing:0.15});
+    drawLabel('Rohib', 500, 250);
+  }
+
+  function scene4(){
+    backdropOutdoor();
+    drawTree(650,340,1.0);
+    const shake = state.mash.active ? Math.sin(Date.now()/45)*2 : 0;
+    drawSlingshotKid(230+shake,410,1.05);
+    drawSlingshotKid(330+shake,415,1.0);
+    drawPerson(460,400,1.2,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing:0.5});
+    drawLabel('Rohib', 460, 250);
+    const flap = Date.now()/120;
+    drawBird(state.mash.birdX, state.mash.birdY, 1.6, flap);
+
+    const pct = Math.min(1, state.mash.count / state.mash.needed);
+    const barX = 220, barY = 55, barW = 360, barH = 24;
+    ctx.fillStyle = 'rgba(46,42,31,0.6)';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle = '#2f7a4d';
+    roundRect(barX+3,barY+3,(barW-6)*pct,barH-6,8); ctx.fill();
+  }
+
+  function scene5(){
+    backdropOutdoor();
+    drawHut(120,345,0.7);
+    drawPerson(300,400,1.25,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing: state.alms.holding ? 0.7 : 0.2});
+    drawPerson(470,400,1.05,{shirt:'#7a6a4a',pants:'#4a3a26',headwear:'ragged'});
+    drawLabel('Rohib', 300, 250);
+    drawLabel(state.lang==='id'?'Pengemis':'Beggar', 470, 260);
+
+    const n = Math.round(state.alms.charge*6);
+    for(let i=0;i<n;i++){
+      const ang = (i/6)*Math.PI*2 + Date.now()/600;
+      drawCoin(300+Math.cos(ang)*60, 330+Math.sin(ang)*24, 1.1);
+    }
+    const barX=260,barY=430,barW=280,barH=20;
+    ctx.fillStyle='rgba(46,42,31,0.55)';
+    roundRect(barX,barY,barW,barH,9); ctx.fill();
+    ctx.fillStyle='#d9a441';
+    roundRect(barX+2,barY+2,(barW-4)*state.alms.charge,barH-4,7); ctx.fill();
+  }
+
+  function scene6(){
+    backdropForest();
+    drawTree(140,330,1.0);
+    drawTree(660,330,1.0);
+    const bob = Math.sin(Date.now()/500)*3;
+    drawPerson(560,400+bob,1.2,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing:0.1});
+    drawLabel('Rohib', 560, 250);
+    drawSnake(260,340,1.15,'plain');
+    drawLabel(state.lang==='id'?'Raja Ular':'Snake King', 260, 250);
+  }
+
+  function scene7(){
+    backdropForest();
+    drawTree(700,330,0.9);
+    drawSnake(560,380,1.0,'crown');
+    drawPerson(200,420,1.3,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing: state.wish.holding ? 0.8 : 0.15});
+    drawLabel('Rohib', 200, 270);
+    drawRing(200,190,1.6,true);
+
+    if(state.wish.charge > 0.3){
+      const n = Math.round((state.wish.charge-0.3)*10);
+      for(let i=0;i<n;i++){
+        const ang = (i/10)*Math.PI*2 + Date.now()/500;
+        drawCoin(200+Math.cos(ang)*70, 230+Math.sin(ang)*30, 1.1);
+      }
+    }
+    const barX=180,barY=55,barW=280,barH=22;
+    ctx.fillStyle='rgba(46,42,31,0.6)';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle= state.wish.charge>=1 ? '#d9a441' : '#2f7a4d';
+    roundRect(barX+3,barY+3,(barW-6)*state.wish.charge,barH-6,8); ctx.fill();
+  }
+
+  function scene8(){
+    backdropOutdoor();
+    drawPalace(560,300,1.0);
+    drawPerson(430,400,1.25,{shirt:'#8f5a1d',headwear:'crown',armSwing:0.3});
+    drawPerson(280,400,1.2,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing:0.4});
+    drawLabel(state.lang==='id'?'Sang Raja':'The King', 430, 250);
+    drawLabel('Rohib', 280, 250);
+    for(let i=0;i<5;i++){ drawCoin(320+i*14, 340, 1); }
+
+    drawHut(680,150,0.5);
+    drawPerson(690,205,0.85,{shirt:'#7a5a2f',pants:'#4a3a26',headwear:'peci',flip:true,armSwing:0.6});
+    drawRing(650,190,1.1,false);
+    drawLabel(state.lang==='id'?'Tukang Cincin':'Ring-maker', 690, 155, {font:'bold 12px Trebuchet MS'});
+  }
+
+  function scene9(){
+    backdropRiver();
+    ctx.strokeStyle = '#caa66b';
+    ctx.lineWidth = 5;
+    ctx.setLineDash([9,7]);
+    ctx.beginPath();
+    ctx.moveTo(160,420); ctx.lineTo(400,330); ctx.lineTo(640,420);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawPerson(400,460,1.05,{shirt:'#3a6b8f',pants:'#e8d9a8'});
+    drawLabel('Rohib', 400, 490, {font:'bold 13px Trebuchet MS'});
+
+    const positions = [{x:160,y:420},{x:400,y:330},{x:640,y:420}];
+    const emojis = ['🐕','🐈','🐁'];
+    const labels = T().animalNames;
+    for(let i=0;i<3;i++){
+      const p = positions[i];
+      const picked = state.seq.picks.includes(i);
+      ctx.save();
+      ctx.fillStyle = picked ? 'rgba(47,122,77,0.85)' : 'rgba(46,42,31,0.55)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y-46, 26, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#fdf6e8'; ctx.lineWidth=3; ctx.stroke();
+      ctx.font = '28px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(emojis[i], p.x, p.y-46);
+      if(picked){
+        ctx.fillStyle = '#fdf6e8';
+        ctx.font = 'bold 16px Trebuchet MS';
+        ctx.fillText('✓', p.x+20, p.y-68);
+      }
+      ctx.restore();
+      drawLabel(labels[i], p.x, p.y-84, {font:'bold 13px Trebuchet MS'});
+    }
+  }
+
+  function scene10(){
+    backdropRiver();
+    const sneezeShake = state.tickle.sneeze>0 ? Math.sin(Date.now()/25)*4 : 0;
+    drawPerson(620+sneezeShake,340,1.35,{shirt:'#7a5a2f',pants:'#4a3a26',headwear:'peci',flip:true,sneeze: state.tickle.sneeze>0});
+    ctx.save();
+    ctx.translate(620,240);
+    ctx.rotate(-0.35);
+    ctx.font='26px sans-serif';
+    ctx.fillText('💤',0,0);
+    ctx.restore();
+
+    drawRing(620 + (state.tickle.sneeze>0?55:14), 280 - (state.tickle.sneeze>0?40:0), state.tickle.sneeze>0?1.4:1.0, state.tickle.sneeze>0);
+
+    ctx.font='30px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🐕', 150, 340);
+    ctx.fillText('🐈', 230, 360);
+    if(state.tickle.sneeze>0){
+      ctx.font='bold 22px Trebuchet MS';
+      ctx.fillStyle='#8f2f1d';
+      ctx.fillText(state.lang==='id' ? 'HATSYI!!' : 'ACHOO!!', 620, 190);
+    }
+
+    const barX=280,barY=55,barW=240,barH=20;
+    ctx.fillStyle='rgba(46,42,31,0.6)';
+    roundRect(barX,barY,barW,barH,9); ctx.fill();
+    ctx.fillStyle='#2f7a4d';
+    roundRect(barX+2,barY+2,(barW-4)*state.tickle.charge,barH-4,7); ctx.fill();
+  }
+
+  function scene11(){
+    backdropOutdoor();
+    drawTree(120,340,0.9);
+    drawTree(680,340,0.9);
+    drawPerson(400,400,1.4,{shirt:'#3a6b8f',pants:'#e8d9a8',armSwing:0.5});
+    drawRing(400,300,1.5,true);
+    ctx.font='30px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🐕', 250, 420);
+    ctx.fillText('🐈', 300, 440);
+    ctx.fillText('🐁', 560, 430);
+    drawLabel('Rohib', 400, 230, {font:'bold 18px Trebuchet MS'});
+  }
+
+  /* ============ ANIMATION LOOP ============ */
+  function render(){
+    switch(state.scene){
+      case 0: clearCanvas(); backdropOutdoor(); drawLabel(T().title,400,250,{font:'bold 22px Trebuchet MS'}); break;
+      case 1: scene1(); break;
+      case 2: scene2(); break;
+      case 3: scene3(); break;
+      case 4: scene4(); break;
+      case 5: scene5(); break;
+      case 6: scene6(); break;
+      case 7: scene7(); break;
+      case 8: scene8(); break;
+      case 9: scene9(); break;
+      case 10: scene10(); break;
+      case 11: scene11(); break;
+    }
+    requestAnimationFrame(render);
+  }
+
+  /* ============ TRANSITIONS ============ */
+  function goToScene(n){
+    state.scene = n;
+    state.locked = false;
+    clearOverlays();
+    renderDots();
+    if(n === 0){
+      mainBtn.classList.remove('hidden');
+      mainBtn.textContent = T().startBtn;
+      mainBtn.disabled = false;
+      setInstruction(T().startInstr);
+      setNarration('');
+      return;
+    }
+    const sceneData = T().scenes[n-1];
+    setInstruction(sceneData.instruction);
+    setNarration(sceneData.narration);
+    speak(sceneData.narration);
+    mainBtn.classList.add('hidden');
+    setupSceneInteraction(n);
+  }
+
+  function advanceOnce(nextScene){
+    if(state.locked) return;
+    state.locked = true;
+    stopSpeak();
+    setTimeout(()=>{ goToScene(nextScene); }, 260);
+  }
+
+  function setupSceneInteraction(n){
+    canvas.onclick = null;
+    if(n === 1){
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,500,340,95)) advanceOnce(2);
+      };
+    } else if(n === 2){
+      addOverlayBtn('helpBtn', T().helpText, {
+        left:'50%', bottom:'16px', transform:'translateX(-50%)'
+      }, ()=>{ advanceOnce(3); });
+    } else if(n === 3){
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,300,300,90)) advanceOnce(4);
+      };
+    } else if(n === 4){
+      state.mash.count = 0;
+      state.mash.needed = 10;
+      state.mash.active = true;
+      state.mash.birdX = 460; state.mash.birdY = 230;
+      const tapHandler = function(evt){
+        if(!state.mash.active || state.locked) return;
+        evt.preventDefault();
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,state.mash.birdX,state.mash.birdY,42)){
+          state.mash.count++;
+          state.mash.birdY -= 14;
+          state.mash.birdX += (Math.random()>0.5?1:-1)*18;
+          if(state.mash.count >= state.mash.needed){
+            state.mash.active = false;
+            canvasWrap.removeEventListener('pointerdown', tapHandler);
+            advanceOnce(5);
+          }
+        }
+      };
+      canvasWrap.addEventListener('pointerdown', tapHandler);
+      overlayEls.push({ remove: ()=>canvasWrap.removeEventListener('pointerdown', tapHandler) });
+    } else if(n === 5){
+      state.alms.charge = 0;
+      state.alms.holding = false;
+      const btn = addOverlayBtn('holdBtn', T().sedekahBtn, {
+        left:'50%', bottom:'14px', transform:'translateX(-50%)'
+      }, ()=>{});
+      let iv = null;
+      function start(e){ e.preventDefault(); if(state.locked) return; state.alms.holding = true;
+        iv = setInterval(()=>{
+          state.alms.charge = Math.min(1, state.alms.charge + 0.04);
+          if(state.alms.charge >= 1){
+            clearInterval(iv);
+            state.alms.holding = false;
+            advanceOnce(6);
+          }
+        }, 40);
+      }
+      function stop(e){ if(e) e.preventDefault(); state.alms.holding = false; clearInterval(iv); }
+      btn.addEventListener('pointerdown', start);
+      btn.addEventListener('pointerup', stop);
+      btn.addEventListener('pointerleave', stop);
+      btn.addEventListener('pointercancel', stop);
+    } else if(n === 6){
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,260,330,110)) advanceOnce(7);
+      };
+    } else if(n === 7){
+      state.wish.charge = 0;
+      state.wish.holding = false;
+      const btn = addOverlayBtn('holdBtn', T().requestBtn, {
+        left:'50%', bottom:'14px', transform:'translateX(-50%)'
+      }, ()=>{});
+      let iv = null;
+      function start(e){ e.preventDefault(); if(state.locked) return; state.wish.holding = true;
+        iv = setInterval(()=>{
+          state.wish.charge = Math.min(1, state.wish.charge + 0.035);
+          if(state.wish.charge >= 1){
+            clearInterval(iv);
+            state.wish.holding = false;
+            advanceOnce(8);
+          }
+        }, 40);
+      }
+      function stop(e){ if(e) e.preventDefault(); state.wish.holding = false; clearInterval(iv); }
+      btn.addEventListener('pointerdown', start);
+      btn.addEventListener('pointerup', stop);
+      btn.addEventListener('pointerleave', stop);
+      btn.addEventListener('pointercancel', stop);
+    } else if(n === 8){
+      addOverlayBtn('helpBtn', T().helpText, {
+        left:'50%', bottom:'16px', transform:'translateX(-50%)'
+      }, ()=>{ advanceOnce(9); });
+    } else if(n === 9){
+      state.seq.picks = [];
+      const positions = [{x:160,y:420},{x:400,y:330},{x:640,y:420}];
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        for(let i=0;i<3;i++){
+          const pos = positions[i];
+          if(inCircle(p.x,p.y,pos.x,pos.y-46,30)){
+            const expected = state.seq.picks.length;
+            if(i === expected){
+              state.seq.picks.push(i);
+              if(state.seq.picks.length === 3) advanceOnce(10);
+            }
+            break;
+          }
+        }
+      };
+    } else if(n === 10){
+      state.tickle.charge = 0;
+      state.tickle.holding = false;
+      state.tickle.sneeze = 0;
+      const btn = addOverlayBtn('holdBtn', T().tickleBtn, {
+        left:'50%', bottom:'14px', transform:'translateX(-50%)'
+      }, ()=>{});
+      let iv = null;
+      function start(e){ e.preventDefault(); if(state.locked) return; state.tickle.holding = true;
+        iv = setInterval(()=>{
+          state.tickle.charge = Math.min(1, state.tickle.charge + 0.03);
+          if(state.tickle.charge >= 1){
+            clearInterval(iv);
+            state.tickle.holding = false;
+            state.tickle.sneeze = 1;
+            btn.disabled = true;
+            setTimeout(()=>{ advanceOnce(11); }, 700);
+          }
+        }, 40);
+      }
+      function stop(e){ if(e) e.preventDefault(); state.tickle.holding = false; clearInterval(iv); }
+      btn.addEventListener('pointerdown', start);
+      btn.addEventListener('pointerup', stop);
+      btn.addEventListener('pointerleave', stop);
+      btn.addEventListener('pointercancel', stop);
+    } else if(n === 11){
+      setTimeout(()=>{
+        setNarration(T().scenes[10].narration + ' ' + T().moral);
+      }, 3400);
+      mainBtn.classList.remove('hidden');
+      mainBtn.textContent = T().replayBtn;
+      mainBtn.disabled = false;
+    }
+  }
+
+  /* ============ MAIN BUTTON ============ */
+  mainBtn.addEventListener('click', function(){
+    if(state.scene === 0) goToScene(1);
+    else if(state.scene === TOTAL_SCENES) goToScene(0);
+  });
+
+  /* ============ LANG / MUTE ============ */
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    try{ localStorage.setItem('mentiko_lang', state.lang); }catch(e){}
+    try{
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', state.lang);
+      window.history.replaceState({}, '', url);
+    }catch(e){}
+    applyStaticStrings();
+    if(state.scene > 0 && state.scene <= TOTAL_SCENES){
+      const sceneData = T().scenes[state.scene-1];
+      setInstruction(sceneData.instruction);
+      setNarration(sceneData.narration);
+      const savedScene = state.scene;
+      clearOverlays();
+      setupSceneInteraction(savedScene);
+      if(savedScene === TOTAL_SCENES) mainBtn.textContent = T().replayBtn;
+    }
+  });
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('mentiko_muted', state.muted ? 'true' : 'false'); }catch(e){}
+    muteBtn.textContent = state.muted ? T().muteOn : T().muteOff;
+    if(state.muted) stopSpeak();
+  });
+
+  /* ============ RESIZE ============ */
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(()=>notifyResize());
+    ro.observe(document.getElementById('app'));
+  }
+  window.addEventListener('load', notifyResize);
+  setInterval(notifyResize, 1500);
+
+  /* ============ BOOTSTRAP ============ */
+  applyStaticStrings();
+  renderDots();
+  goToScene(0);
+  render();
+
+})();
+</script>
+</body>
+</html>
