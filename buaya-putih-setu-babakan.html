@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Legenda Buaya Putih Setu Babakan</title>
+<style>
+  :root{
+    --lake-deep:#0d3b3e;
+    --lake-mid:#155a5e;
+    --lake-light:#1f7a7d;
+    --gold:#d9a441;
+    --gold-dim:#8a6a2c;
+    --cream:#f3e9d2;
+    --white-glow:#f5f5f0;
+    --panel-bg:#0a2b2d;
+    --ink:#e9f3f0;
+    --danger:#c0533e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Georgia','Segoe UI',serif;
+    background:linear-gradient(180deg,var(--lake-deep),#071f21);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:14px 10px 18px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+  }
+  .title-block{
+    display:flex;
+    flex-direction:column;
+    line-height:1.15;
+  }
+  .title-block h1{
+    font-size:16px;
+    margin:0;
+    color:var(--gold);
+    letter-spacing:0.3px;
+  }
+  .title-block span{
+    font-size:11px;
+    color:#b9d3d0;
+    font-family:'Segoe UI',sans-serif;
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+  }
+  .ctrl-btn{
+    background:var(--panel-bg);
+    border:1px solid var(--gold-dim);
+    color:var(--cream);
+    font-family:'Segoe UI',sans-serif;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .ctrl-btn:hover{background:#123f42;}
+  .ctrl-btn:active{transform:scale(0.96);}
+  .ctrl-btn.active{border-color:var(--gold); color:var(--gold);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    background:radial-gradient(ellipse at 50% 30%, var(--lake-mid), var(--lake-deep) 75%);
+    border:1px solid #16484b;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35) inset, 0 4px 14px rgba(0,0,0,0.25);
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+  #cover{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:26px 22px;
+    background:radial-gradient(ellipse at 50% 30%, rgba(21,90,94,0.96), rgba(7,31,33,0.98) 78%);
+    gap:14px;
+    z-index:5;
+  }
+  #cover h2{
+    margin:0;
+    color:var(--gold);
+    font-size:clamp(20px,5vw,28px);
+    letter-spacing:0.4px;
+  }
+  #cover p{
+    margin:0;
+    max-width:440px;
+    font-size:14px;
+    color:#cfe4e1;
+    font-family:'Segoe UI',sans-serif;
+    line-height:1.5;
+  }
+  #cover .crocline{
+    font-size:34px;
+    filter:drop-shadow(0 0 10px rgba(245,245,240,0.5));
+  }
+  .start-btn{
+    background:linear-gradient(180deg,#e6b957,var(--gold));
+    color:#2a1c05;
+    border:none;
+    font-family:'Segoe UI',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    padding:12px 28px;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(217,164,65,0.35);
+    transition:transform .12s ease;
+  }
+  .start-btn:active{transform:scale(0.96);}
+
+  #instructionPanel{
+    min-height:20px;
+    font-family:'Segoe UI',sans-serif;
+    font-size:13px;
+    color:var(--gold);
+    background:rgba(217,164,65,0.08);
+    border:1px dashed var(--gold-dim);
+    border-radius:10px;
+    padding:8px 12px;
+    text-align:center;
+  }
+
+  #narrationPanel{
+    font-size:14.5px;
+    line-height:1.6;
+    background:var(--panel-bg);
+    border:1px solid #16484b;
+    border-radius:12px;
+    padding:12px 14px;
+    min-height:64px;
+    display:flex;
+    align-items:center;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:2px 0 0;
+  }
+  .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#2a5b5d;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.done{background:var(--gold);}
+  .dot.current{background:var(--white-glow); transform:scale(1.3);}
+
+  #bottomRow{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  #replayBtn{
+    display:none;
+    background:transparent;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    font-family:'Segoe UI',sans-serif;
+    font-size:13px;
+    padding:8px 18px;
+    border-radius:24px;
+    cursor:pointer;
+  }
+  #replayBtn:active{transform:scale(0.97);}
+
+  #holdBarWrap{
+    position:absolute;
+    left:50%;
+    bottom:16px;
+    transform:translateX(-50%);
+    width:70%;
+    max-width:320px;
+    height:10px;
+    background:rgba(0,0,0,0.35);
+    border-radius:6px;
+    overflow:hidden;
+    display:none;
+    border:1px solid rgba(245,245,240,0.3);
+  }
+  #holdBarFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--white-glow));
+  }
+
+  footer{
+    text-align:center;
+    font-family:'Segoe UI',sans-serif;
+    font-size:11px;
+    color:#5f8b89;
+    padding-top:2px;
+  }
+
+  @media (max-width:480px){
+    .title-block h1{font-size:14px;}
+    .title-block span{font-size:10px;}
+    .ctrl-btn{padding:6px 8px; font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="title-block">
+      <h1 id="mainTitleText">Legenda Buaya Putih Setu Babakan</h1>
+      <span id="subTitleText">Cerita Rakyat Betawi — Jakarta</span>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn" id="langBtn" type="button" title="Ganti Bahasa">🌐 <span id="langBtnLabel">EN</span></button>
+      <button class="ctrl-btn" id="muteBtn" type="button" title="Mute/Unmute">🔊 <span id="muteBtnLabel">Suara</span></button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="gameCanvas" width="900" height="560"></canvas>
+    <div id="holdBarWrap"><div id="holdBarFill"></div></div>
+
+    <div id="cover">
+      <div class="crocline">🐊🌊</div>
+      <h2 id="coverTitle">Legenda Buaya Putih Setu Babakan</h2>
+      <p id="coverDesc">Sebuah kisah cinta, pengorbanan, dan penjaga gaib danau Setu Babakan yang diwariskan turun-temurun oleh warga Betawi.</p>
+      <button class="start-btn" id="startBtn" type="button">Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="instructionPanel"></div>
+  <div id="narrationPanel"></div>
+  <div id="dots"></div>
+  <div id="bottomRow">
+    <button id="replayBtn" type="button">Ulangi Cerita</button>
+  </div>
+
+  <footer>Kisah rakyat turun-temurun dari Setu Babakan, Jagakarsa, Jakarta</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ i18n TEXT ============ */
+  var T = {
+    id:{
+      mainTitle:"Legenda Buaya Putih Setu Babakan",
+      subTitle:"Cerita Rakyat Betawi — Jakarta",
+      coverTitle:"Legenda Buaya Putih Setu Babakan",
+      coverDesc:"Sebuah kisah cinta, pengorbanan, dan penjaga gaib danau Setu Babakan yang diwariskan turun-temurun oleh warga Betawi.",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      muteOn:"Suara",
+      muteOff:"Bisu",
+      footer:"Kisah rakyat turun-temurun dari Setu Babakan, Jagakarsa, Jakarta"
+    },
+    en:{
+      mainTitle:"The Legend of the White Crocodile of Setu Babakan",
+      subTitle:"Betawi Folktale — Jakarta",
+      coverTitle:"The Legend of the White Crocodile of Setu Babakan",
+      coverDesc:"A tale of love, sacrifice, and the mystical guardian of Setu Babakan lake, passed down through generations of the Betawi people.",
+      start:"Start the Story",
+      replay:"Replay the Story",
+      muteOn:"Sound",
+      muteOff:"Muted",
+      footer:"A folktale passed down from Setu Babakan, Jagakarsa, Jakarta"
+    }
+  };
+
+  /* ============ SCENES ============ */
+  var scenes = [
+    {
+      key:"village",
+      narr:{
+        id:"Pada zaman dahulu, di tepi Setu Babakan, hiduplah warga Betawi yang rukun dan damai. Danau yang tenang itu menjadi jantung kehidupan mereka sehari-hari.",
+        en:"Long ago, beside the waters of Setu Babakan, a Betawi village lived in peace and harmony. The calm lake was the heart of their daily lives."
+      },
+      instr:{
+        id:"Ketuk permukaan danau untuk memulai kisah.",
+        en:"Tap the surface of the lake to begin the story."
+      },
+      interaction:"tap-once"
+    },
+    {
+      key:"couple",
+      narr:{
+        id:"Di antara warga desa, ada sepasang muda-mudi yang saling jatuh cinta. Mereka adalah Joko, pemuda sederhana, dan Siti, gadis dari keluarga terpandang.",
+        en:"Among the villagers, a young man named Joko and a girl named Siti had fallen deeply in love. Joko came from a humble family, while Siti's family was well respected."
+      },
+      instr:{
+        id:"Ketuk Joko, lalu ketuk Siti, untuk mempertemukan mereka.",
+        en:"Tap Joko, then tap Siti, to bring them together."
+      },
+      interaction:"multi-tap-pair"
+    },
+    {
+      key:"gate",
+      narr:{
+        id:"Namun cinta mereka terhalang restu. Orang tua Siti menutup pintu rapat-rapat, menolak Joko karena dianggap tak sepadan derajatnya.",
+        en:"But their love met a wall. Siti's parents shut the gate tightly, refusing Joko because they felt he was not of equal standing."
+      },
+      instr:{
+        id:"Ketuk gerbang rumah Siti untuk melihat apa yang terjadi.",
+        en:"Tap the gate of Siti's house to see what happens."
+      },
+      interaction:"tap-once"
+    },
+    {
+      key:"leave",
+      narr:{
+        id:"Dengan hati berat, Joko memutuskan pergi merantau untuk mengubah nasib, berharap suatu hari bisa kembali dan meminang Siti dengan layak.",
+        en:"With a heavy heart, Joko decided to leave and seek his fortune, hoping one day to return and rightfully ask for Siti's hand."
+      },
+      instr:{
+        id:"Seret Joko menyusuri jalan menuju cakrawala.",
+        en:"Drag Joko along the path toward the horizon."
+      },
+      interaction:"drag"
+    },
+    {
+      key:"wait",
+      narr:{
+        id:"Siti menunggu di tepi danau setiap malam, memandang bulan yang berganti purnama, merindukan kabar dari kekasihnya yang tak kunjung tiba.",
+        en:"Every night, Siti waited by the lake, watching the moon wax and wane, longing for news from her beloved that never came."
+      },
+      instr:{
+        id:"Ketuk bulan berulang kali untuk mempercepat waktu menunggu.",
+        en:"Tap the moon repeatedly to speed up the long wait."
+      },
+      interaction:"tap-mash"
+    },
+    {
+      key:"sorrow",
+      narr:{
+        id:"Suatu malam, dilanda putus asa dan kesedihan yang mendalam, Siti melangkah ke tepi danau yang gelap dan tenang, tak mampu lagi menahan pilu di hatinya.",
+        en:"One night, overwhelmed by despair, Siti walked to the edge of the dark, still lake, no longer able to bear the sorrow in her heart."
+      },
+      instr:{
+        id:"Tekan dan tahan permukaan air agar siluman buaya merasakan kesedihan Siti.",
+        en:"Press and hold the water's surface so the crocodile spirit can sense Siti's sorrow."
+      },
+      interaction:"hold"
+    },
+    {
+      key:"transform",
+      narr:{
+        id:"Siluman buaya penjaga Setu Babakan merasa iba melihat Siti. Dengan kekuatan gaibnya, ia mengubah Siti menjadi seekor buaya putih, agar tak lagi merasakan pedih dunia manusia.",
+        en:"The guardian crocodile spirit of Setu Babakan felt deep pity for Siti. With its mystical power, it transformed her into a white crocodile, so she would no longer feel the pain of the human world."
+      },
+      instr:{
+        id:"Ketuk cahaya di dalam air untuk menyaksikan keajaiban terjadi.",
+        en:"Tap the glow in the water to witness the transformation."
+      },
+      interaction:"tap-once"
+    },
+    {
+      key:"ending",
+      narr:{
+        id:"Sejak saat itu, buaya putih dipercaya menjaga Setu Babakan. Konon ia hanya muncul untuk melindungi danau dan menegur siapa saja yang berbuat tak baik di sana. Hingga kini warga tetap menghormati dan menjaga kelestarian Setu Babakan.",
+        en:"From that day on, the white crocodile was believed to watch over Setu Babakan, appearing only to protect the lake and caution those who behaved badly there. To this day, the local people continue to respect and preserve Setu Babakan."
+      },
+      instr:{
+        id:"Ketuk buaya putih untuk mengakhiri kisah.",
+        en:"Tap the white crocodile to end the story."
+      },
+      interaction:"tap-once"
+    }
+  ];
+
+  /* ============ STATE ============ */
+  var state = {
+    lang: "id",
+    muted: false,
+    sceneIndex: -1, // -1 = cover
+    locked: false,
+    started: false,
+    coupleStep: 0,       // 0=none,1=joko tapped,2=both
+    gateOpened: false,
+    dragging: false,
+    dragProgress: 0,     // 0..1
+    dragPointerId: null,
+    moonTaps: 0,
+    moonTapsNeeded: 6,
+    holdActive: false,
+    holdProgress: 0,
+    holdNeeded: 1.6, // seconds
+    transformProgress: 0, // 0..1 animating
+    transformDone: false,
+    endingTapped: false,
+    t0: performance.now()
+  };
+
+  try {
+    var savedMute = localStorage.getItem("swb_muted");
+    if (savedMute === "1") state.muted = true;
+  } catch(e){}
+
+  /* ============ DOM refs ============ */
+  var canvas = document.getElementById("gameCanvas");
+  var ctx = canvas.getContext("2d");
+  var cover = document.getElementById("cover");
+  var startBtn = document.getElementById("startBtn");
+  var replayBtn = document.getElementById("replayBtn");
+  var instructionPanel = document.getElementById("instructionPanel");
+  var narrationPanel = document.getElementById("narrationPanel");
+  var dotsWrap = document.getElementById("dots");
+  var langBtn = document.getElementById("langBtn");
+  var langBtnLabel = document.getElementById("langBtnLabel");
+  var muteBtn = document.getElementById("muteBtn");
+  var muteBtnLabel = document.getElementById("muteBtnLabel");
+  var holdBarWrap = document.getElementById("holdBarWrap");
+  var holdBarFill = document.getElementById("holdBarFill");
+
+  var LW = 900, LH = 560; // logical canvas size
+
+  /* ============ Build dots ============ */
+  function buildDots(){
+    dotsWrap.innerHTML = "";
+    for (var i=0;i<scenes.length;i++){
+      var d = document.createElement("div");
+      d.className = "dot";
+      d.dataset.idx = i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var els = dotsWrap.querySelectorAll(".dot");
+    for (var i=0;i<els.length;i++){
+      els[i].classList.remove("done","current");
+      if (i < state.sceneIndex) els[i].classList.add("done");
+      else if (i === state.sceneIndex) els[i].classList.add("current");
+    }
+  }
+  buildDots();
+
+  /* ============ i18n apply ============ */
+  function applyLang(){
+    var t = T[state.lang];
+    document.getElementById("mainTitleText").textContent = t.mainTitle;
+    document.getElementById("subTitleText").textContent = t.subTitle;
+    document.getElementById("coverTitle").textContent = t.coverTitle;
+    document.getElementById("coverDesc").textContent = t.coverDesc;
+    startBtn.textContent = t.start;
+    replayBtn.textContent = t.replay;
+    muteBtnLabel.textContent = state.muted ? t.muteOff : t.muteOn;
+    document.querySelector("footer").textContent = t.footer;
+    langBtnLabel.textContent = state.lang === "id" ? "EN" : "ID";
+    document.documentElement.lang = state.lang;
+    if (state.sceneIndex >= 0 && state.sceneIndex < scenes.length){
+      refreshTextPanels();
+    }
+  }
+
+  function refreshTextPanels(){
+    var sc = scenes[state.sceneIndex];
+    if (!sc) return;
+    instructionPanel.textContent = sc.instr[state.lang];
+    narrationPanel.textContent = sc.narr[state.lang];
+  }
+
+  /* ============ Speech ============ */
+  var currentUtterance = null;
+  function speak(text){
+    if (state.muted) return;
+    if (!("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === "id" ? "id-ID" : "en-US";
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function stopSpeech(){
+    if ("speechSynthesis" in window){
+      try { window.speechSynthesis.cancel(); } catch(e){}
+    }
+  }
+
+  /* ============ Canvas resize (responsive + crisp) ============ */
+  function resizeCanvas(){
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.clientWidth || LW;
+    var cssHeight = cssWidth * (LH/LW);
+    canvas.style.height = cssHeight + "px";
+    canvas.width = Math.round(LW * dpr);
+    canvas.height = Math.round(LH * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize", resizeCanvas);
+
+  /* ============ postMessage resize for iframe embed ============ */
+  function notifyParentHeight(){
+    try {
+      var h = document.getElementById("app").getBoundingClientRect().height + 24;
+      window.parent.postMessage({ type:"setuBabakanResize", height: Math.ceil(h) }, "*");
+    } catch(e){}
+  }
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ notifyParentHeight(); });
+    ro.observe(document.getElementById("app"));
+  } else {
+    window.addEventListener("resize", notifyParentHeight);
+  }
+
+  /* ============ Drawing helpers ============ */
+  function clear(){
+    ctx.clearRect(0,0,LW,LH);
+  }
+
+  function drawSky(t){
+    var grd = ctx.createLinearGradient(0,0,0,LH*0.55);
+    grd.addColorStop(0,"#08262a");
+    grd.addColorStop(1,"#124e52");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,LW,LH*0.55);
+    // stars
+    ctx.fillStyle = "rgba(245,245,240,0.5)";
+    for (var i=0;i<40;i++){
+      var sx = (i*97 % LW);
+      var sy = (i*53 % (LH*0.4));
+      var tw = 0.4 + 0.6*Math.abs(Math.sin(t*0.001 + i));
+      ctx.globalAlpha = tw*0.6;
+      ctx.beginPath();
+      ctx.arc(sx, sy+10, 1.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawHills(){
+    ctx.fillStyle = "#0b3538";
+    ctx.beginPath();
+    ctx.moveTo(0, LH*0.42);
+    ctx.quadraticCurveTo(LW*0.25, LH*0.34, LW*0.5, LH*0.42);
+    ctx.quadraticCurveTo(LW*0.75, LH*0.5, LW, LH*0.4);
+    ctx.lineTo(LW, LH*0.55);
+    ctx.lineTo(0, LH*0.55);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawLake(t, extraAlpha){
+    var y0 = LH*0.52;
+    var grd = ctx.createLinearGradient(0,y0,0,LH);
+    grd.addColorStop(0,"#1f7a7d");
+    grd.addColorStop(1,"#062729");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,y0,LW,LH-y0);
+
+    // ripples
+    ctx.strokeStyle = "rgba(245,245,240,0.18)";
+    ctx.lineWidth = 1.4;
+    for (var i=0;i<5;i++){
+      var ry = y0 + 26 + i*36;
+      var phase = t*0.0006 + i*1.3;
+      ctx.beginPath();
+      for (var x=0;x<=LW;x+=18){
+        var yy = ry + Math.sin(x*0.03 + phase)*4;
+        if (x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = "#5a3a1e";
+    ctx.fillRect(-6,-10,12,50);
+    ctx.fillStyle = "#1f6b4a";
+    ctx.beginPath();
+    ctx.arc(0,-38,34,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "#278059";
+    ctx.beginPath();
+    ctx.arc(-14,-22,22,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(16,-20,22,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHouse(x,y,scale,doorOpen){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // base
+    ctx.fillStyle = "#caa15c";
+    ctx.fillRect(-55,-10,110,70);
+    // roof (khas Betawi joglo-ish)
+    ctx.fillStyle = "#8a4a2b";
+    ctx.beginPath();
+    ctx.moveTo(-70,-10);
+    ctx.lineTo(0,-60);
+    ctx.lineTo(70,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#6f3a20";
+    ctx.fillRect(-72,-14,144,10);
+    // gold ornament
+    ctx.fillStyle = "#d9a441";
+    ctx.beginPath();
+    ctx.moveTo(-6,-58);
+    ctx.lineTo(6,-58);
+    ctx.lineTo(0,-70);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.save();
+    ctx.translate(0,60);
+    var doorAngle = doorOpen ? 0.9 : 0;
+    ctx.fillStyle = "#3d2412";
+    ctx.fillRect(-20,-60,40,60);
+    ctx.save();
+    ctx.translate(doorOpen?-20:0,-60);
+    ctx.rotate(doorOpen ? -doorAngle : 0);
+    ctx.fillStyle = "#6b3e21";
+    ctx.fillRect(0,0, doorOpen? 40: 40,60);
+    ctx.restore();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawPersonSimple(x,y,scale,skinTone,clothColor,label){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(0,74,26,7,0,0,Math.PI*2);
+    ctx.fill();
+    // body
+    ctx.fillStyle = clothColor;
+    ctx.beginPath();
+    ctx.moveTo(-22,70);
+    ctx.lineTo(22,70);
+    ctx.lineTo(16,10);
+    ctx.lineTo(-16,10);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = skinTone;
+    ctx.beginPath();
+    ctx.arc(0,-8,20,0,Math.PI*2);
+    ctx.fill();
+    // simple hair
+    ctx.fillStyle = "#241a10";
+    ctx.beginPath();
+    ctx.arc(0,-14,20,Math.PI,0);
+    ctx.fill();
+    ctx.restore();
+    if (label){
+      ctx.fillStyle = "rgba(245,245,240,0.85)";
+      ctx.font = "13px 'Segoe UI', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, x, y+96);
+    }
+  }
+
+  function drawHeart(x,y,scale,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha!==undefined?alpha:1;
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = "#e0483e";
+    ctx.beginPath();
+    ctx.moveTo(0,6);
+    ctx.bezierCurveTo(-14,-10,-24,4,0,20);
+    ctx.bezierCurveTo(24,4,14,-10,0,6);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMoon(x,y,r,phase){
+    ctx.save();
+    ctx.fillStyle = "#f3ecc9";
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    // glow
+    ctx.globalAlpha = 0.25;
+    ctx.beginPath();
+    ctx.arc(x,y,r*1.6,0,Math.PI*2);
+    ctx.fillStyle = "#f3ecc9";
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCrocodile(x,y,scale,white,swimPhase){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.rotate(Math.sin((swimPhase||0))*0.05);
+    var body = white ? "#f5f5f0" : "#3f6b3a";
+    var belly = white ? "#e3ded0" : "#c8d98a";
+    // tail
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(-70,0);
+    ctx.quadraticCurveTo(-110,-14,-140,0);
+    ctx.quadraticCurveTo(-110,14,-70,0);
+    ctx.fill();
+    // body
+    ctx.beginPath();
+    ctx.ellipse(0,0,72,26,0,0,Math.PI*2);
+    ctx.fill();
+    // belly
+    ctx.fillStyle = belly;
+    ctx.beginPath();
+    ctx.ellipse(0,10,55,12,0,0,Math.PI*2);
+    ctx.fill();
+    // head/snout
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(60,-8);
+    ctx.lineTo(110,-4);
+    ctx.lineTo(110,6);
+    ctx.lineTo(60,10);
+    ctx.closePath();
+    ctx.fill();
+    // eyes
+    ctx.fillStyle = white ? "#e0483e" : "#e0483e";
+    ctx.beginPath();
+    ctx.arc(70,-10,3.2,0,Math.PI*2);
+    ctx.fill();
+    if (white){
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.ellipse(0,0,90,40,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
+  function drawGlowOrb(x,y,r,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha!==undefined?alpha:1;
+    var grd = ctx.createRadialGradient(x,y,0,x,y,r);
+    grd.addColorStop(0,"rgba(245,245,240,0.95)");
+    grd.addColorStop(1,"rgba(245,245,240,0)");
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPath(x1,y1,x2,y2){
+    ctx.save();
+    ctx.strokeStyle = "rgba(217,164,65,0.4)";
+    ctx.lineWidth = 10;
+    ctx.setLineDash([16,10]);
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ============ Hit areas registry (rebuilt every frame render call) ============ */
+  var hitAreas = []; // {x,y,r,id}
+  function registerHit(id,x,y,r){ hitAreas.push({id:id,x:x,y:y,r:r}); }
+  function hitTest(px,py){
+    for (var i=hitAreas.length-1;i>=0;i--){
+      var h = hitAreas[i];
+      var dx = px-h.x, dy = py-h.y;
+      if (dx*dx+dy*dy <= h.r*h.r) return h.id;
+    }
+    return null;
+  }
+
+  /* ============ Scene draw functions ============ */
+  function sceneVillage(t){
+    drawSky(t);
+    drawHills();
+    drawTree(140,LH*0.5-4,1.1);
+    drawTree(LW-140,LH*0.5-2,0.9);
+    drawHouse(LW/2, LH*0.44, 0.9, false);
+    drawLake(t);
+    registerHit("lake", LW/2, LH*0.78, 260);
+    if (!state.locked){
+      // gentle pulsing ripple hint
+      var pulse = 8 + Math.sin(t*0.004)*4;
+      ctx.save();
+      ctx.strokeStyle = "rgba(245,245,240,0.5)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(LW/2, LH*0.78, 40+pulse, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function sceneCouple(t){
+    drawSky(t);
+    drawHills();
+    drawLake(t);
+    var jokoX = 300, girlX = 600, y = LH*0.62;
+    if (state.coupleStep >= 2){
+      var merge = Math.min(1,(t-state.coupleAnimStart)/700 || 0);
+    }
+    drawPersonSimple(jokoX,y,1,"#c98d5a","#3d5a45","Joko");
+    drawPersonSimple(girlX,y,1,"#e8bd8a","#a9375a","Siti");
+    registerHit("joko", jokoX, y+10, 55);
+    registerHit("girl", girlX, y+10, 55);
+
+    if (state.coupleStep>=1){
+      ctx.save();
+      ctx.strokeStyle = "rgba(217,164,65,0.7)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(jokoX, y-10, 62, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (state.coupleStep>=2){
+      var pulse = 0.85+Math.sin(t*0.006)*0.15;
+      drawHeart((jokoX+girlX)/2, y-70, pulse, 1);
+    }
+  }
+
+  function sceneGate(t){
+    drawSky(t);
+    drawHills();
+    drawHouse(LW/2, LH*0.5, 1.15, state.gateOpened);
+    drawLake(t);
+    registerHit("gate", LW/2, LH*0.62, 90);
+    if (!state.locked){
+      ctx.save();
+      ctx.strokeStyle = "rgba(245,245,240,0.4)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,6]);
+      ctx.strokeRect(LW/2-40, LH*0.5, 80, 90);
+      ctx.restore();
+    }
+    if (state.gateOpened){
+      ctx.save();
+      ctx.font = "italic 15px Georgia, serif";
+      ctx.fillStyle = "#e0483e";
+      ctx.textAlign = "center";
+      ctx.globalAlpha = Math.min(1,(t-state.gateAnimStart)/500||0);
+      ctx.fillText(state.lang==="id" ? "\"Kau tak sepadan!\"" : "\"You are not worthy!\"", LW/2, LH*0.36);
+      ctx.restore();
+    }
+  }
+
+  function sceneLeave(t){
+    drawSky(t);
+    drawHills();
+    drawLake(t);
+    var x1=180, x2=LW-140, y=LH*0.6;
+    drawPath(x1,y,x2,y);
+    var progress = state.dragProgress;
+    var jokoX = x1 + (x2-x1)*progress;
+    drawPersonSimple(jokoX, y, 0.9, "#c98d5a", "#3d5a45", state.lang==="id"?"Joko":"Joko");
+    // horizon sun
+    ctx.save();
+    ctx.fillStyle = "rgba(217,164,65,0.9)";
+    ctx.beginPath();
+    ctx.arc(x2+40, y-60, 28, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    registerHit("jokoDrag", jokoX, y+10, 60);
+  }
+
+  function sceneWait(t){
+    drawSky(t);
+    drawHills();
+    drawLake(t);
+    var moonX = LW/2, moonY = 110;
+    drawMoon(moonX, moonY, 34);
+    registerHit("moon", moonX, moonY, 60);
+    drawPersonSimple(LW/2, LH*0.72, 1, "#e8bd8a", "#a9375a", state.lang==="id"?"Siti menunggu":"Siti waits");
+    // progress bar of moon cycles
+    var pct = Math.min(1, state.moonTaps/state.moonTapsNeeded);
+    ctx.save();
+    ctx.fillStyle="rgba(245,245,240,0.2)";
+    ctx.fillRect(LW/2-90,150,180,8);
+    ctx.fillStyle="var(--gold)";
+    ctx.fillStyle="#d9a441";
+    ctx.fillRect(LW/2-90,150,180*pct,8);
+    ctx.restore();
+  }
+
+  function sceneSorrow(t){
+    drawSky(t);
+    drawHills();
+    drawLake(t);
+    drawPersonSimple(LW/2, LH*0.66, 1, "#e8bd8a", "#a9375a", "Siti");
+    registerHit("water", LW/2, LH*0.85, 220);
+    if (state.holdActive){
+      var pct = state.holdProgress/state.holdNeeded;
+      drawGlowOrb(LW/2, LH*0.85, 60+pct*90, 0.15+pct*0.5);
+    }
+  }
+
+  function sceneTransform(t){
+    drawSky(t);
+    drawHills();
+    drawLake(t);
+    var cx=LW/2, cy=LH*0.72;
+    var p = state.transformProgress; // 0..1
+    if (p<1){
+      ctx.save();
+      ctx.globalAlpha = 1-p;
+      drawPersonSimple(cx, cy-10, 1, "#e8bd8a", "#a9375a", null);
+      ctx.restore();
+    }
+    if (p>0){
+      ctx.save();
+      ctx.globalAlpha = p;
+      drawCrocodile(cx, cy+30, 0.9, true, t*0.002);
+      ctx.restore();
+    }
+    drawGlowOrb(cx, cy, 70+Math.sin(t*0.005)*10, 0.5+ (p>0&&p<1?0.4:0.15));
+    if (!state.transformDone){
+      registerHit("orb", cx, cy, 90);
+    }
+    // sparkles once triggered
+    if (state.transformStart){
+      var elapsed = t-state.transformStart;
+      for (var i=0;i<14;i++){
+        var ang = (i/14)*Math.PI*2 + elapsed*0.001;
+        var rad = 40 + (elapsed*0.06)%140;
+        var sx = cx+Math.cos(ang)*rad;
+        var sy = cy+Math.sin(ang)*rad*0.6;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1-(rad/160));
+        ctx.fillStyle = "#f5f5f0";
+        ctx.beginPath();
+        ctx.arc(sx,sy,2.4,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+
+  function sceneEnding(t){
+    drawSky(t);
+    drawHills();
+    drawLake(t);
+    var cx = LW*0.3 + (Math.sin(t*0.0007)*0.5+0.5)*LW*0.4;
+    var cy = LH*0.78;
+    drawCrocodile(cx, cy, 1, true, t*0.0025);
+    registerHit("finalCroc", cx, cy, 100);
+    if (state.endingTapped){
+      ctx.save();
+      ctx.font="bold 20px Georgia, serif";
+      ctx.fillStyle="#f5f5f0";
+      ctx.textAlign="center";
+      ctx.globalAlpha = Math.min(1,(t-state.endingAnimStart)/700||0);
+      ctx.fillText(state.lang==="id" ? "Penjaga Setu Babakan" : "Guardian of Setu Babakan", LW/2, 90);
+      ctx.restore();
+    }
+  }
+
+  var sceneDrawFns = [sceneVillage, sceneCouple, sceneGate, sceneLeave, sceneWait, sceneSorrow, sceneTransform, sceneEnding];
+
+  /* ============ Main render loop ============ */
+  function render(t){
+    clear();
+    hitAreas = [];
+    if (state.sceneIndex>=0 && state.sceneIndex < sceneDrawFns.length){
+      sceneDrawFns[state.sceneIndex](t);
+    } else {
+      drawSky(t); drawHills(); drawLake(t);
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  /* ============ Scene transition control ============ */
+  function goToScene(idx){
+    state.sceneIndex = idx;
+    state.locked = false;
+    // reset per-scene transient state
+    state.coupleStep = 0;
+    state.gateOpened = false;
+    state.dragging = false;
+    state.dragProgress = 0;
+    state.moonTaps = 0;
+    state.holdActive = false;
+    state.holdProgress = 0;
+    state.transformProgress = 0;
+    state.transformDone = false;
+    state.transformStart = 0;
+    state.endingTapped = false;
+    holdBarWrap.style.display = "none";
+
+    updateDots();
+    refreshTextPanels();
+    speak(scenes[idx].narr[state.lang]);
+    notifyParentHeight();
+  }
+
+  function advanceOnce(){
+    if (state.locked) return;
+    state.locked = true;
+    stopSpeech();
+    setTimeout(function(){
+      if (state.sceneIndex+1 < scenes.length){
+        goToScene(state.sceneIndex+1);
+      } else {
+        finishStory();
+      }
+    }, 600);
+  }
+
+  function finishStory(){
+    state.locked = true;
+    replayBtn.style.display = "inline-block";
+    instructionPanel.textContent = state.lang==="id"
+      ? "Kisah selesai. Tekan \"Ulangi Cerita\" untuk mengulang."
+      : "The story has ended. Press \"Replay the Story\" to start again.";
+    notifyParentHeight();
+  }
+
+  /* ============ Pointer handling ============ */
+  function getCanvasPoint(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    var scaleX = LW/rect.width;
+    var scaleY = LH/rect.height;
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  var isPointerDown = false;
+
+  canvas.addEventListener("pointerdown", function(evt){
+    if (state.sceneIndex<0) return;
+    isPointerDown = true;
+    var p = getCanvasPoint(evt);
+    var id = hitTest(p.x,p.y);
+    handleDown(id, evt);
+  });
+  window.addEventListener("pointermove", function(evt){
+    if (!isPointerDown) return;
+    var p = getCanvasPoint(evt);
+    handleMove(p, evt);
+  });
+  window.addEventListener("pointerup", function(evt){
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    handleUp(evt);
+  });
+
+  function currentInteraction(){
+    if (state.sceneIndex<0 || state.sceneIndex>=scenes.length) return null;
+    return scenes[state.sceneIndex].interaction;
+  }
+
+  function handleDown(id, evt){
+    if (state.locked) return;
+    var inter = currentInteraction();
+
+    if (inter==="tap-once"){
+      if (id==="lake" || id==="gate" || id==="orb" || id==="finalCroc"){
+        onSimpleTapTarget(id);
+      }
+      return;
+    }
+
+    if (inter==="multi-tap-pair"){
+      if (id==="joko" && state.coupleStep===0){
+        state.coupleStep = 1;
+      } else if (id==="girl" && state.coupleStep===1){
+        state.coupleStep = 2;
+        state.coupleAnimStart = performance.now();
+        setTimeout(advanceOnce, 700);
+      }
+      return;
+    }
+
+    if (inter==="drag"){
+      if (id==="jokoDrag"){
+        state.dragging = true;
+      }
+      return;
+    }
+
+    if (inter==="tap-mash"){
+      if (id==="moon"){
+        state.moonTaps++;
+        if (state.moonTaps>=state.moonTapsNeeded){
+          advanceOnce();
+        }
+      }
+      return;
+    }
+
+    if (inter==="hold"){
+      if (id==="water"){
+        state.holdActive = true;
+        state.holdStartTime = performance.now();
+        holdBarWrap.style.display = "block";
+      }
+      return;
+    }
+  }
+
+  function onSimpleTapTarget(id){
+    if (state.sceneIndex===2){ // gate
+      if (!state.gateOpened){
+        state.gateOpened = true;
+        state.gateAnimStart = performance.now();
+        setTimeout(advanceOnce, 1100);
+      }
+      return;
+    }
+    if (state.sceneIndex===6){ // transform
+      if (!state.transformDone){
+        state.transformDone = true;
+        state.transformStart = performance.now();
+        animateTransform();
+      }
+      return;
+    }
+    if (state.sceneIndex===7){ // ending
+      if (!state.endingTapped){
+        state.endingTapped = true;
+        state.endingAnimStart = performance.now();
+        setTimeout(finishStory, 900);
+      }
+      return;
+    }
+    // default (village / lake)
+    advanceOnce();
+  }
+
+  function animateTransform(){
+    var start = performance.now();
+    var dur = 1600;
+    function step(now){
+      var p = Math.min(1,(now-start)/dur);
+      state.transformProgress = p;
+      if (p<1){
+        requestAnimationFrame(step);
+      } else {
+        setTimeout(advanceOnce, 500);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function handleMove(p, evt){
+    var inter = currentInteraction();
+    if (inter==="drag" && state.dragging){
+      var x1=180, x2=LW-140;
+      var prog = (p.x-x1)/(x2-x1);
+      state.dragProgress = Math.max(0,Math.min(1,prog));
+    }
+    if (inter==="hold" && state.holdActive){
+      // keep holding as long as pointer is down; handled in updateHold loop
+    }
+  }
+
+  function handleUp(evt){
+    var inter = currentInteraction();
+    if (inter==="drag" && state.dragging){
+      state.dragging = false;
+      if (state.dragProgress >= 0.92){
+        state.dragProgress = 1;
+        advanceOnce();
+      } else {
+        // snap back a bit if not far enough, but keep some progress feel
+        // no punishment, just don't advance
+      }
+    }
+    if (inter==="hold" && state.holdActive){
+      state.holdActive = false;
+      holdBarWrap.style.display = "none";
+      holdBarFill.style.width = "0%";
+      state.holdProgress = 0;
+    }
+  }
+
+  /* hold progress ticking */
+  setInterval(function(){
+    if (state.holdActive){
+      var elapsed = (performance.now()-state.holdStartTime)/1000;
+      state.holdProgress = Math.min(state.holdNeeded, elapsed);
+      var pct = (state.holdProgress/state.holdNeeded)*100;
+      holdBarFill.style.width = pct+"%";
+      if (state.holdProgress>=state.holdNeeded){
+        state.holdActive = false;
+        holdBarWrap.style.display = "none";
+        advanceOnce();
+      }
+    }
+  }, 50);
+
+  /* ============ Buttons ============ */
+  startBtn.addEventListener("click", function(){
+    cover.style.display = "none";
+    state.started = true;
+    resizeCanvas();
+    goToScene(0);
+  });
+
+  replayBtn.addEventListener("click", function(){
+    replayBtn.style.display = "none";
+    goToScene(0);
+  });
+
+  langBtn.addEventListener("click", function(){
+    state.lang = state.lang==="id" ? "en" : "id";
+    applyLang();
+    if (state.sceneIndex>=0 && state.sceneIndex<scenes.length && !state.locked){
+      speak(scenes[state.sceneIndex].narr[state.lang]);
+    }
+  });
+
+  muteBtn.addEventListener("click", function(){
+    state.muted = !state.muted;
+    try { localStorage.setItem("swb_muted", state.muted ? "1":"0"); } catch(e){}
+    if (state.muted) stopSpeech();
+    applyLang();
+  });
+
+  /* ============ URL lang param ============ */
+  (function initLangFromUrl(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var l = params.get("lang");
+      if (l==="en" || l==="id") state.lang = l;
+    } catch(e){}
+  })();
+
+  /* ============ init ============ */
+  applyLang();
+  resizeCanvas();
+  window.addEventListener("load", function(){
+    resizeCanvas();
+    notifyParentHeight();
+  });
+  setTimeout(notifyParentHeight, 400);
+
+})();
+</script>
+</body>
+</html>
