@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kisah Pangeran Syarif</title>
+<style>
+  :root{
+    --bg-1:#0f2027;
+    --bg-2:#203a43;
+    --bg-3:#2c5364;
+    --gold:#e0b84b;
+    --gold-soft:#f3d98b;
+    --cream:#f7ecd7;
+    --panel:#12222a;
+    --accent:#7fb7a3;
+    --river:#2f6b8f;
+    --danger:#c85c3c;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:transparent;
+    overflow:hidden;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-2) 55%,var(--bg-3));
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,0.35);
+    color:var(--cream);
+    position:relative;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:rgba(0,0,0,0.25);
+  }
+  #topbar h1{
+    font-size:15px;
+    margin:0;
+    letter-spacing:0.5px;
+    font-weight:600;
+    color:var(--gold-soft);
+  }
+  .icon-btn{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.18);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background 0.2s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.18);}
+  #controls{display:flex;gap:8px;}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    padding-top:66%;
+  }
+  #gameCanvas{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    display:block;
+    touch-action:manipulation;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:10px 0 2px;
+  }
+  .dot{
+    width:9px;height:9px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.25);
+    transition:all 0.3s;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.3);}
+  .dot.done{background:var(--accent);}
+
+  #narration-panel{
+    margin:6px 14px 4px;
+    background:var(--panel);
+    border-radius:10px;
+    padding:12px 14px;
+    min-height:56px;
+    font-size:14px;
+    line-height:1.5;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  #instruction{
+    margin:0 14px 6px;
+    font-size:12.5px;
+    color:var(--gold-soft);
+    font-style:italic;
+    min-height:16px;
+  }
+  #bottombar{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:6px 14px 16px;
+  }
+  #startBtn{
+    background:linear-gradient(120deg,var(--gold),#c9962f);
+    color:#241a05;
+    border:none;
+    border-radius:24px;
+    padding:10px 26px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(224,184,75,0.35);
+  }
+  #startBtn:active{transform:scale(0.97);}
+  .hidden{display:none !important;}
+
+  #footer{
+    text-align:center;
+    font-size:10.5px;
+    color:rgba(247,236,215,0.45);
+    padding:2px 0 10px;
+  }
+
+  /* progress bar for hold interaction */
+  .prog-label{
+    position:absolute;
+    bottom:8px;left:50%;
+    transform:translateX(-50%);
+    font-size:11px;
+    color:var(--cream);
+    background:rgba(0,0,0,0.4);
+    padding:3px 10px;
+    border-radius:10px;
+    pointer-events:none;
+  }
+
+  @media (max-width:420px){
+    #topbar h1{font-size:12.5px;}
+    .icon-btn{padding:5px 8px;font-size:11px;}
+    #narration-panel{font-size:13px;padding:10px 12px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1 id="titleText">Kisah Pangeran Syarif</h1>
+    <div id="controls">
+      <button class="icon-btn" id="langBtn">EN</button>
+      <button class="icon-btn" id="muteBtn">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="narration-panel">
+    <span id="narrationText"></span>
+  </div>
+  <div id="instruction" id="instructionText"></div>
+
+  <div id="bottombar">
+    <button id="startBtn">Mulai Cerita</button>
+  </div>
+
+  <div id="footer">Cerita Rakyat Betawi &mdash; Interaktif</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     LANGUAGE + TEXT DATA
+  --------------------------------------------------------- */
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var T = {
+    id:{
+      title:"Kisah Pangeran Syarif",
+      start:"Mulai Cerita",
+      restart:"Ulangi Cerita",
+      footer:"Cerita Rakyat Betawi — Interaktif",
+      langBtn:"EN",
+      scenes:[
+        {
+          narration:"Di tanah Jayakarta yang kini bernama Jakarta, hiduplah Pangeran Syarif, seorang penyebar agama Islam yang bijaksana dan penuh humor. Suatu hari, dalam perjalanan menuju Desa Bendungan, ia melewati Sungai Ciliwung yang diselimuti gerimis. Di sana, sebuah perahu mencurigakan mendekat.",
+          instruction:"Ketuk perahu untuk melihat siapa yang mendekat.",
+          progLabel:""
+        },
+        {
+          narration:"Pangeran Syarif merasa curiga. Sang pemilik perahu ternyata adalah mata-mata Belanda yang diam-diam mengikutinya. Untuk menghilangkan jejak, Pangeran Syarif bersembunyi di balik semak-semak.",
+          instruction:"Tahan semak-semak untuk bersembunyi.",
+          progLabel:"Bersembunyi..."
+        },
+        {
+          narration:"Sang mata-mata terus mengendap-endap. Melihat itu, Pangeran Syarif segera masuk ke sebuah terowongan gelap yang tembus hingga ke arah Sunter, dekat Pondok Gede.",
+          instruction:"Ketuk mulut terowongan untuk masuk.",
+          progLabel:""
+        },
+        {
+          narration:"Di dalam kegelapan, sang mata-mata menjadi bingung dan takut. Terowongan itu terasa gaib baginya. Ia pun mendayung perahunya sekuat tenaga, berusaha mengejar Pangeran Syarif yang sudah jauh di depan.",
+          instruction:"Ketuk dayung berulang kali untuk mengejar!",
+          progLabel:""
+        },
+        {
+          narration:"Dengan napas terengah dan hati cemas, sang mata-mata akhirnya berhasil menghampiri Pangeran Syarif. Ia berlutut dan memohon ampun atas perbuatannya menguntit sang Pangeran.",
+          instruction:"Ketuk Pangeran Syarif untuk mendengar jawabannya.",
+          progLabel:""
+        },
+        {
+          narration:"Pangeran Syarif berkata lembut, \"Mintalah ampun bukan kepadaku, melainkan kepada Allah SWT, sang pemilik alam semesta.\" Sejak saat itu, sang mata-mata bertobat dan menjadi murid Pangeran Syarif yang setia, belajar ilmu agama dengan sepenuh hati.",
+          instruction:"Ketuk tombol Selesai untuk mengakhiri cerita.",
+          progLabel:""
+        }
+      ],
+      endTitle:"Tamat",
+      endSub:"Hikmah: Jadilah pemaaf, jangan berbuat jahat, dan selalu mendekatlah kepada Tuhan.",
+      finishBtn:"Selesai",
+      tapBoat:"(diketuk)",
+      caught:"Terkejar!"
+    },
+    en:{
+      title:"The Tale of Prince Syarif",
+      start:"Start the Story",
+      restart:"Play Again",
+      footer:"Betawi Folktale — Interactive",
+      langBtn:"ID",
+      scenes:[
+        {
+          narration:"In the old land of Jayakarta, now known as Jakarta, lived Prince Syarif, a wise and humorous teacher of Islam. One day, travelling to Bendungan Village, he passed the drizzly Ciliwung River. There, a suspicious boat drew near.",
+          instruction:"Tap the boat to see who is approaching.",
+          progLabel:""
+        },
+        {
+          narration:"Prince Syarif grew suspicious — the boat owner was secretly a Dutch spy following him. To lose his trail, Prince Syarif hid behind the bushes.",
+          instruction:"Hold the bushes to hide.",
+          progLabel:"Hiding..."
+        },
+        {
+          narration:"The spy kept creeping closer. Seeing this, Prince Syarif quickly entered a dark tunnel that led all the way to Sunter, near Pondok Gede.",
+          instruction:"Tap the tunnel entrance to go inside.",
+          progLabel:""
+        },
+        {
+          narration:"Inside the darkness, the spy grew confused and afraid — the tunnel felt magical to him. He paddled his boat with all his strength, trying to catch up with Prince Syarif far ahead.",
+          instruction:"Tap the paddle repeatedly to catch up!",
+          progLabel:""
+        },
+        {
+          narration:"Breathless and anxious, the spy finally reached Prince Syarif. He knelt and begged forgiveness for having followed him.",
+          instruction:"Tap Prince Syarif to hear his answer.",
+          progLabel:""
+        },
+        {
+          narration:"Prince Syarif spoke gently, \"Do not ask forgiveness from me, but from Allah, the Lord of the universe.\" From that day, the spy repented and became Prince Syarif's loyal student, learning the faith wholeheartedly.",
+          instruction:"Tap Finish to end the story.",
+          progLabel:""
+        }
+      ],
+      endTitle:"The End",
+      endSub:"Moral: Be forgiving, avoid wrongdoing, and always stay close to God.",
+      finishBtn:"Finish",
+      tapBoat:"(tapped)",
+      caught:"Caught up!"
+    }
+  };
+
+  /* ---------------------------------------------------------
+     DOM
+  --------------------------------------------------------- */
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var narrationText = document.getElementById('narrationText');
+  var instructionText = document.getElementById('instruction');
+  var dotsWrap = document.getElementById('dots');
+  var startBtn = document.getElementById('startBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  var titleText = document.getElementById('titleText');
+  var footerEl = document.getElementById('footer');
+
+  var W=0,H=0,DPR=1;
+
+  function resizeCanvas(){
+    var wrap = document.getElementById('stage-wrap');
+    var rect = wrap.getBoundingClientRect();
+    DPR = window.devicePixelRatio || 1;
+    W = rect.width; H = rect.height;
+    canvas.width = W*DPR;
+    canvas.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    draw();
+    sendResize();
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  /* ---------------------------------------------------------
+     IFRAME AUTO RESIZE
+  --------------------------------------------------------- */
+  function sendResize(){
+    try{
+      var h = document.getElementById('app').getBoundingClientRect().height;
+      window.parent.postMessage({ type:'pangeranSyarifResize', height: Math.ceil(h) }, '*');
+    }catch(e){}
+  }
+
+  /* ---------------------------------------------------------
+     MUTE / SPEECH
+  --------------------------------------------------------- */
+  var muted = false;
+  try{ muted = localStorage.getItem('ps_muted') === '1'; }catch(e){}
+  function updateMuteBtn(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
+  updateMuteBtn();
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    try{ localStorage.setItem('ps_muted', muted ? '1':'0'); }catch(e){}
+    updateMuteBtn();
+    if(muted && window.speechSynthesis) window.speechSynthesis.cancel();
+  });
+
+  function speak(text){
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  /* ---------------------------------------------------------
+     LANGUAGE TOGGLE
+  --------------------------------------------------------- */
+  function applyLangStrings(){
+    var t = T[lang];
+    titleText.textContent = t.title;
+    startBtn.textContent = state.sceneIndex < 0 ? t.start : t.restart;
+    langBtn.textContent = t.langBtn;
+    footerEl.textContent = t.footer;
+    document.documentElement.lang = lang;
+  }
+
+  langBtn.addEventListener('click', function(){
+    lang = (lang === 'id') ? 'en' : 'id';
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', lang);
+    window.history.replaceState({}, '', url);
+    applyLangStrings();
+    if(state.sceneIndex >= 0){
+      renderSceneText();
+      draw();
+    }
+  });
+
+  /* ---------------------------------------------------------
+     STATE MACHINE
+  --------------------------------------------------------- */
+  var state = {
+    sceneIndex: -1, // -1 = belum mulai
+    locked: false,
+    ended: false,
+    holdProgress: 0,
+    holding:false,
+    holdTimer:null,
+    mashCount:0,
+    mashNeeded:8,
+    boatX: 0.15
+  };
+
+  var TOTAL_SCENES = 6;
+
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=0;i<TOTAL_SCENES;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.id = 'dot-'+i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  buildDots();
+
+  function updateDots(){
+    for(var i=0;i<TOTAL_SCENES;i++){
+      var d = document.getElementById('dot-'+i);
+      d.className = 'dot' + (i===state.sceneIndex ? ' active' : (i<state.sceneIndex ? ' done':''));
+    }
+  }
+
+  function renderSceneText(){
+    var sc = T[lang].scenes[state.sceneIndex];
+    if(!sc) return;
+    narrationText.textContent = sc.narration;
+    instructionText.textContent = sc.instruction;
+    speak(sc.narration);
+  }
+
+  function advanceOnce(){
+    if(state.locked) return;
+    state.locked = true;
+    setTimeout(function(){ state.locked = false; }, 500);
+
+    state.holdProgress = 0;
+    state.holding = false;
+    state.mashCount = 0;
+    if(state.holdTimer){ clearInterval(state.holdTimer); state.holdTimer=null; }
+
+    if(state.sceneIndex >= TOTAL_SCENES - 1){
+      state.ended = true;
+      state.sceneIndex = TOTAL_SCENES; // end marker
+      updateDots();
+      showEnding();
+      return;
+    }
+    state.sceneIndex++;
+    updateDots();
+    renderSceneText();
+    draw();
+  }
+
+  function showEnding(){
+    var t = T[lang];
+    narrationText.textContent = t.endSub;
+    instructionText.textContent = '';
+    speak(t.endSub);
+    startBtn.textContent = t.restart;
+    startBtn.classList.remove('hidden');
+    draw();
+  }
+
+  /* ---------------------------------------------------------
+     START / RESTART
+  --------------------------------------------------------- */
+  startBtn.addEventListener('click', function(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+    state.sceneIndex = 0;
+    state.ended = false;
+    state.locked = false;
+    state.holdProgress = 0;
+    state.holding = false;
+    state.mashCount = 0;
+    state.boatX = 0.15;
+    updateDots();
+    startBtn.classList.add('hidden');
+    renderSceneText();
+    draw();
+  });
+
+  /* ---------------------------------------------------------
+     INPUT HANDLING PER SCENE
+  --------------------------------------------------------- */
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx,cy;
+    if(evt.touches && evt.touches.length){
+      cx = evt.touches[0].clientX; cy = evt.touches[0].clientY;
+    } else {
+      cx = evt.clientX; cy = evt.clientY;
+    }
+    return { x: (cx-rect.left), y:(cy-rect.top) };
+  }
+
+  function inCircle(px,py,cx,cy,r){
+    var dx=px-cx, dy=py-cy;
+    return (dx*dx+dy*dy) <= r*r;
+  }
+  function inRect(px,py,rx,ry,rw,rh){
+    return px>=rx && px<=rx+rw && py>=ry && py<=ry+rh;
+  }
+
+  canvas.addEventListener('click', function(evt){
+    if(state.sceneIndex < 0 || state.ended) return;
+    var p = getPos(evt);
+    handleTap(p.x,p.y);
+  });
+
+  canvas.addEventListener('mousedown', function(evt){ handlePressStart(getPos(evt)); });
+  canvas.addEventListener('touchstart', function(evt){ evt.preventDefault(); handlePressStart(getPos(evt)); }, {passive:false});
+  canvas.addEventListener('mouseup', handlePressEnd);
+  canvas.addEventListener('mouseleave', handlePressEnd);
+  canvas.addEventListener('touchend', function(evt){ evt.preventDefault(); handlePressEnd(); }, {passive:false});
+
+  function handleTap(x,y){
+    switch(state.sceneIndex){
+      case 0: // boat tap
+        var bx = W*state.boatX, by = H*0.62;
+        if(inCircle(x,y,bx,by,H*0.11)){
+          advanceOnce();
+        }
+        break;
+      case 2: // tunnel tap
+        var tx = W*0.5, ty = H*0.55;
+        if(inRect(x,y, tx-W*0.16, ty-H*0.22, W*0.32, H*0.34)){
+          advanceOnce();
+        }
+        break;
+      case 3: // paddle mash
+        var px = W*0.5, py = H*0.62;
+        if(inCircle(x,y,px,py,H*0.13)){
+          state.mashCount++;
+          state.boatX = Math.min(0.85, 0.15 + (state.mashCount/state.mashNeeded)*0.7);
+          draw();
+          if(state.mashCount >= state.mashNeeded){
+            advanceOnce();
+          }
+        }
+        break;
+      case 4: // tap Pangeran Syarif
+        var sx = W*0.55, sy = H*0.5;
+        if(inCircle(x,y,sx,sy,H*0.18)){
+          advanceOnce();
+        }
+        break;
+      case 5:
+        // end scene handled via startBtn "Selesai"
+        var fx = W*0.5, fy = H*0.78;
+        if(inRect(x,y, fx-W*0.18, fy-H*0.08, W*0.36, H*0.16)){
+          advanceOnce();
+        }
+        break;
+    }
+  }
+
+  function handlePressStart(p){
+    if(state.sceneIndex !== 1 || state.ended) return;
+    var cx = W*0.55, cy = H*0.6;
+    if(!inCircle(p.x,p.y,cx,cy,H*0.2)) return;
+    state.holding = true;
+    state.holdProgress = 0;
+    if(state.holdTimer) clearInterval(state.holdTimer);
+    state.holdTimer = setInterval(function(){
+      if(!state.holding) return;
+      state.holdProgress += 0.045;
+      draw();
+      if(state.holdProgress >= 1){
+        clearInterval(state.holdTimer);
+        state.holdTimer = null;
+        state.holding = false;
+        advanceOnce();
+      }
+    }, 60);
+  }
+  function handlePressEnd(){
+    if(state.sceneIndex !== 1) return;
+    state.holding = false;
+    if(state.holdProgress < 1){
+      state.holdProgress = 0;
+      if(state.holdTimer){ clearInterval(state.holdTimer); state.holdTimer=null; }
+      draw();
+    }
+  }
+
+  /* ---------------------------------------------------------
+     DRAWING HELPERS
+  --------------------------------------------------------- */
+  function skyGradient(){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#274b5e');
+    g.addColorStop(1,'#0e1f28');
+    return g;
+  }
+
+  function drawFigure(cx,cy,scale,color){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale,scale);
+    // jubah / robe
+    ctx.fillStyle = color || '#3c7a64';
+    ctx.beginPath();
+    ctx.moveTo(0,-40);
+    ctx.quadraticCurveTo(-32,10,-26,60);
+    ctx.lineTo(26,60);
+    ctx.quadraticCurveTo(32,10,0,-40);
+    ctx.fill();
+    // head
+    ctx.fillStyle = '#d9a875';
+    ctx.beginPath();
+    ctx.arc(0,-52,15,0,Math.PI*2);
+    ctx.fill();
+    // turban / peci
+    ctx.fillStyle = '#e0b84b';
+    ctx.beginPath();
+    ctx.arc(0,-60,13,Math.PI,0);
+    ctx.fill();
+    ctx.fillRect(-13,-60,26,6);
+    ctx.restore();
+  }
+
+  function drawRiverScene(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+    // moon-ish glow
+    ctx.fillStyle='rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.arc(W*0.85,H*0.18,H*0.15,0,Math.PI*2); ctx.fill();
+
+    // river
+    ctx.fillStyle = 'rgba(47,107,143,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.72);
+    ctx.quadraticCurveTo(W*0.5,H*0.62,W,H*0.74);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.fill();
+
+    // river shimmer lines
+    ctx.strokeStyle='rgba(255,255,255,0.12)';
+    ctx.lineWidth=2;
+    for(var i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.moveTo(W*0.1, H*(0.8+i*0.04));
+      ctx.quadraticCurveTo(W*0.5,H*(0.75+i*0.04),W*0.95,H*(0.82+i*0.04));
+      ctx.stroke();
+    }
+
+    // Pangeran Syarif standing on the bank, left side
+    drawFigure(W*0.78, H*0.62, Math.min(W,H)/260, '#3c7a64');
+
+    // boat
+    var bx = W*state.boatX, by = H*0.62;
+    ctx.save();
+    ctx.translate(bx,by);
+    ctx.fillStyle='#6b4226';
+    ctx.beginPath();
+    ctx.moveTo(-38,10);
+    ctx.quadraticCurveTo(0,28,38,10);
+    ctx.lineTo(30,-6);
+    ctx.lineTo(-30,-6);
+    ctx.closePath();
+    ctx.fill();
+    // person in boat (mata-mata)
+    ctx.fillStyle='#555';
+    ctx.beginPath();
+    ctx.arc(0,-16,9,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-6,-10,12,14);
+    ctx.restore();
+
+    // glow ring to hint tap target
+    if(state.sceneIndex===0){
+      pulseRing(bx,by,H*0.11);
+    }
+  }
+
+  function drawBushScene(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+
+    // ground
+    ctx.fillStyle='#1c3327';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.78);
+    ctx.quadraticCurveTo(W*0.5,H*0.7,W,H*0.8);
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+
+    // Pangeran Syarif hiding behind bush (slightly transparent to show hiding)
+    ctx.save();
+    ctx.globalAlpha = 0.55 + state.holdProgress*0.45;
+    drawFigure(W*0.55, H*0.52, Math.min(W,H)/230, '#3c7a64');
+    ctx.restore();
+
+    // bushes cluster (the tap target) in front
+    var cx=W*0.55, cy=H*0.66;
+    ctx.fillStyle='#2f5233';
+    for(var i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.arc(cx+i*26, cy - Math.abs(i)*6, 34-Math.abs(i)*3, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle='#3a6a3f';
+    for(var j=-1;j<=1;j++){
+      ctx.beginPath();
+      ctx.arc(cx+j*30, cy-14, 22, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // hold progress ring
+    if(state.holdProgress>0){
+      ctx.strokeStyle = '#e0b84b';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(cx,cy-6,H*0.14, -Math.PI/2, -Math.PI/2 + state.holdProgress*Math.PI*2);
+      ctx.stroke();
+    } else {
+      pulseRing(cx,cy-6,H*0.14);
+    }
+  }
+
+  function drawTunnelScene(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+
+    // hill / rocky mound
+    ctx.fillStyle='#233d2f';
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    ctx.quadraticCurveTo(W*0.5,H*0.28,W,H);
+    ctx.fill();
+
+    // tunnel entrance (dark oval)
+    var tx=W*0.5, ty=H*0.62;
+    var grd = ctx.createRadialGradient(tx,ty,4,tx,ty,W*0.18);
+    grd.addColorStop(0,'#000');
+    grd.addColorStop(1,'#111');
+    ctx.fillStyle=grd;
+    ctx.beginPath();
+    ctx.ellipse(tx,ty,W*0.16,H*0.19,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='#4d3a24';
+    ctx.lineWidth=6;
+    ctx.stroke();
+
+    // Pangeran Syarif approaching tunnel from left
+    drawFigure(W*0.24, H*0.66, Math.min(W,H)/260, '#3c7a64');
+
+    // spy figure lurking behind, small, right side further back
+    ctx.save();
+    ctx.globalAlpha=0.7;
+    drawFigure(W*0.86, H*0.7, Math.min(W,H)/340, '#555555');
+    ctx.restore();
+
+    pulseRing(tx,ty,H*0.17);
+  }
+
+  function drawMashScene(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+
+    // river
+    ctx.fillStyle = 'rgba(47,107,143,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.72);
+    ctx.quadraticCurveTo(W*0.5,H*0.6,W,H*0.74);
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+
+    // distant Pangeran Syarif figure ahead (right side, small = far)
+    drawFigure(W*0.92, H*0.5, Math.min(W,H)/380, '#3c7a64');
+
+    // boat position based on mash progress
+    var bx = W*state.boatX, by=H*0.72;
+    ctx.save();
+    ctx.translate(bx,by);
+    ctx.fillStyle='#6b4226';
+    ctx.beginPath();
+    ctx.moveTo(-40,10);
+    ctx.quadraticCurveTo(0,30,40,10);
+    ctx.lineTo(32,-6);
+    ctx.lineTo(-32,-6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle='#555';
+    ctx.beginPath();
+    ctx.arc(0,-16,9,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-6,-10,12,14);
+    ctx.restore();
+
+    // paddle target (tap-mash zone) center
+    var px=W*0.5, py=H*0.62;
+    ctx.fillStyle='rgba(224,184,75,0.18)';
+    ctx.beginPath();
+    ctx.arc(px,py,H*0.13,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='#e0b84b';
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.arc(px,py,H*0.13,0,Math.PI*2);
+    ctx.stroke();
+    // paddle icon
+    ctx.save();
+    ctx.translate(px,py);
+    ctx.rotate(-0.4 + (state.mashCount%2)*0.5);
+    ctx.fillStyle='#a9723c';
+    ctx.fillRect(-4,-30,8,60);
+    ctx.beginPath();
+    ctx.ellipse(0,-34,10,16,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // progress bar
+    var barW = W*0.5;
+    ctx.fillStyle='rgba(255,255,255,0.15)';
+    ctx.fillRect(W*0.25, H*0.86, barW, 10);
+    ctx.fillStyle='#e0b84b';
+    ctx.fillRect(W*0.25, H*0.86, barW*(state.mashCount/state.mashNeeded), 10);
+  }
+
+  function drawForgiveScene(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle='#1c3327';
+    ctx.beginPath();
+    ctx.moveTo(0,H*0.8);
+    ctx.quadraticCurveTo(W*0.5,H*0.72,W,H*0.8);
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+
+    // Pangeran Syarif standing, target for tap
+    var sx=W*0.55, sy=H*0.5;
+    drawFigure(sx,sy, Math.min(W,H)/220, '#3c7a64');
+    pulseRing(sx,sy+10,H*0.18);
+
+    // spy kneeling to the left
+    ctx.save();
+    ctx.translate(W*0.24,H*0.66);
+    ctx.fillStyle='#555';
+    ctx.beginPath();
+    ctx.ellipse(0,20,26,16,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-4,12,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawEndingScene(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+
+    drawFigure(W*0.38, H*0.55, Math.min(W,H)/240, '#3c7a64');
+    // student figure now standing (not kneeling), smaller, robed too
+    ctx.save();
+    drawFigure(W*0.62, H*0.58, Math.min(W,H)/280, '#5b7a9e');
+    ctx.restore();
+
+    // sparkles
+    ctx.fillStyle='rgba(224,184,75,0.7)';
+    for(var i=0;i<10;i++){
+      var sxp = (Math.sin(i*12.9)+1)/2*W;
+      var syp = (Math.cos(i*7.3)+1)/2*H*0.5;
+      ctx.beginPath();
+      ctx.arc(sxp,syp, 2+ (i%3), 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    if(!state.ended){
+      var t = T[lang];
+      // finish button drawn on canvas
+      var fx=W*0.5, fy=H*0.78;
+      ctx.fillStyle='rgba(224,184,75,0.9)';
+      roundRect(fx-W*0.18, fy-H*0.08, W*0.36, H*0.16, 14);
+      ctx.fill();
+      ctx.fillStyle='#241a05';
+      ctx.font = 'bold '+Math.max(13,H*0.045)+'px Segoe UI';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillText(t.finishBtn, fx, fy);
+      ctx.textAlign='start';
+      ctx.textBaseline='alphabetic';
+    } else {
+      var t2 = T[lang];
+      ctx.fillStyle='rgba(0,0,0,0.35)';
+      ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#f3d98b';
+      ctx.font='bold '+Math.max(20,H*0.09)+'px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(t2.endTitle, W/2, H*0.45);
+      ctx.textAlign='start';
+    }
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  var pulseT = 0;
+  function pulseRing(cx,cy,r){
+    var pr = r + Math.sin(pulseT)*4;
+    ctx.strokeStyle='rgba(224,184,75,0.7)';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(cx,cy,pr,0,Math.PI*2);
+    ctx.stroke();
+  }
+
+  function drawIntro(){
+    ctx.fillStyle = skyGradient();
+    ctx.fillRect(0,0,W,H);
+    drawFigure(W*0.5, H*0.56, Math.min(W,H)/220, '#3c7a64');
+    ctx.fillStyle='rgba(247,236,215,0.85)';
+    ctx.font = Math.max(13,H*0.045)+'px Segoe UI';
+    ctx.textAlign='center';
+    var msg = lang==='id' ? 'Ketuk "Mulai Cerita" di bawah' : 'Tap "Start the Story" below';
+    ctx.fillText(msg, W/2, H*0.86);
+    ctx.textAlign='start';
+  }
+
+  /* ---------------------------------------------------------
+     MAIN DRAW DISPATCH
+  --------------------------------------------------------- */
+  function draw(){
+    if(!W||!H) return;
+    ctx.clearRect(0,0,W,H);
+    if(state.sceneIndex < 0){ drawIntro(); return; }
+    if(state.sceneIndex >= TOTAL_SCENES){ drawEndingScene(); return; }
+    switch(state.sceneIndex){
+      case 0: drawRiverScene(); break;
+      case 1: drawBushScene(); break;
+      case 2: drawTunnelScene(); break;
+      case 3: drawMashScene(); break;
+      case 4: drawForgiveScene(); break;
+      case 5: drawEndingScene(); break;
+    }
+  }
+
+  // handle canvas click for the on-canvas "finish" button in scene 5 ending pre-state
+  canvas.addEventListener('click', function(evt){
+    if(state.sceneIndex === 5 && !state.ended){
+      var p = getPos(evt);
+      var fx=W*0.5, fy=H*0.78;
+      if(inRect(p.x,p.y, fx-W*0.18, fy-H*0.08, W*0.36, H*0.16)){
+        state.ended = true;
+        state.sceneIndex = TOTAL_SCENES;
+        updateDots();
+        showEnding();
+      }
+    }
+  });
+
+  /* ---------------------------------------------------------
+     ANIMATION LOOP (for pulse rings)
+  --------------------------------------------------------- */
+  function loop(){
+    pulseT += 0.07;
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  function init(){
+    applyLangStrings();
+    resizeCanvas();
+    updateDots();
+    requestAnimationFrame(loop);
+    setTimeout(sendResize, 300);
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>
