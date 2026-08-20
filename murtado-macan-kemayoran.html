@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Murtado Macan Kemayoran</title>
+<style>
+  :root{
+    --sky-top:#2b1d3f;
+    --sky-bottom:#8a4a3d;
+    --ground:#3f5a3a;
+    --ground-dark:#2e4229;
+    --panel-bg:#fdf6e8;
+    --panel-border:#c9a15a;
+    --ink:#3a2a1c;
+    --accent:#c1462f;
+    --accent-dark:#8f2f1d;
+    --gold:#d9a441;
+    --btn-shadow:#7a2418;
+    --dot-off:#d8c6a1;
+    --dot-on:#c1462f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Trebuchet MS', 'Segoe UI', sans-serif;
+    background:linear-gradient(180deg,#efe2c3,#e4d3a8);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    background:var(--panel-bg);
+    border:3px solid var(--panel-border);
+    border-radius:16px;
+    padding:14px 14px 10px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.18);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-size:1.15rem;
+    margin:0;
+    color:var(--accent-dark);
+    letter-spacing:0.5px;
+  }
+  .top-controls{
+    display:flex;
+    gap:6px;
+  }
+  .icon-btn{
+    background:var(--panel-bg);
+    border:2px solid var(--panel-border);
+    color:var(--ink);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:0.85rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-weight:bold;
+    transition:background 0.15s;
+  }
+  .icon-btn:hover{background:#f3e6c8;}
+  .icon-btn:active{transform:translateY(1px);}
+
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:8/5;
+    border-radius:12px;
+    overflow:hidden;
+    border:3px solid var(--ground-dark);
+    background:#000;
+    touch-action:manipulation;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+
+  #instructionPanel{
+    margin-top:10px;
+    background:#fff8e8;
+    border:2px dashed var(--gold);
+    border-radius:10px;
+    padding:10px 12px;
+    min-height:44px;
+    font-size:0.95rem;
+    line-height:1.4;
+  }
+  #instructionPanel .label{
+    font-weight:bold;
+    color:var(--accent-dark);
+    margin-right:4px;
+  }
+
+  #narrationPanel{
+    margin-top:8px;
+    background:#f3e9d0;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:0.88rem;
+    line-height:1.45;
+    color:#4a3a26;
+    min-height:20px;
+  }
+
+  #controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  #dots{
+    display:flex;
+    gap:6px;
+  }
+  .dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--dot-off);
+    transition:background 0.2s, transform 0.2s;
+  }
+  .dot.active{
+    background:var(--dot-on);
+    transform:scale(1.25);
+  }
+  .dot.done{
+    background:var(--gold);
+  }
+
+  #mainBtn{
+    background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:10px 22px;
+    font-size:1rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--btn-shadow);
+    letter-spacing:0.3px;
+  }
+  #mainBtn:active{
+    transform:translateY(3px);
+    box-shadow:0 1px 0 var(--btn-shadow);
+  }
+  #mainBtn:disabled{
+    opacity:0.4;
+    cursor:default;
+    box-shadow:0 4px 0 #999;
+    background:#aaa;
+  }
+
+  footer{
+    margin-top:10px;
+    text-align:center;
+    font-size:0.72rem;
+    color:#9a8460;
+  }
+
+  .hidden{display:none !important;}
+
+  #holdBtnWrap{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    z-index:5;
+  }
+  #holdBtn{
+    width:84px;
+    height:84px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #e8724f, var(--accent-dark));
+    border:4px solid #fff3d8;
+    color:#fff;
+    font-weight:bold;
+    font-size:0.78rem;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  #holdBtn:active{transform:scale(0.95);}
+
+  .choiceBtn{
+    position:absolute;
+    background:linear-gradient(180deg,#fff8e8,#f0dcae);
+    border:2px solid var(--gold);
+    color:var(--ink);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:0.8rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 3px 0 #a9832f;
+    max-width:44%;
+    line-height:1.25;
+  }
+  .choiceBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #a9832f;}
+
+  .helpBtn{
+    position:absolute;
+    background:linear-gradient(180deg,#fff8e8,#f0dcae);
+    border:2px solid var(--gold);
+    color:var(--ink);
+    border-radius:24px;
+    padding:10px 18px;
+    font-size:0.85rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 3px 0 #a9832f;
+  }
+  .helpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #a9832f;}
+
+  @media (max-width:420px){
+    h1{font-size:0.98rem;}
+    .icon-btn{padding:5px 8px;font-size:0.75rem;}
+    #instructionPanel,#narrationPanel{font-size:0.82rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="titleText">Murtado Macan Kemayoran</h1>
+    <div class="top-controls">
+      <button class="icon-btn" id="langBtn" type="button">EN</button>
+      <button class="icon-btn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </header>
+
+  <div id="canvasWrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+  </div>
+
+  <div id="instructionPanel">
+    <span class="label" id="instrLabel">Instruksi:</span><span id="instrText">Ketuk tombol "Mulai Cerita" untuk memulai.</span>
+  </div>
+
+  <div id="narrationPanel"><span id="narrText"></span></div>
+
+  <div id="controls">
+    <div id="dots"></div>
+    <button id="mainBtn" type="button">Mulai Cerita</button>
+  </div>
+
+  <footer>Cerita rakyat Betawi &middot; dongeng interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ STRINGS ============ */
+  const STR = {
+    id: {
+      title: "Murtado Macan Kemayoran",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      nextHint: "Ketuk untuk melanjutkan",
+      instrLabel: "Instruksi:",
+      startInstr: 'Ketuk tombol "Mulai Cerita" untuk memulai.',
+      muteOn: "🔇",
+      muteOff: "🔊",
+      langSwitch: "EN",
+      scenes: [
+        { // 1
+          narration: "Pada masa penjajahan Belanda, di daerah Kemayoran hiduplah seorang pemuda gagah bernama Murtado. Ia memiliki ilmu silat yang tinggi, namun tak sudi menjadi kaki tangan Belanda.",
+          instruction: 'Ketuk sosok Murtado di tengah kampung untuk mengenalnya.'
+        },
+        { // 2
+          narration: "Pada sebuah acara derapan padi, Mandor Bacan yang bertugas mengawasi acara justru menggoda kekasih Murtado. Murtado tidak terima kekasihnya diganggu.",
+          instruction: "Ketuk Murtado untuk menegur Mandor Bacan."
+        },
+        { // 3
+          narration: "Mandor Bacan malah meledek Murtado. Murtado pun menantang perkelahian dan mengeluarkan jurus silatnya yang tinggi.",
+          instruction: "Ketuk Murtado dengan cepat dan berulang untuk mengeluarkan jurus silat!"
+        },
+        { // 4 - after duel
+          narration: "Mandor Bacan kewalahan dan lari tunggang langgang. Ia mengadu kepada Bek Lihun, atasannya. Namun segala siasat untuk menjebak Murtado selalu gagal, hingga akhirnya Bek Lihun memilih berdamai.",
+          instruction: 'Ketuk tombol "Lanjutkan" untuk melihat apa yang terjadi selanjutnya.'
+        },
+        { // 5 - Bek Lihun minta bantuan
+          narration: 'Suatu hari, Bek Lihun mendatangi Murtado. "Kawanan perampok pimpinan Warsa sangat mengganggu rakyat Kemayoran. Aku minta bantuanmu untuk menumpas mereka," pinta Bek Lihun.',
+          instruction: 'Ketuk tombol "Bantu Rakyat" untuk menerima permintaan Bek Lihun.'
+        },
+        { // 6 - mencari markas
+          narration: "Murtado bersama sahabatnya, Saomin dan Sarpin, menyusuri Tambun, Bekasi, hingga akhirnya Karawang untuk mencari markas kawanan Warsa.",
+          instruction: "Ketuk penanda daerah secara berurutan: Tambun, lalu Bekasi, lalu Karawang."
+        },
+        { // 7 - fight warsa
+          narration: "Warsa mengejek ilmu silat Murtado. Namun ejekan itu tidak menyurutkan semangat Murtado untuk melindungi rakyat Kemayoran.",
+          instruction: "Tahan tombol merah hingga penuh, lalu lepaskan untuk menyerang Warsa. Lakukan dua kali!"
+        },
+        { // 8 - kembalikan barang
+          narration: "Warsa berhasil dikalahkan. Anak buahnya meminta maaf dan menyerahkan seluruh hasil rampokan untuk dikembalikan kepada pemiliknya.",
+          instruction: "Seret setiap barang ke penduduk dengan warna tanda yang sama."
+        },
+        { // 9 - tawaran jabatan
+          narration: 'Bek Lihun kagum dan menawarkan Murtado menjadi pemimpin Kemayoran menggantikan dirinya. Murtado terdiam sejenak, mengingat niatnya menolong rakyat.',
+          instruction: "Ketuk pilihan yang mencerminkan hati Murtado."
+        },
+        { // 10 - ending
+          narration: 'Murtado memilih tetap menjadi rakyat biasa, berjuang dengan caranya sendiri demi rakyat kecil. Kharismanya tetap hidup di hati masyarakat, dan ia dijuluki Macan Kemayoran.',
+          instruction: 'Ketuk "Ulangi Cerita" untuk menonton kembali, atau bagikan cerita ini kepada teman.'
+        }
+      ],
+      choiceAccept: "Menerima jabatan pemimpin",
+      choiceRefuse: "Tetap menjadi rakyat biasa",
+      choiceAcceptReaction: 'Murtado terdiam. Ia teringat, tujuannya bukan pangkat, melainkan menolong rakyat kecil. "Maafkan saya, Bek Lihun. Saya lebih baik tetap menjadi rakyat biasa," katanya akhirnya.',
+      choiceRefuseReaction: '"Maafkan saya, Bapak Bek Lihun. Tujuan saya menumpas kejahatan semata untuk membantu rakyat. Biarkan saya berjuang dengan jalan saya sendiri," kata Murtado sambil tersenyum.',
+      moral: "Pesan moral: jadilah pemberani dalam membela yang lemah, dan tetaplah rendah hati meski memiliki kemampuan lebih.",
+      helpText: "Lanjutkan",
+      helpPeopleBtn: "Bantu Rakyat",
+      tapMashLabel: "Jurus Silat",
+      holdLabel: "TAHAN",
+      locations: ["Tambun","Bekasi","Karawang"],
+      villagerNames: ["Warga 1","Warga 2","Warga 3"]
+    },
+    en: {
+      title: "Murtado, the Tiger of Kemayoran",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      nextHint: "Tap to continue",
+      instrLabel: "Instruction:",
+      startInstr: 'Tap "Start Story" to begin.',
+      muteOn: "🔇",
+      muteOff: "🔊",
+      langSwitch: "ID",
+      scenes: [
+        {
+          narration: "During Dutch colonial times, in the Kemayoran district lived a brave young man named Murtado. He had great skill in silat, yet refused to work for the Dutch.",
+          instruction: "Tap Murtado standing in the village to meet him."
+        },
+        {
+          narration: "At a rice-threshing festival, Mandor Bacan, who was supervising the event, flirted with Murtado's beloved. Murtado could not accept his sweetheart being disturbed.",
+          instruction: "Tap Murtado to confront Mandor Bacan."
+        },
+        {
+          narration: "Mandor Bacan only mocked him further. Murtado challenged him to a fight and unleashed his powerful silat skills.",
+          instruction: "Tap Murtado quickly and repeatedly to unleash his silat moves!"
+        },
+        {
+          narration: "Mandor Bacan was overwhelmed and fled. He complained to his superior, Bek Lihun. Every scheme to trap Murtado failed, until Bek Lihun finally chose to make peace.",
+          instruction: 'Tap "Continue" to see what happens next.'
+        },
+        {
+          narration: 'One day, Bek Lihun came to Murtado. "Warsa\'s gang of robbers is terrorizing the people of Kemayoran. I need your help to stop them," he pleaded.',
+          instruction: 'Tap "Help the People" to accept Bek Lihun\'s request.'
+        },
+        {
+          narration: "Murtado, together with his friends Saomin and Sarpin, searched through Tambun, Bekasi, and finally Karawang to find Warsa's hideout.",
+          instruction: "Tap the location markers in order: Tambun, then Bekasi, then Karawang."
+        },
+        {
+          narration: "Warsa mocked Murtado's silat skills. But the taunts only strengthened Murtado's resolve to protect the people of Kemayoran.",
+          instruction: "Hold the red button until it's full, then release to strike Warsa. Do it twice!"
+        },
+        {
+          narration: "Warsa was finally defeated. His men apologized and handed over everything they had stolen, to be returned to its rightful owners.",
+          instruction: "Drag each item to the villager with the matching colored mark."
+        },
+        {
+          narration: 'Bek Lihun was impressed and offered Murtado the position of leader of Kemayoran. Murtado paused, remembering that his only purpose was to help the people.',
+          instruction: "Tap the choice that reflects Murtado's heart."
+        },
+        {
+          narration: 'Murtado chose to remain an ordinary man, fighting for the people in his own way. His spirit lived on in the hearts of the people, and he became known as the Tiger of Kemayoran.',
+          instruction: 'Tap "Replay Story" to watch again, or share this story with a friend.'
+        }
+      ],
+      choiceAccept: "Accept the leadership",
+      choiceRefuse: "Remain an ordinary man",
+      choiceAcceptReaction: 'Murtado paused. He remembered his purpose was never rank, but helping the common people. "Forgive me, Bek Lihun. I would rather remain an ordinary man," he finally said.',
+      choiceRefuseReaction: '"Forgive me, Bek Lihun. My only purpose in fighting crime was to help the people. Let me continue my own way," Murtado said with a smile.',
+      moral: "Moral of the story: be brave in defending the weak, and stay humble even when gifted with great ability.",
+      helpText: "Continue",
+      helpPeopleBtn: "Help the People",
+      tapMashLabel: "Silat Strike",
+      holdLabel: "HOLD",
+      locations: ["Tambun","Bekasi","Karawang"],
+      villagerNames: ["Villager 1","Villager 2","Villager 3"]
+    }
+  };
+
+  const TOTAL_SCENES = 10; // dots correspond to scenes 1..10
+
+  /* ============ STATE ============ */
+  const state = {
+    lang: 'id',
+    muted: false,
+    scene: 0, // 0 = start screen, 1..10 story scenes
+    locked: false,
+    // scene3 tap-mash
+    mash: { count:0, needed:14, timeLeft:6, timerId:null, active:false },
+    // scene6 sequential locations
+    seq: { order:[0,1,2], picks:[], pos:[] },
+    // scene7 hold-to-attack
+    hold: { charge:0, holding:false, hits:0, needed:2, rafId:null },
+    // scene8 drag drop
+    drag: { items:[], targets:[], dragging:null, placed:0 },
+    // scene9 choice
+    choiceMade:false
+  };
+
+  /* ============ DOM ============ */
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const instrText = document.getElementById('instrText');
+  const instrLabel = document.getElementById('instrLabel');
+  const narrText = document.getElementById('narrText');
+  const mainBtn = document.getElementById('mainBtn');
+  const dotsWrap = document.getElementById('dots');
+  const titleText = document.getElementById('titleText');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+
+  let overlayEls = []; // dynamic DOM overlay buttons for mini-games
+
+  /* ============ INIT LANG / MUTE ============ */
+  function initSettings(){
+    try{
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      const savedMute = localStorage.getItem('murtado_muted');
+      if(urlLang === 'en' || urlLang === 'id'){ state.lang = urlLang; }
+      else {
+        const savedLang = localStorage.getItem('murtado_lang');
+        if(savedLang === 'en' || savedLang === 'id') state.lang = savedLang;
+      }
+      if(savedMute === 'true') state.muted = true;
+    }catch(e){}
+  }
+  initSettings();
+
+  function T(){ return STR[state.lang]; }
+
+  /* ============ RESIZE / POSTMESSAGE ============ */
+  function notifyResize(){
+    try{
+      const h = document.getElementById('app').offsetHeight + 24;
+      window.parent.postMessage({ type:'murtado-resize', height:h }, '*');
+    }catch(e){}
+  }
+
+  /* ============ SPEECH ============ */
+  let voices = [];
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(langCode){
+    if(!voices || !voices.length) return null;
+    let v = voices.find(v=>v.lang === langCode);
+    if(v) return v;
+    const prefix = langCode.split('-')[0];
+    v = voices.find(v=>v.lang && v.lang.indexOf(prefix)===0);
+    return v || null;
+  }
+  function speak(text){
+    if(state.muted) return;
+    if(!window.speechSynthesis) return;
+    try{
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const langCode = state.lang === 'id' ? 'id-ID' : 'en-US';
+      utter.lang = langCode;
+      const v = pickVoice(langCode);
+      if(v) utter.voice = v;
+      utter.rate = 0.98;
+      utter.pitch = 1.0;
+      window.speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ============ UI HELPERS ============ */
+  function setInstruction(text){
+    instrText.textContent = text;
+  }
+  function setNarration(text){
+    narrText.textContent = text;
+  }
+  function clearOverlays(){
+    overlayEls.forEach(el=>el.remove());
+    overlayEls = [];
+  }
+  function addOverlayBtn(className, label, style, onClick){
+    const b = document.createElement('button');
+    b.className = className;
+    b.type = 'button';
+    b.textContent = label;
+    Object.assign(b.style, style);
+    b.addEventListener('click', onClick);
+    canvasWrap.appendChild(b);
+    overlayEls.push(b);
+    return b;
+  }
+
+  function renderDots(){
+    dotsWrap.innerHTML = '';
+    for(let i=1;i<=TOTAL_SCENES;i++){
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if(i < state.scene) d.classList.add('done');
+      if(i === state.scene) d.classList.add('active');
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function applyStaticStrings(){
+    document.documentElement.lang = state.lang;
+    titleText.textContent = T().title;
+    instrLabel.textContent = T().instrLabel;
+    langBtn.textContent = T().langSwitch;
+    muteBtn.textContent = state.muted ? T().muteOn : T().muteOff;
+    if(state.scene === 0){
+      mainBtn.textContent = T().startBtn;
+      setInstruction(T().startInstr);
+      setNarration('');
+    }
+  }
+
+  /* ============ DRAWING HELPERS ============ */
+  function clearCanvas(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  function drawSky(topColor, bottomColor){
+    const g = ctx.createLinearGradient(0,0,0,canvas.height*0.62);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height*0.62);
+  }
+  function drawGround(){
+    ctx.fillStyle = '#4a3626';
+    ctx.fillRect(0, canvas.height*0.60, canvas.width, canvas.height*0.42);
+    const g = ctx.createLinearGradient(0,canvas.height*0.60,0,canvas.height);
+    g.addColorStop(0,'#6b8f4e');
+    g.addColorStop(1,'#3f5a3a');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, canvas.height*0.60, canvas.width, canvas.height*0.40);
+  }
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b3a22';
+    ctx.fillRect(-8,-10,16,70);
+    ctx.fillStyle = '#2e5c2a';
+    ctx.beginPath(); ctx.arc(0,-40,38,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-28,-20,26,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(28,-20,26,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawHouse(x,y,scale,roofColor){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#caa66b';
+    ctx.fillRect(-40,-10,80,60);
+    ctx.fillStyle = roofColor || '#8f2f1d';
+    ctx.beginPath();
+    ctx.moveTo(-50,-10);
+    ctx.lineTo(0,-55);
+    ctx.lineTo(50,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#4a3020';
+    ctx.fillRect(-10,20,20,30);
+    ctx.restore();
+  }
+
+  // Simple stylized person figure. color = shirt color, accent = headwear/details
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    const shirt = opts.shirt || '#c1462f';
+    const skin = '#e0a877';
+    const pants = opts.pants || '#3a3226';
+    const flip = opts.flip ? -1 : 1;
+    const armSwing = opts.armSwing || 0; // radians
+    const legSwing = opts.legSwing || 0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*flip, scale);
+
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0,4,26,7,0,0,Math.PI*2);
+    ctx.fill();
+
+    // legs
+    ctx.strokeStyle = pants;
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-6,-20); ctx.lineTo(-10+ -10*Math.sin(legSwing), 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(6,-20); ctx.lineTo(10+10*Math.sin(legSwing), 2);
+    ctx.stroke();
+
+    // torso
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.moveTo(-16,-70);
+    ctx.lineTo(16,-70);
+    ctx.lineTo(14,-20);
+    ctx.lineTo(-14,-20);
+    ctx.closePath();
+    ctx.fill();
+
+    // arms
+    const elbowLX = -14 - 22*Math.cos(armSwing), elbowLY = -64 - 18*Math.sin(armSwing);
+    const handLX  = -14 - 34*Math.cos(armSwing), handLY  = -64 - 30*Math.sin(armSwing);
+    const elbowRX = 14 + 22*Math.cos(armSwing),  elbowRY = -64 - 18*Math.sin(armSwing);
+    const handRX  = 14 + 34*Math.cos(armSwing),  handRY  = -64 - 30*Math.sin(armSwing);
+
+    ctx.strokeStyle = shirt;
+    ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(-14,-64); ctx.lineTo(elbowLX, elbowLY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,-64); ctx.lineTo(elbowRX, elbowRY); ctx.stroke();
+
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(elbowLX, elbowLY); ctx.lineTo(handLX, handLY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(elbowRX, elbowRY); ctx.lineTo(handRX, handRY); ctx.stroke();
+
+    // neck + head
+    ctx.fillStyle = skin;
+    ctx.fillRect(-5,-78,10,10);
+    ctx.beginPath();
+    ctx.arc(0,-88,16,0,Math.PI*2);
+    ctx.fill();
+
+    // headwear
+    if(opts.headwear === 'peci'){
+      ctx.fillStyle = '#1c1c1c';
+      ctx.beginPath();
+      ctx.arc(0,-96,15,Math.PI,0);
+      ctx.fill();
+      ctx.fillRect(-15,-98,30,6);
+    } else if(opts.headwear === 'hat'){
+      ctx.fillStyle = opts.hatColor || '#3a3226';
+      ctx.beginPath();
+      ctx.ellipse(0,-98,22,7,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillRect(-10,-112,20,16);
+    } else if(opts.headwear === 'bandana'){
+      ctx.fillStyle = opts.hatColor || '#c1462f';
+      ctx.fillRect(-17,-96,34,7);
+    }
+
+    // face
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.arc(-5,-88,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-88,1.6,0,Math.PI*2); ctx.fill();
+    if(opts.mustache){
+      ctx.fillRect(-6,-82,12,2.4);
+    }
+    ctx.restore();
+  }
+
+  function drawWomanPerson(x,y,scale,opts){
+    opts = opts || {};
+    const dress = opts.dress || '#c98a3f';
+    const skin = '#e6b98a';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0,4,24,7,0,0,Math.PI*2);
+    ctx.fill();
+
+    // dress (triangle skirt)
+    ctx.fillStyle = dress;
+    ctx.beginPath();
+    ctx.moveTo(-14,-70);
+    ctx.lineTo(14,-70);
+    ctx.lineTo(26,2);
+    ctx.lineTo(-26,2);
+    ctx.closePath();
+    ctx.fill();
+
+    // arms
+    ctx.strokeStyle = dress;
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(-14,-64); ctx.lineTo(-24,-40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,-64); ctx.lineTo(24,-40); ctx.stroke();
+
+    // head
+    ctx.fillStyle = skin;
+    ctx.fillRect(-5,-78,10,10);
+    ctx.beginPath(); ctx.arc(0,-88,15,0,Math.PI*2); ctx.fill();
+
+    // hair bun
+    ctx.fillStyle = '#241a10';
+    ctx.beginPath(); ctx.arc(0,-100,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-13,-84,6,10,0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(13,-84,6,10,-0.3,0,Math.PI*2); ctx.fill();
+
+    // face
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.arc(-4,-88,1.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-88,1.4,0,Math.PI*2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawLabel(text,x,y,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.font = (opts.font || 'bold 15px Trebuchet MS, sans-serif');
+    ctx.textAlign = opts.align || 'center';
+    const w = ctx.measureText(text).width + 20;
+    ctx.fillStyle = opts.bg || 'rgba(58,42,28,0.85)';
+    roundRect(x - w/2, y-14, w, 26, 8);
+    ctx.fill();
+    ctx.fillStyle = opts.color || '#fdf6e8';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  /* ============ HIT-TEST HELPER (canvas coord conversion) ============ */
+  function canvasPointFromEvent(evt){
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  /* ============ SCENE RENDER FUNCTIONS ============ */
+  function drawSceneBackdrop(){
+    clearCanvas();
+    drawSky('#f3c98a','#e28a52');
+    drawSun(700,80,44,'#ffe08a');
+    drawGround();
+  }
+
+  function scene1(){
+    drawSceneBackdrop();
+    drawHouse(140,340,0.9,'#8f2f1d');
+    drawHouse(660,340,0.85,'#6b3a22');
+    drawTree(60,330,0.9);
+    drawTree(740,330,0.9);
+    drawPerson(400,390,1.5,{shirt:'#c1462f',headwear:'bandana',mustache:true});
+    drawLabel(state.lang==='id' ? 'Murtado' : 'Murtado', 400, 250);
+  }
+
+  function scene2(){
+    drawSceneBackdrop();
+    drawHouse(90,340,0.7,'#6b3a22');
+    drawTree(730,330,0.9);
+    // rice field texture
+    ctx.fillStyle = '#c9a441';
+    for(let i=0;i<10;i++){
+      ctx.fillRect(120 + i*55, 420, 6, 20);
+    }
+    drawWomanPerson(300,400,1.3,{dress:'#c98a3f'});
+    drawPerson(430,400,1.3,{shirt:'#5a6b3a',headwear:'hat',hatColor:'#3a3226'});
+    drawPerson(560,400,1.4,{shirt:'#c1462f',headwear:'bandana',mustache:true});
+    drawLabel(state.lang==='id'?'Kekasih Murtado':"Murtado's beloved", 300, 270);
+    drawLabel('Mandor Bacan', 430, 270);
+    drawLabel('Murtado', 560, 270);
+  }
+
+  function scene3(){
+    drawSceneBackdrop();
+    drawTree(700,330,0.8);
+    const shake = state.mash.active ? Math.sin(Date.now()/40)*4 : 0;
+    drawPerson(300+shake,400,1.5,{shirt:'#c1462f',headwear:'bandana',mustache:true, armSwing: 0.6 + Math.sin(Date.now()/90)*0.4});
+    drawPerson(520,400,1.4,{shirt:'#5a6b3a',headwear:'hat'});
+    drawLabel('Murtado', 300, 250);
+    drawLabel('Mandor Bacan', 520, 250);
+
+    // power bar
+    const pct = Math.min(1, state.mash.count / state.mash.needed);
+    const barX = 220, barY = 60, barW = 360, barH = 26;
+    ctx.fillStyle = 'rgba(58,42,28,0.6)';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle = '#c1462f';
+    roundRect(barX+3,barY+3,(barW-6)*pct,barH-6,8); ctx.fill();
+    ctx.fillStyle = '#fdf6e8';
+    ctx.font = 'bold 14px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(T().tapMashLabel, barX+barW/2, barY+barH/2+5);
+  }
+
+  function scene4(){
+    drawSceneBackdrop();
+    drawHouse(150,340,0.85,'#6b3a22');
+    drawHouse(650,340,0.85,'#8f2f1d');
+    drawPerson(330,400,1.4,{shirt:'#c1462f',headwear:'bandana',mustache:true});
+    drawPerson(500,400,1.4,{shirt:'#3a5a6b',headwear:'hat',hatColor:'#241a10',mustache:true});
+    drawLabel('Murtado', 330, 260);
+    drawLabel('Bek Lihun', 500, 260);
+  }
+
+  function scene5(){
+    drawSceneBackdrop();
+    drawHouse(120,340,0.75,'#6b3a22');
+    drawPerson(280,400,1.35,{shirt:'#3a5a6b',headwear:'hat',hatColor:'#241a10',mustache:true});
+    drawPerson(460,400,1.4,{shirt:'#c1462f',headwear:'bandana',mustache:true});
+    drawLabel('Bek Lihun', 280, 260);
+    drawLabel('Murtado', 460, 260);
+  }
+
+  function scene6(){
+    drawSceneBackdrop();
+    // simple map look: paths
+    ctx.strokeStyle = '#caa66b';
+    ctx.lineWidth = 6;
+    ctx.setLineDash([10,8]);
+    ctx.beginPath();
+    ctx.moveTo(160,400); ctx.lineTo(400,300); ctx.lineTo(640,400);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawPerson(400,440,1.1,{shirt:'#c1462f',headwear:'bandana',mustache:true});
+    drawLabel('Murtado & kawan-kawan', 400, 480, {font:'bold 13px Trebuchet MS'});
+
+    const positions = [{x:160,y:400},{x:400,y:300},{x:640,y:400}];
+    const labels = T().locations;
+    for(let i=0;i<3;i++){
+      const p = positions[i];
+      const picked = state.seq.picks.includes(i);
+      ctx.save();
+      ctx.fillStyle = picked ? '#4a7a3f' : '#c1462f';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y-40, 18, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#fdf6e8';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = '#fdf6e8';
+      ctx.font = 'bold 14px Trebuchet MS';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(picked ? '✓' : (i+1).toString(), p.x, p.y-40);
+      ctx.restore();
+      drawLabel(labels[i], p.x, p.y-72, {font:'bold 13px Trebuchet MS'});
+    }
+  }
+
+  function scene7(){
+    drawSceneBackdrop();
+    drawTree(120,330,0.8);
+    drawTree(700,330,0.8);
+    const shakeAtk = state.hold.holding ? Math.sin(Date.now()/50)*3 : 0;
+    drawPerson(300,410,1.5,{shirt:'#c1462f',headwear:'bandana',mustache:true, armSwing: state.hold.holding ? 0.9 : 0.2});
+    drawPerson(520+shakeAtk,410,1.5,{shirt:'#333',headwear:'bandana',hatColor:'#111',mustache:true});
+    drawLabel('Murtado', 300, 260);
+    drawLabel('Warsa', 520, 260);
+
+    // charge bar
+    const barX = 260, barY = 60, barW = 280, barH = 22;
+    ctx.fillStyle = 'rgba(58,42,28,0.6)';
+    roundRect(barX,barY,barW,barH,10); ctx.fill();
+    ctx.fillStyle = state.hold.charge >= 1 ? '#4a7a3f' : '#e0483e';
+    roundRect(barX+3,barY+3,(barW-6)*Math.min(1,state.hold.charge),barH-6,8); ctx.fill();
+
+    // hits indicator
+    for(let i=0;i<state.hold.needed;i++){
+      ctx.fillStyle = i < state.hold.hits ? '#d9a441' : 'rgba(255,255,255,0.35)';
+      ctx.beginPath();
+      ctx.arc(barX + barW/2 - 16 + i*32, barY - 18, 7, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function scene8(){
+    drawSceneBackdrop();
+    drawHouse(80,110,0.5,'#6b3a22');
+    // villagers row (targets)
+    const targetPositions = [{x:180,y:400},{x:400,y:400},{x:620,y:400}];
+    state.drag.targets.forEach((t,i)=>{
+      const p = targetPositions[i];
+      drawPerson(p.x,p.y,1.15,{shirt:t.color,headwear:'hat',hatColor:'#241a10'});
+      // color tag
+      ctx.fillStyle = t.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y-140, 10, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#fdf6e8'; ctx.lineWidth=2; ctx.stroke();
+      if(t.filled){
+        ctx.fillStyle = '#fdf6e8';
+        ctx.font = 'bold 16px Trebuchet MS';
+        ctx.textAlign = 'center';
+        ctx.fillText('✓', p.x, p.y-136);
+      }
+    });
+
+    // draggable items
+    state.drag.items.forEach(item=>{
+      if(item.placed) return;
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      ctx.fillStyle = item.color;
+      roundRect(-22,-16,44,32,8);
+      ctx.fill();
+      ctx.strokeStyle = '#fdf6e8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#fdf6e8';
+      ctx.font = 'bold 20px Trebuchet MS';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(item.icon, 0, 1);
+      ctx.restore();
+    });
+  }
+
+  function scene9(){
+    drawSceneBackdrop();
+    drawHouse(140,340,0.85,'#8f2f1d');
+    drawPerson(330,400,1.4,{shirt:'#3a5a6b',headwear:'hat',hatColor:'#241a10',mustache:true});
+    drawPerson(500,400,1.4,{shirt:'#c1462f',headwear:'bandana',mustache:true});
+    drawLabel('Bek Lihun', 330, 260);
+    drawLabel('Murtado', 500, 260);
+  }
+
+  function scene10(){
+    drawSceneBackdrop();
+    drawSun(400,120,60,'#ffe08a');
+    drawTree(120,340,0.9);
+    drawTree(680,340,0.9);
+    drawPerson(400,400,1.9,{shirt:'#c1462f',headwear:'bandana',mustache:true, armSwing:0.9});
+    drawLabel(state.lang==='id' ? 'Macan Kemayoran' : 'The Tiger of Kemayoran', 400, 220, {font:'bold 20px Trebuchet MS'});
+  }
+
+  /* ============ ANIMATION LOOP ============ */
+  let rafHandle = null;
+  function render(){
+    switch(state.scene){
+      case 0: clearCanvas(); drawSceneBackdrop(); drawLabel(T().title,400,250,{font:'bold 22px Trebuchet MS'}); break;
+      case 1: scene1(); break;
+      case 2: scene2(); break;
+      case 3: scene3(); break;
+      case 4: scene4(); break;
+      case 5: scene5(); break;
+      case 6: scene6(); break;
+      case 7: scene7(); break;
+      case 8: scene8(); break;
+      case 9: scene9(); break;
+      case 10: scene10(); break;
+    }
+    rafHandle = requestAnimationFrame(render);
+  }
+
+  /* ============ SCENE TRANSITION MANAGEMENT ============ */
+  function goToScene(n){
+    state.scene = n;
+    state.locked = false;
+    clearOverlays();
+    renderDots();
+    if(n === 0){
+      mainBtn.classList.remove('hidden');
+      mainBtn.textContent = T().startBtn;
+      mainBtn.disabled = false;
+      setInstruction(T().startInstr);
+      setNarration('');
+      return;
+    }
+    const sceneData = T().scenes[n-1];
+    setInstruction(sceneData.instruction);
+    setNarration(sceneData.narration);
+    speak(sceneData.narration);
+    mainBtn.classList.add('hidden');
+
+    setupSceneInteraction(n);
+  }
+
+  function advanceOnce(nextScene, extra){
+    if(state.locked) return;
+    state.locked = true;
+    stopSpeak();
+    setTimeout(()=>{
+      goToScene(nextScene);
+    }, 260);
+  }
+
+  /* ============ CANVAS CLICK TARGETS PER SCENE ============ */
+  function inCircle(px,py,cx,cy,r){
+    const dx = px-cx, dy = py-cy;
+    return dx*dx+dy*dy <= r*r;
+  }
+
+  function setupSceneInteraction(n){
+    if(n === 1){
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,400,340,90)){
+          advanceOnce(2);
+        }
+      };
+    } else if(n === 2){
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,560,330,90)){
+          advanceOnce(3);
+        }
+      };
+    } else if(n === 3){
+      canvas.onclick = null;
+      state.mash.count = 0;
+      state.mash.needed = 14;
+      state.mash.active = true;
+      const wrap = canvasWrap;
+      const tapHandler = function(evt){
+        if(!state.mash.active || state.locked) return;
+        evt.preventDefault();
+        const p = canvasPointFromEvent(evt);
+        if(inCircle(p.x,p.y,300,340,110)){
+          state.mash.count++;
+          if(state.mash.count >= state.mash.needed){
+            state.mash.active = false;
+            wrap.removeEventListener('pointerdown', tapHandler);
+            advanceOnce(4);
+          }
+        }
+      };
+      wrap.addEventListener('pointerdown', tapHandler);
+      overlayEls.push({ remove: ()=>wrap.removeEventListener('pointerdown', tapHandler) });
+    } else if(n === 4){
+      canvas.onclick = null;
+      addOverlayBtn('helpBtn', T().helpText, {
+        left:'50%', bottom:'16px', transform:'translateX(-50%)'
+      }, ()=>{ advanceOnce(5); });
+    } else if(n === 5){
+      canvas.onclick = null;
+      addOverlayBtn('helpBtn', T().helpPeopleBtn, {
+        left:'50%', bottom:'16px', transform:'translateX(-50%)'
+      }, ()=>{ advanceOnce(6); });
+    } else if(n === 6){
+      state.seq.picks = [];
+      const positions = [{x:160,y:400},{x:400,y:300},{x:640,y:400}];
+      canvas.onclick = function(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        for(let i=0;i<3;i++){
+          const pos = positions[i];
+          if(inCircle(p.x,p.y,pos.x,pos.y-40,26)){
+            const expected = state.seq.picks.length;
+            if(i === expected){
+              state.seq.picks.push(i);
+              if(state.seq.picks.length === 3){
+                advanceOnce(7);
+              }
+            }
+            break;
+          }
+        }
+      };
+    } else if(n === 7){
+      canvas.onclick = null;
+      state.hold.charge = 0;
+      state.hold.hits = 0;
+      state.hold.holding = false;
+      const btn = addOverlayBtn('', T().holdLabel, {
+        left:'50%', bottom:'14px', transform:'translateX(-50%)',
+        width:'84px', height:'84px', borderRadius:'50%',
+        background:'radial-gradient(circle at 35% 30%, #e8724f, #8f2f1d)',
+        border:'4px solid #fff3d8', color:'#fff', fontWeight:'bold',
+        fontSize:'0.78rem', cursor:'pointer', boxShadow:'0 4px 10px rgba(0,0,0,0.4)'
+      }, ()=>{});
+
+      let chargeInterval = null;
+      function startCharge(e){
+        e.preventDefault();
+        if(state.locked) return;
+        state.hold.holding = true;
+        chargeInterval = setInterval(()=>{
+          state.hold.charge = Math.min(1, state.hold.charge + 0.045);
+        }, 30);
+      }
+      function endCharge(e){
+        if(e) e.preventDefault();
+        if(!state.hold.holding) return;
+        state.hold.holding = false;
+        clearInterval(chargeInterval);
+        if(state.hold.charge >= 0.97){
+          state.hold.hits++;
+          state.hold.charge = 0;
+          if(state.hold.hits >= state.hold.needed){
+            advanceOnce(8);
+            return;
+          }
+        } else {
+          state.hold.charge = 0;
+        }
+      }
+      btn.addEventListener('pointerdown', startCharge);
+      btn.addEventListener('pointerup', endCharge);
+      btn.addEventListener('pointerleave', endCharge);
+      btn.addEventListener('pointercancel', endCharge);
+    } else if(n === 8){
+      canvas.onclick = null;
+      const colors = ['#c1462f','#3a6b4a','#3a5a8f'];
+      const icons = ['💰','👘','💍'];
+      const positions = [{x:220,y:250},{x:400,y:200},{x:580,y:250}];
+      state.drag.targets = colors.map(c=>({color:c, filled:false}));
+      state.drag.items = colors.map((c,i)=>({
+        color:c, icon:icons[i], id:i, placed:false,
+        homeX: positions[i].x, homeY: positions[i].y,
+        x: positions[i].x, y: positions[i].y
+      }));
+      state.drag.placed = 0;
+      state.drag.dragging = null;
+
+      const targetPositions = [{x:180,y:400},{x:400,y:400},{x:620,y:400}];
+
+      function pointerDown(evt){
+        if(state.locked) return;
+        const p = canvasPointFromEvent(evt);
+        for(let i=state.drag.items.length-1;i>=0;i--){
+          const item = state.drag.items[i];
+          if(item.placed) continue;
+          if(p.x > item.x-24 && p.x < item.x+24 && p.y > item.y-18 && p.y < item.y+18){
+            state.drag.dragging = item;
+            break;
+          }
+        }
+      }
+      function pointerMove(evt){
+        if(!state.drag.dragging) return;
+        evt.preventDefault();
+        const p = canvasPointFromEvent(evt);
+        state.drag.dragging.x = p.x;
+        state.drag.dragging.y = p.y;
+      }
+      function pointerUp(evt){
+        if(!state.drag.dragging) return;
+        const item = state.drag.dragging;
+        let placedOk = false;
+        for(let i=0;i<targetPositions.length;i++){
+          const tp = targetPositions[i];
+          const target = state.drag.targets[i];
+          if(target.filled) continue;
+          if(inCircle(item.x, item.y, tp.x, tp.y-140, 40) && target.color === item.color){
+            item.placed = true;
+            target.filled = true;
+            state.drag.placed++;
+            placedOk = true;
+            break;
+          }
+        }
+        if(!placedOk){
+          item.x = item.homeX;
+          item.y = item.homeY;
+        }
+        state.drag.dragging = null;
+        if(state.drag.placed >= 3){
+          advanceOnce(9);
+        }
+      }
+      canvasWrap.addEventListener('pointerdown', pointerDown);
+      canvasWrap.addEventListener('pointermove', pointerMove);
+      canvasWrap.addEventListener('pointerup', pointerUp);
+      canvasWrap.addEventListener('pointerleave', pointerUp);
+      overlayEls.push({ remove: ()=>{
+        canvasWrap.removeEventListener('pointerdown', pointerDown);
+        canvasWrap.removeEventListener('pointermove', pointerMove);
+        canvasWrap.removeEventListener('pointerup', pointerUp);
+        canvasWrap.removeEventListener('pointerleave', pointerUp);
+      }});
+    } else if(n === 9){
+      canvas.onclick = null;
+      state.choiceMade = false;
+      addOverlayBtn('choiceBtn', T().choiceAccept, {
+        left:'8%', bottom:'14px'
+      }, ()=>{
+        if(state.choiceMade) return;
+        state.choiceMade = true;
+        setNarration(T().choiceAcceptReaction);
+        speak(T().choiceAcceptReaction);
+        clearOverlays();
+        setTimeout(()=>{
+          addOverlayBtn('helpBtn', T().helpText, {
+            left:'50%', bottom:'16px', transform:'translateX(-50%)'
+          }, ()=>{ advanceOnce(10); });
+        }, 400);
+      });
+      addOverlayBtn('choiceBtn', T().choiceRefuse, {
+        right:'8%', bottom:'14px'
+      }, ()=>{
+        if(state.choiceMade) return;
+        state.choiceMade = true;
+        setNarration(T().choiceRefuseReaction);
+        speak(T().choiceRefuseReaction);
+        clearOverlays();
+        setTimeout(()=>{
+          addOverlayBtn('helpBtn', T().helpText, {
+            left:'50%', bottom:'16px', transform:'translateX(-50%)'
+          }, ()=>{ advanceOnce(10); });
+        }, 400);
+      });
+    } else if(n === 10){
+      canvas.onclick = null;
+      setTimeout(()=>{
+        setNarration(T().scenes[9].narration + ' ' + T().moral);
+      }, 3200);
+      mainBtn.classList.remove('hidden');
+      mainBtn.textContent = T().replayBtn;
+      mainBtn.disabled = false;
+    }
+  }
+
+  /* ============ MAIN BUTTON ============ */
+  mainBtn.addEventListener('click', function(){
+    if(state.scene === 0){
+      goToScene(1);
+    } else if(state.scene === 10){
+      goToScene(0);
+    }
+  });
+
+  /* ============ LANG / MUTE TOGGLES ============ */
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    try{ localStorage.setItem('murtado_lang', state.lang); }catch(e){}
+    try{
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', state.lang);
+      window.history.replaceState({}, '', url);
+    }catch(e){}
+    applyStaticStrings();
+    if(state.scene > 0 && state.scene <= TOTAL_SCENES){
+      const sceneData = T().scenes[state.scene-1];
+      setInstruction(sceneData.instruction);
+      setNarration(sceneData.narration);
+      // rebuild overlay button text by re-running interaction setup (without resetting progress where possible)
+      const savedScene = state.scene;
+      clearOverlays();
+      setupSceneInteraction(savedScene);
+      if(savedScene === 10){
+        mainBtn.textContent = T().replayBtn;
+      }
+    }
+  });
+
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('murtado_muted', state.muted ? 'true' : 'false'); }catch(e){}
+    muteBtn.textContent = state.muted ? T().muteOn : T().muteOff;
+    if(state.muted) stopSpeak();
+  });
+
+  /* ============ RESIZE OBSERVER ============ */
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(()=>notifyResize());
+    ro.observe(document.getElementById('app'));
+  }
+  window.addEventListener('load', notifyResize);
+  setInterval(notifyResize, 1500);
+
+  /* ============ BOOTSTRAP ============ */
+  applyStaticStrings();
+  renderDots();
+  goToScene(0);
+  render();
+
+})();
+</script>
+</body>
+</html>
