@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pangeran Amat Mude - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #pam-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E241A;
+    background: linear-gradient(180deg, #FBF1DA 0%, #F6EEDD 100%);
+    border: 3px solid #8B1E2B;
+    border-radius: 18px;
+    padding: 14px 16px 18px;
+  }
+  #pam-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #8B1E2B;
+  }
+  #pam-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #pam-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  #pam-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 12.5px;
+    background: #D4A017;
+    color: #4a2f00;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .pam-btn-mini {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: #8B1E2B;
+    color: #fff;
+    border: none;
+    padding: 3px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pam-btn-mini.off { background: #9a9a9a; }
+  #pam-hud-right { display: flex; gap: 6px; align-items: center; }
+
+  #pam-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 8px; }
+  .pam-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: rgba(139,30,43,0.25);
+    transition: background 0.25s, transform 0.25s;
+  }
+  .pam-dot.active { background: #8B1E2B; transform: scale(1.25); }
+  .pam-dot.done { background: #D4A017; }
+
+  #pam-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8B1E2B;
+    background: #FBE9C6;
+    touch-action: none;
+  }
+  #pam-canvas { display: block; width: 100%; height: 100%; }
+
+  .pam-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(30,18,14,0.88);
+    color: #fff;
+    padding: 20px;
+  }
+  .pam-overlay.show { display: flex; }
+  .pam-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 23px; margin: 0 0 8px; color: #F3D27A; }
+  .pam-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .pam-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #D4A017;
+    color: #402c00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .pam-btn:active { transform: scale(0.97); }
+
+  #pam-info {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8B1E2B;
+    border-radius: 12px;
+    padding: 10px 14px;
+    min-height: 60px;
+  }
+  #pam-instruction {
+    font-size: 14px;
+    font-weight: 700;
+    color: #8B1E2B;
+    margin: 0 0 4px;
+    line-height: 1.4;
+  }
+  #pam-instruction:before { content: "👉 "; }
+  #pam-caption {
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: #3a3226;
+    margin: 0;
+  }
+  #pam-progressText {
+    font-size: 12.5px;
+    color: #8B1E2B;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  #pam-controls { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #pam-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    overflow: hidden;
+    display: none;
+  }
+  #pam-progressWrap.show { display: block; }
+  #pam-progressBar { height: 100%; width: 0%; background: #2F6B3D; border-radius: 6px; }
+
+  #pam-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    background: #8B1E2B;
+    border: none;
+    border-radius: 30px;
+    padding: 13px 30px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+    display: none;
+  }
+  #pam-actionBtn.show { display: inline-block; }
+  #pam-actionBtn.hold { background: #2F6B3D; }
+  #pam-actionBtn:active { transform: scale(0.97); }
+
+  #pam-choiceRow { display: none; flex-direction: column; gap: 8px; width: 100%; max-width: 460px; }
+  #pam-choiceRow.show { display: flex; }
+  .pam-choiceBtn {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #2E241A;
+    background: #FBE9C6;
+    border: 2px solid #D4A017;
+    border-radius: 14px;
+    padding: 10px 14px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .pam-choiceBtn:active { transform: scale(0.98); }
+  .pam-choiceBtn.wrong { animation: pam-shake 0.4s; border-color: #8B1E2B; }
+  @keyframes pam-shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  #pam-nextBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #402c00;
+    background: #D4A017;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 30px;
+    cursor: pointer;
+    min-width: 200px;
+    display: none;
+  }
+  #pam-nextBtn.show { display: inline-block; }
+  #pam-nextBtn:active { transform: scale(0.97); }
+
+  #pam-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #9a8a6a;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+<div id="pam-wrap">
+  <h2>👑 Pangeran Amat Mude</h2>
+  <p id="pam-sub">Cerita rakyat Aceh, Nanggroe Aceh Darussalam.</p>
+
+  <div id="pam-hud">
+    <span id="pam-phase">Tahap 1 / 8</span>
+    <div id="pam-hud-right">
+      <button class="pam-btn-mini" id="pam-langBtn">EN</button>
+      <button class="pam-btn-mini" id="pam-voiceBtn">🔊 Suara: Aktif</button>
+    </div>
+  </div>
+
+  <div id="pam-dots"></div>
+
+  <div id="pam-canvas-holder">
+    <canvas id="pam-canvas"></canvas>
+
+    <div class="pam-overlay show" id="pam-start">
+      <h3>Pangeran Amat Mude</h3>
+      <p>Cerita rakyat Aceh tentang seorang pangeran yang dibuang ke hutan bersama ibunya, namun kembali dengan kejujuran dan kebijaksanaan untuk memimpin kerajaannya.</p>
+      <button class="pam-btn" id="pam-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="pam-overlay" id="pam-win">
+      <h3>Pangeran Amat Mude Menjadi Raja! 👑</h3>
+      <p>Kelapa gading berhasil dibawa pulang. Pangeran Amat Mude naik takhta menjadi raja Negeri Alas yang adil dan bijaksana, serta tetap memaafkan pamannya.</p>
+      <button class="pam-btn" id="pam-playAgainBtn">Ulangi Kisah</button>
+    </div>
+  </div>
+
+  <div id="pam-info">
+    <p id="pam-instruction">Ketuk tombol Mulai Kisah untuk memulai.</p>
+    <p id="pam-caption">Bersiap memulai kisah...</p>
+    <p id="pam-progressText"></p>
+  </div>
+
+  <div id="pam-controls">
+    <div id="pam-progressWrap"><div id="pam-progressBar"></div></div>
+    <button id="pam-actionBtn">Tahan</button>
+    <div id="pam-choiceRow"></div>
+    <button id="pam-nextBtn">Lanjut ▶</button>
+  </div>
+
+  <div id="pam-footer">Kisah Rakyat Nusantara • Negeri Alas, Aceh</div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Pangeran Amat Mude - Game',
+      h2: '👑 Pangeran Amat Mude',
+      sub: 'Cerita rakyat Aceh, Nanggroe Aceh Darussalam.',
+      startTitle: 'Pangeran Amat Mude',
+      startBody: 'Cerita rakyat Aceh tentang seorang pangeran yang dibuang ke hutan bersama ibunya, namun kembali dengan kejujuran dan kebijaksanaan untuk memimpin kerajaannya.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Pangeran Amat Mude Menjadi Raja! 👑',
+      winBody: 'Kelapa gading berhasil dibawa pulang. Pangeran Amat Mude naik takhta menjadi raja Negeri Alas yang adil dan bijaksana, serta tetap memaafkan pamannya.',
+      playAgainBtn: 'Ulangi Kisah',
+      nextBtn: 'Lanjut ▶',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      langBtn: 'EN',
+      startHint: 'Ketuk tombol Mulai Kisah untuk memulai.',
+      phase: function(p){ return 'Tahap ' + p + ' / 8'; },
+      holdSharpenBtn: '🌿 TAHAN UNTUK MERUNCINGKAN',
+      holdClimbBtn: '🌴 TAHAN UNTUK MEMANJAT',
+      caughtText: function(a,b){ return 'Ikan tertangkap: ' + a + ' / ' + b; },
+      goldText: function(a,b){ return 'Emas ditemukan: ' + a + ' / ' + b; },
+      scenes: [
+        {
+          narration: 'Di Kerajaan Negeri Alas, Nanggroe Aceh Darussalam, hiduplah seorang raja yang bijaksana bersama permaisurinya. Sudah lama mereka menikah, namun belum juga dikaruniai seorang anak. Setiap hari, mereka berdoa dengan penuh harap di serambi istana.',
+          instruction: 'Ketuk Raja dan Permaisuri yang sedang berdoa di serambi istana.'
+        },
+        {
+          narration: 'Doa mereka pun terkabul. Lahirlah seorang putra yang sehat dan tampan, diberi nama Pangeran Amat Mude. Namun ketika sang pangeran baru berusia sepuluh tahun, sang Raja jatuh sakit keras dan mangkat, meninggalkan takhta kepada adiknya sebagai raja sementara.',
+          instruction: 'Ketuk lonceng istana untuk mengumumkan kelahiran Pangeran Amat Mude.'
+        },
+        {
+          narration: 'Sang paman yang menjadi raja sementara mulai iri hati dan tidak ingin melepaskan takhtanya kelak. Ia memerintahkan prajuritnya membawa Permaisuri dan Pangeran Amat Mude pergi berburu, lalu meninggalkan mereka jauh di dalam hutan.',
+          instruction: 'Seret Permaisuri dan Pangeran Amat Mude dari istana menuju ke dalam hutan.'
+        },
+        {
+          narration: 'Di dalam hutan, Pangeran Amat Mude tumbuh menjadi anak yang tabah dan tidak manja. Untuk membantu ibunya, ia meruncingkan sebatang ranting pohon agar dapat dijadikan alat menangkap ikan di sungai jernih.',
+          instruction: 'Tekan dan tahan tombol untuk meruncingkan ranting pohon.'
+        },
+        {
+          narration: 'Dengan ranting tajam di tangan, Pangeran Amat Mude menangkap ikan-ikan di sungai untuk dimasak ibunya. Banyak sekali ikan yang dapat ia tangkap.',
+          instruction: 'Ketuk ikan-ikan yang berenang di sungai untuk menangkapnya.'
+        },
+        {
+          narration: 'Saat membersihkan ikan, sang ibu terkejut menemukan sebutir emas di dalam perut setiap ikan. Rezeki yang tak disangka-sangka itu membuat mereka berangsur-angsur menjadi kaya dan gemar menolong orang miskin.',
+          instruction: 'Ketuk perut setiap ikan satu per satu, dari kiri ke kanan, untuk menemukan emas di dalamnya.'
+        },
+        {
+          narration: 'Bertahun-tahun kemudian, sang paman memanggil Pangeran Amat Mude untuk mengambil sebutir kelapa gading di sebuah pulau kecil di tengah samudera. Dalam perjalanan, tiga makhluk penjaga laut menghadang dan bertanya siapa dirinya.',
+          instruction: 'Pilih jawaban yang sopan agar makhluk laut mengizinkan Pangeran Amat Mude lewat.'
+        },
+        {
+          narration: 'Karena kesopanannya, sang naga mengaku sebagai sahabat lama ayahandanya dan memberikan sebuah cincin ajaib. Dengan bantuan cincin itu, Pangeran Amat Mude memanjat pohon kelapa gading yang menjulang sangat tinggi.',
+          instruction: 'Tekan dan tahan tombol untuk memanjat pohon kelapa gading.'
+        }
+      ],
+      choiceA: 'Aku adalah Pangeran Amat Mude, putra sahabatmu dahulu, Raja Negeri Alas.',
+      choiceB: 'Minggir! Aku seorang pangeran, jangan menghalangi jalanku!',
+      choiceWrongMsg: 'Makhluk laut itu mengaung marah. Cobalah jawaban yang lebih sopan.'
+    },
+    en: {
+      title: 'Prince Amat Mude - Game',
+      h2: '👑 Prince Amat Mude',
+      sub: 'A folktale from Aceh, Nanggroe Aceh Darussalam.',
+      startTitle: 'Prince Amat Mude',
+      startBody: 'A folktale from Aceh about a prince exiled to the forest with his mother, who returns with honesty and wisdom to lead his kingdom.',
+      startBtn: 'Start the Tale',
+      winTitle: 'Prince Amat Mude Becomes King! 👑',
+      winBody: 'The golden coconut was brought home safely. Prince Amat Mude ascended the throne as a just and wise king of Negeri Alas, and still forgave his uncle.',
+      playAgainBtn: 'Play Again',
+      nextBtn: 'Next ▶',
+      voiceOn: '🔊 Sound: On',
+      voiceOff: '🔇 Sound: Off',
+      langBtn: 'ID',
+      startHint: 'Tap the Start the Tale button to begin.',
+      phase: function(p){ return 'Stage ' + p + ' / 8'; },
+      holdSharpenBtn: '🌿 HOLD TO SHARPEN',
+      holdClimbBtn: '🌴 HOLD TO CLIMB',
+      caughtText: function(a,b){ return 'Fish caught: ' + a + ' / ' + b; },
+      goldText: function(a,b){ return 'Gold found: ' + a + ' / ' + b; },
+      scenes: [
+        {
+          narration: 'In the Kingdom of Negeri Alas, Aceh, there lived a wise King and his Queen. They had been married a long time, but had never been blessed with a child. Every day, they prayed together with hope on the palace veranda.',
+          instruction: 'Tap the King and Queen praying on the palace veranda.'
+        },
+        {
+          narration: 'Their prayers were finally answered. A healthy, handsome son was born, named Prince Amat Mude. But when the prince was only ten years old, the King fell gravely ill and passed away, leaving the throne to his younger brother as regent.',
+          instruction: 'Tap the palace bell to announce Prince Amat Mude\'s birth.'
+        },
+        {
+          narration: 'The uncle who became regent grew envious and did not wish to give up the throne later on. He ordered his soldiers to take the Queen and Prince Amat Mude out to hunt, then abandon them deep in the forest.',
+          instruction: 'Drag the Queen and Prince Amat Mude from the palace into the forest.'
+        },
+        {
+          narration: 'In the forest, Prince Amat Mude grew into a resilient, uncomplaining boy. To help his mother, he sharpened a tree branch to use as a tool for catching fish in the clear river.',
+          instruction: 'Press and hold the button to sharpen the branch.'
+        },
+        {
+          narration: 'With the sharpened branch in hand, Prince Amat Mude caught fish from the river for his mother to cook. He managed to catch a great many fish.',
+          instruction: 'Tap the fish swimming in the river to catch them.'
+        },
+        {
+          narration: 'While cleaning the fish, the mother was astonished to find a piece of gold inside each fish\'s belly. This unexpected fortune slowly made them wealthy, and they loved helping the poor.',
+          instruction: 'Tap each fish\'s belly one by one, from left to right, to find the gold inside.'
+        },
+        {
+          narration: 'Years later, the uncle summoned Prince Amat Mude to fetch a golden coconut from a small island in the middle of the ocean. Along the way, three guardian sea creatures blocked his path and asked who he was.',
+          instruction: 'Choose the polite answer so the sea creatures let Prince Amat Mude pass.'
+        },
+        {
+          narration: 'Because of his courtesy, the dragon revealed himself as an old friend of his late father and gave him a magic ring. With the ring\'s help, Prince Amat Mude climbed the towering golden coconut palm.',
+          instruction: 'Press and hold the button to climb the golden coconut palm.'
+        }
+      ],
+      choiceA: 'I am Prince Amat Mude, son of your old friend, the King of Negeri Alas.',
+      choiceB: 'Move aside! I am a prince, do not stand in my way!',
+      choiceWrongMsg: 'The sea creature roars in anger. Try a more polite answer.'
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.documentElement.lang = LANG;
+  document.querySelector('#pam-wrap h2').textContent = TXT.h2;
+  document.getElementById('pam-sub').textContent = TXT.sub;
+  document.querySelector('#pam-start h3').textContent = TXT.startTitle;
+  document.querySelector('#pam-start p').textContent = TXT.startBody;
+  document.getElementById('pam-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#pam-win h3').textContent = TXT.winTitle;
+  document.querySelector('#pam-win p').textContent = TXT.winBody;
+  document.getElementById('pam-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('pam-instruction').textContent = TXT.startHint;
+  document.getElementById('pam-caption').textContent = '';
+  document.getElementById('pam-nextBtn').textContent = TXT.nextBtn;
+  document.getElementById('pam-langBtn').textContent = TXT.langBtn;
+
+  var langBtn = document.getElementById('pam-langBtn');
+  langBtn.addEventListener('click', function(){
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', LANG === 'en' ? 'id' : 'en');
+    window.location.href = url.toString();
+  });
+
+  var voiceBtn = document.getElementById('pam-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  try {
+    var savedMute = localStorage.getItem('pam-mute');
+    if (savedMute === '1') narrationOn = false;
+  } catch(e){}
+  voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+  voiceBtn.className = 'pam-btn-mini' + (narrationOn ? '' : ' off');
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = 'pam-btn-mini' + (narrationOn ? '' : ' off');
+    try { localStorage.setItem('pam-mute', narrationOn ? '0' : '1'); } catch(e){}
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+    else if(narrationOn && speechSupported && currentSceneIdx >= 0) speak(TXT.scenes[currentSceneIdx].narration);
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  var canvas = document.getElementById('pam-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+  var canvasScale = 1;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvasScale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * canvasScale, 0, 0, dpr * canvasScale, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  function toCanvasXY(clientX, clientY){
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left) / canvasScale,
+      y: (clientY - rect.top) / canvasScale
+    };
+  }
+
+  var phaseEl = document.getElementById('pam-phase');
+  var instructionEl = document.getElementById('pam-instruction');
+  var captionEl = document.getElementById('pam-caption');
+  var progressTextEl = document.getElementById('pam-progressText');
+  var actionBtn = document.getElementById('pam-actionBtn');
+  var nextBtn = document.getElementById('pam-nextBtn');
+  var choiceRow = document.getElementById('pam-choiceRow');
+  var progressWrap = document.getElementById('pam-progressWrap');
+  var progressBar = document.getElementById('pam-progressBar');
+  var startOverlay = document.getElementById('pam-start');
+  var winOverlay = document.getElementById('pam-win');
+  var dotsWrap = document.getElementById('pam-dots');
+
+  var SCENE_COUNT = 8;
+  var currentSceneIdx = -1;
+  var t = 0;
+  var holding = false;
+  var holdProgress = 0;
+  var holdTarget = null; // 'sharpen' | 'climb'
+
+  for (var i = 0; i < SCENE_COUNT; i++){
+    var d = document.createElement('div');
+    d.className = 'pam-dot';
+    dotsWrap.appendChild(d);
+  }
+  function updateDots(){
+    var dots = dotsWrap.querySelectorAll('.pam-dot');
+    for (var i = 0; i < dots.length; i++){
+      dots[i].className = 'pam-dot' + (i < currentSceneIdx ? ' done' : (i === currentSceneIdx ? ' active' : ''));
+    }
+  }
+
+  // ---- Scene-specific interaction state ----
+  var s1 = { done: false, pulse: 0 };
+  var s2 = { done: false, ring: 0 };
+  var s3 = { done: false, dragging: false, px: 130, py: 330, homeX: 130, homeY: 330, targetX: 620, targetY: 300, dropped: false };
+  var s4 = { done: false };
+  var s5 = { need: 5, caught: 0, fish: [] };
+  var s6 = { need: 3, found: [false,false,false], positions: [ {x:260,y:330}, {x:400,y:330}, {x:540,y:330} ] };
+  var s7 = { done: false, chosen: false };
+  var s8 = { done: false };
+
+  function resetSceneStates(){
+    s1 = { done: false, pulse: 0 };
+    s2 = { done: false, ring: 0 };
+    s3 = { done: false, dragging: false, px: 130, py: 330, homeX: 130, homeY: 330, targetX: 620, targetY: 300, dropped: false };
+    s4 = { done: false };
+    s5 = { need: 5, caught: 0, fish: [
+      { x: 200, y: 300, vx: 0.7, alive: true },
+      { x: 400, y: 340, vx: -0.5, alive: true },
+      { x: 560, y: 290, vx: 0.6, alive: true }
+    ] };
+    s6 = { need: 3, found: [false,false,false], positions: [ {x:260,y:330}, {x:400,y:330}, {x:540,y:330} ] };
+    s7 = { done: false, chosen: false };
+    s8 = { done: false };
+    holdProgress = 0;
+    holding = false;
+  }
+
+  function setPhaseLabel(){ phaseEl.textContent = TXT.phase(currentSceneIdx + 1); }
+
+  function hideAllControls(){
+    actionBtn.className = ''; actionBtn.classList.remove('show','hold');
+    nextBtn.classList.remove('show');
+    choiceRow.classList.remove('show');
+    choiceRow.innerHTML = '';
+    progressWrap.classList.remove('show');
+    progressBar.style.width = '0%';
+    progressTextEl.textContent = '';
+  }
+
+  function showNextBtn(){
+    nextBtn.classList.add('show');
+  }
+
+  function enterScene(idx){
+    currentSceneIdx = idx;
+    updateDots();
+    setPhaseLabel();
+    hideAllControls();
+    var sc = TXT.scenes[idx];
+    instructionEl.textContent = sc.instruction;
+    captionEl.textContent = sc.narration;
+    speak(sc.narration);
+
+    if (idx === 3){ // sharpen - hold
+      holdTarget = 'sharpen';
+      actionBtn.textContent = TXT.holdSharpenBtn;
+      actionBtn.classList.add('show');
+      progressWrap.classList.add('show');
+    } else if (idx === 4){ // catch fish - rapid tap
+      progressTextEl.textContent = TXT.caughtText(s5.caught, s5.need);
+    } else if (idx === 5){ // sequential tap gold
+      progressTextEl.textContent = TXT.goldText(0, s6.need);
+    } else if (idx === 6){ // choice
+      buildChoiceButtons();
+    } else if (idx === 7){ // climb - hold
+      holdTarget = 'climb';
+      actionBtn.textContent = TXT.holdClimbBtn;
+      actionBtn.classList.add('show');
+      progressWrap.classList.add('show');
+    }
+  }
+
+  function buildChoiceButtons(){
+    choiceRow.innerHTML = '';
+    choiceRow.classList.add('show');
+    var opts = [
+      { text: TXT.choiceA, correct: true },
+      { text: TXT.choiceB, correct: false }
+    ];
+    opts.forEach(function(opt){
+      var b = document.createElement('button');
+      b.className = 'pam-choiceBtn';
+      b.textContent = opt.text;
+      b.addEventListener('click', function(){
+        if (opt.correct){
+          s7.done = true;
+          choiceRow.classList.remove('show');
+          captionEl.textContent = TXT.scenes[6].narration;
+          showNextBtn();
+        } else {
+          b.classList.remove('wrong');
+          void b.offsetWidth;
+          b.classList.add('wrong');
+          captionEl.textContent = TXT.choiceWrongMsg;
+          speak(TXT.choiceWrongMsg);
+        }
+      });
+      choiceRow.appendChild(b);
+    });
+  }
+
+  function goToNextScene(){
+    if (currentSceneIdx + 1 >= SCENE_COUNT){
+      showWin();
+    } else {
+      enterScene(currentSceneIdx + 1);
+    }
+  }
+
+  function showWin(){
+    currentSceneIdx = SCENE_COUNT;
+    updateDots();
+    hideAllControls();
+    winOverlay.classList.add('show');
+    instructionEl.textContent = '';
+    captionEl.textContent = '';
+    speak(TXT.winBody);
+  }
+
+  function startGame(){
+    startOverlay.classList.remove('show');
+    winOverlay.classList.remove('show');
+    resetSceneStates();
+    enterScene(0);
+  }
+
+  document.getElementById('pam-startBtn').addEventListener('click', startGame);
+  document.getElementById('pam-playAgainBtn').addEventListener('click', startGame);
+  nextBtn.addEventListener('click', function(){
+    nextBtn.classList.remove('show');
+    goToNextScene();
+  });
+
+  // ---- Hold button (sharpen / climb) ----
+  actionBtn.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    holding = true;
+    actionBtn.classList.add('hold');
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){
+      holding = false;
+      actionBtn.classList.remove('hold');
+    });
+  });
+  window.addEventListener('keydown', function(e){
+    if (e.code === 'Space' && actionBtn.classList.contains('show')){ holding = true; actionBtn.classList.add('hold'); }
+  });
+  window.addEventListener('keyup', function(e){
+    if (e.code === 'Space'){ holding = false; actionBtn.classList.remove('hold'); }
+  });
+
+  function handleHoldProgress(){
+    if (currentSceneIdx !== 3 && currentSceneIdx !== 7) return;
+    if (holding){
+      holdProgress = Math.min(100, holdProgress + 1.6);
+    } else {
+      holdProgress = Math.max(0, holdProgress - 0.8);
+    }
+    progressBar.style.width = holdProgress + '%';
+    if (holdProgress >= 100){
+      if (currentSceneIdx === 3 && !s4.done){
+        s4.done = true;
+        holding = false;
+        setTimeout(function(){ goToNextScene(); }, 400);
+      } else if (currentSceneIdx === 7 && !s8.done){
+        s8.done = true;
+        holding = false;
+        setTimeout(function(){ goToNextScene(); }, 400);
+      }
+    }
+  }
+
+  // ---- Canvas pointer interaction (tap / drag / rapid-tap / sequential-tap) ----
+  var pointerIsDown = false;
+
+  canvas.addEventListener('pointerdown', function(e){
+    var p = toCanvasXY(e.clientX, e.clientY);
+    pointerIsDown = true;
+
+    if (currentSceneIdx === 0 && !s1.done){
+      if (dist(p.x, p.y, 400, 220) < 90){
+        s1.done = true;
+        s1.pulse = 1;
+        showNextBtn();
+      }
+    } else if (currentSceneIdx === 1 && !s2.done){
+      if (dist(p.x, p.y, 620, 130) < 45){
+        s2.done = true;
+        s2.ring = 1;
+        showNextBtn();
+      }
+    } else if (currentSceneIdx === 2 && !s3.done){
+      if (dist(p.x, p.y, s3.px, s3.py) < 60){
+        s3.dragging = true;
+      }
+    } else if (currentSceneIdx === 4){
+      tryCatchFish(p);
+    } else if (currentSceneIdx === 5){
+      tryFindGold(p);
+    }
+  });
+
+  canvas.addEventListener('pointermove', function(e){
+    if (!pointerIsDown) return;
+    if (currentSceneIdx === 2 && s3.dragging && !s3.done){
+      var p = toCanvasXY(e.clientX, e.clientY);
+      s3.px = p.x; s3.py = p.y;
+    }
+  });
+
+  ['pointerup','pointercancel','pointerleave'].forEach(function(evt){
+    canvas.addEventListener(evt, function(e){
+      pointerIsDown = false;
+      if (currentSceneIdx === 2 && s3.dragging && !s3.done){
+        s3.dragging = false;
+        if (dist(s3.px, s3.py, s3.targetX, s3.targetY) < 90){
+          s3.px = s3.targetX; s3.py = s3.targetY;
+          s3.done = true;
+          s3.dropped = true;
+          showNextBtn();
+        } else {
+          s3.px = s3.homeX; s3.py = s3.homeY;
+        }
+      }
+    });
+  });
+
+  function dist(x1,y1,x2,y2){ return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)); }
+
+  function tryCatchFish(p){
+    for (var i = 0; i < s5.fish.length; i++){
+      var f = s5.fish[i];
+      if (f.alive && dist(p.x, p.y, f.x, f.y) < 34){
+        f.alive = false;
+        s5.caught++;
+        progressTextEl.textContent = TXT.caughtText(Math.min(s5.caught, s5.need), s5.need);
+        setTimeout((function(idx){
+          return function(){
+            if (currentSceneIdx !== 4) return;
+            var ff = s5.fish[idx];
+            ff.alive = true;
+            ff.x = 150 + Math.random() * 500;
+            ff.y = 270 + Math.random() * 100;
+            ff.vx = (Math.random() > 0.5 ? 1 : -1) * (0.4 + Math.random()*0.5);
+          };
+        })(i), 550);
+        if (s5.caught >= s5.need){
+          showNextBtn();
+        }
+        break;
+      }
+    }
+  }
+
+  function tryFindGold(p){
+    for (var i = 0; i < s6.positions.length; i++){
+      if (s6.found[i]) continue;
+      var pos = s6.positions[i];
+      if (dist(p.x, p.y, pos.x, pos.y) < 40){
+        // must be tapped left to right
+        var expectedIdx = s6.found.indexOf(false);
+        if (i !== expectedIdx) {
+          captionEl.textContent = (LANG === 'en')
+            ? 'Try the fish from left to right, one at a time.'
+            : 'Coba ikan dari kiri ke kanan, satu per satu.';
+          return;
+        }
+        s6.found[i] = true;
+        var count = s6.found.filter(Boolean).length;
+        progressTextEl.textContent = TXT.goldText(count, s6.need);
+        if (count >= s6.need){
+          captionEl.textContent = TXT.scenes[5].narration;
+          showNextBtn();
+        }
+        break;
+      }
+    }
+  }
+
+  // ================= DRAWING =================
+  function drawSky(topColor, bottomColor){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawCloud(x,y,s){
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(x,y,26*s,14*s,0,0,Math.PI*2);
+    ctx.ellipse(x+22*s,y+4*s,20*s,12*s,0,0,Math.PI*2);
+    ctx.ellipse(x-22*s,y+5*s,18*s,11*s,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawSun(x,y,s){
+    ctx.fillStyle = '#F3D27A';
+    ctx.beginPath(); ctx.arc(x,y,20*s,0,Math.PI*2); ctx.fill();
+  }
+
+  // -- Palace background --
+  function drawPalaceBg(){
+    drawSky('#BEE3F8', '#FDEBC7');
+    drawSun(700, 70, 1);
+    drawCloud(140, 70, 1);
+    drawCloud(560, 50, 0.8);
+    // ground
+    ctx.fillStyle = '#DDC48A';
+    ctx.fillRect(0, 360, W, H-360);
+    // palace veranda platform
+    ctx.fillStyle = '#C99A4A';
+    ctx.fillRect(60, 330, 680, 40);
+    ctx.fillStyle = '#B5842A';
+    ctx.fillRect(60, 365, 680, 8);
+    // roof (Aceh meuligoe style, layered curved roof)
+    ctx.fillStyle = '#8B1E2B';
+    roofLayer(400, 150, 300, 26);
+    roofLayer(400, 185, 250, 24);
+    roofLayer(400, 218, 200, 22);
+    // pillars
+    ctx.fillStyle = '#D4A017';
+    for (var i=0;i<5;i++){
+      var px = 150 + i*125;
+      ctx.fillRect(px-8, 235, 16, 100);
+    }
+    // ornament finial
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath(); ctx.moveTo(400,100); ctx.lineTo(390,140); ctx.lineTo(410,140); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(400,96,7,0,Math.PI*2); ctx.fill();
+  }
+
+  function roofLayer(cx, cy, width, height){
+    ctx.beginPath();
+    ctx.moveTo(cx-width/2, cy+height);
+    ctx.quadraticCurveTo(cx, cy-height*0.6, cx+width/2, cy+height);
+    ctx.lineTo(cx+width/2-14, cy+height);
+    ctx.quadraticCurveTo(cx, cy-height*0.15, cx-width/2+14, cy+height);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // -- Characters --
+  function drawKing(px, py, size, kneeling){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if (kneeling) ctx.translate(0, 6*s);
+    // robe
+    ctx.fillStyle = '#2F6B3D';
+    ctx.beginPath(); ctx.ellipse(0,10*s,12*s,16*s,0,0,Math.PI*2); ctx.fill();
+    // face
+    ctx.fillStyle = '#C98A5C';
+    ctx.beginPath(); ctx.arc(0,-6*s,7*s,0,Math.PI*2); ctx.fill();
+    // mustache
+    ctx.fillStyle = '#3A2E24';
+    ctx.fillRect(-4*s,-2*s,8*s,2*s);
+    // crown
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-11*s); ctx.lineTo(-8*s,-17*s); ctx.lineTo(-4*s,-13*s);
+    ctx.lineTo(0,-19*s); ctx.lineTo(4*s,-13*s); ctx.lineTo(8*s,-17*s); ctx.lineTo(8*s,-11*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawQueen(px, py, size, kneeling){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    if (kneeling) ctx.translate(0, 6*s);
+    ctx.fillStyle = '#8B1E2B';
+    ctx.beginPath(); ctx.ellipse(0,10*s,11*s,16*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-6*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-13*s,7.5*s,5*s,0,Math.PI,0); ctx.fill();
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath(); ctx.arc(0,-15*s,6*s,Math.PI,0); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-19*s,2.4*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPrinceChild(px, py, size){
+    var s = size/34;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D8A52';
+    ctx.beginPath(); ctx.ellipse(0,9*s,8*s,11*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-4*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath(); ctx.arc(0,-10*s,5.8*s,Math.PI,0); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPrinceAdult(px, py, size, holdingStick){
+    var s = size/46;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#3D8A52';
+    ctx.beginPath(); ctx.ellipse(0,11*s,11*s,15*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-5*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2E24';
+    ctx.beginPath(); ctx.ellipse(0,-11.5*s,7.5*s,4.5*s,0,Math.PI,0); ctx.fill();
+    if (holdingStick){
+      ctx.strokeStyle = '#7A5A32';
+      ctx.lineWidth = 3*s;
+      ctx.beginPath(); ctx.moveTo(8*s, 0); ctx.lineTo(22*s, -22*s); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawUncle(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5B3A66';
+    ctx.beginPath(); ctx.ellipse(0,10*s,12*s,16*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#C98A5C';
+    ctx.beginPath(); ctx.arc(0,-6*s,7*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E241A';
+    ctx.fillRect(-4*s,-2*s,8*s,2*s);
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath();
+    ctx.moveTo(-7*s,-11*s); ctx.lineTo(-7*s,-16*s); ctx.lineTo(0,-12*s); ctx.lineTo(7*s,-16*s); ctx.lineTo(7*s,-11*s);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSoldier(px, py, size){
+    var s = size/38;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5b5b5b';
+    ctx.beginPath(); ctx.ellipse(0,8*s,8*s,11*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#C98A5C';
+    ctx.beginPath(); ctx.arc(0,-4*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#7A5A32'; ctx.lineWidth = 2.5*s;
+    ctx.beginPath(); ctx.moveTo(7*s,-6*s); ctx.lineTo(16*s,-24*s); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBell(px, py, size, rung){
+    var s = size/40;
+    ctx.save(); ctx.translate(px,py);
+    ctx.strokeStyle = '#7A5A32'; ctx.lineWidth = 4*s;
+    ctx.beginPath(); ctx.moveTo(0,-30*s); ctx.lineTo(0,-14*s); ctx.stroke();
+    var wob = rung ? Math.sin(t*10)*4 : 0;
+    ctx.save(); ctx.translate(wob, 0);
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-14*s);
+    ctx.quadraticCurveTo(-16*s,6*s,-6*s,12*s);
+    ctx.lineTo(6*s,12*s);
+    ctx.quadraticCurveTo(16*s,6*s,14*s,-14*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#B5842A';
+    ctx.beginPath(); ctx.ellipse(0,-14*s,14*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawFishShape(px, py, size, color, facing){
+    var s = size/30; facing = facing || 1;
+    ctx.save(); ctx.translate(px,py); ctx.scale(facing,1);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0,0,14*s,8*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-13*s,0); ctx.lineTo(-22*s,-8*s); ctx.lineTo(-22*s,8*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath(); ctx.arc(9*s,-2*s,2*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGoldNugget(px, py, size){
+    var s = size/16;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#F3D27A';
+    ctx.beginPath();
+    ctx.moveTo(-8*s,-4*s); ctx.lineTo(0,-8*s); ctx.lineTo(8*s,-3*s); ctx.lineTo(5*s,7*s); ctx.lineTo(-5*s,6*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath(); ctx.moveTo(-8*s,-4*s); ctx.lineTo(0,-8*s); ctx.lineTo(0,2*s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawForestBg(){
+    drawSky('#CDEBD3', '#EDE0B5');
+    drawSun(680, 60, 0.9);
+    ctx.fillStyle = '#DDC48A';
+    ctx.fillRect(0, 360, W, H-360);
+    // trees
+    for (var i=0;i<7;i++){
+      var tx = 20 + i*115 + (i%2)*20;
+      drawTree(tx, 330, 60 + (i%3)*10);
+    }
+  }
+
+  function drawTree(px, py, size){
+    var s = size/60;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7A5A32';
+    ctx.fillRect(-5*s,-10*s,10*s,50*s);
+    ctx.fillStyle = '#3D8A52';
+    ctx.beginPath(); ctx.arc(0,-40*s,30*s,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18*s,-25*s,20*s,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18*s,-25*s,20*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRiverBg(){
+    drawSky('#CDEBD3', '#EDE0B5');
+    ctx.fillStyle = '#DDC48A';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#3D8A52';
+    ctx.fillRect(0, 0, W, 250);
+    for (var i=0;i<4;i++){ drawTree(60+i*220, 250, 55); }
+    // river
+    var g = ctx.createLinearGradient(0,250,0,400);
+    g.addColorStop(0,'#7EC8E3'); g.addColorStop(1,'#3E9BC4');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(0,260); ctx.quadraticCurveTo(400,300,800,260); ctx.lineTo(800,420); ctx.quadraticCurveTo(400,460,0,420); ctx.closePath();
+    ctx.fill();
+    // ripples
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
+    for (var r=0;r<5;r++){
+      ctx.beginPath();
+      ctx.moveTo(60+r*140, 320 + Math.sin(t*2+r)*4);
+      ctx.quadraticCurveTo(60+r*140+40, 310+ Math.sin(t*2+r)*4, 60+r*140+80, 320+ Math.sin(t*2+r)*4);
+      ctx.stroke();
+    }
+  }
+
+  function drawCuttingBoard(){
+    drawSky('#EAD9F2', '#EDE0B5');
+    ctx.fillStyle = '#DDC48A';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#3D8A52'; ctx.fillRect(0,0,W,240);
+    for (var i=0;i<4;i++){ drawTree(70+i*220, 240, 50); }
+    // ground plank
+    ctx.fillStyle = '#B5842A';
+    ctx.fillRect(120, 300, 560, 90);
+    ctx.fillStyle = '#9A6D28';
+    for (var i=0;i<6;i++){ ctx.fillRect(130+i*95, 300, 4, 90); }
+  }
+
+  function drawOceanBg(){
+    drawSky('#8FCBEA', '#E7F3EE');
+    drawSun(690, 60, 1);
+    var g = ctx.createLinearGradient(0,200,0,H);
+    g.addColorStop(0,'#3E9BC4'); g.addColorStop(1,'#1B5F82');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,190,W,H-190);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
+    for (var r=0;r<6;r++){
+      ctx.beginPath();
+      ctx.moveTo(0, 220+r*30 + Math.sin(t*1.5+r)*4);
+      ctx.lineTo(W, 220+r*30 + Math.sin(t*1.5+r+1)*4);
+      ctx.stroke();
+    }
+  }
+
+  function drawIslandBg(climbAmt){
+    drawSky('#8FCBEA', '#DDF3EA');
+    drawSun(700, 60, 1);
+    var g = ctx.createLinearGradient(0,260,0,H);
+    g.addColorStop(0,'#3E9BC4'); g.addColorStop(1,'#1B5F82');
+    ctx.fillStyle = g; ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#EAD9A5';
+    ctx.beginPath(); ctx.ellipse(400,340,220,50,0,0,Math.PI*2); ctx.fill();
+    drawPalmTree(400, 340, climbAmt || 0);
+  }
+
+  function drawPalmTree(px, py, climbAmt){
+    ctx.save(); ctx.translate(px, py);
+    var trunkH = 260;
+    ctx.strokeStyle = '#8A6A3A';
+    ctx.lineWidth = 16;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(-10, -trunkH*0.5, 6, -trunkH);
+    ctx.stroke();
+    var topX = 6, topY = -trunkH;
+    // fronds
+    ctx.strokeStyle = '#2F6B3D'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    var fronds = [[-70,-40],[-40,-70],[0,-80],[40,-70],[70,-35],[-60,10],[60,10]];
+    fronds.forEach(function(f){
+      ctx.beginPath();
+      ctx.moveTo(topX, topY);
+      ctx.quadraticCurveTo(topX+f[0]*0.6, topY+f[1]*0.6, topX+f[0], topY+f[1]);
+      ctx.stroke();
+    });
+    // golden coconuts
+    ctx.fillStyle = '#F3D27A';
+    ctx.beginPath(); ctx.arc(topX-10, topY+18, 11, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(topX+12, topY+22, 11, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(topX+2, topY+30, 11, 0, Math.PI*2); ctx.fill();
+
+    // climbing prince
+    if (climbAmt !== undefined){
+      var climbY = -climbAmt * (trunkH-20) / 100;
+      ctx.save();
+      ctx.translate(0, climbY);
+      drawPrinceAdult(0, 0, 40, false);
+      // magic ring glow
+      ctx.fillStyle = 'rgba(243,210,122,0.6)';
+      ctx.beginPath(); ctx.arc(10,-8,6,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawSeaCreatures(){
+    // big fish
+    ctx.save();
+    drawFishShape(180, 260, 60, '#3E9BC4', 1);
+    ctx.restore();
+    // crocodile
+    ctx.save(); ctx.translate(400, 250);
+    ctx.fillStyle = '#3D8A52';
+    ctx.beginPath(); ctx.ellipse(0,0,60,16,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(50,-4); ctx.lineTo(80,0); ctx.lineTo(50,4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(35,-8,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    // naga / dragon (serpentine)
+    ctx.save(); ctx.translate(620, 260);
+    ctx.strokeStyle = '#8B1E2B'; ctx.lineWidth = 18; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-60, 20);
+    ctx.quadraticCurveTo(-20, -20, 0, 10);
+    ctx.quadraticCurveTo(20, 40, 60, 0);
+    ctx.stroke();
+    ctx.fillStyle = '#D4A017';
+    ctx.beginPath(); ctx.arc(60,0,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E241A';
+    ctx.beginPath(); ctx.arc(65,-4,2.5,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBoat(px, py){
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7A5A32';
+    ctx.beginPath();
+    ctx.moveTo(-40,0); ctx.lineTo(40,0); ctx.lineTo(28,18); ctx.lineTo(-28,18); ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // -------- Main draw dispatch --------
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    switch (currentSceneIdx){
+      case 0:
+        drawPalaceBg();
+        var pulse = s1.done ? (1 + Math.sin(t*4)*0.05) : 1;
+        ctx.save(); ctx.translate(400,220); ctx.scale(pulse,pulse); ctx.translate(-400,-220);
+        drawKing(365, 240, 44, true);
+        drawQueen(435, 240, 44, true);
+        ctx.restore();
+        if (!s1.done && Math.floor(t*2)%2===0){
+          ctx.strokeStyle = 'rgba(139,30,43,0.5)'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(400,220,55,0,Math.PI*2); ctx.stroke();
+        }
+        break;
+      case 1:
+        drawPalaceBg();
+        drawKing(320, 300, 44, false);
+        drawQueen(400, 300, 44, false);
+        drawPrinceChild(360, 315, 30);
+        drawBell(620, 130, 40, s2.done);
+        if (!s2.done && Math.floor(t*2)%2===0){
+          ctx.strokeStyle = 'rgba(139,30,43,0.5)'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(620,120,50,0,Math.PI*2); ctx.stroke();
+        }
+        break;
+      case 2:
+        drawForestBg();
+        drawSoldier(560, 300, 38);
+        drawSoldier(660, 300, 38);
+        if (!s3.dropped){
+          drawQueen(s3.px, s3.py, 40, false);
+          drawPrinceChild(s3.px+22, s3.py+10, 26);
+        } else {
+          drawQueen(s3.targetX, s3.targetY, 40, false);
+          drawPrinceChild(s3.targetX+22, s3.targetY+10, 26);
+        }
+        if (!s3.done){
+          ctx.strokeStyle = 'rgba(139,30,43,0.45)'; ctx.setLineDash([6,5]); ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(s3.targetX, s3.targetY, 55, 0, Math.PI*2); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        break;
+      case 3:
+        drawForestBg();
+        drawPrinceAdult(400, 300, 50, true);
+        ctx.fillStyle = 'rgba(47,107,61,'+(0.3+holdProgress/300)+')';
+        ctx.beginPath(); ctx.arc(430, 250, 10+holdProgress/6, 0, Math.PI*2); ctx.fill();
+        break;
+      case 4:
+        drawRiverBg();
+        s5.fish.forEach(function(f){
+          if (!f.alive) return;
+          f.x += f.vx;
+          if (f.x < 130 || f.x > 670) f.vx *= -1;
+          drawFishShape(f.x, f.y + Math.sin(t*3+f.x)*4, 30, '#F3D27A', f.vx>0?1:-1);
+        });
+        drawPrinceAdult(90, 330, 46, true);
+        break;
+      case 5:
+        drawCuttingBoard();
+        s6.positions.forEach(function(pos, i){
+          drawFishShape(pos.x, pos.y, 34, s6.found[i] ? '#EFEFEF' : '#DDA0A0', 1);
+          if (s6.found[i]){
+            drawGoldNugget(pos.x, pos.y-6, 16);
+          } else if (i === s6.found.indexOf(false)) {
+            ctx.strokeStyle = 'rgba(139,30,43,0.5)'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(pos.x,pos.y,44,0,Math.PI*2); ctx.stroke();
+          }
+        });
+        drawQueen(400, 400 > 0 ? 240 : 240, 34, false);
+        break;
+      case 6:
+        drawOceanBg();
+        drawBoat(400, 300);
+        drawPrinceAdult(400, 285, 44, false);
+        drawSeaCreatures();
+        break;
+      case 7:
+        drawIslandBg(holdProgress);
+        break;
+      default:
+        drawPalaceBg();
+    }
+  }
+
+  function loop(now){
+    t = now/1000;
+    handleHoldProgress();
+    if (currentSceneIdx >= 0 && currentSceneIdx < SCENE_COUNT) draw();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  resize();
+  updateDots();
+
+  // ---- iframe auto-resize ----
+  function sendHeight(){
+    var h = document.getElementById('pam-wrap').getBoundingClientRect().height;
+    window.parent.postMessage({ type: 'pam-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  if (window.ResizeObserver){
+    var wrapEl = document.getElementById('pam-wrap');
+    if (wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+  setInterval(sendHeight, 800);
+})();
+</script>
+</body>
+</html>
