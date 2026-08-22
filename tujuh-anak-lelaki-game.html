@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tujuh Anak Lelaki - Cerita Rakyat Aceh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c2116;
+    --cream:#faf3e2;
+    --gold:#e0a839;
+    --terracotta:#c85a3a;
+    --forest:#2f4a35;
+    --forest-dark:#1c2f21;
+    --panel:#fffaf0;
+    --line:#d9c8a4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;}
+  body{
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding:10px 10px 16px;
+  }
+  .stage{
+    position:relative;
+    width:100%;
+    border-radius:16px;
+    overflow:hidden;
+    background:var(--forest-dark);
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+    cursor:pointer;
+  }
+  .topbar{
+    position:absolute;
+    top:8px;
+    right:8px;
+    display:flex;
+    gap:6px;
+    z-index:5;
+  }
+  .iconbtn{
+    background:rgba(20,15,10,.55);
+    border:1.5px solid rgba(250,243,226,.5);
+    color:var(--cream);
+    border-radius:10px;
+    padding:6px 10px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    backdrop-filter:blur(2px);
+  }
+  .iconbtn:hover{background:rgba(200,90,58,.8);}
+  .cover{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:linear-gradient(180deg,rgba(28,47,33,.55),rgba(15,20,15,.85));
+    padding:24px;
+    z-index:4;
+  }
+  .cover h1{
+    font-family:'Baloo 2',sans-serif;
+    color:var(--gold);
+    font-size:clamp(22px,5vw,32px);
+    margin:0 0 6px;
+    text-shadow:0 2px 6px rgba(0,0,0,.5);
+  }
+  .cover p{
+    color:var(--cream);
+    max-width:480px;
+    font-size:14.5px;
+    line-height:1.5;
+    margin:0 0 18px;
+  }
+  .bigbtn{
+    background:var(--terracotta);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:13px 30px;
+    font-family:'Baloo 2',sans-serif;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 6px 0 #8f3d26,0 8px 16px rgba(0,0,0,.3);
+    transition:transform .08s;
+  }
+  .bigbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #8f3d26;}
+  .hidden{display:none !important;}
+
+  .instruction{
+    margin-top:12px;
+    background:var(--terracotta);
+    color:#fff;
+    border-radius:12px;
+    padding:10px 14px;
+    font-weight:700;
+    font-size:14.5px;
+    line-height:1.4;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:22px;
+  }
+  .instruction .dot-ic{
+    width:9px;height:9px;border-radius:50%;
+    background:#fff;flex:none;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.4;transform:scale(.8);}50%{opacity:1;transform:scale(1.15);}}
+
+  .narration{
+    margin-top:10px;
+    background:var(--panel);
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    font-size:15px;
+    line-height:1.6;
+    min-height:70px;
+  }
+
+  .bottomrow{
+    margin-top:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .dots{
+    display:flex;
+    gap:7px;
+  }
+  .dots span{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--line);
+    display:inline-block;
+    transition:background .2s, transform .2s;
+  }
+  .dots span.on{background:var(--terracotta);transform:scale(1.15);}
+  .dots span.done{background:var(--forest);}
+
+  .nextbtn{
+    background:var(--forest);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:9px 22px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #16241a;
+  }
+  .nextbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #16241a;}
+  .nextbtn[disabled]{opacity:.4;cursor:default;box-shadow:none;}
+
+  .footer{
+    text-align:center;
+    font-size:11.5px;
+    color:#9a8a6c;
+    margin-top:14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+
+  <div class="stage" id="stage">
+    <canvas id="game" width="800" height="500"></canvas>
+
+    <div class="topbar">
+      <button class="iconbtn" id="langBtn" title="Language">EN</button>
+      <button class="iconbtn" id="muteBtn" title="Mute">🔊</button>
+    </div>
+
+    <div class="cover" id="cover">
+      <h1 id="coverTitle">Tujuh Anak Lelaki</h1>
+      <p id="coverDesc">Sebuah dongeng dari Aceh tentang tujuh bersaudara yang dibuang ke hutan, dan perjalanan mereka menemukan kehidupan baru serta memaafkan orang tua mereka.</p>
+      <button class="bigbtn" id="startBtn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div class="instruction" id="instruction">
+    <span class="dot-ic"></span>
+    <span id="instructionText">Ketuk "Mulai Cerita" untuk memulai.</span>
+  </div>
+
+  <div class="narration" id="narration">Selamat datang di dongeng interaktif Tujuh Anak Lelaki.</div>
+
+  <div class="bottomrow">
+    <div class="dots" id="dots"></div>
+    <button class="nextbtn" id="nextBtn" disabled>Lanjut ▶</button>
+  </div>
+
+  <div class="footer" id="footerNote">Dongeng interaktif · Cerita Rakyat Aceh</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const wrap = document.getElementById('wrap');
+  const cover = document.getElementById('cover');
+  const coverTitle = document.getElementById('coverTitle');
+  const coverDesc = document.getElementById('coverDesc');
+  const startBtn = document.getElementById('startBtn');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const instructionText = document.getElementById('instructionText');
+  const narrationBox = document.getElementById('narration');
+  const dotsBox = document.getElementById('dots');
+  const nextBtn = document.getElementById('nextBtn');
+  const footerNote = document.getElementById('footerNote');
+
+  /* ---------- language & mute setup ---------- */
+  const qs = new URLSearchParams(location.search);
+  let lang = qs.get('lang') === 'en' ? 'en' : (localStorage.getItem('tal_lang') || 'id');
+  let muted = localStorage.getItem('tal_muted') === '1';
+
+  function t(pair){ return pair[lang] || pair.id; }
+
+  const UI = {
+    coverTitle:{id:'Tujuh Anak Lelaki', en:'Seven Sons'},
+    coverDesc:{id:'Sebuah dongeng dari Aceh tentang tujuh bersaudara yang dibuang ke hutan, dan perjalanan mereka menemukan kehidupan baru serta memaafkan orang tua mereka.',
+               en:'A folktale from Aceh about seven brothers left in the forest, and their journey to a new life and forgiving their parents.'},
+    start:{id:'▶ Mulai Cerita', en:'▶ Start Story'},
+    replay:{id:'⟲ Ulangi Cerita', en:'⟲ Replay Story'},
+    next:{id:'Lanjut ▶', en:'Next ▶'},
+    footer:{id:'Dongeng interaktif · Cerita Rakyat Aceh', en:'Interactive folktale · Folklore of Aceh'},
+    tapStart:{id:'Ketuk "Mulai Cerita" untuk memulai.', en:'Tap "Start Story" to begin.'},
+    tapNext:{id:'Bagus! Ketuk tombol Lanjut untuk melanjutkan cerita.', en:'Well done! Tap the Next button to continue the story.'}
+  };
+
+  function applyStaticText(){
+    coverTitle.textContent = t(UI.coverTitle);
+    coverDesc.textContent = t(UI.coverDesc);
+    startBtn.textContent = t(UI.start);
+    footerNote.textContent = t(UI.footer);
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('tal_lang', lang);
+    applyStaticText();
+    refreshTexts();
+    speakCurrent();
+  });
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem('tal_muted', muted ? '1' : '0');
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    if(muted && window.speechSynthesis) speechSynthesis.cancel();
+    else speakCurrent();
+  });
+
+  /* ---------- speech ---------- */
+  function speak(text){
+    if(muted || !('speechSynthesis' in window) || !text) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function speakCurrent(){
+    if(state.phase === 'playing'){
+      speak(t(scenes[state.sceneIndex].narration));
+    } else if(state.phase === 'ending'){
+      speak(t(ENDING.narration));
+    }
+  }
+
+  /* ---------- generic drawing helpers ---------- */
+  function grad(x0,y0,x1,y1,stops){
+    const g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(s=>g.addColorStop(s[0],s[1]));
+    return g;
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function hills(baseY, color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(0, baseY+30);
+    ctx.quadraticCurveTo(150, baseY-40, 300, baseY);
+    ctx.quadraticCurveTo(480, baseY+50, 650, baseY-20);
+    ctx.quadraticCurveTo(750, baseY-40, W, baseY+10);
+    ctx.lineTo(W,H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function tree(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5b3b23';
+    ctx.fillRect(-6,0,12,40);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(0,-25,32,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-22,0,24,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(22,0,24,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function person(x,y,scale,skin,shirt,opts){
+    opts = opts||{};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.strokeStyle = '#5b4636'; ctx.lineWidth = 5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-5,20); ctx.lineTo(-7,38); ctx.moveTo(5,20); ctx.lineTo(7,38); ctx.stroke();
+    // body
+    ctx.fillStyle = shirt;
+    roundRect(-11,0,22,22,7); ctx.fill();
+    // arms
+    ctx.strokeStyle = shirt; ctx.lineWidth = 6;
+    const armAngle = opts.wave ? -0.9 : -0.25;
+    ctx.beginPath(); ctx.moveTo(-11,4); ctx.lineTo(-11+Math.cos(armAngle)*16, 4+Math.sin(armAngle)*16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(11,4); ctx.lineTo(11-Math.cos(armAngle)*16, 4+Math.sin(armAngle)*16); ctx.stroke();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-8,11,0,Math.PI*2); ctx.fill();
+    if(opts.hair!==false){
+      ctx.fillStyle = '#2a1c12';
+      ctx.beginPath(); ctx.arc(0,-13,11.5,Math.PI,0); ctx.fill();
+    }
+    if(opts.closedEyes){
+      ctx.strokeStyle = '#2a1c12'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(-5,-8); ctx.lineTo(-2,-8); ctx.moveTo(2,-8); ctx.lineTo(5,-8); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#2a1c12';
+      ctx.beginPath(); ctx.arc(-3.5,-8,1.3,0,Math.PI*2); ctx.arc(3.5,-8,1.3,0,Math.PI*2); ctx.fill();
+    }
+    if(opts.tear){
+      ctx.fillStyle = 'rgba(120,180,220,.85)';
+      ctx.beginPath(); ctx.arc(3.5,-4,1.6,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function giant(x,y,scale,mood){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = mood==='female' ? '#8fae86' : '#7a9670';
+    roundRect(-22,-10,44,55,14); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-32,22,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.arc(-8,-34,2.6,0,Math.PI*2); ctx.arc(8,-34,2.6,0,Math.PI*2); ctx.fill();
+    if(mood!=='female'){
+      ctx.beginPath(); ctx.moveTo(-10,-22); ctx.lineTo(10,-22); ctx.lineTo(0,-14); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.strokeStyle='#3a2a1c'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(0,-24,6,0,Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function smokeStack(x,y,tOff){
+    for(let i=0;i<4;i++){
+      const p = ((state.time*0.0006)+i*0.25+tOff)%1;
+      ctx.globalAlpha = 0.5*(1-p);
+      ctx.fillStyle = '#e8e4da';
+      ctx.beginPath();
+      ctx.arc(x+Math.sin(p*8+i)*8, y-p*70, 8+p*14, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function pulseRing(x,y,r,color){
+    const p = (Math.sin(state.time*0.004)+1)/2;
+    ctx.strokeStyle = color || 'rgba(255,255,255,.9)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(x,y,r+p*6,0,Math.PI*2);
+    ctx.globalAlpha = 0.55 - p*0.35;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  function stars(){
+    for(let i=0;i<40;i++){
+      const sx = (i*137)%W, sy=(i*89)%230;
+      const tw = (Math.sin(state.time*0.002+i)+1)/2;
+      ctx.fillStyle = 'rgba(255,255,240,'+(0.25+tw*0.55)+')';
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+  }
+
+  /* ---------- state ---------- */
+  const state = {
+    phase:'cover',
+    sceneIndex:0,
+    time:0,
+    dragId:null,
+    dragOffset:{x:0,y:0},
+    holding:false,
+    holdProgress:0,
+    seqStep:0,
+    hitboxHighlight:0
+  };
+
+  /* ---------- scenes ---------- */
+  const scenes = [
+
+  // 0: Musim Kemarau
+  {
+    key:'drought',
+    narration:{
+      id:'Di sebuah kampung di Aceh, hiduplah sepasang suami istri bersama tujuh anak lelaki mereka. Mereka petani sayur yang hidup rukun dan bahagia. Namun suatu musim kemarau panjang datang, membuat sumber air mengering dan seluruh kebun mereka layu.',
+      en:'In a village in Aceh lived a couple with their seven sons. They were vegetable farmers living happily together. But a long dry season came, drying up the water sources and withering their entire garden.'
+    },
+    instruction:{
+      id:'Ketuk tiga tanaman yang layu di kebun untuk melihat parahnya kekeringan.',
+      en:'Tap the three wilted plants in the field to see how bad the drought has become.'
+    },
+    hotspots:[
+      {id:'p1', x:230, y:360, r:26},
+      {id:'p2', x:340, y:380, r:26},
+      {id:'p3', x:450, y:360, r:26}
+    ],
+    done:{},
+    type:'tap-multi',
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#f4d99b'],[0.5,'#f0c56e'],[1,'#d9a75a']]);
+      ctx.fillRect(0,0,W,H);
+      hills(300, '#c9a463');
+      hills(340, '#b98f4c');
+      // sun
+      ctx.fillStyle = '#ffe27a';
+      ctx.beginPath(); ctx.arc(680,90,50,0,Math.PI*2); ctx.fill();
+      // hut
+      ctx.fillStyle = '#7a5230'; ctx.fillRect(560,260,120,90);
+      ctx.fillStyle = '#5b3b1f'; ctx.beginPath(); ctx.moveTo(545,260); ctx.lineTo(620,210); ctx.lineTo(695,260); ctx.closePath(); ctx.fill();
+      // parents
+      person(600, 300, 1.6, '#d9a06a', '#8a5b3a', {});
+      person(640, 300, 1.6, '#e6b483', '#c9613f', {});
+      // ground cracks
+      ctx.strokeStyle = 'rgba(90,60,30,.5)'; ctx.lineWidth=2;
+      for(let i=0;i<6;i++){
+        ctx.beginPath();
+        ctx.moveTo(100+i*110, 430);
+        ctx.lineTo(120+i*110, 460);
+        ctx.stroke();
+      }
+      this.hotspots.forEach(hs=>{
+        const wilted = this.done[hs.id];
+        ctx.save();
+        ctx.translate(hs.x, hs.y);
+        ctx.strokeStyle = wilted ? '#8a6a3a' : '#5a7a3a';
+        ctx.lineWidth = 4;
+        const droop = wilted ? 0.9 : 0.15;
+        ctx.beginPath(); ctx.moveTo(0,20); ctx.quadraticCurveTo(droop*20,-10,droop*30,-26); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,10); ctx.quadraticCurveTo(-droop*22,-8,-droop*28,-20); ctx.stroke();
+        ctx.fillStyle = wilted ? '#9c8a4a' : '#7fae4a';
+        ctx.beginPath(); ctx.ellipse(droop*30,-26,10,6,0.6,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-droop*28,-20,10,6,-0.6,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+        if(!wilted) pulseRing(hs.x, hs.y-8, hs.r-8, 'rgba(255,255,255,.95)');
+      });
+    },
+    onHotspot(id){
+      this.done[id] = true;
+      return Object.keys(this.done).length >= this.hotspots.length && this.hotspots.every(h=>this.done[h.id]);
+    }
+  },
+
+  // 1: Rencana Rahasia
+  {
+    key:'secret',
+    narration:{
+      id:'Malam itu, orang tua mereka berbisik merencanakan sesuatu yang berat: membawa ketujuh anaknya ke tengah hutan untuk mencari kayu bakar, lalu diam-diam meninggalkan mereka di sana karena sudah tak sanggup memberi makan. Anak ketiga yang belum tidur, mendengar semuanya.',
+      en:'That night, the parents whispered a heavy plan: take their seven sons deep into the forest to gather firewood, then quietly leave them there because they could no longer feed them. The third son, still awake, overheard everything.'
+    },
+    instruction:{
+      id:'Ketuk anak ketiga yang berpura-pura tidur di sudut untuk mendengarkan percakapan orang tuanya.',
+      en:"Tap the third son pretending to sleep in the corner to listen to his parents' conversation."
+    },
+    hotspots:[{id:'listen', x:230, y:330, r:34}],
+    revealed:false,
+    type:'tap-single',
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#1d2438'],[1,'#0f1420']]);
+      ctx.fillRect(0,0,W,H);
+      stars();
+      // moon
+      ctx.fillStyle = '#f4e9c9';
+      ctx.beginPath(); ctx.arc(690,80,36,0,Math.PI*2); ctx.fill();
+      // hut interior wall
+      ctx.fillStyle = '#3a2a1c'; ctx.fillRect(0,240,W,260);
+      ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth=3;
+      for(let i=0;i<8;i++){ ctx.beginPath(); ctx.moveTo(0,260+i*24); ctx.lineTo(W,260+i*24); ctx.stroke(); }
+      // parents whispering
+      person(500, 350, 1.7, '#d9a06a', '#8a5b3a', {});
+      person(540, 350, 1.7, '#e6b483', '#c9613f', {});
+      if(this.revealed){
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        roundRect(410,270,220,60,14); ctx.fill();
+        ctx.fillStyle = '#2c2116';
+        ctx.font = '13px Nunito, sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(lang==='id' ? '"...kita tinggalkan mereka di hutan..."' : '"...we will leave them in the forest..."', 520, 305);
+        ctx.textAlign='left';
+      }
+      // third child pretending to sleep
+      ctx.save();
+      ctx.translate(230,340);
+      ctx.fillStyle = '#5b4636';
+      roundRect(-30,10,60,20,10); ctx.fill();
+      ctx.restore();
+      person(230,330,1.5,'#e0b17f','#4a6b52',{closedEyes:true});
+      if(this.revealed && lang){
+        ctx.fillStyle='rgba(140,190,230,.9)';
+        ctx.beginPath(); ctx.arc(236,318,2,0,Math.PI*2); ctx.fill();
+      }
+      if(!this.revealed) pulseRing(230,325,40,'rgba(255,255,255,.9)');
+    },
+    onHotspot(id){
+      this.revealed = true;
+      return true;
+    }
+  },
+
+  // 2: Mengumpulkan Kayu Bakar
+  {
+    key:'firewood',
+    narration:{
+      id:'Keesokan harinya, sang ayah membawa ketujuh anaknya jauh ke tengah hutan yang rindang untuk mencari kayu bakar. Mereka mengumpulkan kayu dengan riang, tidak curiga bahwa ini adalah kesempatan terakhir mereka bersama kedua orang tuanya.',
+      en:'The next day, the father took his seven sons deep into the lush forest to gather firewood. They collected wood cheerfully, unaware this might be their last time together with their parents.'
+    },
+    instruction:{
+      id:'Seret tiga batang kayu ke dalam ikatan tali di tengah untuk mengumpulkan kayu bakar.',
+      en:'Drag the three logs into the rope bundle in the middle to gather firewood.'
+    },
+    dropzone:{x:340,y:330,w:120,h:80},
+    items:[
+      {id:'log1', x:120, y:150, r:26, placed:false, home:{x:120,y:150}},
+      {id:'log2', x:640, y:170, r:26, placed:false, home:{x:640,y:170}},
+      {id:'log3', x:120, y:400, r:26, placed:false, home:{x:120,y:400}}
+    ],
+    type:'drag',
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#274a2e'],[1,'#12261a']]);
+      ctx.fillRect(0,0,W,H);
+      tree(120,240,1.4,'#2f5e3a'); tree(650,220,1.6,'#245030');
+      tree(700,320,1.3,'#2f5e3a'); tree(70,340,1.5,'#245030');
+      // dropzone bundle
+      ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([8,6]); ctx.lineWidth=3;
+      roundRect(this.dropzone.x,this.dropzone.y,this.dropzone.w,this.dropzone.h,16); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#caa06a';
+      ctx.font='13px Nunito, sans-serif'; ctx.textAlign='center';
+      ctx.fillText(lang==='id'?'Ikatan Kayu':'Wood Bundle', this.dropzone.x+this.dropzone.w/2, this.dropzone.y+this.dropzone.h+18);
+      ctx.textAlign='left';
+      // kids
+      person(400,420,1.4,'#e0b17f','#c9613f',{});
+      person(440,430,1.2,'#d9a06a','#4a6b52',{});
+      person(370,435,1.1,'#e6b483','#8a5b3a',{});
+
+      this.items.forEach(it=>{
+        if(it.placed) return;
+        ctx.save();
+        ctx.translate(it.x,it.y);
+        ctx.fillStyle = '#6b4726';
+        roundRect(-24,-9,48,18,8); ctx.fill();
+        ctx.strokeStyle='#4a3218'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(-24,0,9,0,Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(24,0,9,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+        pulseRing(it.x,it.y,30,'rgba(255,255,255,.85)');
+      });
+      // placed logs stacked visual
+      let stackI = 0;
+      this.items.forEach(it=>{
+        if(!it.placed) return;
+        const px = this.dropzone.x+30+ (stackI%2)*40;
+        const py = this.dropzone.y+30+ Math.floor(stackI/2)*22;
+        ctx.save(); ctx.translate(px,py); ctx.rotate(stackI*0.15);
+        ctx.fillStyle = '#6b4726'; roundRect(-22,-8,44,16,7); ctx.fill();
+        ctx.restore();
+        stackI++;
+      });
+    },
+    allPlaced(){ return this.items.every(i=>i.placed); }
+  },
+
+  // 3: Ditinggal & Memanjat Pohon
+  {
+    key:'climb',
+    narration:{
+      id:'Menjelang siang, orang tua mereka berpamitan mencari air, lalu pergi dan tak kembali. Hari mulai gelap. Untunglah mereka menemukan pohon besar berlubang untuk berteduh. Si sulung berjanji memanjat hingga ke pucuknya, mencari tanda kepulan asap dari perkampungan.',
+      en:'Around noon, their parents said they were going to find water, then left and never returned. Night fell. Luckily, they found a huge hollow tree to shelter in. The eldest brother promised to climb to the top to look for smoke from a nearby village.'
+    },
+    instruction:{
+      id:'Tekan dan tahan batang pohon untuk membantu si sulung memanjat mencari kepulan asap.',
+      en:'Press and hold the tree trunk to help the eldest brother climb and search for smoke.'
+    },
+    trunk:{x:400,y:250,w:60,h:220},
+    type:'hold',
+    found:false,
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#141b2b'],[1,'#050810']]);
+      ctx.fillRect(0,0,W,H);
+      stars();
+      ctx.fillStyle = '#eee7d0';
+      ctx.beginPath(); ctx.arc(140,90,30,0,Math.PI*2); ctx.fill();
+      // big hollow tree
+      ctx.fillStyle = '#3a2a1c';
+      roundRect(this.trunk.x-40, 120, 140, 340, 30); ctx.fill();
+      ctx.fillStyle = '#161010';
+      ctx.beginPath(); ctx.ellipse(this.trunk.x+30, 400, 34, 55, 0, 0, Math.PI*2); ctx.fill();
+      // canopy
+      ctx.fillStyle = '#1c3322';
+      ctx.beginPath(); ctx.arc(this.trunk.x+20,130,110,0,Math.PI*2); ctx.fill();
+
+      // kids sheltering
+      person(430,430,1.1,'#e0b17f','#c9613f',{});
+      person(460,435,1.0,'#d9a06a','#4a6b52',{tear:true});
+      person(400,440,0.9,'#e6b483','#8a5b3a',{});
+
+      // climbing figure position based on progress
+      const climbY = 400 - state.holdProgress*260;
+      person(this.trunk.x+30, climbY, 1.1, '#e6b483', '#c9613f', {});
+
+      // smoke reveal far distance once found
+      if(this.found){
+        smokeStack(650, 300, 0);
+        ctx.fillStyle='rgba(255,255,255,.9)';
+        ctx.font='13px Nunito, sans-serif'; ctx.textAlign='center';
+        ctx.fillText(lang==='id'?'Ada asap di kejauhan!':'Smoke in the distance!', 650, 210);
+        ctx.textAlign='left';
+      } else {
+        // progress bar on trunk
+        ctx.fillStyle='rgba(255,255,255,.25)';
+        roundRect(this.trunk.x-40, 470, 140, 14, 7); ctx.fill();
+        ctx.fillStyle='#e0a839';
+        roundRect(this.trunk.x-40, 470, 140*Math.min(state.holdProgress,1), 14, 7); ctx.fill();
+        pulseRing(this.trunk.x+30, 320, 55, 'rgba(255,255,255,.85)');
+      }
+    }
+  },
+
+  // 4: Rumah Raksasa - bersembunyi
+  {
+    key:'hide',
+    narration:{
+      id:'Kepulan asap membawa mereka ke sebuah rumah besar milik raksasa. Istri raksasa yang baik hati menyambut dan memberi mereka makan, tapi memperingatkan: suaminya suka daging manusia dan akan segera pulang berburu. Mereka harus segera bersembunyi.',
+      en:"The smoke led them to a giant's huge house. The kind giantess welcomed them and fed them, but warned: her husband loved human flesh and would soon return from hunting. They had to hide quickly."
+    },
+    instruction:{
+      id:'Ketuk tangga, lalu ketuk pintu loteng secara berurutan untuk bersembunyi sebelum raksasa pulang.',
+      en:'Tap the ladder, then tap the attic door in order to hide before the giant comes home.'
+    },
+    order:['ladder','attic'],
+    hotspots:[
+      {id:'ladder', x:250, y:360, r:30},
+      {id:'attic', x:250, y:140, r:40}
+    ],
+    type:'sequence',
+    wrongFlash:0,
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#241b3a'],[1,'#120c1e']]);
+      ctx.fillRect(0,0,W,H);
+      stars();
+      // giant house
+      ctx.fillStyle = '#4a3221'; ctx.fillRect(120,120,340,300);
+      ctx.fillStyle = '#2b1b12'; ctx.beginPath(); ctx.moveTo(100,120); ctx.lineTo(290,40); ctx.lineTo(480,120); ctx.closePath(); ctx.fill();
+      // attic door
+      ctx.fillStyle = state.seqStep>=1 ? '#7a5a3a' : '#3a2818';
+      roundRect(210,110,80,60,8); ctx.fill();
+      // ladder
+      ctx.strokeStyle = '#caa06a'; ctx.lineWidth=5;
+      ctx.beginPath(); ctx.moveTo(230,420); ctx.lineTo(230,180); ctx.moveTo(270,420); ctx.lineTo(270,180); ctx.stroke();
+      for(let y=190;y<420;y+=30){ ctx.beginPath(); ctx.moveTo(230,y); ctx.lineTo(270,y); ctx.stroke(); }
+
+      // giantess at door
+      giant(560,340,1.5,'female');
+      // seven brothers small
+      for(let i=0;i<7;i++){
+        person(160+i*22, 440, 0.55, '#e0b17f', i%2? '#c9613f':'#4a6b52', {});
+      }
+
+      this.hotspots.forEach((hs,idx)=>{
+        const active = idx === state.seqStep;
+        if(active) pulseRing(hs.x,hs.y,hs.r,'rgba(255,230,150,.95)');
+        ctx.fillStyle='rgba(255,255,255,.85)';
+        ctx.font='bold 15px Baloo 2, sans-serif'; ctx.textAlign='center';
+        ctx.fillText(String(idx+1), hs.x, hs.y+ (hs.id==='ladder'? -40 : 60));
+        ctx.textAlign='left';
+      });
+      if(this.wrongFlash>0){
+        ctx.fillStyle = 'rgba(200,50,50,'+(this.wrongFlash/10)+')';
+        ctx.fillRect(0,0,W,H);
+        this.wrongFlash--;
+      }
+    }
+  },
+
+  // 5: Kabur dengan Harta
+  {
+    key:'escape',
+    narration:{
+      id:'Setelah beberapa hari bersembunyi di loteng, sang istri raksasa membekali mereka dengan makanan, emas, dan intan, lalu menyuruh mereka pergi sebelum suaminya sadar. Ketujuh anak lelaki itu berterima kasih dan bergegas pergi.',
+      en:"After hiding in the attic for several days, the giantess gave them food, gold, and jewels, then told them to leave before her husband noticed. The seven brothers thanked her and hurried away."
+    },
+    instruction:{
+      id:'Seret emas, permata, dan bekal makanan ke dalam karung sebelum kabur.',
+      en:'Drag the gold, gem, and food bundle into the sack before escaping.'
+    },
+    dropzone:{x:560,y:300,w:130,h:110},
+    items:[
+      {id:'gold', x:150, y:160, r:24, placed:false, kind:'gold'},
+      {id:'gem', x:600, y:150, r:22, placed:false, kind:'gem'},
+      {id:'food', x:150, y:400, r:26, placed:false, kind:'food'}
+    ],
+    type:'drag',
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#2a2035'],[1,'#100c18']]);
+      ctx.fillRect(0,0,W,H);
+      giant(690,120,1.3,'female');
+      // sack dropzone
+      ctx.fillStyle = '#7a5a3a';
+      roundRect(this.dropzone.x, this.dropzone.y+30, this.dropzone.w, this.dropzone.h-30, 20); ctx.fill();
+      ctx.strokeStyle='#4a3218'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(this.dropzone.x+15,this.dropzone.y+30); ctx.quadraticCurveTo(this.dropzone.x+this.dropzone.w/2,this.dropzone.y, this.dropzone.x+this.dropzone.w-15, this.dropzone.y+30); ctx.stroke();
+      ctx.fillStyle='#caa06a'; ctx.font='13px Nunito, sans-serif'; ctx.textAlign='center';
+      ctx.fillText(lang==='id'?'Karung':'Sack', this.dropzone.x+this.dropzone.w/2, this.dropzone.y+this.dropzone.h+18);
+      ctx.textAlign='left';
+
+      for(let i=0;i<7;i++){
+        person(180+i*22, 440, 0.55, '#e0b17f', i%2? '#c9613f':'#4a6b52', {});
+      }
+
+      let stackI=0;
+      this.items.forEach(it=>{
+        if(it.placed){
+          const px = this.dropzone.x+35+(stackI%2)*35, py = this.dropzone.y+70+Math.floor(stackI/2)*18;
+          drawTreasure(it.kind, px, py, 0.8);
+          stackI++;
+          return;
+        }
+        drawTreasure(it.kind, it.x, it.y, 1);
+        pulseRing(it.x, it.y, it.r+8, 'rgba(255,255,255,.85)');
+      });
+
+      function drawTreasure(kind,x,y,scale){
+        ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+        if(kind==='gold'){
+          ctx.fillStyle='#e0a839'; ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle='#a9781f'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.stroke();
+        } else if(kind==='gem'){
+          ctx.fillStyle='#5cc7d6';
+          ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(14,0); ctx.lineTo(0,18); ctx.lineTo(-14,0); ctx.closePath(); ctx.fill();
+        } else {
+          ctx.fillStyle='#caa06a';
+          roundRect(-18,-14,36,28,10); ctx.fill();
+          ctx.strokeStyle='#8a6b3a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-18,-2); ctx.lineTo(18,-2); ctx.stroke();
+        }
+        ctx.restore();
+      }
+    },
+    allPlaced(){ return this.items.every(i=>i.placed); }
+  },
+
+  // 6: Kehidupan Baru & Kerinduan
+  {
+    key:'newlife',
+    narration:{
+      id:'Mereka menyeberangi lautan dengan perahu, menjual emas dan permata untuk membeli tanah, lalu membangun rumah serta kebun bersama. Bertahun-tahun berlalu, mereka hidup makmur dan rukun. Namun di dalam hati, mereka tetap merindukan ayah dan ibunya.',
+      en:'They crossed the sea by boat, sold the gold and jewels to buy land, and built houses and farms together. Years passed, and they lived prosperously. But deep down, they still missed their father and mother.'
+    },
+    instruction:{
+      id:'Ketuk papan penunjuk arah untuk memutuskan mencari ayah dan ibu mereka.',
+      en:'Tap the signpost to decide to search for their father and mother.'
+    },
+    hotspots:[{id:'sign', x:560, y:330, r:36}],
+    type:'tap-single',
+    decided:false,
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#8fd0e6'],[1,'#e9f6ea']]);
+      ctx.fillRect(0,0,W,H);
+      // sea
+      ctx.fillStyle = grad(0,300,0,H,[[0,'#2a7f9e'],[1,'#123a4a']]);
+      ctx.fillRect(0,300,W,H-300);
+      // houses
+      for(let i=0;i<3;i++){
+        const hx = 130+i*90;
+        ctx.fillStyle = '#caa06a'; ctx.fillRect(hx,230,60,60);
+        ctx.fillStyle = '#8a5b3a'; ctx.beginPath(); ctx.moveTo(hx-10,230); ctx.lineTo(hx+30,195); ctx.lineTo(hx+70,230); ctx.closePath(); ctx.fill();
+      }
+      // boat
+      ctx.fillStyle = '#6b4726';
+      ctx.beginPath(); ctx.moveTo(600,330); ctx.quadraticCurveTo(660,360,720,330); ctx.lineTo(700,315); ctx.lineTo(620,315); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#4a3218'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(660,315); ctx.lineTo(660,270); ctx.stroke();
+      ctx.fillStyle='#eee7d0'; ctx.beginPath(); ctx.moveTo(660,272); ctx.lineTo(660,315); ctx.lineTo(690,313); ctx.closePath(); ctx.fill();
+
+      for(let i=0;i<7;i++){
+        person(160+i*24, 300, 0.85, '#e0b17f', i%2? '#c9613f':'#4a6b52', {});
+      }
+
+      // signpost
+      ctx.save(); ctx.translate(560,330);
+      ctx.strokeStyle='#6b4726'; ctx.lineWidth=8; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(0,60); ctx.stroke();
+      ctx.fillStyle='#caa06a'; roundRect(-40,-40,80,26,4); ctx.fill();
+      ctx.fillStyle='#3a2a1c'; ctx.font='11px Nunito, sans-serif'; ctx.textAlign='center';
+      ctx.fillText(lang==='id'?'Cari Orang Tua?':'Find Parents?', 0, -24);
+      ctx.textAlign='left';
+      ctx.restore();
+      if(!this.decided) pulseRing(560,330,44,'rgba(255,255,255,.9)');
+    }
+  },
+
+  // 7: Pertemuan Kembali
+  {
+    key:'reunion',
+    narration:{
+      id:'Mereka menyeberangi lautan, dari pulau ke pulau, dan kampung ke kampung. Akhirnya mereka menemukan kedua orang tuanya yang telah tua dan hidup dalam kemiskinan. Dengan penuh kasih, ketujuh anak lelaki itu memeluk dan membawa mereka untuk tinggal bersama.',
+      en:'They crossed the sea, island by island, village by village. Finally they found their parents, now old and living in poverty. With full hearts, the seven sons embraced them and brought them home to live together.'
+    },
+    instruction:{
+      id:'Ketuk untuk memeluk ayah dan ibu yang telah lama mereka rindukan.',
+      en:'Tap to embrace the father and mother they had missed for so long.'
+    },
+    hotspots:[{id:'hug', x:400, y:330, r:60}],
+    type:'tap-single',
+    hugged:false,
+    draw(){
+      ctx.fillStyle = grad(0,0,0,H,[[0,'#f2ddb0'],[1,'#e3c88a']]);
+      ctx.fillRect(0,0,W,H);
+      hills(320,'#c9a463');
+      // small poor hut
+      ctx.fillStyle = '#7a5230'; ctx.fillRect(320,260,90,80);
+      ctx.fillStyle = '#5b3b1f'; ctx.beginPath(); ctx.moveTo(305,260); ctx.lineTo(365,220); ctx.lineTo(425,260); ctx.closePath(); ctx.fill();
+
+      const hugged = this.hugged;
+      // parents (elderly, smaller/hunched)
+      person(hugged?400:370, 340, 1.3, '#c8946a', '#6a5040', {});
+      person(hugged?400:430, 340, 1.2, '#d9a878', '#8a6050', {});
+      // sons around
+      for(let i=0;i<7;i++){
+        const a = (i/7)*Math.PI*2;
+        const dist = hugged? 55 : 130;
+        person(400+Math.cos(a)*dist, 350+Math.sin(a)*dist*0.4, 0.7, '#e0b17f', i%2? '#c9613f':'#4a6b52', {});
+      }
+      if(hugged){
+        ctx.fillStyle='#c85a3a'; ctx.font='26px serif'; ctx.textAlign='center';
+        ctx.fillText('❤', 400, 300);
+        ctx.textAlign='left';
+      } else {
+        pulseRing(400,335,60,'rgba(255,255,255,.85)');
+      }
+    }
+  }
+  ];
+
+  const ENDING = {
+    narration:{
+      id:'Akhirnya, kedua orang tua dan ketujuh anak lelaki mereka hidup rukun dan bahagia kembali. Pesan dari cerita ini: jangan menyimpan dendam, selalu berusaha dan berbuat kebaikan di mana pun kita berada, serta utamakan kemandirian dalam hidup.',
+      en:'In the end, the parents and their seven sons lived happily together again. The lesson of this tale: never hold a grudge, always strive to do good wherever you are, and value independence in life.'
+    }
+  };
+
+  /* ---------- dots ---------- */
+  function buildDots(){
+    dotsBox.innerHTML = '';
+    scenes.forEach((s,i)=>{
+      const d = document.createElement('span');
+      d.dataset.i = i;
+      dotsBox.appendChild(d);
+    });
+  }
+  function updateDots(){
+    [...dotsBox.children].forEach((d,i)=>{
+      d.classList.remove('on','done');
+      if(state.phase==='ending' || i < state.sceneIndex) d.classList.add('done');
+      else if(i === state.sceneIndex && state.phase==='playing') d.classList.add('on');
+    });
+  }
+
+  /* ---------- text refresh ---------- */
+  function isSceneComplete(){
+    const sc = scenes[state.sceneIndex];
+    if(!sc) return false;
+    if(sc.type==='tap-multi') return sc.hotspots.every(h=>sc.done[h.id]);
+    if(sc.type==='tap-single') return !!(sc.revealed || sc.decided || sc.hugged);
+    if(sc.type==='drag') return sc.allPlaced();
+    if(sc.type==='hold') return sc.found;
+    if(sc.type==='sequence') return state.seqStep >= sc.order.length;
+    return false;
+  }
+  function refreshTexts(){
+    if(state.phase==='cover'){
+      instructionText.textContent = t(UI.tapStart);
+      narrationBox.textContent = t(scenes[0].narration);
+      return;
+    }
+    if(state.phase==='ending'){
+      instructionText.textContent = t(UI.replay);
+      narrationBox.textContent = t(ENDING.narration);
+      nextBtn.classList.remove('hidden');
+      nextBtn.disabled = false;
+      nextBtn.textContent = t(UI.replay);
+      updateDots();
+      return;
+    }
+    const sc = scenes[state.sceneIndex];
+    narrationBox.textContent = t(sc.narration);
+    if(isSceneComplete()){
+      instructionText.textContent = t(UI.tapNext);
+      nextBtn.disabled = false;
+    } else {
+      instructionText.textContent = t(sc.instruction);
+      nextBtn.disabled = true;
+    }
+    nextBtn.classList.remove('hidden');
+    nextBtn.textContent = t(UI.next);
+    updateDots();
+  }
+
+  /* ---------- input handling ---------- */
+  function toCanvasCoords(evt){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (evt.clientX - rect.left) * (W/rect.width);
+    const cy = (evt.clientY - rect.top) * (H/rect.height);
+    return {x:cx, y:cy};
+  }
+  function dist(ax,ay,bx,by){ return Math.hypot(ax-bx, ay-by); }
+
+  canvas.addEventListener('pointerdown', (e)=>{
+    if(state.phase!=='playing') return;
+    const p = toCanvasCoords(e);
+    const sc = scenes[state.sceneIndex];
+
+    if(sc.type==='tap-multi'){
+      for(const hs of sc.hotspots){
+        if(!sc.done[hs.id] && dist(p.x,p.y,hs.x,hs.y) <= hs.r+10){
+          sc.done[hs.id] = true;
+          refreshTexts();
+          break;
+        }
+      }
+    } else if(sc.type==='tap-single'){
+      const hs = sc.hotspots[0];
+      if(dist(p.x,p.y,hs.x,hs.y) <= hs.r+14){
+        const result = sc.onHotspot ? sc.onHotspot(hs.id) : true;
+        if(sc.key==='newlife') sc.decided = true;
+        if(sc.key==='reunion') sc.hugged = true;
+        refreshTexts();
+      }
+    } else if(sc.type==='sequence'){
+      const hs = sc.hotspots[state.seqStep];
+      if(hs && dist(p.x,p.y,hs.x,hs.y) <= hs.r+12){
+        state.seqStep++;
+        if(state.seqStep >= sc.order.length){ refreshTexts(); }
+      } else {
+        for(const other of sc.hotspots){
+          if(dist(p.x,p.y,other.x,other.y) <= other.r+12){ sc.wrongFlash = 8; }
+        }
+      }
+    } else if(sc.type==='drag'){
+      for(const it of sc.items){
+        if(!it.placed && dist(p.x,p.y,it.x,it.y) <= it.r+12){
+          state.dragId = it.id;
+          state.dragOffset = {x:p.x-it.x, y:p.y-it.y};
+          break;
+        }
+      }
+    } else if(sc.type==='hold' && !sc.found){
+      if(p.x > sc.trunk.x-60 && p.x < sc.trunk.x+100 && p.y > 120 && p.y < 480){
+        state.holding = true;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e)=>{
+    if(state.phase!=='playing') return;
+    const sc = scenes[state.sceneIndex];
+    if(sc.type==='drag' && state.dragId){
+      const p = toCanvasCoords(e);
+      const it = sc.items.find(i=>i.id===state.dragId);
+      if(it){ it.x = p.x - state.dragOffset.x; it.y = p.y - state.dragOffset.y; }
+    }
+  });
+
+  function endDrag(){
+    const sc = scenes[state.sceneIndex];
+    if(sc && sc.type==='drag' && state.dragId){
+      const it = sc.items.find(i=>i.id===state.dragId);
+      const dz = sc.dropzone;
+      if(it && it.x > dz.x-10 && it.x < dz.x+dz.w+10 && it.y > dz.y-10 && it.y < dz.y+dz.h+10){
+        it.placed = true;
+      }
+      state.dragId = null;
+      refreshTexts();
+    }
+    state.holding = false;
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointerleave', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  /* ---------- main loop ---------- */
+  function loop(ts){
+    state.time = ts;
+    const sc = state.phase==='playing' ? scenes[state.sceneIndex] : null;
+
+    if(sc && sc.type==='hold'){
+      if(state.holding && !sc.found){
+        state.holdProgress = Math.min(1, state.holdProgress + 0.012);
+        if(state.holdProgress >= 1){ sc.found = true; refreshTexts(); }
+      } else if(!sc.found){
+        state.holdProgress = Math.max(0, state.holdProgress - 0.008);
+      }
+    }
+
+    ctx.clearRect(0,0,W,H);
+    if(state.phase==='cover'){
+      scenes[0].draw.call(scenes[0]);
+      ctx.fillStyle='rgba(20,15,10,.35)'; ctx.fillRect(0,0,W,H);
+    } else if(state.phase==='playing'){
+      sc.draw.call(sc);
+    } else if(state.phase==='ending'){
+      // reuse last scene bg with a warm overlay
+      scenes[scenes.length-1].draw.call(scenes[scenes.length-1]);
+      ctx.fillStyle='rgba(255,235,180,.35)'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#4a3218'; ctx.font='bold 28px Baloo 2, sans-serif'; ctx.textAlign='center';
+      ctx.fillText(lang==='id' ? 'Tamat' : 'The End', W/2, 60);
+      ctx.textAlign='left';
+    }
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- navigation ---------- */
+  startBtn.addEventListener('click', ()=>{
+    cover.classList.add('hidden');
+    state.phase = 'playing';
+    state.sceneIndex = 0;
+    resetSceneRuntimeFlags();
+    refreshTexts();
+    speakCurrent();
+  });
+
+  nextBtn.addEventListener('click', ()=>{
+    if(state.phase==='ending'){
+      restartStory();
+      return;
+    }
+    if(nextBtn.disabled) return;
+    if(state.sceneIndex < scenes.length - 1){
+      state.sceneIndex++;
+      resetSceneRuntimeFlags();
+      refreshTexts();
+      speakCurrent();
+    } else {
+      state.phase = 'ending';
+      refreshTexts();
+      speakCurrent();
+    }
+  });
+
+  function resetSceneRuntimeFlags(){
+    state.holdProgress = 0;
+    state.holding = false;
+    state.seqStep = 0;
+    state.dragId = null;
+  }
+
+  function restartStory(){
+    scenes.forEach(sc=>{
+      if(sc.done) Object.keys(sc.done).forEach(k=>delete sc.done[k]);
+      if('revealed' in sc) sc.revealed = false;
+      if('decided' in sc) sc.decided = false;
+      if('hugged' in sc) sc.hugged = false;
+      if('found' in sc) sc.found = false;
+      if(sc.items) sc.items.forEach(it=>{ it.placed=false; it.x = it.home ? it.home.x : it.x; it.y = it.home ? it.home.y : it.y; });
+    });
+    state.phase = 'cover';
+    state.sceneIndex = 0;
+    resetSceneRuntimeFlags();
+    cover.classList.remove('hidden');
+    refreshTexts();
+  }
+
+
+
+  /* ---------- iframe auto-resize ---------- */
+  function sendResize(){
+    const h = document.getElementById('wrap').getBoundingClientRect().height + 20;
+    try{ window.parent.postMessage({type:'tal-resize', source:'tujuh-anak-lelaki', height:Math.ceil(h)}, '*'); }catch(e){}
+  }
+  window.addEventListener('load', sendResize);
+  window.addEventListener('resize', sendResize);
+  if('ResizeObserver' in window){
+    new ResizeObserver(sendResize).observe(document.getElementById('wrap'));
+  }
+  setTimeout(sendResize, 400);
+  setTimeout(sendResize, 1200);
+
+  /* ---------- init ---------- */
+  buildDots();
+  applyStaticText();
+  refreshTexts();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
