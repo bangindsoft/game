@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ahmad Rhang Manyang - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #arm-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E1B14;
+    background: linear-gradient(180deg, #FBF0E0 0%, #F6ECD9 100%);
+    border: 3px solid #7A2331;
+    border-radius: 18px;
+    padding: 14px 16px 16px;
+  }
+  #arm-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #7A2331;
+  }
+  #arm-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5346;
+    margin: 0 0 10px;
+  }
+  #arm-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  #arm-phase {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    background: #C9A227;
+    color: #4a3a00;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  #arm-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #7A2331;
+    color: #fff;
+    border: none;
+    padding: 3px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  #arm-voiceBtn.off { background: #9a9a9a; }
+
+  #arm-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .arm-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid #B5842A;
+    transition: background .2s, transform .2s;
+  }
+  .arm-dot.done { background: #B5842A; }
+  .arm-dot.active { background: #7A2331; border-color: #7A2331; transform: scale(1.3); }
+
+  #arm-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #7A2331;
+    background: #BFDCEC;
+  }
+  #arm-canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+  .arm-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(35,20,15,0.88);
+    color: #fff;
+    padding: 20px;
+  }
+  .arm-overlay.show { display: flex; }
+  .arm-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .arm-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .arm-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #C9A227;
+    color: #4a3a00;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .arm-btn:active { transform: scale(0.97); }
+
+  #arm-instruction {
+    margin-top: 10px;
+    background: #fff8ec;
+    border: 2px dashed #C9A227;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    color: #7A2331;
+    font-weight: 700;
+    text-align: center;
+    min-height: 18px;
+    display: none;
+  }
+  #arm-instruction.show { display: block; }
+
+  #arm-caption {
+    margin-top: 8px;
+    background: #ffffff;
+    border: 2px solid #7A2331;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #arm-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #arm-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #7A2331;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    min-width: 220px;
+  }
+  #arm-actionBtn.hold { background: #3D6B3D; }
+  #arm-actionBtn.tap { background: #B5842A; }
+  #arm-actionBtn:active { transform: scale(0.97); }
+  #arm-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #arm-progressWrap.show { display: block; }
+  #arm-progressBar { height: 100%; width: 0%; background: #3D6B3D; border-radius: 6px; }
+
+  #arm-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #8a7364;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<div id="arm-wrap">
+  <h2>🏔️ Ahmad Rhang Manyang</h2>
+  <p id="arm-sub">Cerita rakyat Aceh dari Krueng Peusangan tentang seorang anak yang durhaka kepada ibunya.</p>
+
+  <div id="arm-hud">
+    <span id="arm-phase">Tahap 1 / 5</span>
+    <button id="arm-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
+
+  <div id="arm-dots">
+    <span class="arm-dot" data-p="1"></span>
+    <span class="arm-dot" data-p="2"></span>
+    <span class="arm-dot" data-p="3"></span>
+    <span class="arm-dot" data-p="4"></span>
+    <span class="arm-dot" data-p="5"></span>
+  </div>
+
+  <div id="arm-canvas-holder">
+    <canvas id="arm-canvas"></canvas>
+
+    <div class="arm-overlay show" id="arm-start">
+      <h3>Ahmad Rhang Manyang</h3>
+      <p>Kisah seorang pemuda dari Krueng Peusangan, Aceh, yang merantau demi membahagiakan ibunya. Namun kesuksesan yang ia raih perlahan membuatnya lupa diri. Ikuti kisah legenda asal-usul Bukit Glee Kapal ini.</p>
+      <button class="arm-btn" id="arm-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="arm-overlay" id="arm-win">
+      <h3>Legenda Glee Kapal 🏔️</h3>
+      <p>Ahmad Rhang Manyang dikutuk menjadi bukit karena durhaka kepada ibunya sendiri. Semoga kisah ini menjadi pengingat agar kita senantiasa berbakti kepada orang tua, sebesar apa pun kesuksesan yang kita raih.</p>
+      <button class="arm-btn" id="arm-playAgainBtn">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="arm-instruction"></div>
+  <div id="arm-caption">Bersiap memulai kisah...</div>
+
+  <div id="arm-progressWrap"><div id="arm-progressBar"></div></div>
+  <div id="arm-action-row">
+    <button id="arm-actionBtn">Lanjut ▶</button>
+  </div>
+
+  <div id="arm-footer">🏔️ Legenda Glee Kapal — Cerita Rakyat Aceh</div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Ahmad Rhang Manyang - Game',
+      h2: '🏔️ Ahmad Rhang Manyang',
+      sub: 'Cerita rakyat Aceh dari Krueng Peusangan tentang seorang anak yang durhaka kepada ibunya.',
+      startTitle: 'Ahmad Rhang Manyang',
+      startBody: 'Kisah seorang pemuda dari Krueng Peusangan, Aceh, yang merantau demi membahagiakan ibunya. Namun kesuksesan yang ia raih perlahan membuatnya lupa diri. Ikuti kisah legenda asal-usul Bukit Glee Kapal ini.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Legenda Glee Kapal 🏔️',
+      winBody: 'Ahmad Rhang Manyang dikutuk menjadi bukit karena durhaka kepada ibunya sendiri. Semoga kisah ini menjadi pengingat agar kita senantiasa berbakti kepada orang tua, sebesar apa pun kesuksesan yang kita raih.',
+      playAgainBtn: 'Ulangi Cerita',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      holdBtn: 'Tahan Tombol',
+      loadBtn: '📦 TAHAN, PIKUL BARANG',
+      prayBtn: '🙏 TAHAN, BANTU BERDOA',
+      rowBtn: '🚣 KETUK, DAYUNG PERAHU',
+      shipBtn: '⛵ KETUK, LAYARKAN KAPAL',
+      callBtn: '📣 KETUK MAK MINAH',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      phase: function(p){ return 'Tahap ' + p + ' / 5'; },
+      instructions: {
+        row: 'Ketuk perahu di kanvas (atau tombol) berulang kali untuk mendayung menyeberangi Krueng Peusangan.',
+        load: 'Tahan tombol untuk membantu Ahmad memikul barang di pelabuhan dengan tekun.',
+        ship: 'Ketuk kapal mewah di kanvas (atau tombol) berulang kali untuk berlayar pulang ke kampung halaman.',
+        call: 'Ketuk sosok Mak Minah di kanvas (atau tombol) untuk memanggil nama Ahmad.',
+        pray: 'Tahan tombol untuk membantu Mak Minah berdoa memohon keadilan kepada Allah SWT.'
+      },
+      steps: [
+        { scene:'kampung_intro', text:'Di sebuah desa dekat Krueng (Sungai) Peusangan, tinggallah seorang pemuda bernama Ahmad Rhang Manyang bersama ibunya, Mak Minah, yang telah tua renta. Mereka hidup sangat sederhana di sebuah gubuk bambu.' },
+        { scene:'ahmad_rajin', text:'Ahmad adalah anak yang rajin, taat beribadah, dan berbakti kepada ibunya. Ia bekerja sebagai buruh tani, namun hatinya selalu gelisah melihat ibunya hidup serba kekurangan.' },
+        { scene:'minta_izin', text:'"Mak, izinkan Ahmad merantau untuk memperbaiki nasib kita," pinta Ahmad. Mak Minah terkejut dan awalnya menolak, karena tak tega ditinggal sendirian di usia tuanya.' },
+        { scene:'ibu_mengizinkan', text:'Setelah melihat kesungguhan hati anaknya, Mak Minah pun mengizinkan dengan berat hati. Di dermaga Krueng Peusangan, keduanya berpelukan dan saling melepas air mata perpisahan.' },
+        { scene:'mendayung_pergi', text:'Ketuk perahu untuk membantu Ahmad mendayung menyeberangi Krueng Peusangan menuju negeri seberang.' },
+        { scene:'tiba_rantau', text:'Setibanya di negeri seberang, Ahmad bekerja sebagai kuli pikul barang di pelabuhan. Ia dikenal jujur, sopan, dan tekun oleh atasannya.' },
+        { scene:'memikul_barang', text:'Tahan tombol untuk membantu Ahmad memikul barang-barang di pelabuhan dengan penuh ketekunan.' },
+        { scene:'ahmad_sukses', text:'Waktu demi waktu berlalu, Ahmad naik jabatan hingga menjadi orang kaya dan terpandang. Ia menikahi putri seorang saudagar kaya. Namun kesibukannya membuat ia mulai lalai beribadah dan melupakan kampung halaman.' },
+        { scene:'istri_minta_pulang', text:'"Kakanda, aku ingin bertemu dengan orang tua Kakanda," pinta sang istri suatu hari. Ahmad yang sebenarnya juga merindukan ibunya, akhirnya menyetujui permintaan itu.' },
+        { scene:'kapal_pulang', text:'Ketuk kapal mewah untuk berlayar pulang mengarungi Krueng Peusangan menuju kampung halaman Ahmad.' },
+        { scene:'tiba_kampung', text:'Kapal mewah Tuanku Ahmad Rhang Manyang akhirnya merapat di Krueng Peusangan. Para penduduk berkumpul menyambut kedatangannya dengan suka cita.' },
+        { scene:'mak_minah_dengar', text:'Di gubuknya, Mak Minah mendengar kabar kedatangan anaknya. Dengan air mata bahagia, ia bergegas ke dermaga sambil membawa bekal makanan kesukaan Ahmad.' },
+        { scene:'panggil_ahmad', text:'Ketuk sosok Mak Minah untuk memanggil nama Ahmad di tengah keramaian penduduk.' },
+        { scene:'ahmad_menolak', text:'"Ahmad... anakku, ini ibu, Nak," panggil Mak Minah. Namun Ahmad yang malu dengan penampilan ibunya yang lusuh, berpura-pura tidak mengenalnya. "Aku bukan anakmu, perempuan tua!" bentaknya kasar sambil menyuruh pengawal mengusir ibunya.' },
+        { scene:'ibu_berdoa', text:'Tahan tombol untuk membantu Mak Minah berdoa memohon keadilan kepada Allah SWT atas perlakuan anaknya.' },
+        { scene:'kutukan_bukit', text:'Seketika angin ribut dan petir menyambar-nyambar. Ahmad Rhang Manyang beserta istri, pengawal, dan kapalnya berubah menjadi sebuah bukit di Krueng Peusangan. Bukit itu kini dikenal sebagai "Glee Kapal" atau Bukit Kapal, peringatan bagi anak yang durhaka kepada ibunya.' }
+      ]
+    },
+    en: {
+      title: 'Ahmad Rhang Manyang - Game',
+      h2: '🏔️ Ahmad Rhang Manyang',
+      sub: 'An Acehnese folktale from Krueng Peusangan about a son who wronged his mother.',
+      startTitle: 'Ahmad Rhang Manyang',
+      startBody: 'The tale of a young man from Krueng Peusangan, Aceh, who left home to seek fortune for his mother\'s sake. But success slowly made him forget who he was. Follow the legend behind the origin of Glee Kapal Hill.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Legend of Glee Kapal 🏔️',
+      winBody: 'Ahmad Rhang Manyang was cursed into a hill for disrespecting his own mother. May this story remind us to always honor our parents, no matter how much success we achieve.',
+      playAgainBtn: 'Play Again',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      holdBtn: 'Hold the Button',
+      loadBtn: '📦 HOLD, CARRY CARGO',
+      prayBtn: '🙏 HOLD, HELP HER PRAY',
+      rowBtn: '🚣 TAP, ROW THE BOAT',
+      shipBtn: '⛵ TAP, SAIL THE SHIP',
+      callBtn: '📣 TAP MAK MINAH',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
+      phase: function(p){ return 'Stage ' + p + ' / 5'; },
+      instructions: {
+        row: 'Tap the boat on the canvas (or the button) repeatedly to row across Krueng Peusangan.',
+        load: 'Hold the button to help Ahmad diligently carry cargo at the harbor.',
+        ship: 'Tap the fancy ship on the canvas (or the button) repeatedly to sail home to Ahmad\'s village.',
+        call: 'Tap Mak Minah on the canvas (or the button) to call out Ahmad\'s name.',
+        pray: 'Hold the button to help Mak Minah pray to God for justice.'
+      },
+      steps: [
+        { scene:'kampung_intro', text:'In a village near Krueng (River) Peusangan lived a young man named Ahmad Rhang Manyang with his elderly mother, Mak Minah. They lived very simply in a small bamboo hut.' },
+        { scene:'ahmad_rajin', text:'Ahmad was diligent, devout, and devoted to his mother. He worked as a farm laborer, but his heart was troubled seeing his mother live in such hardship.' },
+        { scene:'minta_izin', text:'"Mother, let me go abroad to improve our fortune," Ahmad asked. Mak Minah was startled and at first refused, unable to bear being left alone in her old age.' },
+        { scene:'ibu_mengizinkan', text:'Seeing her son\'s sincere resolve, Mak Minah reluctantly agreed. At the Krueng Peusangan dock, the two embraced, shedding tears of farewell.' },
+        { scene:'mendayung_pergi', text:'Tap the boat to help Ahmad row across Krueng Peusangan toward the land across the sea.' },
+        { scene:'tiba_rantau', text:'Upon arriving in the foreign land, Ahmad worked as a cargo porter at the harbor. His employer came to know him as honest, polite, and hard-working.' },
+        { scene:'memikul_barang', text:'Hold the button to help Ahmad diligently carry cargo at the harbor.' },
+        { scene:'ahmad_sukses', text:'Time passed, and Ahmad rose through the ranks to become wealthy and respected. He married the daughter of a rich merchant. But his busy life made him neglect his prayers and forget his homeland.' },
+        { scene:'istri_minta_pulang', text:'"My dear, I wish to meet your parents," his wife asked one day. Ahmad, who secretly missed his mother too, finally agreed to her request.' },
+        { scene:'kapal_pulang', text:'Tap the fancy ship to sail home across Krueng Peusangan, back to Ahmad\'s village.' },
+        { scene:'tiba_kampung', text:'The magnificent ship of Lord Ahmad Rhang Manyang finally docked at Krueng Peusangan. Villagers gathered joyfully to welcome his arrival.' },
+        { scene:'mak_minah_dengar', text:'In her hut, Mak Minah heard news of her son\'s return. With tears of joy, she hurried to the dock, bringing along Ahmad\'s favorite food.' },
+        { scene:'panggil_ahmad', text:'Tap Mak Minah to call out Ahmad\'s name amid the crowd of villagers.' },
+        { scene:'ahmad_menolak', text:'"Ahmad... my child, it\'s your mother," Mak Minah called. But Ahmad, ashamed of his mother\'s shabby appearance, pretended not to know her. "I am not your son, old woman!" he shouted harshly, ordering his guards to drive her away.' },
+        { scene:'ibu_berdoa', text:'Hold the button to help Mak Minah pray to God for justice over her son\'s treatment of her.' },
+        { scene:'kutukan_bukit', text:'Suddenly the wind roared and lightning struck. Ahmad Rhang Manyang, his wife, his guards, and his ship were all turned into a hill in Krueng Peusangan. That hill is now known as "Glee Kapal," or Ship Hill, a lasting reminder for children who wrong their mothers.' }
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#arm-wrap h2').textContent = TXT.h2;
+  document.getElementById('arm-sub').textContent = TXT.sub;
+  document.querySelector('#arm-start h3').textContent = TXT.startTitle;
+  document.querySelector('#arm-start p').textContent = TXT.startBody;
+  document.getElementById('arm-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#arm-win h3').textContent = TXT.winTitle;
+  document.querySelector('#arm-win p').textContent = TXT.winBody;
+  document.getElementById('arm-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('arm-caption').textContent = TXT.captionInit;
+  document.getElementById('arm-actionBtn').textContent = TXT.nextBtn;
+
+  var voiceBtn = document.getElementById('arm-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  voiceBtn.textContent = TXT.voiceOn;
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  var canvas = document.getElementById('arm-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+  var scaleX = 1, scaleY = 1;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    scaleX = W / rect.width;
+    scaleY = H / rect.height;
+  }
+  window.addEventListener('resize', resize);
+
+  var phaseEl = document.getElementById('arm-phase');
+  var captionEl = document.getElementById('arm-caption');
+  var instructionEl = document.getElementById('arm-instruction');
+  var actionBtn = document.getElementById('arm-actionBtn');
+  var progressWrap = document.getElementById('arm-progressWrap');
+  var progressBar = document.getElementById('arm-progressBar');
+  var startOverlay = document.getElementById('arm-start');
+  var winOverlay = document.getElementById('arm-win');
+  var dots = document.querySelectorAll('.arm-dot');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+  var tapsDone = 0;
+
+  // step.type: 'caption' | 'hold' | 'tap'
+  var STEP_DEFS = [
+    { type:'caption', phase:1 },
+    { type:'caption', phase:1 },
+    { type:'caption', phase:1 },
+    { type:'caption', phase:2 },
+    { type:'tap', phase:2, tapsRequired:6, hotspot:{x:300,y:325,r:55} },
+    { type:'caption', phase:2 },
+    { type:'hold', phase:3 },
+    { type:'caption', phase:3 },
+    { type:'caption', phase:3 },
+    { type:'tap', phase:4, tapsRequired:5, hotspot:{x:460,y:290,r:65} },
+    { type:'caption', phase:4 },
+    { type:'caption', phase:4 },
+    { type:'tap', phase:5, tapsRequired:1, hotspot:{x:250,y:330,r:50} },
+    { type:'caption', phase:5 },
+    { type:'hold', phase:5 },
+    { type:'caption', phase:5 }
+  ];
+
+  var steps = STEP_DEFS.map(function(def, i){
+    var s = Object.assign({}, def);
+    s.scene = TXT.steps[i].scene;
+    s.text = TXT.steps[i].text;
+    return s;
+  });
+  var stepIndex = 0;
+
+  function setPhaseLabel(p){
+    phaseEl.textContent = TXT.phase(p);
+    dots.forEach(function(d){
+      var dp = parseInt(d.getAttribute('data-p'), 10);
+      d.classList.remove('done','active');
+      if(dp < p) d.classList.add('done');
+      else if(dp === p) d.classList.add('active');
+    });
+  }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    setPhaseLabel(step.phase);
+    captionEl.textContent = step.text;
+    speak(step.text);
+    progress = 0;
+    tapsDone = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+    instructionEl.classList.remove('show');
+    instructionEl.textContent = '';
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      progressWrap.classList.add('show');
+      if(step.scene === 'memikul_barang'){
+        actionBtn.textContent = TXT.loadBtn;
+        instructionEl.textContent = '👉 ' + TXT.instructions.load;
+      } else if(step.scene === 'ibu_berdoa'){
+        actionBtn.textContent = TXT.prayBtn;
+        instructionEl.textContent = '👉 ' + TXT.instructions.pray;
+      } else {
+        actionBtn.textContent = TXT.holdBtn;
+      }
+      instructionEl.classList.add('show');
+    } else if(step.type === 'tap'){
+      actionBtn.className = 'tap';
+      progressWrap.classList.add('show');
+      if(step.scene === 'mendayung_pergi'){
+        actionBtn.textContent = TXT.rowBtn;
+        instructionEl.textContent = '👉 ' + TXT.instructions.row;
+      } else if(step.scene === 'kapal_pulang'){
+        actionBtn.textContent = TXT.shipBtn;
+        instructionEl.textContent = '👉 ' + TXT.instructions.ship;
+      } else if(step.scene === 'panggil_ahmad'){
+        actionBtn.textContent = TXT.callBtn;
+        instructionEl.textContent = '👉 ' + TXT.instructions.call;
+      }
+      instructionEl.classList.add('show');
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      speak(TXT.winBody);
+      setPhaseLabel(5);
+      dots.forEach(function(d){ d.classList.add('done'); d.classList.remove('active'); });
+      winOverlay.classList.add('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  function registerTap(){
+    var step = steps[stepIndex];
+    if(step.type !== 'tap' || holdAdvancing) return;
+    tapsDone++;
+    progress = Math.min(1, tapsDone / step.tapsRequired);
+    progressBar.style.width = Math.round(progress*100) + '%';
+    if(tapsDone >= step.tapsRequired){
+      holdAdvancing = true;
+      var capturedIndex = stepIndex;
+      setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 300);
+    }
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    } else if(step.type === 'tap'){
+      registerTap();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+      else if(step.type === 'tap'){ e.preventDefault(); registerTap(); }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  canvas.addEventListener('click', function(e){
+    var step = steps[stepIndex];
+    if(step.type !== 'tap' || !step.hotspot) return;
+    var rect = canvas.getBoundingClientRect();
+    var cx = (e.clientX - rect.left) * scaleX;
+    var cy = (e.clientY - rect.top) * scaleY;
+    var dx = cx - step.hotspot.x, dy = cy - step.hotspot.y;
+    if(Math.sqrt(dx*dx + dy*dy) <= step.hotspot.r + 15){
+      registerTap();
+    }
+  });
+
+  document.getElementById('arm-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('arm-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawMakMinah(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A6A5A';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,9*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7A5A46';
+    ctx.beginPath(); ctx.arc(0,-6*s,5.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8E1D2';
+    ctx.beginPath(); ctx.ellipse(0,-10*s,6*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAhmadMuda(px, py, size){
+    var s = size/46;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8C7355';
+    ctx.beginPath(); ctx.ellipse(0,4*s,10*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9A876';
+    ctx.beginPath(); ctx.arc(0,-7*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2418';
+    ctx.beginPath(); ctx.ellipse(0,-11*s,6.2*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAhmadKaya(px, py, size){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7A2331';
+    ctx.beginPath(); ctx.ellipse(0,6*s,12*s,12*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#C9A227';
+    ctx.fillRect(-12*s, 0, 24*s, 5*s);
+    ctx.fillStyle = '#D9A876';
+    ctx.beginPath(); ctx.arc(0,-8*s,6.5*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#C9A227';
+    ctx.beginPath(); ctx.ellipse(0,-13*s,7*s,4.5*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawIstri(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#B5445A';
+    ctx.beginPath(); ctx.ellipse(0,5*s,9*s,11*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8B08A';
+    ctx.beginPath(); ctx.arc(0,-7*s,5.6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A2418';
+    ctx.beginPath(); ctx.ellipse(0,-11*s,6*s,4.2*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPengawal(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#4A4A5A';
+    ctx.beginPath(); ctx.ellipse(0,5*s,8*s,10*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#C99C6E';
+    ctx.beginPath(); ctx.arc(0,-6*s,5*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGubuk(px, py, s){
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#B8935E';
+    ctx.fillRect(-45*s,-10*s,90*s,55*s);
+    ctx.fillStyle = '#7A5A34';
+    ctx.beginPath(); ctx.moveTo(-55*s,-10*s); ctx.lineTo(0,-55*s); ctx.lineTo(55*s,-10*s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPerahu(px, py, s, oarAngle){
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#7A5A34';
+    ctx.beginPath();
+    ctx.moveTo(-45*s,0); ctx.quadraticCurveTo(0,20*s,45*s,0);
+    ctx.lineTo(38*s,-8*s); ctx.lineTo(-38*s,-8*s); ctx.closePath(); ctx.fill();
+    ctx.save();
+    ctx.translate(20*s,-6*s);
+    ctx.rotate(oarAngle);
+    ctx.strokeStyle = '#5A4028'; ctx.lineWidth = 3*s;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,26*s); ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawKapalMewah(px, py, s, sway){
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#5A3A24';
+    ctx.beginPath();
+    ctx.moveTo(-70*s,10*s); ctx.quadraticCurveTo(0,32*s,70*s,10*s);
+    ctx.lineTo(60*s,-6*s); ctx.lineTo(-60*s,-6*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#C9A227';
+    ctx.fillRect(-8*s,-70*s,4*s,64*s);
+    ctx.save(); ctx.translate(-6*s + sway,-70*s);
+    ctx.fillStyle = '#F3E4C0';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(46*s,14*s); ctx.lineTo(0,28*s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#7A2331';
+    ctx.fillRect(-30*s,-14*s,60*s,10*s);
+    ctx.restore();
+  }
+
+  function drawBukit(px, py, s){
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#6B7A5A';
+    ctx.beginPath();
+    ctx.moveTo(-120*s,20*s);
+    ctx.quadraticCurveTo(-40*s,-90*s,0,-70*s);
+    ctx.quadraticCurveTo(60*s,-100*s,120*s,20*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8A9A78';
+    ctx.beginPath(); ctx.ellipse(0,-40*s,26*s,14*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSungaiBg(){
+    ctx.fillStyle = '#7DAF6E';
+    ctx.fillRect(0,290,W,H-290);
+    ctx.fillStyle = '#4E8FC2';
+    ctx.fillRect(0,340,W,H-340);
+  }
+
+  function drawDermagaBg(){
+    ctx.fillStyle = '#4E8FC2';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8A6A44';
+    ctx.fillRect(150,280,500,18);
+  }
+
+  function drawPelabuhanBg(){
+    ctx.fillStyle = '#B7A98C';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#5A7FA0';
+    ctx.fillRect(0,330,W,H-330);
+    ctx.fillStyle = '#8A6A44';
+    for(var i=0;i<3;i++){ ctx.fillRect(500+i*60, 200, 30, 100); }
+  }
+
+  function drawIstanaBg(){
+    ctx.fillStyle = '#D9C9A3';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#C9A227';
+    ctx.fillRect(60,140,680,170);
+    ctx.fillStyle = '#7A2331';
+    for(var i=0;i<5;i++){ ctx.fillRect(100+i*140, 140, 20, 170); }
+  }
+
+  function drawSky(scene, stormAmt){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(stormAmt > 0){
+      var g1 = lerpColor([124,110,110], [40,38,48], stormAmt);
+      var g2 = lerpColor([200,190,180], [70,66,80], stormAmt);
+      sky.addColorStop(0, rgbStr(g1)); sky.addColorStop(1, rgbStr(g2));
+    } else if(scene==='tiba_rantau' || scene==='memikul_barang'){
+      sky.addColorStop(0,'#F0B96A'); sky.addColorStop(1,'#FCE3B8');
+    } else {
+      sky.addColorStop(0,'#7FB6E0'); sky.addColorStop(1,'#CFE7F5');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function lerpColor(a,b,t){
+    return [ a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t ];
+  }
+  function rgbStr(c){ return 'rgb('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+')'; }
+
+  function drawHotspotHint(step){
+    if(step.type !== 'tap' || !step.hotspot) return;
+    var hs = step.hotspot;
+    var pulse = 4 + Math.sin(t*5)*4;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(201,162,39,0.9)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8,6]);
+    ctx.beginPath();
+    ctx.arc(hs.x, hs.y, hs.r + pulse, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    var bob = Math.sin(t*6)*6;
+    drawEmoji('👆', hs.x, hs.y - hs.r - 22 + bob, 26);
+    ctx.restore();
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'kampung_intro';
+    var stormAmt = (scene==='ibu_berdoa') ? Math.min(1,progress*1.2) : (scene==='kutukan_bukit' ? 1 : 0);
+    drawSky(scene, stormAmt);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='kampung_intro'){
+      drawSungaiBg();
+      drawGubuk(600,300,1);
+      drawMakMinah(250,335+bob,44);
+      drawAhmadMuda(320,330+bob,46);
+    }
+    if(scene==='ahmad_rajin'){
+      drawSungaiBg();
+      drawGubuk(620,300,0.9);
+      drawAhmadMuda(340,330+bob,46);
+      drawEmoji('🌾', 460, 320, 30);
+    }
+    if(scene==='minta_izin'){
+      drawSungaiBg();
+      drawGubuk(650,300,0.9);
+      drawMakMinah(300,335+bob,44);
+      drawAhmadMuda(400,330+bob,46);
+    }
+    if(scene==='ibu_mengizinkan'){
+      drawDermagaBg();
+      drawMakMinah(300,300+bob,44);
+      drawAhmadMuda(400,300+bob,46);
+      drawPerahu(560,320,1,0.3);
+    }
+    if(scene==='mendayung_pergi'){
+      drawDermagaBg();
+      drawMakMinah(120,300+bob,40);
+      var boatX = step.hotspot.x, boatY = step.hotspot.y;
+      drawAhmadMuda(boatX-6, boatY-18+bob, 40);
+      drawPerahu(boatX, boatY, 1, Math.sin(t*10)*0.6);
+      drawHotspotHint(step);
+    }
+    if(scene==='tiba_rantau'){
+      drawPelabuhanBg();
+      drawAhmadMuda(380,330+bob,44);
+      drawEmoji('📦', 480, 320, 30);
+    }
+    if(scene==='memikul_barang'){
+      drawPelabuhanBg();
+      drawAhmadMuda(380,330+bob - progress*4,44);
+      drawEmoji('📦', 420, 310 - progress*10, 26+progress*8);
+    }
+    if(scene==='ahmad_sukses'){
+      drawIstanaBg();
+      drawAhmadKaya(340,335+bob,50);
+      drawIstri(430,335+bob,44);
+    }
+    if(scene==='istri_minta_pulang'){
+      drawIstanaBg();
+      drawAhmadKaya(340,335+bob,50);
+      drawIstri(440,335+bob,44);
+    }
+    if(scene==='kapal_pulang'){
+      drawSungaiBg();
+      var shipX = step.hotspot.x, shipY = step.hotspot.y;
+      drawKapalMewah(shipX, shipY, 1, Math.sin(t*3)*2);
+      drawAhmadKaya(shipX-10, shipY-30+bob, 36);
+      drawIstri(shipX+20, shipY-30+bob, 32);
+      drawHotspotHint(step);
+    }
+    if(scene==='tiba_kampung'){
+      drawSungaiBg();
+      drawKapalMewah(560,300,0.9,Math.sin(t*3)*2);
+      drawAhmadKaya(420,335+bob,46);
+      drawIstri(470,335+bob,40);
+      drawMakMinah(200,335+bob,40);
+    }
+    if(scene==='mak_minah_dengar'){
+      drawSungaiBg();
+      drawGubuk(650,300,0.8);
+      drawMakMinah(300,330+bob,44);
+      drawEmoji('🍚', 350, 320, 24);
+    }
+    if(scene==='panggil_ahmad'){
+      drawSungaiBg();
+      drawKapalMewah(560,290,0.85,Math.sin(t*3)*2);
+      drawAhmadKaya(460,330+bob,44);
+      drawIstri(500,330+bob,38);
+      drawPengawal(530,335+bob,36);
+      var mmX = step.hotspot.x, mmY = step.hotspot.y;
+      drawMakMinah(mmX, mmY+bob, 42);
+      drawHotspotHint(step);
+    }
+    if(scene==='ahmad_menolak'){
+      drawSungaiBg();
+      drawAhmadKaya(440,330+bob,46);
+      drawIstri(490,330+bob,40);
+      drawPengawal(390,332+bob,36);
+      drawMakMinah(280,335+bob,40);
+    }
+    if(scene==='ibu_berdoa'){
+      drawSungaiBg();
+      drawAhmadKaya(440,330+bob,46);
+      drawIstri(490,330+bob,40);
+      drawPengawal(390,332+bob,36);
+      drawMakMinah(260,320+bob - progress*6,42);
+      if(progress>0.15){
+        ctx.save(); ctx.globalAlpha = Math.min(0.9, progress);
+        ctx.strokeStyle = '#FFF3C0'; ctx.lineWidth = 3;
+        for(var i=0;i<3;i++){
+          var lx = 220 + i*30 + Math.sin(t*20+i)*6;
+          ctx.beginPath(); ctx.moveTo(lx,0); ctx.lineTo(lx-10,90); ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+    if(scene==='kutukan_bukit'){
+      drawSungaiBg();
+      drawBukit(430,320,1);
+      drawMakMinah(260,335+bob,40);
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/1.6);
+      } else {
+        progress = Math.max(0, progress - dt/2.2);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('arm-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'arm-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('arm-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
