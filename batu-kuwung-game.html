@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Batu Kuwung - Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #bkg-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    font-family: 'Nunito', sans-serif;
+    color: #2E2A1F;
+    background: linear-gradient(180deg, #FBEEDD 0%, #F3E6C8 100%);
+    border: 3px solid #8B5E34;
+    border-radius: 18px;
+    padding: 14px 16px 16px;
+  }
+  #bkg-wrap h2 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 2px 0 4px;
+    text-align: center;
+    color: #6E4321;
+  }
+  #bkg-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6b5f4f;
+    margin: 0 0 10px;
+  }
+  #bkg-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  #bkg-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .bkg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #D9C7A3;
+    border: 1.5px solid #B08A52;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .bkg-dot.done { background: #C9922E; border-color: #8B5E34; }
+  .bkg-dot.active { background: #D4A24C; border-color: #6E4321; transform: scale(1.3); }
+  #bkg-voiceBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #8B5E34;
+    color: #fff;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #bkg-voiceBtn.off { background: #9a9a9a; }
+  #bkg-canvas-holder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 450;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #8B5E34;
+    background: #DCEAE0;
+  }
+  #bkg-canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+
+  .bkg-hotspot {
+    position: absolute;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.001);
+    cursor: pointer;
+    padding: 0;
+    display: none;
+    box-shadow: 0 0 0 3px rgba(212,162,76,0.9), 0 0 0 8px rgba(212,162,76,0.35);
+    animation: bkg-pulse 1.3s ease-in-out infinite;
+  }
+  .bkg-hotspot.show { display: block; }
+  @keyframes bkg-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(212,162,76,0.9), 0 0 0 8px rgba(212,162,76,0.35); }
+    50% { box-shadow: 0 0 0 3px rgba(212,162,76,1), 0 0 0 14px rgba(212,162,76,0.12); }
+  }
+
+  .bkg-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(35,25,15,0.88);
+    color: #fff;
+    padding: 20px;
+  }
+  .bkg-overlay.show { display: flex; }
+  .bkg-overlay h3 { font-family: 'Baloo 2', sans-serif; font-size: 24px; margin: 0 0 8px; }
+  .bkg-overlay p { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 0 14px; }
+  .bkg-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    background: #D4A24C;
+    color: #4A2E12;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  .bkg-btn:active { transform: scale(0.97); }
+
+  #bkg-caption {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 2px solid #8B5E34;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 1.45;
+  }
+  #bkg-instruction {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: #8B5E34;
+    font-weight: 700;
+    text-align: center;
+    min-height: 16px;
+  }
+  #bkg-action-row { display: flex; justify-content: center; margin-top: 12px; }
+  #bkg-actionBtn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    background: #8B5E34;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 34px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    min-width: 220px;
+  }
+  #bkg-actionBtn.hold { background: #3D7A4C; }
+  #bkg-actionBtn.hidden { display: none; }
+  #bkg-actionBtn:active { transform: scale(0.97); }
+  #bkg-progressWrap {
+    width: 220px;
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 6px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    display: none;
+  }
+  #bkg-progressWrap.show { display: block; }
+  #bkg-progressBar { height: 100%; width: 0%; background: #3D7A4C; border-radius: 6px; }
+
+  #bkg-footer {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: #9a8c73;
+  }
+</style>
+</head>
+<body>
+<div id="bkg-wrap">
+  <h2>🪨 Legenda Batu Kuwung</h2>
+  <p id="bkg-sub">Cerita rakyat Banten tentang saudagar kaya yang sombong dan kikir, hingga akhirnya sadar setelah bertapa di sebuah batu cekung.</p>
+
+  <div id="bkg-hud">
+    <div id="bkg-dots"></div>
+    <button id="bkg-voiceBtn">🔊 Suara: Aktif</button>
+  </div>
+
+  <div id="bkg-canvas-holder">
+    <canvas id="bkg-canvas"></canvas>
+    <button id="bkg-hotspot" class="bkg-hotspot" aria-label="Ketuk objek"></button>
+
+    <div class="bkg-overlay show" id="bkg-start">
+      <h3>Legenda Batu Kuwung</h3>
+      <p>Seorang saudagar kaya hidup sombong dan kikir di atas penderitaan rakyatnya. Namun sebuah kutukan dari orang sakti mengubah segalanya. Ikuti kisahnya hingga ke kaki Gunung Karang.</p>
+      <button class="bkg-btn" id="bkg-startBtn">Mulai Kisah</button>
+    </div>
+
+    <div class="bkg-overlay" id="bkg-win">
+      <h3>Saudagar Berubah! 🙏</h3>
+      <p>Setelah bertapa di batu cekung, sang saudagar sembuh dan berubah menjadi orang yang dermawan. Kolam air panas ajaib itu kini dikenal warga sebagai Batu Kuwung.</p>
+      <button class="bkg-btn" id="bkg-playAgainBtn">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="bkg-caption">Bersiap memulai kisah...</div>
+  <div id="bkg-instruction"></div>
+
+  <div id="bkg-progressWrap"><div id="bkg-progressBar"></div></div>
+  <div id="bkg-action-row">
+    <button id="bkg-actionBtn">Lanjut ▶</button>
+  </div>
+
+  <div id="bkg-footer">Legenda Batu Kuwung &middot; Cerita Rakyat Banten</div>
+</div>
+
+<script>
+(function(){
+  var LANG = (function(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('lang');
+      return (p || 'id').toLowerCase() === 'en' ? 'en' : 'id';
+    } catch(e){ return 'id'; }
+  })();
+
+  var I18N = {
+    id: {
+      title: 'Legenda Batu Kuwung - Game',
+      h2: '🪨 Legenda Batu Kuwung',
+      sub: 'Cerita rakyat Banten tentang saudagar kaya yang sombong dan kikir, hingga akhirnya sadar setelah bertapa di sebuah batu cekung.',
+      startTitle: 'Legenda Batu Kuwung',
+      startBody: 'Seorang saudagar kaya hidup sombong dan kikir di atas penderitaan rakyatnya. Namun sebuah kutukan dari orang sakti mengubah segalanya. Ikuti kisahnya hingga ke kaki Gunung Karang.',
+      startBtn: 'Mulai Kisah',
+      winTitle: 'Saudagar Berubah! 🙏',
+      winBody: 'Setelah bertapa di batu cekung, sang saudagar sembuh dan berubah menjadi orang yang dermawan. Kolam air panas ajaib itu kini dikenal warga sebagai Batu Kuwung.',
+      playAgainBtn: 'Ulangi Cerita',
+      captionInit: 'Bersiap memulai kisah...',
+      nextBtn: 'Lanjut ▶',
+      climbBtn: '⛰️ TANDU MENUJU GUNUNG KARANG',
+      meditateBtn: '🧘 BERTAPA MENAHAN GODAAN',
+      voiceOn: '🔊 Suara: Aktif',
+      voiceOff: '🔇 Suara: Nonaktif',
+      footer: 'Legenda Batu Kuwung · Cerita Rakyat Banten',
+      steps: [
+        { text: 'Pada masa Sultan Haji berkuasa, hiduplah seorang saudagar kaya yang sangat dekat dengan sultan. Kedekatan itu membuatnya bisa memonopoli perdagangan kopi dan lada hingga ke Lampung.', instruction: '' },
+        { text: 'Tanahnya terbentang luas, namun didapat dengan cara licik: ia memberi pinjaman berbunga tinggi kepada para petani, hingga mereka terlilit utang dan terpaksa menyerahkan tanah mereka.', instruction: '' },
+        { text: 'Ketuk peti pajak untuk melihat betapa serakahnya saudagar itu setelah diangkat menjadi kepala desa.', instruction: 'Ketuk peti pajak di layar' },
+        { text: 'Sebagai kepala desa, ia justru menaikkan pajak melebihi aturan dan tak pernah mau menolong warganya yang kesusahan. Ia bahkan menyewa pengawal pribadi agar tak ada yang berani mendekat.', instruction: '' },
+        { text: 'Suatu hari, seorang pengemis pincang datang ke rumahnya, meminta makanan karena sudah dua hari tak makan.', instruction: '' },
+        { text: 'Ketuk pengawal untuk melihat bagaimana mereka memperlakukan pengemis malang itu.', instruction: 'Ketuk pengawal di layar' },
+        { text: 'Bukannya diberi makan, pengemis itu malah didorong hingga jatuh dan diseret pergi. Dengan murka, ia berpesan sebelum menghilang: "Bersiaplah menerima balasan atas perbuatanmu. Kau akan merasakan pedihnya menjadi orang miskin!"', instruction: '' },
+        { text: 'Keesokan paginya, kaki saudagar itu tiba-tiba lumpuh, tak bisa digerakkan sedikit pun. Ia panik dan memanggil seluruh tabib di daerah itu, namun tak satu pun berhasil menyembuhkannya.', instruction: '' },
+        { text: 'Ketuk gong untuk mengumumkan sayembara: siapa pun yang bisa menyembuhkannya akan diberi sebagian hartanya.', instruction: 'Ketuk gong di layar' },
+        { text: 'Banyak orang sakti mencoba peruntungan, namun semua gagal. Di antara mereka, muncul kembali sang pengemis pincang, ikut mendaftar dalam sayembara itu.', instruction: '' },
+        { text: 'Pengemis itu berkata bahwa penyakitnya berasal dari sifat sombong dan kikirnya. Untuk sembuh, ia harus mengubah sifatnya, bertapa 7 hari 7 malam di sebuah batu cekung di kaki Gunung Karang, lalu membagikan setengah hartanya kepada orang miskin.', instruction: '' },
+        { text: 'Tahan tombol untuk membantu para pengawal menandu saudagar menempuh perjalanan menuju kaki Gunung Karang.', instruction: 'Tahan tombol di bawah' },
+        { text: 'Tahan tombol untuk membantu saudagar bertapa di atas batu cekung, menahan lapar, haus, dan segala godaan selama 7 hari 7 malam.', instruction: 'Tahan tombol di bawah' },
+        { text: 'Ketuk batu untuk melihat keajaiban yang muncul dari sela-selanya.', instruction: 'Ketuk batu cekung di layar' },
+        { text: 'Tiba-tiba air panas mengalir dari sela batu, membentuk kolam kecil. Saudagar itu segera mandi di sana — dan ajaib, kakinya bisa digerakkan kembali! Ia bersyukur kepada Tuhan atas kesembuhannya.', instruction: '' },
+        { text: 'Ketuk kantong harta untuk membagikan setengah kekayaannya kepada para petani miskin, sesuai janjinya.', instruction: 'Ketuk kantong harta di layar' },
+        { text: 'Ia juga membagikan tanah pertaniannya kepada para petani, lalu menikahi seorang gadis dari keluarga sederhana. Sikapnya berubah menjadi dermawan dan bijaksana, hingga seluruh warga menyukainya.', instruction: '' },
+        { text: 'Kisah kolam air panas ajaib itu pun tersebar ke seluruh warga desa. Tempat itu kini dikenal dengan nama Batu Kuwung, mengingatkan semua orang akan kisah pertobatan sang saudagar.', instruction: '' }
+      ]
+    },
+    en: {
+      title: 'The Legend of Batu Kuwung - Game',
+      h2: '🪨 The Legend of Batu Kuwung',
+      sub: 'A Banten folktale about a rich, arrogant, and stingy merchant who finally finds redemption after meditating on a hollow rock.',
+      startTitle: 'The Legend of Batu Kuwung',
+      startBody: 'A wealthy merchant lives in arrogance and greed atop the suffering of his people. But a curse from a mysterious wise man changes everything. Follow his journey to the foot of Mount Karang.',
+      startBtn: 'Start the Tale',
+      winTitle: 'The Merchant Transformed! 🙏',
+      winBody: 'After meditating on the hollow rock, the merchant is healed and becomes a generous man. The miraculous hot spring is now known to villagers as Batu Kuwung.',
+      playAgainBtn: 'Replay the Tale',
+      captionInit: 'Getting the tale ready...',
+      nextBtn: 'Next ▶',
+      climbBtn: '⛰️ CARRY HIM TO MOUNT KARANG',
+      meditateBtn: '🧘 MEDITATE THROUGH TEMPTATION',
+      voiceOn: '🔊 Voice: On',
+      voiceOff: '🔇 Voice: Off',
+      footer: 'The Legend of Batu Kuwung · A Banten Folktale',
+      steps: [
+        { text: 'During the reign of Sultan Haji, there lived a wealthy merchant who was very close to the sultan. That closeness let him monopolize the coffee and pepper trade all the way to Lampung.', instruction: '' },
+        { text: 'His land stretched wide, but it was gained through cunning: he lent money at crushing interest to farmers, who fell into debt and were forced to hand over their land.', instruction: '' },
+        { text: 'Tap the tax chest to see just how greedy the merchant became after being appointed village head.', instruction: 'Tap the tax chest on screen' },
+        { text: 'As village head, he raised taxes beyond what was fair and never once helped villagers in need. He even hired private guards so no one dared come near him.', instruction: '' },
+        { text: 'One day, a limping beggar came to his house, asking for food after two days without eating.', instruction: '' },
+        { text: 'Tap the guards to see how they treated the poor beggar.', instruction: 'Tap the guards on screen' },
+        { text: 'Instead of food, the beggar was shoved to the ground and dragged away. Furious, he gave a final warning before vanishing: "Prepare to face the consequences of your deeds. You will know the bitterness of poverty!"', instruction: '' },
+        { text: 'The next morning, the merchant\'s legs were suddenly paralyzed, unable to move at all. In a panic, he summoned every healer in the region, but none could cure him.', instruction: '' },
+        { text: 'Tap the gong to announce a contest: whoever can heal him will receive part of his wealth.', instruction: 'Tap the gong on screen' },
+        { text: 'Many gifted healers tried their luck, but all failed. Among them, the same limping beggar reappeared and entered the contest.', instruction: '' },
+        { text: 'The beggar said his illness came from his own pride and greed. To be healed, he must change his ways, meditate for 7 days and 7 nights on a hollow rock at the foot of Mount Karang, then give half his wealth to the poor.', instruction: '' },
+        { text: 'Hold the button to help the guards carry the merchant on his journey to the foot of Mount Karang.', instruction: 'Hold the button below' },
+        { text: 'Hold the button to help the merchant meditate atop the hollow rock, enduring hunger, thirst, and every temptation for 7 days and 7 nights.', instruction: 'Hold the button below' },
+        { text: 'Tap the rock to see the miracle that emerges from its cracks.', instruction: 'Tap the hollow rock on screen' },
+        { text: 'Suddenly hot water flows from the rock\'s cracks, forming a small pool. The merchant bathes in it at once — and miraculously, his legs can move again! He gives thanks to God for his healing.', instruction: '' },
+        { text: 'Tap the money pouch to share half his wealth with the poor farmers, keeping his promise.', instruction: 'Tap the money pouch on screen' },
+        { text: 'He also gave his farmland to the farmers and married a woman from a humble family. He became generous and wise, and the villagers came to love him.', instruction: '' },
+        { text: 'The story of the miraculous hot spring spread throughout the village. The place became known as Batu Kuwung, a lasting reminder of the merchant\'s redemption.', instruction: '' }
+      ]
+    }
+  };
+  var TXT = I18N[LANG];
+  document.title = TXT.title;
+  document.querySelector('#bkg-wrap h2').textContent = TXT.h2;
+  document.getElementById('bkg-sub').textContent = TXT.sub;
+  document.querySelector('#bkg-start h3').textContent = TXT.startTitle;
+  document.querySelector('#bkg-start p').textContent = TXT.startBody;
+  document.getElementById('bkg-startBtn').textContent = TXT.startBtn;
+  document.querySelector('#bkg-win h3').textContent = TXT.winTitle;
+  document.querySelector('#bkg-win p').textContent = TXT.winBody;
+  document.getElementById('bkg-playAgainBtn').textContent = TXT.playAgainBtn;
+  document.getElementById('bkg-caption').textContent = TXT.captionInit;
+  document.getElementById('bkg-actionBtn').textContent = TXT.nextBtn;
+  document.getElementById('bkg-footer').textContent = TXT.footer;
+
+  // ---- Voice / mute (persisted) ----
+  var voiceBtn = document.getElementById('bkg-voiceBtn');
+  var speechSupported = ('speechSynthesis' in window);
+  var narrationOn = true;
+  try {
+    var savedMute = localStorage.getItem('bkg-muted');
+    if (savedMute === '1') narrationOn = false;
+  } catch(e){}
+  function refreshVoiceBtn(){
+    voiceBtn.textContent = narrationOn ? TXT.voiceOn : TXT.voiceOff;
+    voiceBtn.className = narrationOn ? '' : 'off';
+  }
+  refreshVoiceBtn();
+  if(!speechSupported){ voiceBtn.style.display = 'none'; }
+  voiceBtn.addEventListener('click', function(){
+    narrationOn = !narrationOn;
+    refreshVoiceBtn();
+    try { localStorage.setItem('bkg-muted', narrationOn ? '0' : '1'); } catch(e){}
+    if(!narrationOn && speechSupported) window.speechSynthesis.cancel();
+  });
+  function speak(text){
+    if(!speechSupported || !narrationOn || !text) return;
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  // ---- Canvas setup ----
+  var canvas = document.getElementById('bkg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 800, H = 450;
+
+  function resize(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var scale = rect.width / W;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    positionHotspot();
+  }
+  window.addEventListener('resize', resize);
+
+  var captionEl = document.getElementById('bkg-caption');
+  var instructionEl = document.getElementById('bkg-instruction');
+  var actionBtn = document.getElementById('bkg-actionBtn');
+  var progressWrap = document.getElementById('bkg-progressWrap');
+  var progressBar = document.getElementById('bkg-progressBar');
+  var startOverlay = document.getElementById('bkg-start');
+  var winOverlay = document.getElementById('bkg-win');
+  var hotspotBtn = document.getElementById('bkg-hotspot');
+  var dotsWrap = document.getElementById('bkg-dots');
+
+  var progress = 0;
+  var holding = false;
+  var t = 0;
+  var holdAdvancing = false;
+
+  // step.type: 'caption' | 'hold' | 'tap'
+  // hotspot: {x,y,r} in logical 800x450 canvas units (for tap steps)
+  var steps = [
+    { type:'caption', phase:1, scene:'intro_saudagar' },
+    { type:'caption', phase:1, scene:'petani_berhutang' },
+    { type:'tap',     phase:1, scene:'pajak_tinggi', hotspot:{x:600,y:250,r:44} },
+    { type:'caption', phase:1, scene:'pajak_tinggi_hasil' },
+    { type:'caption', phase:2, scene:'pengemis_datang' },
+    { type:'tap',     phase:2, scene:'pengemis_didorong', hotspot:{x:560,y:300,r:46} },
+    { type:'caption', phase:2, scene:'kutukan' },
+    { type:'caption', phase:3, scene:'kaki_lumpuh' },
+    { type:'tap',     phase:3, scene:'sayembara_gong', hotspot:{x:400,y:230,r:46} },
+    { type:'caption', phase:3, scene:'tabib_gagal' },
+    { type:'caption', phase:3, scene:'syarat_sembuh' },
+    { type:'hold',    phase:4, scene:'mendaki_gunung' },
+    { type:'hold',    phase:4, scene:'bertapa_batu' },
+    { type:'tap',     phase:4, scene:'keajaiban_air', hotspot:{x:420,y:330,r:50} },
+    { type:'caption', phase:4, scene:'kaki_sembuh' },
+    { type:'tap',     phase:5, scene:'bagi_harta', hotspot:{x:300,y:290,r:44} },
+    { type:'caption', phase:5, scene:'menikah_berubah' },
+    { type:'caption', phase:5, scene:'ending' }
+  ];
+  steps.forEach(function(s, i){ s.text = TXT.steps[i].text; s.instruction = TXT.steps[i].instruction; });
+  var stepIndex = 0;
+  var TOTAL_PHASES = 5;
+
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    for(var i=1;i<=TOTAL_PHASES;i++){
+      var d = document.createElement('span');
+      d.className = 'bkg-dot';
+      d.setAttribute('data-phase', i);
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(currentPhase){
+    var dots = dotsWrap.querySelectorAll('.bkg-dot');
+    dots.forEach(function(d){
+      var p = parseInt(d.getAttribute('data-phase'), 10);
+      d.className = 'bkg-dot' + (p < currentPhase ? ' done' : (p === currentPhase ? ' active' : ''));
+    });
+  }
+  buildDots();
+
+  function positionHotspot(){
+    var step = steps[stepIndex];
+    if(!step || step.type !== 'tap' || !step.hotspot){
+      hotspotBtn.classList.remove('show');
+      return;
+    }
+    var rect = canvas.getBoundingClientRect();
+    var scale = rect.width / W;
+    var hx = step.hotspot.x, hy = step.hotspot.y, hr = step.hotspot.r;
+    hotspotBtn.style.left = Math.round((hx-hr)*scale) + 'px';
+    hotspotBtn.style.top = Math.round((hy-hr)*scale) + 'px';
+    hotspotBtn.style.width = Math.round(hr*2*scale) + 'px';
+    hotspotBtn.style.height = Math.round(hr*2*scale) + 'px';
+    hotspotBtn.classList.add('show');
+  }
+
+  function showStep(){
+    var step = steps[stepIndex];
+    updateDots(step.phase);
+    captionEl.textContent = step.text;
+    instructionEl.textContent = step.instruction || '';
+    speak(step.text);
+    progress = 0;
+    progressBar.style.width = '0%';
+    holdAdvancing = false;
+
+    if(step.type === 'caption'){
+      actionBtn.className = '';
+      actionBtn.textContent = TXT.nextBtn;
+      progressWrap.classList.remove('show');
+      hotspotBtn.classList.remove('show');
+    } else if(step.type === 'hold'){
+      actionBtn.className = 'hold';
+      actionBtn.textContent = (step.scene === 'mendaki_gunung') ? TXT.climbBtn : TXT.meditateBtn;
+      progressWrap.classList.add('show');
+      hotspotBtn.classList.remove('show');
+    } else if(step.type === 'tap'){
+      actionBtn.className = 'hidden';
+      progressWrap.classList.remove('show');
+      positionHotspot();
+    }
+  }
+
+  function nextStep(){
+    stepIndex++;
+    if(stepIndex >= steps.length){
+      speak(TXT.winBody);
+      winOverlay.classList.add('show');
+      hotspotBtn.classList.remove('show');
+      return;
+    }
+    showStep();
+  }
+
+  function resetGame(){
+    stepIndex = 0;
+    showStep();
+  }
+
+  actionBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'caption'){
+      nextStep();
+    }
+  });
+
+  actionBtn.addEventListener('pointerdown', function(e){
+    var step = steps[stepIndex];
+    if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    actionBtn.addEventListener(evt, function(){ holding = false; });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.code === 'Space'){
+      var step = steps[stepIndex];
+      if(step.type === 'hold'){ e.preventDefault(); holding = true; }
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    if(e.code === 'Space') holding = false;
+  });
+
+  hotspotBtn.addEventListener('click', function(){
+    var step = steps[stepIndex];
+    if(step.type === 'tap'){
+      hotspotBtn.classList.remove('show');
+      setTimeout(nextStep, 150);
+    }
+  });
+
+  document.getElementById('bkg-startBtn').addEventListener('click', function(){
+    startOverlay.classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('bkg-playAgainBtn').addEventListener('click', function(){
+    winOverlay.classList.remove('show');
+    resetGame();
+  });
+
+  // ---- Drawing helpers ----
+  function drawEmoji(str, x, y, size){
+    ctx.font = size+'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function drawSaudagar(px, py, size, smug){
+    var s = size/48;
+    ctx.save(); ctx.translate(px,py);
+    // robe
+    ctx.fillStyle = smug ? '#5B3A8E' : '#7A5A3A';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-4*s); ctx.quadraticCurveTo(-20*s,20*s,-12*s,26*s);
+    ctx.lineTo(12*s,26*s); ctx.quadraticCurveTo(20*s,20*s,14*s,-4*s);
+    ctx.quadraticCurveTo(0,-8*s,-14*s,-4*s); ctx.closePath(); ctx.fill();
+    // gold trim
+    ctx.strokeStyle = '#D4A24C'; ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.moveTo(0,-6*s); ctx.lineTo(0,25*s); ctx.stroke();
+    // head
+    ctx.fillStyle = '#C88A5A';
+    ctx.beginPath(); ctx.arc(0,-13*s,7*s,0,Math.PI*2); ctx.fill();
+    // songkok/cap
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.rect(-7*s,-22*s,14*s,7*s); ctx.fill();
+    // face
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.arc(-2.5*s,-13*s,1*s,0,Math.PI*2); ctx.arc(2.5*s,-13*s,1*s,0,Math.PI*2); ctx.fill();
+    // mustache
+    ctx.strokeStyle = '#2E2A1F'; ctx.lineWidth = 1.4*s;
+    ctx.beginPath(); ctx.moveTo(-4*s,-9*s); ctx.lineTo(4*s,-9*s); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPetani(px, py, size, sad){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8B7355';
+    ctx.beginPath(); ctx.ellipse(0,10*s,10*s,16*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#C88A5A';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9C79A';
+    ctx.beginPath(); ctx.ellipse(0,-11*s,8*s,3.5*s,0,0,Math.PI*2); ctx.fill();
+    if(sad){
+      ctx.strokeStyle = '#2E2A1F'; ctx.lineWidth = 1.2*s;
+      ctx.beginPath(); ctx.arc(-2*s,-4*s,1.5*s,Math.PI,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPengemis(px, py, size, angry){
+    var s = size/46;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = angry ? '#5A5147' : '#7A6F5F';
+    ctx.beginPath();
+    ctx.moveTo(-10*s,0); ctx.quadraticCurveTo(-16*s,20*s,-9*s,26*s);
+    ctx.lineTo(9*s,26*s); ctx.quadraticCurveTo(16*s,20*s,10*s,0);
+    ctx.quadraticCurveTo(0,-4*s,-10*s,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#B98A5E';
+    ctx.beginPath(); ctx.arc(0,-9*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#3A2E1F'; ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.moveTo(14*s,8*s); ctx.lineTo(14*s,30*s); ctx.stroke(); // stick
+    if(angry){
+      ctx.fillStyle = '#B23A2E';
+      ctx.beginPath(); ctx.arc(-2.5*s,-9*s,1.3*s,0,Math.PI*2); ctx.arc(2.5*s,-9*s,1.3*s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPengawal(px, py, size){
+    var s = size/48;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#4A4038';
+    ctx.beginPath();
+    ctx.moveTo(-11*s,-2*s); ctx.quadraticCurveTo(-15*s,20*s,-9*s,28*s);
+    ctx.lineTo(9*s,28*s); ctx.quadraticCurveTo(15*s,20*s,11*s,-2*s);
+    ctx.quadraticCurveTo(0,-6*s,-11*s,-2*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#C88A5A';
+    ctx.beginPath(); ctx.arc(0,-11*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2E2A1F';
+    ctx.beginPath(); ctx.rect(-7*s,-19*s,14*s,5*s); ctx.fill();
+    ctx.strokeStyle = '#6b5a3a'; ctx.lineWidth = 2.2*s;
+    ctx.beginPath(); ctx.moveTo(13*s,-14*s); ctx.lineTo(13*s,26*s); ctx.stroke(); // tombak
+    ctx.fillStyle = '#8a8a8a';
+    ctx.beginPath(); ctx.moveTo(13*s,-14*s); ctx.lineTo(9*s,-22*s); ctx.lineTo(17*s,-22*s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGadis(px, py, size){
+    var s = size/44;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#C97BA0';
+    ctx.beginPath(); ctx.ellipse(0,8*s,9*s,15*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#D9A579';
+    ctx.beginPath(); ctx.arc(0,-8*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8D3A9';
+    ctx.beginPath(); ctx.ellipse(0,-13*s,7.5*s,4*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTaxChest(px, py, size, pulse){
+    var s = size/40;
+    ctx.save(); ctx.translate(px,py);
+    if(pulse){ ctx.shadowColor = '#D4A24C'; ctx.shadowBlur = 16; }
+    ctx.fillStyle = '#6E4321';
+    ctx.beginPath(); ctx.rect(-16*s,-8*s,32*s,20*s); ctx.fill();
+    ctx.fillStyle = '#D4A24C';
+    ctx.beginPath(); ctx.rect(-16*s,-8*s,32*s,6*s); ctx.fill();
+    ctx.fillStyle = '#4A2E12';
+    ctx.beginPath(); ctx.arc(0,2*s,3*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGong(px, py, size, pulse){
+    var s = size/40;
+    ctx.save(); ctx.translate(px,py);
+    if(pulse){ ctx.shadowColor = '#D4A24C'; ctx.shadowBlur = 18; }
+    ctx.strokeStyle = '#6E4321'; ctx.lineWidth = 3*s;
+    ctx.beginPath(); ctx.moveTo(-18*s,-22*s); ctx.lineTo(18*s,-22*s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-18*s,-22*s); ctx.lineTo(-18*s,10*s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(18*s,-22*s); ctx.lineTo(18*s,10*s); ctx.stroke();
+    ctx.fillStyle = '#D4A24C';
+    ctx.beginPath(); ctx.arc(0,-6*s,15*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#B08035';
+    ctx.beginPath(); ctx.arc(0,-6*s,6*s,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBatuCekung(px, py, size, steamAmt){
+    var s = size/50;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = '#8A8272';
+    ctx.beginPath();
+    ctx.moveTo(-30*s,10*s);
+    ctx.quadraticCurveTo(-20*s,-14*s,0,-10*s);
+    ctx.quadraticCurveTo(20*s,-14*s,30*s,10*s);
+    ctx.quadraticCurveTo(15*s,18*s,0,16*s);
+    ctx.quadraticCurveTo(-15*s,18*s,-30*s,10*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6E6858';
+    ctx.beginPath(); ctx.ellipse(0,2*s,16*s,6*s,0,0,Math.PI*2); ctx.fill();
+    if(steamAmt > 0){
+      ctx.fillStyle = 'rgba(120,170,200,'+(0.5+0.4*steamAmt)+')';
+      ctx.beginPath(); ctx.ellipse(0,2*s,14*s*Math.min(1,steamAmt+0.3),5*s,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,'+(0.5*steamAmt)+')';
+      ctx.lineWidth = 2;
+      for(var i=-1;i<=1;i++){
+        ctx.beginPath();
+        ctx.moveTo(i*10*s, -2*s);
+        ctx.quadraticCurveTo(i*10*s+6, -14*s*steamAmt-6, i*10*s, -22*s*steamAmt-8);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawMoneyPouch(px, py, size, given){
+    var s = size/40;
+    ctx.save(); ctx.translate(px,py);
+    ctx.fillStyle = given ? '#8B5E34' : '#D4A24C';
+    ctx.beginPath();
+    ctx.moveTo(-14*s,-4*s); ctx.quadraticCurveTo(-16*s,16*s,0,20*s);
+    ctx.quadraticCurveTo(16*s,16*s,14*s,-4*s);
+    ctx.quadraticCurveTo(0,-12*s,-14*s,-4*s); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#4A2E12'; ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.moveTo(-8*s,-6*s); ctx.quadraticCurveTo(0,-14*s,8*s,-6*s); ctx.stroke();
+    if(given){
+      ctx.font = (14*s)+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('✨', -18*s, -6*s);
+      ctx.fillText('✨', 18*s, -4*s);
+    }
+    ctx.restore();
+  }
+
+  function drawMansionBg(){
+    ctx.fillStyle = '#E7D6AE';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#B08A52';
+    ctx.beginPath(); ctx.rect(500,150,220,150); ctx.fill();
+    ctx.fillStyle = '#8B5E34';
+    ctx.beginPath(); ctx.moveTo(480,150); ctx.lineTo(610,90); ctx.lineTo(740,150); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D4A24C';
+    for(var i=0;i<3;i++){ ctx.fillRect(530+i*60,190,30,50); }
+  }
+
+  function drawVillageBg(){
+    ctx.fillStyle = '#BFCB8E';
+    ctx.fillRect(0,300,W,H-300);
+    ctx.fillStyle = '#8B7355';
+    ctx.beginPath(); ctx.moveTo(120,300); ctx.lineTo(170,240); ctx.lineTo(220,300); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#D9C79A';
+    ctx.fillRect(140,270,60,30);
+  }
+
+  function drawMountainBg(){
+    ctx.fillStyle = '#7C9E8E';
+    ctx.beginPath();
+    ctx.moveTo(0,340); ctx.lineTo(260,150); ctx.lineTo(460,270); ctx.lineTo(650,120); ctx.lineTo(800,340);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5C8070';
+    ctx.beginPath(); ctx.moveTo(650,120); ctx.lineTo(700,180); ctx.lineTo(600,180); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#A9C4A0';
+    ctx.fillRect(0,340,W,H-340);
+  }
+
+  function drawSky(scene){
+    var sky = ctx.createLinearGradient(0,0,0,300);
+    if(scene==='mendaki_gunung' || scene==='bertapa_batu' || scene==='keajaiban_air'){
+      sky.addColorStop(0,'#8FB7A8'); sky.addColorStop(1,'#D6E8DA');
+    } else if(scene==='kutukan' || scene==='kaki_lumpuh'){
+      sky.addColorStop(0,'#6E5A6E'); sky.addColorStop(1,'#C9B8B0');
+    } else {
+      sky.addColorStop(0,'#F6D48A'); sky.addColorStop(1,'#FCEFD6');
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw(step){
+    ctx.clearRect(0,0,W,H);
+    var scene = step ? step.scene : 'intro_saudagar';
+    drawSky(scene);
+    var bob = Math.sin(t*4)*2;
+
+    if(scene==='intro_saudagar'){
+      drawMansionBg();
+      drawSaudagar(430, 330+bob, 48, true);
+    }
+    if(scene==='petani_berhutang'){
+      drawVillageBg();
+      drawPetani(280, 330+bob, 42, true);
+      drawSaudagar(480, 320+bob, 46, true);
+    }
+    if(scene==='pajak_tinggi'){
+      drawMansionBg();
+      drawSaudagar(430, 330+bob, 46, true);
+      drawTaxChest(600, 300, 40, true);
+    }
+    if(scene==='pajak_tinggi_hasil'){
+      drawVillageBg();
+      drawPetani(260, 335+bob, 40, true);
+      drawPetani(340, 335+bob, 40, true);
+      drawSaudagar(520, 320+bob, 46, true);
+    }
+    if(scene==='pengemis_datang'){
+      drawMansionBg();
+      drawPengemis(260, 335+bob, 44, false);
+      drawSaudagar(500, 320+bob, 46, true);
+    }
+    if(scene==='pengemis_didorong'){
+      drawMansionBg();
+      drawPengemis(320, 340+bob, 44, false);
+      drawPengawal(560, 310+bob, 46);
+    }
+    if(scene==='kutukan'){
+      drawMansionBg();
+      drawPengemis(400, 320+Math.sin(t*10)*3, 46, true);
+      drawSaudagar(560, 335+bob, 46, true);
+    }
+    if(scene==='kaki_lumpuh'){
+      drawMansionBg();
+      drawSaudagar(420, 340, 48, false);
+      ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('❗', 420, 380);
+    }
+    if(scene==='sayembara_gong'){
+      drawVillageBg();
+      drawGong(400, 250, 40, true);
+      drawSaudagar(620, 335+bob, 40, false);
+    }
+    if(scene==='tabib_gagal'){
+      drawVillageBg();
+      drawPengemis(250, 335+bob, 40, false);
+      drawPetani(340, 335+bob, 38, false);
+      drawSaudagar(560, 330+bob, 42, false);
+    }
+    if(scene==='syarat_sembuh'){
+      drawVillageBg();
+      drawPengemis(320, 320+bob, 42, false);
+      drawSaudagar(520, 330+bob, 44, false);
+    }
+    if(scene==='mendaki_gunung'){
+      drawMountainBg();
+      var mgx = 250 + progress*300;
+      drawPengawal(mgx-40, 320+bob, 38);
+      drawSaudagar(mgx, 310+bob, 42, false);
+      drawPengawal(mgx+40, 320+bob, 38);
+    }
+    if(scene==='bertapa_batu'){
+      drawMountainBg();
+      drawBatuCekung(420, 340, 50, 0);
+      drawSaudagar(420, 310-progress*4, 40, false);
+    }
+    if(scene==='keajaiban_air'){
+      drawMountainBg();
+      drawBatuCekung(420, 340, 50, 0.6);
+      drawSaudagar(420, 300, 40, false);
+    }
+    if(scene==='kaki_sembuh'){
+      drawMountainBg();
+      drawBatuCekung(420, 340, 50, 0.8);
+      drawSaudagar(420, 300, 42, false);
+      ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🙏', 420, 260);
+    }
+    if(scene==='bagi_harta'){
+      drawVillageBg();
+      drawSaudagar(400, 320+bob, 44, false);
+      drawPetani(260, 335+bob, 38, false);
+      drawMoneyPouch(300, 290, 36, false);
+    }
+    if(scene==='menikah_berubah'){
+      drawVillageBg();
+      drawSaudagar(360, 325+bob, 44, false);
+      drawGadis(440, 330+bob, 42);
+      drawPetani(240, 335+bob, 36, false);
+    }
+    if(scene==='ending'){
+      drawMountainBg();
+      drawBatuCekung(420, 340, 54, 0.7);
+      drawSaudagar(340, 300, 40, false);
+      drawGadis(500, 305, 38);
+    }
+  }
+
+  var lastTime = null;
+  function loop(now){
+    if(lastTime===null) lastTime = now;
+    var dt = Math.min(0.05, (now-lastTime)/1000);
+    lastTime = now;
+    t += dt;
+
+    var step = steps[stepIndex];
+
+    if(step && step.type === 'hold'){
+      if(holding){
+        progress = Math.min(1, progress + dt/2.0);
+      } else {
+        progress = Math.max(0, progress - dt/2.6);
+      }
+      progressBar.style.width = Math.round(progress*100) + '%';
+      if(progress >= 1 && !holdAdvancing){
+        holdAdvancing = true;
+        progressWrap.classList.remove('show');
+        var capturedIndex = stepIndex;
+        setTimeout(function(){ if(stepIndex === capturedIndex) nextStep(); }, 250);
+      }
+    }
+
+    draw(step);
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+
+  function sendHeight(){
+    var wrap = document.getElementById('bkg-wrap');
+    var h = wrap ? wrap.getBoundingClientRect().height : document.body.scrollHeight;
+    window.parent.postMessage({ type: 'bkg-resize', height: Math.ceil(h) }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+  if(window.ResizeObserver){
+    var wrapEl = document.getElementById('bkg-wrap');
+    if(wrapEl) new ResizeObserver(sendHeight).observe(wrapEl);
+  }
+})();
+</script>
+</body>
+</html>
