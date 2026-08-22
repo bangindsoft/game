@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Muasal Gunung Pinang</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: transparent;
+    font-family: 'Segoe UI', Verdana, Tahoma, sans-serif;
+    overflow-x: hidden;
+  }
+  #appWrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 10px 10px 16px;
+    background: linear-gradient(180deg, #eaf4fb 0%, #f7f3e8 100%);
+    border-radius: 14px;
+  }
+  #topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  #dots {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #c9d6df;
+    transition: background .25s, transform .25s;
+  }
+  .dot.active { background: #2a7f9e; transform: scale(1.3); }
+  .dot.done { background: #6fb7c9; }
+  #controls { display: flex; gap: 6px; }
+  #controls button {
+    border: none;
+    background: #2a7f9e;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #controls button:hover { background: #226a85; }
+  #canvasWrap {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #bfe3f2;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: pointer;
+  }
+  #instruction {
+    margin-top: 10px;
+    background: #fffaf0;
+    border: 1px solid #e6d9b8;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14.5px;
+    color: #4a3b22;
+    min-height: 22px;
+    line-height: 1.45;
+  }
+  #instruction b { color: #a5541e; }
+  #storyText {
+    margin-top: 8px;
+    background: #f2f8fb;
+    border: 1px solid #cfe4ee;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #234;
+    line-height: 1.5;
+    display: none;
+  }
+  #startOverlayBtn {
+    display: block;
+    margin: 12px auto 4px;
+    padding: 12px 26px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: #d97a2b;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(217,122,43,0.4);
+  }
+  #startOverlayBtn:hover { background: #c76a1e; }
+  #footer {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: #8a8a8a;
+  }
+  #progressBarWrap {
+    position: absolute;
+    left: 50%;
+    bottom: 14%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 16px;
+    background: rgba(255,255,255,0.55);
+    border: 2px solid #2a7f9e;
+    border-radius: 8px;
+    overflow: hidden;
+    display: none;
+  }
+  #progressBarFill {
+    height: 100%;
+    width: 0%;
+    background: #d97a2b;
+    transition: width 0.08s linear;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="appWrap">
+  <div id="topbar">
+    <div id="dots"></div>
+    <div id="controls">
+      <button id="muteBtn" title="Mute/Unmute">🔊</button>
+      <button id="langBtn" title="Language">EN</button>
+    </div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="game" width="800" height="500"></canvas>
+    <div id="progressBarWrap"><div id="progressBarFill"></div></div>
+  </div>
+
+  <div id="instruction"></div>
+  <div id="storyText"></div>
+  <button id="startOverlayBtn"></button>
+
+  <div id="footer">Cerita Rakyat Nusantara — Provinsi Banten</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- LANGUAGE ----------
+  const urlParams = new URLSearchParams(window.location.search);
+  let lang = urlParams.get('lang') === 'en' ? 'en' : 'id';
+
+  // ---------- MUTE ----------
+  const MUTE_KEY = 'gunungPinangMuted';
+  let muted = localStorage.getItem(MUTE_KEY) === '1';
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const instructionEl = document.getElementById('instruction');
+  const storyTextEl = document.getElementById('storyText');
+  const dotsEl = document.getElementById('dots');
+  const startBtn = document.getElementById('startOverlayBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const langBtn = document.getElementById('langBtn');
+  const progressBarWrap = document.getElementById('progressBarWrap');
+  const progressBarFill = document.getElementById('progressBarFill');
+  const footerEl = document.getElementById('footer');
+
+  const TXT = {
+    id: {
+      footer: "Cerita Rakyat Nusantara — Provinsi Banten",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      muteOn: "🔊", muteOff: "🔇",
+      title: "Asal Muasal Gunung Pinang",
+      scenes: [
+        {
+          instr: "Ketuk tombol <b>Mulai Cerita</b> untuk memulai kisah Dampu Awang.",
+          narr: "Di sebuah pesisir Kota Banten, hiduplah seorang ibu bersama anak laki-lakinya bernama Dampu Awang. Mereka hidup sangat miskin, namun Dampu Awang bercita-cita menjadi saudagar kaya raya."
+        },
+        {
+          instr: "Ketuk <b>kapal layar</b> yang baru berlabuh di pelabuhan untuk melihat lebih dekat.",
+          narr: "Suatu hari, sebuah kapal layar milik saudagar kaya bernama Teuku Abu Matsyah berlabuh di Banten. Dampu Awang sangat ingin bekerja di kapal itu."
+        },
+        {
+          instr: "Ketuk <b>ibu Dampu Awang</b> di depan gubuk untuk meminta izin berlayar.",
+          narr: "Dampu Awang meminta izin kepada ibunya untuk ikut berlayar. Sang ibu awalnya melarang, namun akhirnya mengizinkan dengan berat hati sambil menitipkan burung kesayangan ayahnya."
+        },
+        {
+          instr: "Ketuk <b>tali layar kapal</b> berulang-ulang untuk membantu Dampu Awang bekerja keras di kapal.",
+          narr: "Selama berlayar, Dampu Awang dikenal sebagai pekerja yang sangat rajin dan selalu menjalankan perintah majikannya dengan baik."
+        },
+        {
+          instr: "Ketuk tombol <b>Terima Pinangan</b> karena saudagar ingin menjodohkan Dampu Awang dengan putrinya.",
+          narr: "Saudagar Teuku Abu Matsyah sangat senang dengan kerja keras Dampu Awang, lalu menjodohkannya dengan putrinya, Siti Nurhasanah. Setelah sang mertua wafat, Dampu Awang pun menjadi saudagar kaya raya."
+        },
+        {
+          instr: "Seret (drag) <b>kapal mewah</b> menuju <b>pelabuhan</b> di sebelah kanan.",
+          narr: "Bertahun-tahun kemudian, Dampu Awang dan istrinya berlayar kembali ke pesisir Banten dengan kapal yang sangat mewah."
+        },
+        {
+          instr: "Ketuk <b>ibu tua</b> yang berlari mendekati kapal untuk melihat apa yang terjadi.",
+          narr: "Ibu Dampu Awang yang mendengar kabar itu bergegas ke pelabuhan. Namun, Dampu Awang malu mengakui perempuan tua dan lusuh itu sebagai ibunya, dan menyangkalnya di depan istrinya."
+        },
+        {
+          instr: "Tekan dan tahan tombol <b>Doa Ibu</b>, lalu ketuk <b>burung</b> yang berbicara memperingatkan Dampu Awang.",
+          narr: "Dengan hati hancur, sang ibu berdoa memohon keadilan Tuhan. Burung peliharaan Dampu Awang pun berbicara memperingatkannya agar mengakui ibunya, tetapi Dampu Awang tetap menyangkal."
+        },
+        {
+          instr: "Ketuk <b>gunung</b> untuk melihat akhir dari kisah Dampu Awang.",
+          narr: "Seketika, bumi bergetar dan badai dahsyat datang. Kapal mewah Dampu Awang terangkat dan terlempar, lalu tertelungkup menjadi sebuah gunung yang kini dikenal dengan nama Gunung Pinang, terletak di antara Kota Serang dan Kota Cilegon."
+        }
+      ],
+      moral: "Pesan moral: hormati dan sayangilah kedua orang tua, sebab durhaka kepada mereka dapat mendatangkan celaka.",
+      endTitle: "Gunung Pinang Telah Terbentuk"
+    },
+    en: {
+      footer: "Indonesian Folklore — Banten Province",
+      start: "Start Story",
+      replay: "Replay Story",
+      muteOn: "🔊", muteOff: "🔇",
+      title: "The Origin of Mount Pinang",
+      scenes: [
+        {
+          instr: "Tap the <b>Start Story</b> button to begin the tale of Dampu Awang.",
+          narr: "On the coast of Banten, there lived a mother and her son named Dampu Awang. They were very poor, yet Dampu Awang dreamed of becoming a wealthy merchant."
+        },
+        {
+          instr: "Tap the <b>sailing ship</b> that has just docked at the harbor to take a closer look.",
+          narr: "One day, a ship belonging to a rich merchant named Teuku Abu Matsyah docked in Banten. Dampu Awang wished deeply to work aboard it."
+        },
+        {
+          instr: "Tap <b>Dampu Awang's mother</b> in front of the hut to ask her permission to sail.",
+          narr: "Dampu Awang asked his mother for permission to sail. At first she refused, but finally agreed with a heavy heart, entrusting him with his late father's beloved bird."
+        },
+        {
+          instr: "Tap the <b>ship's ropes</b> repeatedly to help Dampu Awang work hard aboard the ship.",
+          narr: "During the voyage, Dampu Awang became known as a diligent worker who always carried out his master's orders well."
+        },
+        {
+          instr: "Tap the <b>Accept Proposal</b> button, for the merchant wishes to marry his daughter to Dampu Awang.",
+          narr: "Pleased with his hard work, Teuku Abu Matsyah married his daughter Siti Nurhasanah to Dampu Awang. After his father-in-law passed away, Dampu Awang became a wealthy merchant himself."
+        },
+        {
+          instr: "Drag the <b>grand ship</b> toward the <b>harbor</b> on the right.",
+          narr: "Years later, Dampu Awang and his wife sailed back to the coast of Banten aboard a magnificent ship."
+        },
+        {
+          instr: "Tap the <b>old woman</b> running toward the ship to see what happens.",
+          narr: "Hearing the news, Dampu Awang's mother rushed to the harbor. But ashamed of the ragged old woman, Dampu Awang denied her in front of his wife."
+        },
+        {
+          instr: "Press and hold the <b>Mother's Prayer</b> button, then tap the <b>bird</b> speaking out to warn Dampu Awang.",
+          narr: "Heartbroken, the mother prayed for God's justice. Dampu Awang's pet bird spoke, warning him to acknowledge his mother, but he refused once more."
+        },
+        {
+          instr: "Tap the <b>mountain</b> to see how Dampu Awang's story ends.",
+          narr: "Suddenly the earth shook and a great storm arrived. Dampu Awang's grand ship was hurled into the air and capsized, turning into a mountain now known as Mount Pinang, located between the cities of Serang and Cilegon."
+        }
+      ],
+      moral: "Moral: honor and love your parents, for betraying them brings misfortune.",
+      endTitle: "Mount Pinang Has Formed"
+    }
+  };
+
+  // ---------- SPEECH ----------
+  let voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text){
+    if (muted || !window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    const wanted = lang === 'id' ? 'id-ID' : 'en-US';
+    const v = voices.find(v => v.lang === wanted) || voices.find(v => v.lang.startsWith(lang));
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+  // ---------- RESIZE (postMessage to parent Blogger page) ----------
+  function sendHeight(){
+    const h = document.getElementById('appWrap').scrollHeight + 20;
+    window.parent.postMessage({ type: 'gunungPinangResize', height: h }, '*');
+  }
+
+  // ---------- SCENE STATE ----------
+  let sceneIndex = 0; // 0 = intro/start not yet begun
+  let started = false;
+  const TOTAL_SCENES = 9; // index 0..8, dot count excludes nothing (9 dots)
+  let animT = 0;
+  let rafId = null;
+
+  // interactive state per scene
+  let hotspots = []; // {x,y,r,onTap} circular hotspots in canvas coords
+  let dragObj = null; // {x,y,r,targetX,targetY,tolerance,done}
+  let mashProgress = 0;
+  let mashNeeded = 14;
+  let mashDone = false;
+  let holdActive = false;
+  let holdProgress = 0;
+  let holdDone = false;
+  let birdTapped = false;
+  let sceneAdvanceLock = false;
+  let denyShown = false;
+  let shipWreckT = 0;
+
+  function resetInteractionState(){
+    hotspots = [];
+    dragObj = null;
+    mashProgress = 0;
+    mashDone = false;
+    holdActive = false;
+    holdProgress = 0;
+    holdDone = false;
+    birdTapped = false;
+    sceneAdvanceLock = false;
+    denyShown = false;
+    progressBarWrap.style.display = 'none';
+    progressBarFill.style.width = '0%';
+  }
+
+  // ---------- DRAW HELPERS ----------
+  function drawSky(topColor, bottomColor){
+    const g = ctx.createLinearGradient(0,0,0,320);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,800,340);
+  }
+  function drawSea(t, stormy){
+    const g = ctx.createLinearGradient(0,300,0,500);
+    if (stormy){
+      g.addColorStop(0,'#3a5568'); g.addColorStop(1,'#22323f');
+    } else {
+      g.addColorStop(0,'#2f92b5'); g.addColorStop(1,'#1b6480');
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0,300,800,200);
+    ctx.strokeStyle = stormy ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for (let i=0;i<6;i++){
+      const y = 320 + i*28;
+      ctx.beginPath();
+      for (let x=-20;x<=820;x+=20){
+        const offset = Math.sin((x*0.03)+t*(stormy?4:1.6)+i)* (stormy?7:4);
+        if (x===-20) ctx.moveTo(x,y+offset); else ctx.lineTo(x,y+offset);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawBeach(){
+    ctx.fillStyle = '#e8d9a8';
+    ctx.beginPath();
+    ctx.moveTo(0,340);
+    ctx.quadraticCurveTo(400,300,800,340);
+    ctx.lineTo(800,400);
+    ctx.quadraticCurveTo(400,360,0,400);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawHut(x,y){
+    ctx.fillStyle = '#8a6a45';
+    ctx.fillRect(x-38,y-30,76,45);
+    ctx.beginPath();
+    ctx.moveTo(x-48,y-30);
+    ctx.lineTo(x,y-70);
+    ctx.lineTo(x+48,y-30);
+    ctx.closePath();
+    ctx.fillStyle = '#5c4326';
+    ctx.fill();
+    ctx.fillStyle = '#3d2c1a';
+    ctx.fillRect(x-10,y-2,20,17);
+  }
+  function drawPalm(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#6b4a2b';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(10,-50,4,-90);
+    ctx.stroke();
+    ctx.fillStyle = '#3f7a3a';
+    for (let i=0;i<5;i++){
+      ctx.save();
+      ctx.translate(4,-90);
+      ctx.rotate((i-2)*0.5);
+      ctx.beginPath();
+      ctx.ellipse(20,0,26,8,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function drawPerson(x,y,opts){
+    opts = opts || {};
+    const scale = opts.scale || 1;
+    const skirtColor = opts.skirtColor || '#7a4a2a';
+    const shirtColor = opts.shirtColor || '#c95d2e';
+    const old = !!opts.old;
+    const female = !!opts.female;
+    const fancy = !!opts.fancy;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs/skirt
+    ctx.fillStyle = fancy ? '#d4af37' : skirtColor;
+    ctx.beginPath();
+    ctx.moveTo(-14,10); ctx.lineTo(14,10); ctx.lineTo(20,44); ctx.lineTo(-20,44);
+    ctx.closePath(); ctx.fill();
+    // body
+    ctx.fillStyle = fancy ? '#3d2b6b' : shirtColor;
+    ctx.fillRect(-14,-22,28,34);
+    // arms
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 9;
+    ctx.beginPath();
+    ctx.moveTo(-14,-14); ctx.lineTo(opts.armOutL ? -30 : -22, opts.armOutL ? -20 : 4);
+    ctx.moveTo(14,-14); ctx.lineTo(opts.armOutR ? 30 : 22, opts.armOutR ? -20 : 4);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = old ? '#e3c7a8' : '#f0cfa0';
+    ctx.beginPath();
+    ctx.arc(0,-34,15,0,Math.PI*2);
+    ctx.fill();
+    // hair / headwear
+    if (female){
+      ctx.fillStyle = old ? '#cfcfcf' : '#241a10';
+      ctx.beginPath();
+      ctx.arc(0,-38,16,Math.PI*0.9,Math.PI*2.1);
+      ctx.fill();
+      if (!old){
+        ctx.fillStyle = fancy ? '#d4af37' : '#e0b84a';
+        ctx.beginPath();
+        ctx.arc(0,-48,8,0,Math.PI,true);
+        ctx.fill();
+      }
+    } else {
+      ctx.fillStyle = fancy ? '#d4af37' : '#3a2e1f';
+      ctx.beginPath();
+      ctx.moveTo(-16,-40); ctx.lineTo(16,-40); ctx.lineTo(10,-52); ctx.lineTo(-10,-52);
+      ctx.closePath(); ctx.fill();
+    }
+    if (old){
+      ctx.strokeStyle = '#7a6a55';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-6,-30); ctx.lineTo(-2,-28);
+      ctx.moveTo(6,-30); ctx.lineTo(2,-28);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = '#2a2a2a';
+      ctx.beginPath();
+      ctx.arc(-5,-34,1.6,0,Math.PI*2);
+      ctx.arc(5,-34,1.6,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawBird(x,y,flap,talking){
+    ctx.save();
+    ctx.translate(x,y);
+    const wingY = Math.sin(flap*6)*8;
+    ctx.fillStyle = '#3a7d44';
+    ctx.beginPath();
+    ctx.ellipse(0,0,16,11,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-14,-2,8,7,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#e8b23a';
+    ctx.beginPath();
+    ctx.moveTo(-22,-2); ctx.lineTo(-30, talking ? -6 : -1); ctx.lineTo(-22,3);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#255c2c';
+    ctx.beginPath();
+    ctx.ellipse(10,wingY,12,6,0.3,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(-16,-4,1.6,0,Math.PI*2);
+    ctx.fill();
+    if (talking){
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.ellipse(-36,-22,16,10,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#333';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', -36, -18);
+    }
+    ctx.restore();
+  }
+  function drawShip(x,y,scale,opts){
+    opts = opts || {};
+    const grand = !!opts.grand;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // hull
+    ctx.fillStyle = grand ? '#7a4a1e' : '#5c4326';
+    ctx.beginPath();
+    ctx.moveTo(-90,10); ctx.lineTo(90,10); ctx.lineTo(70,40); ctx.lineTo(-70,40);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // deck
+    ctx.fillStyle = grand ? '#a97a3e' : '#7a5a37';
+    ctx.fillRect(-85,0,170,12);
+    // mast
+    ctx.strokeStyle = '#3d2c1a';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(0,0); ctx.lineTo(0,-110);
+    ctx.stroke();
+    // sail
+    ctx.fillStyle = grand ? '#f2e3c0' : '#e8dcc0';
+    ctx.beginPath();
+    ctx.moveTo(2,-104); ctx.quadraticCurveTo(55,-70,4,-14);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.stroke();
+    // rope hotspot decoration
+    ctx.strokeStyle = '#4a3a22';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-40,-6); ctx.lineTo(-40,-70);
+    ctx.moveTo(40,-6); ctx.lineTo(45,-90);
+    ctx.stroke();
+    if (grand){
+      ctx.fillStyle = '#c0392b';
+      ctx.beginPath();
+      ctx.moveTo(0,-110); ctx.lineTo(24,-102); ctx.lineTo(0,-96);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawMountain(x,y,scale,formed){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = formed ? '#5c6b4a' : '#7a8a68';
+    ctx.beginPath();
+    ctx.moveTo(-110,40);
+    ctx.quadraticCurveTo(-40,-80,0,-90);
+    ctx.quadraticCurveTo(40,-80,110,40);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(-10,-85); ctx.quadraticCurveTo(10,-40,30,20);
+    ctx.lineTo(10,20);
+    ctx.quadraticCurveTo(-5,-30,-10,-85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawSun(x,y){
+    ctx.fillStyle = '#ffd873';
+    ctx.beginPath();
+    ctx.arc(x,y,34,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawLightning(t){
+    if (Math.sin(t*9) > 0.94){
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillRect(0,0,800,340);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(560,10); ctx.lineTo(540,90); ctx.lineTo(565,90); ctx.lineTo(530,180);
+      ctx.stroke();
+    }
+  }
+  function drawClouds(t, dark){
+    ctx.fillStyle = dark ? 'rgba(60,60,70,0.7)' : 'rgba(255,255,255,0.85)';
+    for (let i=0;i<3;i++){
+      const cx = 100 + i*260 + Math.sin(t*0.3+i)*10;
+      const cy = 60 + i*18;
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,50,20,0,0,Math.PI*2);
+      ctx.ellipse(cx+35,cy+6,36,16,0,0,Math.PI*2);
+      ctx.ellipse(cx-35,cy+6,36,16,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // ---------- SCENE DEFINITIONS ----------
+  function drawScene(t){
+    ctx.clearRect(0,0,800,500);
+    switch(sceneIndex){
+      case 0: sceneIntro(t); break;
+      case 1: sceneShipArrives(t); break;
+      case 2: sceneAskPermission(t); break;
+      case 3: sceneWorkHard(t); break;
+      case 4: sceneMarriage(t); break;
+      case 5: sceneReturnHome(t); break;
+      case 6: sceneMotherRuns(t); break;
+      case 7: sceneCurse(t); break;
+      case 8: sceneMountainFormed(t); break;
+    }
+  }
+
+  function sceneIntro(t){
+    drawSky('#bfe6f5','#eaf7ea');
+    drawSun(700,70);
+    drawClouds(t,false);
+    drawSea(t,false);
+    drawBeach();
+    drawPalm(680,330,1.1);
+    drawPalm(90,340,0.9);
+    drawHut(400,330);
+    drawPerson(370,340,{old:true, female:true});
+    drawPerson(430,345,{scale:0.85});
+  }
+
+  function sceneShipArrives(t){
+    drawSky('#bfe6f5','#eaf7ea');
+    drawClouds(t,false);
+    drawSea(t,false);
+    drawBeach();
+    drawPalm(80,340,0.9);
+    const bob = Math.sin(t*1.4)*4;
+    drawShip(560,300+bob,1.05);
+    drawPerson(300,345,{scale:0.9, armOutR:true});
+    if (started){
+      hotspots.push({x:560,y:250+bob,r:80, onTap:()=>advanceScene()});
+    }
+  }
+
+  function sceneAskPermission(t){
+    drawSky('#cdeaf5','#f2ecd9');
+    drawClouds(t,false);
+    drawSea(t,false);
+    drawBeach();
+    drawHut(650,330);
+    drawPerson(560,345,{old:true, female:true, armOutR:true});
+    drawPerson(500,350,{scale:0.85, armOutL:true});
+    drawBird(430,300,t,false);
+    if (!sceneAdvanceLock){
+      hotspots.push({x:560,y:300,r:70, onTap:()=>{ sceneAdvanceLock = true; }});
+    } else {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.strokeStyle = '#2a7f9e';
+      ctx.lineWidth = 2;
+      roundRect(ctx,230,110,340,90,14);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#234';
+      ctx.font = '15px sans-serif';
+      ctx.textAlign = 'center';
+      wrapText(ctx, lang==='id' ? '"Baik, pergilah berlayar. Jaga burung ini baik-baik, dan jangan lupa memberi kabar, Nak."' : '"Very well, you may sail. Take good care of this bird, and never forget to send word, my son."', 400, 145, 300, 20);
+      ctx.restore();
+      drawButton(400,230,220,44, lang==='id' ? 'Izinkan Berlayar' : 'Allow to Sail');
+      hotspots.push({x:400,y:230,isRect:true,w:220,h:44, onTap:()=>advanceScene()});
+    }
+  }
+
+  function sceneWorkHard(t){
+    drawSky('#a9d7ea','#dff0e0');
+    drawSea(t,false);
+    const bob = Math.sin(t*1.2)*5;
+    drawShip(400,330+bob,1.5);
+    drawPerson(400,300+bob,{scale:0.95, armOutR:true});
+    hotspots.push({x:460,y:250+bob,r:60, onTap:()=>{
+      if (mashDone) return;
+      mashProgress++;
+      if (mashProgress >= mashNeeded){ mashDone = true; }
+    }});
+    progressBarWrap.style.display = 'block';
+    progressBarFill.style.width = Math.min(100,(mashProgress/mashNeeded)*100) + '%';
+    if (mashDone && !sceneAdvanceLock){
+      sceneAdvanceLock = true;
+      setTimeout(()=>advanceScene(), 500);
+    }
+  }
+
+  function sceneMarriage(t){
+    drawSky('#f5e3c0','#fbf3dd');
+    drawSea(t,false);
+    drawBeach();
+    drawShip(650,320,0.9,{grand:false});
+    drawPerson(340,340,{scale:1, fancy:true});
+    drawPerson(410,340,{scale:1, female:true, fancy:true});
+    drawPerson(270,345,{scale:0.85, old:true});
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = '#2a7f9e';
+    roundRect(ctx,190,90,420,60,14);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#234';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    wrapText(ctx, lang==='id' ? 'Sang saudagar menawarkan putrinya, Siti Nurhasanah, untuk dinikahi Dampu Awang.' : 'The merchant offers his daughter, Siti Nurhasanah, in marriage to Dampu Awang.', 400,112, 380, 18);
+    ctx.restore();
+    drawButton(400,190,220,46, lang==='id' ? 'Terima Pinangan' : 'Accept Proposal');
+    hotspots.push({x:400,y:190,isRect:true,w:220,h:46,onTap:()=>advanceScene()});
+  }
+
+  let dragX = 550, dragY = 300, dragging = false;
+  function sceneReturnHome(t){
+    drawSky('#bfe6f5','#eaf7ea');
+    drawSea(t,false);
+    drawBeach();
+    drawPalm(680,330,1.1);
+    drawHut(400,330);
+    // dermaga target zone
+    ctx.save();
+    ctx.strokeStyle = 'rgba(217,122,43,0.8)';
+    ctx.setLineDash([6,5]);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(300,250,150,110);
+    ctx.restore();
+    ctx.fillStyle = '#4a3b22';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang==='id' ? 'Pelabuhan' : 'Harbor', 375, 245);
+    drawShip(dragX,dragY,1.1,{grand:true});
+    hotspots.push({x:dragX,y:dragY-60,r:90, isDragHandle:true});
+    const dx = dragX-375, dy=dragY-300;
+    if (Math.sqrt(dx*dx+dy*dy) < 60 && !sceneAdvanceLock){
+      sceneAdvanceLock = true;
+      setTimeout(()=>advanceScene(), 500);
+    }
+  }
+
+  function sceneMotherRuns(t){
+    drawSky('#bfe6f5','#eaf7ea');
+    drawSea(t,false);
+    drawBeach();
+    drawShip(560,300,1.1,{grand:true});
+    drawPerson(600,340,{scale:0.9, fancy:true});
+    drawPerson(660,340,{scale:0.9, female:true, fancy:true});
+    const runX = 150 + Math.min(1, t*0.15) * 250;
+    drawPerson(Math.min(runX,400),350,{old:true, female:true, scale:0.9, armOutR:true});
+    if (!sceneAdvanceLock){
+      hotspots.push({x:Math.min(runX,400),y:340,r:60, onTap:()=>{
+        sceneAdvanceLock = true;
+        denyShown = true;
+      }});
+    } else {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.strokeStyle = '#a5541e';
+      roundRect(ctx,190,90,420,80,14);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#5a2a1a';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      wrapText(ctx, lang==='id' ? '"Bukan, perempuan tua itu bukan ibuku. Ibuku sudah lama meninggal!" kata Dampu Awang menyangkal ibunya sendiri.' : '"No, that old woman is not my mother. My mother has long since died!" Dampu Awang said, denying his own mother.', 400,112, 380, 18);
+      ctx.restore();
+      drawButton(400,205,200,42, lang==='id' ? 'Lanjutkan' : 'Continue');
+      hotspots.push({x:400,y:205,isRect:true,w:200,h:42,onTap:()=>advanceScene()});
+    }
+  }
+
+  function sceneCurse(t){
+    const stormLevel = Math.min(1, holdProgress/100);
+    drawSky(lerpColor('#bfe6f5','#333844',stormLevel), lerpColor('#eaf7ea','#20242c',stormLevel));
+    drawClouds(t, stormLevel>0.3);
+    drawSea(t, stormLevel>0.3);
+    drawBeach();
+    if (stormLevel>0.3) drawLightning(t);
+    drawShip(560,300,1.1,{grand:true});
+    drawPerson(400,350,{old:true, female:true, scale:0.95, armOutR:true, armOutL:true});
+    drawBird(470,290,t, birdTapped);
+
+    if (!holdDone){
+      progressBarWrap.style.display='block';
+      progressBarFill.style.width = holdProgress + '%';
+      drawButton(400,440,220,42, lang==='id' ? 'Tahan: Doa Ibu' : 'Hold: Mother\'s Prayer');
+      hotspots.push({x:400,y:440,isRect:true,w:220,h:42,isHold:true});
+    } else if (!birdTapped){
+      progressBarWrap.style.display='none';
+      hotspots.push({x:470,y:290,r:55, onTap:()=>{ birdTapped = true; speakNarr(true); }});
+    } else {
+      hotspots.push({x:400,y:250,r:200, onTap:()=>advanceScene()});
+      ctx.save();
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.font='13px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(lang==='id' ? '(Ketuk di mana saja untuk melanjutkan)' : '(Tap anywhere to continue)', 400, 470);
+      ctx.restore();
+    }
+  }
+
+  function sceneMountainFormed(t){
+    drawSky('#cfe9f2','#f4f6e6');
+    drawSun(700,70);
+    drawSea(t,false);
+    drawBeach();
+    drawPalm(90,340,0.9);
+    drawMountain(400,340,1.15, true);
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = '#2a7f9e';
+    roundRect(ctx,180,60,440,50,14);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#234';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(TXT[lang].endTitle, 400, 90);
+    ctx.restore();
+    if (!sceneAdvanceLock){
+      hotspots.push({x:400,y:330,r:130, onTap:()=>{ sceneAdvanceLock = true; advanceScene(); }});
+    }
+  }
+
+  // ---------- UTILS ----------
+  function lerpColor(a,b,t){
+    const pa = hexToRgb(a), pb = hexToRgb(b);
+    const r = Math.round(pa.r + (pb.r-pa.r)*t);
+    const g = Math.round(pa.g + (pb.g-pa.g)*t);
+    const bl = Math.round(pa.b + (pb.b-pa.b)*t);
+    return `rgb(${r},${g},${bl})`;
+  }
+  function hexToRgb(hex){
+    hex = hex.replace('#','');
+    return { r: parseInt(hex.substring(0,2),16), g: parseInt(hex.substring(2,4),16), b: parseInt(hex.substring(4,6),16) };
+  }
+  function roundRect(c,x,y,w,h,r){
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+  function wrapText(c,text,x,y,maxWidth,lineHeight){
+    const words = text.split(' ');
+    let line = '';
+    let yy = y;
+    for (let n=0;n<words.length;n++){
+      const test = line + words[n] + ' ';
+      if (c.measureText(test).width > maxWidth && n>0){
+        c.fillText(line, x, yy);
+        line = words[n] + ' ';
+        yy += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    c.fillText(line, x, yy);
+  }
+  function drawButton(cx,cy,w,h,label){
+    ctx.save();
+    ctx.fillStyle = '#d97a2b';
+    roundRect(ctx, cx-w/2, cy-h/2, w, h, 22);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx, cy+1);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+
+  // ---------- INPUT HANDLING ----------
+  function getCanvasCoords(evt){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+    return { x: cx * (800/rect.width), y: cy * (500/rect.height) };
+  }
+
+  let pointerDown = false;
+  let holdTimer = null;
+
+  canvas.addEventListener('pointerdown', (e)=>{
+    pointerDown = true;
+    const p = getCanvasCoords(e);
+    for (const h of hotspots){
+      if (h.isDragHandle){
+        const dx = p.x-h.x, dy = p.y-h.y;
+        if (Math.sqrt(dx*dx+dy*dy) < h.r){ dragging = true; }
+      } else if (h.isRect){
+        const halfW = (h.w || 220)/2, halfH = (h.h || 44)/2;
+        if (Math.abs(p.x-h.x) < halfW && Math.abs(p.y-h.y) < halfH){
+          if (h.isHold){ startHold(); } else if (h.onTap){ h.onTap(); }
+        }
+      } else {
+        const dx = p.x-h.x, dy = p.y-h.y;
+        if (Math.sqrt(dx*dx+dy*dy) < h.r){ h.onTap(); }
+      }
+    }
+  });
+  canvas.addEventListener('pointermove',(e)=>{
+    if (dragging){
+      const p = getCanvasCoords(e);
+      dragX = Math.max(60,Math.min(740,p.x));
+      dragY = Math.max(200,Math.min(360,p.y));
+    }
+  });
+  window.addEventListener('pointerup', ()=>{
+    pointerDown = false;
+    dragging = false;
+    stopHold();
+  });
+
+  function startHold(){
+    if (holdActive || holdDone) return;
+    holdActive = true;
+  }
+  function stopHold(){
+    holdActive = false;
+  }
+
+  // ---------- SCENE FLOW ----------
+  function speakNarr(isBirdWarning){
+    const s = TXT[lang].scenes[sceneIndex];
+    if (isBirdWarning){
+      speak(lang==='id' ? 'Dampu Awang! Akuilah perempuan itu sebagai ibumu!' : 'Dampu Awang! Acknowledge that woman as your mother!');
+    } else {
+      speak(s.narr);
+    }
+  }
+
+  function updateDots(){
+    dotsEl.innerHTML = '';
+    for (let i=0;i<TOTAL_SCENES;i++){
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===sceneIndex ? ' active' : (i<sceneIndex ? ' done' : ''));
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function updateInstruction(){
+    const s = TXT[lang].scenes[sceneIndex];
+    instructionEl.innerHTML = s.instr;
+  }
+
+  function enterScene(){
+    resetInteractionState();
+    updateDots();
+    updateInstruction();
+    speakNarr(false);
+    dragX = 550; dragY = 300;
+    sendHeight();
+  }
+
+  function advanceScene(){
+    if (sceneIndex < TOTAL_SCENES-1){
+      sceneIndex++;
+      enterScene();
+    } else {
+      showEnding();
+    }
+  }
+
+  function showEnding(){
+    stopSpeak();
+    storyTextEl.style.display = 'block';
+    storyTextEl.innerHTML = '<b>' + TXT[lang].moral + '</b>';
+    instructionEl.innerHTML = lang==='id' ? 'Ketuk tombol di bawah untuk mengulang kisah ini.' : 'Tap the button below to replay this tale.';
+    startBtn.textContent = TXT[lang].replay;
+    startBtn.classList.remove('hidden');
+    startBtn.onclick = restartStory;
+    sendHeight();
+  }
+
+  function restartStory(){
+    sceneIndex = 0;
+    started = true;
+    storyTextEl.style.display = 'none';
+    startBtn.classList.add('hidden');
+    enterScene();
+  }
+
+  function beginStory(){
+    started = true;
+    startBtn.classList.add('hidden');
+    storyTextEl.style.display = 'none';
+    sceneIndex = 1;
+    enterScene();
+  }
+
+  // ---------- ANIMATION LOOP ----------
+  function loop(ts){
+    animT += 0.016;
+    if (holdActive && !holdDone){
+      holdProgress += 1.6;
+      if (holdProgress >= 100){ holdProgress = 100; holdDone = true; }
+    }
+    drawScene(animT);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // ---------- CONTROLS ----------
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? TXT[lang].muteOff : TXT[lang].muteOn;
+  }
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem(MUTE_KEY, muted ? '1':'0');
+    updateMuteBtn();
+    if (muted) stopSpeak();
+  });
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    footerEl.textContent = TXT[lang].footer;
+    if (!started){
+      startBtn.textContent = TXT[lang].start;
+      updateInstruction0();
+    } else {
+      updateInstruction();
+    }
+    if (sceneIndex === TOTAL_SCENES-1 && storyTextEl.style.display === 'block'){
+      showEnding();
+    }
+    sendHeight();
+  });
+
+  function updateInstruction0(){
+    instructionEl.innerHTML = TXT[lang].scenes[0].instr;
+  }
+
+  startBtn.addEventListener('click', beginStory);
+
+  // ---------- INIT ----------
+  function init(){
+    footerEl.textContent = TXT[lang].footer;
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    startBtn.textContent = TXT[lang].start;
+    updateMuteBtn();
+    sceneIndex = 0;
+    updateDots();
+    updateInstruction0();
+    drawScene(0);
+    loop(0);
+    window.addEventListener('resize', sendHeight);
+    setTimeout(sendHeight, 300);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
