@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garuda Wisnu Kencana - Cerita Interaktif</title>
+<style>
+  :root{
+    --sky1:#1a2a4a;
+    --sky2:#f4a45c;
+    --gold:#e8b84b;
+    --cream:#f6ecd8;
+    --panel:#241a12;
+    --panel2:#2f2113;
+    --accent:#c0392b;
+    --accent2:#2e8b57;
+    --ink:#241608;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+    background: linear-gradient(180deg,#0e1524,#1c2b1a 60%,#241608);
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #gwk-root{
+    width:100%;
+    max-width:720px;
+    background: var(--panel);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+    border:2px solid #6b4a24;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 12px;
+    background: linear-gradient(180deg,#3a2513,#2a1a0d);
+    border-bottom:2px solid #6b4a24;
+  }
+  #titleText{
+    font-size:14px;
+    font-weight:bold;
+    letter-spacing:.5px;
+    color:var(--gold);
+    text-shadow:0 1px 2px #000;
+  }
+  .iconBtn{
+    background:#3d2a16;
+    border:1px solid #7a5628;
+    color:var(--cream);
+    border-radius:8px;
+    width:34px;
+    height:34px;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .iconBtn:hover{background:#54391c;}
+  .iconBtn:active{transform:scale(.92);}
+  #controls{display:flex;gap:6px;}
+  #langBtn{width:auto;padding:0 10px;font-size:12px;font-weight:bold;}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:#000;
+  }
+  #stage{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+  }
+  #dots{
+    position:absolute;
+    top:8px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:6px;
+    background:rgba(0,0,0,.35);
+    padding:5px 9px;
+    border-radius:20px;
+    z-index:5;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,.35);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.35);}
+  .dot.done{background:#d98b3f;}
+
+  #overlayBtns{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:6;
+    pointer-events:none;
+  }
+  #overlayBtns.show{pointer-events:auto;background:rgba(10,8,4,.55);}
+  .bigBtn{
+    pointer-events:auto;
+    background:linear-gradient(180deg,var(--accent),#8f2b1f);
+    color:#fff8ec;
+    border:2px solid #f0c98a;
+    border-radius:14px;
+    padding:14px 26px;
+    font-size:17px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 #6d1c13, 0 8px 18px rgba(0,0,0,.5);
+    letter-spacing:.5px;
+  }
+  .bigBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #6d1c13;}
+
+  #instrPanel{
+    padding:12px 14px 6px 14px;
+    min-height:34px;
+  }
+  #instrText{
+    font-size:13.5px;
+    color:var(--gold);
+    font-style:italic;
+    text-align:center;
+    line-height:1.4;
+  }
+  #narrPanel{
+    padding:2px 16px 14px 16px;
+  }
+  #narrText{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--cream);
+    text-align:center;
+    min-height:44px;
+  }
+  #choiceRow{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    padding:0 14px 14px 14px;
+    flex-wrap:wrap;
+  }
+  .choiceBtn{
+    background:#3d2a16;
+    border:2px solid #a97a3c;
+    color:var(--cream);
+    padding:10px 18px;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  .choiceBtn:active{transform:scale(.95);}
+  .hidden{display:none !important;}
+
+  #holdBar{
+    margin:0 16px 14px 16px;
+    height:16px;
+    background:#1b120a;
+    border:1px solid #6b4a24;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  #holdFill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#7c1c14,#c0392b);
+  }
+  #holdLabel{
+    text-align:center;
+    font-size:12px;
+    color:#e0b98a;
+    margin:-6px 16px 10px 16px;
+  }
+  #replayFooter{
+    display:flex;
+    justify-content:center;
+    padding:6px 14px 16px 14px;
+  }
+  #replayBtn{
+    background:#2f2113;
+    border:1px solid #7a5628;
+    color:var(--gold);
+    padding:8px 16px;
+    border-radius:10px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  footer.gwk-foot{
+    text-align:center;
+    font-size:10.5px;
+    color:#6b5b46;
+    padding:4px 10px 10px 10px;
+  }
+</style>
+</head>
+<body>
+<div id="gwk-root">
+  <div id="topbar">
+    <div id="titleText">Garuda Wisnu Kencana</div>
+    <div id="controls">
+      <button class="iconBtn" id="langBtn" title="Language">EN</button>
+      <button class="iconBtn" id="muteBtn" title="Mute">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <div id="dots"></div>
+    <canvas id="stage" width="1000" height="620"></canvas>
+    <div id="overlayBtns">
+      <button class="bigBtn" id="startBtn">MULAI CERITA</button>
+    </div>
+  </div>
+
+  <div id="instrPanel"><div id="instrText"></div></div>
+  <div id="holdBar" class="hidden"><div id="holdFill"></div></div>
+  <div id="holdLabel" class="hidden"></div>
+  <div id="choiceRow"></div>
+  <div id="narrPanel"><div id="narrText"></div></div>
+  <div id="replayFooter">
+    <button class="iconBtn" id="replayBtn2" style="display:none;width:auto;padding:0 16px;">↺ Ulangi Cerita</button>
+  </div>
+  <footer class="gwk-foot">Cerita Rakyat Bali &middot; Interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== I18N ===================== */
+  var params = new URLSearchParams(window.location.search);
+  var LANG = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var UI = {
+    title:{id:"Garuda Wisnu Kencana", en:"Garuda Wisnu Kencana"},
+    start:{id:"MULAI CERITA", en:"START STORY"},
+    replay:{id:"↺ Ulangi Cerita", en:"↺ Replay Story"},
+    footer:{id:"Cerita Rakyat Bali · Interaktif", en:"Balinese Folktale · Interactive"}
+  };
+
+  /* ===================== STORY DATA ===================== */
+  // Each scene: narration (id/en), instruction (id/en), type, draw(t) function, hit regions defined at draw time
+  var scenes = [];
+
+  function S(obj){ scenes.push(obj); }
+
+  S({ // 0 intro
+    type:"tap",
+    narr:{
+      id:"Pada zaman dahulu di Pulau Dewata, hiduplah Resi Kasyapa yang bijaksana. Ia memiliki dua istri: Kadru dan Winata. Kadru melahirkan para Naga, sedangkan Winata melahirkan Garuda.",
+      en:"Long ago on the Island of the Gods lived the wise sage Resi Kasyapa. He had two wives: Kadru and Winata. Kadru gave birth to the Nagas, while Winata gave birth to Garuda."
+    },
+    instr:{
+      id:"Ketuk layar untuk melanjutkan kisahnya.",
+      en:"Tap the screen to continue the story."
+    }
+  });
+
+  S({ // 1 jealousy
+    type:"tap",
+    narr:{
+      id:"Meski Resi Kasyapa berlaku adil, Kadru selalu iri terhadap Winata. Ia mencari cara untuk menjatuhkan martabat Winata selamanya.",
+      en:"Although Resi Kasyapa treated them fairly, Kadru always envied Winata. She looked for a way to bring Winata down forever."
+    },
+    instr:{
+      id:"Ketuk Kadru (sosok berselendang merah) untuk melihat niat liciknya.",
+      en:"Tap Kadru (the figure with the red sash) to see her scheme."
+    }
+  });
+
+  S({ // 2 choice - guess horse color
+    type:"choice",
+    narr:{
+      id:"Kadru menantang Winata menebak warna Kuda Ucaihswara yang tengah melintasi samudera. Siapa yang salah menebak akan menjadi budak selamanya. Bantu Winata menjawab!",
+      en:"Kadru challenged Winata to guess the color of the flying horse Ucaihswara crossing the ocean. Whoever guessed wrong would become a slave forever. Help Winata answer!"
+    },
+    instr:{
+      id:"Ketuk salah satu tombol untuk menjawab warna kuda menurut Winata.",
+      en:"Tap one of the buttons to answer what color Winata believes the horse is."
+    },
+    choices:[
+      {id:"Kuda Putih", en:"White Horse", key:"white"},
+      {id:"Kuda Hitam", en:"Black Horse", key:"black"}
+    ]
+  });
+
+  S({ // 3 result of guess (auto, shows winata guessed white correctly - narrative fixed)
+    type:"tap",
+    narr:{
+      id:"Winata menjawab bahwa kuda itu berwarna putih — dan jawaban itu benar! Namun Kadru yang licik tidak mau menerima kekalahan.",
+      en:"Winata answered that the horse was white — and she was right! But the cunning Kadru refused to accept defeat."
+    },
+    instr:{
+      id:"Ketuk layar untuk melihat apa yang dilakukan Kadru selanjutnya.",
+      en:"Tap the screen to see what Kadru does next."
+    }
+  });
+
+  S({ // 4 hold - naga spits venom
+    type:"hold",
+    narr:{
+      id:"Kadru memerintahkan anaknya, sang Naga, untuk menyemburkan racun ke tubuh Kuda Ucaihswara agar warnanya berubah menjadi hitam.",
+      en:"Kadru ordered her son, the Naga, to spit venom onto the horse Ucaihswara so its color would turn black."
+    },
+    instr:{
+      id:"Tekan dan tahan tombol di bawah untuk membantu Naga menyemburkan racun ke kuda.",
+      en:"Press and hold the button below to help the Naga spray venom onto the horse."
+    }
+  });
+
+  S({ // 5 result - winata enslaved, garuda angry
+    type:"tap",
+    narr:{
+      id:"Kuda itu pun berubah hitam karena racun Naga. Winata dinyatakan kalah dan harus menjadi budak Kadru seumur hidup. Garuda, putra Winata, murka mendengarnya!",
+      en:"The horse turned black from the Naga's venom. Winata was declared the loser and had to become Kadru's slave for life. Garuda, Winata's son, was furious to hear this!"
+    },
+    instr:{
+      id:"Ketuk Garuda untuk membangkitkan amarahnya membela sang ibu.",
+      en:"Tap Garuda to awaken his fury in defense of his mother."
+    }
+  });
+
+  S({ // 6 mash - battle
+    type:"mash",
+    narr:{
+      id:"Garuda bertarung sengit siang dan malam melawan para Naga demi membebaskan ibunya. Pertarungan itu berjalan seimbang tanpa ada yang menang.",
+      en:"Garuda fought fiercely day and night against the Nagas to free his mother. The battle was evenly matched, with neither side winning."
+    },
+    instr:{
+      id:"Ketuk Naga berkali-kali secepat mungkin untuk membantu Garuda bertarung!",
+      en:"Tap the Naga repeatedly as fast as you can to help Garuda fight!"
+    }
+  });
+
+  S({ // 7 tap - deal offered
+    type:"tap",
+    narr:{
+      id:"Karena pertarungan tak berkesudahan, para Naga memberi syarat: jika Garuda dapat membawakan Tirtha Amartha, air keabadian, maka Winata akan dibebaskan.",
+      en:"Since the fight had no end, the Nagas set a condition: if Garuda could bring them Tirtha Amartha, the water of immortality, Winata would be freed."
+    },
+    instr:{
+      id:"Ketuk layar untuk mengikuti Garuda mencari Tirtha Amartha.",
+      en:"Tap the screen to follow Garuda in search of Tirtha Amartha."
+    }
+  });
+
+  S({ // 8 tap - meet wisnu, get the jar
+    type:"tap",
+    narr:{
+      id:"Dalam pencariannya, Garuda bertemu Dewa Wisnu yang membawa kendi berisi Tirtha Amartha, terikat tali rumput ilalang.",
+      en:"During his search, Garuda met Dewa Wisnu, who carried a jar of Tirtha Amartha, tied with a rope of sharp reed grass."
+    },
+    instr:{
+      id:"Ketuk kendi Tirtha Amartha di tangan Dewa Wisnu.",
+      en:"Tap the jar of Tirtha Amartha in Dewa Wisnu's hand."
+    }
+  });
+
+  S({ // 9 choice - become vehicle
+    type:"choice",
+    narr:{
+      id:"Dewa Wisnu bersedia memberikan Tirtha Amartha, dengan satu syarat: Garuda harus bersedia menjadi tunggangannya.",
+      en:"Dewa Wisnu agreed to give the water of immortality, on one condition: Garuda must agree to become his vehicle."
+    },
+    instr:{
+      id:"Ketuk pilihan Garuda untuk menyelamatkan ibunya.",
+      en:"Tap Garuda's choice to save his mother."
+    },
+    choices:[
+      {id:"Bersedia demi Ibu", en:"Agree, for Mother", key:"agree"}
+    ]
+  });
+
+  S({ // 10 tap - become garuda wisnu kencana + indra steals
+    type:"tap",
+    narr:{
+      id:"Sejak saat itu, Garuda dikenal sebagai Garuda Wisnu Kencana, tunggangan Dewa Wisnu. Namun dalam perjalanan pulang, Dewa Indra yang melintas merebut Tirtha Amartha darinya!",
+      en:"From then on, Garuda was known as Garuda Wisnu Kencana, the vehicle of Dewa Wisnu. But on the way home, the passing Dewa Indra seized the Tirtha Amartha from him!"
+    },
+    instr:{
+      id:"Ketuk Dewa Indra untuk melihat apa yang terjadi.",
+      en:"Tap Dewa Indra to see what happens."
+    }
+  });
+
+  S({ // 11 tap - only rope grass left with drops
+    type:"tap",
+    narr:{
+      id:"Garuda hanya tersisa membawa tali rumput ilalang, wadah dari Tirtha Amartha. Untungnya, masih ada tetesan air suci yang menempel di rumput itu.",
+      en:"Garuda was left only with the reed-grass rope that once held the jar. Luckily, a few drops of the sacred water still clung to the grass."
+    },
+    instr:{
+      id:"Ketuk rumput ilalang untuk melihat tetesan Tirtha Amartha yang tersisa.",
+      en:"Tap the reed grass to see the remaining drops of Tirtha Amartha."
+    }
+  });
+
+  S({ // 12 tap - naga lick grass, tongue splits
+    type:"tap",
+    narr:{
+      id:"Para Naga menjilati tetesan air itu di atas rumput ilalang yang tajam. Lidah mereka pun terbelah dua — sejak itulah naga dan keturunannya berlidah bercabang.",
+      en:"The Nagas licked the drops off the sharp reed grass. Their tongues split in two — and from then on, snakes and their descendants have forked tongues."
+    },
+    instr:{
+      id:"Ketuk Naga untuk melihat lidahnya terbelah.",
+      en:"Tap the Naga to see its tongue split."
+    }
+  });
+
+  S({ // 13 ending
+    type:"end",
+    narr:{
+      id:"Winata pun dibebaskan dari perbudakan. Garuda bahagia dapat menyelamatkan ibunya. Kegigihan Garuda inilah yang menjadi filosofi burung Garuda, lambang negara Indonesia.",
+      en:"Winata was freed from slavery, and Garuda was overjoyed to have saved his mother. Garuda's persistence became the philosophy behind the Garuda bird, the symbol of Indonesia."
+    },
+    instr:{
+      id:"Cerita selesai. Ketuk 'Ulangi Cerita' untuk memulai kembali.",
+      en:"The story is complete. Tap 'Replay Story' to start again."
+    }
+  });
+
+  var TOTAL = scenes.length;
+
+  /* ===================== STATE ===================== */
+  var state = {
+    scene: -1,
+    started: false,
+    locked: false,
+    holdActive: false,
+    holdProgress: 0,
+    holdRAF: null,
+    mashCount: 0,
+    mashTarget: 14,
+    horseColor: "white",
+    tongueDone: false,
+    muted: (localStorage.getItem('gwk_muted') === '1'),
+    t0: performance.now()
+  };
+
+  /* ===================== DOM ===================== */
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var dotsWrap = document.getElementById('dots');
+  var instrText = document.getElementById('instrText');
+  var narrText = document.getElementById('narrText');
+  var overlay = document.getElementById('overlayBtns');
+  var startBtn = document.getElementById('startBtn');
+  var choiceRow = document.getElementById('choiceRow');
+  var holdBar = document.getElementById('holdBar');
+  var holdFill = document.getElementById('holdFill');
+  var holdLabel = document.getElementById('holdLabel');
+  var replayBtn2 = document.getElementById('replayBtn2');
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  var titleText = document.getElementById('titleText');
+  var footerEl = document.querySelector('.gwk-foot');
+
+  var CW = canvas.width, CH = canvas.height;
+  var hotspots = []; // {x,y,r,name} in canvas space, checked on click
+
+  /* ===================== I18N APPLY ===================== */
+  function t(obj){ return LANG === 'en' ? obj.en : obj.id; }
+
+  function applyStaticText(){
+    document.documentElement.lang = LANG;
+    titleText.textContent = t(UI.title);
+    startBtn.textContent = t(UI.start);
+    replayBtn2.textContent = t(UI.replay);
+    footerEl.textContent = t(UI.footer);
+    langBtn.textContent = LANG === 'en' ? 'ID' : 'EN';
+  }
+
+  /* ===================== DOTS ===================== */
+  function buildDots(){
+    dotsWrap.innerHTML = "";
+    for (var i=0;i<TOTAL;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.dataset.i = i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var ds = dotsWrap.children;
+    for (var i=0;i<ds.length;i++){
+      ds[i].className = 'dot' + (i < state.scene ? ' done' : '') + (i === state.scene ? ' active' : '');
+    }
+  }
+
+  /* ===================== SPEECH ===================== */
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if (!voices || !voices.length) return null;
+    var prefix = lang === 'en' ? 'en' : 'id';
+    var exact = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(prefix) === 0; });
+    return exact || null;
+  }
+  function speak(text){
+    if (state.muted || !window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice(LANG);
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+  /* ===================== DRAWING HELPERS ===================== */
+  function grad(x0,y0,x1,y1,stops){
+    var g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+    return g;
+  }
+
+  function drawSky(mood){
+    // mood: 'day','dusk','night'
+    var stops;
+    if (mood === 'night') stops = [[0,'#0a0f24'],[1,'#1c2c3f']];
+    else if (mood === 'dusk') stops = [[0,'#2a1c3d'],[0.5,'#a8456b'],[1,'#f0a95e']];
+    else stops = [[0,'#3d6fa8'],[0.55,'#8fb8d8'],[1,'#f4d9a0']];
+    ctx.fillStyle = grad(0,0,0,CH,stops);
+    ctx.fillRect(0,0,CW,CH);
+    // sun/moon
+    ctx.beginPath();
+    ctx.arc(CW*0.78, CH*0.22, 46, 0, Math.PI*2);
+    ctx.fillStyle = mood==='night' ? '#e8e6d0' : '#ffdf8a';
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    // clouds
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    for (var i=0;i<3;i++){
+      var cx = 100 + i*260, cy = 90 + (i%2)*30;
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,60,20,0,0,Math.PI*2);
+      ctx.ellipse(cx+40,cy+8,40,16,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawOcean(y){
+    ctx.fillStyle = grad(0,y,0,CH,[[0,'#1a5276'],[1,'#0d2a3d']]);
+    ctx.fillRect(0,y,CW,CH-y);
+    ctx.strokeStyle = 'rgba(255,255,255,.18)';
+    ctx.lineWidth = 2;
+    for (var i=0;i<6;i++){
+      ctx.beginPath();
+      var wy = y + 20 + i*22;
+      for (var x=0;x<=CW;x+=20){
+        var yy = wy + Math.sin((x+i*30)/40)*4;
+        if (x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawBaliSilhouette(){
+    ctx.fillStyle = '#12202b';
+    ctx.beginPath();
+    ctx.moveTo(0,CH*0.62);
+    ctx.lineTo(90,CH*0.5);
+    ctx.lineTo(150,CH*0.62);
+    ctx.lineTo(230,CH*0.46);
+    ctx.lineTo(300,CH*0.62);
+    ctx.lineTo(CW,CH*0.58);
+    ctx.lineTo(CW,CH*0.66);
+    ctx.lineTo(0,CH*0.66);
+    ctx.closePath();
+    ctx.fill();
+    // simple meru/temple shape
+    var tx = 210, ty = CH*0.46;
+    ctx.fillStyle = '#0d1a22';
+    for (var i=0;i<3;i++){
+      var w = 46 - i*10, hgt = 18;
+      ctx.beginPath();
+      ctx.moveTo(tx-w/2, ty - i*20);
+      ctx.lineTo(tx+w/2, ty - i*20);
+      ctx.lineTo(tx, ty - i*20 - hgt);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawGround(y, color){
+    ctx.fillStyle = color || '#2c3d1f';
+    ctx.fillRect(0,y,CW,CH-y);
+  }
+
+  // figure: robed sage
+  function drawSage(x,y,scale,sashColor){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#d8c9a3';
+    ctx.beginPath();
+    ctx.moveTo(-30,60);
+    ctx.quadraticCurveTo(-40,-10,0,-20);
+    ctx.quadraticCurveTo(40,-10,30,60);
+    ctx.closePath();
+    ctx.fill();
+    if (sashColor){
+      ctx.strokeStyle = sashColor;
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(-24,10); ctx.lineTo(24,40);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#e8c79a';
+    ctx.beginPath();
+    ctx.arc(0,-38,20,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#3a2a14';
+    ctx.beginPath();
+    ctx.arc(0,-48,16,Math.PI,0);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWoman(x,y,scale,sashColor,label){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#f0d9b5';
+    ctx.beginPath();
+    ctx.moveTo(-26,55);
+    ctx.quadraticCurveTo(-34,0,0,-16);
+    ctx.quadraticCurveTo(34,0,26,55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = sashColor;
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(-20,6); ctx.lineTo(20,34);
+    ctx.stroke();
+    ctx.fillStyle = '#e8c79a';
+    ctx.beginPath();
+    ctx.arc(0,-34,18,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#241608';
+    ctx.beginPath();
+    ctx.arc(0,-42,15,Math.PI,0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0,-20,4,10,0,0,Math.PI*2); // simple hair bun accent not needed
+    ctx.restore();
+  }
+
+  function drawHorse(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    // body
+    ctx.beginPath();
+    ctx.ellipse(0,0,55,26,0,0,Math.PI*2);
+    ctx.fill();
+    // neck+head
+    ctx.beginPath();
+    ctx.moveTo(40,-10);
+    ctx.quadraticCurveTo(70,-40,85,-38);
+    ctx.quadraticCurveTo(95,-34,88,-22);
+    ctx.quadraticCurveTo(70,-14,50,10);
+    ctx.closePath();
+    ctx.fill();
+    // legs
+    ctx.fillRect(-35,15,8,30);
+    ctx.fillRect(20,15,8,30);
+    ctx.fillRect(-10,18,8,28);
+    ctx.fillRect(10,20,8,26);
+    // mane
+    ctx.strokeStyle = color==='#f4f4f4' ? '#cfcfcf' : '#111';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(55,-30); ctx.lineTo(75,-20); ctx.moveTo(60,-24); ctx.lineTo(80,-16);
+    ctx.stroke();
+    // wing-ish flying suggestion (small feather flick)
+    ctx.restore();
+  }
+
+  function drawNaga(x,y,scale,tongueSplit){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // coiled body
+    ctx.strokeStyle = '#2e7d46';
+    ctx.lineWidth = 18;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-60,40);
+    ctx.quadraticCurveTo(-20,70,10,40);
+    ctx.quadraticCurveTo(40,10,20,-20);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = '#33914f';
+    ctx.beginPath();
+    ctx.ellipse(28,-34,22,16,0.3,0,Math.PI*2);
+    ctx.fill();
+    // eyes
+    ctx.fillStyle = '#ffe082';
+    ctx.beginPath(); ctx.arc(36,-40,3,0,Math.PI*2); ctx.fill();
+    // tongue
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(46,-30);
+    if (tongueSplit){
+      ctx.lineTo(58,-30);
+      ctx.moveTo(58,-30); ctx.lineTo(66,-34);
+      ctx.moveTo(58,-30); ctx.lineTo(66,-26);
+    } else {
+      ctx.lineTo(60,-30);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawGaruda(x,y,scale,angry){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // wings
+    ctx.fillStyle = angry ? '#c0392b' : '#b5651d';
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(-70,-40,-100,10);
+    ctx.quadraticCurveTo(-60,10,-30,20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(70,-40,100,10);
+    ctx.quadraticCurveTo(60,10,30,20);
+    ctx.closePath();
+    ctx.fill();
+    // body
+    ctx.fillStyle = '#d8a13a';
+    ctx.beginPath();
+    ctx.ellipse(0,10,26,34,0,0,Math.PI*2);
+    ctx.fill();
+    // head
+    ctx.fillStyle = '#eec97a';
+    ctx.beginPath();
+    ctx.arc(0,-26,18,0,Math.PI*2);
+    ctx.fill();
+    // beak
+    ctx.fillStyle = '#e8b84b';
+    ctx.beginPath();
+    ctx.moveTo(0,-26);
+    ctx.lineTo(20,-20);
+    ctx.lineTo(0,-16);
+    ctx.closePath();
+    ctx.fill();
+    // eye
+    ctx.fillStyle = '#241608';
+    ctx.beginPath();
+    ctx.arc(4,-30,3,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWisnu(x,y,scale,withJar){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // body glow
+    ctx.fillStyle = 'rgba(70,130,220,.25)';
+    ctx.beginPath(); ctx.arc(0,0,70,0,Math.PI*2); ctx.fill();
+    // body
+    ctx.fillStyle = '#3b6fc4';
+    ctx.beginPath();
+    ctx.moveTo(-28,60);
+    ctx.quadraticCurveTo(-36,-10,0,-18);
+    ctx.quadraticCurveTo(36,-10,28,60);
+    ctx.closePath();
+    ctx.fill();
+    // face
+    ctx.fillStyle = '#8ab0e8';
+    ctx.beginPath();
+    ctx.arc(0,-36,20,0,Math.PI*2);
+    ctx.fill();
+    // crown
+    ctx.fillStyle = '#e8b84b';
+    ctx.beginPath();
+    ctx.moveTo(-16,-52); ctx.lineTo(0,-72); ctx.lineTo(16,-52);
+    ctx.closePath();
+    ctx.fill();
+    if (withJar){
+      ctx.fillStyle = '#c99a4a';
+      ctx.beginPath();
+      ctx.ellipse(38,10,14,18,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#7a5c2a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(30,-6); ctx.lineTo(46,-6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawIndra(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = 'rgba(255,220,120,.25)';
+    ctx.beginPath(); ctx.arc(0,0,60,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#d8a13a';
+    ctx.beginPath();
+    ctx.moveTo(-24,50);
+    ctx.quadraticCurveTo(-30,-8,0,-16);
+    ctx.quadraticCurveTo(30,-8,24,50);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#f0d9a0';
+    ctx.beginPath();
+    ctx.arc(0,-32,17,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#e8b84b';
+    ctx.beginPath();
+    ctx.moveTo(-14,-46); ctx.lineTo(0,-64); ctx.lineTo(14,-46);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGrass(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#4c8f3a';
+    ctx.lineWidth = 4;
+    for (var i=-3;i<=3;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*10,20);
+      ctx.quadraticCurveTo(i*10+6,-10,i*10+2,-40);
+      ctx.stroke();
+    }
+    // droplets
+    ctx.fillStyle = 'rgba(220,240,255,.9)';
+    [[-10,-30],[6,-20],[-2,-38]].forEach(function(p){
+      ctx.beginPath();
+      ctx.arc(p[0],p[1],3.5,0,Math.PI*2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawVenomCloud(x,y,scale,progress){
+    if (progress <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(progress,1)*0.85;
+    ctx.fillStyle = '#3a2a4a';
+    for (var i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.ellipse(x + i*14 - 28, y - i*4, 16+ progress*10, 10+progress*6, 0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawLabel(x,y,text){
+    ctx.font = 'bold 15px Trebuchet MS, sans-serif';
+    var w = ctx.measureText(text).width + 18;
+    ctx.fillStyle = 'rgba(20,12,6,.55)';
+    roundRect(x - w/2, y - 12, w, 24, 8);
+    ctx.fill();
+    ctx.fillStyle = '#f6ecd8';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x, y+5);
+    ctx.textAlign = 'left';
+  }
+
+  function pulseHint(x,y,r,phase){
+    ctx.save();
+    var p = (Math.sin(phase*3)+1)/2;
+    ctx.strokeStyle = 'rgba(232,184,75,' + (0.35+p*0.4) + ')';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x,y, r + p*8, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ===================== SCENE RENDER ===================== */
+  var animPhase = 0;
+
+  function render(){
+    hotspots = [];
+    ctx.clearRect(0,0,CW,CH);
+    var sc = state.scene;
+    if (sc < 0){
+      drawSky('dusk');
+      drawBaliSilhouette();
+      drawOcean(CH*0.66);
+      return;
+    }
+
+    switch(sc){
+      case 0: // intro: sage + two wives
+        drawSky('day');
+        drawBaliSilhouette();
+        drawGround(CH*0.66, '#33461f');
+        drawSage(CW*0.5, CH*0.62, 1.5, '#e8b84b');
+        drawWoman(CW*0.3, CH*0.7, 1.2, '#c0392b', 'Kadru');
+        drawWoman(CW*0.7, CH*0.7, 1.2, '#3b6fc4', 'Winata');
+        drawLabel(CW*0.5, CH*0.62-96, 'Resi Kasyapa');
+        drawLabel(CW*0.3, CH*0.7-70, 'Kadru');
+        drawLabel(CW*0.7, CH*0.7-70, 'Winata');
+        break;
+
+      case 1: // jealousy - tap Kadru
+        drawSky('dusk');
+        drawBaliSilhouette();
+        drawGround(CH*0.66, '#33461f');
+        drawWoman(CW*0.35, CH*0.6, 1.6, '#c0392b');
+        drawWoman(CW*0.68, CH*0.66, 1.15, '#3b6fc4');
+        drawLabel(CW*0.35, CH*0.6-86, 'Kadru');
+        pulseHint(CW*0.35, CH*0.6-20, 60, animPhase);
+        hotspots.push({x:CW*0.35,y:CH*0.6-10,r:70,name:'kadru'});
+        break;
+
+      case 2: // choice scene - horse over ocean
+        drawSky('day');
+        drawOcean(CH*0.55);
+        drawHorse(CW*0.55, CH*0.32, 1.3, '#f4f4f4');
+        drawLabel(CW*0.55, CH*0.32-70, 'Ucaihswara');
+        drawWoman(CW*0.18, CH*0.72, 1.0, '#c0392b');
+        drawWoman(CW*0.85, CH*0.72, 1.0, '#3b6fc4');
+        break;
+
+      case 3: // reveal winata correct
+        drawSky('day');
+        drawOcean(CH*0.55);
+        drawHorse(CW*0.5, CH*0.34, 1.35, '#f4f4f4');
+        drawLabel(CW*0.5, CH*0.34-72, LANG==='en' ? 'White! Winata is right' : 'Putih! Winata benar');
+        drawWoman(CW*0.82, CH*0.7, 1.1, '#3b6fc4');
+        pulseHint(CW*0.5, CH*0.34, 90, animPhase);
+        hotspots.push({x:CW*0.5,y:CH*0.34,r:100,name:'continue'});
+        break;
+
+      case 4: // hold - naga spits venom
+        drawSky('dusk');
+        drawOcean(CH*0.55);
+        drawHorse(CW*0.5, CH*0.4, 1.3, state.holdProgress > 0.55 ? '#1c1c1c' : '#f4f4f4');
+        drawNaga(CW*0.5, CH*0.2, 1.2, false);
+        drawVenomCloud(CW*0.5, CH*0.32, 1, state.holdProgress);
+        drawLabel(CW*0.5, CH*0.2-56, LANG==='en' ? 'The Naga' : 'Sang Naga');
+        break;
+
+      case 5: // winata enslaved / garuda anger - tap garuda
+        drawSky('night');
+        drawGround(CH*0.68, '#20301a');
+        drawWoman(CW*0.25, CH*0.75, 1.1, '#c0392b');
+        drawLabel(CW*0.25, CH*0.75-72, LANG==='en' ? 'Winata enslaved' : 'Winata menjadi budak');
+        drawGaruda(CW*0.68, CH*0.42, 1.2, false);
+        pulseHint(CW*0.68, CH*0.42, 90, animPhase);
+        hotspots.push({x:CW*0.68,y:CH*0.42,r:100,name:'garuda'});
+        break;
+
+      case 6: // mash battle
+        drawSky('night');
+        drawGround(CH*0.7, '#20301a');
+        drawGaruda(CW*0.32, CH*0.42, 1.15, true);
+        drawNaga(CW*0.68, CH*0.5, 1.25, false);
+        drawLabel(CW*0.68, CH*0.5-90, LANG==='en' ? 'Naga' : 'Naga');
+        pulseHint(CW*0.68, CH*0.5-10, 80, animPhase);
+        hotspots.push({x:CW*0.68,y:CH*0.5-10,r:95,name:'mash'});
+        // battle meter (kept clear of the dot progress overlay near the top)
+        ctx.fillStyle = 'rgba(0,0,0,.45)';
+        roundRect(CW*0.5-140, 70, 280, 22, 10); ctx.fill();
+        ctx.fillStyle = '#c0392b';
+        roundRect(CW*0.5-136, 74, Math.max(0,(280-8)*(state.mashCount/state.mashTarget)), 14, 7); ctx.fill();
+        break;
+
+      case 7: // condition set - tap continue
+        drawSky('dusk');
+        drawGround(CH*0.7, '#20301a');
+        drawNaga(CW*0.3, CH*0.55, 1.1, false);
+        drawGaruda(CW*0.7, CH*0.42, 1.0, false);
+        pulseHint(CW*0.5, CH*0.5, 130, animPhase);
+        hotspots.push({x:CW*0.5,y:CH*0.5,r:220,name:'continue'});
+        break;
+
+      case 8: // meet wisnu tap jar
+        drawSky('day');
+        drawBaliSilhouette();
+        drawGround(CH*0.7, '#33461f');
+        drawGaruda(CW*0.28, CH*0.5, 1.0, false);
+        drawWisnu(CW*0.68, CH*0.44, 1.15, true);
+        drawLabel(CW*0.68, CH*0.44-96, 'Dewa Wisnu');
+        pulseHint(CW*0.68+38, CH*0.44+34, 44, animPhase);
+        hotspots.push({x:CW*0.68+38,y:CH*0.44+34,r:60,name:'jar'});
+        break;
+
+      case 9: // choice agree
+        drawSky('day');
+        drawBaliSilhouette();
+        drawGround(CH*0.7, '#33461f');
+        drawGaruda(CW*0.35, CH*0.5, 1.1, false);
+        drawWisnu(CW*0.65, CH*0.44, 1.15, true);
+        break;
+
+      case 10: // garuda wisnu kencana + indra steals
+        drawSky('day');
+        ctx.save(); ctx.translate(0,0);
+        // garuda carrying wisnu
+        drawGaruda(CW*0.42, CH*0.4, 1.3, false);
+        ctx.save();
+        ctx.translate(CW*0.42, CH*0.4 - 40);
+        drawWisnu(0,0,0.8,true);
+        ctx.restore();
+        ctx.restore();
+        drawIndra(CW*0.78, CH*0.22, 1.0);
+        drawLabel(CW*0.78, CH*0.22-70, 'Dewa Indra');
+        pulseHint(CW*0.78, CH*0.22, 70, animPhase);
+        hotspots.push({x:CW*0.78,y:CH*0.22,r:80,name:'indra'});
+        break;
+
+      case 11: // only rope left, tap grass
+        drawSky('dusk');
+        drawGround(CH*0.7, '#20301a');
+        drawGaruda(CW*0.35, CH*0.45, 1.15, false);
+        drawGrass(CW*0.68, CH*0.62, 1.4);
+        drawLabel(CW*0.68, CH*0.62-70, LANG==='en' ? 'Reed grass rope' : 'Tali rumput ilalang');
+        pulseHint(CW*0.68, CH*0.5, 70, animPhase);
+        hotspots.push({x:CW*0.68,y:CH*0.55,r:80,name:'grass'});
+        break;
+
+      case 12: // naga licks, tongue splits
+        drawSky('night');
+        drawGround(CH*0.7, '#20301a');
+        drawGrass(CW*0.5, CH*0.62, 1.4);
+        drawNaga(CW*0.5, CH*0.4, 1.3, state.tongueDone);
+        pulseHint(CW*0.5, CH*0.4, 90, animPhase);
+        hotspots.push({x:CW*0.5,y:CH*0.4,r:100,name:'lick'});
+        break;
+
+      case 13: // ending
+        drawSky('day');
+        drawBaliSilhouette();
+        drawGround(CH*0.7, '#33461f');
+        drawGaruda(CW*0.35, CH*0.46, 1.3, false);
+        ctx.save();
+        ctx.translate(CW*0.35, CH*0.46-46);
+        drawWisnu(0,0,0.85,true);
+        ctx.restore();
+        drawWoman(CW*0.72, CH*0.68, 1.1, '#3b6fc4');
+        drawLabel(CW*0.72, CH*0.68-72, LANG==='en' ? 'Winata, free' : 'Winata, bebas');
+        break;
+    }
+  }
+
+  function loop(ts){
+    animPhase = ts/500;
+    if (state.holdActive){
+      // handled by RAF increment elsewhere
+    }
+    render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ===================== SCENE FLOW ===================== */
+  function currentScene(){ return scenes[state.scene]; }
+
+  function showInstrAndNarr(){
+    var s = currentScene();
+    if (!s){ instrText.textContent=""; narrText.textContent=""; return; }
+    narrText.textContent = t(s.narr);
+    instrText.textContent = t(s.instr);
+  }
+
+  function clearInteractiveUI(){
+    choiceRow.innerHTML = "";
+    choiceRow.classList.add('hidden');
+    holdBar.classList.add('hidden');
+    holdLabel.classList.add('hidden');
+    replayBtn2.style.display = 'none';
+  }
+
+  function setupInteractionUI(){
+    var s = currentScene();
+    clearInteractiveUI();
+    if (!s) return;
+
+    if (s.type === 'choice'){
+      choiceRow.classList.remove('hidden');
+      s.choices.forEach(function(c){
+        var b = document.createElement('button');
+        b.className = 'choiceBtn';
+        b.textContent = t(c);
+        b.onclick = function(){ handleChoice(c.key); };
+        choiceRow.appendChild(b);
+      });
+    } else if (s.type === 'hold'){
+      holdBar.classList.remove('hidden');
+      holdLabel.classList.remove('hidden');
+      holdLabel.textContent = LANG==='en' ? 'Hold the canvas to spray venom' : 'Tahan kanvas untuk menyemburkan racun';
+      holdFill.style.width = '0%';
+    } else if (s.type === 'mash'){
+      // instructions already shown; nothing extra
+    } else if (s.type === 'end'){
+      replayBtn2.style.display = 'inline-block';
+    }
+  }
+
+  function goToScene(i){
+    stopSpeak();
+    state.scene = i;
+    state.locked = false;
+    state.holdProgress = 0;
+    state.mashCount = 0;
+    if (i === 4) state.horseColor = 'white';
+    if (i === 12) state.tongueDone = false;
+    updateDots();
+    showInstrAndNarr();
+    setupInteractionUI();
+    var s = currentScene();
+    if (s) speak(t(s.narr));
+  }
+
+  function advance(){
+    if (state.scene >= TOTAL - 1) return;
+    goToScene(state.scene + 1);
+  }
+
+  function handleChoice(key){
+    if (state.locked) return;
+    state.locked = true;
+    choiceRow.classList.add('hidden');
+    setTimeout(function(){ advance(); }, 500);
+  }
+
+  /* ===================== INPUT: canvas tap ===================== */
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if (evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    var scaleX = CW / rect.width;
+    var scaleY = CH / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }
+
+  function hitTest(pos){
+    for (var i=0;i<hotspots.length;i++){
+      var h = hotspots[i];
+      var dx = pos.x - h.x, dy = pos.y - h.y;
+      if (dx*dx + dy*dy <= h.r*h.r) return h.name;
+    }
+    return null;
+  }
+
+  function onCanvasTap(evt){
+    if (!state.started) return;
+    evt.preventDefault();
+    var s = currentScene();
+    if (!s || state.locked) return;
+    var pos = getCanvasPos(evt);
+    var hit = hitTest(pos);
+
+    if (s.type === 'tap'){
+      // any tap on canvas advances (whole scene is tap-through per instructions,
+      // but if a hotspot exists we still just advance on tap anywhere in canvas)
+      state.locked = true;
+      setTimeout(function(){ advance(); }, 250);
+    } else if (s.type === 'mash'){
+      if (hit === 'mash' || true){ // allow mashing anywhere on canvas per instruction "ketuk Naga"
+        state.mashCount++;
+        if (state.mashCount >= state.mashTarget){
+          state.locked = true;
+          setTimeout(function(){ advance(); }, 350);
+        }
+      }
+    } else if (s.type === 'end'){
+      // no-op, replay button handles restart
+    }
+  }
+
+  /* hold logic for scene 4 */
+  var HOLD_DURATION = 1600; // ms
+  var holdStartTs = 0;
+  function startHold(evt){
+    var s = currentScene();
+    if (!s || s.type !== 'hold' || state.locked) return;
+    evt.preventDefault();
+    state.holdActive = true;
+    holdStartTs = performance.now() - (state.holdProgress * HOLD_DURATION);
+    stepHold();
+  }
+  function stepHold(){
+    if (!state.holdActive) return;
+    var elapsed = performance.now() - holdStartTs;
+    state.holdProgress = Math.min(1, elapsed / HOLD_DURATION);
+    holdFill.style.width = (state.holdProgress*100).toFixed(0) + '%';
+    if (state.holdProgress >= 1){
+      state.holdActive = false;
+      state.locked = true;
+      setTimeout(function(){ advance(); }, 400);
+      return;
+    }
+    state.holdRAF = requestAnimationFrame(stepHold);
+  }
+  function endHold(){
+    var s = currentScene();
+    if (!s || s.type !== 'hold') return;
+    state.holdActive = false;
+    if (state.holdRAF) cancelAnimationFrame(state.holdRAF);
+    if (state.holdProgress < 1){
+      // decay slowly if released early
+      var decay = setInterval(function(){
+        state.holdProgress = Math.max(0, state.holdProgress - 0.05);
+        holdFill.style.width = (state.holdProgress*100).toFixed(0) + '%';
+        if (state.holdProgress <= 0) clearInterval(decay);
+      }, 60);
+    }
+  }
+
+  canvas.addEventListener('mousedown', function(e){ startHold(e); });
+  canvas.addEventListener('touchstart', function(e){ startHold(e); }, {passive:false});
+  canvas.addEventListener('mouseup', endHold);
+  canvas.addEventListener('mouseleave', endHold);
+  canvas.addEventListener('touchend', endHold);
+  canvas.addEventListener('click', onCanvasTap);
+  canvas.addEventListener('touchend', function(e){
+    // treat as tap too for 'tap'/'mash' scenes (touchstart used for hold scenes only)
+    var s = currentScene();
+    if (s && (s.type === 'tap' || s.type === 'mash' || s.type==='end')) onCanvasTap(e);
+  });
+
+  /* ===================== START / REPLAY ===================== */
+  function startStory(){
+    state.started = true;
+    overlay.classList.remove('show');
+    overlay.style.display = 'none';
+    goToScene(0);
+  }
+  function restartStory(){
+    overlay.style.display = 'flex';
+    overlay.classList.add('show');
+    startBtn.textContent = t(UI.replay);
+    state.started = false;
+    stopSpeak();
+    state.scene = -1;
+    updateDots();
+    narrText.textContent = "";
+    instrText.textContent = "";
+    clearInteractiveUI();
+  }
+
+  startBtn.addEventListener('click', function(){
+    if (!state.started){
+      startStory();
+    }
+  });
+  replayBtn2.addEventListener('click', restartStory);
+
+  /* ===================== MUTE ===================== */
+  function updateMuteBtn(){
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  }
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('gwk_muted', state.muted ? '1':'0');
+    updateMuteBtn();
+    if (state.muted) stopSpeak();
+    else { var s = currentScene(); if (s) speak(t(s.narr)); }
+  });
+
+  /* ===================== LANG TOGGLE ===================== */
+  langBtn.addEventListener('click', function(){
+    LANG = (LANG === 'en') ? 'id' : 'en';
+    applyStaticText();
+    showInstrAndNarr();
+    setupInteractionUI();
+    var s = currentScene();
+    if (s && state.started) speak(t(s.narr));
+    // update URL param without reload
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', LANG);
+    window.history.replaceState({}, '', url);
+  });
+
+  /* ===================== IFRAME AUTO-RESIZE ===================== */
+  function postHeight(){
+    var h = document.getElementById('gwk-root').scrollHeight;
+    try{
+      window.parent.postMessage({ type:'gwk-resize', height: h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  new ResizeObserver(postHeight).observe(document.getElementById('gwk-root'));
+
+  /* ===================== INIT ===================== */
+  applyStaticText();
+  updateMuteBtn();
+  buildDots();
+  updateDots();
+  render();
+  setTimeout(postHeight, 200);
+
+})();
+</script>
+</body>
+</html>
