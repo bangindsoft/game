@@ -3,766 +3,999 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Putri Tidur / Sleeping Beauty</title>
+<title>Putri Tidur - Sleeping Beauty</title>
 <style>
   :root{
-    --bg-deep:#241028;
-    --bg-mid:#3a1a44;
-    --panel:#2c1433;
-    --gold:#e8c26a;
-    --gold-soft:#f2d999;
-    --rose:#d94f6e;
-    --rose-dark:#8c2f45;
-    --cream:#fbf3e3;
-    --thorn:#2f4a2f;
+    --pink:#f9e4ea;
+    --pink-deep:#e78ca2;
+    --gold:#caa14a;
+    --purple:#4a2e5c;
+    --ink:#3a2e2e;
+    --green:#3f6b3f;
+    --cream:#fff8f0;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:transparent;}
-  body{
-    font-family:'Georgia','Palatino Linotype',serif;
-    color:var(--cream);
-    display:flex;
-    justify-content:center;
+  html,body{
+    margin:0; padding:0;
+    font-family:'Segoe UI', 'Trebuchet MS', sans-serif;
+    background: linear-gradient(180deg,#f9e4ea 0%, #fdf3e7 100%);
+    color:var(--ink);
+    display:flex; justify-content:center;
   }
-  #wrap{
-    width:100%;
-    max-width:720px;
-    background:linear-gradient(180deg,var(--bg-deep),var(--bg-mid));
-    border-radius:18px;
-    padding:14px 14px 18px;
-    box-shadow:0 8px 30px rgba(0,0,0,.35);
-    position:relative;
-    overflow:hidden;
+  #app{
+    width:100%; max-width:720px;
+    padding:10px 10px 4px;
   }
-  #wrap::before{
-    content:"";
-    position:absolute;inset:0;
-    background:
-      radial-gradient(circle at 15% 10%, rgba(232,194,106,.10), transparent 40%),
-      radial-gradient(circle at 85% 90%, rgba(217,79,110,.12), transparent 45%);
-    pointer-events:none;
-  }
-  #topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:8px;
-    position:relative;
-    z-index:2;
-  }
-  #title{
-    font-size:15px;
-    letter-spacing:1px;
-    color:var(--gold-soft);
-    font-weight:bold;
-    text-shadow:0 1px 3px rgba(0,0,0,.4);
-  }
-  .iconbtn{
-    background:var(--panel);
-    border:1px solid rgba(232,194,106,.35);
-    color:var(--gold-soft);
-    border-radius:10px;
-    padding:6px 10px;
-    font-size:13px;
-    cursor:pointer;
-    font-family:inherit;
-    margin-left:6px;
-    transition:background .15s, transform .1s;
-  }
-  .iconbtn:hover{background:#3d1e46;}
-  .iconbtn:active{transform:scale(0.95);}
-  .iconbtn.active{border-color:var(--rose);color:var(--rose);}
-  #stage-holder{
-    position:relative;
-    border-radius:14px;
-    overflow:hidden;
-    border:1px solid rgba(232,194,106,.25);
-    background:#1a0d20;
-    z-index:1;
-  }
-  canvas{display:block;width:100%;height:auto;}
-  #panel{
-    position:relative;
-    z-index:2;
-    margin-top:12px;
-    background:var(--panel);
-    border:1px solid rgba(232,194,106,.25);
-    border-radius:14px;
-    padding:14px 16px;
-  }
-  #narrationText{
-    font-size:15.5px;
-    line-height:1.55;
-    min-height:64px;
-    color:var(--cream);
-  }
-  #progressDots{
-    display:flex;
-    gap:5px;
-    margin:10px 0 4px;
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 4px 10px;
     flex-wrap:wrap;
+    gap:6px;
+  }
+  h1{
+    font-size:1.25rem; margin:0;
+    color:var(--purple);
+    text-shadow:1px 1px 0 #fff;
+  }
+  .controls{
+    display:flex; gap:6px;
+  }
+  .ctrlBtn{
+    border:2px solid var(--gold);
+    background:var(--cream);
+    color:var(--ink);
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:0.85rem;
+    cursor:pointer;
+    font-weight:600;
+    transition:transform .15s;
+  }
+  .ctrlBtn:active{ transform:scale(0.94); }
+  .stage{
+    position:relative;
+    width:100%;
+    background:#dfe7ef;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 14px rgba(0,0,0,0.15);
+    touch-action:none;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    cursor:pointer;
+  }
+  #startOverlay{
+    position:absolute; inset:0;
+    background:rgba(74,46,92,0.88);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; color:#fff; padding:20px;
+    gap:14px;
+  }
+  #startOverlay h2{ font-size:1.5rem; margin:0; }
+  #startOverlay p{ font-size:0.95rem; max-width:420px; margin:0; line-height:1.5;}
+  .bigBtn{
+    background:var(--gold);
+    border:none; color:#3a2e2e; font-weight:700;
+    padding:12px 26px; border-radius:30px; font-size:1rem;
+    cursor:pointer; box-shadow:0 4px 0 #9c7c33;
+  }
+  .bigBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #9c7c33; }
+  .hidden{ display:none !important; }
+  #dots{
+    display:flex; justify-content:center; gap:7px; margin:10px 0 6px;
   }
   .dot{
-    width:7px;height:7px;border-radius:50%;
-    background:rgba(232,194,106,.25);
+    width:9px; height:9px; border-radius:50%;
+    background:#d8c3cd; transition:background .3s, transform .3s;
   }
-  .dot.done{background:var(--gold);}
-  .dot.now{background:var(--rose);}
-  #controls{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:10px;
+  .dot.filled{ background:var(--pink-deep); transform:scale(1.25); }
+  .dot.current{ background:var(--gold); }
+  #textBox{
+    background:var(--cream);
+    border:2px solid #f0d9c8;
+    border-radius:12px;
+    padding:10px 14px;
+    margin-top:4px;
+    min-height:54px;
   }
-  .mainbtn{
-    background:linear-gradient(180deg,var(--rose),var(--rose-dark));
-    color:var(--cream);
-    border:none;
-    border-radius:10px;
-    padding:10px 20px;
-    font-size:14.5px;
-    font-family:inherit;
-    font-weight:bold;
-    cursor:pointer;
-    box-shadow:0 3px 8px rgba(0,0,0,.3);
-    transition:transform .1s;
+  #narrationText{
+    font-style:italic;
+    color:#5a4a4a;
+    font-size:0.92rem;
+    margin:0 0 6px;
+    line-height:1.45;
   }
-  .mainbtn:active{transform:scale(0.96);}
-  .mainbtn:disabled{opacity:.4;cursor:not-allowed;}
-  .ghostbtn{
-    background:transparent;
-    color:var(--gold-soft);
-    border:1px solid rgba(232,194,106,.35);
-    border-radius:10px;
-    padding:9px 14px;
-    font-size:13px;
-    font-family:inherit;
-    cursor:pointer;
+  #instructionText{
+    font-weight:700;
+    color:var(--purple);
+    font-size:0.95rem;
+    margin:0;
+    line-height:1.4;
   }
-  #qteWrap{margin-top:10px;}
-  #qteBarBg{
-    width:100%;height:18px;border-radius:9px;
-    background:rgba(255,255,255,.08);
-    position:relative;overflow:hidden;
-    border:1px solid rgba(232,194,106,.3);
+  #instructionText::before{
+    content:"👉 ";
   }
-  #qteBarFill{
-    height:100%;width:0%;
-    background:linear-gradient(90deg,var(--gold),var(--rose));
-    transition:width .12s linear;
-  }
-  #qteHint{font-size:12.5px;color:var(--gold-soft);margin-top:6px;text-align:center;}
-  .lang-toggle{display:flex;}
-  .lang-btn{
-    background:var(--panel);
-    border:1px solid rgba(232,194,106,.3);
-    color:var(--gold-soft);
-    padding:5px 9px;
-    font-size:12px;
-    cursor:pointer;
-    font-family:inherit;
-  }
-  .lang-btn:first-child{border-radius:8px 0 0 8px;}
-  .lang-btn:last-child{border-radius:0 8px 8px 0;}
-  .lang-btn.active{background:var(--rose);color:#fff;border-color:var(--rose);}
-  #creditline{
+  footer{
     text-align:center;
-    font-size:10.5px;
-    color:rgba(251,243,227,.35);
-    margin-top:10px;
-    letter-spacing:.5px;
+    font-size:0.72rem;
+    color:#a08c8c;
+    margin:14px 0 6px;
+  }
+  .replayWrap{
+    display:flex; justify-content:center; margin-top:10px;
   }
 </style>
 </head>
 <body>
-<div id="wrap">
-  <div id="topbar">
-    <div id="title">🌹 Putri Tidur</div>
-    <div style="display:flex;align-items:center;">
-      <div class="lang-toggle">
-        <button class="lang-btn" data-lang="id">ID</button>
-        <button class="lang-btn" data-lang="en">EN</button>
-      </div>
-      <button class="iconbtn" id="muteBtn">🔊</button>
+<div id="app">
+  <header>
+    <h1 id="titleText">🌹 Putri Tidur</h1>
+    <div class="controls">
+      <button class="ctrlBtn" id="langBtn" title="Ganti bahasa">EN</button>
+      <button class="ctrlBtn" id="muteBtn" title="Bisukan suara">🔊</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="game" width="700" height="460"></canvas>
+    <div id="startOverlay">
+      <h2 id="startTitle">Putri Tidur</h2>
+      <p id="startDesc">Sebuah dongeng klasik dari Jerman tentang seorang putri, kutukan jahat, dan cinta sejati yang membangunkannya dari tidur seratus tahun.</p>
+      <button class="bigBtn" id="startBtn">▶ Mulai Cerita</button>
     </div>
   </div>
 
-  <div id="stage-holder">
-    <canvas id="stage" width="800" height="450"></canvas>
+  <div id="dots"></div>
+
+  <div id="textBox">
+    <p id="narrationText"></p>
+    <p id="instructionText"></p>
   </div>
 
-  <div id="panel">
-    <div id="narrationText"></div>
-
-    <div id="qteWrap" style="display:none;">
-      <div id="qteBarBg"><div id="qteBarFill"></div></div>
-      <div id="qteHint"></div>
-    </div>
-
-    <div id="progressDots"></div>
-
-    <div id="controls">
-      <button class="ghostbtn" id="skipBtn"></button>
-      <button class="mainbtn" id="nextBtn"></button>
-    </div>
-    <div id="creditline">caritasato.blogspot.com — Dongeng Nusantara & Dunia</div>
+  <div class="replayWrap hidden" id="replayWrap">
+    <button class="bigBtn" id="replayBtn">🔁 Ulangi Cerita</button>
   </div>
+
+  <footer>Kisah Klasik Dunia • Dongeng Interaktif</footer>
 </div>
 
 <script>
 (function(){
-  // ---------- Language ----------
-  const params = new URLSearchParams(location.search);
-  let lang = params.get('lang') === 'en' ? 'en' : 'id';
-  let muted = false;
+  "use strict";
 
+  /* ---------------- Setup & State ---------------- */
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  const startOverlay = document.getElementById('startOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const replayWrap = document.getElementById('replayWrap');
+  const replayBtn = document.getElementById('replayBtn');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const dotsEl = document.getElementById('dots');
+  const narrationEl = document.getElementById('narrationText');
+  const instructionEl = document.getElementById('instructionText');
+  const titleText = document.getElementById('titleText');
+  const startTitle = document.getElementById('startTitle');
+  const startDesc = document.getElementById('startDesc');
+
+  const TOTAL_SCENES = 8; // dots represent scenes 1..8
+
+  const params = new URLSearchParams(window.location.search);
+  const initialLang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  const state = {
+    scene: 0, // 0 intro, 1..8 story, 9 ending
+    lang: initialLang,
+    muted: (localStorage.getItem('putriTidurMuted') === 'true'),
+    s1Step: 0,       // scene1 sequential fairy taps 0..3 (3 good fairies), then 4 = evil tapped
+    s2Hold: 0,       // scene2 hold progress 0..100
+    s2Holding:false,
+    s3Fire: 0,       // scene3 mash progress
+    s5Dragging:false,
+    s5DragPos:{x:0,y:0},
+    s5Done:false,
+    s7Cut: 0,        // scene7 mash progress
+    s8Step: 0,       // 0 = need approach tap, 1 = need kiss tap, 2 = done
+    particles: [],
+    lastTime: 0
+  };
+
+  let currentUtterance = null;
+  let voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  /* ---------------- Text content ---------------- */
   const T = {
     id: {
-      title:"Putri Tidur",
-      skip:"Lewati Cerita",
-      next:"Lanjut",
-      start:"Mulai Cerita",
-      restart:"Ulangi Cerita",
-      qteSpindle:"Ketuk tombol saat jarum menyentuh area merah!",
-      qteThorn:"Ketuk terus untuk menebas semak duri!",
-      tapBtn:"Ketuk!",
-      cutBtn:"Tebas!",
+      title: "🌹 Putri Tidur",
+      startTitle: "Putri Tidur",
+      startDesc: "Sebuah dongeng klasik dari Jerman tentang seorang putri, kutukan jahat, dan cinta sejati yang membangunkannya dari tidur seratus tahun.",
+      startBtn: "▶ Mulai Cerita",
+      replayBtn: "🔁 Ulangi Cerita",
+      lang: "EN",
+      scenes: {
+        1: {
+          narration: "Raja dan Ratu bersukacita atas kelahiran putri mereka. Mereka mengundang peri-peri baik untuk memberi hadiah bagi sang bayi.",
+          instr: ["Ketuk peri di sebelah kiri untuk memberi hadiah kecantikan.",
+                  "Ketuk peri di tengah untuk memberi hadiah suara merdu.",
+                  "Ketuk peri di sebelah kanan untuk memberi hadiah kebijaksanaan.",
+                  "Peri jahat yang tak diundang muncul! Ketuk dia untuk mendengar kutukannya."]
+        },
+        2: {
+          narration: "Peri jahat mengutuk sang putri: ia akan tertusuk jarum pemintal dan mati saat berusia enam belas tahun. Untung, peri baik kedua belas belum sempat memberi hadiahnya.",
+          instr: "Tekan dan tahan tongkat peri baik untuk melemahkan kutukan itu."
+        },
+        3: {
+          narration: "Peri baik itu tak bisa menghapus kutukan sepenuhnya, tapi ia melunakkannya: sang putri tidak akan mati, hanya tertidur selama seratus tahun. Sang Raja pun memerintahkan semua roda pemintal di kerajaan dimusnahkan.",
+          instr: "Ketuk tumpukan roda pemintal berkali-kali untuk membakarnya."
+        },
+        4: {
+          narration: "Enam belas tahun berlalu. Putri tumbuh menjadi gadis yang ceria dan suka menjelajah. Suatu hari, ia menemukan sebuah menara tua yang belum pernah ia masuki.",
+          instr: "Ketuk pintu menara untuk menjelajahinya."
+        },
+        5: {
+          narration: "Di puncak menara, seorang wanita tua duduk memintal benang dengan roda pemintal tua. Putri, yang belum pernah melihat benda itu, mendekat dengan penasaran.",
+          instr: "Seret jari Putri menuju roda pemintal untuk menyentuhnya."
+        },
+        6: {
+          narration: "Begitu jarinya tertusuk jarum pemintal, Putri pun jatuh tertidur. Dalam sekejap, seluruh istana ikut tertidur: Raja, Ratu, para pelayan, bahkan api di perapian.",
+          instr: "Ketuk di mana saja untuk melanjutkan cerita."
+        },
+        7: {
+          narration: "Seratus tahun berlalu. Semak duri tumbuh lebat mengelilingi istana. Seorang pangeran dari negeri jauh mendengar kisah sang putri dan bertekad membangunkannya.",
+          instr: "Ketuk semak duri berkali-kali agar Pangeran bisa membuka jalan."
+        },
+        8: {
+          narration: "Pangeran akhirnya sampai di kamar puncak menara, dan menemukan Putri tertidur lelap dengan damai.",
+          instr: ["Ketuk pintu kamar untuk mendekati Putri.",
+                  "Ketuk Putri dengan lembut untuk membangunkannya."]
+        },
+        9: {
+          narration: "Putri pun terbangun, dan seketika seluruh istana ikut terjaga. Raja dan Ratu bersukacita, dan sang Putri hidup bahagia bersama Pangeran selamanya.",
+          instr: ""
+        }
+      },
+      endingTitle: "~ Tamat ~"
     },
     en: {
-      title:"Sleeping Beauty",
-      skip:"Skip Story",
-      next:"Next",
-      start:"Start Story",
-      restart:"Replay Story",
-      qteSpindle:"Tap the button when the needle hits the red zone!",
-      qteThorn:"Keep tapping to cut through the thorns!",
-      tapBtn:"Tap!",
-      cutBtn:"Cut!",
+      title: "🌹 Sleeping Beauty",
+      startTitle: "Sleeping Beauty",
+      startDesc: "A classic German fairy tale about a princess, a wicked curse, and true love that wakes her from a hundred years of sleep.",
+      startBtn: "▶ Start Story",
+      replayBtn: "🔁 Replay Story",
+      lang: "ID",
+      scenes: {
+        1: {
+          narration: "The King and Queen rejoiced at the birth of their daughter. They invited good fairies to bless the baby with gifts.",
+          instr: ["Tap the fairy on the left to grant the gift of beauty.",
+                  "Tap the fairy in the middle to grant a sweet voice.",
+                  "Tap the fairy on the right to grant wisdom.",
+                  "An uninvited wicked fairy appears! Tap her to hear her curse."]
+        },
+        2: {
+          narration: "The wicked fairy cursed the princess: she would prick her finger on a spindle and die at sixteen. Luckily, the twelfth good fairy had not yet given her gift.",
+          instr: "Press and hold the good fairy's wand to weaken the curse."
+        },
+        3: {
+          narration: "The fairy could not undo the curse completely, but softened it: the princess would not die, only fall asleep for a hundred years. The King ordered every spinning wheel in the kingdom destroyed.",
+          instr: "Tap the pile of spinning wheels repeatedly to burn them."
+        },
+        4: {
+          narration: "Sixteen years passed. The princess grew into a cheerful, curious girl. One day she found an old tower she had never entered before.",
+          instr: "Tap the tower door to explore it."
+        },
+        5: {
+          narration: "At the top of the tower, an old woman sat spinning thread on an ancient spinning wheel. The princess, who had never seen such a thing, drew near with curiosity.",
+          instr: "Drag the princess's finger toward the spinning wheel to touch it."
+        },
+        6: {
+          narration: "The moment her finger touched the spindle, the princess fell asleep. In an instant, the whole castle fell asleep too: the King, the Queen, the servants, even the fire in the hearth.",
+          instr: "Tap anywhere to continue the story."
+        },
+        7: {
+          narration: "A hundred years passed. Thick thorn bushes grew around the castle. A prince from a distant land heard the tale of the sleeping princess and vowed to wake her.",
+          instr: "Tap the thorn bushes repeatedly so the Prince can clear a path."
+        },
+        8: {
+          narration: "At last the Prince reached the tower room, and found the princess sleeping peacefully.",
+          instr: ["Tap the room door to approach the princess.",
+                  "Gently tap the princess to wake her."]
+        },
+        9: {
+          narration: "The princess awoke, and at once the whole castle woke with her. The King and Queen rejoiced, and the princess lived happily ever after with the Prince.",
+          instr: ""
+        }
+      },
+      endingTitle: "~ The End ~"
     }
   };
 
-  // ---------- Scenes ----------
-  const scenes = [
-    {
-      type:"title",
-      id:"Pada suatu masa di Prancis, seorang Raja dan Ratu telah lama menantikan kehadiran seorang putri. Ketika sang putri lahir, seluruh negeri bersukacita.",
-      en:"Once upon a time in France, a King and Queen had long awaited the birth of a princess. When she finally arrived, the whole kingdom rejoiced."
-    },
-    {
-      type:"narrative",
-      id:"Untuk merayakan kelahiran sang putri, tujuh peri baik diundang ke istana untuk memberikan hadiah ajaib: kecantikan, kebijaksanaan, dan suara yang merdu.",
-      en:"To celebrate the princess's birth, seven good fairies were invited to the castle to bestow magical gifts: beauty, wisdom, and a lovely voice."
-    },
-    {
-      type:"narrative",
-      id:"Namun seorang peri jahat yang tak diundang datang dengan murka. Ia mengutuk sang putri: pada usia enam belas tahun, ia akan tertusuk jarum pemintal dan mati.",
-      en:"But an uninvited wicked fairy arrived in fury. She cursed the princess: on her sixteenth birthday, she would prick her finger on a spindle and die."
-    },
-    {
-      type:"narrative",
-      id:"Untunglah, salah satu peri baik belum memberi hadiahnya. Ia tak bisa membatalkan kutukan sepenuhnya, namun ia mengubahnya — bukan kematian, melainkan tidur selama seratus tahun.",
-      en:"Fortunately, one good fairy had not yet given her gift. She could not undo the curse entirely, but she softened it — instead of death, a sleep of one hundred years."
-    },
-    {
-      type:"narrative",
-      id:"Sang Raja pun memerintahkan agar semua roda pemintal di kerajaan dimusnahkan. Bertahun-tahun berlalu, sang putri tumbuh menjadi gadis yang cantik dan riang.",
-      en:"The King ordered every spinning wheel in the kingdom to be destroyed. Years passed, and the princess grew into a beautiful, cheerful young woman."
-    },
-    {
-      type:"qte_spindle",
-      id:"Tepat pada hari ulang tahunnya yang keenam belas, sang putri menjelajahi menara tua istana dan menemukan seorang nenek sedang memintal benang...",
-      en:"On her sixteenth birthday, the princess explored the old castle tower and found an old woman spinning thread..."
-    },
-    {
-      type:"narrative",
-      id:"Seketika itu juga, sang putri dan seluruh isi istana — raja, ratu, para pelayan, bahkan kucing istana — tertidur lelap oleh kutukan sang peri jahat.",
-      en:"At that very moment, the princess and everyone in the castle — the king, the queen, the servants, even the palace cat — fell into a deep enchanted sleep."
-    },
-    {
-      type:"timelapse",
-      id:"Seratus tahun berlalu. Semak duri raksasa tumbuh mengelilingi istana, menyembunyikannya dari dunia luar. Legenda tentang putri yang tertidur pun tersebar luas.",
-      en:"A hundred years passed. Giant thorn bushes grew around the castle, hiding it from the outside world. Legends of the sleeping princess spread far and wide."
-    },
-    {
-      type:"qte_thorn",
-      id:"Seorang pangeran dari kerajaan tetangga mendengar kisah itu dan bertekad menyelamatkan sang putri. Ia menebas semak duri yang menghalangi jalannya.",
-      en:"A prince from a neighboring kingdom heard the tale and vowed to rescue the princess. He hacked through the thorny brambles blocking his path."
-    },
-    {
-      type:"narrative",
-      id:"Sang pangeran akhirnya sampai ke kamar sang putri. Ia begitu terpesona hingga berlutut dan mengecup kening sang putri dengan lembut.",
-      en:"At last the prince reached the princess's chamber. Enchanted by her beauty, he knelt down and gently kissed her forehead."
-    },
-    {
-      type:"ending",
-      id:"Sang putri pun terbangun! Seluruh istana ikut terbangun bersamanya — pesta pun digelar, dan mereka hidup bahagia selamanya.",
-      en:"The princess awoke! The whole castle awakened with her — a grand celebration was held, and they lived happily ever after."
-    }
-  ];
-
-  let sceneIndex = 0;
-  const canvas = document.getElementById('stage');
-  const ctx = canvas.getContext('2d');
-  const narrationText = document.getElementById('narrationText');
-  const nextBtn = document.getElementById('nextBtn');
-  const skipBtn = document.getElementById('skipBtn');
-  const muteBtn = document.getElementById('muteBtn');
-  const progressDots = document.getElementById('progressDots');
-  const qteWrap = document.getElementById('qteWrap');
-  const qteBarFill = document.getElementById('qteBarFill');
-  const qteHint = document.getElementById('qteHint');
-
-  function buildDots(){
-    progressDots.innerHTML = '';
-    scenes.forEach((s,i)=>{
-      const d = document.createElement('div');
-      d.className = 'dot' + (i<sceneIndex?' done':'') + (i===sceneIndex?' now':'');
-      progressDots.appendChild(d);
-    });
-  }
-
-  // ---------- Drawing helpers ----------
-  function grad(x0,y0,x1,y1,stops){
-    const g = ctx.createLinearGradient(x0,y0,x1,y1);
-    stops.forEach(s=>g.addColorStop(s[0],s[1]));
-    return g;
-  }
-
-  function drawSky(topColor,botColor){
-    ctx.fillStyle = grad(0,0,0,450,[[0,topColor],[1,botColor]]);
-    ctx.fillRect(0,0,800,450);
-  }
-
-  function drawStars(n,opacity){
-    ctx.fillStyle = 'rgba(255,255,255,'+opacity+')';
-    for(let i=0;i<n;i++){
-      const x = (i*97 % 800);
-      const y = (i*53 % 220);
-      const r = (i%3===0)?1.6:1;
-      ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
-    }
-  }
-
-  function drawMoon(){
-    ctx.fillStyle = '#f2e9c9';
-    ctx.beginPath();ctx.arc(700,70,26,0,7);ctx.fill();
-  }
-
-  function drawCastle(baseY, glowRoses){
-    ctx.save();
-    ctx.translate(400,baseY);
-    // ground
-    ctx.fillStyle = '#241533';
-    ctx.fillRect(-400,0,800,450-baseY);
-    // towers
-    function tower(x,w,h,capColor){
-      ctx.fillStyle = '#4b2b57';
-      ctx.fillRect(x-w/2,-h,w,h);
-      ctx.fillStyle = capColor;
-      ctx.beginPath();
-      ctx.moveTo(x-w/2-6,-h);
-      ctx.lineTo(x,-h-40);
-      ctx.lineTo(x+w/2+6,-h);
-      ctx.closePath();ctx.fill();
-      ctx.fillStyle = '#f2d999';
-      ctx.fillRect(x-6,-h+18,12,16);
-    }
-    ctx.fillStyle = '#3a2044';
-    ctx.fillRect(-140,-160,280,160);
-    tower(-160,60,190,'#7a2f45');
-    tower(160,60,190,'#7a2f45');
-    tower(0,50,230,'#8c3a52');
-    // door
-    ctx.fillStyle='#1c0f22';
-    ctx.beginPath();
-    ctx.moveTo(-22,0);ctx.lineTo(-22,-45);
-    ctx.quadraticCurveTo(0,-70,22,-45);
-    ctx.lineTo(22,0);ctx.closePath();ctx.fill();
-
-    if(glowRoses){
-      for(let i=0;i<14;i++){
-        const rx = -220 + i*33 + (i%2)*10;
-        const ry = -6 - (i%3)*4;
-        ctx.fillStyle = i%2===0 ? '#d94f6e' : '#8c2f45';
-        ctx.beginPath();ctx.arc(rx,ry,5,0,7);ctx.fill();
-      }
-    }
-    ctx.restore();
-  }
-
-  function drawThornVines(coverage){
-    ctx.save();
-    ctx.strokeStyle = '#2f4a2f';
-    ctx.lineWidth = 6;
-    const count = 10;
-    for(let i=0;i<count;i++){
-      const startX = i*80;
-      const h = 450*coverage;
-      ctx.beginPath();
-      ctx.moveTo(startX, 450);
-      ctx.quadraticCurveTo(startX+40, 450-h*0.6, startX+10, 450-h);
-      ctx.stroke();
-      // thorn leaves
-      for(let j=0;j<4;j++){
-        const t = j/4;
-        const px = startX + 20*t;
-        const py = 450 - h*t;
-        ctx.fillStyle = '#3f6b3f';
-        ctx.beginPath();
-        ctx.ellipse(px, py, 6,3, Math.PI/4,0,7);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-  }
-
-  function drawPrincess(x,y,scale,asleep){
-    ctx.save();
-    ctx.translate(x,y);ctx.scale(scale,scale);
-    // dress
-    ctx.fillStyle = '#e8c26a';
-    ctx.beginPath();
-    ctx.moveTo(-24,60);ctx.lineTo(24,60);ctx.lineTo(14,0);ctx.lineTo(-14,0);
-    ctx.closePath();ctx.fill();
-    // head
-    ctx.fillStyle = '#f4d9b8';
-    ctx.beginPath();ctx.arc(0,-16,16,0,7);ctx.fill();
-    // hair
-    ctx.fillStyle = '#5a3220';
-    ctx.beginPath();ctx.arc(0,-20,17,Math.PI,0);ctx.fill();
-    ctx.fillRect(-17,-20,6,28);
-    ctx.fillRect(11,-20,6,28);
-    // eyes
-    ctx.fillStyle = '#2c1433';
-    if(asleep){
-      ctx.fillRect(-8,-16,5,2);
-      ctx.fillRect(3,-16,5,2);
-    } else {
-      ctx.beginPath();ctx.arc(-6,-17,1.6,0,7);ctx.fill();
-      ctx.beginPath();ctx.arc(6,-17,1.6,0,7);ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawPrince(x,y,scale){
-    ctx.save();
-    ctx.translate(x,y);ctx.scale(scale,scale);
-    ctx.fillStyle = '#3a5a9c';
-    ctx.beginPath();
-    ctx.moveTo(-20,60);ctx.lineTo(20,60);ctx.lineTo(12,0);ctx.lineTo(-12,0);
-    ctx.closePath();ctx.fill();
-    ctx.fillStyle = '#f4d9b8';
-    ctx.beginPath();ctx.arc(0,-16,15,0,7);ctx.fill();
-    ctx.fillStyle = '#2c1a10';
-    ctx.beginPath();ctx.arc(0,-22,15,Math.PI,0);ctx.fill();
-    ctx.fillStyle='#e8c26a';
-    ctx.beginPath();ctx.arc(0,-28,6,0,7);ctx.fill();
-    ctx.restore();
-  }
-
-  function drawFairy(x,y,scale,color){
-    ctx.save();
-    ctx.translate(x,y);ctx.scale(scale,scale);
-    ctx.globalAlpha = 0.95;
-    ctx.fillStyle = color;
-    ctx.beginPath();ctx.ellipse(0,0,18,26,0,0,7);ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.5)';
-    ctx.beginPath();ctx.ellipse(-22,-6,16,8,-0.4,0,7);ctx.fill();
-    ctx.beginPath();ctx.ellipse(22,-6,16,8,0.4,0,7);ctx.fill();
-    ctx.fillStyle = '#f4d9b8';
-    ctx.beginPath();ctx.arc(0,-26,9,0,7);ctx.fill();
-    ctx.restore();
-  }
-
-  function drawSpindle(x,y,angle){
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.fillStyle = '#3a2417';
-    ctx.fillRect(-4,-50,8,100);
-    ctx.save();
-    ctx.rotate(angle);
-    ctx.strokeStyle = '#e8c26a';
-    ctx.lineWidth = 3;
-    ctx.beginPath();ctx.arc(0,0,40,0,7);ctx.stroke();
-    ctx.beginPath();
-    for(let i=0;i<8;i++){
-      const a = i*Math.PI/4;
-      ctx.moveTo(0,0);
-      ctx.lineTo(Math.cos(a)*40,Math.sin(a)*40);
-    }
-    ctx.stroke();
-    ctx.restore();
-    ctx.restore();
-  }
-
-  // ---------- Scene renderers ----------
-  let animT = 0;
-  let raf = null;
-
-  function render(){
-    const sc = scenes[sceneIndex];
-    ctx.clearRect(0,0,800,450);
-    switch(sc.type){
-      case 'title':
-        drawSky('#3a1a44','#1a0d20');
-        drawStars(60,0.5);
-        drawMoon();
-        drawCastle(360,false);
-        drawPrincess(300,398,1.6,false);
-        break;
-      case 'narrative':
-        if(sceneIndex<=3){
-          drawSky('#4a2050','#241028');
-          drawStars(40,0.35);
-          drawCastle(370,false);
-          drawFairy(560,150,1.3,'#e0483e');
-          drawFairy(260,160,1.1,'#e8c26a');
-          drawFairy(420,120,1.0,'#7fb3d5');
-        } else if(sceneIndex===4){
-          drawSky('#6a3a5a','#241028');
-          drawStars(20,0.2);
-          drawCastle(370,false);
-          drawPrincess(400,398,1.7,false);
-        } else if(sceneIndex===6){
-          drawSky('#241028','#120814');
-          drawStars(70,0.6);
-          drawMoon();
-          drawCastle(370,true);
-          drawPrincess(360,390,1.3,true);
-        } else {
-          drawSky('#4a2050','#241028');
-          drawStars(40,0.3);
-          drawCastle(370,true);
-          drawPrincess(430,390,1.3,true);
-          drawPrince(340,398,1.3);
-        }
-        break;
-      case 'qte_spindle':
-        drawSky('#5a2a50','#241028');
-        drawCastle(400,false);
-        drawSpindle(400,260,animT*0.15);
-        drawPrincess(500,340,1.1,false);
-        break;
-      case 'timelapse': {
-        drawSky('#241028','#120814');
-        drawStars(50,0.5);
-        drawMoon();
-        drawCastle(370,true);
-        const cov = Math.min(1, (animT%240)/240);
-        drawThornVines(cov*0.9+0.1);
-        break;
-      }
-      case 'qte_thorn':
-        drawSky('#4a2050','#1a0d20');
-        drawCastle(370,true);
-        drawThornVines(0.9 - qteProgress*0.7);
-        drawPrince(200,398,1.3);
-        break;
-      case 'ending':
-        drawSky('#e8c26a','#d94f6e');
-        drawStars(0,0);
-        drawCastle(370,true);
-        drawPrincess(360,390,1.4,false);
-        drawPrince(440,398,1.4);
-        // confetti
-        for(let i=0;i<30;i++){
-          const cx = (i*53+animT*2)%800;
-          const cy = (i*37+animT*3)%450;
-          ctx.fillStyle = i%2===0?'#fff':'#e8c26a';
-          ctx.fillRect(cx,cy,4,4);
-        }
-        break;
-    }
-  }
-
-  function loop(){
-    animT++;
-    render();
-    raf = requestAnimationFrame(loop);
-  }
-
-  // ---------- QTE: Spindle (timing tap) ----------
-  let qteSpindleActive = false;
-  let spindleSpeed = 0.06;
-  let spindleT = 0;
-  let spindleZone = [0.42,0.58];
-  let spindleHits = 0;
-  const SPINDLE_HITS_NEEDED = 3;
-
-  function spindleLoop(){
-    if(!qteSpindleActive) return;
-    spindleT += spindleSpeed;
-    const pos = (Math.sin(spindleT)+1)/2;
-    qteBarFill.style.width = (pos*100)+'%';
-    requestAnimationFrame(spindleLoop);
-  }
-
-  function startSpindleQTE(){
-    qteSpindleActive = true;
-    spindleHits = 0;
-    spindleT = 0;
-    qteWrap.style.display = 'block';
-    nextBtn.disabled = true;
-    qteHint.textContent = T[lang].qteSpindle + ' (0/'+SPINDLE_HITS_NEEDED+')';
-    nextBtn.textContent = T[lang].tapBtn;
-    spindleLoop();
-  }
-
-  function handleSpindleTap(){
-    if(!qteSpindleActive) return;
-    const pos = (Math.sin(spindleT)+1)/2;
-    if(pos>spindleZone[0] && pos<spindleZone[1]){
-      spindleHits++;
-      qteHint.textContent = T[lang].qteSpindle + ' ('+spindleHits+'/'+SPINDLE_HITS_NEEDED+')';
-      if(spindleHits>=SPINDLE_HITS_NEEDED){
-        qteSpindleActive = false;
-        qteWrap.style.display = 'none';
-        nextBtn.disabled = false;
-        nextBtn.textContent = T[lang].next;
-        advanceAfterDelay();
-      }
-    }
-  }
-
-  // ---------- QTE: Thorn cutting (mash) ----------
-  let qteThornActive = false;
-  let qteProgress = 0;
-
-  function startThornQTE(){
-    qteThornActive = true;
-    qteProgress = 0;
-    qteWrap.style.display = 'block';
-    nextBtn.disabled = true;
-    qteHint.textContent = T[lang].qteThorn;
-    nextBtn.textContent = T[lang].cutBtn;
-    qteBarFill.style.width = '0%';
-  }
-
-  function handleThornTap(){
-    if(!qteThornActive) return;
-    qteProgress = Math.min(1, qteProgress + 0.09);
-    qteBarFill.style.width = (qteProgress*100)+'%';
-    if(qteProgress>=1){
-      qteThornActive = false;
-      qteWrap.style.display = 'none';
-      nextBtn.disabled = false;
-      nextBtn.textContent = T[lang].next;
-      advanceAfterDelay();
-    }
-  }
-
-  function advanceAfterDelay(){
-    // small pause before allowing manual continue is skipped; user clicks Lanjut
-  }
-
-  // ---------- Narration (speech) ----------
-  let currentUtterance = null;
-  function speak(text, lg){
+  /* ---------------- Speech ---------------- */
+  function speak(text){
+    if (!window.speechSynthesis || state.muted || !text) return;
     window.speechSynthesis.cancel();
-    if(muted) return;
-    if(!('speechSynthesis' in window)) return;
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lg==='en' ? 'en-US' : 'id-ID';
+    u.lang = state.lang === 'id' ? 'id-ID' : 'en-US';
+    const wantLang = u.lang;
+    let v = voices.find(v => v.lang === wantLang);
+    if (!v) v = voices.find(v => v.lang && v.lang.startsWith(wantLang.slice(0,2)));
+    if (v) u.voice = v;
     u.rate = 0.95;
-    u.pitch = 1.05;
     currentUtterance = u;
     window.speechSynthesis.speak(u);
   }
 
-  // ---------- Scene flow ----------
-  function showScene(){
-    const sc = scenes[sceneIndex];
-    narrationText.textContent = sc[lang];
-    buildDots();
-    qteWrap.style.display = 'none';
-    nextBtn.disabled = false;
+  /* ---------------- Resize / postMessage ---------------- */
+  function notifyHeight(){
+    const h = document.getElementById('app').scrollHeight;
+    try{
+      window.parent.postMessage({ type:'putriTidurHeight', height: h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', notifyHeight);
+  window.addEventListener('resize', notifyHeight);
 
-    skipBtn.style.display = (sceneIndex < scenes.length-1) ? 'inline-block' : 'none';
-    skipBtn.textContent = T[lang].skip;
+  /* ---------------- Drawing helpers ---------------- */
+  function clear(){
+    ctx.clearRect(0,0,700,460);
+  }
+  function skyBg(colorTop, colorBottom){
+    const g = ctx.createLinearGradient(0,0,0,460);
+    g.addColorStop(0,colorTop);
+    g.addColorStop(1,colorBottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,700,460);
+  }
+  function drawCastleSilhouette(y){
+    ctx.fillStyle = "#b9a8c9";
+    // main wall
+    ctx.fillRect(60, y, 580, 130);
+    // towers
+    towerShape(90, y-70, 60, 70);
+    towerShape(560, y-90, 70, 90);
+    towerShape(330, y-110, 60, 110);
+  }
+  function towerShape(x,y,w,h){
+    ctx.fillRect(x,y,w,h);
+    ctx.beginPath();
+    ctx.moveTo(x-6,y);
+    ctx.lineTo(x+w/2,y-40);
+    ctx.lineTo(x+w+6,y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawGround(y, color){
+    ctx.fillStyle = color || "#cfe3c0";
+    ctx.fillRect(0,y,700,460-y);
+  }
+  function drawPerson(x,y,opts){
+    opts = opts || {};
+    const skin = opts.skin || "#f2c9a0";
+    const outfit = opts.outfit || "#8fa8d8";
+    const hair = opts.hair || "#5a3a26";
+    const scale = opts.scale || 1;
+    const crown = !!opts.crown;
+    const cape = opts.cape;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // cape
+    if (cape){
+      ctx.fillStyle = cape;
+      ctx.beginPath();
+      ctx.moveTo(-16,-10);
+      ctx.lineTo(16,-10);
+      ctx.lineTo(22,55);
+      ctx.lineTo(-22,55);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // body
+    ctx.fillStyle = outfit;
+    ctx.beginPath();
+    ctx.moveTo(-14,50);
+    ctx.quadraticCurveTo(-16,0,0,-4);
+    ctx.quadraticCurveTo(16,0,14,50);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-20,14,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = hair;
+    ctx.beginPath();
+    ctx.arc(0,-24,14,Math.PI,Math.PI*2);
+    ctx.fill();
+    if (opts.longHair){
+      ctx.beginPath();
+      ctx.ellipse(-13,-14,5,16,0,0,Math.PI*2);
+      ctx.ellipse(13,-14,5,16,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    // crown
+    if (crown){
+      ctx.fillStyle = "#e8c84a";
+      ctx.beginPath();
+      ctx.moveTo(-10,-34); ctx.lineTo(-10,-42); ctx.lineTo(-4,-34);
+      ctx.lineTo(0,-44); ctx.lineTo(4,-34); ctx.lineTo(10,-42); ctx.lineTo(10,-34);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // face
+    ctx.fillStyle = "#3a2e2e";
+    ctx.beginPath(); ctx.arc(-4,-20,1.6,0,Math.PI*2); ctx.arc(4,-20,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawSleepingPerson(x,y,opts){
+    opts = opts||{};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = opts.outfit || "#8fa8d8";
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = opts.skin || "#f2c9a0";
+    ctx.beginPath();
+    ctx.arc(-24,-2,10,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = "#3a2e2e";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-28,-4); ctx.quadraticCurveTo(-24,-1,-20,-4);
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawFairy(x,y,color,opts){
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x,y);
+    // wings
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.beginPath(); ctx.ellipse(-14,4,12,20,0.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(14,4,12,20,-0.4,0,Math.PI*2); ctx.fill();
+    // dress
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-12,40); ctx.quadraticCurveTo(-14,0,0,-2); ctx.quadraticCurveTo(14,0,12,40);
+    ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = "#f2c9a0";
+    ctx.beginPath(); ctx.arc(0,-14,11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = opts.dark ? "#241a2c" : "#7a5030";
+    ctx.beginPath(); ctx.arc(0,-18,11,Math.PI,Math.PI*2); ctx.fill();
+    // wand
+    ctx.strokeStyle = opts.dark ? "#241a2c" : "#caa14a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(12,10); ctx.lineTo(30,-14);
+    ctx.stroke();
+    ctx.fillStyle = opts.dark ? "#8a3fbf" : "#fff2c0";
+    ctx.beginPath(); ctx.arc(31,-16,5,0,Math.PI*2); ctx.fill();
+    if (opts.dark){
+      // hood shadow
+      ctx.fillStyle = "rgba(20,10,25,0.5)";
+      ctx.beginPath(); ctx.arc(0,-16,13,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#f2c9a0";
+      ctx.beginPath(); ctx.arc(0,-14,9,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawSpindle(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle = "#6b4a2c"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0,0,32,0,Math.PI*2); ctx.stroke();
+    for (let i=0;i<8;i++){
+      const a = i/8*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(a)*32, Math.sin(a)*32);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#8a5a34";
+    ctx.fillRect(-6,30,12,40);
+    ctx.fillStyle = "#3a2e2e";
+    ctx.beginPath(); ctx.arc(0,-2,3,0,Math.PI*2); ctx.fill(); // needle tip
+    ctx.restore();
+  }
+  function drawWheelPile(x,y,burnAmount){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.globalAlpha = Math.max(0, 1 - burnAmount/100);
+    for (let i=0;i<3;i++){
+      ctx.save();
+      ctx.translate((i-1)*40, (i%2)*8);
+      ctx.strokeStyle = "#6b4a2c"; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.stroke();
+      for (let k=0;k<6;k++){
+        const a = k/6*Math.PI*2;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*26,Math.sin(a)*26); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    if (burnAmount>5){
+      ctx.globalAlpha = Math.min(1, burnAmount/60);
+      for (let i=0;i<6;i++){
+        const fx = -40 + i*16 + Math.sin(Date.now()/150+i)*4;
+        const fy = -10 - (i%3)*8 - Math.sin(Date.now()/120+i)*6;
+        const grd = ctx.createRadialGradient(fx,fy,0,fx,fy,18);
+        grd.addColorStop(0,"#ffdd66");
+        grd.addColorStop(0.5,"#ff9933");
+        grd.addColorStop(1,"rgba(255,80,20,0)");
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(fx,fy,18,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+  function drawThornOverlay(coverage){
+    // coverage 0..1
+    ctx.save();
+    ctx.strokeStyle = "#2f5c2f";
+    ctx.lineWidth = 4;
+    const count = Math.floor(coverage*26);
+    for (let i=0;i<count;i++){
+      const seed = i*37.7;
+      const bx = (i%13)*54 + 10;
+      const by = 60 + Math.floor(i/13)*180 + Math.sin(seed)*20;
+      ctx.beginPath();
+      ctx.moveTo(bx,by);
+      ctx.bezierCurveTo(bx+10,by-40,bx-10,by-80,bx+15,by-120);
+      ctx.stroke();
+      // thorn spikes
+      for (let s=0;s<4;s++){
+        const t = s/4;
+        const px = bx + 10*Math.sin(t*3+seed);
+        const py = by - t*100;
+        ctx.beginPath();
+        ctx.moveTo(px,py); ctx.lineTo(px+8,py-4); ctx.lineTo(px,py-2);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  function drawTowerDoor(x,y,w,h){
+    ctx.fillStyle = "#7a5a3a";
+    ctx.beginPath();
+    ctx.moveTo(x,y+h);
+    ctx.lineTo(x,y+h*0.3);
+    ctx.quadraticCurveTo(x+w/2,y-h*0.15,x+w,y+h*0.3);
+    ctx.lineTo(x+w,y+h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#caa14a";
+    ctx.beginPath(); ctx.arc(x+w-14,y+h*0.6,4,0,Math.PI*2); ctx.fill();
+  }
+  function drawProgressBar(x,y,w,h,pct,color){
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle = color || "#caa14a";
+    ctx.fillRect(x,y,w*Math.max(0,Math.min(1,pct/100)),h);
+    ctx.strokeStyle = "#3a2e2e";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x,y,w,h);
+  }
+  function drawSparkles(cx,cy,n,color){
+    for (let i=0;i<n;i++){
+      const a = Math.random()*Math.PI*2;
+      const r = Math.random()*40;
+      const x = cx+Math.cos(a)*r;
+      const y = cy+Math.sin(a)*r;
+      ctx.fillStyle = color || "#fff2c0";
+      ctx.globalAlpha = Math.random();
+      ctx.beginPath(); ctx.arc(x,y,Math.random()*2.5+0.5,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
 
-    if(sc.type==='title'){
-      nextBtn.textContent = T[lang].start;
-    } else if(sc.type==='ending'){
-      nextBtn.textContent = T[lang].restart;
+  /* ---------------- Hotspots per scene ---------------- */
+  function hotspots(){
+    switch(state.scene){
+      case 1: return [
+        {id:'f1', x:150, y:250, r:44},
+        {id:'f2', x:350, y:250, r:44},
+        {id:'f3', x:550, y:250, r:44},
+        {id:'evil', x:620, y:130, r:40}
+      ];
+      case 2: return [{id:'wand', x:400, y:230, r:50}];
+      case 3: return [{id:'pile', x:350, y:300, r:70}];
+      case 4: return [{id:'door', x:330, y:250, r:70}];
+      case 5: return [
+        {id:'hand', x:250, y:300, r:34},
+        {id:'spindle', x:430, y:260, r:44}
+      ];
+      case 6: return [{id:'anywhere', x:350, y:230, r:900}];
+      case 7: return [{id:'thorns', x:350, y:280, r:180}];
+      case 8: return state.s8Step===0 ?
+          [{id:'roomdoor', x:180, y:230, r:60}] :
+          [{id:'princess', x:430, y:280, r:60}];
+      default: return [];
+    }
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  function getCanvasPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    let clientX, clientY;
+    if (evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if (evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
     } else {
-      nextBtn.textContent = T[lang].next;
+      clientX = evt.clientX; clientY = evt.clientY;
     }
-
-    speak(sc[lang], lang);
-
-    if(sc.type==='qte_spindle'){
-      startSpindleQTE();
-    } else if(sc.type==='qte_thorn'){
-      startThornQTE();
-    }
-
-    sendHeight();
+    return { x: (clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
   }
 
-  function goNext(){
-    const sc = scenes[sceneIndex];
-    if(sc.type==='qte_spindle' && qteSpindleActive){
-      handleSpindleTap();
-      return;
+  /* ---------------- Scene rendering ---------------- */
+  function render(){
+    clear();
+    switch(state.scene){
+      case 0: skyBg("#f6d9e6","#fbeee0"); break;
+      case 1: renderScene1(); break;
+      case 2: renderScene2(); break;
+      case 3: renderScene3(); break;
+      case 4: renderScene4(); break;
+      case 5: renderScene5(); break;
+      case 6: renderScene6(); break;
+      case 7: renderScene7(); break;
+      case 8: renderScene8(); break;
+      case 9: renderScene9(); break;
     }
-    if(sc.type==='qte_thorn' && qteThornActive){
-      handleThornTap();
-      return;
-    }
-    if(sc.type==='ending'){
-      sceneIndex = 0;
-      showScene();
-      return;
-    }
-    sceneIndex = Math.min(scenes.length-1, sceneIndex+1);
-    showScene();
   }
 
-  function goSkip(){
-    sceneIndex = scenes.length-1;
-    showScene();
+  function renderScene1(){
+    skyBg("#f9e9c8","#f3c9d8");
+    drawGround(360,"#e8c9d8");
+    drawCastleSilhouette(260);
+    // thrones
+    drawPerson(90,300,{outfit:"#7a3f4a",crown:true,cape:"#5a2a35",scale:1.1});
+    drawPerson(150,300,{outfit:"#d88fae",crown:true,longHair:true,scale:1.05});
+    // cradle
+    ctx.fillStyle = "#e8c9a0";
+    ctx.beginPath(); ctx.ellipse(230,340,40,16,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#8a5a34"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(195,340); ctx.lineTo(200,300); ctx.moveTo(265,340); ctx.lineTo(260,300); ctx.stroke();
+    ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(230,330,10,0,Math.PI*2); ctx.fill();
+
+    drawFairy(150,250,"#8fc9e8");
+    drawFairy(350,250,"#f0c94a");
+    drawFairy(550,250,"#a8d88a");
+    if (state.s1Step>=3){
+      drawFairy(620,150,"#7a3fbf",{dark:true});
+    }
+    if (state.s1Step>=1) drawSparkles(150,240,10,"#8fc9e8");
+    if (state.s1Step>=2) drawSparkles(350,240,10,"#f0c94a");
+    if (state.s1Step>=3) drawSparkles(550,240,10,"#a8d88a");
+  }
+  function renderScene2(){
+    skyBg("#f3d8e0","#e8c9e0");
+    drawGround(360,"#e8c9d8");
+    drawCastleSilhouette(260);
+    drawPerson(90,300,{outfit:"#7a3f4a",crown:true,cape:"#5a2a35"});
+    drawPerson(150,300,{outfit:"#d88fae",crown:true,longHair:true});
+    ctx.fillStyle = "#e8c9a0";
+    ctx.beginPath(); ctx.ellipse(400,340,40,16,0,0,Math.PI*2); ctx.fill();
+    drawFairy(400,250,"#c98fe0");
+    drawSparkles(400,240,Math.floor(state.s2Hold/4)+4,"#c98fe0");
+    drawProgressBar(280,400,240,20,state.s2Hold,"#c98fe0");
+  }
+  function renderScene3(){
+    skyBg("#f6e2c8","#f0c9a8");
+    drawGround(340,"#d8c0a0");
+    drawCastleSilhouette(230);
+    drawPerson(120,300,{outfit:"#7a3f4a",crown:true,cape:"#5a2a35"});
+    drawWheelPile(350,320,state.s3Fire);
+    drawPerson(560,300,{outfit:"#6b6b6b"}); // guard
+    drawProgressBar(230,400,240,20,state.s3Fire,"#ff8c3f");
+  }
+  function renderScene4(){
+    skyBg("#cfe3f0","#e8f0d8");
+    drawGround(340,"#b8d8a0");
+    drawCastleSilhouette(220);
+    drawTowerDoor(300,190,80,150);
+    drawPerson(200,300,{outfit:"#e0a8c0",longHair:true,scale:1.05,crown:true});
+  }
+  function renderScene5(){
+    skyBg("#e8d8c8","#d8c0b0");
+    drawGround(360,"#c9b090");
+    // room walls
+    ctx.fillStyle="#a8907a"; ctx.fillRect(0,60,700,300);
+    ctx.fillStyle="#8a725c"; ctx.fillRect(0,340,700,120);
+    drawSpindle(430,260,1.2);
+    // old woman
+    drawPerson(560,300,{outfit:"#6b5a4a",skin:"#d8a880",scale:1});
+    ctx.fillStyle="#dcdcdc";
+    ctx.beginPath(); ctx.ellipse(560,255,20,10,0,0,Math.PI*2); ctx.fill();
+    // princess base position (if not dragging show at hand hotspot)
+    const px = state.s5Dragging ? state.s5DragPos.x : 250;
+    const py = state.s5Dragging ? state.s5DragPos.y : 300;
+    drawPerson(px,py,{outfit:"#e0a8c0",longHair:true,crown:true});
+    if (state.s5Dragging){
+      ctx.fillStyle="#f2c9a0";
+      ctx.beginPath(); ctx.arc(px+16,py-4,4,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function renderScene6(){
+    skyBg("#d8c8e0","#c8b8d8");
+    drawGround(360,"#c9b8d0");
+    drawCastleSilhouette(260);
+    drawSleepingPerson(230,340,{outfit:"#e0a8c0"});
+    drawSleepingPerson(90,340,{outfit:"#7a3f4a"});
+    drawSleepingPerson(150,340,{outfit:"#d88fae"});
+    drawSleepingPerson(500,340,{outfit:"#8fa8d8"});
+    drawSleepingPerson(560,340,{outfit:"#6b6b6b"});
+    // sleeping fire icon
+    ctx.fillStyle="#999"; ctx.beginPath(); ctx.arc(650,330,14,0,Math.PI*2); ctx.fill();
+  }
+  function renderScene7(){
+    skyBg("#a8c0d8","#c8d8b8");
+    drawGround(360,"#8fae7a");
+    drawCastleSilhouette(220);
+    drawThornOverlay(1 - state.s7Cut/100 > 0 ? 1 : 0);
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    drawThornOverlay(Math.max(0, 1 - state.s7Cut/100));
+    ctx.restore();
+    drawPerson(120, 340, {outfit:"#3f5faa",cape:"#28407a",scale:1.05});
+    drawProgressBar(230,410,240,20,state.s7Cut,"#3f5faa");
+  }
+  function renderScene8(){
+    skyBg("#e8d8f0","#d8c8e8");
+    drawGround(360,"#c9b8d0");
+    ctx.fillStyle="#a8907a"; ctx.fillRect(0,60,700,300);
+    ctx.fillStyle="#8a725c"; ctx.fillRect(0,340,700,120);
+    drawTowerDoor(140,200,90,150);
+    // sleeping princess on a bed
+    ctx.fillStyle="#e0c9a8";
+    ctx.fillRect(360,260,140,40);
+    drawSleepingPerson(430,270,{outfit:"#e0a8c0"});
+    const princeX = state.s8Step===0 ? 260 : 350;
+    drawPerson(princeX,300,{outfit:"#3f5faa",cape:"#28407a"});
+  }
+  function renderScene9(){
+    skyBg("#fdeec2","#f8cfe0");
+    drawGround(360,"#cfe3c0");
+    drawCastleSilhouette(240);
+    drawPerson(300,300,{outfit:"#e0a8c0",crown:true,longHair:true});
+    drawPerson(370,300,{outfit:"#3f5faa",crown:true,cape:"#28407a"});
+    drawPerson(150,300,{outfit:"#7a3f4a",crown:true,cape:"#5a2a35"});
+    drawPerson(220,300,{outfit:"#d88fae",crown:true,longHair:true});
+    drawSparkles(340,220,60,"#f0c94a");
+    ctx.fillStyle="#4a2e5c";
+    ctx.font="bold 30px 'Segoe UI'";
+    ctx.textAlign="center";
+    ctx.fillText(T[state.lang].endingTitle, 350, 90);
   }
 
-  nextBtn.addEventListener('click', goNext);
-  skipBtn.addEventListener('click', goSkip);
+  /* ---------------- Animation loop (for fire flicker etc.) ---------------- */
+  function loop(ts){
+    if (state.scene===3 || state.scene===7 || state.scene===1){
+      render();
+    }
+    requestAnimationFrame(loop);
+  }
 
-  muteBtn.addEventListener('click', ()=>{
-    muted = !muted;
-    muteBtn.textContent = muted ? '🔇' : '🔊';
-    muteBtn.classList.toggle('active', muted);
-    if(muted) window.speechSynthesis.cancel();
-    else speak(scenes[sceneIndex][lang], lang);
+  /* ---------------- UI text update ---------------- */
+  function updateDots(){
+    dotsEl.innerHTML = "";
+    for (let i=1;i<=TOTAL_SCENES;i++){
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if (state.scene>i || state.scene===9) d.classList.add('filled');
+      else if (state.scene===i) d.classList.add('current');
+      dotsEl.appendChild(d);
+    }
+  }
+  function updateTextForScene(){
+    const L = T[state.lang];
+    const sc = L.scenes[state.scene===0?1:state.scene];
+    if (!sc){ narrationEl.textContent=''; instructionEl.textContent=''; return; }
+    narrationEl.textContent = sc.narration;
+    let instr = sc.instr;
+    if (Array.isArray(instr)){
+      if (state.scene===1) instr = instr[Math.min(state.s1Step,3)];
+      else if (state.scene===8) instr = instr[state.s8Step];
+      else instr = instr[0];
+    }
+    instructionEl.textContent = instr || '';
+    if (state.scene>=1 && state.scene<=9){
+      speak(sc.narration + (instr ? (" " + instr) : ""));
+    }
+  }
+  function refreshAll(){
+    updateDots();
+    updateTextForScene();
+    render();
+    notifyHeight();
+  }
+
+  /* ---------------- Scene transition ---------------- */
+  function goToScene(n){
+    state.scene = n;
+    render();
+    updateDots();
+    updateTextForScene();
+    if (n===9){
+      replayWrap.classList.remove('hidden');
+    }
+    notifyHeight();
+  }
+
+  /* ---------------- Interaction handlers ---------------- */
+  let holdTimer = null;
+
+  function onPointerDown(evt){
+    if (state.scene===0 || state.scene===9) return;
+    const pos = getCanvasPos(evt);
+    const hs = hotspots();
+    let hit = null;
+    for (const h of hs){
+      if (dist(pos.x,pos.y,h.x,h.y) <= h.r){ hit = h; break; }
+    }
+    if (!hit) return;
+
+    if (state.scene===1){
+      handleScene1Tap(hit);
+    } else if (state.scene===2){
+      if (hit.id==='wand'){
+        state.s2Holding = true;
+        holdTimer = setInterval(()=>{
+          state.s2Hold = Math.min(100, state.s2Hold+4);
+          render();
+          if (state.s2Hold>=100){
+            clearInterval(holdTimer);
+            state.s2Holding = false;
+            setTimeout(()=>goToScene(3), 500);
+          }
+        }, 60);
+      }
+    } else if (state.scene===3){
+      if (hit.id==='pile'){
+        state.s3Fire = Math.min(100, state.s3Fire+6);
+        render();
+        if (state.s3Fire>=100){
+          setTimeout(()=>goToScene(4), 600);
+        }
+      }
+    } else if (state.scene===4){
+      if (hit.id==='door') goToScene(5);
+    } else if (state.scene===5){
+      if (hit.id==='hand'){
+        state.s5Dragging = true;
+        state.s5DragPos = {x:pos.x,y:pos.y};
+        render();
+      }
+    } else if (state.scene===6){
+      goToScene(7);
+    } else if (state.scene===7){
+      if (hit.id==='thorns'){
+        state.s7Cut = Math.min(100, state.s7Cut+7);
+        render();
+        if (state.s7Cut>=100){
+          setTimeout(()=>goToScene(8), 600);
+        }
+      }
+    } else if (state.scene===8){
+      if (state.s8Step===0 && hit.id==='roomdoor'){
+        state.s8Step = 1;
+        updateTextForScene();
+        render();
+      } else if (state.s8Step===1 && hit.id==='princess'){
+        setTimeout(()=>goToScene(9), 400);
+      }
+    }
+  }
+  function onPointerMove(evt){
+    if (state.scene===5 && state.s5Dragging){
+      const pos = getCanvasPos(evt);
+      state.s5DragPos = pos;
+      render();
+    }
+  }
+  function onPointerUp(evt){
+    if (state.scene===2){
+      if (holdTimer){ clearInterval(holdTimer); holdTimer=null; }
+      state.s2Holding = false;
+    }
+    if (state.scene===5 && state.s5Dragging){
+      const pos = getCanvasPos(evt);
+      const target = {x:430,y:260,r:50};
+      if (dist(pos.x,pos.y,target.x,target.y) <= target.r){
+        state.s5Dragging = false;
+        setTimeout(()=>goToScene(6), 400);
+      } else {
+        state.s5Dragging = false;
+        render();
+      }
+    }
+  }
+
+  function handleScene1Tap(hit){
+    if (state.s1Step===0 && hit.id==='f1'){ state.s1Step=1; }
+    else if (state.s1Step===1 && hit.id==='f2'){ state.s1Step=2; }
+    else if (state.s1Step===2 && hit.id==='f3'){ state.s1Step=3; }
+    else if (state.s1Step===3 && hit.id==='evil'){
+      state.s1Step=4;
+      setTimeout(()=>goToScene(2), 600);
+    } else {
+      return;
+    }
+    updateTextForScene();
+    render();
+  }
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); onPointerDown(e); }, {passive:false});
+  canvas.addEventListener('touchmove', function(e){ e.preventDefault(); onPointerMove(e); }, {passive:false});
+  canvas.addEventListener('touchend', function(e){ e.preventDefault(); onPointerUp(e); }, {passive:false});
+
+  /* ---------------- Buttons ---------------- */
+  startBtn.addEventListener('click', function(){
+    startOverlay.classList.add('hidden');
+    goToScene(1);
+  });
+  replayBtn.addEventListener('click', function(){
+    state.scene = 0;
+    state.s1Step=0; state.s2Hold=0; state.s2Holding=false; state.s3Fire=0;
+    state.s5Dragging=false; state.s5Done=false; state.s7Cut=0; state.s8Step=0;
+    replayWrap.classList.add('hidden');
+    startOverlay.classList.remove('hidden');
+    updateDots();
+    render();
+    narrationEl.textContent=''; instructionEl.textContent='';
+    notifyHeight();
+  });
+  langBtn.addEventListener('click', function(){
+    state.lang = state.lang==='id' ? 'en' : 'id';
+    applyLangUI();
+    updateTextForScene();
+    render();
+    notifyHeight();
+  });
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('putriTidurMuted', state.muted ? 'true' : 'false');
+    muteBtn.textContent = state.muted ? "🔇" : "🔊";
+    if (state.muted && window.speechSynthesis) window.speechSynthesis.cancel();
   });
 
-  document.querySelectorAll('.lang-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      lang = btn.getAttribute('data-lang');
-      document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b===btn));
-      document.documentElement.lang = lang;
-      showScene();
-    });
-  });
-
-  function setLangButtons(){
-    document.querySelectorAll('.lang-btn').forEach(b=>{
-      b.classList.toggle('active', b.getAttribute('data-lang')===lang);
-    });
+  function applyLangUI(){
+    const L = T[state.lang];
+    titleText.textContent = L.title;
+    startTitle.textContent = L.startTitle;
+    startDesc.textContent = L.startDesc;
+    startBtn.textContent = L.startBtn;
+    replayBtn.textContent = L.replayBtn;
+    langBtn.textContent = L.lang;
   }
 
-  // ---------- Resize / postMessage for Blogger embed ----------
-  function sendHeight(){
-    requestAnimationFrame(()=>{
-      const h = document.getElementById('wrap').scrollHeight + 20;
-      window.parent.postMessage({ type:'putritidurHeight', height:h }, '*');
-    });
-  }
-  window.addEventListener('resize', sendHeight);
+  /* ---------------- Init ---------------- */
+  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  applyLangUI();
+  updateDots();
+  render();
+  requestAnimationFrame(loop);
+  notifyHeight();
 
-  // ---------- Init ----------
-  setLangButtons();
-  buildDots();
-  showScene();
-  loop();
 })();
 </script>
 </body>
