@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ladang Jagung - Cerita Interaktif</title>
+<style>
+  :root{
+    --sky-day:#8fd0e8;
+    --sky-eve:#2a2350;
+    --cream:#fff7e6;
+    --panel:#fffdf7;
+    --wood:#7a4a2b;
+    --wood-dark:#5c3620;
+    --corn-gold:#e8b93b;
+    --corn-dark:#c99422;
+    --leaf:#4c8a3f;
+    --leaf-dark:#356628;
+    --ink:#3a2b1a;
+    --accent:#d9622b;
+    --accent-dark:#b34d1e;
+    --muted-text:#7a6a55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Verdana, sans-serif;
+    background:linear-gradient(180deg,#fdf3df 0%, #f7e6c4 100%);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background:var(--panel);
+    border-radius:18px;
+    box-shadow:0 6px 22px rgba(90,60,20,0.18);
+    padding:14px 14px 16px;
+    border:1px solid #eaddb9;
+  }
+  .top-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .title-box h1{
+    font-size:1.15rem;
+    margin:0;
+    color:var(--accent-dark);
+    letter-spacing:0.3px;
+  }
+  .title-box span{
+    font-size:0.72rem;
+    color:var(--muted-text);
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+  }
+  .icon-btn{
+    border:1px solid #e2cf9e;
+    background:#fffaf0;
+    color:var(--ink);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:0.78rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .icon-btn:hover{background:#fbeecb;}
+  .icon-btn:active{transform:scale(0.96);}
+  .icon-btn.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent-dark);
+  }
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    border:3px solid #ecd9a8;
+    background:#cfeaf5;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:10px 0 4px;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#e6d6ac;
+    border:1px solid #d6bd80;
+    transition:all .2s ease;
+  }
+  .dot.done{background:var(--leaf);border-color:var(--leaf-dark);}
+  .dot.current{background:var(--accent);border-color:var(--accent-dark);transform:scale(1.25);}
+
+  #instruction{
+    text-align:center;
+    font-size:0.92rem;
+    color:var(--ink);
+    background:#fbf1d9;
+    border:1px dashed #dcc48a;
+    border-radius:10px;
+    padding:8px 12px;
+    margin:4px 0 8px;
+    min-height:20px;
+  }
+  #narration{
+    font-size:0.88rem;
+    line-height:1.5;
+    background:#fffef9;
+    border:1px solid #f0e3bf;
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:10px;
+    color:#4a3a24;
+    min-height:22px;
+  }
+  #action-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .main-btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:10px 22px;
+    border-radius:24px;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--accent-dark);
+    transition:transform .08s ease;
+  }
+  .main-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--accent-dark);}
+  .main-btn.secondary{
+    background:#f2e6c8;
+    color:var(--ink);
+    box-shadow:0 3px 0 #d8c48f;
+  }
+  footer{
+    text-align:center;
+    font-size:0.7rem;
+    color:#a3927a;
+    margin-top:6px;
+  }
+  .progress-bar-outer{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:14px;
+    width:70%;
+    height:12px;
+    background:rgba(255,255,255,0.55);
+    border:2px solid #fff;
+    border-radius:8px;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .progress-bar-inner{
+    height:100%;
+    width:0%;
+    background:var(--accent);
+    transition:width .05s linear;
+  }
+  @media (max-width:420px){
+    .title-box h1{font-size:1rem;}
+    .icon-btn{padding:5px 8px;font-size:0.72rem;}
+    .main-btn{padding:9px 18px;font-size:0.88rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <div class="title-box">
+      <h1 id="gameTitle">Ladang Jagung</h1>
+      <span id="gameSubtitle">Cerita Rakyat Amerika Serikat</span>
+    </div>
+    <div class="controls">
+      <button class="icon-btn" id="langBtn" type="button">EN</button>
+      <button class="icon-btn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+    <div class="progress-bar-outer" id="progressOuter" style="display:none;">
+      <div class="progress-bar-inner" id="progressInner"></div>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="instruction"></div>
+  <div id="narration"></div>
+
+  <div id="action-row"></div>
+
+  <footer id="footerText">Cerita Rakyat Digital · Dongeng Interaktif</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ CONFIG & STRINGS ============ */
+
+var TOTAL_STAGES = 7;
+
+var STR = {
+  id: {
+    title: "Ladang Jagung",
+    subtitle: "Cerita Rakyat Amerika Serikat",
+    startBtn: "Mulai Cerita",
+    replayBtn: "Ulangi Cerita",
+    continueBtn: "Lanjutkan",
+    footer: "Cerita Rakyat Digital · Dongeng Interaktif",
+    langLabel: "EN",
+    startTitle: "Ladang Jagung",
+    startDesc: "Sebuah cerita rakyat dari Georgia, Amerika Serikat, tentang petani yang tertidur terlalu lelap dan ladangnya yang habis diserbu gagak.",
+    scenes: [
+      {
+        narration: "Pada zaman dahulu, di sebuah desa di Georgia, Amerika Serikat, ada sepasang suami istri yang memiliki ladang jagung yang sangat luas. Kini ladang itu sudah siap dipanen.",
+        instruction: "Ketuk ladang jagung yang menguning untuk melihat betapa suburnya hasil panen mereka."
+      },
+      {
+        narration: "Masyarakat desa mengadakan pesta menyambut panen jagung. Semua menari dan menyanyi dengan gembira hingga larut malam.",
+        instruction: "Ketuk para penari berulang kali agar pesta semakin meriah hingga larut malam!"
+      },
+      {
+        narration: "Menjelang pagi, kedua suami istri itu baru bisa tidur. Mereka sangat lelah sehingga tertidur sangat pulas.",
+        instruction: "Tekan dan tahan gambar tempat tidur untuk menidurkan petani dan istrinya yang kelelahan."
+      },
+      {
+        narration: "Ayam jantan berkokok sekeras-kerasnya untuk membangunkan petani. Namun petani dan istrinya masih tetap tertidur pulas.",
+        instruction: "Ketuk gambar ayam jantan berulang kali agar ia berkokok sekeras-kerasnya!"
+      },
+      {
+        narration: "Ayam kalkun pun ikut mengeluarkan suara ributnya. Tapi suami istri itu tak juga terbangun.",
+        instruction: "Tekan dan tahan gambar ayam kalkun agar suaranya semakin ribut."
+      },
+      {
+        narration: "Segerombolan burung gagak yang mengetahui keadaan itu langsung mendatangi ladang dan menyantap jagung-jagung milik petani.",
+        instruction: "Ketuk setiap gagak yang hinggap di ladang sebelum mereka pergi!"
+      },
+      {
+        narration: "Ketika siang hari, barulah petani terbangun. Namun semuanya sudah terlambat. Ladang jagungnya bersih tanpa ada setongkol pun yang tersisa.",
+        instruction: "Ketuk ladang yang kosong itu untuk mengetahui pesan dari kisah ini."
+      }
+    ],
+    moralTitle: "Pesan dari Cerita",
+    moralText: "\u201cAda gagak di ladang jagung\u201d — begitu istilah yang terkenal di Georgia, yang berarti \u201csudah waktunya untuk bangun.\u201d\n\nPesan dari cerita: Bangunlah di pagi hari, agar keberuntungan menghampiri."
+  },
+  en: {
+    title: "The Cornfield",
+    subtitle: "A Folktale from the United States",
+    startBtn: "Start Story",
+    replayBtn: "Replay Story",
+    continueBtn: "Continue",
+    footer: "Digital Folktales · Interactive Story",
+    langLabel: "ID",
+    startTitle: "The Cornfield",
+    startDesc: "A folktale from Georgia, USA, about a farmer who slept too soundly while crows feasted on his cornfield.",
+    scenes: [
+      {
+        narration: "Long ago, in a village in Georgia, United States, there lived a farmer and his wife who owned a vast cornfield. Now the field was ready for harvest.",
+        instruction: "Tap the golden cornfield to see how bountiful their harvest has grown."
+      },
+      {
+        narration: "The villagers held a festival to celebrate the harvest. Everyone danced and sang joyfully late into the night.",
+        instruction: "Tap the dancing villagers again and again to keep the festival lively deep into the night!"
+      },
+      {
+        narration: "By dawn, the husband and wife finally lay down to sleep. They were so exhausted that they fell into a very deep sleep.",
+        instruction: "Press and hold the bed to lull the exhausted farmer and his wife to sleep."
+      },
+      {
+        narration: "The rooster crowed as loudly as he could to wake the farmer. But the couple remained fast asleep.",
+        instruction: "Tap the rooster again and again to make him crow as loudly as possible!"
+      },
+      {
+        narration: "The turkey joined in with his own noisy racket. Still, the couple would not wake.",
+        instruction: "Press and hold the turkey to make his gobbling grow louder and louder."
+      },
+      {
+        narration: "A flock of crows, sensing the chance, swooped down onto the field and devoured every last ear of corn.",
+        instruction: "Tap each crow that lands in the field before it flies off!"
+      },
+      {
+        narration: "At last, come midday, the farmer woke up. But it was too late — the field lay bare, without a single cob of corn left.",
+        instruction: "Tap the empty field to discover the lesson of this story."
+      }
+    ],
+    moralTitle: "The Story's Lesson",
+    moralText: "\u201cThere's a crow in the cornfield\u201d — a saying still known in Georgia, meaning \u201cit's time to wake up.\u201d\n\nMoral: Rise early in the morning, and good fortune will find you."
+  }
+};
+
+/* ============ STATE ============ */
+
+var canvas = document.getElementById('stage');
+var ctx = canvas.getContext('2d');
+var W = canvas.width, H = canvas.height;
+
+var qs = new URLSearchParams(window.location.search);
+var state = {
+  lang: (qs.get('lang') === 'en') ? 'en' : 'id',
+  muted: (localStorage.getItem('ladangJagungMuted') === '1'),
+  scene: 'start', // 'start' | 1..7 | 'end'
+  t: 0,           // animation clock
+  mash: 0,
+  mashRequired: 14,
+  holding: false,
+  holdStart: 0,
+  holdRequired: 1400,
+  holdProgress: 0,
+  crows: [],      // for scene 6
+  crowsDone: 0,
+  crowsTotal: 5,
+  sceneDone: false,
+  moralShown: false
+};
+
+var utterCurrent = null;
+
+/* ============ HELPERS ============ */
+
+function tstr(){ return STR[state.lang]; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function lerp(a,b,t){ return a + (b-a)*t; }
+
+function speak(text){
+  if(state.muted) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = (state.lang === 'en') ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    utterCurrent = u;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* speech not available */ }
+}
+
+function stopSpeak(){
+  if('speechSynthesis' in window){
+    try{ window.speechSynthesis.cancel(); }catch(e){}
+  }
+}
+
+function sendResize(){
+  var h = document.getElementById('app').getBoundingClientRect().height;
+  try{
+    window.parent.postMessage({ type:'ladangJagungResize', height: Math.ceil(h) + 20 }, '*');
+  }catch(e){}
+}
+
+/* ============ DRAWING PRIMITIVES ============ */
+
+function drawSky(topColor,bottomColor){
+  var g = ctx.createLinearGradient(0,0,0,H*0.72);
+  g.addColorStop(0, topColor);
+  g.addColorStop(1, bottomColor);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H*0.72);
+}
+
+function drawGround(color){
+  ctx.fillStyle = color;
+  ctx.fillRect(0, H*0.68, W, H*0.32);
+}
+
+function drawSun(x,y,r){
+  var grad = ctx.createRadialGradient(x,y,r*0.2,x,y,r*1.6);
+  grad.addColorStop(0,'#fff3b0');
+  grad.addColorStop(1,'rgba(255,230,150,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(x,y,r*1.6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffcf4d';
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+}
+
+function drawMoon(x,y,r){
+  ctx.save();
+  ctx.fillStyle = '#f4edd0';
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#2a2350';
+  ctx.beginPath(); ctx.arc(x + r*0.42, y - r*0.25, r*0.82, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawStars(seedT){
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  var stars = [[60,40],[120,80],[200,30],[300,60],[380,25],[460,70],[540,35],[620,55],[700,30],[740,85],[40,110],[160,120],[260,100],[420,110],[600,110]];
+  for(var i=0;i<stars.length;i++){
+    var tw = 0.55 + 0.45*Math.sin(seedT*2 + i*1.7);
+    ctx.globalAlpha = tw;
+    ctx.beginPath();
+    ctx.arc(stars[i][0], stars[i][1], 1.6, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawCloud(x,y,scale){
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.beginPath();
+  ctx.arc(0,0,18,0,Math.PI*2);
+  ctx.arc(20,-8,14,0,Math.PI*2);
+  ctx.arc(-20,-6,13,0,Math.PI*2);
+  ctx.arc(10,6,15,0,Math.PI*2);
+  ctx.arc(-14,6,13,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHouse(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#c98a4b';
+  ctx.fillRect(-40,-10,80,60);
+  ctx.fillStyle = '#8a5a2e';
+  ctx.beginPath();
+  ctx.moveTo(-50,-10); ctx.lineTo(0,-55); ctx.lineTo(50,-10); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#6b3f1f';
+  ctx.fillRect(-8,20,16,30);
+  ctx.fillStyle = '#dff0f7';
+  ctx.fillRect(-32,0,16,16);
+  ctx.fillRect(16,0,16,16);
+  ctx.strokeStyle = '#6b3f1f'; ctx.lineWidth=2;
+  ctx.strokeRect(-32,0,16,16);
+  ctx.strokeRect(16,0,16,16);
+  ctx.restore();
+}
+
+function drawCornStalk(x,y,scale,hasCob,sway){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate((sway||0)*0.06);
+  ctx.scale(scale,scale);
+  ctx.strokeStyle = '#3f7a34';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0,0); ctx.lineTo(-3,-70);
+  ctx.stroke();
+  ctx.fillStyle = '#4c8a3f';
+  function leaf(lx,ly,rot,len){
+    ctx.save();
+    ctx.translate(lx,ly); ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(len*0.5,-6,len,-2);
+    ctx.quadraticCurveTo(len*0.5,4,0,0);
+    ctx.fill();
+    ctx.restore();
+  }
+  leaf(-1,-15,-0.6,26);
+  leaf(-2,-32,0.7,28);
+  leaf(-2,-48,-0.8,24);
+  if(hasCob){
+    ctx.fillStyle = '#e8b93b';
+    ctx.beginPath();
+    ctx.ellipse(-2,-40,5,14,0.15,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#cfa832';
+    ctx.beginPath();
+    ctx.moveTo(-6,-52); ctx.quadraticCurveTo(-2,-58,3,-52); ctx.quadraticCurveTo(-1,-50,-6,-52);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCornField(rows, cols, originX, originY, spacing, cobsLeftRatio, sway){
+  var count = rows*cols;
+  var kept = Math.round(count * cobsLeftRatio);
+  var idx = 0;
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var px = originX + c*spacing + (r%2===0?0:spacing/2);
+      var py = originY + r*(spacing*0.5);
+      var hasCob = idx < kept;
+      drawCornStalk(px,py,0.9 - r*0.03, hasCob, sway + r*0.3 + c*0.15);
+      idx++;
+    }
+  }
+}
+
+function drawPerson(x,y,scale,opts){
+  opts = opts || {};
+  var isWife = !!opts.wife;
+  var asleep = !!opts.asleep;
+  var armWave = opts.armWave || 0;
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  if(asleep){ ctx.rotate(Math.PI/2); }
+  // legs
+  ctx.strokeStyle = isWife ? '#6b4a8a' : '#5c4630';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-6,20); ctx.lineTo(-9,42);
+  ctx.moveTo(6,20); ctx.lineTo(9,42);
+  ctx.stroke();
+  // body
+  ctx.fillStyle = isWife ? '#c85f7a' : '#3f6ea5';
+  ctx.beginPath();
+  ctx.moveTo(-14,20); ctx.quadraticCurveTo(0,-6,14,20); ctx.closePath();
+  ctx.fill();
+  // arms
+  ctx.strokeStyle = isWife ? '#c85f7a' : '#3f6ea5';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-11,4); ctx.lineTo(-20, 8 - armWave*14);
+  ctx.moveTo(11,4); ctx.lineTo(20, 8 - armWave*14);
+  ctx.stroke();
+  // head
+  ctx.fillStyle = '#f0c299';
+  ctx.beginPath(); ctx.arc(0,-10,11,0,Math.PI*2); ctx.fill();
+  if(isWife){
+    ctx.fillStyle = '#7a4a2b';
+    ctx.beginPath(); ctx.arc(0,-10,12.5,Math.PI*0.9,Math.PI*2.1); ctx.fill();
+    ctx.fillStyle = '#e0483e';
+    ctx.beginPath(); ctx.arc(0,-16,12,Math.PI,Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillStyle = '#c99422';
+    ctx.beginPath();
+    ctx.ellipse(0,-19,13,6,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-13,-19); ctx.quadraticCurveTo(0,-30,13,-19); ctx.closePath();
+    ctx.fill();
+  }
+  if(asleep){
+    ctx.fillStyle = '#3a2b1a';
+    ctx.font = '10px sans-serif';
+    ctx.fillText('Z', 14, -18);
+    ctx.font = '13px sans-serif';
+    ctx.fillText('z', 22, -26);
+  }
+  ctx.restore();
+}
+
+function drawBed(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#7a4a2b';
+  ctx.fillRect(-60,-6,120,14);
+  ctx.fillRect(-64,-40,10,60);
+  ctx.fillRect(54,-30,10,50);
+  ctx.fillStyle = '#eee7d8';
+  ctx.fillRect(-52,-16,104,12);
+  ctx.fillStyle = '#d9622b';
+  ctx.fillRect(-52,-16,104,4);
+  ctx.restore();
+}
+
+function drawRooster(x,y,scale,crowIntensity){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  var bob = Math.sin((crowIntensity||0)*20) * (crowIntensity>0?4:0);
+  ctx.translate(0,bob*-1);
+  // body
+  ctx.fillStyle = '#f2f2f2';
+  ctx.beginPath(); ctx.ellipse(0,10,24,18,0,0,Math.PI*2); ctx.fill();
+  // tail
+  ctx.fillStyle = '#3f6ea5';
+  ctx.beginPath();
+  ctx.moveTo(18,2); ctx.quadraticCurveTo(46,-14,40,10); ctx.quadraticCurveTo(30,4,18,14);
+  ctx.fill();
+  // head
+  var headTilt = crowIntensity ? -0.35 : 0;
+  ctx.save();
+  ctx.translate(-16,-8);
+  ctx.rotate(headTilt);
+  ctx.fillStyle = '#f2f2f2';
+  ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#d9433a';
+  ctx.beginPath(); ctx.arc(-2,-10,6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-4,6,4,6,0,0,Math.PI*2); ctx.fill();
+  var beakOpen = crowIntensity ? 6 : 2;
+  ctx.fillStyle = '#e8b93b';
+  ctx.beginPath();
+  ctx.moveTo(-11,0); ctx.lineTo(-20,-2); ctx.lineTo(-11,beakOpen); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2a2350';
+  ctx.beginPath(); ctx.arc(-3,-2,1.6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // legs
+  ctx.strokeStyle = '#e8b93b'; ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-6,26); ctx.lineTo(-8,38);
+  ctx.moveTo(8,26); ctx.lineTo(10,38);
+  ctx.stroke();
+  if(crowIntensity > 0.15){
+    ctx.strokeStyle = 'rgba(217,98,43,0.65)';
+    ctx.lineWidth = 2;
+    for(var i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.arc(-30,-14,10+i*7*crowIntensity,-0.9,-0.1);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawTurkey(x,y,scale,flapIntensity){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  var f = flapIntensity||0;
+  var flap = Math.sin(f*18) * (f>0?1:0);
+
+  // tail fan (behind body, fanned upward-right, clearly feather-shaped)
+  ctx.save();
+  ctx.translate(10,4);
+  for(var i=-3;i<=3;i++){
+    var ang = i*0.26 - 0.1;
+    ctx.save();
+    ctx.rotate(ang);
+    var featherLen = 46;
+    var grad = ctx.createLinearGradient(0,0,0,-featherLen);
+    grad.addColorStop(0,'#8a5a34');
+    grad.addColorStop(1,'#c98a4b');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(-5,0);
+    ctx.quadraticCurveTo(-9,-featherLen*0.6,0,-featherLen);
+    ctx.quadraticCurveTo(9,-featherLen*0.6,5,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e8b93b';
+    ctx.beginPath();
+    ctx.ellipse(0,-featherLen+6,3.5,6,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // body
+  ctx.fillStyle = '#6b4630';
+  ctx.beginPath(); ctx.ellipse(-2,14,24,19,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#83593a';
+  ctx.beginPath(); ctx.ellipse(-6,10,15,12,0,0,Math.PI*2); ctx.fill();
+
+  // wing (flapping)
+  ctx.fillStyle = '#4a3220';
+  ctx.save();
+  ctx.translate(2,16);
+  ctx.rotate(flap*0.25);
+  ctx.beginPath(); ctx.ellipse(0,0,15,10,0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // neck + head
+  ctx.fillStyle = '#83593a';
+  ctx.beginPath(); ctx.ellipse(-20,-2,7,10,0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#7d97a3';
+  ctx.beginPath(); ctx.arc(-24,-12,8,0,Math.PI*2); ctx.fill();
+
+  // wattle (red dangly bit) - wobbles more when gobbling loudly
+  var wattleLen = 9 + Math.abs(flap)*6;
+  ctx.strokeStyle = '#d9433a';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(-21,-9);
+  ctx.quadraticCurveTo(-19-flap*2, -9+wattleLen*0.6, -20, -9+wattleLen);
+  ctx.stroke();
+
+  // snood
+  ctx.strokeStyle = '#d9433a';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-27,-13);
+  ctx.quadraticCurveTo(-30,-9,-28,-6);
+  ctx.stroke();
+
+  // beak
+  ctx.fillStyle = '#e8b93b';
+  ctx.beginPath();
+  ctx.moveTo(-31,-13); ctx.lineTo(-38,-11); ctx.lineTo(-31,-10); ctx.closePath();
+  ctx.fill();
+
+  // eye
+  ctx.fillStyle = '#2a2350';
+  ctx.beginPath(); ctx.arc(-25,-15,1.6,0,Math.PI*2); ctx.fill();
+
+  // legs + feet
+  ctx.strokeStyle = '#e8b93b'; ctx.lineWidth=3.5;
+  ctx.beginPath();
+  ctx.moveTo(-8,31); ctx.lineTo(-10,44);
+  ctx.moveTo(6,31); ctx.lineTo(9,44);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-14,44); ctx.lineTo(-10,44); ctx.lineTo(-6,44);
+  ctx.moveTo(4,44); ctx.lineTo(9,44); ctx.lineTo(13,44);
+  ctx.stroke();
+
+  // gobble sound waves when actively making noise
+  if(f > 0.15){
+    ctx.strokeStyle = 'rgba(217,98,43,0.6)';
+    ctx.lineWidth = 2;
+    for(var k=0;k<3;k++){
+      ctx.beginPath();
+      ctx.arc(-38,-11, 8+k*7*f, 2.3, 3.4);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawCrow(x,y,scale,flap){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  var w = Math.sin((flap||0)) * 14;
+  ctx.fillStyle = '#2b2b2b';
+  ctx.beginPath(); ctx.ellipse(0,0,14,10,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-6,-2); ctx.quadraticCurveTo(-24,-10-w, -30,2-w);
+  ctx.quadraticCurveTo(-16,4,-6,4);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(6,-2); ctx.quadraticCurveTo(24,-10+w, 30,2+w);
+  ctx.quadraticCurveTo(16,4,6,4);
+  ctx.fill();
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(10,-4,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#e8b93b';
+  ctx.beginPath();
+  ctx.moveTo(14,-6); ctx.lineTo(22,-3); ctx.lineTo(14,-1); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(12,-5,1.4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawBonfire(x,y,scale,flick){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#7a4a2b';
+  ctx.fillRect(-16,10,10,4);
+  ctx.fillRect(6,10,10,4);
+  ctx.fillRect(-10,8,20,4);
+  var h = 22 + Math.sin(flick*8)*4;
+  var grad = ctx.createLinearGradient(0,10,0,10-h);
+  grad.addColorStop(0,'#d9622b');
+  grad.addColorStop(0.5,'#e8b93b');
+  grad.addColorStop(1,'#fff3b0');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(-10,10);
+  ctx.quadraticCurveTo(-14 + Math.sin(flick*5)*3, 10-h*0.5, 0, 10-h);
+  ctx.quadraticCurveTo(14 + Math.cos(flick*6)*3, 10-h*0.5, 10,10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawVillager(x,y,scale,phase,colorA){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  var sway = Math.sin(phase)*10;
+  var armUp = Math.sin(phase*1.3);
+  ctx.strokeStyle = '#5c4630'; ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(-5,20); ctx.lineTo(-5+sway*0.2,38);
+  ctx.moveTo(5,20); ctx.lineTo(5-sway*0.2,38);
+  ctx.stroke();
+  ctx.fillStyle = colorA;
+  ctx.save();
+  ctx.rotate(sway*0.02);
+  ctx.beginPath();
+  ctx.moveTo(-12,20); ctx.quadraticCurveTo(0,-4,12,20); ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = colorA; ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(-10,2); ctx.lineTo(-18, 2 - armUp*16);
+  ctx.moveTo(10,2); ctx.lineTo(18, 2 - armUp*16);
+  ctx.stroke();
+  ctx.fillStyle = '#f0c299';
+  ctx.beginPath(); ctx.arc(sway*0.05,-8,9,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+/* ============ SCENE RENDER ============ */
+
+function computeHotspots(){
+  var hs = [];
+  if(state.scene === 1){
+    hs.push({shape:'rect', x:150, y:230, w:500, h:150, id:'field'});
+  } else if(state.scene === 2){
+    hs.push({shape:'circle', x:260, y:330, r:60, id:'dance1'});
+    hs.push({shape:'circle', x:400, y:340, r:60, id:'dance2'});
+    hs.push({shape:'circle', x:540, y:330, r:60, id:'dance3'});
+  } else if(state.scene === 3){
+    hs.push({shape:'rect', x:280, y:270, w:240, h:110, id:'bed'});
+  } else if(state.scene === 4){
+    hs.push({shape:'circle', x:560, y:300, r:70, id:'rooster'});
+  } else if(state.scene === 5){
+    hs.push({shape:'circle', x:250, y:300, r:70, id:'turkey'});
+  } else if(state.scene === 6){
+    for(var i=0;i<state.crows.length;i++){
+      var c = state.crows[i];
+      if(!c.tapped){
+        hs.push({shape:'circle', x:c.x, y:c.y, r:34, id:'crow'+i});
+      }
+    }
+  } else if(state.scene === 7){
+    hs.push({shape:'rect', x:150, y:230, w:500, h:150, id:'emptyfield'});
+  }
+  return hs;
+}
+
+function hitTest(px,py){
+  var hs = computeHotspots();
+  for(var i=0;i<hs.length;i++){
+    var h = hs[i];
+    if(h.shape === 'rect'){
+      if(px>=h.x && px<=h.x+h.w && py>=h.y && py<=h.y+h.h) return h.id;
+    } else {
+      var dx = px-h.x, dy = py-h.y;
+      if(dx*dx+dy*dy <= h.r*h.r) return h.id;
+    }
+  }
+  return null;
+}
+
+function renderStart(){
+  drawSky('#8fd0e8', '#eaf6fb');
+  drawGround('#e8b93b');
+  drawCloud(120,70,1.1);
+  drawCloud(650,50,0.9);
+  drawSun(700,80,36);
+  drawHouse(150,H*0.66,0.9);
+  drawCornField(3,7,220,H*0.72,58,1, state.t);
+  drawPerson(150, H*0.78, 1, {});
+}
+
+function renderScene1(){
+  drawSky('#8fd0e8', '#eaf6fb');
+  drawGround('#c99422');
+  drawSun(120,70,34);
+  drawCloud(600,60,1);
+  drawHouse(680,H*0.6,0.7);
+  var wobble = Math.sin(state.t*1.5)*4;
+  drawCornField(4,9, 130, H*0.66, 46, 1, state.t*0.6);
+  drawPerson(120, H*0.86, 1, {});
+  drawPerson(170, H*0.86, 1, {wife:true});
+  if(state.wiggle && state.wiggle>0){
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,0.6)';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(400,300,60+ (1-state.wiggle)*40, 0, Math.PI*2);
+    ctx.globalAlpha = state.wiggle;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function renderScene2(){
+  drawSky('#2a2350','#4a3f7a');
+  drawStars(state.t);
+  drawMoon(700,70,26);
+  drawGround('#3d5a34');
+  drawHouse(700,H*0.62,0.6);
+  drawBonfire(400,H*0.82,1.4,state.t);
+  var phase = state.t*3;
+  drawVillager(260,330,1, phase, '#c85f7a');
+  drawVillager(400,340,1, phase+1.4,'#3f6ea5');
+  drawVillager(540,330,1, phase+2.8,'#e8b93b');
+  drawVillager(320,300,0.7, phase+0.8,'#7a5636');
+  drawVillager(470,300,0.7, phase+2.1,'#4c8a3f');
+}
+
+function renderScene3(){
+  drawSky('#2a2350','#33306b');
+  drawStars(state.t*0.6);
+  drawMoon(120,70,24);
+  drawGround('#5c4630');
+  drawBed(400,H*0.66,1.3);
+  var asleep = state.holdProgress >= 1;
+  var yOff = asleep ? 0 : -20;
+  drawPerson(360, H*0.62+yOff, 0.85, {asleep:asleep});
+  drawPerson(440, H*0.62+yOff, 0.85, {wife:true, asleep:asleep});
+}
+
+function renderScene4(){
+  drawSky('#f6c88a','#fdeccb');
+  drawSun(680,90,32);
+  drawGround('#c99422');
+  drawHouse(220,H*0.6,0.85);
+  ctx.save();
+  ctx.font = '20px sans-serif';
+  ctx.fillStyle = '#3a2b1a';
+  if(state.mash < state.mashRequired){
+    ctx.fillText('Z z z ...', 250, H*0.42);
+  }
+  ctx.restore();
+  var intensity = clamp(state.mash / state.mashRequired, 0, 1) * (0.4+0.6*Math.abs(Math.sin(state.t*6)));
+  drawRooster(560, H*0.66, 1.3, intensity);
+}
+
+function renderScene5(){
+  drawSky('#f6c88a','#fdeccb');
+  drawSun(680,90,32);
+  drawGround('#c99422');
+  drawHouse(600,H*0.6,0.8);
+  ctx.save();
+  ctx.font = '20px sans-serif';
+  ctx.fillStyle = '#3a2b1a';
+  if(state.holdProgress < 1){
+    ctx.fillText('Z z z ...', 470, H*0.42);
+  }
+  ctx.restore();
+  var intensity = state.holdProgress * (0.4+0.6*Math.abs(Math.sin(state.t*6)));
+  drawTurkey(250, H*0.66, 1.35, intensity);
+}
+
+function ensureCrows(){
+  if(state.crows.length===0){
+    var spots = [[230,300],[330,270],[430,300],[520,270],[610,300]];
+    for(var j=0;j<state.crowsTotal;j++){
+      state.crows.push({x:spots[j][0], y:spots[j][1], tapped:false, appearAt: j*0.5, flapPhase: Math.random()*6});
+    }
+  }
+}
+
+function renderScene6(){
+  drawSky('#f6c88a','#fdeccb');
+  drawSun(700,80,30);
+  drawGround('#c99422');
+  var ratio = 1 - (state.crowsDone / state.crowsTotal) * 0.9;
+  drawCornField(3,8, 130, H*0.64, 52, ratio, state.t*0.4);
+  ensureCrows();
+  for(var i=0;i<state.crows.length;i++){
+    var c = state.crows[i];
+    if(state.t > c.appearAt && !c.tapped){
+      drawCrow(c.x, c.y-10, 1.1, state.t*4+c.flapPhase);
+    }
+  }
+}
+
+function renderScene7(){
+  drawSky('#a9e0f0','#eef8fb');
+  drawSun(400,80,34);
+  drawGround('#8a6a3a');
+  drawCornField(3,8, 130, H*0.64, 52, 0.05, 0);
+  drawPerson(400, H*0.84, 1.05, {});
+  drawPerson(450, H*0.84, 1.05, {wife:true});
+}
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+  if(state.scene === 'start'){
+    renderStart();
+  } else if(state.scene === 1){ renderScene1(); }
+  else if(state.scene === 2){ renderScene2(); }
+  else if(state.scene === 3){ renderScene3(); }
+  else if(state.scene === 4){ renderScene4(); }
+  else if(state.scene === 5){ renderScene5(); }
+  else if(state.scene === 6){ renderScene6(); }
+  else if(state.scene === 7){ renderScene7(); }
+  else if(state.scene === 'end'){ renderScene7(); }
+}
+
+/* ============ UI SYNC ============ */
+
+function buildDots(){
+  var wrap = document.getElementById('dots');
+  wrap.innerHTML = '';
+  for(var i=1;i<=TOTAL_STAGES;i++){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    if(typeof state.scene === 'number'){
+      if(i < state.scene) d.className = 'dot done';
+      else if(i === state.scene) d.className = 'dot current';
+    } else if(state.scene === 'end'){
+      d.className = 'dot done';
+    }
+    wrap.appendChild(d);
+  }
+}
+
+function setInstruction(text){
+  document.getElementById('instruction').textContent = text;
+}
+function setNarration(text){
+  document.getElementById('narration').textContent = text;
+}
+
+function setActionRow(html){
+  document.getElementById('action-row').innerHTML = html;
+}
+
+function showProgress(show){
+  document.getElementById('progressOuter').style.display = show ? 'block':'none';
+}
+function setProgress(p){
+  document.getElementById('progressInner').style.width = (clamp(p,0,1)*100)+'%';
+}
+
+function refreshTexts(){
+  var s = tstr();
+  document.getElementById('gameTitle').textContent = s.title;
+  document.getElementById('gameSubtitle').textContent = s.subtitle;
+  document.getElementById('footerText').textContent = s.footer;
+  document.getElementById('langBtn').textContent = s.langLabel;
+  document.getElementById('muteBtn').textContent = state.muted ? '🔇' : '🔊';
+
+  if(state.scene === 'start'){
+    setInstruction(s.startDesc);
+    setNarration('');
+    setActionRow('<button class="main-btn" id="startBtn" type="button">'+s.startBtn+'</button>');
+    document.getElementById('startBtn').onclick = function(){ goToScene(1); };
+    showProgress(false);
+  } else if(typeof state.scene === 'number'){
+    var sc = s.scenes[state.scene-1];
+    setInstruction(sc.instruction);
+    setNarration(sc.narration);
+    if(state.sceneDone){
+      setActionRow('<button class="main-btn" id="nextBtn" type="button">'+s.continueBtn+'</button>');
+      var btn = document.getElementById('nextBtn');
+      if(btn) btn.onclick = function(){ advanceScene(); };
+    } else {
+      setActionRow('');
+    }
+  } else if(state.scene === 'end'){
+    setInstruction('');
+    setNarration(s.moralText);
+    setActionRow('<button class="main-btn secondary" id="replayBtn" type="button">'+s.replayBtn+'</button>');
+    document.getElementById('replayBtn').onclick = function(){ restartGame(); };
+    showProgress(false);
+  }
+  buildDots();
+  sendResize();
+}
+
+/* ============ SCENE FLOW ============ */
+
+function resetSceneMechanics(){
+  state.mash = 0;
+  state.holding = false;
+  state.holdProgress = 0;
+  state.crows = [];
+  state.crowsDone = 0;
+  state.sceneDone = false;
+  showProgress(false);
+  setProgress(0);
+}
+
+function goToScene(n){
+  resetSceneMechanics();
+  state.scene = n;
+  state.t = 0;
+  refreshTexts();
+  var sc = tstr().scenes[n-1];
+  speak(sc.narration);
+  if(n===2 || n===4){ showProgress(true); }
+}
+
+function advanceScene(){
+  stopSpeak();
+  if(typeof state.scene === 'number'){
+    if(state.scene < TOTAL_STAGES){
+      goToScene(state.scene+1);
+    } else {
+      goToEnd();
+    }
+  }
+}
+
+function goToEnd(){
+  resetSceneMechanics();
+  state.scene = 'end';
+  refreshTexts();
+  speak(tstr().moralText.replace(/\n/g,' '));
+}
+
+function restartGame(){
+  stopSpeak();
+  resetSceneMechanics();
+  state.scene = 'start';
+  refreshTexts();
+}
+
+function completeObjective(){
+  state.sceneDone = true;
+  showProgress(false);
+  refreshTexts();
+}
+
+/* ============ INPUT HANDLING ============ */
+
+function getPos(evt){
+  var rect = canvas.getBoundingClientRect();
+  var cx, cy;
+  if(evt.touches && evt.touches.length){
+    cx = evt.touches[0].clientX; cy = evt.touches[0].clientY;
+  } else {
+    cx = evt.clientX; cy = evt.clientY;
+  }
+  var scaleX = W / rect.width;
+  var scaleY = H / rect.height;
+  return { x:(cx-rect.left)*scaleX, y:(cy-rect.top)*scaleY };
+}
+
+function onPointerDown(evt){
+  evt.preventDefault();
+  var pos = getPos(evt);
+  var id = hitTest(pos.x,pos.y);
+  if(!id) return;
+
+  if(state.scene===1 && id==='field' && !state.sceneDone){
+    state.wiggle = 1;
+    completeObjective();
+  } else if(state.scene===2 && !state.sceneDone && id && id.indexOf('dance')===0){
+    state.mash++;
+    setProgress(state.mash/state.mashRequired);
+    if(state.mash >= state.mashRequired){
+      completeObjective();
+    }
+  } else if(state.scene===3 && id==='bed'){
+    state.holding = true;
+    state.holdStart = performance.now();
+    showProgress(true);
+  } else if(state.scene===4 && id==='rooster' && !state.sceneDone){
+    state.mash++;
+    setProgress(state.mash/state.mashRequired);
+    if(state.mash >= state.mashRequired){
+      completeObjective();
+    }
+  } else if(state.scene===5 && id==='turkey'){
+    state.holding = true;
+    state.holdStart = performance.now();
+    showProgress(true);
+  } else if(state.scene===6 && id && id.indexOf('crow')===0){
+    var idx = parseInt(id.substring(4),10);
+    if(state.crows[idx] && !state.crows[idx].tapped){
+      state.crows[idx].tapped = true;
+      state.crowsDone++;
+      if(state.crowsDone >= state.crowsTotal){
+        completeObjective();
+      }
+    }
+  } else if(state.scene===7 && id==='emptyfield' && !state.sceneDone){
+    completeObjective();
+  }
+}
+
+function onPointerUp(evt){
+  if(state.holding){
+    state.holding = false;
+    if(state.holdProgress < 1){
+      // decay back a bit if released early, but keep some credit
+      state.holdProgress = Math.max(0, state.holdProgress - 0.15);
+      setProgress(state.holdProgress);
+    }
+  }
+}
+
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('touchstart', onPointerDown, {passive:false});
+window.addEventListener('mouseup', onPointerUp);
+window.addEventListener('touchend', onPointerUp);
+
+/* ============ MAIN LOOP ============ */
+
+var lastTs = performance.now();
+function loop(ts){
+  var dt = (ts-lastTs)/1000;
+  lastTs = ts;
+  state.t += dt;
+
+  if(state.wiggle && state.wiggle>0){
+    state.wiggle -= dt*1.2;
+    if(state.wiggle<0) state.wiggle=0;
+  }
+
+  if(state.holding && (state.scene===3 || state.scene===5)){
+    var elapsed = performance.now() - state.holdStart;
+    state.holdProgress = clamp(elapsed/state.holdRequired,0,1);
+    setProgress(state.holdProgress);
+    if(state.holdProgress >= 1 && !state.sceneDone){
+      completeObjective();
+    }
+  }
+
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ============ CONTROLS: LANG / MUTE ============ */
+
+document.getElementById('langBtn').addEventListener('click', function(){
+  state.lang = (state.lang === 'id') ? 'en' : 'id';
+  stopSpeak();
+  refreshTexts();
+  if(typeof state.scene === 'number'){
+    speak(tstr().scenes[state.scene-1].narration);
+  } else if(state.scene === 'end'){
+    speak(tstr().moralText.replace(/\n/g,' '));
+  }
+});
+
+document.getElementById('muteBtn').addEventListener('click', function(){
+  state.muted = !state.muted;
+  localStorage.setItem('ladangJagungMuted', state.muted ? '1':'0');
+  if(state.muted){ stopSpeak(); }
+  refreshTexts();
+});
+
+/* ============ RESIZE / INIT ============ */
+
+window.addEventListener('resize', sendResize);
+window.addEventListener('load', sendResize);
+
+refreshTexts();
+render();
+
+})();
+</script>
+</body>
+</html>
