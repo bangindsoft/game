@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedagang Tamak dan Pedagang Jujur</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fdf6e9;
+    color: #3a2a1a;
+  }
+  #app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px 14px 20px;
+  }
+  header.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    color: #7a3b12;
+  }
+  .top-controls {
+    display: flex;
+    gap: 6px;
+  }
+  .icon-btn {
+    background: #fff3dd;
+    border: 2px solid #c98a3f;
+    color: #7a3b12;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .icon-btn:hover { background: #ffe6bd; }
+  .icon-btn.active { background: #c98a3f; color: #fff; }
+
+  #canvasWrap {
+    position: relative;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 3px solid #c98a3f;
+    background: linear-gradient(#bfe3ff, #eaf6ff);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  #progressWrap {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 16px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 10px;
+    border: 2px solid #7a3b12;
+    overflow: hidden;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: #e07b1a;
+    transition: width 0.05s linear;
+  }
+
+  #choiceOverlay {
+    display: none;
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 10px 12px 14px;
+    background: linear-gradient(rgba(255,255,255,0), rgba(255,246,229,0.97) 30%);
+    gap: 8px;
+    flex-direction: column;
+  }
+  .choice-btn {
+    background: #fff3dd;
+    border: 2px solid #c98a3f;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    text-align: left;
+    cursor: pointer;
+    color: #3a2a1a;
+    font-weight: 600;
+  }
+  .choice-btn:hover { background: #ffe6bd; }
+
+  #instructionBox {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: #fff3dd;
+    border-left: 5px solid #e07b1a;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  #narrationBox {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: #fffdf8;
+    border: 1px dashed #c98a3f;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    min-height: 30px;
+    color: #4a3520;
+  }
+
+  #dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #e6d3b3;
+    border: 1px solid #c98a3f;
+    transition: background 0.2s;
+  }
+  .dot.active { background: #e07b1a; }
+  .dot.done { background: #7a3b12; }
+
+  #controlsRow {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #mainBtn {
+    background: #e07b1a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #a85c10;
+  }
+  #mainBtn:active { box-shadow: none; transform: translateY(3px); }
+  #mainBtn:hover { background: #ee8a2c; }
+
+  footer.gamefooter {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.78rem;
+    color: #a08862;
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 1rem; }
+    .icon-btn { padding: 5px 8px; font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <h1 id="gameTitle">Pedagang Tamak dan Pedagang Jujur</h1>
+    <div class="top-controls">
+      <button class="icon-btn" id="langBtn" type="button">EN</button>
+      <button class="icon-btn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </header>
+
+  <div id="canvasWrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="choiceOverlay"></div>
+  </div>
+
+  <div id="instructionBox">Memuat...</div>
+  <div id="narrationBox"></div>
+
+  <div id="dots"></div>
+
+  <div id="controlsRow">
+    <button id="mainBtn" type="button">Mulai Cerita</button>
+  </div>
+
+  <footer class="gamefooter">Kisah rakyat India · Kesetiaan pada kejujuran membawa keberuntungan</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= LANGUAGE ================= */
+  var params = new URLSearchParams(window.location.search);
+  var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+  var STR = {
+    id: {
+      title: "Pedagang Tamak dan Pedagang Jujur",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      nextBtn: "Lanjut",
+      footer: "Kisah rakyat India · Kesetiaan pada kejujuran membawa keberuntungan",
+      scenes: [
+        {
+          narr: "Di sebuah kota di India, hidup dua pedagang peralatan rumah tangga yang bertetangga. Satu jujur dan baik hati, satu lagi tamak dan licik.",
+          instr: "Ketuk gubuk tua di tengah desa untuk memulai kisah.",
+          hotspot: "hut"
+        },
+        {
+          narr: "Pada suatu hari, pedagang tamak berjalan menjajakan dagangannya dan melewati gubuk seorang nenek tua.",
+          instr: "Ketuk pedagang berbaju hijau (pedagang tamak) untuk melihat apa yang terjadi.",
+          hotspot: "greedy"
+        },
+        {
+          narr: "Nenek itu keluar sambil membawa sebuah mangkuk. 'Nak, bolehkah aku menukar mangkuk peninggalan suamiku ini dengan perkakas yang kau jual?' katanya.",
+          instr: "Ketuk mangkuk yang dipegang nenek untuk memeriksanya lebih dekat.",
+          hotspot: "bowl1"
+        },
+        {
+          narr: "Pedagang tamak itu diam-diam tahu mangkuk itu terbuat dari emas. Tapi ia berkata, 'Mangkuk ini tidak berharga, Nek. Aku hanya mau menukarnya dengan sepasang sendok dan garpu.'",
+          instr: "Tekan dan tahan tombol 'Tawarkan Sendok & Garpu' untuk melihat tawaran licik pedagang tamak.",
+          hold: true
+        },
+        {
+          narr: "Nenek itu meminta tawaran yang lebih baik, tapi pedagang tamak menolak dan pergi begitu saja. Nenek pun tertunduk sedih sambil memeluk mangkuknya.",
+          instr: "Ketuk nenek untuk melanjutkan kisah.",
+          hotspot: "grandma"
+        },
+        {
+          narr: "Tak lama kemudian, pedagang jujur lewat. Nenek menawarkan mangkuk itu kepadanya. Pedagang jujur terkejut melihat kilau emas pada mangkuk itu.",
+          instr: "Seret keranjang perkakas ke arah nenek untuk menukarkannya dengan mangkuk emas.",
+          drag: true
+        },
+        {
+          narr: "'Mangkuk ini sangat berharga, Nek, ini emas asli. Seluruh daganganku mungkin tak sebanding nilainya,' kata pedagang jujur itu. Namun nenek tetap memintanya menerima mangkuk itu.",
+          instr: "Tekan dan tahan mangkuk untuk menggosoknya dan melihat kilau emas yang sesungguhnya.",
+          hold: true
+        },
+        {
+          narr: "Sore harinya, pedagang tamak kembali untuk mengambil mangkuk emas itu. Namun nenek berkata bahwa mangkuk itu telah diberikan kepada pedagang yang jujur.",
+          instr: "Pilih apa yang menurutmu dikatakan nenek kepada pedagang tamak itu.",
+          choice: {
+            question: "Apa yang dikatakan nenek kepada pedagang tamak?",
+            options: [
+              { text: "'Mangkuk itu sudah kuberikan pada pedagang yang jujur. Kau tidak jujur dan tamak.'", correct: true },
+              { text: "'Maaf, aku lupa menyimpannya untukmu, ambillah barang lain sebagai gantinya.'", correct: false }
+            ],
+            wrongFeedback: "Bukan itu jawabannya. Nenek justru menegur ketamakan pedagang itu. Coba pilih lagi."
+          }
+        },
+        {
+          narr: "Pedagang tamak hanya bisa menyesali perbuatannya sendiri. Sementara itu, pedagang jujur hidup berkecukupan setelah menjual mangkuk emas itu di pasar.",
+          instr: "Ketuk pasar untuk melihat akhir kisah.",
+          hotspot: "market"
+        },
+        {
+          narr: "Pesan moral: Orang yang tamak tidak akan mendapatkan kebaikan. Orang yang jujur dan berhati baik pasti akan mendapatkan keberuntungan.",
+          instr: "Kisah selesai. Ketuk 'Ulangi Cerita' untuk mengulang dari awal.",
+          ending: true
+        }
+      ]
+    },
+    en: {
+      title: "The Greedy Merchant and the Honest Merchant",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      nextBtn: "Next",
+      footer: "A folktale from India · Honesty always brings good fortune",
+      scenes: [
+        {
+          narr: "In a city in India, two household-goods merchants lived as neighbors. One was honest and kind, the other greedy and cunning.",
+          instr: "Tap the old hut in the middle of the village to begin the story.",
+          hotspot: "hut"
+        },
+        {
+          narr: "One day, the greedy merchant walked around selling his goods and passed by an old woman's hut.",
+          instr: "Tap the merchant in green (the greedy merchant) to see what happens.",
+          hotspot: "greedy"
+        },
+        {
+          narr: "The old woman came out holding a bowl. 'Son, may I trade this bowl, left by my late husband, for some of your wares?' she asked.",
+          instr: "Tap the bowl the grandmother is holding to inspect it closely.",
+          hotspot: "bowl1"
+        },
+        {
+          narr: "The greedy merchant secretly knew the bowl was made of gold. But he said, 'This bowl is worthless, Grandma. I'll only trade it for a spoon and fork.'",
+          instr: "Press and hold the 'Offer Spoon & Fork' button to see the merchant's sly offer.",
+          hold: true
+        },
+        {
+          narr: "The old woman asked for a better offer, but the greedy merchant refused and walked away. She was left sitting sadly, clutching her bowl.",
+          instr: "Tap the grandmother to continue the story.",
+          hotspot: "grandma"
+        },
+        {
+          narr: "Soon after, the honest merchant passed by. The grandmother offered him the bowl. He was astonished to see the golden shine of the bowl.",
+          instr: "Drag the basket of wares toward the grandmother to trade it for the golden bowl.",
+          drag: true
+        },
+        {
+          narr: "'This bowl is very precious, Grandma, it's real gold. My whole stock might not be worth as much,' said the honest merchant. But she insisted he take it.",
+          instr: "Press and hold the bowl to polish it and reveal its true golden shine.",
+          hold: true
+        },
+        {
+          narr: "That evening, the greedy merchant came back to collect the golden bowl. But the grandmother told him it had already been given to the honest merchant.",
+          instr: "Choose what you think the grandmother said to the greedy merchant.",
+          choice: {
+            question: "What did the grandmother say to the greedy merchant?",
+            options: [
+              { text: "'I already gave it to the honest merchant. You were dishonest and greedy.'", correct: true },
+              { text: "'Sorry, I forgot to save it for you — take something else instead.'", correct: false }
+            ],
+            wrongFeedback: "That's not quite it. The grandmother actually scolded his greed. Try again."
+          }
+        },
+        {
+          narr: "The greedy merchant could only regret his own actions. Meanwhile, the honest merchant lived comfortably after selling the golden bowl at the market.",
+          instr: "Tap the market to see the ending of the story.",
+          hotspot: "market"
+        },
+        {
+          narr: "Moral of the story: A greedy person will never find true fortune. An honest and kind-hearted person will always be rewarded with good luck.",
+          instr: "The story has ended. Tap 'Replay Story' to start again.",
+          ending: true
+        }
+      ]
+    }
+  };
+
+  /* ================= STATE ================= */
+  var state = {
+    scene: -1, // -1 = title screen
+    muted: (localStorage.getItem('ptpj_muted') === '1'),
+    started: false,
+    holdActive: false,
+    holdProgress: 0,
+    holdTimer: null,
+    dragging: false,
+    dragX: 0, dragY: 0,
+    dragDone: false,
+    choiceLocked: false,
+    wrongTries: 0
+  };
+
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var instructionBox = document.getElementById('instructionBox');
+  var narrationBox = document.getElementById('narrationBox');
+  var dotsWrap = document.getElementById('dots');
+  var mainBtn = document.getElementById('mainBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var langBtn = document.getElementById('langBtn');
+  var progressWrap = document.getElementById('progressWrap');
+  var progressBar = document.getElementById('progressBar');
+  var choiceOverlay = document.getElementById('choiceOverlay');
+  var titleEl = document.getElementById('gameTitle');
+  var footerEl = document.querySelector('footer.gamefooter');
+
+  function T(){ return STR[lang]; }
+  function totalScenes(){ return T().scenes.length; }
+
+  /* ================= NARRATION (Web Speech API) ================= */
+  var voices = [];
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    var wantLang = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = voices.find(function(v){ return v.lang === wantLang; });
+    if (!v) v = voices.find(function(v){ return v.lang && v.lang.indexOf(lang) === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (state.muted) return;
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice();
+    if (v) u.voice = v;
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ================= DRAWING HELPERS ================= */
+  function clear(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  function drawSky(){
+    var g = ctx.createLinearGradient(0,0,0,320);
+    g.addColorStop(0,'#a9dcf5');
+    g.addColorStop(1,'#eaf6ff');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,800,320);
+    // sun
+    ctx.fillStyle = '#ffe08a';
+    ctx.beginPath();
+    ctx.arc(700,70,40,0,Math.PI*2);
+    ctx.fill();
+    // clouds
+    drawCloud(120,60);
+    drawCloud(320,100);
+  }
+  function drawCloud(x,y){
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(x,y,22,0,Math.PI*2);
+    ctx.arc(x+26,y+6,26,0,Math.PI*2);
+    ctx.arc(x+52,y,20,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawGround(){
+    var g = ctx.createLinearGradient(0,300,0,500);
+    g.addColorStop(0,'#dcbb6e');
+    g.addColorStop(1,'#c9a256');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,300,800,200);
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(-8,0,16,60);
+    ctx.fillStyle = '#4f7a34';
+    ctx.beginPath();
+    ctx.arc(0,-20,42,0,Math.PI*2);
+    ctx.arc(-28,0,32,0,Math.PI*2);
+    ctx.arc(28,0,32,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawHut(x,y,highlight){
+    ctx.save();
+    ctx.translate(x,y);
+    if (highlight) {
+      ctx.shadowColor = '#ffd479';
+      ctx.shadowBlur = 25;
+    }
+    // walls
+    ctx.fillStyle = '#c9a06a';
+    ctx.fillRect(-70,-10,140,90);
+    // roof
+    ctx.fillStyle = '#8a5a2b';
+    ctx.beginPath();
+    ctx.moveTo(-90,-10);
+    ctx.lineTo(0,-70);
+    ctx.lineTo(90,-10);
+    ctx.closePath();
+    ctx.fill();
+    // door
+    ctx.fillStyle = '#5b3a1e';
+    ctx.fillRect(-18,20,36,60);
+    // window
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(-55,5,22,22);
+    ctx.fillRect(33,5,22,22);
+    ctx.restore();
+  }
+  function drawMarket(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    // stall poles
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(-80,-10,10,80);
+    ctx.fillRect(70,-10,10,80);
+    // awning
+    ctx.fillStyle = '#c94b3a';
+    ctx.beginPath();
+    ctx.moveTo(-95,-10);
+    ctx.lineTo(95,-10);
+    ctx.lineTo(75,-45);
+    ctx.lineTo(-75,-45);
+    ctx.closePath();
+    ctx.fill();
+    for (var i=-90;i<90;i+=20){
+      ctx.fillStyle = (i/20)%2===0 ? '#f2e2c8' : '#c94b3a';
+      ctx.beginPath();
+      ctx.moveTo(i,-10);
+      ctx.lineTo(i+20,-10);
+      ctx.lineTo(i+10,2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // table with goods
+    ctx.fillStyle = '#8a5a2b';
+    ctx.fillRect(-70,40,140,10);
+    ctx.fillStyle = '#5b3a1e';
+    ctx.fillRect(-65,50,8,25);
+    ctx.fillRect(57,50,8,25);
+    // pots on table
+    drawPot(-40,30,'#b06a2a');
+    drawPot(-10,25,'#d4922f');
+    drawPot(20,32,'#8a5a2b');
+    drawPot(50,28,'#c9a06a');
+    ctx.restore();
+  }
+  function drawPot(x,y,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x,y,10,12,0,0,Math.PI*2);
+    ctx.fill();
+  }
+  function drawPerson(x,y,opts){
+    // opts: {shirt, skin, robe, old, headscarf, label}
+    ctx.save();
+    ctx.translate(x,y);
+    var skin = opts.skin || '#c98a5e';
+    ctx.fillStyle = skin;
+    // head
+    ctx.beginPath();
+    ctx.arc(0,-70,20,0,Math.PI*2);
+    ctx.fill();
+    // hair / headscarf
+    if (opts.old) {
+      ctx.fillStyle = '#e9e2d3';
+      ctx.beginPath();
+      ctx.arc(0,-85,16,Math.PI,Math.PI*2);
+      ctx.fill();
+    } else if (opts.headwrap) {
+      ctx.fillStyle = opts.headwrap;
+      ctx.beginPath();
+      ctx.arc(0,-82,20,Math.PI*0.9,Math.PI*2.1);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#2c1c10';
+      ctx.beginPath();
+      ctx.arc(0,-82,18,Math.PI,Math.PI*2);
+      ctx.fill();
+    }
+    // body / robe
+    ctx.fillStyle = opts.shirt || '#5b8a5a';
+    ctx.beginPath();
+    ctx.moveTo(-24,10);
+    ctx.lineTo(-16,-50);
+    ctx.lineTo(16,-50);
+    ctx.lineTo(24,10);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = opts.shirt || '#5b8a5a';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(-16,-40);
+    ctx.lineTo(-32, opts.armOut ? -50 : -5);
+    ctx.moveTo(16,-40);
+    ctx.lineTo(32, opts.armOut ? -50 : -5);
+    ctx.stroke();
+    // legs
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(-16,10,12,35);
+    ctx.fillRect(4,10,12,35);
+    ctx.restore();
+  }
+  function drawBowl(x,y,scale,goldReveal){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if (goldReveal) {
+      var g = ctx.createRadialGradient(0,0,2,0,0,30);
+      g.addColorStop(0,'#fff6c9');
+      g.addColorStop(0.5,'#ffd24a');
+      g.addColorStop(1,'#c9931a');
+      ctx.fillStyle = g;
+      ctx.shadowColor = '#ffe98a';
+      ctx.shadowBlur = 30;
+    } else {
+      ctx.fillStyle = '#9a9a9a';
+    }
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,14,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0,-4,20,10,0,Math.PI,Math.PI*2);
+    ctx.fillStyle = goldReveal ? '#ffdf70' : '#c4c4c4';
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawBasket(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#8a5a2b';
+    ctx.beginPath();
+    ctx.moveTo(-24,0);
+    ctx.lineTo(24,0);
+    ctx.lineTo(18,26);
+    ctx.lineTo(-18,26);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#5b3a1e';
+    ctx.lineWidth = 2;
+    for (var i=-18;i<=18;i+=9){
+      ctx.beginPath();
+      ctx.moveTo(i,2);
+      ctx.lineTo(i,24);
+      ctx.stroke();
+    }
+    // handle
+    ctx.beginPath();
+    ctx.arc(0,-6,20,Math.PI,Math.PI*2);
+    ctx.stroke();
+    // spoon+fork sticking out
+    ctx.fillStyle = '#d8d8d8';
+    ctx.fillRect(-4,-24,3,20);
+    ctx.fillRect(4,-24,3,20);
+    ctx.restore();
+  }
+  function drawSpoonForkOffer(x,y,pressProgress){
+    ctx.save();
+    ctx.translate(x,y);
+    // button plate
+    var pressed = pressProgress && pressProgress > 0;
+    var offsetY = pressed ? Math.min(4, pressProgress*4) : 0;
+    ctx.fillStyle = '#8a5a2b';
+    roundRect(-58,32+offsetY,116,14,6);
+    ctx.fill();
+    ctx.fillStyle = pressed ? '#e0a23a' : '#f2c766';
+    roundRect(-58,26+offsetY,116,20,8);
+    ctx.fill();
+    ctx.strokeStyle = '#7a3b12';
+    ctx.lineWidth = 2;
+    roundRect(-58,26+offsetY,116,20,8);
+    ctx.stroke();
+    ctx.fillStyle = '#5b3a1e';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang === 'en' ? 'Offer Spoon & Fork' : 'Tukar Sendok & Garpu', 0, 40+offsetY);
+    // spoon
+    ctx.fillStyle = '#e0e0e0';
+    ctx.beginPath();
+    ctx.ellipse(-14,-6,6,9,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-16,0,4,26);
+    // fork
+    ctx.fillRect(10,-14,3,14);
+    ctx.fillRect(16,-14,3,14);
+    ctx.fillRect(13,-14,3,14);
+    ctx.fillRect(10,0,9,4);
+    ctx.fillRect(11,4,7,22);
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function drawHighlightRing(x,y,r){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,180,60,0.9)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawSadFace(x,y){
+    ctx.strokeStyle = '#3a2a1a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x,y,5,Math.PI*1.15,Math.PI*1.85,true);
+    ctx.stroke();
+  }
+
+  /* Hotspot registry: {name, x, y, r} in canvas coordinate space (800x500) */
+  var hotspots = [];
+
+  function addHotspot(name,x,y,r){
+    hotspots.push({name:name,x:x,y:y,r:r});
+  }
+
+  /* ================= SCENE RENDERING ================= */
+  function render(){
+    clear();
+    hotspots = [];
+    drawSky();
+    drawGround();
+
+    var idx = state.scene;
+    if (idx < 0) {
+      renderTitle();
+      return;
+    }
+    var sc = T().scenes[idx];
+
+    switch(idx){
+      case 0: renderScene0(sc); break;
+      case 1: renderScene1(sc); break;
+      case 2: renderScene2(sc); break;
+      case 3: renderScene3(sc); break;
+      case 4: renderScene4(sc); break;
+      case 5: renderScene5(sc); break;
+      case 6: renderScene6(sc); break;
+      case 7: renderScene7(sc); break;
+      case 8: renderScene8(sc); break;
+      case 9: renderScene9(sc); break;
+    }
+  }
+
+  function renderTitle(){
+    drawTree(90,300,1);
+    drawTree(720,310,0.9);
+    drawHut(400,300,false);
+    drawPerson(250,340,{shirt:'#5b8a5a'});
+    drawPerson(550,340,{shirt:'#3a6ea5', armOut:true});
+    ctx.fillStyle = 'rgba(255,255,255,0.0)';
+    ctx.font = 'bold 30px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#5b3a1e';
+    ctx.fillText(T().title, 400, 100);
+  }
+
+  function renderScene0(sc){
+    drawTree(90,300,1);
+    drawTree(700,300,0.85);
+    drawHut(400,300,true);
+    drawHighlightRing(400,300,115);
+    addHotspot('hut',400,300,115);
+  }
+
+  function renderScene1(sc){
+    drawTree(700,300,0.85);
+    drawHut(560,300,false);
+    drawPerson(280,340,{shirt:'#5b8a5a', armOut:false});
+    drawBasket(320,350);
+    drawHighlightRing(280,300,60);
+    addHotspot('greedy',280,300,60);
+  }
+
+  function renderScene2(sc){
+    drawHut(560,300,false);
+    drawPerson(280,340,{shirt:'#5b8a5a'});
+    drawBasket(320,350);
+    drawPerson(450,340,{old:true, shirt:'#b06a8a'});
+    drawBowl(400,300,1.4,false);
+    drawHighlightRing(400,300,45);
+    addHotspot('bowl1',400,300,45);
+  }
+
+  function renderScene3(sc){
+    drawHut(560,300,false);
+    drawPerson(280,340,{shirt:'#5b8a5a', armOut:true});
+    drawPerson(450,340,{old:true, shirt:'#b06a8a'});
+    drawBowl(400,290,1.1,false);
+    drawSpoonForkOffer(400,240, state.holdProgress);
+  }
+
+  function renderScene4(sc){
+    drawHut(560,300,false);
+    drawPerson(280,340,{shirt:'#5b8a5a', armOut:false});
+    drawPerson(450,340,{old:true, shirt:'#b06a8a'});
+    drawBowl(430,300,1.1,false);
+    drawSadFace(450,318);
+    drawHighlightRing(450,340,55);
+    addHotspot('grandma',450,340,55);
+  }
+
+  function renderScene5(sc){
+    drawHut(560,300,false);
+    drawPerson(450,340,{old:true, shirt:'#b06a8a'});
+    drawBowl(430,300,1.1,false);
+    drawPerson(220,340,{shirt:'#3a6ea5', armOut:true});
+    drawBasket(260,360);
+    if (state.dragging || state.dragDone) {
+      var dx = state.dragDone ? 450 : state.dragX;
+      var dy = state.dragDone ? 360 : state.dragY;
+      drawBasket(dx,dy);
+    }
+    addHotspot('basket',260,360,55);
+  }
+
+  function renderScene6(sc){
+    drawHut(560,300,false);
+    drawPerson(450,340,{old:true, shirt:'#b06a8a'});
+    drawPerson(220,340,{shirt:'#3a6ea5'});
+    drawBasket(400,360);
+    drawBowl(430,300,1.3, state.holdProgress > 0.95);
+    drawHighlightRing(430,300,55);
+    addHotspot('bowl2',430,300,55);
+  }
+
+  function renderScene7(sc){
+    drawHut(560,300,false);
+    drawPerson(450,340,{old:true, shirt:'#b06a8a', armOut:true});
+    drawPerson(250,340,{shirt:'#5b8a5a', armOut:true});
+    drawBowl(350,300,1.1,true);
+  }
+
+  function renderScene8(sc){
+    drawTree(700,300,0.85);
+    drawPerson(400,340,{shirt:'#5b8a5a'});
+    drawSadFace(400,318);
+    drawMarket(620,330);
+    drawHighlightRing(620,300,110);
+    addHotspot('market',620,300,110);
+  }
+
+  function renderScene9(sc){
+    drawTree(90,300,1);
+    drawMarket(560,320);
+    drawPerson(300,340,{shirt:'#3a6ea5'});
+    drawBowl(230,300,1.2,true);
+    ctx.fillStyle = '#5b3a1e';
+    ctx.font = 'italic 20px Georgia';
+    ctx.textAlign = 'center';
+  }
+
+  /* ================= UI SYNC ================= */
+  function updateInstructionAndNarration(){
+    var idx = state.scene;
+    if (idx < 0) {
+      instructionBox.textContent = lang === 'en'
+        ? "Tap 'Start Story' below to begin the tale of the two merchants."
+        : "Ketuk 'Mulai Cerita' di bawah untuk memulai kisah dua pedagang.";
+      narrationBox.textContent = "";
+      return;
+    }
+    var sc = T().scenes[idx];
+    instructionBox.textContent = sc.instr;
+    narrationBox.textContent = sc.narr;
+  }
+
+  function updateDots(){
+    dotsWrap.innerHTML = '';
+    var n = totalScenes();
+    for (var i=0;i<n;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      if (i < state.scene) d.className += ' done';
+      if (i === state.scene) d.className += ' active';
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function updateMainButton(){
+    var idx = state.scene;
+    if (idx < 0) {
+      mainBtn.style.display = 'inline-block';
+      mainBtn.textContent = T().startBtn;
+      return;
+    }
+    var sc = T().scenes[idx];
+    if (sc.ending) {
+      mainBtn.style.display = 'inline-block';
+      mainBtn.textContent = T().replayBtn;
+    } else {
+      mainBtn.style.display = 'none';
+    }
+  }
+
+  function updateProgressUI(){
+    var sc = state.scene >= 0 ? T().scenes[state.scene] : null;
+    if (sc && sc.hold) {
+      progressWrap.style.display = 'block';
+      progressBar.style.width = (state.holdProgress*100) + '%';
+    } else {
+      progressWrap.style.display = 'none';
+    }
+  }
+
+  function updateChoiceUI(){
+    choiceOverlay.innerHTML = '';
+    var sc = state.scene >= 0 ? T().scenes[state.scene] : null;
+    if (sc && sc.choice && !state.choiceLocked){
+      choiceOverlay.style.display = 'flex';
+      sc.choice.options.forEach(function(opt, i){
+        var b = document.createElement('button');
+        b.className = 'choice-btn';
+        b.type = 'button';
+        b.textContent = opt.text;
+        b.addEventListener('click', function(){ onChoiceSelected(opt); });
+        choiceOverlay.appendChild(b);
+      });
+    } else {
+      choiceOverlay.style.display = 'none';
+    }
+  }
+
+  function refreshAll(){
+    render();
+    updateInstructionAndNarration();
+    updateDots();
+    updateMainButton();
+    updateProgressUI();
+    updateChoiceUI();
+    titleEl.textContent = T().title;
+    footerEl.textContent = T().footer;
+  }
+
+  /* ================= SCENE TRANSITIONS ================= */
+  function goToScene(i){
+    stopSpeak();
+    state.scene = i;
+    state.holdProgress = 0;
+    state.dragging = false;
+    state.dragDone = false;
+    state.choiceLocked = false;
+    clearHoldTimer();
+    refreshAll();
+    if (i >= 0) {
+      var sc = T().scenes[i];
+      speak(sc.narr);
+    }
+  }
+
+  function advance(){
+    var next = state.scene + 1;
+    if (next >= totalScenes()) {
+      goToScene(0);
+      return;
+    }
+    goToScene(next);
+  }
+
+  function onChoiceSelected(opt){
+    if (opt.correct) {
+      state.choiceLocked = true;
+      updateChoiceUI();
+      setTimeout(advance, 400);
+    } else {
+      state.wrongTries++;
+      instructionBox.textContent = T().scenes[state.scene].choice.wrongFeedback;
+      speak(T().scenes[state.scene].choice.wrongFeedback);
+    }
+  }
+
+  /* ================= HOLD MECHANIC ================= */
+  function clearHoldTimer(){
+    if (state.holdTimer) { clearInterval(state.holdTimer); state.holdTimer = null; }
+    state.holdActive = false;
+  }
+  function startHold(){
+    var sc = T().scenes[state.scene];
+    if (!sc || !sc.hold) return;
+    if (state.holdActive) return;
+    state.holdActive = true;
+    var start = Date.now();
+    var duration = 1400;
+    state.holdTimer = setInterval(function(){
+      var elapsed = Date.now() - start;
+      state.holdProgress = Math.min(1, elapsed/duration);
+      updateProgressUI();
+      render();
+      if (state.holdProgress >= 1){
+        clearHoldTimer();
+        setTimeout(advance, 300);
+      }
+    }, 30);
+  }
+  function cancelHold(){
+    if (!state.holdActive) return;
+    clearHoldTimer();
+    state.holdProgress = 0;
+    updateProgressUI();
+    render();
+  }
+
+  /* ================= CANVAS INTERACTION ================= */
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+  function hitTest(pos){
+    for (var i=0;i<hotspots.length;i++){
+      var h = hotspots[i];
+      var dx = pos.x - h.x, dy = pos.y - h.y;
+      if (Math.sqrt(dx*dx+dy*dy) <= h.r) return h;
+    }
+    return null;
+  }
+
+  var pointerDownPos = null;
+  var pointerDownHotspot = null;
+
+  canvas.addEventListener('pointerdown', function(evt){
+    var pos = getCanvasPos(evt);
+    pointerDownPos = pos;
+    var h = hitTest(pos);
+    pointerDownHotspot = h;
+    var sc = state.scene >= 0 ? T().scenes[state.scene] : null;
+
+    if (state.scene < 0) return;
+
+    if (sc && sc.hold) {
+      if (h && (h.name === 'bowl2' || h.name === 'offer')) startHold();
+      return;
+    }
+    if (sc && sc.drag) {
+      if (h && h.name === 'basket') {
+        state.dragging = true;
+        state.dragX = pos.x;
+        state.dragY = pos.y;
+        render();
+      }
+      return;
+    }
+    if (sc && sc.hotspot) {
+      if (h && h.name === sc.hotspot) {
+        advance();
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', function(evt){
+    if (state.dragging){
+      var pos = getCanvasPos(evt);
+      state.dragX = pos.x;
+      state.dragY = pos.y;
+      render();
+    }
+  });
+
+  function endPointer(evt){
+    var sc = state.scene >= 0 ? T().scenes[state.scene] : null;
+    if (sc && sc.hold) {
+      cancelHold();
+    }
+    if (state.dragging){
+      var pos = pointerDownPos;
+      var dx = state.dragX - 450, dy = state.dragY - 340;
+      var dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < 120){
+        state.dragging = false;
+        state.dragDone = true;
+        render();
+        setTimeout(advance, 350);
+      } else {
+        state.dragging = false;
+        render();
+      }
+    }
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointerleave', endPointer);
+
+  /* Scene 3 special: offer button is drawn near spoon/fork; give it an explicit hotspot area */
+  var originalRenderScene3 = renderScene3;
+  renderScene3 = function(sc){
+    originalRenderScene3(sc);
+    addHotspot('offer', 400, 250, 65);
+    drawHighlightRing(400,250,65);
+  };
+
+  /* ================= TOP CONTROLS ================= */
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('ptpj_muted', state.muted ? '1' : '0');
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', state.muted);
+    if (state.muted) stopSpeak();
+    else if (state.scene >= 0) speak(T().scenes[state.scene].narr);
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', lang);
+    window.history.replaceState({}, '', url);
+    refreshAll();
+    if (state.scene >= 0) speak(T().scenes[state.scene].narr);
+  });
+
+  mainBtn.addEventListener('click', function(){
+    if (state.scene < 0) {
+      goToScene(0);
+    } else {
+      goToScene(0);
+    }
+  });
+
+  /* ================= IFRAME AUTO-RESIZE ================= */
+  function sendHeight(){
+    var h = document.getElementById('app').offsetHeight + 20;
+    try {
+      window.parent.postMessage({ type: 'ptpj-resize', height: h }, '*');
+    } catch(e){}
+  }
+  window.addEventListener('resize', sendHeight);
+  setInterval(sendHeight, 800);
+
+  /* ================= INIT ================= */
+  muteBtn.textContent = state.muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('active', state.muted);
+  langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+
+  refreshAll();
+  sendHeight();
+
+})();
+</script>
+</body>
+</html>
