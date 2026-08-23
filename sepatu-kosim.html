@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sepatu Kosim</title>
+<style>
+  :root{
+    --sand:#f2e2c4;
+    --sand-dark:#e3c891;
+    --brown:#6b4326;
+    --brown-dark:#4a2e19;
+    --gold:#c99a3e;
+    --red:#a33b2c;
+    --teal:#1f6f6a;
+    --night:#2b2138;
+    --white:#fffaf0;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:linear-gradient(180deg,var(--sand) 0%, var(--sand-dark) 100%);
+    color:var(--brown-dark);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:640px;
+    margin:0 auto;
+    padding:10px 10px 16px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    gap:8px;
+  }
+  .title{
+    font-size:1.15rem;
+    font-weight:700;
+    color:var(--brown-dark);
+    letter-spacing:0.5px;
+  }
+  .btn{
+    border:none;
+    border-radius:8px;
+    padding:7px 12px;
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    background:var(--brown);
+    color:var(--white);
+    transition:transform 0.1s ease, background 0.2s ease;
+    user-select:none;
+  }
+  .btn:hover{background:var(--brown-dark);}
+  .btn:active{transform:scale(0.95);}
+  .btn.secondary{
+    background:var(--sand-dark);
+    color:var(--brown-dark);
+    border:1px solid var(--brown);
+  }
+  .controls-top{
+    display:flex;
+    gap:6px;
+  }
+  .stage-wrap{
+    position:relative;
+    background:var(--night);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    border:3px solid var(--gold);
+  }
+  #gameCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+    cursor:pointer;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:10px 0;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--sand-dark);
+    border:1px solid var(--brown);
+    transition:background 0.25s ease, transform 0.25s ease;
+  }
+  .dot.active{
+    background:var(--red);
+    transform:scale(1.3);
+  }
+  .dot.done{
+    background:var(--teal);
+  }
+  .instruction-box{
+    background:var(--white);
+    border:2px solid var(--gold);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-top:6px;
+    font-size:0.95rem;
+    line-height:1.45;
+    min-height:48px;
+  }
+  .instruction-box b{color:var(--red);}
+  .action-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .action-row .btn{
+    padding:10px 20px;
+    font-size:1rem;
+  }
+  .choice-row{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:10px;
+  }
+  .choice-btn{
+    background:var(--white);
+    border:2px solid var(--brown);
+    border-radius:8px;
+    padding:10px 12px;
+    text-align:left;
+    font-size:0.9rem;
+    cursor:pointer;
+    color:var(--brown-dark);
+  }
+  .choice-btn:hover{background:var(--sand-dark);}
+  .footer{
+    text-align:center;
+    font-size:0.72rem;
+    color:#8a7256;
+    margin-top:14px;
+    opacity:0.85;
+  }
+  .progress-track{
+    position:absolute;
+    left:14px;right:14px;bottom:14px;
+    height:14px;
+    background:rgba(255,255,255,0.25);
+    border-radius:7px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.5);
+    display:none;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:var(--gold);
+    transition:width 0.05s linear;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title" id="gameTitle">Sepatu Kosim</div>
+    <div class="controls-top">
+      <button class="btn secondary" id="langBtn">EN</button>
+      <button class="btn secondary" id="muteBtn">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="gameCanvas" width="640" height="420"></canvas>
+    <div class="progress-track" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="instruction-box" id="instructionBox"></div>
+
+  <div id="choiceArea"></div>
+
+  <div class="action-row" id="actionRow"></div>
+
+  <div class="footer" id="footerText">Kisah rakyat Timur Tengah</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- STATE ----------
+  var urlParams = new URLSearchParams(window.location.search);
+  var lang = urlParams.get('lang') === 'en' ? 'en' : 'id';
+  var muted = localStorage.getItem('sepatuKosimMuted') === 'true';
+  var currentScene = -1; // -1 = start screen
+  var sceneState = {};
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var dotsEl = document.getElementById('dots');
+  var instructionBox = document.getElementById('instructionBox');
+  var actionRow = document.getElementById('actionRow');
+  var choiceArea = document.getElementById('choiceArea');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var gameTitle = document.getElementById('gameTitle');
+  var footerText = document.getElementById('footerText');
+  var progressTrack = document.getElementById('progressTrack');
+  var progressFill = document.getElementById('progressFill');
+
+  var TXT = {
+    id: {
+      title: "Sepatu Kosim",
+      footer: "Kisah rakyat Timur Tengah",
+      startTitle: "Sepatu Kosim",
+      startDesc: "Kisah rakyat dari Timur Tengah tentang seorang pelit bernama Kosim, dan sepasang sepatu yang membawanya ke berbagai masalah.",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      nextBtn: "Lanjut",
+      mute: "🔊", unmute:"🔇"
+    },
+    en: {
+      title: "Kosim's Shoes",
+      footer: "A Middle Eastern folktale",
+      startTitle: "Kosim's Shoes",
+      startDesc: "A Middle Eastern folktale about a stingy man named Kosim, and a pair of shoes that brought him nothing but trouble.",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      nextBtn: "Continue",
+      mute: "🔊", unmute:"🔇"
+    }
+  };
+
+  function t(key){ return TXT[lang][key]; }
+
+  // ---------- RESIZE / IFRAME AUTO-RESIZE ----------
+  function reportHeight(){
+    var h = document.getElementById('app').offsetHeight + 20;
+    try{ window.parent.postMessage({ type:'resize', height:h }, '*'); }catch(e){}
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+
+  // ---------- SPEECH ----------
+  var voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    var target = lang === 'en' ? 'en-US' : 'id-ID';
+    for (var i=0;i<voices.length;i++){
+      if (voices[i].lang === target) return voices[i];
+    }
+    for (var j=0;j<voices.length;j++){
+      if (voices[j].lang && voices[j].lang.indexOf(lang) === 0) return voices[j];
+    }
+    return null;
+  }
+  function speak(text){
+    if (muted || !window.speechSynthesis || !text) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+    var v = pickVoice();
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  muteBtn.textContent = muted ? t('unmute') : t('mute');
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('sepatuKosimMuted', muted);
+    muteBtn.textContent = muted ? t('unmute') : t('mute');
+    if (muted) stopSpeak();
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    gameTitle.textContent = t('title');
+    footerText.textContent = t('footer');
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', lang);
+    window.history.replaceState({}, '', url);
+    if (currentScene === -1){ renderStart(); }
+    else { renderScene(currentScene, true); }
+  });
+  langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+  gameTitle.textContent = t('title');
+  footerText.textContent = t('footer');
+
+  // ---------- DRAW HELPERS ----------
+  var W = 640, H = 420;
+
+  function clear(bg){
+    ctx.fillStyle = bg || '#e9d6ab';
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawSky(hue1, hue2){
+    var g = ctx.createLinearGradient(0,0,0,H*0.65);
+    g.addColorStop(0, hue1);
+    g.addColorStop(1, hue2);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.65);
+  }
+
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = '#ffd27a';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGround(color){
+    ctx.fillStyle = color || '#d9b877';
+    ctx.fillRect(0, H*0.65, W, H*0.35);
+  }
+
+  function drawDomeBuilding(x,y,scale, color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color;
+    ctx.fillRect(-40,-60,80,90);
+    // dome
+    ctx.beginPath();
+    ctx.arc(0,-60,42,Math.PI,0);
+    ctx.fill();
+    // arch door
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(-14,30);
+    ctx.lineTo(-14,0);
+    ctx.arc(0,0,14,Math.PI,0,true);
+    ctx.lineTo(14,30);
+    ctx.closePath();
+    ctx.fill();
+    // spire
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,-100); ctx.lineTo(-5,-72); ctx.lineTo(5,-72);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalm(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#7a5230';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(10,-40,0,-80);
+    ctx.stroke();
+    ctx.fillStyle = '#3f7a3a';
+    for (var i=0;i<6;i++){
+      var ang = (Math.PI*2/6)*i;
+      ctx.save();
+      ctx.translate(0,-80);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.ellipse(20,0,26,8,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Kosim character: middle-eastern robe (thob) + turban
+  function drawKosim(x,y,scale,opts){
+    opts = opts || {};
+    var shoesOn = opts.shoesOn !== false; // default true
+    var shoeStyle = opts.shoeStyle || 'old'; // old|new|barefoot
+    var pose = opts.pose || 'stand'; // stand|wash|angry|sad|happy
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+
+    // legs / feet
+    if (opts.legsVisible !== false){
+      ctx.fillStyle = '#e9d9b8';
+      ctx.fillRect(-14,60,10,26);
+      ctx.fillRect(4,60,10,26);
+      if (shoeStyle === 'old'){
+        ctx.fillStyle = '#5c4326';
+        ctx.beginPath();
+        ctx.ellipse(-9,88,13,7,0,0,Math.PI*2); ctx.fill();
+        ctx.ellipse(9,88,13,7,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#2e2013'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(-18,84); ctx.lineTo(0,84); ctx.stroke();
+      } else if (shoeStyle === 'new'){
+        ctx.fillStyle = '#8a2e1f';
+        ctx.beginPath();
+        ctx.ellipse(-9,87,13,7,0,0,Math.PI*2); ctx.fill();
+        ctx.ellipse(9,87,13,7,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#c99a3e';
+        ctx.beginPath(); ctx.arc(-9,84,2.5,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(9,84,2.5,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    // robe (thob)
+    ctx.fillStyle = '#d8c48a';
+    ctx.beginPath();
+    ctx.moveTo(-26,60);
+    ctx.quadraticCurveTo(-30,0,-18,-38);
+    ctx.lineTo(18,-38);
+    ctx.quadraticCurveTo(30,0,26,60);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#a88a4e';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // sash
+    ctx.strokeStyle = '#a33b2c';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(-20,10); ctx.lineTo(20,10);
+    ctx.stroke();
+
+    // arms
+    ctx.strokeStyle = '#d8c48a';
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    if (pose === 'wash'){
+      ctx.beginPath(); ctx.moveTo(-18,-20); ctx.lineTo(-30,10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-20); ctx.lineTo(30,10); ctx.stroke();
+    } else if (pose === 'angry'){
+      ctx.beginPath(); ctx.moveTo(-18,-20); ctx.lineTo(-38,-32); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-20); ctx.lineTo(38,-10); ctx.stroke();
+    } else if (pose === 'sad'){
+      ctx.beginPath(); ctx.moveTo(-18,-16); ctx.lineTo(-24,20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-16); ctx.lineTo(24,20); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-18,-16); ctx.lineTo(-30,20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-16); ctx.lineTo(30,20); ctx.stroke();
+    }
+
+    // head
+    ctx.fillStyle = '#e3b98a';
+    ctx.beginPath(); ctx.arc(0,-52,20,0,Math.PI*2); ctx.fill();
+
+    // turban
+    ctx.fillStyle = '#fffaf0';
+    ctx.beginPath();
+    ctx.ellipse(0,-66,22,16,0,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-22,-70,44,10);
+    ctx.beginPath(); ctx.ellipse(0,-70,22,10,0,0,Math.PI*2); ctx.fill();
+
+    // face
+    ctx.fillStyle = '#3a2a1a';
+    if (pose === 'angry'){
+      ctx.fillRect(-9,-56,5,2);
+      ctx.fillRect(4,-56,5,2);
+    } else {
+      ctx.beginPath(); ctx.arc(-6,-53,2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(6,-53,2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.strokeStyle = '#3a2a1a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (pose === 'sad'){
+      ctx.arc(0,-42,5,Math.PI*1.2,Math.PI*1.8,true);
+    } else if (pose === 'angry'){
+      ctx.moveTo(-6,-42); ctx.lineTo(6,-42);
+    } else {
+      ctx.arc(0,-46,5,0.2,Math.PI-0.2);
+    }
+    ctx.stroke();
+    // moustache
+    ctx.fillStyle = '#2a1c10';
+    ctx.fillRect(-8,-48,16,3);
+
+    ctx.restore();
+  }
+
+  function drawShoeOld(x,y,scale, rotation){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rotation||0);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5c4326';
+    ctx.beginPath();
+    ctx.moveTo(-22,8);
+    ctx.quadraticCurveTo(-24,-6,-8,-8);
+    ctx.quadraticCurveTo(18,-10,22,4);
+    ctx.quadraticCurveTo(22,10,10,10);
+    ctx.lineTo(-22,10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle='#2e2013'; ctx.lineWidth=1.5; ctx.stroke();
+    // tear/patch
+    ctx.strokeStyle = '#2e2013';
+    ctx.beginPath(); ctx.moveTo(-4,-4); ctx.lineTo(2,3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(-6,2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawShoeNew(x,y,scale, rotation){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rotation||0);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a2e1f';
+    ctx.beginPath();
+    ctx.moveTo(-22,8);
+    ctx.quadraticCurveTo(-24,-8,-6,-10);
+    ctx.quadraticCurveTo(20,-12,24,4);
+    ctx.quadraticCurveTo(24,10,10,10);
+    ctx.lineTo(-22,10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle='#5c1c12'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle = '#e8c987';
+    ctx.beginPath(); ctx.arc(-2,-2,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-3,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRiver(){
+    var g = ctx.createLinearGradient(0,H*0.55,0,H);
+    g.addColorStop(0,'#8fd3d8');
+    g.addColorStop(1,'#3f9aa3');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(W/2, H*0.82, W*0.55, H*0.22, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 2;
+    for (var i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.ellipse(W/2, H*0.78+i*10, W*0.4-i*20, 6, 0, 0, Math.PI);
+      ctx.stroke();
+    }
+  }
+
+  function drawTrashBin(x,y,scale,highlight){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = highlight ? '#3f8f8a' : '#5a5a5a';
+    ctx.beginPath();
+    ctx.moveTo(-20,-30); ctx.lineTo(-16,20); ctx.lineTo(16,20); ctx.lineTo(20,-30);
+    ctx.closePath(); ctx.fill();
+    ctx.fillRect(-24,-36,48,8);
+    ctx.strokeStyle='#333'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(-8,-24); ctx.lineTo(-6,14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,-24); ctx.lineTo(6,14); ctx.stroke();
+    if (highlight){
+      ctx.strokeStyle = '#ffd27a'; ctx.lineWidth=3;
+      ctx.strokeRect(-28,-40,56,64);
+    }
+    ctx.restore();
+  }
+
+  function drawBeggar(x,y,scale, hit){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // sitting figure
+    ctx.fillStyle = '#8a7256';
+    ctx.beginPath();
+    ctx.moveTo(-20,20); ctx.quadraticCurveTo(0,-20,20,20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e3b98a';
+    ctx.beginPath(); ctx.arc(0,-24, 15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5c4a36';
+    ctx.beginPath(); ctx.arc(0,-30,15,Math.PI,Math.PI*2); ctx.fill();
+    // bowl
+    ctx.fillStyle = '#7a5230';
+    ctx.beginPath(); ctx.ellipse(24,20,10,4,0,0,Math.PI*2); ctx.fill();
+    if (hit){
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('*BONK*', -30, -50);
+      ctx.strokeStyle='#a33b2c'; ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(-6,-42);ctx.lineTo(0,-36);ctx.lineTo(6,-42);ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGuard(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#2f5f5a';
+    ctx.fillRect(-16,-30,32,60);
+    ctx.fillStyle = '#e3b98a';
+    ctx.beginPath(); ctx.arc(0,-42,15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1c3d39';
+    ctx.beginPath(); ctx.ellipse(0,-52,16,9,0,Math.PI,Math.PI*2); ctx.fill();
+    // spear
+    ctx.strokeStyle = '#7a5230'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(24,-50); ctx.lineTo(24,30); ctx.stroke();
+    ctx.fillStyle = '#ccc';
+    ctx.beginPath(); ctx.moveTo(24,-60); ctx.lineTo(18,-50); ctx.lineTo(30,-50); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawJudge(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // bench
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(-70,10,140,50);
+    ctx.fillStyle = '#5c3d1f';
+    ctx.fillRect(-70,10,140,10);
+    // judge
+    ctx.fillStyle = '#3b3b5c';
+    ctx.fillRect(-20,-40,40,55);
+    ctx.fillStyle = '#e3b98a';
+    ctx.beginPath(); ctx.arc(0,-52,17,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fffaf0';
+    ctx.beginPath(); ctx.ellipse(0,-66,19,13,0,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillRect(-19,-70,38,9);
+    ctx.fillStyle = '#3a2a1a';
+    ctx.beginPath(); ctx.arc(-6,-54,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-54,2,0,Math.PI*2); ctx.fill();
+    ctx.fillRect(-8,-46,16,2);
+    ctx.restore();
+  }
+
+  function drawCoin(x,y,r){
+    ctx.save();
+    ctx.fillStyle = '#e6b93d';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#a8791f'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle = '#a8791f';
+    ctx.font = (r*0.9)+'px serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('$', x, y+1);
+    ctx.restore();
+  }
+
+  function drawJailBars(x,y,w,h){
+    ctx.save();
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle = '#555';
+    var bars = 8;
+    for (var i=0;i<bars;i++){
+      ctx.fillRect(x + (w/bars)*i + 4, y, 4, h);
+    }
+    ctx.restore();
+  }
+
+  function drawShopFront(x,y,scale, hasShoe){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#c99a3e';
+    ctx.fillRect(-70,-60,140,90);
+    ctx.fillStyle = '#fffaf0';
+    ctx.fillRect(-60,-45,120,60);
+    ctx.strokeStyle = '#8a5a1f'; ctx.lineWidth=3;
+    ctx.strokeRect(-60,-45,120,60);
+    ctx.fillStyle = '#a33b2c';
+    ctx.fillRect(-70,-70,140,14);
+    ctx.restore();
+    if (hasShoe){
+      drawShoeNew(x, y-15, 1.1, 0);
+    }
+  }
+
+  // ---------- HOTSPOT / INTERACTION HELPERS ----------
+  var hotspots = []; // {x,y,r or w/h, type:'circle'|'rect', onHit:fn}
+  function addCircleHotspot(x,y,r,onHit){ hotspots.push({type:'circle',x:x,y:y,r:r,onHit:onHit}); }
+  function addRectHotspot(x,y,w,h,onHit){ hotspots.push({type:'rect',x:x,y:y,w:w,h:h,onHit:onHit}); }
+  function clearHotspots(){ hotspots = []; }
+
+  function getCanvasCoords(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if (evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    return { x: (clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  function hitTest(px,py){
+    for (var i=hotspots.length-1;i>=0;i--){
+      var h = hotspots[i];
+      if (h.type === 'circle'){
+        var dx=px-h.x, dy=py-h.y;
+        if (dx*dx+dy*dy <= h.r*h.r) return h;
+      } else if (h.type === 'rect'){
+        if (px>=h.x && px<=h.x+h.w && py>=h.y && py<=h.y+h.h) return h;
+      }
+    }
+    return null;
+  }
+
+  var pointerDown = false;
+  var dragTarget = null;
+  var dragPos = {x:0,y:0};
+
+  canvas.addEventListener('pointerdown', function(evt){
+    evt.preventDefault();
+    var p = getCanvasCoords(evt);
+    pointerDown = true;
+    dragPos = p;
+    var hs = hitTest(p.x,p.y);
+    if (hs && hs.onHit) hs.onHit(p, 'down');
+  });
+  canvas.addEventListener('pointermove', function(evt){
+    if (!pointerDown) return;
+    var p = getCanvasCoords(evt);
+    dragPos = p;
+    if (sceneState.onDragMove) sceneState.onDragMove(p);
+  });
+  window.addEventListener('pointerup', function(evt){
+    if (!pointerDown) return;
+    pointerDown = false;
+    var p = getCanvasCoords(evt);
+    if (sceneState.onDragEnd) sceneState.onDragEnd(p);
+  });
+  canvas.addEventListener('pointerleave', function(){ });
+
+  // ---------- SCENES DEFINITION ----------
+  var scenes = [];
+
+  function I(id,en){ return lang === 'id' ? id : en; }
+
+  // Scene 0: Intro - old shoes
+  scenes.push({
+    key:'intro',
+    narration: {
+      id:"Di sebuah daerah di Timur Tengah, hiduplah seorang pria bernama Kosim. Ia sangat pelit, sampai-sampai sepatunya sudah using dan robek, namun ia tetap tidak mau membeli yang baru.",
+      en:"In a region of the Middle East, there lived a man named Kosim. He was extremely stingy, so much so that his shoes were worn and torn, yet he still refused to buy new ones."
+    },
+    instruction:{
+      id:"Ketuk sepatu using milik Kosim untuk melihat betapa jeleknya sepatu itu.",
+      en:"Tap Kosim's worn-out shoes to see how ragged they are."
+    },
+    setup:function(){
+      clearHotspots();
+      var done = false;
+      function draw(){
+        clear('#f5e3b8');
+        drawSky('#a8d8e8','#f5e3b8');
+        drawSun(560,60,34);
+        drawDomeBuilding(120,H*0.62,0.9,'#e0c68a');
+        drawDomeBuilding(500,H*0.6,1.0,'#d4a86a');
+        drawPalm(60,H*0.68,0.9);
+        drawPalm(600,H*0.66,0.8);
+        drawGround('#d9b877');
+        drawKosim(W/2, H*0.72, 1.15, {shoesOn:true, shoeStyle:'old', pose: done? 'happy':'stand'});
+        if (!done){
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([5,4]);
+          ctx.beginPath(); ctx.arc(W/2, H*0.72+16*1.15+72*0 + 100, 30, 0, Math.PI*2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      draw();
+      addCircleHotspot(W/2, H*0.72+95, 40, function(){
+        if (done) return;
+        done = true;
+        draw();
+        setTimeout(function(){ goNext(); }, 700);
+      });
+    }
+  });
+
+  // Scene 1: River - drag nice shoes onto Kosim
+  scenes.push({
+    key:'river',
+    narration:{
+      id:"Pada siang hari, Kosim pergi mandi di sungai. Ia meletakkan pakaiannya di tepi sungai. Di sampingnya, tergeletak sepasang sepatu bagus milik seorang menteri.",
+      en:"One afternoon, Kosim went to bathe in the river. He left his clothes on the bank. Beside them lay a fine pair of shoes belonging to a minister."
+    },
+    instruction:{
+      id:"Seret sepatu bagus itu ke kaki Kosim untuk memakainya.",
+      en:"Drag the fine shoes onto Kosim's feet to put them on."
+    },
+    setup:function(){
+      clearHotspots();
+      var shoePos = {x:480, y:300};
+      var kosimFeet = {x:260, y:330};
+      var placed = false;
+      var dragging = false;
+      var shoeCur = {x:shoePos.x, y:shoePos.y};
+
+      function draw(){
+        clear('#dff0f2');
+        drawSky('#bfe6ea','#dff0f2');
+        drawSun(560,50,30);
+        drawRiver();
+        drawPalm(560,H*0.55,0.8);
+        drawKosim(160, 300, 1.0, {shoesOn:false, shoeStyle:'barefoot', pose:'wash', legsVisible:!placed});
+        if (placed){
+          drawShoeNew(160+9*1.0, 300+87*1.0, 0.55, 0);
+          drawShoeNew(160-9*1.0, 300+87*1.0, 0.55, 0);
+        }
+        // clothes pile
+        ctx.fillStyle='#c99a3e';
+        ctx.beginPath(); ctx.ellipse(420,340,45,18,0,0,Math.PI*2); ctx.fill();
+        if (!placed){
+          drawShoeNew(shoeCur.x, shoeCur.y, 1.0, 0);
+        }
+      }
+      draw();
+
+      addCircleHotspot(shoePos.x, shoePos.y, 34, function(p, phase){
+        if (placed) return;
+        dragging = true;
+        shoeCur = {x:p.x,y:p.y};
+        draw();
+      });
+      sceneState.onDragMove = function(p){
+        if (!dragging || placed) return;
+        shoeCur = {x:p.x,y:p.y};
+        draw();
+      };
+      sceneState.onDragEnd = function(p){
+        if (!dragging || placed) return;
+        dragging = false;
+        var dx = p.x-kosimFeet.x, dy = p.y-kosimFeet.y;
+        if (dx*dx+dy*dy < 70*70){
+          placed = true;
+          draw();
+          setTimeout(function(){ goNext(); }, 800);
+        } else {
+          shoeCur = {x:shoePos.x,y:shoePos.y};
+          draw();
+        }
+      };
+    },
+    teardown:function(){ sceneState.onDragMove=null; sceneState.onDragEnd=null; }
+  });
+
+  // Scene 2: Guards arrive
+  scenes.push({
+    key:'guards',
+    narration:{
+      id:"Kosim mengira sepatu itu adalah hadiah dari temannya, lalu ia memakainya dan meninggalkan sepatu tuanya di tepi sungai. Namun tak lama setelah ia sampai di rumah, tiga pegawai istana datang menangkapnya karena dituduh mencuri sepatu milik menteri.",
+      en:"Kosim assumed the shoes were a gift from his friend, so he wore them and left his old shoes by the riverbank. But soon after he got home, three palace officials arrived to arrest him, accused of stealing the minister's shoes."
+    },
+    instruction:{
+      id:"Ketuk tiga penjaga istana itu satu per satu sebelum mereka mengepung Kosim.",
+      en:"Tap the three palace guards one by one before they surround Kosim."
+    },
+    setup:function(){
+      clearHotspots();
+      var positions = [{x:150,y:260},{x:320,y:250},{x:490,y:260}];
+      var tapped = [false,false,false];
+
+      function draw(){
+        clear('#f0e0c0');
+        drawSky('#f5d59a','#f0e0c0');
+        drawDomeBuilding(560,H*0.6,0.8,'#d4a86a');
+        drawGround('#d9b877');
+        drawKosim(W/2, H*0.78, 1.05, {shoesOn:true, shoeStyle:'new', pose:'sad'});
+        positions.forEach(function(pos,i){
+          if (!tapped[i]) drawGuard(pos.x,pos.y,0.85);
+          else {
+            ctx.save(); ctx.globalAlpha=0.35;
+            drawGuard(pos.x,pos.y,0.85);
+            ctx.restore();
+          }
+        });
+      }
+      draw();
+      positions.forEach(function(pos,i){
+        addCircleHotspot(pos.x,pos.y-20,45, function(){
+          if (tapped[i]) return;
+          tapped[i]=true;
+          draw();
+          if (tapped[0]&&tapped[1]&&tapped[2]){
+            setTimeout(function(){ goNext(); }, 700);
+          }
+        });
+      });
+    }
+  });
+
+  // Scene 3: Court - pay fine (mash coins)
+  scenes.push({
+    key:'court',
+    narration:{
+      id:"Kosim dibawa ke pengadilan. Karena dituduh mencuri sepatu menteri, hakim menjatuhkan denda seratus dinar kepadanya.",
+      en:"Kosim was brought to court. Accused of stealing the minister's shoes, the judge fined him one hundred dinars."
+    },
+    instruction:{
+      id:"Ketuk koin dinar berulang kali untuk membayar denda 100 dinar.",
+      en:"Tap the dinar coin repeatedly to pay the 100 dinar fine."
+    },
+    setup:function(){
+      clearHotspots();
+      var count = 0;
+      var needed = 8;
+      function draw(){
+        clear('#efe0c2');
+        drawSky('#e8cf9a','#efe0c2');
+        drawJudge(W/2, 150, 1.0);
+        drawKosim(160, 300, 0.95, {shoesOn:true, shoeStyle:'new', pose:'sad'});
+        drawCoin(460,300,36);
+        ctx.fillStyle='#4a2e19';
+        ctx.font='bold 18px sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText((count*(100/needed)).toFixed(0)+' / 100 dinar', 460, 360);
+      }
+      draw();
+      addCircleHotspot(460,300,42, function(){
+        if (count>=needed) return;
+        count++;
+        draw();
+        if (count>=needed){
+          setTimeout(function(){ goNext(); }, 700);
+        }
+      });
+    }
+  });
+
+  // Scene 4: throw old shoe -> hits beggar
+  scenes.push({
+    key:'throw',
+    narration:{
+      id:"Kosim sangat kesal. Ia mengambil sepatu tuanya dan berniat membuangnya ke tempat sampah.",
+      en:"Kosim was furious. He picked up his old shoes, intending to throw them into the trash bin."
+    },
+    instruction:{
+      id:"Seret sepatu using itu ke tempat sampah untuk membuangnya.",
+      en:"Drag the old shoe to the trash bin to throw it away."
+    },
+    setup:function(){
+      clearHotspots();
+      var shoeStart = {x:170,y:290};
+      var shoeCur = {x:shoeStart.x,y:shoeStart.y};
+      var binPos = {x:470,y:300};
+      var beggarPos = {x:540,y:330};
+      var dragging=false;
+      var thrown=false;
+      var hit=false;
+
+      function draw(){
+        clear('#f0e0c2');
+        drawSky('#f5d59a','#f0e0c2');
+        drawGround('#d9b877');
+        drawKosim(170,340,0.95,{shoesOn:true,shoeStyle:'new',pose:'angry', legsVisible:true});
+        drawTrashBin(binPos.x,binPos.y,1.0,!thrown);
+        drawBeggar(beggarPos.x,beggarPos.y,0.9, hit);
+        if (!thrown){
+          drawShoeOld(shoeCur.x,shoeCur.y,1.0,0.3);
+        }
+      }
+      draw();
+
+      addCircleHotspot(shoeStart.x, shoeStart.y, 34, function(p){
+        if (thrown) return;
+        dragging = true;
+        shoeCur = {x:p.x,y:p.y};
+        draw();
+      });
+      sceneState.onDragMove = function(p){
+        if (!dragging || thrown) return;
+        shoeCur = {x:p.x,y:p.y};
+        draw();
+      };
+      sceneState.onDragEnd = function(p){
+        if (!dragging || thrown) return;
+        dragging = false;
+        var dxBin = p.x-binPos.x, dyBin = p.y-binPos.y;
+        if (dxBin*dxBin+dyBin*dyBin < 70*70){
+          thrown = true;
+          // narrative twist: it bounces off the bin's edge and flies to the beggar regardless
+          animateBounce();
+        } else {
+          shoeCur = {x:shoeStart.x,y:shoeStart.y};
+          draw();
+        }
+      };
+
+      function animateBounce(){
+        var frames = 20;
+        var f = 0;
+        var startX = binPos.x, startY = binPos.y-20;
+        var endX = beggarPos.x, endY = beggarPos.y-30;
+        function step(){
+          f++;
+          var pct = f/frames;
+          var x = startX + (endX-startX)*pct;
+          var y = startY + (endY-startY)*pct - Math.sin(pct*Math.PI)*60;
+          clear('#f0e0c2');
+          drawSky('#f5d59a','#f0e0c2');
+          drawGround('#d9b877');
+          drawKosim(170,340,0.95,{shoesOn:true,shoeStyle:'new',pose:'angry',legsVisible:true});
+          drawTrashBin(binPos.x,binPos.y,1.0,false);
+          drawBeggar(beggarPos.x,beggarPos.y,0.9, pct>0.85);
+          drawShoeOld(x,y,1.0, pct*8);
+          if (f<frames){
+            requestAnimationFrame(step);
+          } else {
+            hit = true;
+            draw();
+            setTimeout(function(){ goNext(); }, 1000);
+          }
+        }
+        step();
+      }
+    },
+    teardown:function(){ sceneState.onDragMove=null; sceneState.onDragEnd=null; }
+  });
+
+  // Scene 5: jail (hold to pass the week)
+  scenes.push({
+    key:'jail',
+    narration:{
+      id:"Sang pengemis marah karena kepalanya terkena sepatu, lalu melaporkan Kosim kepada hakim. Kosim pun dipenjara selama satu minggu.",
+      en:"The beggar, angry at being hit on the head, reported Kosim to the judge. Kosim was then jailed for one week."
+    },
+    instruction:{
+      id:"Tekan dan tahan jeruji penjara untuk melewati satu minggu di penjara.",
+      en:"Press and hold the jail bars to get through one week in jail."
+    },
+    setup:function(){
+      clearHotspots();
+      var progress = 0;
+      var holding = false;
+      var finished = false;
+      var raf = null;
+
+      function draw(){
+        clear('#3a3a3a');
+        ctx.fillStyle = '#5c5c5c';
+        ctx.fillRect(0,0,W,H);
+        drawKosim(W/2, 280, 1.0, {shoesOn:true, shoeStyle:'new', pose:'sad'});
+        drawJailBars(0,0,W,H);
+        progressTrack.style.display = 'block';
+        progressFill.style.width = (progress*100).toFixed(0)+'%';
+      }
+      draw();
+
+      function tick(){
+        if (holding && progress < 1 && !finished){
+          progress += 0.012;
+          if (progress>=1){
+            progress=1;
+            finished = true;
+            draw();
+            progressTrack.style.display='none';
+            setTimeout(function(){ goNext(); }, 500);
+            return;
+          }
+          draw();
+          raf = requestAnimationFrame(tick);
+        }
+      }
+
+      addRectHotspot(0,0,W,H, function(p,phase){
+        if (finished) return;
+        holding = true;
+        tick();
+      });
+      window.addEventListener('pointerup', function release(){
+        holding = false;
+      });
+    },
+    teardown:function(){ progressTrack.style.display='none'; }
+  });
+
+  // Scene 6: branching choice with judge
+  scenes.push({
+    key:'choice',
+    narration:{
+      id:"Setelah bebas dari penjara, hakim memanggil Kosim dan bertanya mengapa sepatunya bisa mengenai kepala pengemis, padahal ia mengaku sudah membuangnya.",
+      en:"After his release, the judge summoned Kosim and asked how his shoe ended up hitting the beggar's head, when he claimed he had already thrown it away."
+    },
+    instruction:{
+      id:"Pilih jawaban yang akan diberikan Kosim kepada hakim.",
+      en:"Choose the answer Kosim will give the judge."
+    },
+    isChoice:true,
+    setup:function(){
+      clearHotspots();
+      function draw(){
+        clear('#efe0c2');
+        drawSky('#e8cf9a','#efe0c2');
+        drawJudge(W/2, 150, 1.0);
+        drawKosim(W/2, 320, 1.0, {shoesOn:true, shoeStyle:'new', pose:'stand'});
+      }
+      draw();
+
+      choiceArea.innerHTML = '';
+      choiceArea.className = 'choice-row';
+      var opt1 = document.createElement('button');
+      opt1.className = 'choice-btn';
+      opt1.textContent = lang==='id'
+        ? '"Pak Hakim, itu bukan salahku. Aku sudah membuang sepatu jelek itu ke tempat sampah, jadi apapun yang terjadi setelahnya bukan tanggung jawabku."'
+        : '"Your Honor, it is not my fault. I had already thrown that old shoe into the trash, so whatever happened after that is not my responsibility."';
+      var opt2 = document.createElement('button');
+      opt2.className = 'choice-btn';
+      opt2.textContent = lang==='id'
+        ? '"Pak Hakim, aku sengaja melemparnya ke pengemis itu karena aku sedang marah."'
+        : '"Your Honor, I threw it at the beggar on purpose because I was angry."';
+
+      opt1.addEventListener('click', function(){
+        choiceArea.innerHTML='';
+        speak(lang==='id' ? "Hakim pun tertawa mendengar alasan Kosim yang aneh namun masuk akal itu." : "The judge laughed at Kosim's strange but oddly logical reasoning.");
+        setTimeout(function(){ goNext(); }, 1400);
+      });
+      opt2.addEventListener('click', function(){
+        var note = document.createElement('div');
+        note.style.fontSize='0.85rem';
+        note.style.color='#a33b2c';
+        note.style.textAlign='center';
+        note.style.marginTop='6px';
+        note.textContent = lang==='id'
+          ? 'Itu bukan yang sebenarnya dikatakan Kosim. Coba pilih jawaban yang lain.'
+          : "That's not what Kosim actually said. Try the other answer.";
+        choiceArea.appendChild(note);
+      });
+      choiceArea.appendChild(opt1);
+      choiceArea.appendChild(opt2);
+    },
+    teardown:function(){ choiceArea.innerHTML=''; choiceArea.className=''; }
+  });
+
+  // Scene 7: buy new shoes (ending)
+  scenes.push({
+    key:'ending',
+    narration:{
+      id:"Akhirnya, Kosim sadar. Ia pergi ke toko dan membeli sepasang sepatu baru. Seandainya sejak dahulu ia tidak pelit, ia tidak akan mengalami semua kesulitan ini.",
+      en:"In the end, Kosim realized his mistake. He went to a shop and bought a new pair of shoes. Had he not been so stingy from the start, he would never have gone through all this trouble."
+    },
+    instruction:{
+      id:"Ketuk sepatu baru di etalase toko untuk membelinya.",
+      en:"Tap the new shoes in the shop window to buy them."
+    },
+    setup:function(){
+      clearHotspots();
+      var bought = false;
+      function draw(){
+        clear('#f0e6c8');
+        drawSky('#f7dca0','#f0e6c8');
+        drawGround('#d9b877');
+        drawShopFront(W/2, 220, 1.1, true);
+        drawKosim(W/2, 340, 1.0, {shoesOn:true, shoeStyle: bought?'new':'old', pose: bought?'happy':'stand'});
+      }
+      draw();
+      addCircleHotspot(W/2, 220-15*1.1, 40, function(){
+        if (bought) return;
+        bought = true;
+        draw();
+        setTimeout(function(){ showMoral(); }, 900);
+      });
+    }
+  });
+
+  function showMoral(){
+    stopSpeak();
+    clearHotspots();
+    var moral = lang==='id'
+      ? "Pesan dari cerita ini: tidak ada gunanya menjadi orang yang pelit."
+      : "The moral of this story: there is no use being a stingy person.";
+    clear('#fffaf0');
+    ctx.fillStyle = '#4a2e19';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(lang==='id' ? 'Tamat' : 'The End', W/2, H*0.4);
+    ctx.font = '17px sans-serif';
+    wrapText(ctx, moral, W/2, H*0.52, W-100, 26);
+    speak(moral);
+    instructionBox.innerHTML = '';
+    renderDots(scenes.length, scenes.length-1);
+    actionRow.innerHTML = '';
+    var replay = document.createElement('button');
+    replay.className = 'btn';
+    replay.textContent = t('replayBtn');
+    replay.addEventListener('click', startGame);
+    actionRow.appendChild(replay);
+    reportHeight();
+  }
+
+  function wrapText(ctx,text,x,y,maxWidth,lineHeight){
+    var words = text.split(' ');
+    var line = '';
+    var lines = [];
+    for (var n=0;n<words.length;n++){
+      var testLine = line + words[n] + ' ';
+      var metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n>0){
+        lines.push(line);
+        line = words[n] + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    lines.push(line);
+    var startY = y - (lines.length-1)*lineHeight/2;
+    for (var i=0;i<lines.length;i++){
+      ctx.fillText(lines[i].trim(), x, startY + i*lineHeight);
+    }
+  }
+
+  // ---------- SCENE FLOW ----------
+  function renderDots(total, activeIdx){
+    dotsEl.innerHTML = '';
+    for (var i=0;i<total;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      if (i < activeIdx) d.className += ' done';
+      if (i === activeIdx) d.className += ' active';
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function goNext(){
+    if (currentScene < scenes.length-1){
+      renderScene(currentScene+1);
+    } else {
+      showMoral();
+    }
+  }
+
+  var lastTeardown = null;
+  function renderScene(idx, relangOnly){
+    if (lastTeardown) { lastTeardown(); lastTeardown = null; }
+    sceneState = {};
+    currentScene = idx;
+    var sc = scenes[idx];
+    renderDots(scenes.length, idx);
+    instructionBox.innerHTML = '<b>' + (lang==='id'?'Instruksi:':'Instruction:') + '</b> ' + sc.instruction[lang];
+    actionRow.innerHTML = '';
+    choiceArea.innerHTML = '';
+    progressTrack.style.display = 'none';
+    sc.setup();
+    if (sc.teardown) lastTeardown = sc.teardown;
+    speak(sc.narration[lang]);
+    reportHeight();
+  }
+
+  function renderStart(){
+    currentScene = -1;
+    clearHotspots();
+    stopSpeak();
+    dotsEl.innerHTML = '';
+    choiceArea.innerHTML = '';
+    progressTrack.style.display = 'none';
+    clear('#f5e3b8');
+    drawSky('#a8d8e8','#f5e3b8');
+    drawSun(540,60,34);
+    drawDomeBuilding(140,H*0.62,0.95,'#e0c68a');
+    drawDomeBuilding(500,H*0.6,1.05,'#d4a86a');
+    drawPalm(70,H*0.7,0.9);
+    drawPalm(590,H*0.68,0.85);
+    drawGround('#d9b877');
+    drawKosim(W/2, H*0.78, 1.2, {shoesOn:true, shoeStyle:'old', pose:'stand'});
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0,10,W,60);
+    ctx.fillStyle = '#fffaf0';
+    ctx.textAlign='center';
+    ctx.font='bold 26px sans-serif';
+    ctx.fillText(t('startTitle'), W/2, 48);
+
+    instructionBox.textContent = t('startDesc');
+    actionRow.innerHTML = '';
+    var startBtn = document.createElement('button');
+    startBtn.className='btn';
+    startBtn.textContent = t('startBtn');
+    startBtn.addEventListener('click', startGame);
+    actionRow.appendChild(startBtn);
+    reportHeight();
+  }
+
+  function startGame(){
+    renderScene(0);
+  }
+
+  renderStart();
+})();
+</script>
+</body>
+</html>
