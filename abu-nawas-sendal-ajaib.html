@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abu Nawas dan Sendal Ajaib</title>
+<style>
+  :root{
+    --sand:#f4e4c1;
+    --sand-dark:#e6cf9e;
+    --panel:#fffaf0;
+    --ink:#3b2b1a;
+    --accent:#c1583a;
+    --accent-dark:#a3452a;
+    --teal:#2f7a78;
+    --teal-dark:#215a58;
+    --gold:#d9a441;
+    --muted-gray:#8d7a63;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Verdana,Tahoma,sans-serif;
+    background:transparent;
+    display:flex;
+    justify-content:center;
+    padding:10px 8px 14px;
+  }
+  #app{
+    width:100%;
+    max-width:700px;
+    background:var(--panel);
+    border-radius:18px;
+    box-shadow:0 6px 24px rgba(59,43,26,0.18);
+    padding:12px 12px 14px;
+    border:1px solid var(--sand-dark);
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  #titleTxt{
+    font-size:15px;
+    font-weight:700;
+    color:var(--teal-dark);
+    letter-spacing:.2px;
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+  }
+  #controls button{
+    border:none;
+    background:var(--sand-dark);
+    color:var(--ink);
+    width:34px;
+    height:30px;
+    border-radius:9px;
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .15s;
+  }
+  #controls button:hover{background:var(--gold);}
+  #stageWrap{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    background:#cfe7e6;
+    border:2px solid var(--sand-dark);
+  }
+  canvas{
+    width:100%;
+    height:auto;
+    display:block;
+    touch-action:none;
+    cursor:pointer;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:10px 0 6px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--sand-dark);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--accent);transform:scale(1.35);}
+  .dot.done{background:var(--teal);}
+  #instructionBox{
+    background:var(--sand);
+    border-radius:12px;
+    padding:10px 14px;
+    margin-top:4px;
+    font-size:14.5px;
+    line-height:1.45;
+    color:var(--ink);
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  #instructionBox .icon{font-size:18px;flex-shrink:0;}
+  #feedbackBox{
+    text-align:center;
+    font-size:13.5px;
+    color:var(--accent-dark);
+    font-weight:600;
+    min-height:18px;
+    margin-top:4px;
+  }
+  #footer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--muted-gray);
+    margin-top:10px;
+    letter-spacing:.2px;
+  }
+  @media (max-width:420px){
+    #titleTxt{font-size:13px;}
+    #instructionBox{font-size:13px;padding:8px 10px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="titleTxt">📖 Abu Nawas &amp; Sendal Ajaib</div>
+    <div id="controls">
+      <button id="langBtn" title="Ganti Bahasa">EN</button>
+      <button id="muteBtn" title="Bisukan Narasi">🔊</button>
+    </div>
+  </div>
+  <div id="stageWrap">
+    <canvas id="stage" width="800" height="480"></canvas>
+  </div>
+  <div id="dots"></div>
+  <div id="instructionBox"><span class="icon">👉</span><span id="instructionTxt"></span></div>
+  <div id="feedbackBox"></div>
+  <div id="footer">Kisah Rakyat Interaktif &middot; Timur Tengah</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- SETUP ----------
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const W = 800, H = 480;
+  const dotsEl = document.getElementById('dots');
+  const instructionTxt = document.getElementById('instructionTxt');
+  const feedbackBox = document.getElementById('feedbackBox');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const titleTxt = document.getElementById('titleTxt');
+
+  function getParam(name){
+    const m = new RegExp('[?&]'+name+'=([^&]+)').exec(window.location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  const state = {
+    step: 0,
+    lang: (getParam('lang')==='en') ? 'en' : 'id',
+    muted: (localStorage.getItem('abunawas_muted') === '1'),
+    // mechanic-specific state
+    sandalsCollected: [false,false,false],
+    holding: false,
+    holdProgress: 0,
+    dragActive: false,
+    dragPos: {x:0,y:0},
+    dragOrigin: {x:0,y:0},
+    dragSuccess: false,
+    wanderTaps: 0,
+    wanderOffset: {x:0,y:0},
+    dustTapped: false,
+    dialogueTaps: 0,
+    sandalFlipped: false,
+    choiceMade: null,
+    animT: 0,
+    transitioning:false
+  };
+
+  // ---------- TEXT DATA ----------
+  const STORY_STEPS = 9; // steps 1..9 shown as dots (10 = ending)
+
+  const T = {
+    id: {
+      startBtn:"Mulai Cerita",
+      replayBtn:"Ulangi Cerita",
+      langToggleLabel:"EN",
+      muteOn:"🔊", muteOff:"🔇",
+      choiceA:"Percaya pada\nbenda ajaib",
+      choiceB:"Percaya pada\nTuhan",
+      correctFeedback:"Betul! Percayalah hanya kepada Tuhan yang menciptakan kita, bukan kepada benda-benda ajaib.",
+      incorrectFeedback:"Coba pikirkan lagi pesan Abu Nawas... benda ajaib saja tidak bisa dipercaya begitu saja.",
+    },
+    en: {
+      startBtn:"Start Story",
+      replayBtn:"Replay Story",
+      langToggleLabel:"ID",
+      muteOn:"🔊", muteOff:"🔇",
+      choiceA:"Trust in\nmagic objects",
+      choiceB:"Trust in\nGod",
+      correctFeedback:"That's right! Trust only in God who created us, not in magical objects.",
+      incorrectFeedback:"Think again about Abu Nawas's message... magical objects can't simply be trusted.",
+    }
+  };
+
+  const STEPS_TEXT = [
+    { // 0 title
+      narration:{
+        id:"Selamat datang! Mari dengarkan kisah Abu Nawas dan Sendal Ajaib, dari Timur Tengah.",
+        en:"Welcome! Let's listen to the tale of Abu Nawas and the Magic Sandals, from the Middle East."
+      },
+      instruction:{
+        id:'Ketuk tombol "Mulai Cerita" di bawah untuk memulai kisah Abu Nawas.',
+        en:'Tap the "Start Story" button below to begin Abu Nawas\'s tale.'
+      }
+    },
+    { // 1
+      narration:{
+        id:"Di sebuah kampung, hiduplah Abu Nawas, seorang laki-laki yang terkenal cerdik. Ia sedih melihat banyak penduduk kampungnya lebih percaya pada benda-benda ajaib untuk menjadi kaya, daripada percaya kepada Tuhan. Abu Nawas pun berpikir keras mencari cara untuk menyadarkan mereka.",
+        en:"In a small village lived Abu Nawas, a man famous for his clever mind. He felt sad seeing many villagers trust magical objects to become rich, instead of trusting God. So Abu Nawas thought hard about how to open their eyes."
+      },
+      instruction:{
+        id:"Ketuk Abu Nawas untuk mendengar isi hatinya.",
+        en:"Tap Abu Nawas to hear what's on his mind."
+      }
+    },
+    { // 2
+      narration:{
+        id:"Abu Nawas punya sebuah ide jenaka. Ia membeli beberapa sandal yang sangat murah, lalu bersiap membawanya ke pasar untuk dijual sebagai 'sandal ajaib'.",
+        en:"Abu Nawas had a witty idea. He bought a few very cheap sandals, preparing to sell them at the market as 'magic sandals'."
+      },
+      instruction:{
+        id:"Ketuk ketiga sandal di atas meja satu per satu untuk mengumpulkannya ke dalam tas Abu Nawas.",
+        en:"Tap all three sandals on the table, one by one, to pack them into Abu Nawas's bag."
+      }
+    },
+    { // 3
+      narration:{
+        id:"Sesampainya di pasar, Abu Nawas mulai berteriak lantang menawarkan dagangannya. 'Sandal ajaib! Sandal ajaib!' serunya berulang-ulang, membuat orang-orang mulai menoleh.",
+        en:"Once at the market, Abu Nawas began shouting loudly to sell his goods. 'Magic sandals! Magic sandals!' he called again and again, until people started to turn and look."
+      },
+      instruction:{
+        id:'Tekan dan tahan Abu Nawas agar ia terus berteriak "Sandal Ajaib!" sampai batangnya penuh.',
+        en:'Press and hold Abu Nawas so he keeps shouting "Magic Sandals!" until the bar is full.'
+      }
+    },
+    { // 4
+      narration:{
+        id:"Seorang pemuda yang penasaran mendekat dan bertanya tentang sandal itu. Abu Nawas menjawab bahwa sandal ini bisa membuat orang yang tidak punya menjadi punya. Pemuda itu pun bersemangat ingin membeli sepasang sandal ajaib itu.",
+        en:"A curious young man came closer and asked about the sandals. Abu Nawas told him the sandals could turn someone who has nothing into someone who has something. Excited, the young man wanted to buy a pair right away."
+      },
+      instruction:{
+        id:"Seret sandal dari tangan Abu Nawas ke arah pemuda untuk menjualnya.",
+        en:"Drag the sandal from Abu Nawas's hand over to the young man to sell it."
+      }
+    },
+    { // 5
+      narration:{
+        id:"Pemuda itu berkeliling kampung memakai sandal barunya, berharap keajaiban segera membuatnya kaya raya. Ia berjalan ke sana kemari sambil membayangkan tumpukan emas.",
+        en:"The young man wandered around the village wearing his new sandals, hoping the magic would soon make him rich. He walked here and there, dreaming of piles of gold."
+      },
+      instruction:{
+        id:"Ketuk pemuda itu berulang kali agar ia semangat berkeliling kampung mencari harta.",
+        en:"Tap the young man repeatedly to keep him excitedly wandering the village looking for riches."
+      }
+    },
+    { // 6
+      narration:{
+        id:"Namun, sudah lama berkeliling, tidak ada keajaiban yang terjadi. Malah, warga kampung menyangkanya sebagai pencuri yang mengintai rumah orang, dan ia pun kena amuk warga hingga babak belur.",
+        en:"But after wandering for so long, no magic ever happened. Instead, the villagers mistook him for a thief lurking around houses, and an angry crowd roughed him up."
+      },
+      instruction:{
+        id:"Ketuk kepulan debu di sekitar pemuda untuk melihat apa yang terjadi padanya.",
+        en:"Tap the cloud of dust around the young man to see what happened to him."
+      }
+    },
+    { // 7
+      narration:{
+        id:"Dengan tubuh babak belur, pemuda itu kembali menemui Abu Nawas dan marah-marah, menuduhnya berbohong soal sandal ajaib. Abu Nawas dengan tenang menjelaskan bahwa ia tidak pernah berjanji sandal itu membawa kekayaan secara ajaib — ia hanya bilang sandal itu bisa mengubah orang yang tidak punya menjadi punya sandal.",
+        en:"Bruised and angry, the young man returned to Abu Nawas, accusing him of lying about the magic sandals. Abu Nawas calmly explained that he never promised instant riches — only that the sandals would turn someone with nothing into someone with sandals."
+      },
+      instruction:{
+        id:"Ketuk Abu Nawas dua kali untuk mendengarkan penjelasannya kepada pemuda.",
+        en:"Tap Abu Nawas twice to hear his explanation to the young man."
+      }
+    },
+    { // 8
+      narration:{
+        id:"Untuk membuktikan perkataannya, Abu Nawas membalik sandal itu dan menunjukkan tulisan kecil di bagian bawahnya: merk sandal itu memang bernama 'Ajaib'. Pemuda itu terdiam, tidak bisa membantah.",
+        en:"To prove his point, Abu Nawas flipped the sandal over and showed a small label underneath: the sandal's brand was indeed named 'Magic'. The young man fell silent, unable to argue."
+      },
+      instruction:{
+        id:"Ketuk sandal di tangan Abu Nawas untuk membaliknya dan melihat mereknya.",
+        en:"Tap the sandal in Abu Nawas's hand to flip it over and see its brand."
+      }
+    },
+    { // 9 choice
+      narration:{
+        id:"Abu Nawas lalu berpesan, jangan mudah percaya pada hal-hal ajaib yang menjanjikan kekayaan instan. Menurutmu, kepada siapa sebaiknya kita menaruh kepercayaan agar hidup kita baik?",
+        en:"Abu Nawas then gave his advice: never easily trust magical things that promise instant wealth. Who do you think we should truly place our trust in for a good life?"
+      },
+      instruction:{
+        id:"Ketuk salah satu kartu pilihan di bawah sesuai pesan Abu Nawas.",
+        en:"Tap one of the choice cards below that matches Abu Nawas's message."
+      }
+    },
+    { // 10 ending
+      narration:{
+        id:"Sejak hari itu, pemuda tersebut sadar akan kekeliruannya dan mulai belajar untuk lebih percaya kepada Tuhan. Pesan dari kisah Abu Nawas dan Sendal Ajaib: percayalah hanya kepada Tuhan yang menciptakan kita.",
+        en:"From that day on, the young man realized his mistake and learned to place his trust in God instead. The lesson from the story of Abu Nawas and the Magic Sandals: trust only in God who created us."
+      },
+      instruction:{
+        id:'Ketuk tombol "Ulangi Cerita" untuk mendengarkan kisah ini lagi dari awal.',
+        en:'Tap the "Replay Story" button to hear this tale again from the start.'
+      }
+    }
+  ];
+
+  // ---------- SPEECH ----------
+  let voicesCache = [];
+  function loadVoices(){ voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    if(state.muted) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const targetLang = state.lang === 'id' ? 'id-ID' : 'en-US';
+    u.lang = targetLang;
+    let match = voicesCache.find(v=>v.lang===targetLang);
+    if(!match) match = voicesCache.find(v=>v.lang && v.lang.startsWith(state.lang));
+    if(match) u.voice = match;
+    u.rate = 0.94;
+    u.pitch = 1.02;
+    window.speechSynthesis.speak(u);
+  }
+
+  // ---------- UI TEXT UPDATE ----------
+  function updateChrome(){
+    langBtn.textContent = T[state.lang].langToggleLabel;
+    muteBtn.textContent = state.muted ? T[state.lang].muteOff : T[state.lang].muteOn;
+    instructionTxt.textContent = STEPS_TEXT[state.step].instruction[state.lang];
+    buildDots();
+  }
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    for(let i=1;i<=STORY_STEPS;i++){
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if(state.step > i) d.className += ' done';
+      if(state.step === i) d.className += ' active';
+      if(state.step === 0) d.className = 'dot';
+      if(state.step > STORY_STEPS) d.className = 'dot done';
+      dotsEl.appendChild(d);
+    }
+  }
+
+  // ---------- RESIZE / POSTMESSAGE ----------
+  function sendHeight(){
+    try{
+      const h = document.getElementById('app').getBoundingClientRect().height;
+      window.parent.postMessage({type:'resize-iframe', height: Math.ceil(h) + 16}, '*');
+    }catch(e){}
+  }
+  window.addEventListener('resize', sendHeight);
+
+  // ---------- STEP TRANSITION ----------
+  function goToStep(n){
+    state.step = n;
+    state.holding = false;
+    state.holdProgress = 0;
+    state.dragActive = false;
+    state.dragSuccess = false;
+    state.dustTapped = false;
+    feedbackBox.textContent = '';
+    if(n===2) state.sandalsCollected = [false,false,false];
+    if(n===5) { state.wanderTaps = 0; state.wanderOffset = {x:0,y:0}; }
+    if(n===7) state.dialogueTaps = 0;
+    if(n===8) state.sandalFlipped = false;
+    if(n===9) state.choiceMade = null;
+    updateChrome();
+    speak(STEPS_TEXT[n].narration[state.lang]);
+    setTimeout(sendHeight, 60);
+  }
+
+  langBtn.addEventListener('click', ()=>{
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    updateChrome();
+    speak(STEPS_TEXT[state.step].narration[state.lang]);
+  });
+
+  muteBtn.addEventListener('click', ()=>{
+    state.muted = !state.muted;
+    localStorage.setItem('abunawas_muted', state.muted ? '1':'0');
+    if(state.muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    else speak(STEPS_TEXT[state.step].narration[state.lang]);
+    updateChrome();
+  });
+
+  // ================= DRAWING HELPERS =================
+  function grad(x0,y0,x1,y1,stops){
+    const g = ctx.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(s=>g.addColorStop(s[0],s[1]));
+    return g;
+  }
+
+  function drawSky(warm){
+    ctx.fillStyle = grad(0,0,0,H, warm ? [[0,'#f7d9a0'],[0.55,'#f2c485'],[1,'#e7c98f']] : [[0,'#bfe4e3'],[0.6,'#dff0d8'],[1,'#eddca0']]);
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawSun(x,y,r){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,214,120,0.35)';
+    ctx.beginPath(); ctx.arc(x,y,r*1.8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffd873';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGround(y){
+    ctx.fillStyle = '#e3c284';
+    ctx.fillRect(0,y,W,H-y);
+    ctx.fillStyle = 'rgba(180,140,80,0.25)';
+    for(let i=0;i<8;i++){
+      ctx.beginPath();
+      ctx.ellipse(40+i*100, y+18+((i%3)*8), 46, 8, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawDomeSilhouette(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = color || 'rgba(60,90,90,0.28)';
+    ctx.beginPath();
+    ctx.moveTo(-30,40); ctx.lineTo(-30,10);
+    ctx.quadraticCurveTo(-30,-25,0,-25);
+    ctx.quadraticCurveTo(30,-25,30,10);
+    ctx.lineTo(30,40);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-25,6,Math.PI,0); ctx.fill();
+    ctx.fillRect(-3,-38,6,10);
+    ctx.restore();
+  }
+
+  function drawHouses(){
+    const houseColors = ['#d7b787','#cfae7a','#e0c193'];
+    for(let i=0;i<5;i++){
+      const x = 30 + i*160, y = 300, w = 90, h = 60;
+      ctx.fillStyle = houseColors[i%houseColors.length];
+      ctx.fillRect(x,y,w,h);
+      ctx.fillStyle = '#a5734a';
+      ctx.beginPath();
+      ctx.moveTo(x-8,y); ctx.lineTo(x+w/2,y-28); ctx.lineTo(x+w+8,y);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#6f4a2e';
+      ctx.fillRect(x+w/2-9,y+28,18,32);
+    }
+    drawDomeSilhouette(680,280,1.1,'rgba(70,110,108,0.35)');
+  }
+
+  // simple person: options{robeColor, turban, cap, beard, expr, armsUp, mirror, bandage}
+  function drawPerson(x,y,scale,opt){
+    opt = opt || {};
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale * (opt.mirror?-1:1), scale);
+
+    // shadow
+    ctx.fillStyle='rgba(60,40,20,0.18)';
+    ctx.beginPath(); ctx.ellipse(0,95,34,9,0,0,Math.PI*2); ctx.fill();
+
+    // legs
+    ctx.fillStyle = '#4a3626';
+    ctx.fillRect(-16,55,12,38);
+    ctx.fillRect(4,55,12,38);
+
+    // robe
+    ctx.fillStyle = opt.robeColor || '#2f7a78';
+    ctx.beginPath();
+    ctx.moveTo(-26,60);
+    ctx.quadraticCurveTo(-30,0,-16,-38);
+    ctx.lineTo(16,-38);
+    ctx.quadraticCurveTo(30,0,26,60);
+    ctx.closePath();
+    ctx.fill();
+
+    // belt
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(-24,30,48,8);
+
+    // arms
+    ctx.strokeStyle = opt.robeColor || '#2f7a78';
+    ctx.lineWidth = 13;
+    ctx.lineCap='round';
+    if(opt.armsUp){
+      ctx.beginPath(); ctx.moveTo(-18,-20); ctx.lineTo(-34,-58); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-20); ctx.lineTo(34,-58); ctx.stroke();
+    } else if(opt.oneArmOut){
+      ctx.beginPath(); ctx.moveTo(-18,-18); ctx.lineTo(-40,-4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-18); ctx.lineTo(20,18); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-18,-18); ctx.lineTo(-28,20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-18); ctx.lineTo(28,20); ctx.stroke();
+    }
+    // hands
+    ctx.fillStyle = '#e8c39a';
+    if(opt.armsUp){
+      ctx.beginPath(); ctx.arc(-34,-58,7,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(34,-58,7,0,Math.PI*2); ctx.fill();
+    } else if(opt.oneArmOut){
+      ctx.beginPath(); ctx.arc(-40,-4,7,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(20,18,7,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(-28,20,7,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(28,20,7,0,Math.PI*2); ctx.fill();
+    }
+
+    // neck + head
+    ctx.fillStyle = '#e8c39a';
+    ctx.fillRect(-7,-46,14,12);
+    ctx.beginPath(); ctx.arc(0,-62,22,0,Math.PI*2); ctx.fill();
+
+    // beard
+    if(opt.beard){
+      ctx.fillStyle = '#f4f0e6';
+      ctx.beginPath();
+      ctx.moveTo(-14,-55); ctx.quadraticCurveTo(0,-30,14,-55);
+      ctx.quadraticCurveTo(0,-46,-14,-55);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // turban / cap
+    if(opt.turban){
+      ctx.fillStyle = '#f4f0e6';
+      ctx.beginPath();
+      ctx.ellipse(0,-76,26,16,0,Math.PI,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0,-80,20,13,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#e0483e';
+      ctx.beginPath(); ctx.arc(14,-88,4,0,Math.PI*2); ctx.fill();
+    } else if(opt.cap){
+      ctx.fillStyle = '#a3452a';
+      ctx.beginPath(); ctx.moveTo(-16,-78); ctx.quadraticCurveTo(0,-96,16,-78); ctx.lineTo(-16,-78); ctx.closePath(); ctx.fill();
+    }
+
+    // face
+    ctx.fillStyle = '#3b2b1a';
+    const expr = opt.expr || 'neutral';
+    // eyes
+    ctx.beginPath(); ctx.arc(-8,-64,2.4,0,Math.PI*2); ctx.arc(8,-64,2.4,0,Math.PI*2); ctx.fill();
+    // eyebrows for angry/worried
+    if(expr==='angry'){
+      ctx.strokeStyle='#3b2b1a'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-13,-70); ctx.lineTo(-4,-67); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(13,-70); ctx.lineTo(4,-67); ctx.stroke();
+    }
+    if(expr==='worried'){
+      ctx.strokeStyle='#3b2b1a'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-12,-69); ctx.lineTo(-3,-71); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12,-69); ctx.lineTo(3,-71); ctx.stroke();
+    }
+    // mouth
+    ctx.strokeStyle = '#3b2b1a'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    if(expr==='happy'){
+      ctx.arc(0,-56,6,0.15*Math.PI,0.85*Math.PI);
+    } else if(expr==='angry'){
+      ctx.moveTo(-6,-53); ctx.lineTo(6,-53);
+    } else if(expr==='worried'){
+      ctx.arc(0,-50,5,Math.PI*1.1,Math.PI*1.9);
+    } else if(expr==='shout'){
+      ctx.ellipse(0,-55,4,6,0,0,Math.PI*2);
+    } else {
+      ctx.moveTo(-5,-55); ctx.quadraticCurveTo(0,-52,5,-55);
+    }
+    ctx.stroke();
+
+    // bandage (for step7 bruised young man)
+    if(opt.bandage){
+      ctx.strokeStyle = '#f4f0e6'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(-18,-72); ctx.lineTo(10,-58); ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawSandalPair(x,y,scale,flipped){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    for(let i=0;i<2;i++){
+      const ox = i===0 ? -16 : 16;
+      ctx.save();
+      ctx.translate(ox,0);
+      if(flipped) ctx.scale(1,-1);
+      ctx.fillStyle = '#7a4b2a';
+      ctx.beginPath();
+      ctx.ellipse(0,0,12,26,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#5a341c'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-9,-6); ctx.quadraticCurveTo(0,-16,9,-6); ctx.stroke();
+      if(flipped){
+        ctx.save();
+        ctx.scale(1,-1);
+        ctx.fillStyle = '#e8d3a8';
+        ctx.font = 'bold 6px Verdana';
+        ctx.textAlign='center';
+        ctx.fillText(state.lang==='id'?'AJAIB':'MAGIC', 0, 3);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawSpeechBubble(x,y,w,h,text,tailLeft){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.strokeStyle = 'rgba(59,43,26,0.5)';
+    ctx.lineWidth = 1.5;
+    roundRect(x-w/2,y-h,w,h,10);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    if(tailLeft){
+      ctx.moveTo(x-10,y); ctx.lineTo(x-2,y+12); ctx.lineTo(x+6,y);
+    } else {
+      ctx.moveTo(x+10,y); ctx.lineTo(x+2,y+12); ctx.lineTo(x-6,y);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3b2b1a';
+    ctx.font = '13px Verdana';
+    ctx.textAlign = 'center';
+    wrapText(text, x, y-h+18, w-16, 15);
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function wrapText(text,x,y,maxWidth,lineHeight){
+    const words = text.split(' ');
+    let line = '', yy = y;
+    for(let n=0;n<words.length;n++){
+      const test = line + words[n] + ' ';
+      if(ctx.measureText(test).width > maxWidth && n>0){
+        ctx.fillText(line, x, yy);
+        line = words[n] + ' ';
+        yy += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line, x, yy);
+  }
+
+  function drawDreamBubble(x,y,coins){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = 'rgba(59,43,26,0.4)';
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.arc(x-14+i*7, y+14-i*4, 4-i*0.8, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.ellipse(x,y-16,42,26,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    const n = Math.min(coins,6);
+    for(let i=0;i<n;i++){
+      const cx = x - 24 + (i%3)*22;
+      const cy = y-24 + Math.floor(i/3)*18;
+      ctx.fillStyle = '#d9a441';
+      ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#a3752a'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle = '#a3752a';
+      ctx.font='bold 8px Verdana'; ctx.textAlign='center';
+      ctx.fillText('$', cx, cy+3);
+    }
+    ctx.restore();
+  }
+
+  function drawDust(x,y,intensity){
+    ctx.save();
+    for(let i=0;i<7;i++){
+      const ang = i * 0.9 + state.animT*0.02;
+      const r = 20 + (i%3)*8;
+      ctx.fillStyle = `rgba(150,120,80,${0.15+intensity*0.05})`;
+      ctx.beginPath();
+      ctx.arc(x+Math.cos(ang)*r, y+Math.sin(ang)*r*0.6, 10+ (i%2)*4, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(120,90,60,0.5)';
+    ctx.font='bold 20px Verdana'; ctx.textAlign='center';
+    ctx.fillText('!', x+35, y-30);
+    ctx.fillText('!', x-40, y-20);
+    ctx.restore();
+  }
+
+  function pulseRing(x,y,r){
+    const p = (Math.sin(state.animT*0.06)+1)/2;
+    ctx.save();
+    ctx.strokeStyle = `rgba(224,72,62,${0.35+p*0.4})`;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.arc(x,y,r+p*4,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawButton(x,y,w,h,label,glow){
+    ctx.save();
+    if(glow){
+      ctx.shadowColor = 'rgba(224,72,62,0.6)';
+      ctx.shadowBlur = 14;
+    }
+    ctx.fillStyle = '#c1583a';
+    roundRect(x-w/2,y-h/2,w,h,14);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px Verdana';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label, x, y+1);
+    ctx.textBaseline='alphabetic';
+    ctx.restore();
+  }
+
+  function drawProgressBar(x,y,w,h,pct,label){
+    ctx.save();
+    roundRect(x-w/2,y-h/2,w,h,h/2);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fill();
+    ctx.strokeStyle='rgba(59,43,26,0.4)'; ctx.lineWidth=1.5; ctx.stroke();
+    const fw = Math.max(h, (w-4) * (pct/100));
+    roundRect(x-w/2+2,y-h/2+2,fw,h-4,(h-4)/2);
+    ctx.fillStyle = '#2f7a78';
+    ctx.fill();
+    if(label){
+      ctx.fillStyle = '#3b2b1a';
+      ctx.font='12px Verdana'; ctx.textAlign='center';
+      ctx.fillText(label, x, y-h/2-8);
+    }
+    ctx.restore();
+  }
+
+  // ================= SCENE POSITIONS (for hit-testing) =================
+  const POS = {
+    abuNawasStanding: {x:400,y:300,r:60},
+    startBtn: {x:400,y:400,w:200,h:52},
+    replayBtn: {x:400,y:410,w:220,h:52},
+    tableSandals: [ {x:300,y:340,r:26}, {x:400,y:350,r:26}, {x:500,y:340,r:26} ],
+    marketAbuNawas: {x:340,y:300,r:60},
+    youngManBuy: {x:560,y:300,r:60},
+    sandalInHandOrigin: {x:300,y:300},
+    dustCloud: {x:520,y:300,r:70},
+    dialogueAbuNawas: {x:320,y:300,r:60},
+    sandalHandStep8: {x:430,y:300,r:40},
+    choiceA: {x:250,y:330,w:220,h:110},
+    choiceB: {x:550,y:330,w:220,h:110}
+  };
+
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  // ================= DRAW PER STEP =================
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    switch(state.step){
+      case 0: drawSceneTitle(); break;
+      case 1: drawSceneIntro(); break;
+      case 2: drawScenePrepare(); break;
+      case 3: drawSceneMarketCall(); break;
+      case 4: drawSceneSell(); break;
+      case 5: drawSceneWander(); break;
+      case 6: drawSceneTrouble(); break;
+      case 7: drawSceneConfront(); break;
+      case 8: drawSceneReveal(); break;
+      case 9: drawSceneChoice(); break;
+      case 10: drawSceneEnding(); break;
+    }
+  }
+
+  function drawSceneTitle(){
+    drawSky(true);
+    drawSun(680,80,42);
+    drawGround(360);
+    drawHouses();
+    drawPerson(260,300,1.05,{robeColor:'#2f7a78', turban:true, beard:true, expr:'happy'});
+    drawSandalPair(430,340,1.2,false);
+    ctx.fillStyle = 'rgba(59,43,26,0.85)';
+    ctx.font = 'bold 30px Georgia';
+    ctx.textAlign='center';
+    ctx.fillText(state.lang==='id' ? 'Abu Nawas dan Sendal Ajaib' : 'Abu Nawas and the Magic Sandals', 400, 90);
+    ctx.font = '15px Verdana';
+    ctx.fillText(state.lang==='id' ? 'Kisah Rakyat Timur Tengah' : 'A Middle Eastern Folktale', 400, 118);
+    drawButton(POS.startBtn.x,POS.startBtn.y,POS.startBtn.w,POS.startBtn.h, T[state.lang].startBtn, true);
+  }
+
+  function drawSceneIntro(){
+    drawSky(false);
+    drawSun(700,70,36);
+    drawGround(360);
+    drawHouses();
+    // background villagers dreaming of coins
+    drawPerson(140,320,0.75,{robeColor:'#a3752a', expr:'happy'});
+    drawDreamBubble(140,270,3);
+    drawPerson(660,320,0.75,{robeColor:'#7a5a3a', expr:'happy', mirror:true});
+    drawDreamBubble(660,270,3);
+
+    pulseRing(POS.abuNawasStanding.x, POS.abuNawasStanding.y-40, 66);
+    drawPerson(POS.abuNawasStanding.x,POS.abuNawasStanding.y,1.15,{robeColor:'#2f7a78',turban:true,beard:true,expr:'worried'});
+  }
+
+  function drawScenePrepare(){
+    drawSky(false);
+    drawGround(360);
+    drawHouses();
+    drawPerson(560,300,1.0,{robeColor:'#2f7a78',turban:true,beard:true,expr:'happy',oneArmOut:true});
+    // table
+    ctx.fillStyle = '#8a6238';
+    ctx.fillRect(230,352,300,14);
+    ctx.fillRect(240,366,14,40);
+    ctx.fillRect(500,366,14,40);
+    // sandals on table (3), each tappable if not collected
+    POS.tableSandals.forEach((p,i)=>{
+      if(!state.sandalsCollected[i]){
+        pulseRing(p.x,p.y,28);
+        drawSandalPair(p.x,p.y,0.9,false);
+      }
+    });
+    // bag near Abu Nawas showing collected count
+    ctx.save();
+    ctx.fillStyle = '#5a4632';
+    roundRect(600,330,70,50,8); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Verdana'; ctx.textAlign='center';
+    const collected = state.sandalsCollected.filter(Boolean).length;
+    ctx.fillText(collected+' / 3', 635, 360);
+    ctx.restore();
+  }
+
+  function drawSceneMarketCall(){
+    drawSky(true);
+    drawGround(360);
+    // market stall
+    ctx.fillStyle = '#c1583a';
+    ctx.fillRect(120,180,200,20);
+    ctx.fillStyle = '#a3452a';
+    ctx.fillRect(120,180,200,10);
+    ctx.fillStyle = '#8a6238';
+    ctx.fillRect(130,200,14,140);
+    ctx.fillRect(296,200,14,140);
+    drawHouses();
+
+    const shouting = state.holding;
+    pulseRing(POS.marketAbuNawas.x,POS.marketAbuNawas.y-40,66);
+    drawPerson(POS.marketAbuNawas.x,POS.marketAbuNawas.y,1.15,{robeColor:'#2f7a78',turban:true,beard:true,expr: shouting?'shout':'neutral', armsUp:shouting});
+    if(shouting){
+      ctx.strokeStyle='rgba(59,43,26,0.5)'; ctx.lineWidth=2;
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.arc(POS.marketAbuNawas.x+30, POS.marketAbuNawas.y-100, 14+i*10 + (state.animT%20), Math.PI*1.3, Math.PI*1.8);
+        ctx.stroke();
+      }
+    }
+    drawSandalPair(500,340,1.0,false);
+    drawProgressBar(400,420,320,22, state.holdProgress, state.lang==='id'?'Teriakan':'Shout Meter');
+  }
+
+  function drawSceneSell(){
+    drawSky(true);
+    drawGround(360);
+    drawHouses();
+    drawPerson(POS.sandalInHandOrigin.x,300,1.1,{robeColor:'#2f7a78',turban:true,beard:true,expr:'happy',oneArmOut:true});
+    drawPerson(POS.youngManBuy.x,POS.youngManBuy.y,1.1,{robeColor:'#a3452a',cap:true,expr:'worried',mirror:true});
+    pulseRing(POS.youngManBuy.x,POS.youngManBuy.y-30,60);
+
+    if(state.dragActive){
+      drawSandalPair(state.dragPos.x, state.dragPos.y, 0.9, false);
+    } else if(!state.dragSuccess){
+      pulseRing(POS.sandalInHandOrigin.x+40, 300, 22);
+      drawSandalPair(POS.sandalInHandOrigin.x+40,300,0.8,false);
+    } else {
+      drawSandalPair(POS.youngManBuy.x, POS.youngManBuy.y+40, 0.8, false);
+    }
+  }
+
+  function drawSceneWander(){
+    drawSky(true);
+    drawGround(360);
+    drawHouses();
+    const ox = state.wanderOffset.x, oy = state.wanderOffset.y;
+    const px = 400+ox, py = 300+oy;
+    pulseRing(px,py-30,60);
+    drawPerson(px,py,1.05,{robeColor:'#a3452a',cap:true,expr:'happy'});
+    drawSandalPair(px,py+65,0.6,false);
+    drawDreamBubble(px+55,py-70, Math.ceil(state.wanderTaps/1.3));
+    drawProgressBar(400,430,320,18, Math.min(100,(state.wanderTaps/8)*100), state.lang==='id'?'Semangat Berkeliling':'Wandering Excitement');
+  }
+
+  function drawSceneTrouble(){
+    drawSky(false);
+    drawGround(360);
+    drawHouses();
+    // angry villagers
+    drawPerson(300,300,0.9,{robeColor:'#6f8a55',expr:'angry',oneArmOut:true});
+    drawPerson(240,310,0.85,{robeColor:'#7a5a3a',expr:'angry',mirror:true});
+    drawPerson(360,315,0.85,{robeColor:'#8a6238',expr:'angry'});
+    // young man in the middle, partly obscured by dust
+    drawPerson(520,300,1.0,{robeColor:'#a3452a',cap:true,expr:'worried'});
+    if(!state.dustTapped){
+      pulseRing(POS.dustCloud.x,POS.dustCloud.y-20,80);
+    }
+    drawDust(POS.dustCloud.x,POS.dustCloud.y,state.dustTapped?0.4:1);
+  }
+
+  function drawSceneConfront(){
+    drawSky(false);
+    drawGround(360);
+    drawHouses();
+    pulseRing(POS.dialogueAbuNawas.x,POS.dialogueAbuNawas.y-40,66);
+    drawPerson(POS.dialogueAbuNawas.x,POS.dialogueAbuNawas.y,1.1,{robeColor:'#2f7a78',turban:true,beard:true,expr:'neutral',oneArmOut:true});
+    drawPerson(560,300,1.05,{robeColor:'#a3452a',cap:true,expr:'angry',bandage:true,mirror:true});
+
+    const lines = state.lang==='id'
+      ? ["Saya tak pernah bilang sandal ini membawa kekayaan ajaib...","Buktinya, sekarang Tuan punya sepasang sandal, bukan?"]
+      : ["I never said this sandal brings magical riches...","See? Now you do have a pair of sandals, don't you?"];
+    if(state.dialogueTaps>=1){
+      drawSpeechBubble(POS.dialogueAbuNawas.x+40,POS.dialogueAbuNawas.y-100,200,70,lines[0],false);
+    }
+    if(state.dialogueTaps>=2){
+      drawSpeechBubble(POS.dialogueAbuNawas.x+40,POS.dialogueAbuNawas.y-170,210,60,lines[1],false);
+    }
+  }
+
+  function drawSceneReveal(){
+    drawSky(true);
+    drawGround(360);
+    drawHouses();
+    drawPerson(300,300,1.1,{robeColor:'#2f7a78',turban:true,beard:true,expr:'happy',oneArmOut:true});
+    drawPerson(560,300,1.05,{robeColor:'#a3452a',cap:true,expr:'worried',mirror:true});
+    if(!state.sandalFlipped) pulseRing(POS.sandalHandStep8.x,POS.sandalHandStep8.y,36);
+    drawSandalPair(POS.sandalHandStep8.x,POS.sandalHandStep8.y,1.0,state.sandalFlipped);
+    if(state.sandalFlipped){
+      drawSpeechBubble(300,190,190,55, state.lang==='id' ? 'Lihat! Merk sandal ini "Ajaib"!' : 'Look! This sandal\'s brand is "Magic"!', false);
+    }
+  }
+
+  function drawSceneChoice(){
+    drawSky(false);
+    drawGround(360);
+    drawHouses();
+    drawPerson(400,220,1.0,{robeColor:'#2f7a78',turban:true,beard:true,expr:'neutral'});
+
+    [ {p:POS.choiceA, key:'choiceA', icon:'amulet'}, {p:POS.choiceB, key:'choiceB', icon:'light'} ].forEach(c=>{
+      const chosen = state.choiceMade;
+      const isCorrect = c.key==='choiceB';
+      let fill = '#fffaf0';
+      if(chosen && ((chosen==='correct'&&isCorrect)||(chosen==='incorrect'&&!isCorrect))) fill = isCorrect ? '#cfead0' : '#f2c9c0';
+      ctx.save();
+      roundRect(c.p.x-c.p.w/2,c.p.y-c.p.h/2,c.p.w,c.p.h,16);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle='rgba(59,43,26,0.4)'; ctx.lineWidth=2; ctx.stroke();
+      // icon
+      ctx.translate(c.p.x, c.p.y-20);
+      if(c.icon==='amulet'){
+        ctx.strokeStyle='#a3752a'; ctx.lineWidth=4;
+        ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-14,-14); ctx.lineTo(14,14); ctx.moveTo(14,-14); ctx.lineTo(-14,14); ctx.stroke();
+      } else {
+        ctx.fillStyle='#d9a441';
+        ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#d9a441'; ctx.lineWidth=3;
+        for(let i=0;i<8;i++){
+          const a = i*Math.PI/4;
+          ctx.beginPath(); ctx.moveTo(Math.cos(a)*22,Math.sin(a)*22); ctx.lineTo(Math.cos(a)*30,Math.sin(a)*30); ctx.stroke();
+        }
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.fillStyle='#3b2b1a';
+      ctx.font='bold 13px Verdana'; ctx.textAlign='center';
+      const label = T[state.lang][c.key].split('\n');
+      label.forEach((l,i)=> ctx.fillText(l, c.p.x, c.p.y+35+i*16));
+      ctx.restore();
+      if(!chosen) pulseRing(c.p.x,c.p.y,Math.max(c.p.w,c.p.h)/2+6);
+    });
+  }
+
+  function drawSceneEnding(){
+    drawSky(true);
+    drawSun(400,80,42);
+    drawGround(360);
+    drawHouses();
+    drawPerson(310,300,1.1,{robeColor:'#2f7a78',turban:true,beard:true,expr:'happy',oneArmOut:true});
+    drawPerson(500,300,1.05,{robeColor:'#a3452a',cap:true,expr:'happy'});
+    ctx.fillStyle='rgba(59,43,26,0.85)';
+    ctx.font='bold 16px Georgia';
+    ctx.textAlign='center';
+    const moral = state.lang==='id'
+      ? 'Percayalah hanya kepada Tuhan yang menciptakan kita'
+      : 'Trust only in God who created us';
+    ctx.fillText(moral, 400, 160);
+    drawButton(POS.replayBtn.x,POS.replayBtn.y,POS.replayBtn.w,POS.replayBtn.h, T[state.lang].replayBtn, true);
+  }
+
+  // ================= ANIMATION LOOP =================
+  function loop(){
+    state.animT++;
+    if(state.holding){
+      state.holdProgress = Math.min(100, state.holdProgress + 1.3);
+      if(state.holdProgress>=100 && !state.transitioning){
+        state.transitioning = true;
+        state.holding=false;
+        setTimeout(()=>{ state.transitioning=false; goToStep(4); },300);
+      }
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ================= INPUT HANDLING =================
+  function getPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+    return {
+      x: (cx - rect.left) * (W/rect.width),
+      y: (cy - rect.top) * (H/rect.height)
+    };
+  }
+
+  function inCircle(pos,c){ return dist(pos.x,pos.y,c.x,c.y) <= c.r; }
+  function inRect(pos,r){ return pos.x>=r.x-r.w/2 && pos.x<=r.x+r.w/2 && pos.y>=r.y-r.h/2 && pos.y<=r.y+r.h/2; }
+
+  canvas.addEventListener('pointerdown', (e)=>{
+    const pos = getPos(e);
+    if(state.transitioning) return;
+
+    switch(state.step){
+      case 0:
+        if(inRect(pos,POS.startBtn)) goToStep(1);
+        break;
+      case 1:
+        if(inCircle(pos,{x:POS.abuNawasStanding.x,y:POS.abuNawasStanding.y-30,r:70})) goToStep(2);
+        break;
+      case 2:
+        POS.tableSandals.forEach((p,i)=>{
+          if(!state.sandalsCollected[i] && inCircle(pos,p)){
+            state.sandalsCollected[i]=true;
+          }
+        });
+        if(state.sandalsCollected.every(Boolean)){
+          state.transitioning = true;
+          setTimeout(()=>{ state.transitioning=false; goToStep(3); },500);
+        }
+        break;
+      case 3:
+        if(inCircle(pos,{x:POS.marketAbuNawas.x,y:POS.marketAbuNawas.y-30,r:70})){
+          state.holding = true;
+        }
+        break;
+      case 4:
+        if(inCircle(pos,{x:POS.sandalInHandOrigin.x+40,y:300,r:30}) && !state.dragSuccess){
+          state.dragActive = true;
+          state.dragPos = {x:pos.x,y:pos.y};
+        }
+        break;
+      case 5:
+        if(inCircle(pos,{x:400+state.wanderOffset.x,y:300+state.wanderOffset.y-20,r:70})){
+          state.wanderTaps++;
+          state.wanderOffset.x = (Math.random()-0.5)*140;
+          state.wanderOffset.y = (Math.random()-0.5)*40;
+          if(state.wanderTaps>=8){
+            state.transitioning = true;
+            setTimeout(()=>{ state.transitioning=false; goToStep(6); },500);
+          }
+        }
+        break;
+      case 6:
+        if(!state.dustTapped && inCircle(pos,POS.dustCloud)){
+          state.dustTapped = true;
+          state.transitioning = true;
+          setTimeout(()=>{ state.transitioning=false; goToStep(7); },900);
+        }
+        break;
+      case 7:
+        if(inCircle(pos,{x:POS.dialogueAbuNawas.x,y:POS.dialogueAbuNawas.y-30,r:70})){
+          state.dialogueTaps++;
+          if(state.dialogueTaps>=2){
+            state.transitioning = true;
+            setTimeout(()=>{ state.transitioning=false; goToStep(8); },1400);
+          }
+        }
+        break;
+      case 8:
+        if(!state.sandalFlipped && inCircle(pos,POS.sandalHandStep8)){
+          state.sandalFlipped = true;
+          state.transitioning = true;
+          setTimeout(()=>{ state.transitioning=false; goToStep(9); },2200);
+        }
+        break;
+      case 9:
+        if(!state.choiceMade){
+          if(inRect(pos,POS.choiceA)){
+            state.choiceMade='incorrect';
+            feedbackBox.textContent = T[state.lang].incorrectFeedback;
+            speak(T[state.lang].incorrectFeedback);
+            setTimeout(()=>{ state.choiceMade=null; feedbackBox.textContent=''; }, 2600);
+          } else if(inRect(pos,POS.choiceB)){
+            state.choiceMade='correct';
+            feedbackBox.textContent = T[state.lang].correctFeedback;
+            speak(T[state.lang].correctFeedback);
+            state.transitioning = true;
+            setTimeout(()=>{ state.transitioning=false; goToStep(10); },2600);
+          }
+        }
+        break;
+      case 10:
+        if(inRect(pos,POS.replayBtn)) goToStep(0);
+        break;
+    }
+  });
+
+  window.addEventListener('pointermove', (e)=>{
+    if(state.step===4 && state.dragActive){
+      const pos = getPos(e);
+      state.dragPos = pos;
+    }
+  });
+
+  window.addEventListener('pointerup', (e)=>{
+    if(state.step===3){
+      state.holding = false;
+    }
+    if(state.step===4 && state.dragActive){
+      const pos = getPos(e);
+      state.dragActive = false;
+      if(inCircle(pos,{x:POS.youngManBuy.x,y:POS.youngManBuy.y-20,r:80})){
+        state.dragSuccess = true;
+        state.transitioning = true;
+        setTimeout(()=>{ state.transitioning=false; goToStep(5); },700);
+      }
+    }
+  });
+
+  canvas.addEventListener('pointerleave', ()=>{
+    if(state.step===3) state.holding=false;
+  });
+
+  // ================= INIT =================
+  updateChrome();
+  speak(STEPS_TEXT[0].narration[state.lang]);
+  requestAnimationFrame(loop);
+  setTimeout(sendHeight, 200);
+  window.addEventListener('load', sendHeight);
+
+})();
+</script>
+</body>
+</html>
