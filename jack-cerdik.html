@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jack yang Cerdik / Clever Jack</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #efe6d3;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+  }
+  #app {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 10px 10px 16px;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #4a2f14;
+    flex: 1;
+  }
+  .btn-small {
+    background: #4a2f14;
+    color: #fdf3df;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-small:active { transform: scale(0.96); }
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 6px 0 8px;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #c9b89a;
+    transition: background 0.25s, transform 0.25s;
+  }
+  .dot.active { background: #b5471b; transform: scale(1.25); }
+  .dot.done { background: #7a8a4f; }
+  .canvas-wrap {
+    position: relative;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    background: #223;
+    touch-action: none;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+    touch-action: none;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20,15,8,0.82);
+    color: #fdf3df;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    gap: 14px;
+  }
+  .overlay h1 { margin: 0; font-size: 26px; }
+  .overlay p { margin: 0; font-size: 14px; max-width: 480px; line-height: 1.5; }
+  .bigbtn {
+    background: #b5471b;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #7c2f10;
+  }
+  .bigbtn:active { transform: translateY(2px); box-shadow: 0 1px 0 #7c2f10; }
+  .textbox {
+    margin-top: 10px;
+    background: #fdf3df;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: inset 0 0 0 1px #d9c8a4;
+  }
+  #narrationText {
+    font-size: 14px;
+    color: #4a2f14;
+    line-height: 1.5;
+    margin-bottom: 6px;
+    min-height: 20px;
+  }
+  #instructionText {
+    font-size: 13px;
+    color: #7a4a1e;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #instructionText::before {
+    content: "\1F449";
+  }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: #9a8a6c;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title" id="titleText">Jack yang Cerdik</div>
+    <button class="btn-small" id="langBtn">EN</button>
+    <button class="btn-small" id="muteBtn">🔊</button>
+  </div>
+
+  <div class="dots" id="dotsRow"></div>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="game" width="800" height="450"></canvas>
+    <div class="overlay" id="startOverlay">
+      <h1 id="startTitle">Jack yang Cerdik</h1>
+      <p id="startDesc">Sebuah dongeng Inggris tentang seorang anak yang menyelamatkan desanya bukan dengan kekuatan, tapi dengan kecerdikan.</p>
+      <button class="bigbtn" id="startBtn">Mulai Cerita</button>
+    </div>
+    <div class="overlay hidden" id="endOverlay">
+      <h1 id="endTitle">Desa Bersuka Cita!</h1>
+      <p id="endDesc">Berkat kecerdikan Jack, desa kembali damai dan sejahtera.</p>
+      <button class="bigbtn" id="replayBtn">Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="textbox">
+    <div id="narrationText"></div>
+    <div id="instructionText"></div>
+  </div>
+
+  <footer>✦ Dongeng Interaktif Nusantara &amp; Dunia ✦</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Basic setup ----------
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var langParam = urlParams.get('lang');
+
+  var state = {
+    lang: (langParam === 'en') ? 'en' : 'id',
+    muted: (localStorage.getItem('jackCerdik_muted') === '1'),
+    scene: 0, // 0 = not started, 1..7 gameplay, 8 = ended
+    running: false,
+    t: 0
+  };
+
+  var sceneData = {}; // per-scene runtime data
+  var pointer = { x: -1, y: -1, down: false };
+
+  // ---------- Text content ----------
+  var T = {
+    id: {
+      title: "Jack yang Cerdik",
+      startTitle: "Jack yang Cerdik",
+      startDesc: "Sebuah dongeng Inggris tentang seorang anak yang menyelamatkan desanya bukan dengan kekuatan, tapi dengan kecerdikan.",
+      startBtn: "Mulai Cerita",
+      replayBtn: "Ulangi Cerita",
+      endTitle: "Desa Bersuka Cita!",
+      endDesc: "Berkat kecerdikan Jack, desa kembali damai dan sejahtera. Ketuk tombol di bawah untuk mendengar kisah ini lagi.",
+      scenes: [
+        {
+          name: "Desa dalam Bayangan Raksasa",
+          narr: "Di sebuah desa kecil di tepi hutan, warga hidup ketakutan. Seorang raksasa tinggal di istana atas awan dan sering turun mengambil hasil panen mereka. Jack, seorang anak miskin namun cerdik, memutuskan untuk bertindak.",
+          instr: "Ketuk gambar Jack untuk membuatnya melangkah maju."
+        },
+        {
+          name: "Pohon Kacang Ajaib",
+          narr: "Jack menanam sebutir kacang ajaib yang ia tukar dari seekor sapi. Semalaman, pohon itu tumbuh menjulang hingga ke istana di atas awan.",
+          instr: "Tekan dan tahan tombol PANJAT agar Jack naik ke atas."
+        },
+        {
+          name: "Menyelinap Diam-diam",
+          narr: "Jack menyelinap masuk ke istana raksasa. Ia harus melangkah di atas batu-batu gelap secara berurutan dari kiri ke kanan agar tidak menimbulkan suara.",
+          instr: "Ketuk tiga batu berturut-turut dari kiri ke kanan."
+        },
+        {
+          name: "Ayam Emas Bertelur",
+          narr: "Di ruang harta, Jack menemukan seekor ayam yang bertelur emas. Ia harus membawanya pulang untuk menyelamatkan desa dari kelaparan.",
+          instr: "Seret gambar ayam emas ke dalam karung."
+        },
+        {
+          name: "Raksasa Terbangun!",
+          narr: "Tiba-tiba lantai bergetar—sang raksasa terbangun dan mencium bau manusia! Jack harus berlari secepat mungkin menuju pohon kacang.",
+          instr: "Ketuk tombol LARI berulang kali secepat mungkin."
+        },
+        {
+          name: "Menyebrangi Jembatan Goyah",
+          narr: "Jack sampai di jembatan gantung yang goyah di atas jurang. Ia harus melompat tepat pada waktunya agar tidak terjatuh.",
+          instr: "Ketuk tombol LOMPAT saat penanda berada di area hijau."
+        },
+        {
+          name: "Pilihan Jack",
+          narr: "Setelah menebang pohon kacang dan mengalahkan sang raksasa, Jack kembali membawa ayam emas. Kini ia harus memutuskan bagaimana menggunakan harta itu untuk desanya.",
+          instr: "Pilih salah satu jalan yang menurutmu terbaik untuk desa."
+        }
+      ],
+      choiceA: "Bangun Sumur Desa",
+      choiceB: "Dirikan Sekolah",
+      endA: "Jack membangun sumur besar sehingga desa tak pernah kekurangan air lagi. Warga menjulukinya Jack yang Cerdik.",
+      endB: "Jack mendirikan sekolah kecil agar anak-anak desa bisa belajar membaca dan berhitung. Warga menjulukinya Jack yang Cerdik.",
+      muteOn: "🔇", muteOff: "🔊"
+    },
+    en: {
+      title: "Clever Jack",
+      startTitle: "Clever Jack",
+      startDesc: "An English folktale about a boy who saves his village not with strength, but with cleverness.",
+      startBtn: "Start Story",
+      replayBtn: "Replay Story",
+      endTitle: "The Village Rejoices!",
+      endDesc: "Thanks to Jack's cleverness, the village is peaceful and prosperous again. Tap the button below to hear the tale again.",
+      scenes: [
+        {
+          name: "A Village in the Giant's Shadow",
+          narr: "In a small village by the forest, people lived in fear. A giant lived in a castle above the clouds and often came down to steal their harvest. Jack, a poor but clever boy, decided to act.",
+          instr: "Tap Jack's picture to make him step forward."
+        },
+        {
+          name: "The Magic Bean Tree",
+          narr: "Jack planted a magic bean he traded for a cow. Overnight, the tree grew tall enough to reach the castle above the clouds.",
+          instr: "Press and hold the CLIMB button to make Jack climb up."
+        },
+        {
+          name: "Sneaking In Quietly",
+          narr: "Jack sneaked into the giant's castle. He had to step on the dark stones in order, from left to right, so as not to make a sound.",
+          instr: "Tap the three stones in order from left to right."
+        },
+        {
+          name: "The Golden Egg Hen",
+          narr: "In the treasure room, Jack found a hen that laid golden eggs. He had to carry it home to save the village from hunger.",
+          instr: "Drag the golden hen into the sack."
+        },
+        {
+          name: "The Giant Wakes Up!",
+          narr: "Suddenly the floor shook—the giant woke up and smelled a human! Jack had to run as fast as he could toward the bean tree.",
+          instr: "Tap the RUN button repeatedly as fast as you can."
+        },
+        {
+          name: "Crossing the Wobbly Bridge",
+          narr: "Jack reached a swaying rope bridge over a deep ravine. He had to jump at just the right moment to avoid falling.",
+          instr: "Tap the JUMP button when the marker is in the green zone."
+        },
+        {
+          name: "Jack's Choice",
+          narr: "After cutting down the bean tree and outsmarting the giant, Jack returned home with the golden hen. Now he had to decide how to use the treasure for his village.",
+          instr: "Choose the path you think is best for the village."
+        }
+      ],
+      choiceA: "Build a Village Well",
+      choiceB: "Build a School",
+      endA: "Jack built a great well so the village never lacked water again. The villagers called him Clever Jack.",
+      endB: "Jack built a small school so the village children could learn to read and count. The villagers called him Clever Jack.",
+      muteOn: "🔇", muteOff: "🔊"
+    }
+  };
+
+  var TOTAL_SCENES = 7;
+
+  // ---------- DOM refs ----------
+  var titleText = document.getElementById('titleText');
+  var langBtn = document.getElementById('langBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var dotsRow = document.getElementById('dotsRow');
+  var startOverlay = document.getElementById('startOverlay');
+  var endOverlay = document.getElementById('endOverlay');
+  var startTitle = document.getElementById('startTitle');
+  var startDesc = document.getElementById('startDesc');
+  var startBtn = document.getElementById('startBtn');
+  var endTitle = document.getElementById('endTitle');
+  var endDesc = document.getElementById('endDesc');
+  var replayBtn = document.getElementById('replayBtn');
+  var narrationText = document.getElementById('narrationText');
+  var instructionText = document.getElementById('instructionText');
+  var canvasWrap = document.getElementById('canvasWrap');
+
+  function L(){ return T[state.lang]; }
+
+  function buildDots(){
+    dotsRow.innerHTML = '';
+    for (var i = 1; i <= TOTAL_SCENES; i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.setAttribute('data-i', i);
+      dotsRow.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var children = dotsRow.children;
+    for (var i = 0; i < children.length; i++){
+      var idx = i + 1;
+      children[i].className = 'dot' +
+        (idx === state.scene ? ' active' : '') +
+        (idx < state.scene ? ' done' : '');
+    }
+  }
+
+  function refreshStaticText(){
+    var t = L();
+    titleText.textContent = t.title;
+    startTitle.textContent = t.startTitle;
+    startDesc.textContent = t.startDesc;
+    startBtn.textContent = t.startBtn;
+    endTitle.textContent = t.endTitle;
+    endDesc.textContent = t.endDesc;
+    replayBtn.textContent = t.replayBtn;
+    langBtn.textContent = (state.lang === 'id') ? 'EN' : 'ID';
+    muteBtn.textContent = state.muted ? t.muteOn : t.muteOff;
+    document.title = t.title;
+  }
+
+  // ---------- Narration (Web Speech API) ----------
+  var currentUtterance = null;
+  function speak(text){
+    if (state.muted) return;
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = (state.lang === 'id') ? 'id-ID' : 'en-US';
+      u.rate = 0.95;
+      var voices = window.speechSynthesis.getVoices();
+      var match = null;
+      for (var i = 0; i < voices.length; i++){
+        if (voices[i].lang === u.lang){ match = voices[i]; break; }
+      }
+      if (!match){
+        var prefix = u.lang.split('-')[0];
+        for (var j = 0; j < voices.length; j++){
+          if (voices[j].lang && voices[j].lang.indexOf(prefix) === 0){ match = voices[j]; break; }
+        }
+      }
+      if (match) u.voice = match;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    } catch(e){ /* ignore speech errors */ }
+  }
+  function stopSpeaking(){
+    if ('speechSynthesis' in window){
+      try { window.speechSynthesis.cancel(); } catch(e){}
+    }
+  }
+  if ('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
+
+  function setNarrationAndInstruction(sceneIndex){
+    var t = L();
+    var sc = t.scenes[sceneIndex - 1];
+    if (!sc) return;
+    narrationText.textContent = sc.narr;
+    instructionText.textContent = sc.instr;
+    speak(sc.narr);
+  }
+
+  // ---------- Resize / postMessage ----------
+  function reportHeight(){
+    var h = document.getElementById('app').offsetHeight + 20;
+    try {
+      window.parent.postMessage({ jackCerdikHeight: h }, '*');
+    } catch(e){}
+  }
+
+  // ---------- Pointer handling ----------
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if (evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX;
+      clientY = evt.touches[0].clientY;
+    } else if (evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX;
+      clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX;
+      clientY = evt.clientY;
+    }
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function onDown(evt){
+    evt.preventDefault();
+    var p = getPos(evt);
+    pointer.x = p.x; pointer.y = p.y; pointer.down = true;
+    handleSceneDown(p.x, p.y);
+  }
+  function onMove(evt){
+    if (!pointer.down) return;
+    evt.preventDefault();
+    var p = getPos(evt);
+    pointer.x = p.x; pointer.y = p.y;
+    handleSceneMove(p.x, p.y);
+  }
+  function onUp(evt){
+    if (evt.cancelable) evt.preventDefault();
+    var p = pointer.down ? { x: pointer.x, y: pointer.y } : null;
+    pointer.down = false;
+    handleSceneUp(p);
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', onDown, { passive: false });
+  canvas.addEventListener('touchmove', onMove, { passive: false });
+  canvas.addEventListener('touchend', onUp, { passive: false });
+
+  function inRect(x, y, r){
+    return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  }
+  function dist(x1,y1,x2,y2){ return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)); }
+
+  // ---------- Drawing helpers ----------
+  function drawSky(c1, c2){
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+  function drawClouds(){
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    var puffs = [[90,70,30],[130,60,38],[170,72,26],[600,50,28],[640,42,36],[680,55,24]];
+    for (var i=0;i<puffs.length;i++){
+      ctx.beginPath();
+      ctx.arc(puffs[i][0], puffs[i][1], puffs[i][2], 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  function drawGround(color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0, H-90, W, 90);
+  }
+  function drawHut(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#8a5a34';
+    ctx.fillRect(-40,-30,80,50);
+    ctx.beginPath();
+    ctx.moveTo(-52,-30);
+    ctx.lineTo(0,-70);
+    ctx.lineTo(52,-30);
+    ctx.closePath();
+    ctx.fillStyle = '#5c3a1e';
+    ctx.fill();
+    ctx.fillStyle = '#3d2a1a';
+    ctx.fillRect(-10,-5,20,25);
+    ctx.restore();
+  }
+  function drawVillageBackground(){
+    drawSky('#bcdfe8', '#e9f3d8');
+    drawClouds();
+    drawGround('#6f9c4a');
+    drawHut(140, H-90, 1);
+    drawHut(240, H-90, 0.8);
+    drawHut(660, H-90, 0.9);
+    ctx.fillStyle = '#3f6b2e';
+    ctx.beginPath();
+    ctx.arc(720, H-90, 46, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#5a3a1e';
+    ctx.fillRect(714, H-50, 12, 50);
+  }
+  function drawJack(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    // legs
+    ctx.fillStyle = '#3b2a1a';
+    ctx.fillRect(-10,10,8,26);
+    ctx.fillRect(2,10,8,26);
+    // body
+    ctx.fillStyle = '#d3752b';
+    ctx.fillRect(-14,-20,28,32);
+    // head
+    ctx.fillStyle = '#f2c49b';
+    ctx.beginPath();
+    ctx.arc(0,-32,13,0,Math.PI*2);
+    ctx.fill();
+    // cap
+    ctx.fillStyle = '#7a3b1e';
+    ctx.beginPath();
+    ctx.arc(0,-36,13,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-13,-36,26,4);
+    // eyes
+    ctx.fillStyle = '#241a12';
+    ctx.beginPath();
+    ctx.arc(-4,-32,1.6,0,Math.PI*2);
+    ctx.arc(4,-32,1.6,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawGiant(x,y,scale,angry){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#6b7d8f';
+    ctx.fillRect(-40,-90,80,90);
+    ctx.beginPath();
+    ctx.arc(0,-105,32,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = angry ? '#c0392b' : '#2c2c2c';
+    ctx.beginPath();
+    ctx.arc(-11,-108,4,0,Math.PI*2);
+    ctx.arc(11,-108,4,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#2c2c2c';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (angry){
+      ctx.moveTo(-16,-92); ctx.lineTo(0,-86); ctx.lineTo(16,-92);
+    } else {
+      ctx.moveTo(-14,-90); ctx.quadraticCurveTo(0,-82,14,-90);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawButtonShape(r, label, pressed){
+    ctx.save();
+    ctx.fillStyle = pressed ? '#8a3212' : '#b5471b';
+    roundRect(r.x, r.y, r.w, r.h, 12);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, r.x + r.w/2, r.y + r.h/2 + 1);
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,rad){
+    ctx.beginPath();
+    ctx.moveTo(x+rad,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rad);
+    ctx.arcTo(x+w,y+h,x,y+h,rad);
+    ctx.arcTo(x,y+h,x,y,rad);
+    ctx.arcTo(x,y,x+w,y,rad);
+    ctx.closePath();
+  }
+  function drawBar(x,y,w,h,pct,color){
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    roundRect(x,y,w,h,h/2);
+    ctx.fill();
+    ctx.fillStyle = color;
+    var pw = Math.max(0, Math.min(1,pct)) * w;
+    if (pw > 2){
+      roundRect(x,y,pw,h,h/2);
+      ctx.fill();
+    }
+  }
+
+  // ============================================================
+  // SCENE 1: Village + tap Jack to advance
+  // ============================================================
+  function scene1_init(){
+    sceneData = { jackX: 380, jackTargetX: 460, moving: false };
+  }
+  function scene1_draw(){
+    drawVillageBackground();
+    var jx = sceneData.jackX;
+    drawJack(jx, H-70, 1.1);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(jx, H-42, 20, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  function scene1_down(x,y){
+    var jx = sceneData.jackX;
+    if (dist(x,y,jx,H-95) < 45){
+      sceneData.moving = true;
+    }
+  }
+  function scene1_tick(){
+    if (sceneData.moving){
+      sceneData.jackX += 4;
+      if (sceneData.jackX >= sceneData.jackTargetX){
+        sceneData.jackX = sceneData.jackTargetX;
+        sceneData.moving = false;
+        goToScene(2);
+      }
+    }
+  }
+
+  // ============================================================
+  // SCENE 2: Hold to climb
+  // ============================================================
+  function scene2_init(){
+    sceneData = { climb: 0, holding: false, btn: { x: W/2-70, y: H-110, w: 140, h: 56 } };
+  }
+  function scene2_draw(){
+    drawSky('#a9d3e0', '#eaf6dd');
+    drawClouds();
+    drawGround('#5d8a3f');
+    // beanstalk
+    ctx.strokeStyle = '#3f7a2e';
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.moveTo(400, H-40);
+    var topY = H-40 - sceneData.climb*3.0;
+    ctx.quadraticCurveTo(340, H/2, 400, Math.max(30, topY));
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    // leaves
+    for (var i=0;i<6;i++){
+      var ly = H-60 - i*55;
+      if (ly < topY) continue;
+      ctx.fillStyle = '#4f9a38';
+      ctx.beginPath();
+      ctx.ellipse(400 + (i%2===0?-34:34), ly, 26, 14, 0.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+    drawJack(400, Math.max(70, H-70-sceneData.climb*3.0), 1.0);
+    drawBar(W/2-100, 40, 200, 18, sceneData.climb/100, '#7a8a4f');
+    drawButtonShape(sceneData.btn, 'PANJAT', sceneData.holding);
+  }
+  function scene2_down(x,y){
+    if (inRect(x,y,sceneData.btn)) sceneData.holding = true;
+  }
+  function scene2_up(){ sceneData.holding = false; }
+  function scene2_tick(){
+    if (sceneData.holding){
+      sceneData.climb += 1.1;
+      if (sceneData.climb >= 100){
+        sceneData.climb = 100;
+        goToScene(3);
+      }
+    } else {
+      sceneData.climb = Math.max(0, sceneData.climb - 0.3);
+    }
+  }
+
+  // ============================================================
+  // SCENE 3: Sequential taps on stones (left to right)
+  // ============================================================
+  function scene3_init(){
+    sceneData = {
+      stones: [
+        { x: 220, y: H-140, r: 34, done: false },
+        { x: 400, y: H-160, r: 34, done: false },
+        { x: 580, y: H-140, r: 34, done: false }
+      ],
+      next: 0,
+      shake: 0
+    };
+  }
+  function scene3_draw(){
+    drawSky('#3a3550', '#6b6488');
+    drawGround('#494064');
+    // castle silhouette
+    ctx.fillStyle = '#2c2740';
+    ctx.fillRect(60,H-260,120,170);
+    ctx.fillRect(620,H-260,120,170);
+    ctx.fillRect(160,H-300,480,210);
+    for (var i=0;i<5;i++){
+      ctx.fillStyle = '#4a3f66';
+      ctx.fillRect(190 + i*90, H-270, 20, 40);
+    }
+    var shakeX = sceneData.shake > 0 ? (Math.random()*6-3) : 0;
+    for (var s=0; s<sceneData.stones.length; s++){
+      var st = sceneData.stones[s];
+      ctx.beginPath();
+      ctx.fillStyle = st.done ? '#7a8a4f' : '#22202e';
+      ctx.arc(st.x+shakeX, st.y, st.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#efe6d3';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#efe6d3';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(s+1), st.x+shakeX, st.y+1);
+    }
+    drawGiant(710, H-90, 0.55, false);
+    if (sceneData.shake > 0) sceneData.shake -= 1;
+  }
+  function scene3_down(x,y){
+    var st = sceneData.stones[sceneData.next];
+    if (!st) return;
+    if (dist(x,y,st.x,st.y) < st.r + 6){
+      st.done = true;
+      sceneData.next++;
+      if (sceneData.next >= sceneData.stones.length){
+        setTimeout(function(){ goToScene(4); }, 350);
+      }
+    } else {
+      // wrong stone tapped - gentle shake, no penalty
+      for (var s=0;s<sceneData.stones.length;s++){
+        if (dist(x,y,sceneData.stones[s].x,sceneData.stones[s].y) < sceneData.stones[s].r+6){
+          sceneData.shake = 8;
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // SCENE 4: Drag hen into sack
+  // ============================================================
+  function scene4_init(){
+    sceneData = {
+      hen: { x: 200, y: 220, r: 34 },
+      sack: { x: 600, y: 260, r: 46 },
+      dragging: false,
+      placed: false
+    };
+  }
+  function drawHen(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#f5d976';
+    ctx.beginPath();
+    ctx.ellipse(0,0,26,20,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(24,-10,12,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#d6a92f';
+    ctx.beginPath();
+    ctx.moveTo(34,-10); ctx.lineTo(46,-8); ctx.lineTo(34,-4);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.arc(24,-22,5,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawSack(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a6a3e';
+    ctx.beginPath();
+    ctx.moveTo(-36,10);
+    ctx.quadraticCurveTo(-40,-40,0,-46);
+    ctx.quadraticCurveTo(40,-40,36,10);
+    ctx.quadraticCurveTo(20,40,0,40);
+    ctx.quadraticCurveTo(-20,40,-36,10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#5c4526';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-20,-38); ctx.lineTo(20,-38);
+    ctx.stroke();
+    ctx.restore();
+  }
+  function scene4_draw(){
+    drawSky('#3a3550', '#57506f');
+    drawGround('#494064');
+    drawSack(sceneData.sack.x, sceneData.sack.y, 1.1);
+    if (!sceneData.placed){
+      drawHen(sceneData.hen.x, sceneData.hen.y, 1);
+    } else {
+      ctx.fillStyle = '#efe6d3';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(state.lang==='id' ? 'Ayam berhasil diamankan!' : 'Hen safely secured!', W/2, 60);
+    }
+  }
+  function scene4_down(x,y){
+    if (sceneData.placed) return;
+    if (dist(x,y,sceneData.hen.x,sceneData.hen.y) < sceneData.hen.r + 10){
+      sceneData.dragging = true;
+    }
+  }
+  function scene4_move(x,y){
+    if (sceneData.dragging){
+      sceneData.hen.x = x;
+      sceneData.hen.y = y;
+    }
+  }
+  function scene4_upfn(){
+    if (sceneData.dragging){
+      sceneData.dragging = false;
+      if (dist(sceneData.hen.x,sceneData.hen.y,sceneData.sack.x,sceneData.sack.y) < sceneData.sack.r){
+        sceneData.placed = true;
+        sceneData.hen.x = sceneData.sack.x;
+        sceneData.hen.y = sceneData.sack.y - 10;
+        setTimeout(function(){ goToScene(5); }, 500);
+      }
+    }
+  }
+
+  // ============================================================
+  // SCENE 5: Mash run button vs giant meter
+  // ============================================================
+  function scene5_init(){
+    sceneData = {
+      escape: 0, giantMeter: 0,
+      btn: { x: W/2-70, y: H-110, w: 140, h: 56 },
+      pressed: false
+    };
+  }
+  function scene5_draw(){
+    drawSky('#3a3550', '#6b6488');
+    drawGround('#494064');
+    drawGiant(650, H-90, 0.9 + sceneData.giantMeter/400, true);
+    drawJack(250 + sceneData.escape*3, H-70, 1.0);
+    drawBar(W/2-120, 40, 240, 16, sceneData.escape/100, '#7a8a4f');
+    drawBar(W/2-120, 64, 240, 12, sceneData.giantMeter/100, '#c0392b');
+    drawButtonShape(sceneData.btn, state.lang==='id' ? 'LARI!' : 'RUN!', sceneData.pressed);
+    sceneData.pressed = false;
+  }
+  function scene5_down(x,y){
+    if (inRect(x,y,sceneData.btn)){
+      sceneData.escape = Math.min(100, sceneData.escape + 6);
+      sceneData.pressed = true;
+      if (sceneData.escape >= 100){
+        goToScene(6);
+      }
+    }
+  }
+  function scene5_tick(){
+    if (sceneData.escape >= 100) return;
+    sceneData.giantMeter += 0.6;
+    if (sceneData.giantMeter >= 100){
+      sceneData.giantMeter = 60; // giant stumbles, gentle setback, no fail state
+    }
+  }
+
+  // ============================================================
+  // SCENE 6: Timing bar - jump when marker in green zone
+  // ============================================================
+  function scene6_init(){
+    sceneData = {
+      markerPos: 0, dir: 1,
+      zoneStart: 0.55, zoneEnd: 0.8,
+      hits: 0, needed: 3,
+      btn: { x: W/2-70, y: H-110, w: 140, h: 56 },
+      flashGood: 0, flashBad: 0
+    };
+  }
+  function scene6_draw(){
+    drawSky('#8fd0e6', '#dff3e0');
+    drawClouds();
+    // ravine
+    ctx.fillStyle = '#6f9c4a';
+    ctx.fillRect(0,H-70,260,70);
+    ctx.fillRect(W-260,H-70,260,70);
+    ctx.fillStyle = '#3a3550';
+    ctx.fillRect(260,H-70,W-520,70);
+    // bridge
+    ctx.strokeStyle = '#8a6a3e';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(260,H-95);
+    ctx.lineTo(W-260,H-95);
+    ctx.stroke();
+    drawJack(300 + sceneData.hits*70, H-115, 1.0);
+    // timing bar
+    var barX = W/2-160, barY = 46, barW = 320, barH = 22;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    roundRect(barX,barY,barW,barH,11); ctx.fill();
+    ctx.fillStyle = '#7a8a4f';
+    roundRect(barX + sceneData.zoneStart*barW, barY, (sceneData.zoneEnd-sceneData.zoneStart)*barW, barH, 6);
+    ctx.fill();
+    var mx = barX + sceneData.markerPos*barW;
+    ctx.fillStyle = '#b5471b';
+    ctx.beginPath();
+    ctx.arc(mx, barY+barH/2, 11, 0, Math.PI*2);
+    ctx.fill();
+    drawButtonShape(sceneData.btn, state.lang==='id' ? 'LOMPAT' : 'JUMP', false);
+    // hit dots
+    for (var i=0;i<sceneData.needed;i++){
+      ctx.fillStyle = i < sceneData.hits ? '#7a8a4f' : 'rgba(0,0,0,0.25)';
+      ctx.beginPath();
+      ctx.arc(barX + barW/2 - 20 + i*20, barY-14, 5, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  function scene6_tick(){
+    sceneData.markerPos += 0.014 * sceneData.dir;
+    if (sceneData.markerPos >= 1){ sceneData.markerPos = 1; sceneData.dir = -1; }
+    if (sceneData.markerPos <= 0){ sceneData.markerPos = 0; sceneData.dir = 1; }
+  }
+  function scene6_down(x,y){
+    if (inRect(x,y,sceneData.btn)){
+      if (sceneData.markerPos >= sceneData.zoneStart && sceneData.markerPos <= sceneData.zoneEnd){
+        sceneData.hits++;
+        if (sceneData.hits >= sceneData.needed){
+          goToScene(7);
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // SCENE 7: Branching choice
+  // ============================================================
+  function scene7_init(){
+    sceneData = {
+      btnA: { x: 90, y: H-130, w: 260, h: 70 },
+      btnB: { x: W-350, y: H-130, w: 260, h: 70 },
+      chosen: null
+    };
+  }
+  function scene7_draw(){
+    drawVillageBackground();
+    drawJack(W/2, H/2-10, 1.3);
+    var t = L();
+    drawButtonShape(sceneData.btnA, t.choiceA, false);
+    drawButtonShape(sceneData.btnB, t.choiceB, false);
+  }
+  function scene7_down(x,y){
+    var t = L();
+    if (inRect(x,y,sceneData.btnA)){
+      sceneData.chosen = 'A';
+      narrationText.textContent = t.endA;
+      speak(t.endA);
+      setTimeout(function(){ goToEnd(); }, 300);
+    } else if (inRect(x,y,sceneData.btnB)){
+      sceneData.chosen = 'B';
+      narrationText.textContent = t.endB;
+      speak(t.endB);
+      setTimeout(function(){ goToEnd(); }, 300);
+    }
+  }
+
+  // ---------- Scene registry ----------
+  var scenes = {
+    1: { init: scene1_init, draw: scene1_draw, down: scene1_down, move: null, up: null, tick: scene1_tick },
+    2: { init: scene2_init, draw: scene2_draw, down: scene2_down, move: null, up: scene2_up, tick: scene2_tick },
+    3: { init: scene3_init, draw: scene3_draw, down: scene3_down, move: null, up: null, tick: null },
+    4: { init: scene4_init, draw: scene4_draw, down: scene4_down, move: scene4_move, up: scene4_upfn, tick: null },
+    5: { init: scene5_init, draw: scene5_draw, down: scene5_down, move: null, up: null, tick: scene5_tick },
+    6: { init: scene6_init, draw: scene6_draw, down: scene6_down, move: null, up: null, tick: scene6_tick },
+    7: { init: scene7_init, draw: scene7_draw, down: scene7_down, move: null, up: null, tick: null }
+  };
+
+  function handleSceneDown(x,y){
+    var sc = scenes[state.scene];
+    if (sc && sc.down) sc.down(x,y);
+  }
+  function handleSceneMove(x,y){
+    var sc = scenes[state.scene];
+    if (sc && sc.move) sc.move(x,y);
+  }
+  function handleSceneUp(p){
+    var sc = scenes[state.scene];
+    if (sc && sc.up) sc.up(p);
+  }
+
+  function goToScene(n){
+    state.scene = n;
+    var sc = scenes[n];
+    if (sc && sc.init) sc.init();
+    updateDots();
+    setNarrationAndInstruction(n);
+    reportHeight();
+  }
+
+  function goToEnd(){
+    state.scene = 8;
+    stopSpeaking();
+    startOverlay.classList.add('hidden');
+    endOverlay.classList.remove('hidden');
+    updateDots();
+    var t = L();
+    endTitle.textContent = t.endTitle;
+    reportHeight();
+  }
+
+  function startStory(){
+    startOverlay.classList.add('hidden');
+    endOverlay.classList.add('hidden');
+    goToScene(1);
+  }
+
+  // ---------- Main loop ----------
+  function loop(){
+    state.t++;
+    if (state.scene >= 1 && state.scene <= 7){
+      ctx.clearRect(0,0,W,H);
+      var sc = scenes[state.scene];
+      if (sc && sc.tick) sc.tick();
+      // re-fetch: tick() may have transitioned to a new scene via goToScene()
+      sc = scenes[state.scene];
+      if (sc && sc.draw) sc.draw();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- UI events ----------
+  startBtn.addEventListener('click', function(){
+    startStory();
+  });
+  replayBtn.addEventListener('click', function(){
+    startStory();
+  });
+  langBtn.addEventListener('click', function(){
+    state.lang = (state.lang === 'id') ? 'en' : 'id';
+    refreshStaticText();
+    if (state.scene >= 1 && state.scene <= 7){
+      setNarrationAndInstruction(state.scene);
+    }
+    reportHeight();
+  });
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    localStorage.setItem('jackCerdik_muted', state.muted ? '1' : '0');
+    refreshStaticText();
+    if (state.muted) stopSpeaking();
+  });
+
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+
+  // ---------- Init ----------
+  buildDots();
+  refreshStaticText();
+  requestAnimationFrame(loop);
+  reportHeight();
+
+})();
+</script>
+</body>
+</html>
