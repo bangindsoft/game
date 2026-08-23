@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gadis Bermantel Merah — Dongeng Interaktif</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: transparent;
+    overflow-x: hidden;
+  }
+  #game-wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 10px 12px 16px;
+    background: linear-gradient(180deg,#fdf6e9 0%, #f7ecd7 100%);
+    border-radius: 14px;
+  }
+  #stage-frame {
+    position: relative;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(60,40,20,0.25);
+    background: #depeba;
+  }
+  canvas#game-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #cfe8c8;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  #dots-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 6px;
+  }
+  .dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #d8c9a8;
+    border: 2px solid #a8895c;
+    transition: all .25s ease;
+  }
+  .dot.active {
+    background: #c0392b;
+    border-color: #7a2015;
+    transform: scale(1.25);
+  }
+  .dot.done {
+    background: #6b8f5a;
+    border-color: #45623a;
+  }
+  #instruction-panel {
+    min-height: 46px;
+    background: #fffaf0;
+    border: 1px solid #e0cfa8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: #4a3a22;
+    text-align: center;
+  }
+  #dialogue-panel {
+    min-height: 22px;
+    text-align: center;
+    font-style: italic;
+    color: #7a3b2e;
+    font-size: 13.5px;
+    margin-bottom: 8px;
+  }
+  #controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  button.ctrl-btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    background: #c0392b;
+    color: #fff9ec;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    transition: transform .12s ease, background .2s ease;
+  }
+  button.ctrl-btn:hover { transform: translateY(-1px); background:#a5301f; }
+  button.ctrl-btn:active { transform: translateY(0); }
+  button.icon-btn {
+    background: #6b8f5a;
+    border-radius: 999px;
+    border: none;
+    width: 38px; height: 38px;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  }
+  button.icon-btn.lang { background: #a8895c; font-size: 13px; font-weight: 700; }
+  #game-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #a8895c;
+    margin-top: 8px;
+    letter-spacing: .3px;
+  }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <div id="stage-frame">
+    <canvas id="game-canvas" width="800" height="450"></canvas>
+  </div>
+  <div id="dots-row"></div>
+  <div id="instruction-panel" id="instructionText">Memuat cerita...</div>
+  <div id="dialogue-panel"></div>
+  <div id="controls-row">
+    <button class="ctrl-btn" id="startBtn">Mulai Cerita</button>
+    <button class="icon-btn" id="muteBtn" title="Mute/Unmute">🔊</button>
+    <button class="icon-btn lang" id="langBtn" title="Bahasa">EN</button>
+  </div>
+  <div id="game-footer">Dongeng Interaktif Nusantara</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Setup ----------
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const instructionPanel = document.getElementById('instruction-panel');
+  const dialoguePanel = document.getElementById('dialogue-panel');
+  const dotsRow = document.getElementById('dots-row');
+  const startBtn = document.getElementById('startBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const langBtn = document.getElementById('langBtn');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  let lang = urlParams.get('lang') === 'en' ? 'en' : 'id';
+
+  const MUTE_KEY = 'gbm_redridinghood_muted_v1';
+  let muted = localStorage.getItem(MUTE_KEY) === '1';
+
+  const TOTAL_DOTS = 6;
+
+  // scene: 0 title, 1 forest walk, 2 meet wolf, 3 knock door, 4 suspicious grandma, 5 call hunter, 6 ending
+  let scene = 0;
+  let lastTime = 0;
+  let animT = 0;
+
+  // ---------- Text dictionary ----------
+  const T = {
+    title: { id: "Gadis Bermantel Merah", en: "Little Red Riding Hood" },
+    startBtn: { id: "Mulai Cerita", en: "Start Story" },
+    replayBtn: { id: "Ulangi Cerita", en: "Replay Story" },
+    footer: { id: "Dongeng Interaktif Nusantara", en: "Interactive Folktale" },
+    loading: { id: "Memuat cerita...", en: "Loading story..." },
+
+    instr_title: { id: "Kisah tentang seorang gadis kecil yang menyusuri hutan untuk mengunjungi neneknya yang sedang sakit. Ketuk tombol \"Mulai Cerita\" di bawah untuk memulai petualangan.",
+                   en: "The tale of a little girl crossing the forest to visit her sick grandmother. Tap the \"Start Story\" button below to begin the adventure." },
+
+    instr_scene1: { id: "Ibunya berpesan agar tetap berada di jalan setapak. Ketuk batu-batu di jalan setapak, satu per satu, agar Gadis Bermantel Merah berjalan menuju hutan.",
+                    en: "Her mother told her to stay on the trail. Tap the stones on the path, one by one, to walk Little Red into the forest." },
+    narr_scene1_end: { id: "Ia pun sampai di tengah hutan yang lebat dan gelap.", en: "She reached the deep, dark heart of the forest." },
+
+    instr_scene2: { id: "Tiba-tiba seekor serigala muncul di antara pepohonan. Ketuk serigala untuk bicara dengannya, atau ketuk tanda panah jalan untuk buru-buru pergi tanpa menjawab.",
+                    en: "Suddenly a wolf appears among the trees. Tap the wolf to talk to him, or tap the trail arrow sign to hurry away without answering." },
+    narr_scene2_talk: { id: "Dengan polos, ia menceritakan bahwa ia hendak mengunjungi neneknya di ujung hutan.",
+                        en: "Innocently, she told him she was going to visit her grandmother at the edge of the forest." },
+    narr_scene2_rush: { id: "Ia bergegas pergi tanpa menjawab, namun serigala diam-diam mengendus jejaknya dari kejauhan.",
+                        en: "She hurried off without answering, but the wolf quietly tracked her scent from a distance." },
+    narr_scene2_end: { id: "Serigala licik itu pun berlari lebih dulu menuju rumah nenek.",
+                       en: "The cunning wolf ran on ahead toward grandmother's house." },
+    instr_continue: { id: "Ketuk tombol panah untuk melanjutkan cerita.", en: "Tap the arrow button to continue the story." },
+
+    instr_scene3: { id: "Sang serigala sampai lebih dulu dan menyamar sebagai nenek di ranjang. Gadis Bermantel Merah kini tiba di depan pintu. Tekan dan tahan pintu untuk mengetuknya.",
+                    en: "The wolf arrived first and disguised himself as grandmother in the bed. Little Red now arrives at the door. Press and hold the door to knock." },
+    narr_scene3_end: { id: "Pintu berderit dan terbuka perlahan...", en: "The door creaks slowly open..." },
+
+    instr_scene4_start: { id: "Ia melihat neneknya berbaring di ranjang, tapi ada yang aneh. Ketuk mata nenek untuk mengamatinya lebih dekat.",
+                           en: "She sees grandmother lying in bed, but something feels odd. Tap grandmother's eyes to look closer." },
+    dlg_eyes: { id: "\"Nenek, kenapa matamu besar sekali?\"", en: "\"Grandmother, what big eyes you have!\"" },
+    instr_scene4_ears: { id: "Ketuk telinga nenek untuk mengamatinya.", en: "Tap grandmother's ears to look closer." },
+    dlg_ears: { id: "\"Nenek, kenapa telingamu besar sekali?\"", en: "\"Grandmother, what big ears you have!\"" },
+    instr_scene4_mouth: { id: "Ketuk mulut nenek untuk mengamatinya.", en: "Tap grandmother's mouth to look closer." },
+    dlg_mouth: { id: "\"Nenek, kenapa mulutmu besar sekali?\"", en: "\"Grandmother, what a big mouth you have!\"" },
+    narr_scene4_reveal: { id: "\"Supaya bisa MEMAKANMU lebih mudah!\" — Selimut tersingkap, ternyata itu serigala!",
+                          en: "\"The better to EAT YOU with!\" — The blanket falls away — it was the wolf all along!" },
+
+    instr_scene5: { id: "Serigala jahat itu mengejar Gadis Bermantel Merah! Ketuk ikon teriak berkali-kali secepat mungkin untuk memanggil pemburu agar datang menyelamatkan.",
+                    en: "The wicked wolf lunges after Little Red! Tap the shout icon over and over, as fast as you can, to call the hunter for help." },
+    narr_scene5_end: { id: "Pemburu mendengar teriakannya dan segera berlari datang menolong!",
+                       en: "The hunter heard her cries and came running to help!" },
+
+    narr_scene6: { id: "Pemburu mengusir serigala itu pergi jauh ke dalam hutan. Gadis Bermantel Merah dan neneknya pun selamat. Pesan cerita: dengarkanlah nasihat orang tua, dan berhati-hatilah pada makhluk asing yang belum kau kenal.",
+                  en: "The hunter chased the wolf far away into the forest. Little Red and her grandmother were safe. Moral: listen to your parents' advice, and be careful of strangers you do not know." }
+  };
+
+  function t(key){ return T[key][lang]; }
+
+  // ---------- Speech ----------
+  let voices = [];
+  function loadVoices(){ voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(bcp47){
+    if (!voices || !voices.length) return null;
+    let v = voices.find(v => v.lang && v.lang.toLowerCase() === bcp47.toLowerCase());
+    if (v) return v;
+    const prefix = bcp47.split('-')[0];
+    v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(prefix));
+    return v || null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (muted || !text) return;
+    const u = new SpeechSynthesisUtterance(text);
+    const bcp = lang === 'id' ? 'id-ID' : 'en-US';
+    const v = pickVoice(bcp);
+    if (v) u.voice = v;
+    u.lang = bcp;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+  function setInstruction(key, extraDialogueKey){
+    instructionPanel.textContent = t(key);
+    if (extraDialogueKey) dialoguePanel.textContent = t(extraDialogueKey);
+    else dialoguePanel.textContent = '';
+  }
+
+  function narrate(key, dialogueToo){
+    instructionPanel.textContent = t(key);
+    if (dialogueToo) dialoguePanel.textContent = '';
+    speak(t(key));
+  }
+
+  // ---------- Dots ----------
+  function renderDots(){
+    dotsRow.innerHTML = '';
+    for (let i = 1; i <= TOTAL_DOTS; i++){
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if (scene > i) d.className += ' done';
+      else if (scene === i) d.className += ' active';
+      dotsRow.appendChild(d);
+    }
+  }
+
+  // ---------- Hotspot helpers ----------
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width, scaleY = H / rect.height;
+    let cx, cy;
+    if (e.touches && e.touches.length){
+      cx = e.touches[0].clientX; cy = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length) {
+      cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY;
+    } else {
+      cx = e.clientX; cy = e.clientY;
+    }
+    return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
+
+  // ---------- Drawing helpers ----------
+  function drawForestBg(skyTone){
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, skyTone || '#bfe0d6');
+    g.addColorStop(1, '#e8dcb8');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    // ground
+    ctx.fillStyle = '#7fae63';
+    ctx.fillRect(0, H*0.62, W, H*0.38);
+    // distant trees
+    for (let i=0;i<9;i++){
+      const tx = 20 + i*90 + Math.sin(i*13)*10;
+      const ty = H*0.55 + Math.sin(i*3)*6;
+      drawTree(tx, ty, 0.55 + (i%3)*0.08, '#3f6b3a');
+    }
+  }
+  function drawTree(x,y,scale,color){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2f';
+    ctx.fillRect(-6, 0, 12, 46);
+    ctx.fillStyle = color || '#3f6b3a';
+    ctx.beginPath();
+    ctx.moveTo(0,-70); ctx.lineTo(38,4); ctx.lineTo(-38,4); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0,-46); ctx.lineTo(30,-6); ctx.lineTo(-30,-6); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawStone(x,y,tapped){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = tapped ? '#9fae8a' : '#c8bfa0';
+    ctx.beginPath();
+    ctx.ellipse(0,0,20,11,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#8a7a55';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawGirl(x,y,scale,facing){
+    facing = facing || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*facing, scale);
+    // legs
+    ctx.fillStyle = '#4a3324';
+    ctx.fillRect(-10,40,7,20);
+    ctx.fillRect(3,40,7,20);
+    // dress
+    ctx.fillStyle = '#e3d3b0';
+    ctx.beginPath();
+    ctx.moveTo(-16,42); ctx.lineTo(16,42); ctx.lineTo(10,18); ctx.lineTo(-10,18); ctx.closePath();
+    ctx.fill();
+    // cape/cloak
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.moveTo(-14,-6); ctx.quadraticCurveTo(-22,26,-6,42);
+    ctx.lineTo(10,42); ctx.quadraticCurveTo(20,20,14,-8);
+    ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = '#f0c9a0';
+    ctx.beginPath(); ctx.arc(0,-14,14,0,Math.PI*2); ctx.fill();
+    // hood
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.arc(0,-16,17,Math.PI*0.9,Math.PI*2.15);
+    ctx.fill();
+    // basket
+    ctx.fillStyle = '#8a6a3f';
+    ctx.fillRect(14,20,14,10);
+    ctx.strokeStyle = '#5c4322'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(21,20,7,Math.PI,0); ctx.stroke();
+    // face dots
+    ctx.fillStyle = '#3a2a1a';
+    ctx.beginPath(); ctx.arc(-4,-14,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-14,1.6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawWolf(x,y,scale,pose){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b6b6b';
+    // body
+    ctx.beginPath();
+    ctx.ellipse(0,10,28,18,0,0,Math.PI*2);
+    ctx.fill();
+    // legs
+    ctx.fillRect(-20,20,8,16);
+    ctx.fillRect(10,20,8,16);
+    // tail
+    ctx.beginPath();
+    ctx.moveTo(24,6); ctx.quadraticCurveTo(46,0,40,-14); ctx.quadraticCurveTo(34,-2,20,4); ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.beginPath();
+    ctx.ellipse(-26,-4,16,14,0,0,Math.PI*2);
+    ctx.fill();
+    // ears
+    ctx.beginPath();
+    ctx.moveTo(-36,-14); ctx.lineTo(-30,-28); ctx.lineTo(-24,-14); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-20,-14); ctx.lineTo(-16,-26); ctx.lineTo(-10,-14); ctx.closePath(); ctx.fill();
+    // snout
+    ctx.fillStyle = '#555';
+    ctx.beginPath();
+    ctx.ellipse(-40,0,8,6,0,0,Math.PI*2); ctx.fill();
+    // eyes
+    ctx.fillStyle = '#f2d13a';
+    ctx.beginPath(); ctx.arc(-30,-6,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(-30,-6,1.2,0,Math.PI*2); ctx.fill();
+    if (pose === 'growl'){
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.moveTo(-46,2); ctx.lineTo(-42,8); ctx.lineTo(-38,2); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawSignArrow(x,y,label){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#8a6a3f';
+    ctx.fillRect(-4,0,8,34);
+    ctx.fillStyle = '#c8b088';
+    ctx.beginPath();
+    ctx.moveTo(-30,-10); ctx.lineTo(20,-10); ctx.lineTo(32,0); ctx.lineTo(20,10); ctx.lineTo(-30,10); ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#5c4322'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle = '#3a2a1a';
+    ctx.font = '20px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('➜', -4, 0);
+    ctx.restore();
+  }
+  function drawHouse(){
+    ctx.fillStyle = '#e8d5b7';
+    ctx.fillRect(W/2-110, H*0.42, 220, 150);
+    ctx.fillStyle = '#a5432f';
+    ctx.beginPath();
+    ctx.moveTo(W/2-130, H*0.42);
+    ctx.lineTo(W/2, H*0.42-70);
+    ctx.lineTo(W/2+130, H*0.42);
+    ctx.closePath(); ctx.fill();
+    // window
+    ctx.fillStyle = '#6f8fae';
+    ctx.fillRect(W/2-90, H*0.5, 36, 36);
+    ctx.fillRect(W/2+54, H*0.5, 36, 36);
+  }
+  function drawDoor(x,y,w,h,openAmount){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#5c4322';
+    ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#3a2a1a';
+    ctx.globalAlpha = 0.35 + 0.5*(openAmount||0);
+    ctx.fillRect(4,4,w-8,h-8);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#d8b85a';
+    ctx.beginPath(); ctx.arc(w-10,h/2,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawBedGrandma(reveal){
+    ctx.fillStyle = '#8a6a3f';
+    ctx.fillRect(W/2-140, H*0.62, 280, 16);
+    ctx.fillStyle = '#d8cba8';
+    ctx.fillRect(W/2-130, H*0.5, 260, 100);
+    // pillow
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(W/2-70, H*0.55, 34, 20, 0, 0, Math.PI*2); ctx.fill();
+    // head on pillow
+    ctx.fillStyle = reveal ? '#7a7a7a' : '#f0c9a0';
+    ctx.beginPath(); ctx.arc(W/2-70, H*0.53, 22, 0, Math.PI*2); ctx.fill();
+    if (!reveal){
+      // bonnet
+      ctx.fillStyle = '#e8e0c8';
+      ctx.beginPath(); ctx.arc(W/2-70, H*0.51, 24, Math.PI, Math.PI*2.05); ctx.fill();
+      // glasses
+      ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(W/2-78, H*0.535, 6, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(W/2-62, H*0.535, 6, 0, Math.PI*2); ctx.stroke();
+    } else {
+      // wolf ears
+      ctx.fillStyle = '#6b6b6b';
+      ctx.beginPath(); ctx.moveTo(W/2-90,H*0.51); ctx.lineTo(W/2-82,H*0.4); ctx.lineTo(W/2-74,H*0.51); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W/2-66,H*0.51); ctx.lineTo(W/2-58,H*0.4); ctx.lineTo(W/2-50,H*0.51); ctx.closePath(); ctx.fill();
+      // teeth
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.moveTo(W/2-80,H*0.58); ctx.lineTo(W/2-76,H*0.65); ctx.lineTo(W/2-72,H*0.58); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W/2-68,H*0.58); ctx.lineTo(W/2-64,H*0.65); ctx.lineTo(W/2-60,H*0.58); ctx.closePath(); ctx.fill();
+    }
+    // blanket lump body
+    ctx.fillStyle = '#a3355c';
+    ctx.beginPath(); ctx.ellipse(W/2+10, H*0.62, 90, 26, 0, 0, Math.PI*2); ctx.fill();
+    return { headX: W/2-70, headY: H*0.53 };
+  }
+  function drawHunter(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#3f5334';
+    ctx.fillRect(-12,-6,24,40);
+    ctx.fillStyle = '#f0c9a0';
+    ctx.beginPath(); ctx.arc(0,-18,13,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5c4322';
+    ctx.beginPath(); ctx.arc(0,-24,14,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#6b4a2f';
+    ctx.fillRect(14,-30,4,60);
+    ctx.restore();
+  }
+  function drawMegaphoneIcon(x,y,pulse){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(1+pulse*0.08,1+pulse*0.08);
+    ctx.fillStyle = '#d8a53c';
+    ctx.beginPath();
+    ctx.moveTo(-18,-10); ctx.lineTo(4,-22); ctx.lineTo(4,22); ctx.lineTo(-18,10); ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(-24,-6,8,12);
+    ctx.strokeStyle = '#b5822b'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(10,0,10,-0.6,0.6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(10,0,16,-0.7,0.7); ctx.stroke();
+    ctx.restore();
+  }
+  function drawContinueBtn(x,y){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#7a2015'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('▶', 2, 1);
+    ctx.restore();
+  }
+  function drawProgressBar(x,y,w,h,pct,color){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle = color || '#6b8f5a';
+    ctx.fillRect(x,y,w*Math.max(0,Math.min(1,pct)),h);
+    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth=2;
+    ctx.strokeRect(x,y,w,h);
+    ctx.restore();
+  }
+  function centeredTitle(text, sub){
+    ctx.fillStyle = 'rgba(20,15,8,0.35)';
+    ctx.fillRect(0, H*0.34, W, 90);
+    ctx.fillStyle = '#fff9ec';
+    ctx.font = 'bold 40px Georgia, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline='middle';
+    ctx.fillText(text, W/2, H*0.34+40);
+    if (sub){
+      ctx.font = '18px sans-serif';
+      ctx.fillText(sub, W/2, H*0.34+72);
+    }
+  }
+
+  // ---------- Scene state ----------
+  const S = {
+    stonesTapped: 0,
+    stonePositions: [ {x:170,y:300}, {x:330,y:320}, {x:500,y:300} ],
+    girlWalkX: 90,
+    choice: null,
+    continueVisible: false,
+    continueAction: null,
+    holdProgress: 0,
+    holding: false,
+    doorOpen: 0,
+    grandmaStep: 0, // 0 none,1 eyes done,2 ears done,3 mouth done(reveal)
+    mash: 0,
+    mashNeeded: 18,
+    ended: false
+  };
+
+  function resetSceneState(){
+    S.stonesTapped = 0;
+    S.girlWalkX = 90;
+    S.choice = null;
+    S.continueVisible = false;
+    S.continueAction = null;
+    S.holdProgress = 0;
+    S.holding = false;
+    S.doorOpen = 0;
+    S.grandmaStep = 0;
+    S.mash = 0;
+    S.ended = false;
+  }
+
+  // ---------- Scene enter logic ----------
+  function enterScene(n){
+    scene = n;
+    resetSceneState();
+    renderDots();
+    stopSpeak();
+    if (n === 1){ setInstruction('instr_scene1'); speak(t('instr_scene1')); }
+    else if (n === 2){ setInstruction('instr_scene2'); speak(t('instr_scene2')); }
+    else if (n === 3){ setInstruction('instr_scene3'); speak(t('instr_scene3')); }
+    else if (n === 4){ setInstruction('instr_scene4_start'); speak(t('instr_scene4_start')); }
+    else if (n === 5){ setInstruction('instr_scene5'); speak(t('instr_scene5')); }
+    else if (n === 6){
+      instructionPanel.textContent = t('narr_scene6');
+      dialoguePanel.textContent = '';
+      speak(t('narr_scene6'));
+      startBtn.textContent = t('replayBtn');
+      startBtn.style.display = 'inline-block';
+    }
+    if (n >= 1 && n <= 5) startBtn.style.display = 'none';
+  }
+
+  function showContinue(action){
+    S.continueVisible = true;
+    S.continueAction = action;
+  }
+
+  // ---------- Draw per scene ----------
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if (scene === 0) drawTitleScene();
+    else if (scene === 1) drawScene1();
+    else if (scene === 2) drawScene2();
+    else if (scene === 3) drawScene3();
+    else if (scene === 4) drawScene4();
+    else if (scene === 5) drawScene5();
+    else if (scene === 6) drawScene6();
+
+    if (S.continueVisible){
+      drawContinueBtn(W-50, H-50);
+    }
+  }
+
+  function drawTitleScene(){
+    drawForestBg('#cfe8c8');
+    drawTree(120, H*0.62, 1.0);
+    drawTree(680, H*0.6, 1.15);
+    drawGirl(W/2, H*0.66, 1.5, 1);
+    centeredTitle(t('title'));
+  }
+
+  function drawScene1(){
+    drawForestBg();
+    S.stonePositions.forEach((p,i)=>{
+      drawStone(p.x, p.y, i < S.stonesTapped);
+    });
+    const gx = 90 + (S.stonesTapped/3) * 420;
+    drawGirl(gx, 300, 1.05, 1);
+  }
+
+  function drawScene2(){
+    drawForestBg('#a9c9a0');
+    drawTree(90, H*0.6, 1.1);
+    drawGirl(150, 310, 1.0, 1);
+    if (!S.choice){
+      drawWolf(560, 300, 1.15, 'idle');
+      drawSignArrow(700, 300);
+    } else {
+      // show resolved pose briefly before continue button
+      drawWolf(560, 300, 1.15, 'idle');
+    }
+  }
+
+  function drawScene3(){
+    drawForestBg('#bcd7ae');
+    drawHouse();
+    drawDoor(W/2-24, H*0.62, 48, 66, S.doorOpen);
+    drawGirl(W/2+90, H*0.75, 1.0, -1);
+    if (S.holding){
+      drawProgressBar(W/2-60, H*0.9, 120, 14, S.holdProgress, '#c0392b');
+    }
+  }
+
+  function drawScene4(){
+    ctx.fillStyle = '#efe3c4';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#d8c9a0';
+    ctx.fillRect(0,0,W,H*0.5);
+    const info = drawBedGrandma(S.grandmaStep >= 3);
+    drawGirl(W/2+150, H*0.72, 0.95, -1);
+    // hotspots highlight rings for clarity depending on step
+    if (S.grandmaStep === 0){
+      ctx.strokeStyle = 'rgba(192,57,43,0.8)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(info.headX-3, info.headY-3, 9, 0, Math.PI*2); ctx.stroke();
+    } else if (S.grandmaStep === 1){
+      ctx.strokeStyle = 'rgba(192,57,43,0.8)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(info.headX-16, info.headY-14, 9, 0, Math.PI*2); ctx.stroke();
+    } else if (S.grandmaStep === 2){
+      ctx.strokeStyle = 'rgba(192,57,43,0.8)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(info.headX+2, info.headY+16, 9, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  function drawScene5(){
+    drawForestBg('#e8c9a0');
+    drawWolf(W/2+40, H*0.62, 1.3, 'growl');
+    drawGirl(W/2-140, H*0.62, 1.05, 1);
+    const pulse = Math.sin(animT*6)*0.5+0.5;
+    drawMegaphoneIcon(140, H*0.32, pulse);
+    drawProgressBar(W/2-100, 40, 200, 18, S.mash / S.mashNeeded, '#6b8f5a');
+  }
+
+  function drawScene6(){
+    drawForestBg('#cfe8c8');
+    drawHouse();
+    drawGirl(W/2-90, H*0.78, 1.05, 1);
+    drawHunter(W/2+40, H*0.76, 1.05);
+    drawWolf(W-70, H*0.6, 0.8, 'idle');
+  }
+
+  // ---------- Click handling ----------
+  function onTap(e){
+    e.preventDefault();
+    const p = getPos(e);
+
+    if (S.continueVisible){
+      if (dist(p.x,p.y, W-50, H-50) < 30){
+        S.continueVisible = false;
+        const action = S.continueAction;
+        S.continueAction = null;
+        if (action) action();
+        return;
+      }
+    }
+
+    if (scene === 1){
+      S.stonePositions.forEach((sp, i) => {
+        if (i === S.stonesTapped && dist(p.x,p.y,sp.x,sp.y) < 30){
+          S.stonesTapped++;
+          if (S.stonesTapped >= S.stonePositions.length){
+            narrate('narr_scene1_end');
+            showContinue(()=> enterScene(2));
+          }
+        }
+      });
+    } else if (scene === 2){
+      if (!S.choice){
+        if (dist(p.x,p.y,560,300) < 55){
+          S.choice = 'talk';
+          narrate('narr_scene2_talk');
+          setTimeout(()=>{
+            narrate('narr_scene2_end');
+            showContinue(()=> enterScene(3));
+          }, 3800);
+        } else if (dist(p.x,p.y,700,300) < 45){
+          S.choice = 'rush';
+          narrate('narr_scene2_rush');
+          setTimeout(()=>{
+            narrate('narr_scene2_end');
+            showContinue(()=> enterScene(3));
+          }, 3800);
+        }
+      }
+    } else if (scene === 4){
+      const bx = W/2-70, by = H*0.53;
+      if (S.grandmaStep === 0 && dist(p.x,p.y,bx-3,by-3) < 22){
+        S.grandmaStep = 1;
+        instructionPanel.textContent = t('instr_scene4_ears');
+        dialoguePanel.textContent = t('dlg_eyes');
+        speak(t('dlg_eyes') + '. ' + t('instr_scene4_ears'));
+      } else if (S.grandmaStep === 1 && dist(p.x,p.y,bx-16,by-14) < 20){
+        S.grandmaStep = 2;
+        instructionPanel.textContent = t('instr_scene4_mouth');
+        dialoguePanel.textContent = t('dlg_ears');
+        speak(t('dlg_ears') + '. ' + t('instr_scene4_mouth'));
+      } else if (S.grandmaStep === 2 && dist(p.x,p.y,bx+2,by+16) < 22){
+        S.grandmaStep = 3;
+        dialoguePanel.textContent = t('dlg_mouth');
+        narrate('narr_scene4_reveal');
+        setTimeout(()=>{ showContinue(()=> enterScene(5)); }, 3200);
+      }
+    } else if (scene === 5){
+      if (dist(p.x,p.y,140,H*0.32) < 40){
+        S.mash++;
+        if (S.mash >= S.mashNeeded && !S.ended){
+          S.ended = true;
+          narrate('narr_scene5_end');
+          setTimeout(()=> enterScene(6), 2600);
+        }
+      }
+    }
+  }
+
+  // Hold-to-knock for scene 3
+  let holdRAF = null;
+  function withinDoor(p){
+    return p.x > W/2-24 && p.x < W/2+24 && p.y > H*0.62 && p.y < H*0.62+66;
+  }
+  function startHold(e){
+    if (scene !== 3) return;
+    const p = getPos(e);
+    if (!withinDoor(p)) return;
+    e.preventDefault();
+    S.holding = true;
+    if (holdRAF) cancelAnimationFrame(holdRAF);
+    const step = () => {
+      if (!S.holding) return;
+      S.holdProgress += 0.018;
+      S.doorOpen = Math.min(1, S.holdProgress);
+      if (S.holdProgress >= 1){
+        S.holding = false;
+        narrate('narr_scene3_end');
+        setTimeout(()=> enterScene(4), 1600);
+        return;
+      }
+      holdRAF = requestAnimationFrame(step);
+    };
+    holdRAF = requestAnimationFrame(step);
+  }
+  function endHold(){
+    S.holding = false;
+    if (scene === 3 && S.holdProgress < 1){
+      S.holdProgress = Math.max(0, S.holdProgress - 0.3);
+      S.doorOpen = S.holdProgress;
+    }
+  }
+
+  canvas.addEventListener('mousedown', (e)=>{ startHold(e); });
+  canvas.addEventListener('mouseup', endHold);
+  canvas.addEventListener('mouseleave', endHold);
+  canvas.addEventListener('touchstart', (e)=>{ startHold(e); }, {passive:false});
+  canvas.addEventListener('touchend', endHold);
+  canvas.addEventListener('click', onTap);
+  canvas.addEventListener('touchend', (e)=>{
+    if (scene !== 3) onTap(e);
+  }, {passive:false});
+
+  // ---------- Controls ----------
+  startBtn.addEventListener('click', ()=>{
+    enterScene(1);
+  });
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem(MUTE_KEY, muted ? '1':'0');
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    if (muted) stopSpeak();
+  });
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    document.documentElement.lang = lang;
+    document.title = lang === 'id' ? 'Gadis Bermantel Merah — Dongeng Interaktif' : 'Little Red Riding Hood — Interactive Folktale';
+    refreshTextsForScene();
+  });
+
+  function refreshTextsForScene(){
+    startBtn.textContent = scene === 0 ? t('startBtn') : (scene===6 ? t('replayBtn') : startBtn.textContent);
+    document.getElementById('game-footer').textContent = t('footer');
+    if (scene === 0){ setInstruction('instr_title'); }
+    else if (scene === 1){ setInstruction('instr_scene1'); }
+    else if (scene === 2){ setInstruction('instr_scene2'); }
+    else if (scene === 3){ setInstruction('instr_scene3'); }
+    else if (scene === 4){
+      if (S.grandmaStep === 0) setInstruction('instr_scene4_start');
+      else if (S.grandmaStep === 1) { instructionPanel.textContent = t('instr_scene4_ears'); dialoguePanel.textContent = t('dlg_eyes'); }
+      else if (S.grandmaStep === 2) { instructionPanel.textContent = t('instr_scene4_mouth'); dialoguePanel.textContent = t('dlg_ears'); }
+    }
+    else if (scene === 5){ setInstruction('instr_scene5'); }
+    else if (scene === 6){ instructionPanel.textContent = t('narr_scene6'); }
+  }
+
+  // ---------- Init ----------
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+  document.documentElement.lang = lang;
+  startBtn.textContent = t('startBtn');
+  document.getElementById('game-footer').textContent = t('footer');
+  setInstruction('instr_title');
+  scene = 0;
+  renderDots();
+
+  // ---------- Game loop ----------
+  function loop(ts){
+    if (!lastTime) lastTime = ts;
+    const dt = (ts - lastTime)/1000;
+    lastTime = ts;
+    animT += dt;
+    draw();
+    // mash decay
+    if (scene === 5 && !S.ended){
+      S.mash = Math.max(0, S.mash - dt*0.6);
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---------- iframe auto-resize ----------
+  function sendHeight(){
+    const h = document.getElementById('game-wrap').offsetHeight;
+    try {
+      window.parent.postMessage({ type: 'gbmRedRidingHoodHeight', height: h }, '*');
+    } catch(err){}
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setInterval(sendHeight, 800);
+
+})();
+</script>
+</body>
+</html>
