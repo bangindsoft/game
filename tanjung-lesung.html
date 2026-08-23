@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Mula Tanjung Lesung</title>
+<style>
+  :root{
+    --bg:#fbf3e3;
+    --panel:#fffdf8;
+    --ink:#3a2c1d;
+    --accent:#b5652b;
+    --accent2:#3f6b3f;
+    --gold:#d8a13a;
+    --line:#e3d3b4;
+    --dot:#d9c8a4;
+    --dot-active:#b5652b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    padding:10px 12px 18px;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .titleblock h1{
+    font-size:1.15rem;
+    margin:0;
+    color:var(--accent);
+    line-height:1.25;
+  }
+  .titleblock span{
+    font-size:0.75rem;
+    color:#8a7a5f;
+  }
+  .iconbtns{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .iconbtn{
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--ink);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:0.85rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    white-space:nowrap;
+  }
+  .iconbtn:hover{border-color:var(--accent);}
+  .iconbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:#dff0ff;
+    box-shadow:0 4px 14px rgba(80,60,20,0.12);
+  }
+  #game{
+    display:block;
+    width:100%;
+    height:auto;
+    aspect-ratio:8/5;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:10px 0 8px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--dot);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--dot-active);transform:scale(1.25);}
+  .dot.done{background:var(--accent2);}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .instruction{
+    font-weight:600;
+    color:var(--accent);
+    margin:0 0 6px;
+    font-size:0.95rem;
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+  }
+  .instruction .ico{flex-shrink:0;}
+  .narration{
+    margin:0;
+    font-size:0.92rem;
+    line-height:1.5;
+    color:#4a3c2a;
+  }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:6px;
+  }
+  .btn{
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:24px;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(181,101,43,0.35);
+  }
+  .btn:hover{background:#984f1f;}
+  .btn.secondary{
+    background:var(--panel);
+    color:var(--accent);
+    border:1px solid var(--accent);
+    box-shadow:none;
+  }
+  .btn.hidden{display:none;}
+
+  footer{
+    text-align:center;
+    font-size:0.72rem;
+    color:#a4926e;
+    margin-top:10px;
+  }
+
+  @media (max-width:420px){
+    .titleblock h1{font-size:1rem;}
+    .iconbtn{padding:6px 8px;font-size:0.78rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="titleblock">
+      <h1 id="gameTitle">Asal Mula Tanjung Lesung</h1>
+      <span id="gameSubtitle">Cerita Rakyat Banten — Game Interaktif</span>
+    </div>
+    <div class="iconbtns">
+      <button class="iconbtn" id="langBtn" title="Ganti bahasa">🌐 <span id="langLabel">EN</span></button>
+      <button class="iconbtn" id="muteBtn" title="Bisukan narasi">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="game" width="800" height="500"></canvas>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="panel">
+    <p class="instruction"><span class="ico">👉</span><span id="instructionText">Ketuk tombol Mulai untuk memulai cerita.</span></p>
+    <p class="narration" id="narrationText">Alkisah, di sebuah desa di tanah Banten, hiduplah seorang pengembara bernama Raden Budog...</p>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="startBtn">▶ Mulai Cerita</button>
+    <button class="btn secondary hidden" id="continueBtn">Lanjutkan ▶</button>
+    <button class="btn secondary hidden" id="replayBtn">↻ Ulangi Cerita</button>
+  </div>
+
+  <footer>Kisah rakyat Nusantara • Dimainkan langsung di peramban</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ========================================================
+   LANGUAGE / STATE
+   ======================================================== */
+const params = new URLSearchParams(location.search);
+let lang = params.get('lang') === 'en' ? 'en' : 'id';
+let muted = localStorage.getItem('tlesung_muted') === '1';
+let voiceReady = false;
+let voices = [];
+
+const UI = {
+  id:{
+    title:"Asal Mula Tanjung Lesung",
+    subtitle:"Cerita Rakyat Banten — Game Interaktif",
+    start:"▶ Mulai Cerita",
+    continue:"Lanjutkan ▶",
+    replay:"↻ Ulangi Cerita",
+    intro_instruction:"Ketuk tombol Mulai untuk memulai cerita.",
+    intro_narr:"Alkisah, di sebuah desa di tanah Banten, hiduplah seorang pengembara bernama Raden Budog...",
+    footer:"Kisah rakyat Nusantara • Dimainkan langsung di peramban",
+    mute:"Bisukan narasi",
+    unmute:"Aktifkan narasi"
+  },
+  en:{
+    title:"The Origin of Tanjung Lesung",
+    subtitle:"Folktale from Banten — Interactive Game",
+    start:"▶ Start Story",
+    continue:"Continue ▶",
+    replay:"↻ Replay Story",
+    intro_instruction:"Tap Start to begin the story.",
+    intro_narr:"Once upon a time, in a village in the land of Banten, there lived a wanderer named Raden Budog...",
+    footer:"A Nusantara folktale • Playable right in your browser",
+    mute:"Mute narration",
+    unmute:"Unmute narration"
+  }
+};
+
+/* ========================================================
+   CANVAS SETUP
+   ======================================================== */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 500;
+
+/* ========================================================
+   HOTSPOT / POINTER SYSTEM
+   ======================================================== */
+let hotspots = []; // {id,x,y,r,shape,w,h,onClick,pulse}
+let holdState = { active:false, id:null };
+let animId = null;
+let sceneTime = 0;
+
+function getCanvasPos(evt){
+  const rect = canvas.getBoundingClientRect();
+  const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+  const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+  return { x: cx * (W/rect.width), y: cy * (H/rect.height) };
+}
+
+function hitTest(pos){
+  for (let i = hotspots.length - 1; i >= 0; i--){
+    const h = hotspots[i];
+    if (h.shape === 'rect'){
+      if (pos.x >= h.x - h.w/2 && pos.x <= h.x + h.w/2 && pos.y >= h.y - h.h/2 && pos.y <= h.y + h.h/2) return h;
+    } else {
+      const dx = pos.x - h.x, dy = pos.y - h.y;
+      if (dx*dx + dy*dy <= h.r*h.r) return h;
+    }
+  }
+  return null;
+}
+
+canvas.addEventListener('pointerdown', (e)=>{
+  const pos = getCanvasPos(e);
+  const h = hitTest(pos);
+  if (h){
+    if (h.hold){
+      holdState.active = true;
+      holdState.id = h.id;
+    }
+    if (h.onClick) h.onClick();
+  }
+});
+canvas.addEventListener('pointerup', ()=>{ holdState.active=false; holdState.id=null; });
+canvas.addEventListener('pointerleave', ()=>{ holdState.active=false; holdState.id=null; });
+canvas.addEventListener('pointercancel', ()=>{ holdState.active=false; holdState.id=null; });
+
+/* ========================================================
+   SPEECH NARRATION
+   ======================================================== */
+function loadVoices(){
+  voices = speechSynthesis.getVoices();
+  voiceReady = voices.length > 0;
+}
+if ('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function pickVoice(targetLang){
+  if (!voices || !voices.length) return null;
+  const wanted = targetLang === 'en' ? 'en-US' : 'id-ID';
+  let v = voices.find(v => v.lang === wanted);
+  if (!v) v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(targetLang));
+  return v || voices[0];
+}
+
+function speak(text){
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if (muted || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(lang);
+  if (v) u.voice = v;
+  u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+
+/* ========================================================
+   DOM REFS
+   ======================================================== */
+const instructionText = document.getElementById('instructionText');
+const narrationText = document.getElementById('narrationText');
+const startBtn = document.getElementById('startBtn');
+const continueBtn = document.getElementById('continueBtn');
+const replayBtn = document.getElementById('replayBtn');
+const dotsWrap = document.getElementById('dots');
+const langBtn = document.getElementById('langBtn');
+const langLabel = document.getElementById('langLabel');
+const muteBtn = document.getElementById('muteBtn');
+const gameTitle = document.getElementById('gameTitle');
+const gameSubtitle = document.getElementById('gameSubtitle');
+
+function setText(instr, narr){
+  instructionText.textContent = instr;
+  narrationText.textContent = narr;
+}
+
+function updateChrome(){
+  const t = UI[lang];
+  gameTitle.textContent = t.title;
+  gameSubtitle.textContent = t.subtitle;
+  startBtn.textContent = t.start;
+  continueBtn.textContent = t.continue;
+  replayBtn.textContent = t.replay;
+  document.title = t.title;
+  langLabel.textContent = lang === 'id' ? 'EN' : 'ID';
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  muteBtn.title = muted ? t.unmute : t.mute;
+  muteBtn.classList.toggle('active', muted);
+  document.documentElement.lang = lang;
+}
+
+langBtn.addEventListener('click', ()=>{
+  lang = lang === 'id' ? 'en' : 'id';
+  updateChrome();
+  if (currentSceneIndex === -1){
+    setText(UI[lang].intro_instruction, UI[lang].intro_narr);
+  } else {
+    renderCurrentInstruction();
+    speakCurrentPhase();
+  }
+});
+
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('tlesung_muted', muted ? '1':'0');
+  updateChrome();
+  if (muted) speechSynthesis.cancel();
+  else speakCurrentPhase();
+});
+
+/* ========================================================
+   DRAWING HELPERS (procedural, no external images)
+   ======================================================== */
+function grad(x0,y0,x1,y1,stops){
+  const g = ctx.createLinearGradient(x0,y0,x1,y1);
+  stops.forEach(s=>g.addColorStop(s[0],s[1]));
+  return g;
+}
+
+function drawSky(t, colors){
+  ctx.fillStyle = grad(0,0,0,H*0.7, colors);
+  ctx.fillRect(0,0,W,H*0.72);
+}
+
+function drawSun(x,y,r){
+  ctx.save();
+  ctx.fillStyle = '#ffdc7a';
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawStars(t){
+  ctx.save();
+  ctx.fillStyle = '#fff';
+  const stars = [[80,40],[140,80],[220,50],[320,90],[420,45],[520,75],[600,40],[680,90],[740,55],[100,120],[260,120],[460,120]];
+  stars.forEach(([sx,sy],i)=>{
+    const tw = 0.5 + 0.5*Math.sin(t/400 + i);
+    ctx.globalAlpha = 0.5 + tw*0.5;
+    ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawGround(color, y){
+  ctx.fillStyle = color;
+  ctx.fillRect(0,y,W,H-y);
+}
+
+function drawCloud(x,y,s){
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.arc(x,y,18*s,0,Math.PI*2);
+  ctx.arc(x+22*s,y-8*s,16*s,0,Math.PI*2);
+  ctx.arc(x+42*s,y,18*s,0,Math.PI*2);
+  ctx.arc(x+20*s,y+6*s,20*s,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawTreeSimple(x,y,scale,dark){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#6b4a2a';
+  ctx.fillRect(-6,-10,12,50);
+  ctx.fillStyle = dark ? '#2f5330' : '#4c7a3f';
+  ctx.beginPath();
+  ctx.ellipse(0,-40,34,36,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-22,-20,20,22,0,0,Math.PI*2);
+  ctx.ellipse(22,-15,18,20,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawWater(x,y,w,h,t){
+  ctx.save();
+  ctx.fillStyle = '#5aa9c9';
+  ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 2;
+  for (let i=0;i<5;i++){
+    const yy = y + 12 + i*(h-20)/5;
+    ctx.beginPath();
+    for (let px=x; px<=x+w; px+=14){
+      const off = Math.sin((px/24)+(t/300)+i) * 3;
+      if (px===x) ctx.moveTo(px, yy+off); else ctx.lineTo(px, yy+off);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHouse(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#c9a26a';
+  ctx.fillRect(-40,-10,80,60);
+  ctx.fillStyle = '#7a4a2a';
+  ctx.beginPath();
+  ctx.moveTo(-50,-10); ctx.lineTo(0,-55); ctx.lineTo(50,-10); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#4a3320';
+  ctx.fillRect(-12,20,24,30);
+  ctx.restore();
+}
+
+// Person: generic figure used for Raden Budog / villagers / Sri Poh Haci / Nyi Siti
+function drawPerson(opts){
+  const {x,y,scale=1, skin='#e0ab7a', robe='#8a5a3c', robeDark='#6b3f26',
+         hair='#241c14', female=false, sash=null, furProgress=0, facing=1,
+         armRaise=0, jump=0, headTurn=0} = opts;
+  ctx.save();
+  ctx.translate(x, y - jump);
+  ctx.scale(scale*facing, scale);
+
+  // legs
+  ctx.fillStyle = furProgress>0.5 ? '#2b2b2b' : robeDark;
+  ctx.fillRect(-11,20,9,26);
+  ctx.fillRect(2,20,9,26);
+
+  // robe/body
+  ctx.fillStyle = furProgress>0.35 ? '#3a3530' : robe;
+  ctx.beginPath();
+  ctx.moveTo(-16,20); ctx.lineTo(16,20); ctx.lineTo(12,-18); ctx.lineTo(-12,-18);
+  ctx.closePath(); ctx.fill();
+
+  if (sash){
+    ctx.fillStyle = sash;
+    ctx.fillRect(-14,-2,28,7);
+  }
+
+  // arms
+  ctx.strokeStyle = furProgress>0.35 ? '#2b2b2b' : skin;
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-12,-12); ctx.lineTo(-22, 6 - armRaise*24);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(12,-12); ctx.lineTo(22, 6 - armRaise*24);
+  ctx.stroke();
+
+  // tail (appears with fur progress)
+  if (furProgress > 0.15){
+    ctx.strokeStyle = '#2b2b2b';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(0,18);
+    ctx.quadraticCurveTo(-22 , 30 + furProgress*10, -8, 44*Math.min(furProgress*1.6,1));
+    ctx.stroke();
+  }
+
+  // head
+  ctx.save();
+  ctx.translate(0,-30);
+  ctx.rotate(headTurn);
+  ctx.fillStyle = furProgress>0.6 ? '#2b2b2b' : skin;
+  ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fill();
+
+  if (furProgress>0.6){
+    // monkey face patch
+    ctx.fillStyle = '#e0ab7a';
+    ctx.beginPath(); ctx.ellipse(0,3,8,7,0,0,Math.PI*2); ctx.fill();
+  }
+
+  // hair
+  if (furProgress < 0.6){
+    ctx.fillStyle = hair;
+    if (female){
+      ctx.beginPath(); ctx.ellipse(0,-2,16,13,0,Math.PI,Math.PI*2); ctx.fill();
+      ctx.fillRect(-16,-4,6,20);
+      ctx.fillRect(10,-4,6,20);
+    } else {
+      ctx.beginPath(); ctx.ellipse(0,-4,15,10,0,Math.PI,Math.PI*2); ctx.fill();
+      // headband
+      ctx.fillStyle = '#d8a13a';
+      ctx.fillRect(-15,-3,30,4);
+    }
+  }
+  // eyes
+  ctx.fillStyle = '#2a1d10';
+  ctx.beginPath(); ctx.arc(-5,1,1.6,0,Math.PI*2); ctx.arc(5,1,1.6,0,Math.PI*2); ctx.fill();
+  // mouth
+  ctx.strokeStyle = '#5a3a22';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(0,6,4,0,Math.PI); ctx.stroke();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function drawHorse(x,y,scale,isStone,facing){
+  facing = facing || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale*facing,scale);
+  const body = isStone ? '#9a9a95' : '#7a5230';
+  const dark = isStone ? '#83837e' : '#5c3c22';
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.ellipse(0,0,32,18,0,0,Math.PI*2);
+  ctx.fill();
+  // legs
+  ctx.fillStyle = dark;
+  ctx.fillRect(-22,10,7,20);
+  ctx.fillRect(14,10,7,20);
+  // neck & head
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(24,-8); ctx.lineTo(42,-28); ctx.lineTo(48,-22); ctx.lineTo(32,4);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(44,-26,8,6,0.3,0,Math.PI*2); ctx.fill();
+  // mane
+  ctx.fillStyle = dark;
+  ctx.beginPath(); ctx.ellipse(30,-16,5,10,0.5,0,Math.PI*2); ctx.fill();
+  // tail
+  ctx.strokeStyle = dark; ctx.lineWidth = 5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-30,-4); ctx.quadraticCurveTo(-42,10,-34,26); ctx.stroke();
+  ctx.restore();
+}
+
+function drawDog(x,y,scale,isStone,facing){
+  facing = facing || 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale*facing,scale);
+  const body = isStone ? '#a3a39d' : '#c8b18a';
+  const dark = isStone ? '#8b8b86' : '#8a7550';
+  ctx.fillStyle = body;
+  ctx.beginPath(); ctx.ellipse(0,0,18,11,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(-10,6,5,12);
+  ctx.fillRect(4,6,5,12);
+  ctx.fillStyle = body;
+  ctx.beginPath(); ctx.ellipse(16,-8,8,7,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.beginPath(); ctx.ellipse(20,-14,3,5,0.3,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = dark; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-16,-2); ctx.quadraticCurveTo(-26,-8,-22,2); ctx.stroke();
+  ctx.restore();
+}
+
+function drawLesung(x,y,scale, thumpProgress){
+  // lesung = wooden mortar trough, antan = pestle stick
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#6b4a2a';
+  ctx.beginPath();
+  ctx.moveTo(-38,10); ctx.lineTo(38,10); ctx.lineTo(30,26); ctx.lineTo(-30,26);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#4a3320';
+  ctx.beginPath(); ctx.ellipse(0,10,38,7,0,0,Math.PI*2); ctx.fill();
+  // pestle (antan) bobbing
+  const bob = Math.sin((thumpProgress||0)*Math.PI) * 14;
+  ctx.fillStyle = '#8a5a34';
+  ctx.fillRect(-4, -30 - bob, 8, 40);
+  ctx.beginPath(); ctx.ellipse(0,-30-bob,7,7,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawDreamBubble(x,y,r,reveal){
+  ctx.save();
+  ctx.globalAlpha = 0.95;
+  ctx.fillStyle = '#fdf6e6';
+  ctx.strokeStyle = '#d8a13a';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  // small connecting bubbles
+  ctx.beginPath(); ctx.arc(x-r+10, y+r-6, 8,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x-r+26, y+r+10, 5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+  if (reveal > 0){
+    ctx.save();
+    ctx.globalAlpha = Math.min(reveal,1);
+    ctx.translate(x,y);
+    // girl's face silhouette
+    ctx.fillStyle = '#e0ab7a';
+    ctx.beginPath(); ctx.arc(0,4,26,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#241c14';
+    ctx.beginPath(); ctx.ellipse(0,-8,28,20,0,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillRect(-28,-8,10,34);
+    ctx.fillRect(18,-8,10,34);
+    ctx.fillStyle = '#2a1d10';
+    ctx.beginPath(); ctx.arc(-9,2,2.4,0,Math.PI*2); ctx.arc(9,2,2.4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#a05a3a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,12,6,0,Math.PI); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function pulseRing(x,y,r,t){
+  ctx.save();
+  const p = (Math.sin(t/260)+1)/2;
+  ctx.globalAlpha = 0.25 + p*0.35;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(x,y,r+4+p*4,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+function speechBubble(x,y,text,w){
+  ctx.save();
+  ctx.font = '15px Segoe UI, sans-serif';
+  ctx.fillStyle = '#fffdf8';
+  ctx.strokeStyle = '#3a2c1d';
+  ctx.lineWidth = 1.5;
+  const bw = w || Math.max(90, ctx.measureText(text).width + 26);
+  const bh = 34;
+  roundRect(x-bw/2,y-bh,bw,bh,8);
+  ctx.fill(); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x-6,y); ctx.lineTo(x+8,y); ctx.lineTo(x-2,y+12); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#3a2c1d';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, x, y-bh/2+5);
+  ctx.restore();
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawButton(x,y,w,h,label,activeColor){
+  ctx.save();
+  ctx.fillStyle = activeColor || '#b5652b';
+  roundRect(x-w/2,y-h/2,w,h,10);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 15px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x, y+1);
+  ctx.restore();
+}
+
+function drawProgressBar(x,y,w,h,pct,color){
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  roundRect(x,y,w,h,h/2); ctx.fill();
+  ctx.fillStyle = color || '#3f6b3f';
+  const fw = Math.max(h, w*Math.min(Math.max(pct,0),1));
+  roundRect(x,y,fw,h,h/2); ctx.fill();
+  ctx.strokeStyle = '#3a2c1d33';
+  roundRect(x,y,w,h,h/2); ctx.stroke();
+  ctx.restore();
+}
+
+/* ========================================================
+   SCENE DEFINITIONS
+   ======================================================== */
+let currentSceneIndex = -1;
+let scene = null; // active scene runtime object
+
+const T = { // narration/instruction text table, id + en
+  s0: {
+    instr:{id:"Ketuk gelembung mimpi untuk melihat wajah gadis dalam mimpi Raden Budog.",
+           en:"Tap the dream bubble to see the girl's face from Raden Budog's dream."},
+    narr:{id:"Raden Budog, sang pengembara dari Laut Selatan, bermimpi bertemu seorang gadis yang sangat cantik. Ia jatuh hati dan bertekad mencarinya.",
+          en:"Raden Budog, a wanderer from the Southern Sea, dreamed of a very beautiful girl. He fell in love and vowed to find her."},
+    reveal:{id:"Wajah gadis itu begitu jelita hingga Raden Budog tak bisa melupakannya. Ia pun bertekad pergi mengembara ke utara untuk mencarinya.",
+            en:"The girl's face was so lovely that Raden Budog could not forget it. He resolved to journey north to find her."}
+  },
+  s1: {
+    instr:{id:"Tekan dan tahan gambar kuda untuk menunggangi kuda menuju utara.",
+           en:"Press and hold the horse to ride north."},
+    narr:{id:"Ditemani kuda dan anjing kesayangannya, Raden Budog menunggang kuda menuju utara, hingga tiba di Gunung Walang.",
+          en:"Accompanied by his beloved horse and dog, Raden Budog rode north until he reached Mount Walang."},
+    event:{id:"Tiba-tiba pelana kudanya robek! Raden Budog kini harus menuntun kudanya berjalan kaki.",
+           en:"Suddenly his saddle tore apart! Raden Budog now had to lead his horse on foot."}
+  },
+  s2: {
+    instrA:{id:"Ketuk laut untuk mandi di Pantai Cawar setelah perjalanan panjang.",
+            en:"Tap the sea to bathe at Cawar Beach after the long journey."},
+    instrB:{id:"Ketuk kuda dan anjingnya untuk mengajak mereka melanjutkan perjalanan.",
+            en:"Tap the horse and the dog to urge them to continue the journey."},
+    instrC:{id:"Kuda dan anjing itu enggan pergi. Ketuk Raden Budog untuk mendengar kutukannya.",
+            en:"The horse and dog refuse to leave. Tap Raden Budog to hear his curse."},
+    narrA:{id:"Setelah menempuh perjalanan yang melelahkan, Raden Budog mandi di pantai Cawar yang indah.",
+           en:"After an exhausting journey, Raden Budog bathed at the beautiful Cawar Beach."},
+    narrB:{id:"Selesai mandi, Raden Budog hendak melanjutkan perjalanan. Namun kuda dan anjingnya terdiam, enggan beranjak dari pantai itu.",
+           en:"After bathing, Raden Budog wanted to continue his journey. But his horse and dog stood still, unwilling to leave the beach."},
+    narrC:{id:"Karena berulang kali diajak namun tak dipatuhi, Raden Budog murka dan mengutuk kuda serta anjingnya menjadi batu karang.",
+           en:"After being repeatedly ignored, Raden Budog grew furious and cursed his horse and dog into coral stones."}
+  },
+  s3: {
+    instr:{id:"Ketuk batu-batu sungai secara berurutan dari kiri ke kanan untuk menyeberang.",
+           en:"Tap the river stones in order from left to right to cross."},
+    narr:{id:"Raden Budog melanjutkan perjalanan dengan berjalan kaki, melewati sungai yang meluap airnya karena banjir.",
+          en:"Raden Budog continued on foot, crossing a river that had swollen from flooding."}
+  },
+  s4: {
+    instr:{id:"Ketuk lesung tepat saat penanda berada di area hijau untuk menumbuk padi bersama Sri Poh Haci.",
+           en:"Tap the rice mortar exactly when the marker is in the green zone to pound rice with Sri Poh Haci."},
+    narr:{id:"Di sebuah desa, tinggal seorang gadis bernama Sri Poh Haci. Ia gemar menumbuk padi dengan irama merdu, permainan yang disebut ngagondang.",
+          en:"In a village lived a girl named Sri Poh Haci. She loved pounding rice to a pleasant rhythm, a game called ngagondang."},
+    reveal:{id:"Raden Budog terkejut. Wajah Sri Poh Haci sangat mirip dengan gadis dalam mimpinya!",
+            en:"Raden Budog was astonished. Sri Poh Haci's face looked just like the girl in his dream!"}
+  },
+  s5: {
+    instrA:{id:"Ketuk cincin untuk melamar Sri Poh Haci.",
+            en:"Tap the ring to propose to Sri Poh Haci."},
+    instrB:{id:"Ketuk Nyi Siti untuk meminta restu pernikahan.",
+            en:"Tap Nyi Siti to ask for her blessing on the marriage."},
+    instrC:{id:"Hari Jumat tiba. Ketuk salah satu pilihan untuk menentukan sikap Raden Budog.",
+            en:"Friday has come. Tap one of the choices to decide Raden Budog's response."},
+    narrA:{id:"Raden Budog melamar Sri Poh Haci, dan cintanya pun berbalas.",
+           en:"Raden Budog proposed to Sri Poh Haci, and his love was returned."},
+    narrB:{id:"Nyi Siti merestui pernikahan mereka. Seluruh warga desa bergembira merayakannya.",
+           en:"Nyi Siti blessed their marriage. The whole village rejoiced in celebration."},
+    narrC:{id:"Warga desa punya pantangan: dilarang bermain ngagondang pada hari Jumat. Para tetua memperingatkan Raden Budog untuk menghormatinya.",
+           en:"The villagers had a taboo: ngagondang must never be played on Fridays. The elders warned Raden Budog to respect it."},
+    choiceListen:{id:"Dengarkan Nasihat",en:"Heed the Warning"},
+    choiceIgnore:{id:"Tetap Ingin Bermain",en:"Insist on Playing"},
+    resultListen:{id:"Raden Budog terdiam sejenak, namun hasratnya bermain ngagondang ternyata tak tertahankan.",
+                  en:"Raden Budog paused for a moment, but his urge to play ngagondang proved impossible to resist."},
+    resultIgnore:{id:"Raden Budog tak menghiraukan peringatan itu sama sekali. Baginya, tiada hari pantangan untuk bersenang-senang.",
+                  en:"Raden Budog ignored the warning completely. To him, no day was forbidden for having fun."}
+  },
+  s6: {
+    instr:{id:"Ketuk lesung berkali-kali secepat mungkin — Raden Budog terus bermain ngagondang meski hari Jumat.",
+           en:"Tap the mortar again and again as fast as you can — Raden Budog keeps playing ngagondang despite it being Friday."},
+    narr:{id:"Hari Jumat itu, Raden Budog tetap ngagondang seorang diri, melompat-lompat penuh semangat tanpa memedulikan pantangan desa.",
+          en:"That Friday, Raden Budog played ngagondang alone, leaping about with excitement, ignoring the village taboo."},
+    milestone1:{id:"Anak-anak desa berdatangan. Mereka terheran-heran melihat sesuatu yang aneh terjadi...",
+                en:"Village children came running. They stared in shock at something strange happening..."},
+    milestone2:{id:"\"Ada lutung bermain lesung!\" teriak mereka. Bulu hitam mulai tumbuh di tubuh Raden Budog!",
+                en:"\"A lutung monkey is playing the mortar!\" they shouted. Black fur began covering Raden Budog's body!"}
+  },
+  s7: {
+    instrA:{id:"Ketuk tangan, lalu ekor, lalu wajah Raden Budog untuk melihat perubahan yang terjadi.",
+            en:"Tap Raden Budog's hands, then his tail, then his face to see what has happened."},
+    instrB:{id:"Ketuk pohon-pohon secara berurutan agar lutung dapat melarikan diri ke dalam hutan.",
+            en:"Tap the trees in order so the lutung can flee into the forest."},
+    narrA:{id:"Raden Budog terperanjat. Tangan, kaki, wajah, hingga ekornya kini dipenuhi bulu hitam lebat. Ia telah berubah wujud menjadi lutung!",
+           en:"Raden Budog was stunned. His hands, feet, face, and now a tail were all covered in thick black fur. He had transformed into a lutung monkey!"},
+    narrB:{id:"Dengan sangat malu, lutung jelmaan Raden Budog melompat dari dahan ke dahan, menjauh ke tengah hutan. Warga menjulukinya \"Lutung Kasarung\".",
+           en:"Overcome with shame, the lutung that was once Raden Budog leapt from branch to branch, deep into the forest. Villagers called him \"Lutung Kasarung\"."}
+  },
+  s8: {
+    instr:{id:"Ketuk tanjung pada peta untuk mengetahui asal nama Tanjung Lesung.",
+           en:"Tap the headland on the map to learn how Tanjung Lesung got its name."},
+    narr:{id:"Sri Poh Haci sangat bersedih. Ia pun pergi meninggalkan desa secara diam-diam, dan konon menjelma menjadi Dewi Padi.",
+          en:"Sri Poh Haci was heartbroken. She quietly left the village, and is said to have transformed into the Rice Goddess."},
+    reveal:{id:"Desa tempat peristiwa itu terjadi disebut Desa Lesung. Karena letaknya di sebuah tanjung, desa itu dikenal sebagai Tanjung Lesung hingga kini. Pesan cerita ini: hendaklah kita menghormati adat istiadat setempat.",
+            en:"The village where this happened became known as Desa Lesung. Because it lay on a headland, it came to be called Tanjung Lesung to this day. The lesson: we should always respect local customs and traditions."}
+  }
+};
+
+function tr(obj){ return obj[lang]; }
+
+const totalScenes = 9; // s0..s8
+
+function buildDots(){
+  dotsWrap.innerHTML = '';
+  for (let i=0;i<totalScenes;i++){
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot'+i;
+    dotsWrap.appendChild(d);
+  }
+}
+function updateDots(activeIdx){
+  for (let i=0;i<totalScenes;i++){
+    const d = document.getElementById('dot'+i);
+    d.classList.remove('active','done');
+    if (i < activeIdx) d.classList.add('done');
+    else if (i === activeIdx) d.classList.add('active');
+  }
+}
+
+function renderCurrentInstruction(){
+  if (!scene) return;
+  setText(scene.getInstruction(), scene.getNarration());
+}
+function speakCurrentPhase(){
+  if (!scene) return;
+  speak(scene.getNarration());
+}
+
+function showContinue(show){
+  continueBtn.classList.toggle('hidden', !show);
+}
+function showReplay(show){
+  replayBtn.classList.toggle('hidden', !show);
+}
+
+/* ---- animation loop ---- */
+function loop(ts){
+  sceneTime = ts;
+  ctx.clearRect(0,0,W,H);
+  if (scene && scene.draw) scene.draw(ts);
+  if (holdState.active && scene && scene.onHold) scene.onHold();
+  animId = requestAnimationFrame(loop);
+}
+
+/* ========================================================
+   SCENE 0: THE DREAM
+   ======================================================== */
+function makeScene0(){
+  let reveal = 0, revealed=false;
+  const bubble = {x:400,y:130,r:66};
+  return {
+    getInstruction(){ return revealed ? "" : tr(T.s0.instr); },
+    getNarration(){ return revealed ? tr(T.s0.reveal) : tr(T.s0.narr); },
+    enter(){
+      hotspots = [{id:'bubble', x:bubble.x, y:bubble.y, r:bubble.r, onClick:()=>{
+        if (revealed) return;
+        revealed = true;
+        renderCurrentInstruction();
+        speakCurrentPhase();
+        showContinue(true);
+      }}];
+    },
+    draw(t){
+      drawSky(t,[[0,'#2b3b63'],[1,'#5a6f9e']]);
+      drawStars(t);
+      drawGround('#3d5a3d', H*0.68);
+      // sleeping mat
+      ctx.fillStyle = '#7a5a38';
+      roundRect(260,H*0.68+10,280,30,10); ctx.fill();
+      // Raden Budog sleeping
+      ctx.save();
+      ctx.translate(400, H*0.68 + 5);
+      ctx.fillStyle = '#e0ab7a';
+      ctx.beginPath(); ctx.ellipse(0,0,60,20,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#8a5a3c';
+      ctx.beginPath(); ctx.ellipse(-10,10,58,16,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#e0ab7a';
+      ctx.beginPath(); ctx.arc(-58,-2,16,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#241c14';
+      ctx.beginPath(); ctx.ellipse(-58,-8,16,10,0,Math.PI,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      if (!revealed) pulseRing(bubble.x,bubble.y,bubble.r,t);
+      drawDreamBubble(bubble.x,bubble.y,bubble.r, reveal);
+      if (revealed && reveal < 1) reveal += 0.03;
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 1: RIDE NORTH / SADDLE TEARS
+   ======================================================== */
+function makeScene1(){
+  let progress = 0; // 0..1
+  let torn = false;
+  let doneFlag = false;
+  const horseSpot = {x:300,y:360,r:60};
+  return {
+    getInstruction(){ return torn ? "" : tr(T.s1.instr); },
+    getNarration(){ return torn ? tr(T.s1.event) : tr(T.s1.narr); },
+    enter(){
+      hotspots = [{id:'horse', x:horseSpot.x, y:horseSpot.y, r:horseSpot.r, hold:true, onClick:()=>{}}];
+    },
+    onHold(){
+      if (torn) return;
+      progress += 0.012;
+      if (progress >= 1){
+        progress = 1;
+        torn = true;
+        renderCurrentInstruction();
+        speakCurrentPhase();
+        showContinue(true);
+      }
+    },
+    draw(t){
+      drawSky(t,[[0,'#8ec9e8'],[1,'#eaf6ff']]);
+      drawSun(700,70,36);
+      drawCloud(120,90,1); drawCloud(500,60,0.8);
+      drawGround('#7cb36a', H*0.7);
+      drawTreeSimple(700,H*0.66,1.1,false);
+      drawTreeSimple(60,H*0.62,0.9,false);
+      // mountain (Gunung Walang)
+      ctx.fillStyle = '#8a9a7a';
+      ctx.beginPath(); ctx.moveTo(520,H*0.7); ctx.lineTo(650,H*0.36); ctx.lineTo(780,H*0.7); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#e8ecec';
+      ctx.beginPath(); ctx.moveTo(630,H*0.44); ctx.lineTo(650,H*0.36); ctx.lineTo(668,H*0.44); ctx.closePath(); ctx.fill();
+
+      const jog = torn ? 0 : Math.sin(t/120)*4*(progress>0?1:0);
+      if (!torn){
+        drawHorse(horseSpot.x, horseSpot.y + jog, 1.15, false, 1);
+        drawPerson({x:horseSpot.x-6,y:horseSpot.y-18+jog,scale:0.95, armRaise:0.4});
+        drawDog(horseSpot.x-70,horseSpot.y+22,1,false,1);
+        pulseRing(horseSpot.x,horseSpot.y,horseSpot.r,t);
+        drawProgressBar(W/2-140,H-46,280,16,progress,'#b5652b');
+      } else {
+        // walking, leading horse, torn saddle visible
+        drawDog(90,horseSpot.y+22,1,false,1);
+        drawPerson({x:220,y:horseSpot.y-6,scale:0.95, facing:1, armRaise:0.2});
+        drawHorse(340,horseSpot.y,1.1,false,1);
+        // torn saddle flap
+        ctx.save();
+        ctx.translate(340,horseSpot.y);
+        ctx.fillStyle = '#5c3c22';
+        ctx.beginPath();
+        ctx.moveTo(-6,-4); ctx.lineTo(4,2); ctx.lineTo(-2,10); ctx.lineTo(-10,4);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 2: CAWAR BEACH — BATHE + CURSE
+   ======================================================== */
+function makeScene2(){
+  let phase = 'bathe'; // bathe -> call -> curse -> done
+  let bathTaps = 0;
+  let calledHorse=false, calledDog=false;
+  let stoneAnim = 0;
+  const waterSpot = {x:400,y:410,w:760,h:110};
+  const horseSpot = {x:300,y:300,r:56};
+  const dogSpot = {x:470,y:320,r:44};
+  const personSpot = {x:400,y:250,r:50};
+
+  function refreshHotspots(){
+    if (phase==='bathe'){
+      hotspots = [{id:'water',x:waterSpot.x,y:waterSpot.y,r:120,onClick:()=>{
+        bathTaps++;
+        if (bathTaps>=1){
+          phase='call';
+          renderCurrentInstruction(); speakCurrentPhase();
+          refreshHotspots();
+        }
+      }}];
+    } else if (phase==='call'){
+      hotspots = [
+        {id:'horse',x:horseSpot.x,y:horseSpot.y,r:horseSpot.r,onClick:()=>{ calledHorse=true; tryAdvanceCall(); }},
+        {id:'dog',x:dogSpot.x,y:dogSpot.y,r:dogSpot.r,onClick:()=>{ calledDog=true; tryAdvanceCall(); }}
+      ];
+    } else if (phase==='curse'){
+      hotspots = [{id:'person',x:personSpot.x,y:personSpot.y,r:personSpot.r,onClick:()=>{
+        phase='done';
+        renderCurrentInstruction(); speakCurrentPhase();
+        showContinue(true);
+        hotspots = [];
+      }}];
+    }
+  }
+  function tryAdvanceCall(){
+    if (calledHorse && calledDog){
+      phase='curse';
+      renderCurrentInstruction(); speakCurrentPhase();
+      refreshHotspots();
+    }
+  }
+
+  return {
+    getInstruction(){
+      if (phase==='bathe') return tr(T.s2.instrA);
+      if (phase==='call') return tr(T.s2.instrB);
+      if (phase==='curse') return tr(T.s2.instrC);
+      return "";
+    },
+    getNarration(){
+      if (phase==='bathe') return tr(T.s2.narrA);
+      if (phase==='call') return tr(T.s2.narrB);
+      return tr(T.s2.narrC);
+    },
+    enter(){ refreshHotspots(); },
+    draw(t){
+      drawSky(t,[[0,'#8ec9e8'],[1,'#eaf6ff']]);
+      drawSun(120,70,34);
+      drawGround('#e8d9a8', H*0.58);
+      drawWater(0,H*0.72, W, H*0.28, t);
+      drawTreeSimple(720,H*0.54,1,false);
+
+      const isStone = (phase==='curse' || phase==='done');
+      if (phase==='done') stoneAnim = Math.min(stoneAnim+0.05,1);
+
+      drawHorse(horseSpot.x,horseSpot.y, 1, isStone, 1);
+      drawDog(dogSpot.x,dogSpot.y,1, isStone, -1);
+
+      if (phase==='bathe'){
+        pulseRing(waterSpot.x,H*0.82,90,t);
+        drawPerson({x:400,y:250,scale:0.9,armRaise:0.6});
+      } else {
+        drawPerson({x:personSpot.x,y:personSpot.y,scale:0.95, armRaise: phase==='curse'?0.9:0.2});
+        if (phase==='call' || phase==='curse') pulseRing(horseSpot.x,horseSpot.y,horseSpot.r,t);
+        if (phase==='call') pulseRing(dogSpot.x,dogSpot.y,dogSpot.r,t);
+        if (phase==='curse') pulseRing(personSpot.x,personSpot.y,personSpot.r,t);
+        if (phase==='curse' || phase==='done'){
+          speechBubble(personSpot.x, personSpot.y-70, lang==='id' ? "Jadilah batu!" : "Turn to stone!");
+        }
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 3: RIVER CROSSING
+   ======================================================== */
+function makeScene3(){
+  const stones = [
+    {x:180,y:330,r:30},{x:290,y:300,r:30},{x:400,y:340,r:30},
+    {x:510,y:295,r:30},{x:610,y:330,r:30}
+  ];
+  let next = 0;
+  let personX = 100, personY = 330;
+  let done = false;
+
+  function refreshHotspots(){
+    hotspots = stones.map((s,i)=>({
+      id:'stone'+i, x:s.x, y:s.y, r:s.r,
+      onClick:()=>{
+        if (i===next){
+          next++;
+          personX = s.x; personY = s.y - 26;
+          if (next>=stones.length){
+            done = true;
+            renderCurrentInstruction();
+            showContinue(true);
+            hotspots = [];
+          }
+        }
+      }
+    }));
+  }
+  return {
+    getInstruction(){ return done ? "" : tr(T.s3.instr); },
+    getNarration(){ return tr(T.s3.narr); },
+    enter(){ refreshHotspots(); },
+    draw(t){
+      drawSky(t,[[0,'#8ec9e8'],[1,'#eaf6ff']]);
+      drawGround('#7cb36a',H*0.66);
+      ctx.fillStyle = '#4f83a3';
+      ctx.fillRect(0,H*0.4,W,H*0.32);
+      drawWater(0,H*0.4,W,H*0.32,t);
+      stones.forEach((s,i)=>{
+        ctx.save();
+        ctx.fillStyle = i<next ? '#9a9a95' : '#b8ac8e';
+        ctx.beginPath(); ctx.ellipse(s.x,s.y,s.r,s.r*0.7,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#3a2c1d';
+        ctx.font = 'bold 16px Segoe UI';
+        ctx.textAlign='center';
+        ctx.fillText(String(i+1), s.x, s.y+5);
+        ctx.restore();
+        if (i===next && !done) pulseRing(s.x,s.y,s.r,t);
+      });
+      drawPerson({x:personX,y:personY,scale:0.9,armRaise:0.3});
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 4: NGAGONDANG RHYTHM WITH SRI POH HACI
+   ======================================================== */
+function makeScene4(){
+  let hits = 0;
+  const need = 4;
+  let markerPos = 0; // 0..1 oscillation
+  let dir = 1;
+  let flashUntil = 0;
+  let thump = 0;
+  let revealed = false;
+  const lesungSpot = {x:430,y:330,r:70};
+  const targetZone = [0.42,0.58];
+
+  return {
+    getInstruction(){ return revealed ? "" : tr(T.s4.instr); },
+    getNarration(){ return revealed ? tr(T.s4.reveal) : tr(T.s4.narr); },
+    enter(){
+      hotspots = [{id:'lesung', x:lesungSpot.x, y:lesungSpot.y, r:lesungSpot.r, onClick:()=>{
+        if (revealed) return;
+        thump = 1;
+        if (markerPos >= targetZone[0] && markerPos <= targetZone[1]){
+          hits++;
+          flashUntil = sceneTime + 260;
+          if (hits>=need){
+            revealed = true;
+            renderCurrentInstruction();
+            speakCurrentPhase();
+            showContinue(true);
+          }
+        }
+      }}];
+    },
+    draw(t){
+      drawSky(t,[[0,'#bfe3f5'],[1,'#f4ecd8']]);
+      drawSun(680,80,30);
+      drawGround('#d9c08c', H*0.66);
+      drawHouse(650,H*0.5,0.9);
+      drawTreeSimple(80,H*0.6,1,false);
+
+      thump = Math.max(0, thump-0.06);
+
+      if (!revealed){
+        markerPos += 0.012*dir;
+        if (markerPos>1){markerPos=1;dir=-1;}
+        if (markerPos<0){markerPos=0;dir=1;}
+      }
+
+      // Sri Poh Haci
+      drawPerson({x:340,y:320,scale:0.95, female:true, sash:'#3f6b3f', armRaise:0.4+Math.sin(t/150)*0.15});
+      // lesung
+      drawLesung(lesungSpot.x,lesungSpot.y,1, thump);
+      if (!revealed) pulseRing(lesungSpot.x,lesungSpot.y,lesungSpot.r,t);
+
+      // rhythm bar
+      const bx=230, by=H-60, bw=340, bh=18;
+      ctx.save();
+      ctx.fillStyle='rgba(255,255,255,0.5)';
+      roundRect(bx,by,bw,bh,9); ctx.fill();
+      ctx.fillStyle='#c7e6c0';
+      roundRect(bx+bw*targetZone[0], by, bw*(targetZone[1]-targetZone[0]), bh, 6); ctx.fill();
+      ctx.strokeStyle='#3a2c1d33'; roundRect(bx,by,bw,bh,9); ctx.stroke();
+      const mx = bx + bw*markerPos;
+      ctx.fillStyle = sceneTime<flashUntil ? '#ffd24d' : '#b5652b';
+      ctx.beginPath(); ctx.arc(mx,by+bh/2,10,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      // hit counter
+      ctx.save();
+      ctx.fillStyle='#3a2c1d';
+      ctx.font='bold 14px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(`${Math.min(hits,need)}/${need}`, W/2, by-10);
+      ctx.restore();
+
+      if (revealed){
+        speechBubble(400,190, lang==='id'?"Wajah itu... mirip mimpiku!":"That face... just like my dream!", 210);
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 5: PROPOSAL, MARRIAGE, FRIDAY WARNING
+   ======================================================== */
+function makeScene5(){
+  let phase = 'propose'; // propose -> bless -> warn -> done
+  let choice = null;
+  const ringSpot = {x:430,y:250,r:34};
+  const nyiSpot = {x:620,y:300,r:52};
+  const listenBtn = {x:280,y:400,w:200,h:46};
+  const ignoreBtn = {x:520,y:400,w:220,h:46};
+
+  function refreshHotspots(){
+    if (phase==='propose'){
+      hotspots = [{id:'ring',x:ringSpot.x,y:ringSpot.y,r:ringSpot.r,onClick:()=>{
+        phase='bless'; renderCurrentInstruction(); speakCurrentPhase(); refreshHotspots();
+      }}];
+    } else if (phase==='bless'){
+      hotspots = [{id:'nyi',x:nyiSpot.x,y:nyiSpot.y,r:nyiSpot.r,onClick:()=>{
+        phase='warn'; renderCurrentInstruction(); speakCurrentPhase(); refreshHotspots();
+      }}];
+    } else if (phase==='warn'){
+      hotspots = [
+        {id:'listen', x:listenBtn.x, y:listenBtn.y, shape:'rect', w:listenBtn.w, h:listenBtn.h, onClick:()=>{
+          choice='listen'; phase='done';
+          renderCurrentInstruction();
+          speak(tr(T.s5.resultListen));
+          showContinue(true);
+          hotspots=[];
+        }},
+        {id:'ignore', x:ignoreBtn.x, y:ignoreBtn.y, shape:'rect', w:ignoreBtn.w, h:ignoreBtn.h, onClick:()=>{
+          choice='ignore'; phase='done';
+          renderCurrentInstruction();
+          speak(tr(T.s5.resultIgnore));
+          showContinue(true);
+          hotspots=[];
+        }}
+      ];
+    }
+  }
+
+  return {
+    getInstruction(){
+      if (phase==='propose') return tr(T.s5.instrA);
+      if (phase==='bless') return tr(T.s5.instrB);
+      if (phase==='warn') return tr(T.s5.instrC);
+      return "";
+    },
+    getNarration(){
+      if (phase==='propose') return tr(T.s5.narrA);
+      if (phase==='bless') return tr(T.s5.narrB);
+      if (phase==='warn') return tr(T.s5.narrC);
+      return choice==='listen' ? tr(T.s5.resultListen) : tr(T.s5.resultIgnore);
+    },
+    enter(){ refreshHotspots(); },
+    draw(t){
+      drawSky(t,[[0,'#bfe3f5'],[1,'#f4ecd8']]);
+      drawGround('#d9c08c',H*0.66);
+      drawHouse(160,H*0.52,1.05);
+      drawTreeSimple(730,H*0.58,1,false);
+
+      drawPerson({x:340,y:260,scale:0.95, armRaise:0.5});
+      drawPerson({x:430,y:270,scale:0.95, female:true, sash:'#c98a3a'});
+
+      if (phase==='propose'){
+        ctx.save();
+        ctx.strokeStyle='#d8a13a'; ctx.lineWidth=4;
+        ctx.beginPath(); ctx.arc(ringSpot.x,ringSpot.y,14,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+        pulseRing(ringSpot.x,ringSpot.y,ringSpot.r,t);
+      }
+
+      if (phase!=='propose'){
+        drawPerson({x:nyiSpot.x,y:nyiSpot.y,scale:0.95,female:true, hair:'#555', sash:'#7a4a2a'});
+      }
+      if (phase==='bless') pulseRing(nyiSpot.x,nyiSpot.y,nyiSpot.r,t);
+
+      if (phase==='warn' || phase==='done'){
+        speechBubble(nyiSpot.x-60,nyiSpot.y-70, lang==='id'?"Jangan ngagondang hari Jumat!":"No ngagondang on Fridays!", 240);
+      }
+      if (phase==='warn'){
+        drawButton(listenBtn.x,listenBtn.y,listenBtn.w,listenBtn.h, tr(T.s5.choiceListen),'#3f6b3f');
+        drawButton(ignoreBtn.x,ignoreBtn.y,ignoreBtn.w,ignoreBtn.h, tr(T.s5.choiceIgnore),'#b5652b');
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 6: THE FRIDAY TRANSFORMATION (mash)
+   ======================================================== */
+function makeScene6(){
+  let meter = 0; // 0..100
+  let thump = 0;
+  let stage = 0; // 0..3 milestone text stage
+  let done = false;
+  const lesungSpot = {x:400,y:330,r:80};
+
+  return {
+    getInstruction(){ return done ? "" : tr(T.s6.instr); },
+    getNarration(){
+      if (stage>=2) return tr(T.s6.milestone2);
+      if (stage>=1) return tr(T.s6.milestone1);
+      return tr(T.s6.narr);
+    },
+    enter(){
+      hotspots = [{id:'lesung', x:lesungSpot.x, y:lesungSpot.y, r:lesungSpot.r, onClick:()=>{
+        if (done) return;
+        thump = 1;
+        meter = Math.min(100, meter + 6);
+        const newStage = meter>=70?2: meter>=35?1:0;
+        if (newStage !== stage){
+          stage = newStage;
+          renderCurrentInstruction();
+          speakCurrentPhase();
+        }
+        if (meter>=100){
+          done = true;
+          renderCurrentInstruction();
+          showContinue(true);
+          hotspots = [];
+        }
+      }}];
+    },
+    draw(t){
+      drawSky(t,[[0,'#bfe3f5'],[1,'#f4ecd8']]);
+      drawGround('#d9c08c',H*0.66);
+      drawHouse(660,H*0.5,0.85);
+
+      thump = Math.max(0,thump-0.05);
+      const fur = meter/100;
+      const jumpAmt = Math.abs(Math.sin(t/90)) * (6+meter/6) * (meter>10?1:0);
+
+      drawLesung(lesungSpot.x,lesungSpot.y,1,thump);
+      drawPerson({x:lesungSpot.x-10,y:lesungSpot.y-70,scale:1, armRaise:0.6, furProgress:fur, jump:jumpAmt});
+
+      if (!done) pulseRing(lesungSpot.x,lesungSpot.y,lesungSpot.r,t);
+      drawProgressBar(W/2-160,60,320,18, meter/100, '#8a5a3c');
+      ctx.save();
+      ctx.fillStyle='#3a2c1d'; ctx.font='bold 13px Segoe UI'; ctx.textAlign='center';
+      ctx.fillText(lang==='id'?'Semangat Ngagondang':'Ngagondang Energy', W/2, 48);
+      ctx.restore();
+
+      if (stage>=1){
+        // children pointing, drawn small on the side
+        drawPerson({x:120,y:390,scale:0.55,female:false, armRaise:0.9});
+        drawPerson({x:160,y:395,scale:0.5,female:true, armRaise:0.8});
+        speechBubble(140,340, lang==='id'?"Ada lutung!":"A lutung!", 130);
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 7: DISCOVERY + FLIGHT TO FOREST
+   ======================================================== */
+function makeScene7(){
+  let sub = 'discover'; // discover -> flee -> done
+  const partsOrder = ['hands','tail','face'];
+  let partIdx = 0;
+  let treeIdx = 0;
+  const trees = [{x:200,y:280},{x:400,y:230},{x:610,y:270}];
+  let monkeyPos = {x:400,y:330};
+  let done=false;
+
+  const partSpots = {
+    hands:{x:340,y:340,r:40},
+    tail:{x:330,y:390,r:36},
+    face:{x:400,y:280,r:40}
+  };
+
+  function refreshHotspots(){
+    if (sub==='discover'){
+      const p = partsOrder[partIdx];
+      hotspots = [{id:p, x:partSpots[p].x, y:partSpots[p].y, r:partSpots[p].r, onClick:()=>{
+        partIdx++;
+        if (partIdx>=partsOrder.length){
+          sub='flee';
+          renderCurrentInstruction(); speakCurrentPhase();
+        }
+        refreshHotspots();
+      }}];
+    } else if (sub==='flee'){
+      const tr_ = trees[treeIdx];
+      hotspots = [{id:'tree'+treeIdx, x:tr_.x, y:tr_.y, r:44, onClick:()=>{
+        monkeyPos = {x:tr_.x, y:tr_.y+40};
+        treeIdx++;
+        if (treeIdx>=trees.length){
+          done=true;
+          renderCurrentInstruction();
+          showContinue(true);
+          hotspots=[];
+        } else {
+          refreshHotspots();
+        }
+      }}];
+    }
+  }
+
+  return {
+    getInstruction(){
+      if (sub==='discover') return tr(T.s7.instrA);
+      if (sub==='flee' && !done) return tr(T.s7.instrB);
+      return "";
+    },
+    getNarration(){ return sub==='discover' ? tr(T.s7.narrA) : tr(T.s7.narrB); },
+    enter(){ refreshHotspots(); },
+    draw(t){
+      if (sub==='discover'){
+        drawSky(t,[[0,'#bfe3f5'],[1,'#f4ecd8']]);
+        drawGround('#d9c08c',H*0.66);
+        drawPerson({x:400,y:330,scale:1.3, furProgress:1, armRaise:0.5});
+        Object.entries(partSpots).forEach(([key,s],i)=>{
+          if (partsOrder.indexOf(key) >= partIdx) pulseRing(s.x,s.y,s.r,t);
+        });
+      } else {
+        drawSky(t,[[0,'#4a6642'],[1,'#8fae70']]);
+        drawGround('#2f5330',H*0.7);
+        trees.forEach((tr_,i)=>{
+          drawTreeSimple(tr_.x,tr_.y+70,1.3,true);
+          if (i===treeIdx && !done) pulseRing(tr_.x,tr_.y,44,t);
+          if (i<treeIdx){
+            ctx.save(); ctx.fillStyle='#3a2c1d'; ctx.font='bold 14px Segoe UI'; ctx.textAlign='center';
+            ctx.fillText('✓', tr_.x, tr_.y-50);
+            ctx.restore();
+          }
+        });
+        drawPerson({x:monkeyPos.x,y:monkeyPos.y,scale:0.9,furProgress:1,armRaise:0.7,jump:Math.abs(Math.sin(t/140))*10});
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE 8: EPILOGUE — NAME ORIGIN
+   ======================================================== */
+function makeScene8(){
+  let revealed = false;
+  const mapSpot = {x:470,y:H*0.4,r:55};
+  return {
+    getInstruction(){ return revealed ? "" : tr(T.s8.instr); },
+    getNarration(){ return revealed ? tr(T.s8.reveal) : tr(T.s8.narr); },
+    enter(){
+      hotspots = [{id:'map', x:mapSpot.x, y:mapSpot.y, r:mapSpot.r, onClick:()=>{
+        if (revealed) return;
+        revealed = true;
+        renderCurrentInstruction();
+        speakCurrentPhase();
+        showReplay(true);
+        showContinue(false);
+        hotspots = [];
+      }}];
+    },
+    draw(t){
+      drawSky(t,[[0,'#bfe3f5'],[1,'#f4ecd8']]);
+      drawSun(700,70,30);
+      // sea
+      drawWater(0,H*0.55,W,H*0.45,t);
+      // land / headland shape (tanjung)
+      ctx.save();
+      ctx.fillStyle = '#7cb36a';
+      ctx.beginPath();
+      ctx.moveTo(0,H*0.55);
+      ctx.lineTo(260,H*0.55);
+      ctx.quadraticCurveTo(440,H*0.55, 470,H*0.42);
+      ctx.quadraticCurveTo(500,H*0.3, 560,H*0.55);
+      ctx.lineTo(W,H*0.55);
+      ctx.lineTo(W,0); ctx.lineTo(0,0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      drawTreeSimple(120,H*0.5,0.9,false);
+      drawTreeSimple(620,H*0.5,0.9,false);
+      drawHouse(300,H*0.5,0.8);
+
+      if (!revealed){
+        pulseRing(mapSpot.x, mapSpot.y, mapSpot.r, t);
+        ctx.save();
+        ctx.fillStyle='#b5652b33';
+        ctx.beginPath(); ctx.arc(mapSpot.x,mapSpot.y,mapSpot.r,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.fillStyle = '#3a2c1d';
+        ctx.font = 'bold 20px Segoe UI';
+        ctx.textAlign='center';
+        ctx.fillText('Tanjung Lesung', 470, H*0.42 - 55);
+        ctx.restore();
+        speechBubble(300,150, lang==='id'?'Selesai':'The End', 100);
+      }
+    }
+  };
+}
+
+/* ========================================================
+   SCENE SEQUENCE / NAVIGATION
+   ======================================================== */
+const sceneFactories = [
+  makeScene0, makeScene1, makeScene2, makeScene3, makeScene4,
+  makeScene5, makeScene6, makeScene7, makeScene8
+];
+
+function goToScene(idx){
+  currentSceneIndex = idx;
+  scene = sceneFactories[idx]();
+  hotspots = [];
+  scene.enter();
+  updateDots(idx);
+  renderCurrentInstruction();
+  showContinue(false);
+  speakCurrentPhase();
+}
+
+function startStory(){
+  startBtn.classList.add('hidden');
+  showReplay(false);
+  goToScene(0);
+}
+
+continueBtn.addEventListener('click', ()=>{
+  showContinue(false);
+  if (currentSceneIndex < sceneFactories.length - 1){
+    goToScene(currentSceneIndex + 1);
+  }
+});
+
+replayBtn.addEventListener('click', ()=>{
+  showReplay(false);
+  showContinue(false);
+  startBtn.classList.remove('hidden');
+  currentSceneIndex = -1;
+  scene = null;
+  hotspots = [];
+  updateDots(-1);
+  setText(UI[lang].intro_instruction, UI[lang].intro_narr);
+});
+
+startBtn.addEventListener('click', startStory);
+
+/* ========================================================
+   IFRAME AUTO-RESIZE
+   ======================================================== */
+function sendHeight(){
+  try{
+    const h = document.getElementById('app').getBoundingClientRect().height;
+    window.parent.postMessage({ type:'tlesung-resize', height: Math.ceil(h) + 16 }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+new ResizeObserver(sendHeight).observe(document.getElementById('app'));
+
+/* ========================================================
+   INIT
+   ======================================================== */
+buildDots();
+updateDots(-1);
+updateChrome();
+setText(UI[lang].intro_instruction, UI[lang].intro_narr);
+animId = requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
