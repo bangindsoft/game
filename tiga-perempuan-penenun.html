@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiga Perempuan Penenun</title>
+<style>
+  :root{
+    --bg1:#2b1d12;
+    --bg2:#4a3018;
+    --panel:#fbf1de;
+    --panel-border:#c9a86a;
+    --ink:#3b2a17;
+    --gold:#caa24a;
+    --gold-dark:#9c7a2f;
+    --accent:#8e3b3b;
+    --accent-dark:#6b2727;
+    --green:#4c6b3f;
+    --shadow:rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family: "Georgia", "Segoe UI", Verdana, sans-serif;
+    background: linear-gradient(160deg,var(--bg1),var(--bg2));
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:820px;
+    margin:0 auto;
+    padding:14px 14px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .titlebar{
+    width:100%;
+    text-align:center;
+    color:var(--panel);
+    margin-bottom:8px;
+  }
+  .titlebar h1{
+    font-size:1.4rem;
+    margin:4px 0 2px;
+    letter-spacing:0.5px;
+    text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  }
+  .titlebar p{
+    margin:0;
+    font-size:0.85rem;
+    opacity:0.85;
+    font-style:italic;
+  }
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 8px 24px var(--shadow);
+    border:3px solid var(--gold-dark);
+    background:#e9d9b5;
+  }
+  #stage{
+    display:block;
+    width:100%;
+    height:auto;
+    cursor:pointer;
+    touch-action:manipulation;
+    background: linear-gradient(180deg,#dce9f2 0%, #cfe3d6 55%, #cfe3d6 100%);
+  }
+  .top-controls{
+    position:absolute;
+    top:8px;
+    right:8px;
+    display:flex;
+    gap:6px;
+    z-index:5;
+  }
+  .icon-btn{
+    background:rgba(59,42,23,0.75);
+    color:#fbf1de;
+    border:1px solid rgba(255,255,255,0.25);
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:0.85rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    backdrop-filter: blur(2px);
+  }
+  .icon-btn:hover{ background:rgba(59,42,23,0.92); }
+  .icon-btn:active{ transform:scale(0.96); }
+
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:radial-gradient(ellipse at center, rgba(43,29,18,0.90), rgba(20,13,8,0.97));
+    color:#fbf1de;
+    padding:24px;
+    z-index:10;
+  }
+  .overlay h2{
+    font-size:1.3rem;
+    margin:0 0 10px;
+  }
+  .overlay p{
+    max-width:460px;
+    line-height:1.5;
+    font-size:0.92rem;
+    opacity:0.9;
+    margin:0 0 18px;
+  }
+  .big-btn{
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#3b2a17;
+    border:none;
+    border-radius:30px;
+    padding:12px 28px;
+    font-size:1rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    margin:6px;
+  }
+  .big-btn:active{ transform:translateY(2px); }
+  .ghost-btn{
+    background:transparent;
+    color:#fbf1de;
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:30px;
+    padding:8px 18px;
+    font-size:0.85rem;
+    cursor:pointer;
+    margin:4px;
+  }
+  .lang-row{ display:flex; gap:8px; margin-top:6px; }
+  .lang-row button.active{
+    background:var(--gold);
+    color:#3b2a17;
+    border-color:var(--gold);
+  }
+
+  .info-panel{
+    width:100%;
+    background:var(--panel);
+    border:2px solid var(--panel-border);
+    border-top:none;
+    border-radius:0 0 14px 14px;
+    padding:12px 16px 14px;
+    margin-top:-4px;
+  }
+  #instruction{
+    font-size:0.95rem;
+    font-weight:bold;
+    color:var(--accent-dark);
+    margin:0 0 6px;
+    min-height:1.3em;
+  }
+  #narration{
+    font-size:0.92rem;
+    line-height:1.5;
+    margin:0;
+    min-height:2.6em;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:12px 0 4px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:rgba(255,255,255,0.35);
+    border:1px solid var(--gold-dark);
+  }
+  .dot.done{ background:var(--gold); }
+  .dot.current{
+    background:var(--accent);
+    border-color:var(--accent-dark);
+    transform:scale(1.25);
+  }
+  .progress-bar-wrap{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    width:70%;
+    max-width:340px;
+    height:16px;
+    background:rgba(0,0,0,0.35);
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.4);
+    overflow:hidden;
+    z-index:4;
+  }
+  .progress-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#e0483e,var(--gold));
+    transition:width 0.05s linear;
+  }
+  .choice-row{
+    position:absolute;
+    left:0;right:0;
+    bottom:16px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    z-index:6;
+  }
+  .choice-btn{
+    background:linear-gradient(180deg,#fbf1de,#e9d9b5);
+    color:var(--ink);
+    border:2px solid var(--gold-dark);
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:0.88rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,0.3);
+  }
+  .choice-btn:active{ transform:translateY(2px); }
+
+  footer.credit{
+    color:rgba(251,241,222,0.55);
+    font-size:0.72rem;
+    text-align:center;
+    margin-top:12px;
+    letter-spacing:0.3px;
+  }
+  .hidden{ display:none !important; }
+
+  @media (max-width:480px){
+    .titlebar h1{ font-size:1.15rem; }
+    #instruction{ font-size:0.86rem; }
+    #narration{ font-size:0.84rem; }
+    .choice-btn{ font-size:0.78rem; padding:8px 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="titlebar">
+    <h1 id="mainTitle">Tiga Perempuan Penenun</h1>
+    <p id="mainSubtitle">Dongeng Interaktif dari Jerman</p>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <canvas id="stage" width="800" height="500"></canvas>
+
+    <div class="top-controls">
+      <button class="icon-btn" id="langBtn" title="Ganti bahasa">🌐 <span id="langLabel">ID</span></button>
+      <button class="icon-btn" id="muteBtn" title="Bisukan narasi">🔊</button>
+    </div>
+
+    <div class="progress-bar-wrap hidden" id="progressWrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
+    <div class="choice-row hidden" id="choiceRow"></div>
+
+    <div class="overlay" id="startOverlay">
+      <h2 id="startTitle">Tiga Perempuan Penenun</h2>
+      <p id="startDesc">Sebuah dongeng dari Jerman tentang seorang gadis pemalas, tiga perempuan ajaib, dan sebuah janji yang harus ditepati.</p>
+      <button class="big-btn" id="startBtn">▶ Mulai Cerita</button>
+      <div class="lang-row">
+        <button class="ghost-btn" id="startLangID">Bahasa Indonesia</button>
+        <button class="ghost-btn" id="startLangEN">English</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="endOverlay">
+      <h2 id="endTitle">Tamat</h2>
+      <p id="endDesc"></p>
+      <button class="big-btn" id="replayBtn">↺ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div class="info-panel">
+    <p id="instruction">Ketuk "Mulai Cerita" untuk memulai.</p>
+    <p id="narration"></p>
+    <div style="text-align:center;">
+      <button class="big-btn hidden" id="finishBtn" style="padding:9px 22px;font-size:0.9rem;"></button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <footer class="credit" id="creditFooter">Dongeng Rakyat • Cerita Interaktif</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== KONFIGURASI DASAR ===================== */
+  var LOGICAL_W = 800, LOGICAL_H = 500;
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var initialLang = urlParams.get('lang') === 'en' ? 'en' : 'id';
+
+  var state = {
+    lang: initialLang,
+    muted: false,
+    started: false,
+    finished: false,
+    sceneIndex: 0,
+    anim: 0,
+    holdProgress: 0,
+    holding: false,
+    mashProgress: 0,
+    tapSeqIndex: 0,
+    tapSeq2Index: 0,
+    choiceWrong: false,
+    hotspotPulse: 0
+  };
+
+  try {
+    var savedMute = localStorage.getItem('tigaPenenunMuted');
+    if (savedMute === '1') state.muted = true;
+  } catch(e){}
+
+  /* ===================== TEKS DUA BAHASA ===================== */
+  var TXT = {
+    id: {
+      title: "Tiga Perempuan Penenun",
+      subtitle: "Dongeng Interaktif dari Jerman",
+      startTitle: "Tiga Perempuan Penenun",
+      startDesc: "Sebuah dongeng dari Jerman tentang seorang gadis pemalas, tiga perempuan ajaib, dan sebuah janji yang harus ditepati.",
+      startBtn: "▶ Mulai Cerita",
+      replayBtn: "↺ Ulangi Cerita",
+      finishBtn: "🏁 Selesai",
+      endTitle: "Tamat",
+      endDesc: "Pesan dari cerita: apabila kita sudah berjanji, kita harus menepatinya.",
+      preInstruction: "Ketuk \"Mulai Cerita\" untuk memulai.",
+      footer: "Dongeng Rakyat • Cerita Interaktif",
+      choiceAccept: "Terima tawaran mereka",
+      choiceRefuse: "Tolak, aku bisa sendiri",
+      wrongChoiceMsg: "Gadis itu mencoba sendiri, tapi benang-benang kusut dan waktu terus berjalan. Ia sadar butuh bantuan. Coba ketuk lagi.",
+      scenes: [
+        {
+          narration: "Di sebuah desa, hiduplah seorang ibu dan anak gadisnya. Sang ibu marah karena anaknya malas menenun, hingga gadis itu menangis ketakutan.",
+          instruction: "Ketuk gadis yang sedang menangis untuk melanjutkan cerita."
+        },
+        {
+          narration: "Saat itu, sang ratu sedang berjalan-jalan meninjau desa dan mendengar tangisan itu. Ia berhenti di depan rumah untuk bertanya apa yang terjadi.",
+          instruction: "Ketuk sang ratu untuk mendengar apa yang ia tanyakan."
+        },
+        {
+          narration: "Sang ibu malu mengakui anaknya pemalas. Ia berbohong bahwa anaknya sangat rajin menenun, tapi tak mampu membeli bahan tenun. Ratu pun mengajak gadis itu ke istana.",
+          instruction: "Ketuk gerbang istana untuk mengikuti sang ratu."
+        },
+        {
+          narration: "Di loteng istana, ratu menunjukkan tiga kamar penuh rami dan bahan tenun. Ratu berjanji akan menikahkan gadis itu dengan putra mahkota jika semua bahan berhasil ditenun menjadi kain indah.",
+          instruction: "Ketuk ketiga pintu kamar satu per satu untuk melihat isinya."
+        },
+        {
+          narration: "Gadis itu bingung dan ketakutan. Ia sama sekali tidak bisa menenun, namun terus mencoba memutar roda pemintal tanpa hasil.",
+          instruction: "Tahan roda pemintal untuk mencoba menenun."
+        },
+        {
+          narration: "Karena putus asa, gadis itu keluar mencari udara segar dan duduk termenung di sebuah bangku, memikirkan nasibnya.",
+          instruction: "Ketuk bangku taman untuk duduk beristirahat."
+        },
+        {
+          narration: "Tiba-tiba lewatlah tiga perempuan aneh: satu berkaki lebar, satu berbibir panjang, dan satu berjempol besar. Mereka bertanya apa yang membuatnya sedih.",
+          instruction: "Ketuk masing-masing dari ketiga perempuan itu untuk mendengar mereka."
+        },
+        {
+          narration: "Ketiga perempuan itu bersedia membantu menenun semua kain, asalkan gadis itu mengundang mereka ke pesta pernikahannya dan mengaku mereka sebagai saudara.",
+          instruction: "Pilih jawaban gadis itu terhadap tawaran mereka."
+        },
+        {
+          narration: "Ketiga perempuan bekerja dengan sangat cepat dan terampil: kaki menggerakkan pemintal, bibir membasahi benang, dan jempol memilin benang hingga rapi.",
+          instruction: "Ketuk cepat roda pemintal untuk membantu mereka menenun."
+        },
+        {
+          narration: "Ratu datang menengok dan tercengang melihat kain-kain tenun yang sangat indah memenuhi ruangan. Ia memuji kepandaian gadis itu.",
+          instruction: "Ketuk tumpukan kain untuk menunjukkannya kepada ratu."
+        },
+        {
+          narration: "Ratu menepati janjinya. Gadis itu dinikahkan dengan putra mahkota, dan ketiga perempuan penenun diundang duduk semeja sebagai saudara, sesuai janji.",
+          instruction: "Ketuk kedua mempelai untuk melangsungkan pesta pernikahan."
+        },
+        {
+          narration: "Putra mahkota heran melihat penampilan ketiga tamu itu. Ketuk satu per satu untuk mendengar alasan kaki lebar, bibir panjang, dan jempol besar mereka.",
+          instruction: "Ketuk masing-masing dari ketiga perempuan untuk mengungkap rahasia mereka."
+        },
+        {
+          narration: "Putra mahkota tidak ingin istrinya bernasib sama seperti ketiga perempuan itu. Ia melarang istrinya menenun lagi. Gadis itu pun menepati janjinya kepada ketiga penenun yang telah menolongnya.",
+          instruction: "Ketuk tombol di bawah untuk mengakhiri cerita."
+        }
+      ]
+    },
+    en: {
+      title: "The Three Spinners",
+      subtitle: "An Interactive German Folktale",
+      startTitle: "The Three Spinners",
+      startDesc: "A German folktale about a lazy girl, three magical women, and a promise that must be kept.",
+      startBtn: "▶ Start Story",
+      replayBtn: "↺ Play Again",
+      finishBtn: "🏁 Finish",
+      endTitle: "The End",
+      endDesc: "Moral of the story: once you make a promise, you must keep it.",
+      preInstruction: "Tap \"Start Story\" to begin.",
+      footer: "Folktale • Interactive Story",
+      choiceAccept: "Accept their offer",
+      choiceRefuse: "Refuse, I can do it myself",
+      wrongChoiceMsg: "The girl tried alone, but the threads only tangled while time slipped away. She realizes she needs help. Try tapping again.",
+      scenes: [
+        {
+          narration: "In a small village lived a mother and her daughter. The mother grew furious because her daughter was too lazy to spin, and the girl wept in fear.",
+          instruction: "Tap the crying girl to continue the story."
+        },
+        {
+          narration: "Just then, the queen was passing through the village and heard the crying. She stopped in front of the house to ask what had happened.",
+          instruction: "Tap the queen to hear what she asks."
+        },
+        {
+          narration: "Ashamed to admit her daughter was lazy, the mother lied, saying the girl loved to spin but they were too poor to buy flax. So the queen invited the girl to the palace.",
+          instruction: "Tap the palace gate to follow the queen."
+        },
+        {
+          narration: "In the palace attic, the queen showed her three rooms full of flax and yarn. She promised the girl would marry the prince if she could spin it all into fine cloth.",
+          instruction: "Tap each of the three doors, one by one, to see inside."
+        },
+        {
+          narration: "The girl was confused and afraid. She had no idea how to spin, yet she kept trying to turn the spinning wheel with no success at all.",
+          instruction: "Hold the spinning wheel to try spinning."
+        },
+        {
+          narration: "Feeling hopeless, the girl went outside for fresh air and sat quietly on a bench, worrying about her fate.",
+          instruction: "Tap the garden bench to sit down and rest."
+        },
+        {
+          narration: "Suddenly three strange women passed by: one with a broad flat foot, one with a long hanging lip, and one with a wide thumb. They asked what troubled her.",
+          instruction: "Tap each of the three women to hear what they say."
+        },
+        {
+          narration: "The three women offered to spin all the cloth for her, on one condition: she must invite them to her wedding and call them her cousins.",
+          instruction: "Choose the girl's answer to their offer."
+        },
+        {
+          narration: "The three women worked with astonishing speed and skill: the foot pumped the treadle, the lip wetted the thread, and the thumb twisted it smooth.",
+          instruction: "Tap the spinning wheel rapidly to help them spin."
+        },
+        {
+          narration: "The queen came to check and was amazed to see the room filled with beautiful woven cloth. She praised the girl's skill with delight.",
+          instruction: "Tap the pile of cloth to show it to the queen."
+        },
+        {
+          narration: "The queen kept her promise. The girl married the prince, and the three spinners were invited to sit at the table as promised, honored as her cousins.",
+          instruction: "Tap the bride and groom to begin the wedding feast."
+        },
+        {
+          narration: "The prince was puzzled by the guests' strange looks. Tap each woman, one by one, to hear why her foot, lip, and thumb became so large.",
+          instruction: "Tap each of the three women to reveal their secret."
+        },
+        {
+          narration: "The prince never wanted his wife to suffer the same fate, so he forbade her from spinning ever again. And the girl kept her promise to the women who once saved her.",
+          instruction: "Tap the button below to finish the story."
+        }
+      ]
+    }
+  };
+
+  var TOTAL_SCENES = TXT.id.scenes.length; // 13 tahap cerita
+
+  /* ===================== NARASI SUARA ===================== */
+  var voices = [];
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if (!voices || !voices.length) return null;
+    var want = lang === 'en' ? 'en-US' : 'id-ID';
+    var exact = voices.find(function(v){ return v.lang === want; });
+    if (exact) return exact;
+    var partial = voices.find(function(v){ return v.lang && v.lang.indexOf(lang) === 0; });
+    if (partial) return partial;
+    return null;
+  }
+  function speak(text){
+    if (!window.speechSynthesis || state.muted || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang === 'en' ? 'en-US' : 'id-ID';
+      var v = pickVoice(state.lang);
+      if (v) u.voice = v;
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function stopSpeaking(){
+    if (window.speechSynthesis) {
+      try { window.speechSynthesis.cancel(); } catch(e){}
+    }
+  }
+
+  /* ===================== UTIL ===================== */
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  function roundRect(c,x,y,w,h,r){
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+
+  /* ===================== PENGGAMBARAN LATAR ===================== */
+  function drawSky(topColor,bottomColor){
+    var g = ctx.createLinearGradient(0,0,0,LOGICAL_H*0.65);
+    g.addColorStop(0, topColor);
+    g.addColorStop(1, bottomColor);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H*0.65);
+  }
+  function drawGround(color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0, LOGICAL_H*0.62, LOGICAL_W, LOGICAL_H*0.38);
+  }
+  function drawSun(x,y){
+    ctx.fillStyle = 'rgba(255,236,180,0.9)';
+    ctx.beginPath(); ctx.arc(x,y,34,0,Math.PI*2); ctx.fill();
+  }
+  function drawCloud(x,y,scale){
+    scale = scale||1;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(x,y,28*scale,16*scale,0,0,Math.PI*2);
+    ctx.ellipse(x+22*scale,y+4*scale,20*scale,13*scale,0,0,Math.PI*2);
+    ctx.ellipse(x-22*scale,y+5*scale,18*scale,12*scale,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  /* -------- Tokoh sederhana (figur prosedural) -------- */
+  function drawPersonBase(x,y,scale,skin,outfit){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // bayangan
+    ctx.fillStyle='rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.ellipse(0,86,26,7,0,0,Math.PI*2); ctx.fill();
+    // badan/jubah
+    ctx.fillStyle = outfit;
+    ctx.beginPath();
+    ctx.moveTo(-22,84);
+    ctx.quadraticCurveTo(-26,20,-14,6);
+    ctx.lineTo(14,6);
+    ctx.quadraticCurveTo(26,20,22,84);
+    ctx.closePath();
+    ctx.fill();
+    // kepala
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(0,-16,17,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawFace(x,y,scale,opts){
+    opts = opts||{};
+    ctx.save();
+    ctx.translate(x,y-16*scale);
+    ctx.scale(scale,scale);
+    // mata
+    ctx.fillStyle = '#3b2a17';
+    ctx.beginPath(); ctx.arc(-5.5,-1,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5.5,-1,1.6,0,Math.PI*2); ctx.fill();
+    // alis
+    if (opts.angry) {
+      ctx.strokeStyle='#3b2a17'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(-8,-6); ctx.lineTo(-3,-4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(8,-6); ctx.lineTo(3,-4); ctx.stroke();
+    }
+    // mulut
+    ctx.strokeStyle = '#8a3b2b';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if (opts.mouth === 'sad') {
+      ctx.arc(0,10,5,Math.PI*1.15,Math.PI*1.85);
+    } else if (opts.mouth === 'smile') {
+      ctx.arc(0,4,5,Math.PI*0.15,Math.PI*0.85);
+    } else if (opts.mouth === 'long') {
+      ctx.moveTo(-6,4); ctx.quadraticCurveTo(0,20,6,4);
+    } else {
+      ctx.moveTo(-4,6); ctx.lineTo(4,6);
+    }
+    ctx.stroke();
+    // tetesan air mata
+    if (opts.crying) {
+      ctx.fillStyle = 'rgba(120,180,230,0.85)';
+      ctx.beginPath(); ctx.ellipse(-5.5,4,1.4,3,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(5.5,4,1.4,3,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawGirl(x,y,scale,opts){
+    opts = opts||{};
+    drawPersonBase(x,y,scale,'#e8c39e', opts.outfit || '#7a5a8a');
+    drawFace(x,y,scale,{mouth: opts.crying?'sad':'smile', crying: opts.crying, angry:false});
+    // rambut
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a3220';
+    ctx.beginPath();
+    ctx.arc(0,-20,18,Math.PI*1.05,Math.PI*1.95);
+    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-15,-6,5,14,0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(15,-6,5,14,-0.3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMother(x,y,scale,opts){
+    opts = opts || {};
+    drawPersonBase(x,y,scale,'#dcb48c', '#5a4433');
+    drawFace(x,y,scale,{mouth: opts.angry?'sad':'line', angry:opts.angry});
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    // kerudung/selendang kepala
+    ctx.fillStyle = '#8a3b2b';
+    ctx.beginPath();
+    ctx.moveTo(-19,-24);
+    ctx.quadraticCurveTo(0,-40,19,-24);
+    ctx.quadraticCurveTo(19,-8,10,-2);
+    ctx.quadraticCurveTo(0,-10,-10,-2);
+    ctx.quadraticCurveTo(-19,-8,-19,-24);
+    ctx.fill();
+    // tangan menunjuk saat marah
+    if (opts.angry) {
+      ctx.strokeStyle = '#dcb48c'; ctx.lineWidth = 6; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(20,30); ctx.lineTo(38,10); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawQueen(x,y,scale){
+    drawPersonBase(x,y,scale,'#e8c39e', '#4a2b5a');
+    drawFace(x,y,scale,{mouth:'smile'});
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    // mahkota
+    ctx.fillStyle = '#caa24a';
+    ctx.beginPath();
+    ctx.moveTo(-13,-30); ctx.lineTo(-13,-38); ctx.lineTo(-7,-31);
+    ctx.lineTo(-2,-40); ctx.lineTo(3,-31); ctx.lineTo(8,-40);
+    ctx.lineTo(13,-31); ctx.lineTo(13,-38); ctx.lineTo(13,-27); ctx.lineTo(-13,-27);
+    ctx.closePath(); ctx.fill();
+    // jubah ungu dengan trim emas
+    ctx.strokeStyle = '#caa24a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-14,6); ctx.lineTo(-20,80); ctx.moveTo(14,6); ctx.lineTo(20,80); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPrince(x,y,scale){
+    drawPersonBase(x,y,scale,'#e8c39e', '#28425c');
+    drawFace(x,y,scale,{mouth:'smile'});
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#caa24a';
+    ctx.fillRect(-11,-33,22,6);
+    ctx.strokeStyle='#caa24a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,10); ctx.lineTo(0,60); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Tiga perempuan ajaib dengan ciri khas masing-masing
+  function drawStrangeWoman(x,y,scale,kind,revealed){
+    drawPersonBase(x,y,scale,'#d9b48a', '#3f5a44');
+    drawFace(x,y,scale,{mouth: kind==='lip' ? 'long':'line'});
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    if (kind === 'foot' ) {
+      // kaki lebar terlihat di bawah jubah
+      ctx.fillStyle = '#d9b48a';
+      ctx.beginPath();
+      ctx.ellipse(0, 88, revealed? 22:14, 8, 0,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle='#3b2a17'; ctx.lineWidth=1;
+      ctx.stroke();
+    } else if (kind === 'lip') {
+      // bibir panjang tergantung ke dagu
+      ctx.fillStyle = '#a85050';
+      ctx.beginPath();
+      ctx.ellipse(0, revealed? 6:0, 5, revealed? 12:5, 0,0,Math.PI*2);
+      ctx.fill();
+    } else if (kind === 'thumb') {
+      // jempol besar terlihat di tangan
+      ctx.fillStyle = '#d9b48a';
+      ctx.beginPath();
+      ctx.ellipse(24, 26, revealed? 10:5, revealed? 14:6, 0.4, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle='#3b2a17'; ctx.lineWidth=1;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* -------- Objek latar -------- */
+  function drawCottage(x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#caa06a';
+    ctx.fillRect(-70,-20,140,90);
+    ctx.fillStyle = '#7a4a2c';
+    ctx.beginPath();
+    ctx.moveTo(-84,-20); ctx.lineTo(0,-70); ctx.lineTo(84,-20); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#4a3018';
+    ctx.fillRect(-16,20,32,50);
+    ctx.fillStyle = '#cfe3ee';
+    ctx.fillRect(-52,0,26,26);
+    ctx.fillRect(26,0,26,26);
+    ctx.strokeStyle = '#4a3018'; ctx.lineWidth=2;
+    ctx.strokeRect(-52,0,26,26);
+    ctx.strokeRect(26,0,26,26);
+    ctx.restore();
+  }
+
+  function drawBench(x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4a2c';
+    ctx.fillRect(-45,0,90,10);
+    ctx.fillRect(-40,10,8,22);
+    ctx.fillRect(32,10,8,22);
+    ctx.fillRect(-45,-16,90,8);
+    ctx.restore();
+  }
+
+  function drawTree(x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#6b4a2c';
+    ctx.fillRect(-6,0,12,40);
+    ctx.fillStyle='#4c6b3f';
+    ctx.beginPath(); ctx.arc(0,-20,30,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,-4,20,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,-4,20,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPalaceBg(x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle='#cfc6b0';
+    ctx.fillRect(-150,-60,300,140);
+    ctx.fillStyle='#a89a78';
+    ctx.fillRect(-170,-20,40,100);
+    ctx.fillRect(130,-20,40,100);
+    ctx.beginPath(); ctx.moveTo(-190,-20); ctx.lineTo(-150,-55); ctx.lineTo(-110,-20); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(110,-20); ctx.lineTo(150,-55); ctx.lineTo(190,-20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#7a3b2b';
+    ctx.beginPath(); ctx.moveTo(-160,-60); ctx.lineTo(0,-110); ctx.lineTo(160,-60); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGate(x,y,scale,open){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#5a4433';
+    ctx.fillRect(-60,-70,14,140);
+    ctx.fillRect(46,-70,14,140);
+    ctx.beginPath(); ctx.moveTo(-60,-70); ctx.lineTo(0,-100); ctx.lineTo(60,-70); ctx.closePath(); ctx.fill();
+    var angle = open ? 0.9 : 0.1;
+    ctx.fillStyle = 'rgba(90,68,51,0.9)';
+    ctx.save();
+    ctx.translate(-46,-70);
+    ctx.rotate(-angle);
+    ctx.fillRect(0,0,46,140);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawDoor(x,y,scale,label,open){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#4a3018';
+    roundRect(ctx,-30,-60,60,120,6);
+    ctx.fill();
+    ctx.fillStyle = open ? '#e8c46a' : '#2f2013';
+    roundRect(ctx,-24,-52,48,104,4);
+    ctx.fill();
+    if (open) {
+      // rami/bahan tenun keemasan mengintip
+      ctx.strokeStyle = '#caa24a'; ctx.lineWidth = 2;
+      for (var i=0;i<5;i++){
+        ctx.beginPath();
+        ctx.moveTo(-16+i*8,-40);
+        ctx.quadraticCurveTo(-10+i*8,-10, -16+i*8,30);
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = '#caa24a';
+    ctx.beginPath(); ctx.arc(14,4,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSpinningWheel(x,y,scale,rotation){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle = '#5a4433'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(0,0,42,0,Math.PI*2); ctx.stroke();
+    ctx.save();
+    ctx.rotate(rotation||0);
+    for (var i=0;i<8;i++){
+      ctx.save();
+      ctx.rotate(i*Math.PI/4);
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,42); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+    ctx.fillStyle = '#caa24a';
+    ctx.beginPath(); ctx.arc(0,0,7,0,Math.PI*2); ctx.fill();
+    // dudukan
+    ctx.fillStyle = '#5a4433';
+    ctx.fillRect(-10,42,20,50);
+    ctx.fillRect(-30,90,60,8);
+    // pedal/treadle
+    ctx.fillStyle = '#7a5a3a';
+    ctx.fillRect(-16,84,32,10);
+    ctx.restore();
+  }
+
+  function drawClothPile(x,y,scale,amount){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    var colors = ['#8e3b3b','#4c6b3f','#caa24a','#4a2b5a','#28425c'];
+    var n = Math.max(1, Math.round(amount*5));
+    for (var i=0;i<n;i++){
+      ctx.fillStyle = colors[i % colors.length];
+      roundRect(ctx, -50+i*4, 20-i*10, 100-i*8, 16, 4);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth=1;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWeddingAltar(x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.strokeStyle = '#caa24a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-70,20); ctx.lineTo(-70,-40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(70,20); ctx.lineTo(70,-40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-70,-40); ctx.quadraticCurveTo(0,-70,70,-40); ctx.stroke();
+    ctx.fillStyle = '#e0483e';
+    for (var i=-70;i<=70;i+=20){
+      ctx.beginPath(); ctx.arc(i, -40 + Math.pow((i)/70,2)*-6, 5,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawTable(x,y,scale){
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle = '#7a5a3a';
+    roundRect(ctx,-120,0,240,14,4);
+    ctx.fill();
+    ctx.fillStyle = '#5a4433';
+    ctx.fillRect(-110,14,10,26);
+    ctx.fillRect(100,14,10,26);
+    ctx.restore();
+  }
+
+  /* ===================== HOTSPOT PENANDA ===================== */
+  function drawHotspotRing(x,y,r,pulse){
+    ctx.save();
+    ctx.globalAlpha = 0.55 + 0.35*Math.sin(pulse);
+    ctx.strokeStyle = '#e0483e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x,y,r + 5 + Math.sin(pulse)*3, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ===================== DEFINISI ADEGAN ===================== */
+  // koordinat & hotspot dalam ruang logis 800x500
+  function sceneDraw(idx, t) {
+    var pulse = state.hotspotPulse;
+    switch(idx){
+      case 0: { // rumah, ibu marah, gadis menangis
+        drawSky('#bcd8ea','#e7ecd9');
+        drawGround('#8fae6e');
+        drawCloud(120,60,1); drawCloud(650,40,0.8);
+        drawCottage(600,320,1.0);
+        drawTree(700,340,0.9);
+        drawMother(300,330,1.15,{angry:true});
+        drawGirl(420,340,1.05,{crying:true});
+        drawHotspotRing(420,300,40,pulse);
+        break;
+      }
+      case 1: { // ratu lewat
+        drawSky('#bcd8ea','#e7ecd9');
+        drawGround('#8fae6e');
+        drawCottage(620,320,0.9);
+        drawMother(260,330,1.0,{angry:false});
+        drawGirl(360,340,0.9,{crying:true});
+        drawQueen(540,320,1.1);
+        drawHotspotRing(540,290,42,pulse);
+        break;
+      }
+      case 2: { // menuju gerbang istana
+        drawSky('#cfe0ef','#e9e4cf');
+        drawGround('#c8b98a');
+        drawPalaceBg(400,150,1.0);
+        drawGate(400,340,1.05, (t>0.5));
+        drawQueen(280,360,0.9);
+        drawGirl(500,360,0.85,{crying:false});
+        drawHotspotRing(400,320,60,pulse);
+        break;
+      }
+      case 3: { // 3 kamar rami
+        drawSky('#d8cdb8','#efe6cf');
+        drawGround('#c8b98a');
+        var doors = [ [230,330], [400,330], [570,330] ];
+        for (var i=0;i<3;i++){
+          var opened = state.tapSeqIndex > i;
+          drawDoor(doors[i][0], doors[i][1], 0.95, i, opened);
+          if (state.tapSeqIndex === i) drawHotspotRing(doors[i][0], doors[i][1]-10, 55, pulse);
+        }
+        drawQueen(400,420,0.9);
+        break;
+      }
+      case 4: { // gadis mencoba menenun
+        drawSky('#e7ded0','#efe6cf');
+        drawGround('#c8b98a');
+        var rot = state.holding ? (state.anim*6) : 0;
+        drawSpinningWheel(420,300,1.15, rot);
+        drawGirl(300,340,1.0,{crying: state.holdProgress<0.9});
+        drawHotspotRing(420,300,55,pulse);
+        break;
+      }
+      case 5: { // duduk di bangku
+        drawSky('#bcd8ea','#dcefda');
+        drawGround('#8fae6e');
+        drawTree(180,330,1.0);
+        drawTree(650,320,0.9);
+        drawBench(420,360,1.15);
+        drawGirl(420,330,0.95,{crying:false});
+        drawHotspotRing(420,375,60,pulse);
+        break;
+      }
+      case 6: { // tiga perempuan aneh
+        drawSky('#bcd8ea','#dcefda');
+        drawGround('#8fae6e');
+        drawBench(420,400,1.0);
+        drawGirl(420,360,0.85,{crying:false});
+        var pos = [ [220,340,'foot'], [420,300,'lip'], [610,340,'thumb'] ];
+        for (var j=0;j<3;j++){
+          var revealed = state.tapSeqIndex > j;
+          drawStrangeWoman(pos[j][0],pos[j][1],0.85,pos[j][2], revealed);
+          if (state.tapSeqIndex === j) drawHotspotRing(pos[j][0],pos[j][1]-10,50,pulse);
+        }
+        break;
+      }
+      case 7: { // tawaran bantuan - branching choice
+        drawSky('#bcd8ea','#dcefda');
+        drawGround('#8fae6e');
+        drawGirl(280,340,1.0,{crying: state.choiceWrong});
+        drawStrangeWoman(430,330,0.85,'foot',true);
+        drawStrangeWoman(520,320,0.85,'lip',true);
+        drawStrangeWoman(610,330,0.85,'thumb',true);
+        break;
+      }
+      case 8: { // menenun cepat - rapid tap
+        drawSky('#e7ded0','#efe6cf');
+        drawGround('#c8b98a');
+        var rot2 = state.anim*10;
+        drawSpinningWheel(400,290,1.25, rot2);
+        drawStrangeWoman(230,340,0.8,'foot',true);
+        drawStrangeWoman(560,330,0.8,'lip',true);
+        drawStrangeWoman(650,350,0.75,'thumb',true);
+        drawClothPile(400,410,0.9, state.mashProgress);
+        drawHotspotRing(400,290,60,pulse);
+        break;
+      }
+      case 9: { // ratu terpesona
+        drawSky('#e7ded0','#efe6cf');
+        drawGround('#c8b98a');
+        drawQueen(280,330,1.05);
+        drawClothPile(480,340,1.15,1);
+        drawGirl(560,350,0.85,{crying:false});
+        drawHotspotRing(480,330,70,pulse);
+        break;
+      }
+      case 10: { // pernikahan
+        drawSky('#f0e6cf','#f7efd8');
+        drawGround('#d8c896');
+        drawWeddingAltar(400,300,1.1);
+        drawGirl(340,370,1.0,{crying:false, outfit:'#fbf1de'});
+        drawPrince(460,370,1.0);
+        drawHotspotRing(400,370,90,pulse);
+        break;
+      }
+      case 11: { // pesta - rahasia 3 perempuan
+        drawSky('#f0e6cf','#f7efd8');
+        drawGround('#d8c896');
+        drawTable(400,360,1.1);
+        drawGirl(230,330,0.8,{crying:false, outfit:'#fbf1de'});
+        drawPrince(300,330,0.8);
+        var pos2 = [ [430,320,'foot'], [530,320,'lip'], [630,330,'thumb'] ];
+        for (var k=0;k<3;k++){
+          var rev2 = state.tapSeq2Index > k;
+          drawStrangeWoman(pos2[k][0],pos2[k][1],0.78,pos2[k][2], rev2);
+          if (state.tapSeq2Index === k) drawHotspotRing(pos2[k][0],pos2[k][1]-10,46,pulse);
+        }
+        break;
+      }
+      case 12: { // penutup
+        drawSky('#f0e6cf','#f7efd8');
+        drawGround('#d8c896');
+        drawGirl(340,340,1.05,{crying:false, outfit:'#fbf1de'});
+        drawPrince(460,340,1.05);
+        // roda pemintal dicoret (dilarang menenun lagi)
+        drawSpinningWheel(600,380,0.7,0);
+        ctx.save();
+        ctx.strokeStyle = '#8e3b3b'; ctx.lineWidth=5; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(560,340); ctx.lineTo(640,420); ctx.stroke();
+        ctx.restore();
+        break;
+      }
+    }
+  }
+
+  /* ===================== HOTSPOT LOGIKA PER ADEGAN ===================== */
+  // Mengembalikan true jika tap x,y kena target aktif, memicu transisi/aksi
+  function handleTap(mx,my){
+    if (!state.started || state.finished) return;
+    var idx = state.sceneIndex;
+    switch(idx){
+      case 0:
+        if (dist(mx,my,420,300) < 45) advanceScene();
+        break;
+      case 1:
+        if (dist(mx,my,540,290) < 48) advanceScene();
+        break;
+      case 2:
+        if (dist(mx,my,400,320) < 65) advanceScene();
+        break;
+      case 3: {
+        var doors = [ [230,320], [400,320], [570,320] ];
+        var target = doors[state.tapSeqIndex];
+        if (target && dist(mx,my,target[0],target[1]) < 60) {
+          state.tapSeqIndex++;
+          if (state.tapSeqIndex >= 3) {
+            setTimeout(advanceScene, 500);
+          }
+        }
+        break;
+      }
+      case 5:
+        if (dist(mx,my,420,375) < 65) advanceScene();
+        break;
+      case 6: {
+        var pos = [ [220,330], [420,290,], [610,330] ];
+        var t2 = pos[state.tapSeqIndex];
+        if (t2 && dist(mx,my,t2[0],t2[1]) < 55) {
+          state.tapSeqIndex++;
+          if (state.tapSeqIndex >= 3) setTimeout(advanceScene, 500);
+        }
+        break;
+      }
+      case 8:
+        if (dist(mx,my,400,290) < 65) {
+          state.mashProgress = clamp(state.mashProgress + 0.1, 0, 1);
+          if (state.mashProgress >= 1) setTimeout(advanceScene, 400);
+        }
+        break;
+      case 9:
+        if (dist(mx,my,480,330) < 75) advanceScene();
+        break;
+      case 10:
+        if (dist(mx,my,400,370) < 95) advanceScene();
+        break;
+      case 11: {
+        var pos2 = [ [430,310], [530,310], [630,320] ];
+        var t3 = pos2[state.tapSeq2Index];
+        if (t3 && dist(mx,my,t3[0],t3[1]) < 50) {
+          state.tapSeq2Index++;
+          if (state.tapSeq2Index >= 3) setTimeout(advanceScene, 500);
+        }
+        break;
+      }
+      case 12:
+        // ditangani oleh tombol "Selesai" HTML, bukan tap kanvas
+        break;
+    }
+  }
+
+  function handlePressStart(mx,my){
+    if (state.sceneIndex === 4 && dist(mx,my,420,300) < 65) {
+      state.holding = true;
+    }
+  }
+  function handlePressEnd(){
+    state.holding = false;
+  }
+
+  /* ===================== KONTROL ADEGAN ===================== */
+  function currentSceneText(){
+    return TXT[state.lang].scenes[state.sceneIndex];
+  }
+  function updateTextPanels(){
+    var sc = currentSceneText();
+    document.getElementById('narration').textContent = sc.narration;
+    document.getElementById('instruction').textContent = sc.instruction;
+    renderDots();
+  }
+  function renderDots(){
+    var wrap = document.getElementById('dots');
+    wrap.innerHTML = '';
+    for (var i=0;i<TOTAL_SCENES;i++){
+      var d = document.createElement('div');
+      d.className = 'dot' + (i < state.sceneIndex ? ' done' : '') + (i === state.sceneIndex ? ' current' : '');
+      wrap.appendChild(d);
+    }
+  }
+  function resetSceneLocalState(){
+    state.holdProgress = 0;
+    state.holding = false;
+    state.mashProgress = 0;
+    state.tapSeqIndex = 0;
+    state.tapSeq2Index = 0;
+    state.choiceWrong = false;
+  }
+  function showChoiceIfNeeded(){
+    var row = document.getElementById('choiceRow');
+    row.innerHTML = '';
+    if (state.sceneIndex === 7) {
+      row.classList.remove('hidden');
+      var accept = document.createElement('button');
+      accept.className = 'choice-btn';
+      accept.textContent = TXT[state.lang].choiceAccept;
+      accept.onclick = function(){ advanceScene(); };
+      var refuse = document.createElement('button');
+      refuse.className = 'choice-btn';
+      refuse.textContent = TXT[state.lang].choiceRefuse;
+      refuse.onclick = function(){
+        state.choiceWrong = true;
+        document.getElementById('narration').textContent = TXT[state.lang].wrongChoiceMsg;
+        speak(TXT[state.lang].wrongChoiceMsg);
+      };
+      row.appendChild(accept);
+      row.appendChild(refuse);
+    } else {
+      row.classList.add('hidden');
+    }
+  }
+  function showProgressBarIfNeeded(){
+    var wrap = document.getElementById('progressWrap');
+    if (state.sceneIndex === 4 || state.sceneIndex === 8) {
+      wrap.classList.remove('hidden');
+    } else {
+      wrap.classList.add('hidden');
+    }
+  }
+  function showFinishButtonIfNeeded(){
+    var btn = document.getElementById('finishBtn');
+    if (state.sceneIndex === TOTAL_SCENES - 1) {
+      btn.textContent = TXT[state.lang].finishBtn;
+      btn.classList.remove('hidden');
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
+
+  function enterScene(idx){
+    state.sceneIndex = idx;
+    resetSceneLocalState();
+    updateTextPanels();
+    showChoiceIfNeeded();
+    showProgressBarIfNeeded();
+    showFinishButtonIfNeeded();
+    speak(currentSceneText().narration);
+  }
+
+  function advanceScene(){
+    if (state.sceneIndex >= TOTAL_SCENES - 1) {
+      finishStory();
+      return;
+    }
+    enterScene(state.sceneIndex + 1);
+  }
+
+  function finishStory(){
+    state.finished = true;
+    stopSpeaking();
+    document.getElementById('endTitle').textContent = TXT[state.lang].endTitle;
+    document.getElementById('endDesc').textContent = TXT[state.lang].endDesc;
+    document.getElementById('endOverlay').classList.remove('hidden');
+    speak(TXT[state.lang].endDesc);
+    postResize();
+  }
+
+  function startStory(){
+    document.getElementById('startOverlay').classList.add('hidden');
+    document.getElementById('endOverlay').classList.add('hidden');
+    state.started = true;
+    state.finished = false;
+    enterScene(0);
+    postResize();
+  }
+
+  function restartStory(){
+    document.getElementById('endOverlay').classList.add('hidden');
+    state.started = true;
+    state.finished = false;
+    enterScene(0);
+  }
+
+  /* ===================== BAHASA & UI ===================== */
+  function applyLangUI(){
+    var t = TXT[state.lang];
+    document.getElementById('mainTitle').textContent = t.title;
+    document.getElementById('mainSubtitle').textContent = t.subtitle;
+    document.getElementById('startTitle').textContent = t.startTitle;
+    document.getElementById('startDesc').textContent = t.startDesc;
+    document.getElementById('startBtn').textContent = t.startBtn;
+    document.getElementById('replayBtn').textContent = t.replayBtn;
+    document.getElementById('creditFooter').textContent = t.footer;
+    document.getElementById('langLabel').textContent = state.lang.toUpperCase();
+    document.title = t.title;
+    if (!state.started) {
+      document.getElementById('instruction').textContent = t.preInstruction;
+    } else {
+      updateTextPanels();
+      showChoiceIfNeeded();
+      showFinishButtonIfNeeded();
+    }
+    document.getElementById('startLangID').classList.toggle('active', state.lang === 'id');
+    document.getElementById('startLangEN').classList.toggle('active', state.lang === 'en');
+  }
+  function toggleLang(){
+    state.lang = state.lang === 'id' ? 'en' : 'id';
+    applyLangUI();
+    if (state.started && !state.finished) speak(currentSceneText().narration);
+  }
+  function setLang(l){
+    if (state.lang === l) return;
+    state.lang = l;
+    applyLangUI();
+  }
+
+  function applyMuteUI(){
+    document.getElementById('muteBtn').textContent = state.muted ? '🔇' : '🔊';
+  }
+  function toggleMute(){
+    state.muted = !state.muted;
+    try { localStorage.setItem('tigaPenenunMuted', state.muted ? '1':'0'); } catch(e){}
+    applyMuteUI();
+    if (state.muted) stopSpeaking();
+  }
+
+  /* ===================== EVENT INPUT ===================== */
+  function getPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if (evt.touches && evt.touches.length) {
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if (evt.changedTouches && evt.changedTouches.length) {
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    var scaleX = LOGICAL_W / rect.width;
+    var scaleY = LOGICAL_H / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }
+
+  canvas.addEventListener('mousedown', function(e){
+    var p = getPos(e);
+    handlePressStart(p.x,p.y);
+  });
+  canvas.addEventListener('mouseup', function(e){
+    var p = getPos(e);
+    handlePressEnd();
+    handleTap(p.x,p.y);
+  });
+  canvas.addEventListener('mouseleave', function(){ handlePressEnd(); });
+  canvas.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    var p = getPos(e);
+    handlePressStart(p.x,p.y);
+  }, {passive:false});
+  canvas.addEventListener('touchend', function(e){
+    e.preventDefault();
+    var p = getPos(e);
+    handlePressEnd();
+    handleTap(p.x,p.y);
+  }, {passive:false});
+
+  document.getElementById('langBtn').addEventListener('click', toggleLang);
+  document.getElementById('muteBtn').addEventListener('click', toggleMute);
+  document.getElementById('startBtn').addEventListener('click', startStory);
+  document.getElementById('replayBtn').addEventListener('click', restartStory);
+  document.getElementById('startLangID').addEventListener('click', function(){ setLang('id'); });
+  document.getElementById('startLangEN').addEventListener('click', function(){ setLang('en'); });
+  document.getElementById('finishBtn').addEventListener('click', finishStory);
+
+  /* ===================== LOOP ANIMASI ===================== */
+  var lastTime = performance.now();
+  function loop(now){
+    var dt = (now - lastTime) / 1000;
+    lastTime = now;
+    state.anim += dt;
+    state.hotspotPulse += dt * 3;
+
+    if (state.holding && state.sceneIndex === 4) {
+      state.holdProgress = clamp(state.holdProgress + dt * 0.35, 0, 1);
+      var fill = document.getElementById('progressFill');
+      fill.style.width = (state.holdProgress*100) + '%';
+      if (state.holdProgress >= 1) {
+        state.holding = false;
+        setTimeout(advanceScene, 300);
+      }
+    }
+    if (state.sceneIndex === 8) {
+      var fill2 = document.getElementById('progressFill');
+      fill2.style.width = (state.mashProgress*100) + '%';
+      // sedikit menurun otomatis supaya perlu ketuk berulang
+      state.mashProgress = clamp(state.mashProgress - dt*0.02, 0, 1);
+    }
+
+    ctx.clearRect(0,0,LOGICAL_W,LOGICAL_H);
+    if (state.started) {
+      sceneDraw(state.sceneIndex, Math.min(1, state.anim/1.2));
+    } else {
+      // adegan pembuka statis di balik overlay start
+      drawSky('#bcd8ea','#e7ecd9');
+      drawGround('#8fae6e');
+      drawCottage(400,330,1.1);
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ===================== AUTO-RESIZE IFRAME ===================== */
+  function postResize(){
+    try {
+      var h = document.getElementById('app').getBoundingClientRect().height;
+      window.parent.postMessage({ type: 'tigaPenenunResize', height: Math.ceil(h) + 24 }, '*');
+    } catch(e){}
+  }
+  window.addEventListener('resize', postResize);
+  window.addEventListener('load', postResize);
+  setInterval(postResize, 1200);
+
+  /* ===================== INISIALISASI ===================== */
+  applyLangUI();
+  applyMuteUI();
+  updateTextPanels();
+  showProgressBarIfNeeded();
+
+})();
+</script>
+</body>
+</html>
