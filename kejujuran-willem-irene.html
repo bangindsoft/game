@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kejujuran Willem dan Irene</title>
+<style>
+  :root{
+    --sky-top:#8ec9e8;
+    --sky-bottom:#d9f0f7;
+    --sea:#2f7fb0;
+    --sand:#e8d3a0;
+    --panel:#fffaf0;
+    --ink:#3a2b1c;
+    --accent:#c0562f;
+    --accent-dark:#9a4322;
+    --gold:#d9a441;
+    --green:#3f7a4d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Verdana, sans-serif;
+    background:transparent;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:720px;
+    padding:10px 12px 16px;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .title{
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--accent-dark);
+    line-height:1.2;
+  }
+  .title small{
+    display:block;
+    font-weight:400;
+    font-size:0.7rem;
+    color:#7a6a54;
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .icon-btn{
+    border:none;
+    background:var(--panel);
+    box-shadow:0 2px 4px rgba(0,0,0,0.15);
+    border-radius:8px;
+    width:38px;
+    height:38px;
+    font-size:1.05rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--accent-dark);
+  }
+  .icon-btn:active{transform:scale(0.94);}
+  .stage{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    background:#bfe3ef;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    cursor:pointer;
+  }
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:10px 0 4px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#d8c8ab;
+    transition:background .25s, transform .25s;
+  }
+  .dot.active{background:var(--accent); transform:scale(1.25);}
+  .dot.done{background:var(--green);}
+  .instruction{
+    background:var(--panel);
+    border:1px solid #e7d9bd;
+    border-radius:10px;
+    padding:10px 14px;
+    margin-top:6px;
+    font-size:0.92rem;
+    line-height:1.45;
+    min-height:2.6em;
+    box-shadow:0 2px 6px rgba(0,0,0,0.06);
+  }
+  .instruction b{color:var(--accent-dark);}
+  .choices{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .choice-btn{
+    flex:1 1 45%;
+    padding:10px 8px;
+    border-radius:10px;
+    border:2px solid var(--accent);
+    background:#fff;
+    color:var(--accent-dark);
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .choice-btn:active{transform:scale(0.97);}
+  .action-row{
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+  }
+  .hold-btn{
+    position:relative;
+    padding:12px 26px;
+    border-radius:30px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    font-size:0.95rem;
+    cursor:pointer;
+    overflow:hidden;
+    user-select:none;
+    touch-action:none;
+    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+  }
+  .hold-btn .fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:rgba(255,255,255,0.35);
+  }
+  .hold-btn span{position:relative;}
+  .primary-btn{
+    display:block;
+    margin:14px auto 0;
+    padding:12px 30px;
+    border-radius:30px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+  }
+  .primary-btn:active{transform:scale(0.97);}
+  footer{
+    text-align:center;
+    font-size:0.72rem;
+    color:#9c8c76;
+    margin-top:14px;
+  }
+  .lang-toggle{font-size:0.85rem; font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title" id="titleText">Kejujuran Willem dan Irene<small>Dongeng Rakyat Belanda</small></div>
+    <div class="controls">
+      <button class="icon-btn lang-toggle" id="langBtn" title="Ganti Bahasa">ID</button>
+      <button class="icon-btn" id="muteBtn" title="Bisukan narasi">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="game" width="800" height="480"></canvas>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="instruction" id="instruction">Memuat cerita...</div>
+
+  <div id="dynamicArea"></div>
+
+  <footer id="footerText">Sebuah dongeng interaktif tentang kejujuran.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- State ----------
+  const params = new URLSearchParams(location.search);
+  let lang = params.get('lang') === 'en' ? 'en' : 'id';
+  let muted = localStorage.getItem('wi_muted') === 'true';
+  let scene = 'title'; // title, 1..8, end
+  let sceneOrder = [1,2,3,4,5,6,7,8];
+  let ringChosen = false;
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const instructionEl = document.getElementById('instruction');
+  const dotsEl = document.getElementById('dots');
+  const dynamicArea = document.getElementById('dynamicArea');
+  const muteBtn = document.getElementById('muteBtn');
+  const langBtn = document.getElementById('langBtn');
+  const titleText = document.getElementById('titleText');
+  const footerText = document.getElementById('footerText');
+
+  // ---------- Text content ----------
+  const T = {
+    id:{
+      title:"Kejujuran Willem dan Irene",
+      subtitle:"Dongeng Rakyat Belanda",
+      footer:"Sebuah dongeng interaktif tentang kejujuran.",
+      startBtn:"Mulai Cerita",
+      replayBtn:"Ulangi Cerita",
+      loading:"Memuat cerita...",
+      scenes:{
+        1:{
+          narr:"Willem dan Irene adalah dua sahabat, anak nelayan dari Desa Volendam, Belanda. Setiap sore mereka duduk di tepi pantai, menunggu ayah mereka pulang melaut.",
+          instr:"Ketuk <b>laut</b> untuk melihat apakah kapal-kapal nelayan sudah mulai berdatangan."
+        },
+        2:{
+          narr:"Kapal-kapal nelayan mulai berdatangan satu per satu, namun kapal ayah mereka belum juga terlihat.",
+          instr:"Ketuk <b>nelayan</b> di dermaga untuk bertanya apakah ia melihat ayah Willem dan Irene.",
+          after:"Nelayan itu menjawab, \"Tadi aku melihat mereka pergi ke utara mencari tangkapan lagi.\" Irene mulai cemas karena langit tampak semakin gelap."
+        },
+        3:{
+          narr:"Langit berubah gelap dan awan mendung mulai berkumpul. Irene khawatir akan turun hujan deras sebelum ayah mereka kembali.",
+          instr:"Tahan tombol <b>Berdoa</b> agar Willem dan Irene memohon supaya cuaca kembali cerah.",
+          after:"Doa mereka dikabulkan. Awan gelap perlahan menghilang dan langit kembali cerah."
+        },
+        4:{
+          narr:"Tidak lama kemudian, dua buah kapal nelayan tampak mendekati dermaga.",
+          instr:"Ketuk <b>kapal</b> itu untuk membantunya merapat ke dermaga.",
+          after:"Kapal Pak Hendrik dan Pak Jansen akhirnya merapat. Mereka membawa seekor ikan tuna yang sangat besar!"
+        },
+        5:{
+          narr:"Ikan tuna besar itu akan dijual di tempat pelelangan ikan.",
+          instr:"Ketuk <b>ikan tuna</b> itu untuk membawanya ke tempat pelelangan.",
+          after:"Seorang pemuda datang dan membeli ikan itu dengan harga tertinggi. Ia meminta agar ikan tersebut dibersihkan sebelum dibawa pulang."
+        },
+        6:{
+          narr:"Willem dan Irene ditugaskan untuk membersihkan ikan tuna itu.",
+          instr:"Ketuk <b>ikan</b> itu berkali-kali dengan cepat untuk membersihkan bagian dalamnya.",
+          after:"Saat membersihkan bagian perut ikan, Irene terkejut menemukan sebuah cincin permata yang sangat indah!"
+        },
+        7:{
+          narr:"Cincin itu pastilah milik seseorang. Willem dan Irene harus memutuskan apa yang akan mereka lakukan.",
+          instr:"Ketuk <b>cincin</b> itu, lalu pilih apa yang akan dilakukan Willem dan Irene.",
+          choiceHonest:"Kembalikan ke Pemuda",
+          choiceDishonest:"Simpan untuk Diri Sendiri",
+          wrong:"Willem menggeleng, \"Cincin ini bukan milik kita. Menyimpannya bukanlah tindakan yang jujur.\" Cobalah pilihan lain.",
+          right:"Willem dan Irene memberikan cincin itu kepada sang pemuda. Ia tersenyum kagum melihat kejujuran mereka berdua."
+        },
+        8:{
+          narr:"Pemuda itu tampak sangat kagum dan tersenyum penuh arti kepada Willem dan Irene.",
+          instr:"Ketuk <b>jubah</b> sang pemuda untuk mengungkap jati dirinya yang sebenarnya.",
+          after:"Pemuda itu ternyata adalah seorang pangeran yang sedang menyamar sebagai orang biasa!"
+        }
+      },
+      ending:{
+        title:"Kejujuran Membawa Keberuntungan",
+        text:"Sang pangeran mengangkat Willem menjadi pengawal pribadinya, sedangkan Irene diangkat menjadi adik angkatnya. Mereka berdua akhirnya hidup bahagia sebagai bagian dari keluarga istana.\n\nPesan dari cerita ini: kejujuran akan selalu membawa keberuntungan."
+      }
+    },
+    en:{
+      title:"The Honesty of Willem and Irene",
+      subtitle:"A Folktale from the Netherlands",
+      footer:"An interactive folktale about honesty.",
+      startBtn:"Start Story",
+      replayBtn:"Replay Story",
+      loading:"Loading story...",
+      scenes:{
+        1:{
+          narr:"Willem and Irene were best friends, children of fishermen from the village of Volendam in the Netherlands. Every evening they sat by the shore, waiting for their fathers to return from the sea.",
+          instr:"Tap the <b>sea</b> to see if the fishing boats have begun to arrive."
+        },
+        2:{
+          narr:"The fishing boats began arriving one by one, but their fathers' boat was nowhere to be seen.",
+          instr:"Tap the <b>fisherman</b> at the dock to ask if he has seen Willem and Irene's fathers.",
+          after:"The fisherman replied, \"I saw them heading north to fish some more.\" Irene grew worried as the sky turned darker."
+        },
+        3:{
+          narr:"The sky turned dark and storm clouds gathered. Irene feared heavy rain would fall before their fathers returned.",
+          instr:"Hold the <b>Pray</b> button so Willem and Irene can ask for the weather to clear.",
+          after:"Their prayer was answered. The dark clouds slowly faded and the sky turned bright again."
+        },
+        4:{
+          narr:"Soon after, two fishing boats could be seen approaching the dock.",
+          instr:"Tap the <b>boat</b> to help it dock.",
+          after:"Mr. Hendrik's and Mr. Jansen's boats finally arrived. They carried an enormous tuna fish!"
+        },
+        5:{
+          narr:"The huge tuna was going to be sold at the fish auction.",
+          instr:"Tap the <b>tuna fish</b> to carry it to the auction.",
+          after:"A young man came and bought the fish for the highest price. He asked for it to be cleaned before he took it home."
+        },
+        6:{
+          narr:"Willem and Irene were assigned to clean the tuna fish.",
+          instr:"Tap the <b>fish</b> quickly, again and again, to clean out its insides.",
+          after:"While cleaning the fish's belly, Irene was startled to find a beautiful gemstone ring!"
+        },
+        7:{
+          narr:"The ring must belong to someone. Willem and Irene had to decide what to do.",
+          instr:"Tap the <b>ring</b>, then choose what Willem and Irene should do.",
+          choiceHonest:"Return it to the young man",
+          choiceDishonest:"Keep it for themselves",
+          wrong:"Willem shook his head, \"This ring isn't ours. Keeping it would not be honest.\" Try another choice.",
+          right:"Willem and Irene handed the ring to the young man. He smiled, deeply impressed by their honesty."
+        },
+        8:{
+          narr:"The young man looked deeply moved and gave Willem and Irene a meaningful smile.",
+          instr:"Tap the young man's <b>cloak</b> to reveal his true identity.",
+          after:"The young man turned out to be a prince, secretly disguised as an ordinary person!"
+        }
+      },
+      ending:{
+        title:"Honesty Brings Fortune",
+        text:"The prince made Willem his personal guard, while Irene became his adopted sister. They both lived happily ever after as members of the royal family.\n\nThe moral of this story: honesty always brings good fortune."
+      }
+    }
+  };
+
+  // ---------- Speech ----------
+  let voices = [];
+  function loadVoices(){ voices = speechSynthesis.getVoices ? speechSynthesis.getVoices() : []; }
+  if('speechSynthesis' in window){
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    const target = lang === 'en' ? 'en-US' : 'id-ID';
+    let v = voices.find(v=>v.lang === target);
+    if(!v) v = voices.find(v=>v.lang && v.lang.startsWith(lang === 'en' ? 'en' : 'id'));
+    return v || null;
+  }
+  function speak(text){
+    if(muted || !('speechSynthesis' in window) || !text) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+      const v = pickVoice();
+      if(v) u.voice = v;
+      u.rate = 0.95;
+      u.pitch = 1.05;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+  }
+
+  // ---------- Resize / postMessage ----------
+  function reportHeight(){
+    const h = document.body.scrollHeight;
+    parent.postMessage({ type:'resize', height:h }, '*');
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+
+  // ---------- UI helpers ----------
+  function setLangUI(){
+    langBtn.textContent = lang === 'en' ? 'EN' : 'ID';
+    titleText.innerHTML = T[lang].title + '<small>' + T[lang].subtitle + '</small>';
+    footerText.textContent = T[lang].footer;
+    document.documentElement.lang = lang;
+  }
+  function setMuteUI(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+  setMuteUI();
+  setLangUI();
+
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem('wi_muted', muted);
+    setMuteUI();
+    if(muted) stopSpeak();
+  });
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'en' ? 'id' : 'en';
+    const url = new URL(location.href);
+    url.searchParams.set('lang', lang);
+    history.replaceState(null,'', url);
+    setLangUI();
+    renderCurrentScene(true);
+  });
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    sceneOrder.forEach(n=>{
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.dataset.scene = n;
+      dotsEl.appendChild(d);
+    });
+  }
+  function updateDots(){
+    const idx = sceneOrder.indexOf(scene);
+    Array.from(dotsEl.children).forEach((d,i)=>{
+      d.classList.remove('active','done');
+      if(i < idx) d.classList.add('done');
+      else if(i === idx) d.classList.add('active');
+    });
+  }
+
+  // ---------- Canvas drawing helpers ----------
+  const W = canvas.width, H = canvas.height;
+  let animT = 0;
+  let anim = null; // {type, start, dur, onDone}
+  let rafId = null;
+
+  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+  function drawSkyAndSea(dark){
+    const skyTop = dark ? '#6b7688' : '#8ec9e8';
+    const skyBottom = dark ? '#a3aab5' : '#d9f0f7';
+    let g = ctx.createLinearGradient(0,0,0,H*0.55);
+    g.addColorStop(0, skyTop);
+    g.addColorStop(1, skyBottom);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H*0.6);
+
+    // sun
+    if(!dark){
+      ctx.fillStyle = '#ffe9a8';
+      ctx.beginPath();
+      ctx.arc(W-90, 70, 40, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // clouds
+    ctx.fillStyle = dark ? 'rgba(70,75,85,0.85)' : 'rgba(255,255,255,0.85)';
+    drawCloud(140, 70, 1);
+    drawCloud(420, 50, 0.8);
+    if(dark){
+      drawCloud(620, 90, 1.1);
+      drawCloud(260, 100, 0.9);
+    }
+
+    // sea
+    let sg = ctx.createLinearGradient(0,H*0.42,0,H*0.72);
+    sg.addColorStop(0, dark ? '#3d5f78' : '#3f95c4');
+    sg.addColorStop(1, dark ? '#274a60' : '#1f6f9c');
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, H*0.42, W, H*0.3);
+    // waves
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for(let i=0;i<5;i++){
+      const y = H*0.46 + i*14;
+      ctx.beginPath();
+      for(let x=0;x<=W;x+=20){
+        ctx.lineTo(x, y + Math.sin((x/40)+animT/20+i)*3);
+      }
+      ctx.stroke();
+    }
+    // sand
+    ctx.fillStyle = '#e8d3a0';
+    ctx.fillRect(0, H*0.7, W, H*0.3);
+    ctx.fillStyle = '#ddc287';
+    ctx.beginPath();
+    ctx.ellipse(W*0.5, H*0.7, W*0.6, 18, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawCloud(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.beginPath();
+    ctx.arc(0,0,20,0,Math.PI*2);
+    ctx.arc(22,-8,16,0,Math.PI*2);
+    ctx.arc(-22,-6,14,0,Math.PI*2);
+    ctx.arc(10,6,18,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDock(){
+    ctx.fillStyle = '#8a6339';
+    ctx.fillRect(W*0.62, H*0.6, W*0.3, 14);
+    for(let i=0;i<5;i++){
+      ctx.fillRect(W*0.64 + i*(W*0.26/4), H*0.6, 8, 40);
+    }
+  }
+
+  function drawChild(x,y,scale,palette,talking){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = palette.pants;
+    ctx.fillRect(-14,20,10,26);
+    ctx.fillRect(4,20,10,26);
+    // body
+    ctx.fillStyle = palette.shirt;
+    ctx.beginPath();
+    ctx.moveTo(-16,-10);
+    ctx.quadraticCurveTo(0,-22,16,-10);
+    ctx.lineTo(14,24);
+    ctx.lineTo(-14,24);
+    ctx.closePath();
+    ctx.fill();
+    // arms
+    ctx.strokeStyle = palette.shirt;
+    ctx.lineWidth = 8;
+    ctx.lineCap='round';
+    const armSwing = talking ? Math.sin(animT/8)*6 : 0;
+    ctx.beginPath();
+    ctx.moveTo(-14,-4); ctx.lineTo(-24, 12+armSwing);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(14,-4); ctx.lineTo(24, 12-armSwing);
+    ctx.stroke();
+    // head
+    ctx.fillStyle = palette.skin;
+    ctx.beginPath();
+    ctx.arc(0,-26,15,0,Math.PI*2);
+    ctx.fill();
+    // hair
+    ctx.fillStyle = palette.hair;
+    ctx.beginPath();
+    ctx.arc(0,-32,15,Math.PI, Math.PI*2);
+    ctx.fill();
+    if(palette.hairSide){
+      ctx.beginPath();
+      ctx.moveTo(-15,-30);
+      ctx.quadraticCurveTo(-18,-16,-10,-14);
+      ctx.lineTo(-13,-28);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(15,-30);
+      ctx.quadraticCurveTo(18,-16,10,-14);
+      ctx.lineTo(13,-28);
+      ctx.fill();
+    }
+    // face
+    ctx.fillStyle = '#2a2018';
+    ctx.beginPath(); ctx.arc(-5,-26,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,-26,1.6,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2a2018';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(0,-21,4,0.15*Math.PI,0.85*Math.PI);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const paletteWillem = {skin:'#f0c49a', hair:'#7a4a26', shirt:'#3f6fa8', pants:'#2b3a4a', hairSide:false};
+  const paletteIrene = {skin:'#f3cba3', hair:'#c98a3a', shirt:'#c15a6b', pants:'#7a3f4f', hairSide:true};
+
+  function drawFisherman(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#54677a';
+    ctx.fillRect(-10,10,8,24);
+    ctx.fillRect(2,10,8,24);
+    ctx.fillStyle = '#3d5a6b';
+    ctx.beginPath();
+    ctx.moveTo(-14,-14);
+    ctx.quadraticCurveTo(0,-24,14,-14);
+    ctx.lineTo(12,14);
+    ctx.lineTo(-12,14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e0b183';
+    ctx.beginPath();
+    ctx.arc(0,-26,13,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#f2f2f2';
+    ctx.beginPath();
+    ctx.arc(0,-32,13,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.fillRect(-14,-34,28,5);
+    ctx.fillStyle='#2a2018';
+    ctx.beginPath(); ctx.arc(-4,-25,1.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-25,1.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBoat(x,y,scale,bob){
+    ctx.save();
+    ctx.translate(x, y + Math.sin(animT/15)*bob);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#8a5a35';
+    ctx.beginPath();
+    ctx.moveTo(-50,0);
+    ctx.quadraticCurveTo(-50,20,-30,20);
+    ctx.lineTo(30,20);
+    ctx.quadraticCurveTo(50,20,50,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#b97a45';
+    ctx.fillRect(-40,-6,80,8);
+    ctx.strokeStyle = '#5a3a1f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0,-6); ctx.lineTo(0,-46);
+    ctx.stroke();
+    ctx.fillStyle = '#eef0e5';
+    ctx.beginPath();
+    ctx.moveTo(0,-44);
+    ctx.lineTo(28,-16);
+    ctx.lineTo(0,-16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTuna(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#4c7fa8';
+    ctx.beginPath();
+    ctx.ellipse(0,0,44,20,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#eef3f5';
+    ctx.beginPath();
+    ctx.ellipse(0,6,40,12,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#4c7fa8';
+    ctx.beginPath();
+    ctx.moveTo(40,0);
+    ctx.lineTo(64,-16);
+    ctx.lineTo(64,16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-6,-18);
+    ctx.lineTo(6,-30);
+    ctx.lineTo(14,-16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#1c2a33';
+    ctx.beginPath();
+    ctx.arc(-32,-2,3,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRing(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){
+      ctx.shadowColor = '#ffd76a';
+      ctx.shadowBlur = 18;
+    }
+    ctx.strokeStyle = '#caa03a';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(0,8,11,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle = '#e0483e';
+    ctx.beginPath();
+    ctx.moveTo(0,-10);
+    ctx.lineTo(7,-1);
+    ctx.lineTo(0,6);
+    ctx.lineTo(-7,-1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawYoungMan(x,y,scale,revealed){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#5a4a3a';
+    ctx.fillRect(-10,18,8,26);
+    ctx.fillRect(2,18,8,26);
+    // cloak / robe
+    if(!revealed){
+      ctx.fillStyle = '#6b5a4a';
+      ctx.beginPath();
+      ctx.moveTo(-20,-16);
+      ctx.quadraticCurveTo(0,-26,20,-16);
+      ctx.lineTo(22,26);
+      ctx.lineTo(-22,26);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#7a2e3c';
+      ctx.beginPath();
+      ctx.moveTo(-18,-14);
+      ctx.quadraticCurveTo(0,-24,18,-14);
+      ctx.lineTo(16,24);
+      ctx.lineTo(-16,24);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#d9a441';
+      ctx.fillRect(-16,-2,32,6);
+    }
+    // head
+    ctx.fillStyle = '#e9bb8c';
+    ctx.beginPath();
+    ctx.arc(0,-28,14,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#2b2118';
+    ctx.beginPath();
+    ctx.arc(0,-34,14,Math.PI,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#241a12';
+    ctx.beginPath(); ctx.arc(-4,-27,1.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-27,1.5,0,Math.PI*2); ctx.fill();
+    if(revealed){
+      // crown
+      ctx.fillStyle = '#d9a441';
+      ctx.beginPath();
+      ctx.moveTo(-13,-40);
+      ctx.lineTo(-13,-48);
+      ctx.lineTo(-6,-40);
+      ctx.lineTo(0,-50);
+      ctx.lineTo(6,-40);
+      ctx.lineTo(13,-48);
+      ctx.lineTo(13,-40);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------- Scene registry ----------
+  let hotspots = []; // {x,y,r} in canvas coords relative to W,H (not scaled) or custom hit-test fn
+  let sceneState = {};
+
+  function resetSceneState(){ sceneState = {}; hotspots = []; }
+
+  function draw(){
+    animT++;
+    ctx.clearRect(0,0,W,H);
+    switch(scene){
+      case 'title': drawTitleScene(); break;
+      case 1: drawScene1(); break;
+      case 2: drawScene2(); break;
+      case 3: drawScene3(); break;
+      case 4: drawScene4(); break;
+      case 5: drawScene5(); break;
+      case 6: drawScene6(); break;
+      case 7: drawScene7(); break;
+      case 8: drawScene8(); break;
+      case 'end': drawEndScene(); break;
+    }
+    rafId = requestAnimationFrame(draw);
+  }
+
+  function drawTitleScene(){
+    drawSkyAndSea(false);
+    drawDock();
+    drawChild(W*0.4, H*0.72, 1.6, paletteWillem, false);
+    drawChild(W*0.56, H*0.72, 1.6, paletteIrene, false);
+    drawBoat(W*0.18, H*0.5, 0.9, 4);
+  }
+
+  function drawScene1(){
+    drawSkyAndSea(false);
+    drawChild(W*0.42, H*0.78, 1.7, paletteWillem, false);
+    drawChild(W*0.58, H*0.78, 1.7, paletteIrene, false);
+    if(sceneState.boatsIn){
+      const p = clamp01((animT - sceneState.tStart)/60);
+      drawBoat(W*0.2 + p*W*0.05, H*0.5, 0.8, 4);
+      drawBoat(W*0.75 - p*W*0.05, H*0.46, 0.7, 5);
+    }
+  }
+
+  function drawScene2(){
+    drawSkyAndSea(false);
+    drawDock();
+    drawBoat(W*0.2, H*0.5, 0.8, 4);
+    drawChild(W*0.32, H*0.78, 1.5, paletteWillem, sceneState.asked);
+    drawChild(W*0.46, H*0.78, 1.5, paletteIrene, false);
+    drawFisherman(W*0.68, H*0.72, 1.5);
+    if(sceneState.asked){
+      drawBubble(W*0.68, H*0.5, lang==='id' ? 'Ke utara...' : 'Went north...');
+    }
+  }
+
+  function drawBubble(x,y,text){
+    ctx.save();
+    ctx.font = '13px Segoe UI';
+    const w = ctx.measureText(text).width + 20;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.strokeStyle = '#9a4322';
+    ctx.lineWidth = 1.5;
+    roundRect(x-w/2,y-30,w,26,8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3a2b1c';
+    ctx.textAlign='center';
+    ctx.fillText(text, x, y-12);
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawScene3(){
+    const p = sceneState.clearProgress || 0;
+    drawSkyAndSea(p < 1);
+    drawChild(W*0.42, H*0.78, 1.6, paletteWillem, sceneState.holding);
+    drawChild(W*0.58, H*0.78, 1.6, paletteIrene, sceneState.holding);
+    if(sceneState.holding){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 3;
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.arc(W*0.5, H*0.5, 30+i*14+((animT*2)%20), 0, Math.PI*2);
+        ctx.globalAlpha = 0.5 - i*0.12;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawScene4(){
+    drawSkyAndSea(false);
+    drawDock();
+    const p = sceneState.docking ? clamp01((animT - sceneState.tStart)/50) : 0;
+    const bx = W*0.72 - p*W*0.14;
+    drawBoat(bx, H*0.52, 0.85, 3);
+    if(sceneState.docked){
+      drawFisherman(W*0.58, H*0.68, 1.3);
+      drawFisherman(W*0.44, H*0.7, 1.3);
+      drawTuna(W*0.58, H*0.58, 1);
+    }
+    drawChild(W*0.28, H*0.78, 1.4, paletteWillem, false);
+    drawChild(W*0.2, H*0.78, 1.4, paletteIrene, false);
+  }
+
+  function drawScene5(){
+    drawSkyAndSea(false);
+    drawDock();
+    const p = sceneState.carried ? clamp01((animT - sceneState.tStart)/50) : 0;
+    const fx = W*0.4 + p*(W*0.2);
+    drawTuna(fx, H*0.6, 1.1);
+    drawChild(W*0.28, H*0.78, 1.4, paletteWillem, false);
+    drawChild(W*0.36, H*0.78, 1.4, paletteIrene, false);
+    if(sceneState.carried) drawYoungMan(W*0.7, H*0.72, 1.4, false);
+  }
+
+  function drawScene6(){
+    drawSkyAndSea(false);
+    drawDock();
+    drawYoungMan(W*0.78, H*0.72, 1.3, false);
+    const shake = sceneState.taps ? Math.sin(animT*1.5)*(2+sceneState.taps*0.3) : 0;
+    drawTuna(W*0.5+shake, H*0.62, 1.3);
+    drawChild(W*0.3, H*0.78, 1.4, paletteWillem, false);
+    drawChild(W*0.38, H*0.78, 1.4, paletteIrene, sceneState.taps>0);
+    if(sceneState.ringVisible){
+      drawRing(W*0.5, H*0.62, 1.4, true);
+    }
+    // progress bar for cleaning
+    if(!sceneState.done){
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      roundRect(W*0.5-60, H*0.85, 120, 12, 6);
+      ctx.fill();
+      ctx.fillStyle = '#3f7a4d';
+      const w = 120*clamp01((sceneState.taps||0)/8);
+      roundRect(W*0.5-60, H*0.85, w, 12, 6);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawScene7(){
+    drawSkyAndSea(false);
+    drawDock();
+    drawYoungMan(W*0.78, H*0.7, 1.3, false);
+    drawChild(W*0.3, H*0.78, 1.4, paletteWillem, false);
+    drawChild(W*0.38, H*0.78, 1.4, paletteIrene, false);
+    drawRing(W*0.5, H*0.62, 1.8, true);
+  }
+
+  function drawScene8(){
+    drawSkyAndSea(false);
+    drawDock();
+    drawChild(W*0.28, H*0.78, 1.4, paletteWillem, false);
+    drawChild(W*0.36, H*0.78, 1.4, paletteIrene, false);
+    drawYoungMan(W*0.65, H*0.7, 1.6, sceneState.revealed);
+    if(sceneState.revealed){
+      ctx.save();
+      for(let i=0;i<10;i++){
+        const ang = (animT/20 + i*0.6);
+        const rr = 60 + (i%3)*10;
+        ctx.fillStyle = '#d9a441';
+        ctx.beginPath();
+        ctx.arc(W*0.65 + Math.cos(ang)*rr, H*0.5 + Math.sin(ang)*rr*0.4, 2, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawEndScene(){
+    drawSkyAndSea(false);
+    drawDock();
+    drawChild(W*0.36, H*0.72, 1.7, paletteWillem, false);
+    drawChild(W*0.5, H*0.72, 1.7, paletteIrene, false);
+    drawYoungMan(W*0.64, H*0.66, 1.7, true);
+    ctx.save();
+    for(let i=0;i<14;i++){
+      const ang = (animT/16 + i*0.45);
+      const rr = 90 + (i%4)*14;
+      ctx.fillStyle = i%2===0 ? '#d9a441' : '#e0483e';
+      ctx.beginPath();
+      ctx.arc(W*0.5 + Math.cos(ang)*rr, H*0.4 + Math.sin(ang)*rr*0.5, 2.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------- Scene transition / narration control ----------
+  function renderCurrentScene(skipNarration){
+    resetSceneState();
+    updateDots();
+    dynamicArea.innerHTML = '';
+    if(scene === 'title'){
+      instructionEl.textContent = T[lang].loading;
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = T[lang].startBtn;
+      btn.addEventListener('click', ()=>{ goToScene(1); });
+      dynamicArea.appendChild(btn);
+      instructionEl.innerHTML = lang==='id'
+        ? 'Sebuah kisah tentang dua sahabat kecil dari Belanda yang menemukan sebuah cincin — dan memilih untuk jujur.'
+        : 'A tale of two young friends from the Netherlands who find a ring — and choose to be honest.';
+      if(!skipNarration) {} // no narration on title
+      return;
+    }
+    if(scene === 'end'){
+      instructionEl.innerHTML = '<b>' + T[lang].ending.title + '</b><br>' + T[lang].ending.text.replace(/\n/g,'<br>');
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = T[lang].replayBtn;
+      btn.addEventListener('click', ()=>{ goToScene(1); });
+      dynamicArea.appendChild(btn);
+      if(!skipNarration) speak(T[lang].ending.text.replace(/\n/g,' '));
+      return;
+    }
+    const s = T[lang].scenes[scene];
+    instructionEl.innerHTML = s.instr;
+    if(!skipNarration) speak(s.narr);
+    setupSceneLogic();
+  }
+
+  function goToScene(n){
+    stopSpeak();
+    scene = n;
+    renderCurrentScene(false);
+  }
+
+  function advanceAfter(ms){
+    setTimeout(()=>{
+      const idx = sceneOrder.indexOf(scene);
+      if(idx >= 0 && idx < sceneOrder.length - 1){
+        goToScene(sceneOrder[idx+1]);
+      } else {
+        goToScene('end');
+      }
+    }, ms);
+  }
+
+  function playAfterAndAdvance(afterText, delay){
+    setTimeout(()=>{
+      speak(afterText);
+      instructionEl.innerHTML = '<i>' + afterText + '</i>';
+    }, 350);
+    advanceAfter(delay);
+  }
+
+  // ---------- Canvas click handling ----------
+  function getCanvasPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    const x = (clientX - rect.left) * (W / rect.width);
+    const y = (clientY - rect.top) * (H / rect.height);
+    return {x,y};
+  }
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  canvas.addEventListener('click', function(evt){
+    const {x,y} = getCanvasPos(evt);
+    handleCanvasClick(x,y);
+  });
+
+  function handleCanvasClick(x,y){
+    if(typeof sceneState.onClick === 'function'){
+      sceneState.onClick(x,y);
+    }
+  }
+
+  function setupSceneLogic(){
+    switch(scene){
+      case 1:
+        sceneState.onClick = (x,y)=>{
+          if(sceneState.boatsIn) return;
+          if(y > H*0.42 && y < H*0.7){
+            sceneState.boatsIn = true;
+            sceneState.tStart = animT;
+            playAfterAndAdvance(T[lang].scenes[2] ? '' : '', 1);
+            // move to scene2 shortly
+            setTimeout(()=>{ goToScene(2); }, 1400);
+          }
+        };
+        break;
+      case 2:
+        sceneState.onClick = (x,y)=>{
+          if(sceneState.asked) return;
+          if(dist(x,y,W*0.68,H*0.72) < 60){
+            sceneState.asked = true;
+            const s = T[lang].scenes[2];
+            speak(s.after);
+            instructionEl.innerHTML = '<i>' + s.after + '</i>';
+            advanceAfter(3600);
+          }
+        };
+        break;
+      case 3:
+        setupHoldToPray();
+        break;
+      case 4:
+        sceneState.onClick = (x,y)=>{
+          if(sceneState.docking || sceneState.docked) return;
+          if(dist(x,y,W*0.72,H*0.52) < 70){
+            sceneState.docking = true;
+            sceneState.tStart = animT;
+            setTimeout(()=>{
+              sceneState.docked = true;
+              const s = T[lang].scenes[4];
+              speak(s.after);
+              instructionEl.innerHTML = '<i>' + s.after + '</i>';
+              advanceAfter(3200);
+            }, 900);
+          }
+        };
+        break;
+      case 5:
+        sceneState.onClick = (x,y)=>{
+          if(sceneState.carried) return;
+          if(dist(x,y,W*0.4,H*0.6) < 60){
+            sceneState.carried = true;
+            sceneState.tStart = animT;
+            setTimeout(()=>{
+              const s = T[lang].scenes[5];
+              speak(s.after);
+              instructionEl.innerHTML = '<i>' + s.after + '</i>';
+              advanceAfter(3200);
+            }, 900);
+          }
+        };
+        break;
+      case 6:
+        sceneState.taps = 0;
+        sceneState.done = false;
+        sceneState.onClick = (x,y)=>{
+          if(sceneState.done) return;
+          if(dist(x,y,W*0.5,H*0.62) < 70){
+            sceneState.taps++;
+            if(sceneState.taps >= 8){
+              sceneState.done = true;
+              sceneState.ringVisible = true;
+              const s = T[lang].scenes[6];
+              speak(s.after);
+              instructionEl.innerHTML = '<i>' + s.after + '</i>';
+              advanceAfter(3400);
+            }
+          }
+        };
+        break;
+      case 7:
+        setupChoice();
+        break;
+      case 8:
+        sceneState.onClick = (x,y)=>{
+          if(sceneState.revealed) return;
+          if(dist(x,y,W*0.65,H*0.6) < 80){
+            sceneState.revealed = true;
+            const s = T[lang].scenes[8];
+            speak(s.after);
+            instructionEl.innerHTML = '<i>' + s.after + '</i>';
+            advanceAfter(3400);
+          }
+        };
+        break;
+    }
+  }
+
+  function setupHoldToPray(){
+    dynamicArea.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'action-row';
+    const btn = document.createElement('button');
+    btn.className = 'hold-btn';
+    btn.innerHTML = '<div class="fill" id="holdFill"></div><span>' + (lang==='id' ? '🙏 Berdoa' : '🙏 Pray') + '</span>';
+    wrap.appendChild(btn);
+    dynamicArea.appendChild(wrap);
+    const fill = btn.querySelector('.fill');
+
+    let holding = false;
+    let progress = 0;
+    let holdRaf = null;
+
+    function step(){
+      if(holding && progress < 1){
+        progress += 0.012;
+        sceneState.clearProgress = clamp01(progress);
+        fill.style.width = (progress*100) + '%';
+        holdRaf = requestAnimationFrame(step);
+      } else if(progress >= 1){
+        finishPray();
+      }
+    }
+    function finishPray(){
+      holding = false;
+      sceneState.holding = false;
+      if(sceneState.finished) return;
+      sceneState.finished = true;
+      const s = T[lang].scenes[3];
+      speak(s.after);
+      instructionEl.innerHTML = '<i>' + s.after + '</i>';
+      advanceAfter(3400);
+    }
+    function start(e){
+      e.preventDefault();
+      if(sceneState.finished) return;
+      holding = true;
+      sceneState.holding = true;
+      holdRaf = requestAnimationFrame(step);
+    }
+    function stop(){
+      holding = false;
+      sceneState.holding = false;
+      if(progress < 1){
+        progress = Math.max(0, progress - 0.15);
+        sceneState.clearProgress = progress;
+        fill.style.width = (progress*100) + '%';
+      }
+    }
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('touchstart', start, {passive:false});
+    btn.addEventListener('mouseup', stop);
+    btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchend', stop);
+    sceneState.clearProgress = 0;
+  }
+
+  function setupChoice(){
+    let ringTapped = false;
+    sceneState.onClick = (x,y)=>{
+      if(ringTapped) return;
+      if(dist(x,y,W*0.5,H*0.62) < 60){
+        ringTapped = true;
+        showChoiceButtons();
+      }
+    };
+  }
+
+  function showChoiceButtons(){
+    dynamicArea.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'choices';
+    const s = T[lang].scenes[7];
+    const honestBtn = document.createElement('button');
+    honestBtn.className = 'choice-btn';
+    honestBtn.textContent = s.choiceHonest;
+    const dishonestBtn = document.createElement('button');
+    dishonestBtn.className = 'choice-btn';
+    dishonestBtn.textContent = s.choiceDishonest;
+
+    honestBtn.addEventListener('click', ()=>{
+      wrap.remove();
+      speak(s.right);
+      instructionEl.innerHTML = '<i>' + s.right + '</i>';
+      advanceAfter(3400);
+    });
+    dishonestBtn.addEventListener('click', ()=>{
+      speak(s.wrong);
+      instructionEl.innerHTML = '<i>' + s.wrong + '</i>';
+      setTimeout(()=>{
+        instructionEl.innerHTML = s.instr;
+      }, 3200);
+    });
+
+    wrap.appendChild(honestBtn);
+    wrap.appendChild(dishonestBtn);
+    dynamicArea.appendChild(wrap);
+  }
+
+  // ---------- Init ----------
+  buildDots();
+  renderCurrentScene(true);
+  draw();
+
+  setInterval(reportHeight, 800);
+})();
+</script>
+</body>
+</html>
