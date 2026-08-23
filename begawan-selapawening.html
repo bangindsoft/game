@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Begawan Selapawening - Cerita Rakyat Yogyakarta</title>
+<style>
+  :root{
+    --bg-deep: #0d2b2a;
+    --bg-panel: #f6ecd6;
+    --gold: #c9a24b;
+    --gold-dark: #a2792f;
+    --brown: #5c3a21;
+    --brown-dark: #3c2513;
+    --teal: #12504a;
+    --teal-light: #1d6e64;
+    --cream: #fbf3df;
+    --ink: #2c1d12;
+    --danger: #a13a2f;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI', 'Trebuchet MS', sans-serif;
+    background: transparent;
+  }
+  #app{
+    width:100%;
+    max-width:820px;
+    margin:0 auto;
+    background: linear-gradient(180deg,#fbf3df,#f2e4bf);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 6px 24px rgba(60,37,19,0.25);
+    border:3px solid var(--gold-dark);
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background: linear-gradient(180deg,#3c2513,#2c1c0d);
+    color:var(--cream);
+  }
+  #topbar h1{
+    font-size:16px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  #controls{
+    display:flex;
+    gap:8px;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.25);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background 0.15s ease;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,0.18); }
+  .icon-btn.active{ background:var(--gold); color:var(--brown-dark); border-color:var(--gold); }
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background: linear-gradient(180deg,#a9d4d0,#eef7ef);
+  }
+  #instruction{
+    padding:10px 16px 4px 16px;
+    font-size:14.5px;
+    color:var(--brown-dark);
+    text-align:center;
+    font-weight:600;
+    min-height:20px;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:transparent;
+    touch-action:manipulation;
+  }
+  #overlay-layer{
+    position:absolute;
+    left:0;top:0;right:0;bottom:0;
+    pointer-events:none;
+  }
+  #start-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(13,43,42,0.82);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:var(--cream);
+    text-align:center;
+    padding:20px;
+    z-index:5;
+  }
+  #start-overlay h2{
+    margin:0 0 10px 0;
+    font-size:20px;
+    color:var(--gold);
+  }
+  #start-overlay p{
+    max-width:480px;
+    font-size:13.5px;
+    line-height:1.5;
+    opacity:0.9;
+    margin:0 0 16px 0;
+  }
+  .big-btn{
+    background: linear-gradient(180deg,var(--gold),var(--gold-dark));
+    border:none;
+    color:var(--brown-dark);
+    padding:12px 26px;
+    border-radius:30px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--brown-dark);
+  }
+  .big-btn:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--brown-dark); }
+
+  #bottombar{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    padding:10px 16px 16px 16px;
+    background: var(--bg-panel);
+  }
+  #narration{
+    font-size:14px;
+    line-height:1.55;
+    color:var(--ink);
+    text-align:center;
+    max-width:640px;
+    min-height:44px;
+  }
+  #dots{
+    display:flex;
+    gap:7px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#d9c8a0;
+    border:1px solid var(--gold-dark);
+    transition:all 0.2s ease;
+  }
+  .dot.active{ background:var(--gold-dark); transform:scale(1.25); }
+  .dot.done{ background:var(--teal-light); border-color:var(--teal); }
+
+  #replay-row{
+    display:flex;
+    gap:10px;
+  }
+  .small-btn{
+    background:var(--teal);
+    color:var(--cream);
+    border:none;
+    padding:8px 18px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .small-btn:hover{ background:var(--teal-light); }
+
+  #footer{
+    text-align:center;
+    font-size:11px;
+    color:#8a7554;
+    padding:6px 10px 12px 10px;
+    background:var(--bg-panel);
+  }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1 id="title-text">Begawan Selapawening</h1>
+    <div id="controls">
+      <button class="icon-btn" id="lang-btn" title="Ganti Bahasa">🌐 <span id="lang-label">ID</span></button>
+      <button class="icon-btn" id="mute-btn" title="Bisukan Narasi">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <div id="instruction"></div>
+    <canvas id="game" width="800" height="450"></canvas>
+    <div id="start-overlay">
+      <h2 id="ov-title">Begawan Selapawening</h2>
+      <p id="ov-desc">Sebuah cerita rakyat dari pesisir selatan Yogyakarta, tentang seorang pertapa, sebuah padepokan, dan adu kesaktian yang mengubah sejarah.</p>
+      <button class="big-btn" id="start-btn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="bottombar">
+    <div id="narration"></div>
+    <div id="dots"></div>
+    <div id="replay-row">
+      <button class="small-btn hidden" id="replay-btn">↻ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="footer">Cerita Rakyat Nusantara • Ditulis ulang untuk pembelajaran anak</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Localization ---------------- */
+  const params = new URLSearchParams(location.search);
+  let lang = localStorage.getItem('begawan_lang') || (params.get('lang') === 'en' ? 'en' : 'id');
+  let muted = localStorage.getItem('begawan_muted') === 'true';
+
+  const T = {
+    id: {
+      title: "Begawan Selapawening",
+      ovTitle: "Begawan Selapawening",
+      ovDesc: "Sebuah cerita rakyat dari pesisir selatan Yogyakarta, tentang seorang pertapa, sebuah padepokan, dan adu kesaktian yang mengubah sejarah.",
+      start: "▶ Mulai Cerita",
+      replay: "↻ Ulangi Cerita",
+      footer: "Cerita Rakyat Nusantara • Ditulis ulang untuk pembelajaran anak",
+      langLabel: "ID",
+      scenes: [
+        {
+          instruction: "Ketuk rombongan Begawan Selapawening untuk berjalan menuju pantai selatan.",
+          narration: "Begawan Selapawening, putra Raja Brawijaya dari Majapahit, menyingkir bersama para pengikutnya. Mereka tidak ingin meninggalkan keyakinan lama, sehingga mencari tempat yang tenang dan aman jauh dari pusat kerajaan."
+        },
+        {
+          instruction: "Ketuk gambar palu dengan cepat untuk membangun padepokan.",
+          narration: "Setibanya di pesisir selatan, di Desa Pemancingan, mereka mendirikan sebuah padepokan sebagai tempat tinggal sekaligus tempat menyebarkan ajaran yang mereka anut."
+        },
+        {
+          instruction: "Ketuk gerbang padepokan untuk mempersilakan tamu masuk.",
+          narration: "Suatu hari, Syekh Maulana Maghribi datang ke padepokan itu. Ia ingin menyebarkan ajaran Islam dan menemui penguasa wilayah tersebut, Begawan Selapawening."
+        },
+        {
+          instruction: "Ketuk semak-semak untuk mencari Syekh Maulana Maghribi yang bersembunyi.",
+          narration: "Begawan Selapawening tidak setuju begitu saja. Mereka pun beradu kesaktian. Pertama adalah permainan delikan atau petak umpan: Syekh Maulana Maghribi berhasil menemukan Begawan Selapawening, namun Begawan sama sekali tidak menemukan Syekh di manapun ia mencari."
+        },
+        {
+          instruction: "Tekan dan tahan gambar joran pancing untuk memancing.",
+          narration: "Pertandingan kedua adalah memancing di laut. Begawan Selapawening mendapat giliran pertama. Dengan kesaktiannya, ia berhasil memancing seekor ikan yang sangat besar."
+        },
+        {
+          instruction: "Ketuk permukaan air untuk melihat hasil pancingan Syekh Maulana Maghribi.",
+          narration: "Giliran Syekh Maulana Maghribi memancing. Betapa terkejutnya semua orang, ikan yang ia pancing bukan hanya besar, tetapi sudah matang dan siap disantap. Begawan Selapawening pun menyadari kesaktian Syekh melebihi dirinya."
+        },
+        {
+          instruction: "Ketuk tombol 'Serahkan Padepokan' karena Begawan Selapawening mengakui kekalahannya.",
+          narration: "Dengan besar hati, Begawan Selapawening mengakui kekalahannya. Sesuai janji, padepokan miliknya pun diserahkan kepada Syekh Maulana Maghribi untuk dijadikan tempat penyebaran agama Islam."
+        },
+        {
+          instruction: "",
+          narration: "Padepokan itu kemudian menjadi pondok pesantren. Tongkat kail yang dahulu dipakai bertanding ditancapkan di kebun belakang, lalu tumbuh menjadi rumpun bambu rimbun yang disebut Bambu Sentana. Dari Bukit Sentana inilah ajaran Islam berkembang pesat di daerah sekitarnya."
+        }
+      ]
+    },
+    en: {
+      title: "Begawan Selapawening",
+      ovTitle: "Begawan Selapawening",
+      ovDesc: "A folktale from the southern coast of Yogyakarta, about a hermit, a hermitage, and a contest of spiritual power that changed history.",
+      start: "▶ Start Story",
+      replay: "↻ Replay Story",
+      footer: "Indonesian Folktales • Retold for children's learning",
+      langLabel: "EN",
+      scenes: [
+        {
+          instruction: "Tap Begawan Selapawening's group to walk toward the south coast.",
+          narration: "Begawan Selapawening, son of King Brawijaya of Majapahit, withdrew with his followers. Unwilling to abandon their old beliefs, they searched for a calm, safe place far from the kingdom's center."
+        },
+        {
+          instruction: "Tap the hammer icon quickly to build the hermitage.",
+          narration: "Arriving at the southern coast, in a village called Pemancingan, they built a hermitage — a home, and a place to spread the teachings they held dear."
+        },
+        {
+          instruction: "Tap the hermitage gate to let the guest in.",
+          narration: "One day, Syekh Maulana Maghribi arrived at the hermitage. He wished to spread the teachings of Islam and came to meet the ruler of that region, Begawan Selapawening."
+        },
+        {
+          instruction: "Tap the bushes to search for the hidden Syekh Maulana Maghribi.",
+          narration: "Begawan Selapawening did not simply agree. The two held a contest of spiritual power. The first was a game of hide-and-seek: Syekh Maulana Maghribi found Begawan easily, yet Begawan could not find Syekh no matter where he searched."
+        },
+        {
+          instruction: "Press and hold the fishing rod to fish.",
+          narration: "The second contest was fishing at sea. Begawan Selapawening went first. With his power, he caught an enormous fish."
+        },
+        {
+          instruction: "Tap the water's surface to see Syekh Maulana Maghribi's catch.",
+          narration: "Then it was Syekh Maulana Maghribi's turn. To everyone's astonishment, the fish he caught was not only huge — it was already cooked and ready to eat. Begawan Selapawening realized Syekh's power surpassed his own."
+        },
+        {
+          instruction: "Tap the 'Hand Over the Hermitage' button as Begawan Selapawening accepts defeat.",
+          narration: "Graciously, Begawan Selapawening admitted defeat. true to his word, he handed his hermitage over to Syekh Maulana Maghribi to become a place for spreading Islam."
+        },
+        {
+          instruction: "",
+          narration: "The hermitage became an Islamic boarding school. The fishing rod once used in the contest was planted in the back garden, and grew into a lush bamboo grove known as Bambu Sentana. From this Sentana Hill, Islam flourished throughout the surrounding region."
+        }
+      ]
+    }
+  };
+
+  function L(){ return T[lang]; }
+
+  /* ---------------- DOM refs ---------------- */
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const instructionEl = document.getElementById('instruction');
+  const narrationEl = document.getElementById('narration');
+  const dotsEl = document.getElementById('dots');
+  const startOverlay = document.getElementById('start-overlay');
+  const startBtn = document.getElementById('start-btn');
+  const replayBtn = document.getElementById('replay-btn');
+  const langBtn = document.getElementById('lang-btn');
+  const langLabel = document.getElementById('lang-label');
+  const muteBtn = document.getElementById('mute-btn');
+  const titleText = document.getElementById('title-text');
+  const ovTitle = document.getElementById('ov-title');
+  const ovDesc = document.getElementById('ov-desc');
+  const footerEl = document.getElementById('footer');
+
+  const TOTAL_SCENES = 8;
+
+  const state = {
+    scene: 0,
+    locked: false,
+    started: false,
+    // scene-specific progress
+    walkStep: 0,      // scene 0 (0-3)
+    buildProgress: 0, // scene 1 (0-100)
+    gateOpen: false,  // scene 2
+    bushesChecked: [false,false,false], // scene 3
+    fishProgress: 0,  // scene 4 (0-100)
+    fishCaught: false,
+    holding: false,
+    waterTapped: false, // scene 5
+    handedOver: false // scene 6
+  };
+
+  let animT = 0; // global animation timer
+  let rafId = null;
+
+  /* ---------------- Resize / postMessage ---------------- */
+  function sendHeight(){
+    try{
+      const h = document.getElementById('app').getBoundingClientRect().height;
+      parent.postMessage({ type: 'begawan-resize', height: Math.ceil(h) + 4 }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+
+  /* ---------------- Speech ---------------- */
+  let currentUtter = null;
+  function speak(text){
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    currentUtter = u;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------- UI update ---------------- */
+  function updateDots(){
+    dotsEl.innerHTML = '';
+    for(let i=0;i<TOTAL_SCENES;i++){
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === state.scene ? ' active' : (i < state.scene ? ' done' : ''));
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function refreshTexts(){
+    const t = L();
+    titleText.textContent = t.title;
+    ovTitle.textContent = t.ovTitle;
+    ovDesc.textContent = t.ovDesc;
+    startBtn.textContent = t.start;
+    replayBtn.textContent = t.replay;
+    footerEl.textContent = t.footer;
+    langLabel.textContent = t.langLabel;
+    renderSceneText();
+  }
+
+  function renderSceneText(){
+    const t = L();
+    const sc = t.scenes[state.scene];
+    instructionEl.textContent = sc.instruction;
+    narrationEl.textContent = sc.narration;
+  }
+
+  function goScene(idx, doSpeak){
+    state.scene = idx;
+    updateDots();
+    renderSceneText();
+    if(doSpeak !== false) speak(L().scenes[idx].narration);
+    if(idx === TOTAL_SCENES-1){
+      replayBtn.classList.remove('hidden');
+    }
+    sendHeight();
+  }
+
+  /* ---------------- Drawing helpers ---------------- */
+  function W(){ return canvas.width; }
+  function H(){ return canvas.height; }
+
+  function drawSky(horizonY, palette){
+    const g = ctx.createLinearGradient(0,0,0,horizonY);
+    g.addColorStop(0, palette[0]);
+    g.addColorStop(1, palette[1]);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W(),horizonY);
+  }
+
+  function drawSea(horizonY, palette){
+    const g = ctx.createLinearGradient(0,horizonY,0,H());
+    g.addColorStop(0, palette[0]);
+    g.addColorStop(1, palette[1]);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,horizonY,W(),H()-horizonY);
+    // waves
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for(let i=0;i<4;i++){
+      const y = horizonY + 30 + i*35;
+      ctx.beginPath();
+      for(let x=0;x<=W();x+=20){
+        const yy = y + Math.sin((x/40)+(animT/20)+i)*4;
+        if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawSun(x,y,r,color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGround(y, color){
+    ctx.fillStyle = color;
+    ctx.fillRect(0,y,W(),H()-y);
+  }
+
+  function drawTree(x,y,scale){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4324';
+    ctx.fillRect(-5,-10,10,40);
+    ctx.fillStyle = '#2f6b3a';
+    ctx.beginPath();
+    ctx.ellipse(0,-45,32,34,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#3f8a4d';
+    ctx.beginPath();
+    ctx.ellipse(-12,-55,20,20,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPerson(x,y,scale,robeColor,skin){
+    scale = scale||1;
+    robeColor = robeColor || '#8a5a2b';
+    skin = skin || '#c98a5b';
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // robe
+    ctx.fillStyle = robeColor;
+    ctx.beginPath();
+    ctx.moveTo(-14,30);
+    ctx.lineTo(14,30);
+    ctx.lineTo(8,-14);
+    ctx.lineTo(-8,-14);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(0,-22,10,0,Math.PI*2);
+    ctx.fill();
+    // headwear
+    ctx.fillStyle = '#3c2513';
+    ctx.beginPath();
+    ctx.arc(0,-27,10,Math.PI,0);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHut(x,y,scale,stage){
+    // stage 0..3 building progress
+    scale = scale||1;
+    stage = stage===undefined?3:stage;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(stage>=1){
+      ctx.fillStyle = '#7a5230';
+      ctx.fillRect(-40,-4,80,50);
+    }
+    if(stage>=2){
+      ctx.strokeStyle = '#4a3218';
+      ctx.lineWidth = 3;
+      for(let i=-32;i<=32;i+=16){
+        ctx.beginPath(); ctx.moveTo(i,-4); ctx.lineTo(i,46); ctx.stroke();
+      }
+    }
+    if(stage>=3){
+      ctx.fillStyle = '#c9a24b';
+      ctx.beginPath();
+      ctx.moveTo(-52,-4);
+      ctx.lineTo(0,-46);
+      ctx.lineTo(52,-4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#7a5230';
+      ctx.fillRect(-9,18,18,28);
+    }
+    ctx.restore();
+  }
+
+  function drawGate(x,y,scale,open){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5c3a21';
+    ctx.fillRect(-45,-70,12,90);
+    ctx.fillRect(33,-70,12,90);
+    ctx.fillStyle = '#c9a24b';
+    ctx.beginPath();
+    ctx.moveTo(-45,-70);
+    ctx.quadraticCurveTo(0,-110,45,-70);
+    ctx.lineTo(33,-70);
+    ctx.quadraticCurveTo(0,-92,-33,-70);
+    ctx.closePath();
+    ctx.fill();
+    // doors
+    const angle = open ? 0.9 : 0;
+    ctx.fillStyle = '#4a3218';
+    ctx.save();
+    ctx.translate(-33,-4);
+    ctx.rotate(-angle);
+    ctx.fillRect(0,-56,-30,56);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(33,-4);
+    ctx.rotate(angle);
+    ctx.fillRect(0,-56,30,56);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawBush(x,y,scale,checked){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = checked ? '#9fcf9a' : '#2f6b3a';
+    for(const [dx,dy,r] of [[-14,0,16],[14,0,16],[0,-12,18]]){
+      ctx.beginPath();
+      ctx.arc(dx,dy,r,0,Math.PI*2);
+      ctx.fill();
+    }
+    if(checked){
+      ctx.strokeStyle = '#3c2513';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-8,0); ctx.lineTo(-2,7); ctx.lineTo(10,-9);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawRod(x,y,scale,bend){
+    scale = scale||1; bend = bend||0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#6b4324';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(60+bend*10, -30-bend*10, 130+bend*20, -10-bend*30);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(130+bend*20,-10-bend*30);
+    ctx.lineTo(130+bend*20, 90);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFish(x,y,scale,cooked){
+    scale = scale||1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = cooked ? '#b5702f' : '#7fb6c9';
+    ctx.beginPath();
+    ctx.ellipse(0,0,34,16,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-34,0);
+    ctx.lineTo(-50,-14);
+    ctx.lineTo(-50,14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(16,-3,2.4,0,Math.PI*2);
+    ctx.fill();
+    if(cooked){
+      // steam
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 2;
+      for(const dx of [-10,4,18]){
+        ctx.beginPath();
+        ctx.moveTo(dx,-16);
+        ctx.quadraticCurveTo(dx+6,-28,dx,-40);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawBamboo(x,y,scale,height){
+    scale = scale||1; height = height===undefined?1:height;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    const segs = Math.round(4*height);
+    ctx.strokeStyle = '#3c7d4a';
+    ctx.lineWidth = 8;
+    for(let i=0;i<segs;i++){
+      ctx.beginPath();
+      ctx.moveTo(0,-i*22);
+      ctx.lineTo(0,-i*22-20);
+      ctx.stroke();
+      ctx.fillStyle = '#2f6b3a';
+      ctx.fillRect(-5,-i*22-2,10,3);
+    }
+    if(height>0.5){
+      ctx.fillStyle = '#3f8a4d';
+      for(const dy of [-segs*22+10,-segs*22-20]){
+        ctx.beginPath();
+        ctx.ellipse(14,dy,16,6,-0.4,0,Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(-14,dy-10,16,6,0.4,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawHammer(x,y,scale,swing){
+    scale = scale||1; swing = swing||0;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(swing);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4324';
+    ctx.fillRect(-4,-40,8,60);
+    ctx.fillStyle = '#333';
+    ctx.fillRect(-22,-58,44,20);
+    ctx.restore();
+  }
+
+  function drawProgressBar(x,y,w,h,pct,color){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    roundRect(x,y,w,h,h/2); ctx.fill();
+    ctx.fillStyle = color || '#c9a24b';
+    const fw = Math.max(h, w*Math.min(1,pct/100));
+    roundRect(x,y,fw,h,h/2); ctx.fill();
+    ctx.strokeStyle = '#3c2513';
+    ctx.lineWidth = 1.5;
+    roundRect(x,y,w,h,h/2); ctx.stroke();
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawButton(x,y,w,h,label,active){
+    ctx.save();
+    ctx.fillStyle = active===false ? '#9a8a6a' : '#c9a24b';
+    roundRect(x,y,w,h,h/2); ctx.fill();
+    ctx.strokeStyle = '#3c2513';
+    ctx.lineWidth = 2;
+    roundRect(x,y,w,h,h/2); ctx.stroke();
+    ctx.fillStyle = '#2c1c0d';
+    ctx.font = 'bold 18px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x+w/2, y+h/2+1);
+    ctx.restore();
+  }
+
+  /* ---------------- Scene render functions ---------------- */
+  function renderScene0(){
+    drawSky(300, ['#bfe3e6','#eaf6ef']);
+    drawSun(700,70,36,'#f4d27a');
+    drawSea(300, ['#1d6e64','#0d3f3a']);
+    drawGround(340, '#d9c48a');
+    drawTree(80,340,1);
+    drawTree(730,335,0.9);
+    const baseX = 60 + state.walkStep*220;
+    drawPerson(baseX,400,1.1,'#8a5a2b');
+    drawPerson(baseX-26,410,0.9,'#6f4a24');
+    drawPerson(baseX+26,412,0.9,'#7a5230');
+    // path marker (beach / padepokan site target)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(60,37,19,0.35)';
+    ctx.setLineDash([6,8]);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(60,405); ctx.lineTo(700,405);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(44,28,13,0.55)';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    const langLoc = lang==='id' ? 'Pantai Selatan' : 'South Coast';
+    ctx.fillText(langLoc,700,395);
+  }
+
+  function renderScene1(){
+    drawSky(300, ['#bfe3e6','#eaf6ef']);
+    drawSea(300, ['#1d6e64','#0d3f3a']);
+    drawGround(340, '#d9c48a');
+    drawTree(60,340,0.9);
+    const stage = state.buildProgress>=100?3:(state.buildProgress>=60?2:(state.buildProgress>=20?1:0));
+    drawHut(400,400,1.5,stage);
+    drawPerson(300,405,1,'#8a5a2b');
+    const swing = state.holding ? Math.sin(animT/2)*0.4 : 0;
+    drawHammer(560,395,1,swing);
+    drawProgressBar(280,60,240,20,state.buildProgress,'#c9a24b');
+    ctx.fillStyle = '#2c1c0d';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang==='id'?'Pembangunan Padepokan':'Hermitage Progress',400,50);
+  }
+
+  function renderScene2(){
+    drawSky(300, ['#bfe3e6','#eaf6ef']);
+    drawSea(300, ['#1d6e64','#0d3f3a']);
+    drawGround(340, '#d9c48a');
+    drawHut(600,395,1.2,3);
+    drawGate(300,410,1,state.gateOpen);
+    // guest outside gate
+    const guestX = state.gateOpen ? 300 : 190;
+    drawPerson(guestX,415,1,'#3c6b5a','#c98a5b');
+    if(state.gateOpen){
+      drawPerson(360,412,1,'#8a5a2b');
+    }
+  }
+
+  function renderScene3(){
+    drawSky(300, ['#bfe3e6','#eaf6ef']);
+    drawGround(300, '#c9dba0');
+    drawGround(340,'#d9c48a');
+    drawTree(40,310,0.8);
+    drawTree(760,315,0.85);
+    const positions = [[210,400],[400,410],[590,400]];
+    positions.forEach((p,i)=>{
+      drawBush(p[0],p[1],1.3,state.bushesChecked[i]);
+    });
+    drawPerson(400,340,0.9,'#8a5a2b');
+  }
+
+  function renderScene4(){
+    drawSky(260, ['#bfe3e6','#eaf6ef']);
+    drawSea(260, ['#1d6e64','#08302c']);
+    drawGround(320,'#d9c48a');
+    drawPerson(140,360,1.05,'#8a5a2b');
+    const bend = state.holding ? Math.min(1,state.fishProgress/100) : 0;
+    drawRod(160,340,1,bend);
+    drawProgressBar(280,40,240,20,state.fishProgress,'#1d6e64');
+    ctx.fillStyle = '#2c1c0d';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang==='id'?'Menarik Pancing':'Reeling In',400,30);
+    if(state.fishCaught){
+      drawFish(430,300,1,false);
+    }
+  }
+
+  function renderScene5(){
+    drawSky(260, ['#bfe3e6','#eaf6ef']);
+    drawSea(260, ['#1d6e64','#08302c']);
+    drawGround(320,'#d9c48a');
+    drawPerson(140,360,1.05,'#3c6b5a');
+    drawRod(160,340,1,state.waterTapped?0.6:0.1);
+    if(state.waterTapped){
+      drawFish(440,300,1.15,true);
+    } else {
+      // ripple hint on water
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.6)';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.ellipse(440,300,26+Math.sin(animT/6)*4,10,0,0,Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function renderScene6(){
+    drawSky(300, ['#bfe3e6','#eaf6ef']);
+    drawSea(300, ['#1d6e64','#0d3f3a']);
+    drawGround(340,'#d9c48a');
+    drawHut(560,395,1.2,3);
+    drawPerson(300,410,1,state.handedOver?'#c9a24b':'#8a5a2b');
+    drawPerson(400,412,1,'#3c6b5a');
+    if(!state.handedOver){
+      drawButton(310,40,180,44,lang==='id'?'Serahkan Padepokan':'Hand Over', true);
+    } else {
+      ctx.fillStyle='#2c1c0d';
+      ctx.font='bold 16px Segoe UI, sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(lang==='id'?'Padepokan diserahkan':'Hermitage handed over',400,50);
+    }
+  }
+
+  function renderScene7(){
+    drawSky(300, ['#cfe9d8','#f2f7ee']);
+    drawSun(700,70,34,'#f4d27a');
+    drawGround(340,'#d9c48a');
+    drawHut(560,395,1.1,3);
+    drawBamboo(220,405,1,1);
+    drawBamboo(260,405,0.9,0.8);
+    drawBamboo(200,405,0.8,0.6);
+    drawPerson(400,405,0.95,'#3c6b5a');
+    drawPerson(460,410,0.9,'#7a5230');
+  }
+
+  const sceneRenderers = [renderScene0,renderScene1,renderScene2,renderScene3,renderScene4,renderScene5,renderScene6,renderScene7];
+
+  function render(){
+    ctx.clearRect(0,0,W(),H());
+    sceneRenderers[state.scene]();
+  }
+
+  function loop(){
+    animT++;
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ---------------- Input handling ---------------- */
+  function getCanvasPoint(evt){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+    return { x: cx * (W()/rect.width), y: cy * (H()/rect.height) };
+  }
+
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  function advanceAfter(ms, cb){
+    state.locked = true;
+    setTimeout(()=>{ state.locked = false; if(cb) cb(); }, ms);
+  }
+
+  function nextScene(){
+    if(state.scene < TOTAL_SCENES-1){
+      goScene(state.scene+1);
+    }
+  }
+
+  let holdInterval = null;
+  function startHold(fillTarget){
+    if(state.holding) return;
+    state.holding = true;
+    holdInterval = setInterval(()=>{
+      fillTarget();
+    }, 60);
+  }
+  function stopHold(){
+    state.holding = false;
+    if(holdInterval){ clearInterval(holdInterval); holdInterval = null; }
+  }
+
+  function handleTap(evt){
+    if(!state.started || state.locked) return;
+    const p = getCanvasPoint(evt);
+
+    switch(state.scene){
+      case 0: {
+        const baseX = 60 + state.walkStep*220;
+        if(dist(p.x,p.y, baseX, 405) < 70){
+          state.walkStep++;
+          if(state.walkStep >= 3){
+            advanceAfter(500, nextScene);
+          }
+        }
+        break;
+      }
+      case 2: {
+        if(dist(p.x,p.y,300,395) < 90 && !state.gateOpen){
+          state.gateOpen = true;
+          advanceAfter(900, nextScene);
+        }
+        break;
+      }
+      case 3: {
+        const positions = [[210,400],[400,410],[590,400]];
+        positions.forEach((pos,i)=>{
+          if(!state.bushesChecked[i] && dist(p.x,p.y,pos[0],pos[1]) < 55){
+            state.bushesChecked[i] = true;
+          }
+        });
+        if(state.bushesChecked.every(v=>v)){
+          advanceAfter(900, nextScene);
+        }
+        break;
+      }
+      case 5: {
+        if(!state.waterTapped && dist(p.x,p.y,440,300) < 70){
+          state.waterTapped = true;
+          advanceAfter(1400, nextScene);
+        }
+        break;
+      }
+      case 6: {
+        if(!state.handedOver && p.x>310 && p.x<490 && p.y>40 && p.y<84){
+          state.handedOver = true;
+          advanceAfter(1300, nextScene);
+        }
+        break;
+      }
+      default: break;
+    }
+  }
+
+  function handlePointerDown(evt){
+    if(!state.started || state.locked) return;
+    const p = getCanvasPoint(evt);
+    if(state.scene === 1){
+      if(dist(p.x,p.y,560,395) < 70){
+        startHold(()=>{
+          state.buildProgress = Math.min(100, state.buildProgress+7);
+          if(state.buildProgress>=100){
+            stopHold();
+            advanceAfter(700, nextScene);
+          }
+        });
+      }
+    } else if(state.scene === 4){
+      if(dist(p.x,p.y,160,340) < 80){
+        startHold(()=>{
+          state.fishProgress = Math.min(100, state.fishProgress+4);
+          if(state.fishProgress>=100 && !state.fishCaught){
+            state.fishCaught = true;
+            stopHold();
+            advanceAfter(1100, nextScene);
+          }
+        });
+      }
+    } else {
+      handleTap(evt);
+    }
+  }
+  function handlePointerUp(){
+    stopHold();
+  }
+
+  canvas.addEventListener('mousedown', handlePointerDown);
+  canvas.addEventListener('mouseup', handlePointerUp);
+  canvas.addEventListener('mouseleave', handlePointerUp);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); handlePointerDown(e); }, {passive:false});
+  canvas.addEventListener('touchend', function(e){ e.preventDefault(); handlePointerUp(e); }, {passive:false});
+
+  /* ---------------- Controls ---------------- */
+  function updateMuteBtn(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', muted);
+  }
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    localStorage.setItem('begawan_muted', muted);
+    updateMuteBtn();
+    if(muted) stopSpeak();
+    else speak(L().scenes[state.scene].narration);
+  });
+
+  langBtn.addEventListener('click', function(){
+    lang = lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('begawan_lang', lang);
+    refreshTexts();
+    if(state.started) speak(L().scenes[state.scene].narration);
+  });
+
+  startBtn.addEventListener('click', function(){
+    startOverlay.style.display = 'none';
+    state.started = true;
+    goScene(0);
+  });
+
+  replayBtn.addEventListener('click', function(){
+    stopSpeak();
+    state.scene = 0;
+    state.walkStep = 0;
+    state.buildProgress = 0;
+    state.gateOpen = false;
+    state.bushesChecked = [false,false,false];
+    state.fishProgress = 0;
+    state.fishCaught = false;
+    state.waterTapped = false;
+    state.handedOver = false;
+    state.holding = false;
+    state.locked = false;
+    replayBtn.classList.add('hidden');
+    goScene(0);
+  });
+
+  /* ---------------- Init ---------------- */
+  updateMuteBtn();
+  refreshTexts();
+  updateDots();
+  loop();
+  sendHeight();
+  setTimeout(sendHeight, 300);
+  setTimeout(sendHeight, 1000);
+})();
+</script>
+</body>
+</html>
