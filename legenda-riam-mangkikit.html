@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legenda Riam Mangkikit</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: transparent;
+    overflow: hidden;
+  }
+  #app {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    background: linear-gradient(180deg,#eef6f0 0%, #dcecdf 100%);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  #topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #234a3a;
+    color: #f4ead2;
+  }
+  #topbar .title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  #topbar .controls {
+    display: flex;
+    gap: 6px;
+  }
+  .iconbtn {
+    background: #2f5f4a;
+    border: 1px solid #3f7a5f;
+    color: #f4ead2;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+  .iconbtn:hover { background: #3a725a; }
+  .iconbtn:active { transform: scale(0.96); }
+
+  #stage-wrap {
+    position: relative;
+    width: 100%;
+    background: #cfe6d6;
+  }
+  canvas#game {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: pointer;
+  }
+  #dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 6px 2px;
+    flex-wrap: wrap;
+    background: #eef6f0;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #c3d6c8;
+    transition: background 0.25s ease, transform 0.25s ease;
+  }
+  .dot.active { background: #d97b3f; transform: scale(1.3); }
+  .dot.done { background: #5c8c6c; }
+
+  #narration {
+    padding: 10px 16px 6px;
+    min-height: 46px;
+    text-align: center;
+    color: #2c3f33;
+    font-size: 14.5px;
+    line-height: 1.45;
+    background: #eef6f0;
+  }
+  #instruction {
+    text-align: center;
+    color: #a4552a;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0 16px 10px;
+    background: #eef6f0;
+    min-height: 18px;
+  }
+  #bottombar {
+    display: flex;
+    justify-content: center;
+    padding: 10px 16px 16px;
+    background: #eef6f0;
+  }
+  #mainbtn {
+    background: #d97b3f;
+    color: #fff;
+    border: none;
+    padding: 10px 26px;
+    border-radius: 24px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(217,123,63,0.4);
+    transition: transform 0.12s ease;
+  }
+  #mainbtn:active { transform: scale(0.96); }
+  #mainbtn.hidden { display: none; }
+
+  #footer {
+    text-align: center;
+    font-size: 10.5px;
+    color: #8fa598;
+    padding: 0 10px 10px;
+    background: #eef6f0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="titleText">Legenda Riam Mangkikit</div>
+    <div class="controls">
+      <button class="iconbtn" id="langBtn">EN</button>
+      <button class="iconbtn" id="muteBtn">🔊</button>
+    </div>
+  </div>
+  <div id="stage-wrap">
+    <canvas id="game" width="800" height="500"></canvas>
+  </div>
+  <div id="dots"></div>
+  <div id="narration"></div>
+  <div id="instruction"></div>
+  <div id="bottombar">
+    <button id="mainbtn">Mulai Cerita</button>
+  </div>
+  <div id="footer">Kisah rakyat Kalimantan Tengah • Sungai Katingan</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- STATE ----------
+  const params = new URLSearchParams(location.search);
+  let lang = localStorage.getItem('rm_lang') || (params.get('lang') === 'en' ? 'en' : 'id');
+  let muted = localStorage.getItem('rm_muted') === '1';
+  let stageIndex = -1; // -1 = intro screen
+  let advancing = false;
+  let raf = null;
+  let t0 = performance.now();
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const dotsEl = document.getElementById('dots');
+  const narrEl = document.getElementById('narration');
+  const instrEl = document.getElementById('instruction');
+  const mainBtn = document.getElementById('mainbtn');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const titleText = document.getElementById('titleText');
+  const footer = document.getElementById('footer');
+
+  const W = 800, H = 500;
+
+  // ---------- TEXT ----------
+  const UI = {
+    id: {
+      title: "Legenda Riam Mangkikit",
+      footer: "Kisah rakyat Kalimantan Tengah • Sungai Katingan",
+      start: "Mulai Cerita",
+      replay: "Ulangi Cerita",
+      next: "Lanjut",
+      introNarr: "Di Sungai Katingan, Kalimantan Tengah, hiduplah seorang pemimpin kampung yang gagah berani bernama Mangkikit, bersama istrinya yang cantik, Nyai Endas.",
+    },
+    en: {
+      title: "The Legend of Riam Mangkikit",
+      footer: "Folktale from Central Kalimantan • Katingan River",
+      start: "Start Story",
+      replay: "Replay Story",
+      next: "Continue",
+      introNarr: "Along the Katingan River in Central Kalimantan lived a brave village leader named Mangkikit, with his beautiful wife, Nyai Endas.",
+    }
+  };
+
+  // ---------- SPEECH ----------
+  let voicesReady = false;
+  let idVoice = null, enVoice = null;
+  function loadVoices(){
+    const voices = speechSynthesis.getVoices();
+    if (!voices.length) return;
+    idVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('id')) || null;
+    enVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en')) || null;
+    voicesReady = true;
+  }
+  if ('speechSynthesis' in window) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+  }
+  function speak(text){
+    if (muted || !('speechSynthesis' in window)) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      if (lang === 'en' && enVoice) u.voice = enVoice;
+      if (lang === 'id' && idVoice) u.voice = idVoice;
+      speechSynthesis.speak(u);
+    } catch(e){ /* ignore */ }
+  }
+  function stopSpeak(){
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+  }
+
+  // ---------- STORY DATA ----------
+  // Each stage: id, narr:{id,en}, instr:{id,en}, type, draw(ctx,time,progress state), setup(), pointer handlers
+  const stages = [];
+
+  function addStage(cfg){ stages.push(cfg); }
+
+  // Helper drawing primitives -------------------------------------------------
+  function drawSky(g1, g2){
+    const grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0, g1);
+    grad.addColorStop(1, g2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+  }
+  function drawRiver(y, height, phase){
+    ctx.save();
+    ctx.fillStyle = '#3d7fa3';
+    ctx.fillRect(0, y, W, height);
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 2;
+    for (let i=0;i<6;i++){
+      ctx.beginPath();
+      const yy = y + 14 + i*(height-28)/6;
+      ctx.moveTo(0, yy);
+      for (let x=0;x<=W;x+=20){
+        ctx.lineTo(x, yy + Math.sin((x*0.03)+phase+i)*4);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawTree(x,y,scale){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#6b4226';
+    ctx.fillRect(-6,-10,12,60);
+    ctx.fillStyle = '#3a6b3f';
+    ctx.beginPath(); ctx.ellipse(0,-40,42,48,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#4d8353';
+    ctx.beginPath(); ctx.ellipse(-14,-55,26,30,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(18,-50,24,28,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawHouseBetang(x,y,scale,burnt,burnProgress){
+    scale = scale || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // stilts
+    ctx.fillStyle = '#5a3d24';
+    ctx.fillRect(-60,10,10,40);
+    ctx.fillRect(50,10,10,40);
+    ctx.fillRect(-5,10,10,40);
+    // floor
+    ctx.fillStyle = burnt ? '#5c4535' : '#8a5a34';
+    ctx.fillRect(-70,-10,150,26);
+    // roof
+    ctx.fillStyle = burnt ? '#4a3a30' : '#a4562e';
+    ctx.beginPath();
+    ctx.moveTo(-80,-10);
+    ctx.lineTo(5,-70);
+    ctx.lineTo(90,-10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = burnt ? '#3a2c24' : '#c96b39';
+    ctx.beginPath();
+    ctx.moveTo(-72,-14);
+    ctx.lineTo(5,-62);
+    ctx.lineTo(82,-14);
+    ctx.closePath();
+    ctx.fill();
+    if (burnt && burnProgress > 0){
+      // flames overlay
+      ctx.globalAlpha = Math.min(1, burnProgress);
+      for (let i=0;i<5;i++){
+        const fx = -50 + i*30;
+        drawFlame(fx, -5, 1 + Math.sin(t()*4+i)*0.15);
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+  function drawFlame(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    const grad = ctx.createLinearGradient(0,10,0,-30);
+    grad.addColorStop(0,'#ffcf5a');
+    grad.addColorStop(0.5,'#f77f2e');
+    grad.addColorStop(1,'#c62c1f');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0,10);
+    ctx.quadraticCurveTo(12,-4,3,-20);
+    ctx.quadraticCurveTo(8,-8,0,-2);
+    ctx.quadraticCurveTo(-8,-8,-3,-20);
+    ctx.quadraticCurveTo(-12,-4,0,10);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawPerson(x,y,scale,opts){
+    opts = opts || {};
+    const skin = opts.skin || '#e0ab74';
+    const shirt = opts.shirt || '#8a3f2a';
+    const headScarf = opts.headScarf;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#3d3327';
+    ctx.fillRect(-8,20,7,26);
+    ctx.fillRect(2,20,7,26);
+    // body
+    ctx.fillStyle = shirt;
+    ctx.fillRect(-12,-10,24,32);
+    // arms
+    ctx.fillStyle = skin;
+    ctx.fillRect(-18,-8,6,24);
+    ctx.fillRect(12,-8,6,24);
+    // head
+    ctx.beginPath();
+    ctx.fillStyle = skin;
+    ctx.arc(0,-22,13,0,Math.PI*2);
+    ctx.fill();
+    if (headScarf){
+      ctx.fillStyle = headScarf;
+      ctx.beginPath();
+      ctx.arc(0,-27,14,Math.PI,0);
+      ctx.fill();
+      ctx.fillRect(-14,-27,28,6);
+    } else {
+      ctx.fillStyle = '#241d16';
+      ctx.beginPath();
+      ctx.arc(0,-28,13.5,Math.PI*1.05,Math.PI*1.95);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function t(){ return (performance.now()-t0)/1000; }
+
+  function drawDots(){
+    dotsEl.innerHTML = '';
+    stages.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===stageIndex ? ' active' : (i<stageIndex ? ' done':''));
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function setNarration(txt){ narrEl.textContent = txt; }
+  function setInstruction(txt){ instrEl.textContent = txt; }
+
+  function L(obj){ return obj[lang]; }
+
+  // ============ STAGE DEFINITIONS ============
+
+  // Stage 0: Bersiap berburu - tap busur di dinding
+  addStage({
+    narr: {
+      id: "Setiap pagi buta, Mangkikit bersiap pergi berburu ke hutan. Ia menyiapkan busur dan panahnya sebelum berangkat.",
+      en: "Every dawn, Mangkikit prepared to go hunting in the forest. He readied his bow and arrows before leaving."
+    },
+    instr: { id: "Ketuk busur panah di dinding untuk diambil Mangkikit", en: "Tap the bow on the wall for Mangkikit to grab" },
+    type: 'tap',
+    hit: {x:640, y:170, r:40},
+    done:false,
+    draw(){
+      drawSky('#bfe3ea','#eaf6d8');
+      drawTree(90,380,1.1); drawTree(700,390,1.3);
+      ctx.fillStyle = '#7a5230';
+      ctx.fillRect(300,260,220,140);
+      drawPerson(400,340,1.3,{shirt:'#6b3a24'});
+      // bow on wall
+      ctx.save();
+      ctx.translate(640,170);
+      ctx.rotate(this.done ? -0.4 : 0);
+      ctx.strokeStyle = '#5a3a1e';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0,0,38,-Math.PI*0.6,Math.PI*0.6);
+      ctx.stroke();
+      ctx.strokeStyle = '#d8c48a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0,-32); ctx.lineTo(0,32);
+      ctx.stroke();
+      ctx.restore();
+      if (this.done){
+        ctx.fillStyle = 'rgba(255,220,120,0.5)';
+        ctx.beginPath(); ctx.arc(640,170,46,0,Math.PI*2); ctx.fill();
+      }
+    },
+    onTap(x,y){
+      if (this.done) return;
+      if (dist(x,y,this.hit.x,this.hit.y) < this.hit.r+20){
+        this.done = true;
+        setTimeout(()=>nextStage(), 550);
+      }
+    }
+  });
+
+  // Stage 1: Ketukan pintu - tap pintu
+  addStage({
+    narr: {
+      id: "Sepeninggal Mangkikit, Nyai Endas menganyam tikar di kamarnya. Tiba-tiba, terdengar ketukan di pintu depan rumah betang.",
+      en: "After Mangkikit left, Nyai Endas wove a mat in her room. Suddenly, a knock was heard at the front door of the longhouse."
+    },
+    instr: { id: "Ketuk pintu rumah betang untuk membukanya", en: "Tap the longhouse door to open it" },
+    type: 'tap',
+    hit: {x:400, y:270, r:55},
+    done:false,
+    knockPhase:0,
+    draw(){
+      drawSky('#bfe3ea','#eaf6d8');
+      drawHouseBetang(400,320,1.6,false,0);
+      drawPerson(210,340,1.1,{shirt:'#b06b8a'});
+      // door
+      ctx.save();
+      const shake = !this.done ? Math.sin(t()*14)*3 : 0;
+      ctx.translate(shake,0);
+      ctx.fillStyle = this.done ? '#3a2a18' : '#8a5a34';
+      ctx.fillRect(370,220,60,90);
+      ctx.strokeStyle = '#2a1c10';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(370,220,60,90);
+      ctx.restore();
+      if (!this.done){
+        ctx.fillStyle = '#3a2a18';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('TOK TOK', 400, 210);
+      }
+    },
+    onTap(x,y){
+      if (this.done) return;
+      if (dist(x,y,this.hit.x,this.hit.y) < this.hit.r){
+        this.done = true;
+        setTimeout(()=>nextStage(), 500);
+      }
+    }
+  });
+
+  // Stage 2: Laki-laki asing - tap untuk mendengar
+  addStage({
+    narr: {
+      id: "Seorang laki-laki tampan tak dikenal berdiri di depan pintu, menanyakan Mangkikit dan Nyai Endas.",
+      en: "A handsome stranger stood at the door, asking for Mangkikit and Nyai Endas."
+    },
+    instr: { id: "Ketuk pada laki-laki asing untuk mendengarkan permintaannya", en: "Tap the stranger to hear his request" },
+    type: 'tap',
+    hit: {x:560, y:300, r:50},
+    done:false,
+    draw(){
+      drawSky('#d7e9d0','#eaf6d8');
+      drawHouseBetang(250,320,1.3,false,0);
+      drawPerson(330,335,1.0,{shirt:'#b06b8a'});
+      // stranger
+      drawPerson(560,340,1.15,{shirt:'#7a1f1f', headScarf:'#c62c1f'});
+      if (this.done){
+        drawSpeechBubble(560,220,L({id:'"Apakah Nyai Endas ada?"',en:'"Is Nyai Endas here?"'}));
+      } else {
+        ctx.fillStyle='rgba(255,255,255,0.5)';
+        ctx.beginPath(); ctx.arc(560,300,55,0,Math.PI*2); ctx.fill();
+      }
+    },
+    onTap(x,y){
+      if (this.done){ setTimeout(()=>nextStage(), 900); return; }
+      if (dist(x,y,this.hit.x,this.hit.y) < this.hit.r){
+        this.done = true;
+      }
+    }
+  });
+  function drawSpeechBubble(x,y,text){
+    ctx.save();
+    ctx.font='13px sans-serif';
+    ctx.textAlign='center';
+    const w = Math.max(120, ctx.measureText(text).width + 24);
+    ctx.fillStyle='#fff';
+    ctx.strokeStyle='#333';
+    ctx.lineWidth=2;
+    roundRect(x-w/2, y-24, w, 40, 10);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x-8,y+16); ctx.lineTo(x,y+30); ctx.lineTo(x+8,y+16);
+    ctx.fillStyle='#fff'; ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#222';
+    ctx.fillText(text, x, y+1);
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  // Stage 3: Berjalan di atas air - drag Nyai Endas menyeberang sungai
+  addStage({
+    narr: {
+      id: "Nyai Endas pergi bersama laki-laki itu, berjalan di atas air sungai seolah berjalan di jalan raya. Dungak dan Tambi Jongkong tercengang menyaksikannya.",
+      en: "Nyai Endas left with the stranger, walking across the river's surface as if it were a road. Dungak and Tambi Jongkong watched in astonishment."
+    },
+    instr: { id: "Seret Nyai Endas menyusuri sungai menuju seberang", en: "Drag Nyai Endas across the river to the other side" },
+    type: 'drag',
+    startX:150, startY:250, endX:680, endY:250,
+    px:150, py:250, dragging:false, done:false,
+    draw(){
+      drawSky('#cfe6ee','#e8f2d6');
+      drawRiver(300,120,t());
+      drawTree(60,260,0.9); drawTree(740,260,0.9);
+      drawPerson(720,340,1.0,{shirt:'#4d6b3a'});
+      drawPerson(760,300,0.85,{shirt:'#8a6a3a'});
+      // path hint
+      ctx.strokeStyle='rgba(255,255,255,0.5)';
+      ctx.setLineDash([6,8]);
+      ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(this.startX,this.startY); ctx.lineTo(this.endX,this.endY); ctx.stroke();
+      ctx.setLineDash([]);
+      // stranger
+      drawPerson(this.endX+40,240,1.0,{shirt:'#7a1f1f', headScarf:'#c62c1f'});
+      // Nyai Endas draggable
+      drawPerson(this.px,this.py,1.05,{shirt:'#c26a94'});
+      if (!this.dragging && !this.done){
+        ctx.fillStyle='rgba(255,220,120,0.6)';
+        ctx.beginPath(); ctx.arc(this.px,this.py,34,0,Math.PI*2); ctx.fill();
+      }
+    },
+    onPointerDown(x,y){
+      if (this.done) return;
+      if (dist(x,y,this.px,this.py) < 40) this.dragging = true;
+    },
+    onPointerMove(x,y){
+      if (this.dragging){
+        this.px = Math.max(this.startX, Math.min(this.endX, x));
+        this.py = this.startY + (this.endY-this.startY)*((this.px-this.startX)/(this.endX-this.startX));
+      }
+    },
+    onPointerUp(x,y){
+      this.dragging = false;
+      if (!this.done && this.px > this.endX - 60){
+        this.done = true;
+        setTimeout(()=>nextStage(), 500);
+      }
+    }
+  });
+
+  // Stage 4: Dungak memukul gong - rapid tap
+  addStage({
+    narr: {
+      id: "Dungak berlari kembali ke kampung dan memukul gong berulang kali untuk memberi tahu seluruh penduduk.",
+      en: "Dungak rushed back to the village and struck the gong repeatedly to alert everyone."
+    },
+    instr: { id: "Ketuk gong dengan cepat sebanyak 12 kali!", en: "Tap the gong quickly 12 times!" },
+    type: 'mash',
+    count:0, target:12, done:false,
+    gongX:400, gongY:280, gongR:70,
+    draw(){
+      drawSky('#e2ecd2','#f2e8c9');
+      drawHouseBetang(650,340,0.9,false,0);
+      const bump = Math.max(0, 1-( (t()*1000 - (this._lastHit||0)) /180));
+      // stand
+      ctx.fillStyle='#5a3d24';
+      ctx.fillRect(370,150,10,180);
+      ctx.fillRect(420,150,10,180);
+      ctx.fillRect(365,145,70,10);
+      // gong
+      ctx.save();
+      ctx.translate(this.gongX,this.gongY);
+      ctx.scale(1+bump*0.06,1+bump*0.06);
+      const grad = ctx.createRadialGradient(0,0,10,0,0,60);
+      grad.addColorStop(0,'#f2d27a'); grad.addColorStop(1,'#a97a2e');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(0,0,55,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#6b4a1a'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.arc(0,0,55,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fillStyle='#7a531e'; ctx.fill();
+      ctx.restore();
+      drawPerson(280,340,1.1,{shirt:'#4a3520'});
+      // progress bar
+      ctx.fillStyle = '#c3d6c8';
+      roundRect(250,420,300,18,9); ctx.fill();
+      ctx.fillStyle = '#d97b3f';
+      const w = 300*(this.count/this.target);
+      ctx.beginPath();
+      roundRect(250,420,Math.max(18,w),18,9); ctx.fill();
+    },
+    onTap(x,y){
+      if (this.done) return;
+      if (dist(x,y,this.gongX,this.gongY) < this.gongR){
+        this.count++;
+        this._lastHit = t()*1000;
+        if (this.count >= this.target){
+          this.done = true;
+          setTimeout(()=>nextStage(), 500);
+        }
+      }
+    }
+  });
+
+  // Stage 5: Mendengar cerita dari paman tua - tap
+  addStage({
+    narr: {
+      id: "Mangkikit pulang dengan firasat tak biasa. Seorang paman tua menenangkannya lalu menceritakan semua yang terjadi.",
+      en: "Mangkikit returned home with an uneasy feeling. An elder calmed him down and told him everything that had happened."
+    },
+    instr: { id: "Ketuk paman tua untuk mendengarkan penjelasannya", en: "Tap the elder to hear his explanation" },
+    type: 'tap',
+    hit:{x:500,y:310,r:50}, done:false,
+    draw(){
+      drawSky('#e6ecd0','#f4ecd2');
+      drawHouseBetang(150,320,1.2,false,0);
+      drawPerson(300,340,1.05,{shirt:'#3a3a3a'});
+      drawPerson(500,345,1.05,{shirt:'#5a4a2a'});
+      if (this.done){
+        drawSpeechBubble(500,225, L({id:'"Anakku, coba tenang..."', en:'"My son, please stay calm..."'}));
+      } else {
+        ctx.fillStyle='rgba(255,255,255,0.5)';
+        ctx.beginPath(); ctx.arc(500,310,55,0,Math.PI*2); ctx.fill();
+      }
+    },
+    onTap(x,y){
+      if (this.done){ setTimeout(()=>nextStage(),900); return; }
+      if (dist(x,y,this.hit.x,this.hit.y) < this.hit.r){ this.done = true; }
+    }
+  });
+
+  // Stage 6: Menyiapkan tuak - sequential tap 3 gentong
+  addStage({
+    narr: {
+      id: "Mangkikit meminta setiap keluarga menyiapkan tuak untuk pesta yang akan digelar sepuluh hari kemudian.",
+      en: "Mangkikit asked every family to prepare rice wine for a feast to be held ten days later."
+    },
+    instr: { id: "Ketuk tiga gentong tuak secara berurutan dari kiri ke kanan", en: "Tap the three jars of rice wine in order, left to right" },
+    type: 'sequence',
+    jars:[{x:250,y:330,done:false},{x:400,y:330,done:false},{x:550,y:330,done:false}],
+    step:0, done:false,
+    draw(){
+      drawSky('#efe7ce','#f7ecd6');
+      drawPerson(400,410,1.1,{shirt:'#5a4a2a'});
+      this.jars.forEach((j,i)=>{
+        ctx.save();
+        ctx.translate(j.x,j.y);
+        ctx.fillStyle = j.done ? '#8a6a3a' : '#b9895a';
+        ctx.beginPath();
+        ctx.ellipse(0,0,34,44,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = '#5a3d24'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.ellipse(0,0,34,44,0,0,Math.PI*2); ctx.stroke();
+        ctx.fillStyle = '#3a2a18';
+        ctx.beginPath(); ctx.ellipse(0,-38,16,8,0,0,Math.PI*2); ctx.fill();
+        if (i === this.step && !this.done){
+          ctx.fillStyle='rgba(255,220,120,0.5)';
+          ctx.beginPath(); ctx.arc(0,0,50,0,Math.PI*2); ctx.fill();
+        }
+        if (j.done){
+          ctx.fillStyle='#2f8f4a'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
+          ctx.fillText('✓', 0, -50);
+        }
+        ctx.restore();
+      });
+    },
+    onTap(x,y){
+      if (this.done) return;
+      const j = this.jars[this.step];
+      if (j && dist(x,y,j.x,j.y) < 44){
+        j.done = true; this.step++;
+        if (this.step >= this.jars.length){
+          this.done = true;
+          setTimeout(()=>nextStage(), 500);
+        }
+      }
+    }
+  });
+
+  // Stage 7: Membakar rumah - drag obor ke rumah
+  addStage({
+    narr: {
+      id: "Setelah pesta usai, Mangkikit memerintahkan setiap kepala keluarga membakar rumah mereka masing-masing.",
+      en: "After the feast, Mangkikit ordered every head of family to burn down their own house."
+    },
+    instr: { id: "Seret obor ke arah rumah untuk membakarnya", en: "Drag the torch onto the house to set it on fire" },
+    type: 'drag',
+    torchX:150, torchY:400, homeX:150, homeY:400,
+    houseX:450, houseY:300, dragging:false, done:false, burnProgress:0,
+    draw(){
+      drawSky('#eee2c8','#f6e9c9');
+      drawHouseBetang(this.houseX,this.houseY,1.5, this.done, this.burnProgress);
+      if (this.done && this.burnProgress < 1) this.burnProgress += 0.02;
+      drawPerson(650,400,1.0,{shirt:'#3a3a3a'});
+      // torch
+      ctx.save();
+      ctx.translate(this.torchX,this.torchY);
+      ctx.fillStyle = '#6b4226';
+      ctx.fillRect(-4,0,8,40);
+      drawFlame(0,0,1.1);
+      ctx.restore();
+      if (!this.dragging && !this.done){
+        ctx.fillStyle='rgba(255,220,120,0.5)';
+        ctx.beginPath(); ctx.arc(this.torchX,this.torchY+10,36,0,Math.PI*2); ctx.fill();
+      }
+    },
+    onPointerDown(x,y){
+      if (this.done) return;
+      if (dist(x,y,this.torchX,this.torchY+10) < 40) this.dragging = true;
+    },
+    onPointerMove(x,y){
+      if (this.dragging){ this.torchX = x; this.torchY = y; }
+    },
+    onPointerUp(x,y){
+      if (!this.dragging) return;
+      this.dragging = false;
+      if (!this.done && dist(x,y,this.houseX,this.houseY-20) < 110){
+        this.done = true;
+        setTimeout(()=>nextStage(), 1600);
+      } else {
+        this.torchX = 150; this.torchY = 400;
+      }
+    }
+  });
+
+  // Stage 8: Menabur beras & menyelam ke pusaran air - press and hold
+  addStage({
+    narr: {
+      id: "Mangkikit menaburkan beras kuning ke pusaran air Batu Tangudau, lalu memerintahkan penduduk untuk terjun mengikuti jejak Nyai Endas.",
+      en: "Mangkikit scattered yellow rice into the whirlpool of Batu Tangudau, then had the villagers dive in, following Nyai Endas's trail."
+    },
+    instr: { id: "Tahan pusaran air untuk menyelam ke dunia baru", en: "Press and hold the whirlpool to dive into the new world" },
+    type: 'hold',
+    hold:0, target:1.6, done:false, holding:false,
+    cx:400, cy:280, r:70,
+    draw(){
+      drawSky('#c8dde8','#d8e6ea');
+      drawRiver(340,160,t());
+      // whirlpool spiral
+      ctx.save();
+      ctx.translate(this.cx,this.cy);
+      ctx.rotate(t()*1.4);
+      ctx.strokeStyle='rgba(255,255,255,0.7)';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      for (let a=0;a<Math.PI*6;a+=0.2){
+        const rr = a*6;
+        const xx = Math.cos(a)*rr, yy = Math.sin(a)*rr;
+        if (a===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+      }
+      ctx.stroke();
+      ctx.restore();
+      drawPerson(180,380,1.0,{shirt:'#4a3520'});
+      // progress ring
+      if (this.hold > 0){
+        ctx.strokeStyle='#d97b3f'; ctx.lineWidth=8;
+        ctx.beginPath();
+        ctx.arc(this.cx,this.cy,90, -Math.PI/2, -Math.PI/2 + (this.hold/this.target)*Math.PI*2);
+        ctx.stroke();
+      }
+      if (!this.done){
+        ctx.fillStyle='rgba(255,255,255,0.15)';
+        ctx.beginPath(); ctx.arc(this.cx,this.cy,this.r,0,Math.PI*2); ctx.fill();
+      }
+    },
+    onPointerDown(x,y){
+      if (this.done) return;
+      if (dist(x,y,this.cx,this.cy) < this.r+20) this.holding = true;
+    },
+    onPointerUp(){ this.holding = false; },
+    tick(dt){
+      if (this.holding && !this.done){
+        this.hold += dt;
+        if (this.hold >= this.target){
+          this.done = true;
+          setTimeout(()=>nextStage(), 500);
+        }
+      } else if (!this.done) {
+        this.hold = Math.max(0, this.hold - dt*0.6);
+      }
+    }
+  });
+
+  // Stage 9: Mengepung rumah - sequential tap 3 sisi
+  addStage({
+    narr: {
+      id: "Di kampung baru itu, Mangkikit melihat Nyai Endas di halaman sebuah rumah besar. Ia memerintahkan pengawalnya mengepung rumah dari segala sisi.",
+      en: "In the new village, Mangkikit saw Nyai Endas in the yard of a grand house. He ordered his men to surround it from every side."
+    },
+    instr: { id: "Ketuk tiga sisi rumah secara berurutan untuk mengepungnya", en: "Tap the three sides of the house in order to surround it" },
+    type: 'sequence',
+    spots:[{x:270,y:320,done:false},{x:400,y:220,done:false},{x:530,y:320,done:false}],
+    step:0, done:false,
+    draw(){
+      drawSky('#dfe9d8','#eef2df');
+      drawHouseBetang(400,300,1.4,false,0);
+      drawPerson(400,270,0.9,{shirt:'#c26a94'});
+      this.spots.forEach((s,i)=>{
+        ctx.save();
+        ctx.fillStyle = s.done ? 'rgba(92,140,108,0.55)' : (i===this.step ? 'rgba(255,220,120,0.55)':'rgba(200,200,200,0.25)');
+        ctx.beginPath(); ctx.arc(s.x,s.y,34,0,Math.PI*2); ctx.fill();
+        drawPerson(s.x,s.y+18,0.75,{shirt:'#3a3a3a'});
+        ctx.restore();
+      });
+    },
+    onTap(x,y){
+      if (this.done) return;
+      const s = this.spots[this.step];
+      if (s && dist(x,y,s.x,s.y) < 40){
+        s.done = true; this.step++;
+        if (this.step >= this.spots.length){
+          this.done = true;
+          setTimeout(()=>nextStage(), 600);
+        }
+      }
+    }
+  });
+
+  // Stage 10: Timing bar - serangan dohong
+  addStage({
+    narr: {
+      id: "Mangkikit menyelinap masuk. Dengan cepat ia mencabut dohong pusaka dan menghadapi laki-laki yang telah menculik istrinya.",
+      en: "Mangkikit slipped inside. Quickly he drew his sacred dohong blade to confront the man who had abducted his wife."
+    },
+    instr: { id: "Ketuk tombol SERANG saat penunjuk berada di area hijau", en: "Tap ATTACK when the pointer is in the green zone" },
+    type: 'timing',
+    pos:0, dir:1, speed:1.6, zoneStart:0.55, zoneEnd:0.8, done:false, result:null,
+    draw(){
+      drawSky('#e8dccc','#f2e6d2');
+      drawPerson(250,340,1.1,{shirt:'#3a3020'});
+      drawPerson(560,340,1.1,{shirt:'#7a1f1f'});
+      // bar
+      const bx=200,by=420,bw=400,bh=26;
+      ctx.fillStyle='#c3d6c8';
+      roundRect(bx,by,bw,bh,13); ctx.fill();
+      ctx.fillStyle='#5c8c6c';
+      roundRect(bx+bw*this.zoneStart, by, bw*(this.zoneEnd-this.zoneStart), bh, 10); ctx.fill();
+      ctx.fillStyle='#d97b3f';
+      ctx.beginPath();
+      ctx.arc(bx+bw*this.pos, by+bh/2, 15, 0, Math.PI*2);
+      ctx.fill();
+      // button
+      ctx.fillStyle = this.done ? '#8a8a8a' : '#a4552a';
+      roundRect(340,455,120,32,16); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+      ctx.fillText(L({id:'SERANG!',en:'ATTACK!'}), 400, 476);
+      if (this.result){
+        ctx.fillStyle = this.result==='hit' ? '#2f8f4a':'#a43a2a';
+        ctx.font='bold 18px sans-serif';
+        ctx.fillText(this.result==='hit' ? L({id:'Kena!',en:'Hit!'}) : L({id:'Coba lagi!',en:'Try again!'}), 400, 250);
+      }
+    },
+    tick(dt){
+      if (this.done) return;
+      this.pos += this.dir*this.speed*dt;
+      if (this.pos > 1){ this.pos = 1; this.dir=-1; }
+      if (this.pos < 0){ this.pos = 0; this.dir=1; }
+    },
+    onTap(x,y){
+      if (this.done) return;
+      if (x>340 && x<460 && y>455 && y<487){
+        if (this.pos >= this.zoneStart && this.pos <= this.zoneEnd){
+          this.done = true; this.result='hit';
+          setTimeout(()=>nextStage(), 900);
+        } else {
+          this.result='miss';
+          setTimeout(()=>{ this.result=null; }, 500);
+        }
+      }
+    }
+  });
+
+  // Stage 11: Ending
+  addStage({
+    narr: {
+      id: "Mangkikit berhasil menyelamatkan Nyai Endas. Konon, sebagian penduduk memilih tinggal di kampung baru itu. Hingga kini, Riam Mangkikit menjadi daya tarik wisata di Sungai Katingan.",
+      en: "Mangkikit successfully rescued Nyai Endas. It is said some villagers chose to stay in that new village. To this day, Riam Mangkikit remains a beloved attraction on the Katingan River."
+    },
+    instr: { id: "Ketuk tombol di bawah untuk mengulangi cerita", en: "Tap the button below to replay the story" },
+    type: 'end',
+    draw(){
+      drawSky('#bfe3ea','#eaf6d8');
+      drawRiver(360,140,t());
+      drawTree(100,300,1.1); drawTree(700,300,1.1);
+      drawPerson(360,300,1.1,{shirt:'#6b3a24'});
+      drawPerson(440,300,1.05,{shirt:'#c26a94'});
+      drawHouseBetang(600,260,0.9,false,0);
+      ctx.fillStyle='#2c3f33';
+      ctx.font='bold 20px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(L({id:'~ Tamat ~', en:'~ The End ~'}), 400, 90);
+    }
+  });
+
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+  // ---------- FLOW CONTROL ----------
+  function startStory(){
+    stageIndex = 0;
+    mainBtn.classList.add('hidden');
+    enterStage();
+  }
+  function nextStage(){
+    if (advancing) return;
+    advancing = true;
+    stageIndex++;
+    if (stageIndex >= stages.length){
+      // ended
+      stageIndex = stages.length - 1;
+      advancing = false;
+      return;
+    }
+    enterStage();
+    advancing = false;
+  }
+  function enterStage(){
+    drawDots();
+    const s = stages[stageIndex];
+    setNarration(L(s.narr));
+    setInstruction(s.instr ? L(s.instr) : '');
+    speak(L(s.narr) + (s.instr ? ('. ' + L(s.instr)) : ''));
+    if (s.type === 'end'){
+      mainBtn.textContent = L(UI).replay;
+      mainBtn.classList.remove('hidden');
+    } else {
+      mainBtn.classList.add('hidden');
+    }
+  }
+  function resetAll(){
+    stages.forEach(s=>{
+      if ('done' in s) s.done = false;
+      if ('step' in s) s.step = 0;
+      if ('count' in s) s.count = 0;
+      if ('hold' in s) s.hold = 0;
+      if ('holding' in s) s.holding = false;
+      if ('burnProgress' in s) s.burnProgress = 0;
+      if ('jars' in s) s.jars.forEach(j=>j.done=false);
+      if ('spots' in s) s.spots.forEach(sp=>sp.done=false);
+      if ('result' in s) s.result = null;
+      if (s.type==='drag' && 'startX' in s){ s.px = s.startX; s.py = s.startY; s.dragging=false; }
+      if (s.type==='drag' && s.torchX !== undefined && s.homeX !== undefined){ s.torchX = 150; s.torchY = 400; }
+      if (s.type==='timing'){ s.pos = 0; s.dir = 1; }
+    });
+  }
+
+  mainBtn.addEventListener('click', ()=>{
+    if (stageIndex === -1){
+      startStory();
+    } else if (stages[stageIndex] && stages[stageIndex].type === 'end'){
+      resetAll();
+      stageIndex = -1;
+      mainBtn.textContent = L(UI).start;
+      mainBtn.classList.remove('hidden');
+      setNarration(L(UI).introNarr);
+      setInstruction('');
+      drawDots();
+      speak(L(UI).introNarr);
+    }
+  });
+
+  // ---------- POINTER HANDLING ----------
+  function getPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+    return {
+      x: (cx - rect.left) / rect.width * W,
+      y: (cy - rect.top) / rect.height * H
+    };
+  }
+  let downing = false;
+  canvas.addEventListener('pointerdown', (e)=>{
+    if (stageIndex < 0) return;
+    const s = stages[stageIndex];
+    if (!s) return;
+    const p = getPos(e);
+    downing = true;
+    if (s.onPointerDown) s.onPointerDown(p.x,p.y);
+    if (s.onTap && (s.type==='tap' || s.type==='mash' || s.type==='sequence' || s.type==='timing')) s.onTap(p.x,p.y);
+  });
+  window.addEventListener('pointermove', (e)=>{
+    if (stageIndex < 0 || !downing) return;
+    const s = stages[stageIndex];
+    if (s && s.onPointerMove){
+      const p = getPos(e);
+      s.onPointerMove(p.x,p.y);
+    }
+  });
+  window.addEventListener('pointerup', (e)=>{
+    downing = false;
+    if (stageIndex < 0) return;
+    const s = stages[stageIndex];
+    if (s && s.onPointerUp){
+      const p = getPos(e);
+      s.onPointerUp(p.x,p.y);
+    }
+  });
+
+  // ---------- RENDER LOOP ----------
+  let lastT = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05,(now-lastT)/1000);
+    lastT = now;
+    ctx.clearRect(0,0,W,H);
+    if (stageIndex === -1){
+      drawIntro();
+    } else {
+      const s = stages[stageIndex];
+      if (s){
+        if (s.tick) s.tick(dt);
+        s.draw();
+      }
+    }
+    resizeToParent();
+    raf = requestAnimationFrame(loop);
+  }
+  function drawIntro(){
+    drawSky('#bfe3ea','#eaf6d8');
+    drawRiver(360,140,t());
+    drawTree(90,310,1.2); drawTree(700,320,1.3);
+    drawHouseBetang(400,290,1.6,false,0);
+    drawPerson(360,340,1.05,{shirt:'#6b3a24'});
+    drawPerson(440,340,1.0,{shirt:'#c26a94'});
+    ctx.fillStyle='#2c3f33';
+    ctx.font='bold 26px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(L(UI).title, 400, 70);
+  }
+
+  function resizeToParent(){
+    try {
+      const rect = document.getElementById('app').getBoundingClientRect();
+      window.parent.postMessage({ type:'riam-mangkikit-resize', height: Math.ceil(rect.height) }, '*');
+    } catch(e){}
+  }
+
+  // ---------- LANG / MUTE ----------
+  function applyLangUI(){
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    titleText.textContent = L(UI).title;
+    footer.textContent = L(UI).footer;
+    if (stageIndex === -1){
+      mainBtn.textContent = L(UI).start;
+      setNarration(L(UI).introNarr);
+    } else {
+      const s = stages[stageIndex];
+      if (s){
+        setNarration(L(s.narr));
+        setInstruction(s.instr ? L(s.instr) : '');
+        if (s.type === 'end') mainBtn.textContent = L(UI).replay;
+      }
+    }
+  }
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    localStorage.setItem('rm_lang', lang);
+    stopSpeak();
+    applyLangUI();
+    if (stageIndex === -1) speak(L(UI).introNarr);
+    else {
+      const s = stages[stageIndex];
+      if (s) speak(L(s.narr) + (s.instr ? ('. ' + L(s.instr)) : ''));
+    }
+  });
+  function applyMuteUI(){
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  }
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    localStorage.setItem('rm_muted', muted ? '1':'0');
+    applyMuteUI();
+    if (muted) stopSpeak();
+  });
+
+  // ---------- INIT ----------
+  applyLangUI();
+  applyMuteUI();
+  drawDots();
+  raf = requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
