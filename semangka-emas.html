@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semangka Emas - Cerita Interaktif</title>
+<style>
+  :root{
+    --bg-sky-top:#fdeecb;
+    --bg-sky-bottom:#f7d9a0;
+    --panel:#fffaf0;
+    --brown-dark:#4a2f22;
+    --brown:#7a4a2f;
+    --gold:#d9a441;
+    --gold-dark:#b8842a;
+    --green:#3f7d4d;
+    --green-dark:#2c5a36;
+    --red:#b3452f;
+    --cream:#fff8e8;
+    --ink:#3a2a1e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:transparent;
+    display:flex;
+    justify-content:center;
+    padding:10px 8px 14px;
+  }
+  #wrap{
+    width:100%;
+    max-width:800px;
+    background:var(--panel);
+    border-radius:18px;
+    box-shadow:0 4px 18px rgba(74,47,34,0.18);
+    padding:14px 14px 10px;
+    border:3px solid var(--gold);
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    gap:8px;
+  }
+  #title{
+    font-weight:700;
+    color:var(--brown-dark);
+    font-size:15px;
+    letter-spacing:0.3px;
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+  }
+  .ctrlBtn{
+    background:var(--cream);
+    border:2px solid var(--gold-dark);
+    color:var(--brown-dark);
+    border-radius:8px;
+    padding:5px 10px;
+    font-size:13px;
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:transform .1s ease, background .15s ease;
+  }
+  .ctrlBtn:hover{background:#fff2d6;}
+  .ctrlBtn:active{transform:scale(0.95);}
+  #stage-holder{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    background:linear-gradient(180deg,var(--bg-sky-top),var(--bg-sky-bottom));
+    border:2px solid #e8c988;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+    cursor:pointer;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:10px 0 6px;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#e5d3ad;
+    border:1px solid var(--gold-dark);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{
+    background:var(--gold-dark);
+    transform:scale(1.25);
+  }
+  .dot.done{
+    background:var(--green);
+    border-color:var(--green-dark);
+  }
+  #narrationBox{
+    background:var(--cream);
+    border:1px solid #e8c988;
+    border-radius:12px;
+    padding:10px 14px;
+    margin-top:4px;
+    min-height:44px;
+    color:var(--ink);
+    font-size:14.5px;
+    line-height:1.5;
+    text-align:center;
+  }
+  #instructionBox{
+    text-align:center;
+    color:var(--brown);
+    font-size:13px;
+    font-style:italic;
+    margin-top:6px;
+    min-height:18px;
+  }
+  #bottomBar{
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+  }
+  #mainBtn{
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    border:none;
+    color:#3a2408;
+    font-weight:700;
+    font-size:15px;
+    padding:10px 26px;
+    border-radius:24px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #8a611c;
+    transition:transform .08s ease;
+  }
+  #mainBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a611c;}
+  #mainBtn.hidden{display:none;}
+  #footer{
+    text-align:center;
+    font-size:11px;
+    color:#a98a63;
+    margin-top:10px;
+    letter-spacing:0.2px;
+  }
+  @media (max-width:480px){
+    #title{font-size:13px;}
+    .ctrlBtn{font-size:12px;padding:4px 8px;}
+    #narrationBox{font-size:13.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="topbar">
+    <div id="title">🍉 Semangka Emas</div>
+    <div id="controls">
+      <button class="ctrlBtn" id="langBtn" type="button">EN</button>
+      <button class="ctrlBtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-holder">
+    <canvas id="stage" width="800" height="500"></canvas>
+  </div>
+
+  <div id="dots"></div>
+  <div id="narrationBox"></div>
+  <div id="instructionBox"></div>
+
+  <div id="bottomBar">
+    <button id="mainBtn" type="button"></button>
+  </div>
+
+  <div id="footer">Kisah rakyat Kalimantan Barat, dituturkan ulang secara interaktif.</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ i18n ============ */
+const STR = {
+  id:{
+    title:"🍉 Semangka Emas",
+    startBtn:"Mulai Cerita",
+    replayBtn:"Ulangi Cerita",
+    nextHint:"",
+    footer:"Kisah rakyat Kalimantan Barat, dituturkan ulang secara interaktif.",
+    langBtnLabel:"EN",
+    introNarr:"Di daerah Sambas, hiduplah seorang saudagar kaya raya yang mempunyai dua anak laki-laki, Muzakir dan Dermawan. Suatu kisah tentang harta, kikir, dan ketulusan hati akan segera dimulai.",
+    introInstr:"Ketuk tombol \"Mulai Cerita\" untuk memulai."
+  },
+  en:{
+    title:"🍉 The Golden Watermelon",
+    startBtn:"Start Story",
+    replayBtn:"Replay Story",
+    nextHint:"",
+    footer:"A West Kalimantan folktale, retold as an interactive story.",
+    langBtnLabel:"ID",
+    introNarr:"In the land of Sambas, there once lived a wealthy merchant with two sons, Muzakir and Dermawan. A story about wealth, greed, and a kind heart is about to begin.",
+    introInstr:"Tap the \"Start Story\" button to begin."
+  }
+};
+
+const SCENES = [
+  {
+    key:"chest",
+    narr:{
+      id:"Sang saudagar kaya meninggal dunia dan mewariskan hartanya kepada Muzakir dan Dermawan. Muzakir yang kikir segera mengunci semua hartanya rapat-rapat di dalam peti besi.",
+      en:"The wealthy merchant passed away and left his fortune to Muzakir and Dermawan. Greedy Muzakir quickly locked all his wealth tightly inside an iron chest."
+    },
+    instr:{
+      id:"Ketuk gembok pada peti besi untuk menguncinya.",
+      en:"Tap the padlock on the iron chest to lock it."
+    },
+    type:"tap"
+  },
+  {
+    key:"alms",
+    narr:{
+      id:"Berbeda dari kakaknya, Dermawan yang berhati mulia justru membagikan hartanya kepada orang-orang miskin, hingga hartanya habis dan rumahnya pun terjual.",
+      en:"Unlike his brother, kind-hearted Dermawan gave his wealth away to the poor, until his fortune was gone and even his house was sold."
+    },
+    instr:{
+      id:"Ketuk mangkuk sedekah untuk memberikannya kepada pengemis.",
+      en:"Tap the alms bowl to give it to the beggar."
+    },
+    type:"tap"
+  },
+  {
+    key:"heal",
+    narr:{
+      id:"Suatu hari, Dermawan menemukan seekor burung pipit kecil yang sayapnya terluka di halaman rumahnya. Ia pun merawatnya dengan penuh kasih sayang.",
+      en:"One day, Dermawan found a little sparrow with an injured wing in his yard. He gently cared for it with love."
+    },
+    instr:{
+      id:"Tekan dan tahan sayap burung pipit untuk mengobatinya.",
+      en:"Press and hold the sparrow's wing to heal it."
+    },
+    type:"hold"
+  },
+  {
+    key:"plant",
+    narr:{
+      id:"Setelah sembuh, burung pipit itu memberi sebutir biji sebagai balas budi. Dermawan pun menanam biji itu di kebunnya.",
+      en:"Once healed, the sparrow gave him a single seed as thanks. Dermawan planted the seed in his garden."
+    },
+    instr:{
+      id:"Seret biji ke tanah untuk menanamnya.",
+      en:"Drag the seed onto the soil to plant it."
+    },
+    type:"drag"
+  },
+  {
+    key:"growGood",
+    narr:{
+      id:"Biji itu tumbuh menjadi tanaman yang hanya berbuah satu semangka, namun besar dan sangat harum baunya.",
+      en:"The seed grew into a plant that bore only one watermelon, but it was large and wonderfully fragrant."
+    },
+    instr:{
+      id:"Ketuk berkali-kali pada semangka untuk membuatnya tumbuh besar.",
+      en:"Tap the watermelon repeatedly to make it grow big."
+    },
+    type:"mash",
+    target:14
+  },
+  {
+    key:"cutGood",
+    narr:{
+      id:"Saat dibelah, semangka itu ternyata berisi emas murni yang berkilauan. Dermawan pun kembali kaya, namun tetap rendah hati dan bersyukur.",
+      en:"When cut open, the watermelon was filled with gleaming pure gold. Dermawan became wealthy again, yet stayed humble and grateful."
+    },
+    instr:{
+      id:"Ketuk pisau untuk membelah semangka emas.",
+      en:"Tap the knife to cut open the golden watermelon."
+    },
+    type:"tap"
+  },
+  {
+    key:"catchBird",
+    narr:{
+      id:"Mendengar keberuntungan adiknya, Muzakir menjadi iri. Ia menangkap seekor burung pipit dan sengaja melukainya, berharap mendapat balasan serupa.",
+      en:"Hearing of his brother's fortune, Muzakir grew jealous. He caught a sparrow and deliberately hurt it, hoping for the same reward."
+    },
+    instr:{
+      id:"Seret burung pipit ke tangan Muzakir.",
+      en:"Drag the sparrow into Muzakir's hand."
+    },
+    type:"drag"
+  },
+  {
+    key:"growBad",
+    narr:{
+      id:"Burung pipit itu memberinya biji juga. Muzakir menanamnya dengan penuh harap, dan tumbuhlah semangka yang jauh lebih besar dari milik Dermawan.",
+      en:"The sparrow gave him a seed too. Muzakir planted it eagerly, and it grew into a watermelon far bigger than Dermawan's."
+    },
+    instr:{
+      id:"Ketuk berkali-kali pada semangka untuk membuatnya tumbuh raksasa.",
+      en:"Tap the watermelon repeatedly to make it grow enormous."
+    },
+    type:"mash",
+    target:18
+  },
+  {
+    key:"cutBad",
+    narr:{
+      id:"Namun saat dibelah, bukan emas yang keluar, melainkan lumpur hitam berbau busuk yang menyembur dan mengotori seluruh tubuhnya. Muzakir pun berlari sambil berteriak, ditertawakan orang-orang di sekitarnya.",
+      en:"But when he cut it open, instead of gold, foul black mud burst out and covered him from head to toe. Muzakir ran off screaming, laughed at by everyone around."
+    },
+    instr:{
+      id:"Ketuk pisau untuk membelah semangka milik Muzakir.",
+      en:"Tap the knife to cut open Muzakir's watermelon."
+    },
+    type:"tap"
+  }
+];
+
+const ENDING = {
+  narr:{
+    id:"Muzakir belajar bahwa kekayaan yang didapat dengan cara licik tidak akan membawa kebahagiaan. Sementara itu, Dermawan terus hidup bahagia dengan hati yang penuh kasih dan syukur.",
+    en:"Muzakir learned that wealth gained through wicked means brings no happiness. Meanwhile, Dermawan continued to live happily with a heart full of kindness and gratitude."
+  }
+};
+
+/* ============ state ============ */
+let lang = localStorage.getItem("semangkaEmas_lang") || "id";
+let muted = localStorage.getItem("semangkaEmas_muted") === "1";
+let stageIndex = -1; // -1 = intro, 0..8 = scenes, 9 = ending
+let advancing = false;
+let raf = null;
+
+const canvas = document.getElementById("stage");
+const ctx = canvas.getContext("2d");
+const W = canvas.width, H = canvas.height;
+
+const dotsEl = document.getElementById("dots");
+const narrationBox = document.getElementById("narrationBox");
+const instructionBox = document.getElementById("instructionBox");
+const mainBtn = document.getElementById("mainBtn");
+const langBtn = document.getElementById("langBtn");
+const muteBtn = document.getElementById("muteBtn");
+const titleEl = document.getElementById("title");
+const footerEl = document.getElementById("footer");
+
+/* ============ dots ============ */
+function buildDots(){
+  dotsEl.innerHTML = "";
+  for(let i=0;i<SCENES.length;i++){
+    const d = document.createElement("div");
+    d.className = "dot";
+    d.dataset.i = i;
+    dotsEl.appendChild(d);
+  }
+}
+function updateDots(){
+  const nodes = dotsEl.querySelectorAll(".dot");
+  nodes.forEach((n,i)=>{
+    n.classList.remove("active","done");
+    if(i < stageIndex) n.classList.add("done");
+    else if(i === stageIndex) n.classList.add("active");
+  });
+}
+
+/* ============ narration (speech) ============ */
+let currentUtter = null;
+function speak(text){
+  window.speechSynthesis.cancel();
+  if(muted || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === "id" ? "id-ID" : "en-US";
+  u.rate = 0.95;
+  u.pitch = 1.02;
+  currentUtter = u;
+  window.speechSynthesis.speak(u);
+}
+function stopSpeak(){
+  window.speechSynthesis.cancel();
+}
+
+/* ============ interaction bookkeeping ============ */
+let interaction = null; // holds current scene interaction state
+
+function clearInteraction(){
+  interaction = null;
+  if(raf){ cancelAnimationFrame(raf); raf = null; }
+}
+
+/* ============ pointer helpers ============ */
+function getCanvasPos(evt){
+  const rect = canvas.getBoundingClientRect();
+  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  const x = (clientX - rect.left) / rect.width * W;
+  const y = (clientY - rect.top) / rect.height * H;
+  return {x,y};
+}
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+/* ============ drawing helpers ============ */
+function drawBackground(){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#fdeecb");
+  g.addColorStop(1,"#f5cf8f");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // distant hills
+  ctx.fillStyle = "#cfe6b0";
+  ctx.beginPath();
+  ctx.ellipse(150,330,220,90,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(620,340,260,100,0,0,Math.PI*2);
+  ctx.fill();
+
+  // ground
+  const gg = ctx.createLinearGradient(0,340,0,H);
+  gg.addColorStop(0,"#8fbf5a");
+  gg.addColorStop(1,"#5f9a3e");
+  ctx.fillStyle = gg;
+  ctx.fillRect(0,350,W,H-350);
+
+  // sun
+  ctx.fillStyle = "rgba(255,214,120,0.9)";
+  ctx.beginPath();
+  ctx.arc(700,80,46,0,Math.PI*2);
+  ctx.fill();
+
+  // simple house silhouette
+  ctx.fillStyle = "#a9764f";
+  ctx.fillRect(60,255,110,95);
+  ctx.fillStyle = "#7a4a2f";
+  ctx.beginPath();
+  ctx.moveTo(50,255);
+  ctx.lineTo(115,205);
+  ctx.lineTo(180,255);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#5a3722";
+  ctx.fillRect(95,300,30,50);
+
+  // palm tree
+  drawPalm(700,350);
+}
+function drawPalm(x,y){
+  ctx.strokeStyle = "#6b4226";
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.quadraticCurveTo(x+15,y-70,x+5,y-140);
+  ctx.stroke();
+  ctx.fillStyle = "#3f7d4d";
+  for(let i=0;i<5;i++){
+    const ang = (-Math.PI/2) + (i-2)*0.5;
+    ctx.beginPath();
+    ctx.ellipse(x+5+Math.cos(ang)*40, y-140+Math.sin(ang)*40, 34, 12, ang, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawPerson(x,y,scale,skinColor,shirtColor,frown){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // body
+  ctx.fillStyle = shirtColor;
+  ctx.beginPath();
+  ctx.moveTo(-28,20);
+  ctx.quadraticCurveTo(0,0,28,20);
+  ctx.lineTo(24,80);
+  ctx.lineTo(-24,80);
+  ctx.closePath();
+  ctx.fill();
+  // head
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(0,-15,26,0,Math.PI*2);
+  ctx.fill();
+  // hair
+  ctx.fillStyle = "#2b1c12";
+  ctx.beginPath();
+  ctx.arc(0,-24,27,Math.PI,0);
+  ctx.fill();
+  // eyes
+  ctx.fillStyle = "#2b1c12";
+  ctx.beginPath();
+  ctx.arc(-9,-16,2.6,0,Math.PI*2);
+  ctx.arc(9,-16,2.6,0,Math.PI*2);
+  ctx.fill();
+  // mouth
+  ctx.strokeStyle = "#5a3722";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  if(frown){
+    ctx.arc(0,-1,8,Math.PI*1.15,Math.PI*1.85,true);
+  } else {
+    ctx.arc(0,-6,8,Math.PI*0.15,Math.PI*0.85);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawChest(x,y,scale,locked){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#5c4632";
+  ctx.fillRect(-55,-10,110,60);
+  ctx.fillStyle = "#3d2e20";
+  ctx.beginPath();
+  ctx.ellipse(0,-10,55,16,0,Math.PI,0);
+  ctx.fill();
+  ctx.strokeStyle = "#25190f";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(-55,-10,110,60);
+  // metal bands
+  ctx.fillStyle = "#8a7350";
+  ctx.fillRect(-55,10,110,8);
+  ctx.fillRect(-8,-10,16,60);
+  // lock
+  ctx.fillStyle = locked ? "#d9a441" : "#c9c9c9";
+  ctx.beginPath();
+  ctx.roundRect(-14,18,28,24,5);
+  ctx.fill();
+  ctx.strokeStyle = "#6b4226";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0,16,10,Math.PI,0);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBowl(x,y,scale,given){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#b8862f";
+  ctx.beginPath();
+  ctx.ellipse(0,10,34,14,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-34,10);
+  ctx.quadraticCurveTo(0,34,34,10);
+  ctx.closePath();
+  ctx.fillStyle = "#a06f22";
+  ctx.fill();
+  if(!given){
+    ctx.fillStyle = "#e0c07a";
+    for(let i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.arc(i*10,4,5,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawBird(x,y,scale,wingProgress){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // body
+  ctx.fillStyle = "#8a5a3a";
+  ctx.beginPath();
+  ctx.ellipse(0,0,24,17,0,0,Math.PI*2);
+  ctx.fill();
+  // head
+  ctx.beginPath();
+  ctx.arc(20,-8,11,0,Math.PI*2);
+  ctx.fill();
+  // beak
+  ctx.fillStyle = "#d9a441";
+  ctx.beginPath();
+  ctx.moveTo(30,-8);
+  ctx.lineTo(40,-5);
+  ctx.lineTo(30,-3);
+  ctx.closePath();
+  ctx.fill();
+  // eye
+  ctx.fillStyle = "#2b1c12";
+  ctx.beginPath();
+  ctx.arc(24,-10,2,0,Math.PI*2);
+  ctx.fill();
+  // wing (highlighted if healing)
+  const wingColor = wingProgress!==undefined ? `rgb(${180+Math.round(wingProgress*40)},${100+Math.round(wingProgress*60)},80)` : "#6b4226";
+  ctx.fillStyle = wingColor;
+  ctx.beginPath();
+  ctx.ellipse(-4,4,16,9,0.5,0,Math.PI*2);
+  ctx.fill();
+  if(wingProgress!==undefined && wingProgress>0 && wingProgress<1){
+    ctx.strokeStyle="#e0483e";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(-16,2);ctx.lineTo(8,8);
+    ctx.stroke();
+  }
+  // tail
+  ctx.fillStyle = "#6b4226";
+  ctx.beginPath();
+  ctx.moveTo(-24,0);
+  ctx.lineTo(-40,-6);
+  ctx.lineTo(-38,4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSeed(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#3a2a1e";
+  ctx.beginPath();
+  ctx.ellipse(0,0,10,15,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = "#5c4632";
+  ctx.beginPath();
+  ctx.ellipse(-2,-3,4,6,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSoilPatch(x,y,w){
+  ctx.fillStyle = "#6b4226";
+  ctx.beginPath();
+  ctx.ellipse(x,y,w,w*0.35,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#4a2f22";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawWatermelon(x,y,scale,cut,contents){
+  // contents: null | 'gold' | 'mud'
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  if(!cut){
+    ctx.fillStyle = "#3f7d4d";
+    ctx.beginPath();
+    ctx.ellipse(0,0,50,40,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = "#2c5a36";
+    ctx.lineWidth = 4;
+    for(let i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*16,-38);
+      ctx.quadraticCurveTo(i*16+6,0,i*16,38);
+      ctx.stroke();
+    }
+  } else {
+    // two half melons
+    ctx.fillStyle = "#3f7d4d";
+    ctx.beginPath();
+    ctx.ellipse(-30,0,32,38,0.15,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(30,0,32,38,-0.15,0,Math.PI*2);
+    ctx.fill();
+    // inner flesh
+    ctx.fillStyle = contents === "mud" ? "#5a4a3a" : "#e8455a";
+    ctx.beginPath();
+    ctx.ellipse(-24,0,16,30,0.15,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(24,0,16,30,-0.15,0,Math.PI*2);
+    ctx.fill();
+    if(contents === "gold"){
+      ctx.fillStyle = "#f2c94c";
+      for(let i=0;i<10;i++){
+        const gx = (Math.random()-0.5)*70;
+        const gy = (Math.random()-0.5)*50;
+        ctx.beginPath();
+        ctx.arc(gx,gy,4.5,0,Math.PI*2);
+        ctx.fill();
+      }
+    } else if(contents === "mud"){
+      ctx.fillStyle = "#3a2e22";
+      for(let i=0;i<8;i++){
+        const gx = (Math.random()-0.5)*70;
+        const gy = (Math.random()-0.5)*50;
+        ctx.beginPath();
+        ctx.arc(gx,gy,5,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function drawKnife(x,y,scale,angle){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle||0);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = "#d8d8d8";
+  ctx.beginPath();
+  ctx.moveTo(0,-6);
+  ctx.lineTo(50,0);
+  ctx.lineTo(0,6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#6b4226";
+  ctx.fillRect(-28,-6,28,12);
+  ctx.restore();
+}
+
+/* ============ splatter particles ============ */
+let particles = [];
+function spawnParticles(x,y,color,n){
+  for(let i=0;i<n;i++){
+    particles.push({
+      x,y,
+      vx:(Math.random()-0.5)*7,
+      vy:-Math.random()*6-2,
+      life:1,
+      color
+    });
+  }
+}
+function updateParticles(){
+  particles.forEach(p=>{
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.28;
+    p.life -= 0.018;
+  });
+  particles = particles.filter(p=>p.life>0);
+}
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.globalAlpha = Math.max(p.life,0);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+}
+
+/* ============ scene render + interaction setup ============ */
+function renderScene(){
+  ctx.clearRect(0,0,W,H);
+  drawBackground();
+
+  if(stageIndex === -1){
+    renderIntro();
+  } else if(stageIndex >= 0 && stageIndex < SCENES.length){
+    renderStory(SCENES[stageIndex]);
+  } else {
+    renderEnding();
+  }
+  drawParticles();
+}
+
+function loopParticlesOnly(){
+  updateParticles();
+  ctx.clearRect(0,0,W,H);
+  drawBackground();
+  if(stageIndex>=0 && stageIndex<SCENES.length) renderStory(SCENES[stageIndex], true);
+  else if(stageIndex>=SCENES.length) renderEnding(true);
+  drawParticles();
+  if(particles.length>0){
+    raf = requestAnimationFrame(loopParticlesOnly);
+  } else {
+    raf = null;
+  }
+}
+
+function renderIntro(){
+  ctx.fillStyle = "rgba(255,255,255,0.0)";
+  drawPerson(270,300,1.3,"#e0b088","#2c5a36",false);
+  drawPerson(500,300,1.3,"#e0b088","#b3452f",false);
+  ctx.fillStyle = "#4a2f22";
+  ctx.font = "bold 34px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText(lang==="id" ? "Semangka Emas" : "The Golden Watermelon", W/2, 120);
+  ctx.font = "16px Georgia, serif";
+  ctx.fillStyle = "#7a4a2f";
+  ctx.fillText(lang==="id" ? "Cerita Rakyat dari Kalimantan Barat" : "A Folktale from West Kalimantan", W/2, 152);
+  drawWatermelon(W/2,240,0.9,false);
+}
+
+function renderEnding(skipStatic){
+  drawPerson(230,300,1.2,"#e0b088","#2c5a36",false);
+  drawWatermelon(230,220,0.55,true,"gold");
+  drawPerson(560,300,1.2,"#7a6a5a","#5c4632",true);
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = "#3a2e22";
+  ctx.beginPath();
+  ctx.ellipse(560,250,34,44,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = "#4a2f22";
+  ctx.font = "bold 24px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText(lang==="id" ? "Tamat" : "The End", W/2, 90);
+}
+
+function renderStory(scene, skipInit){
+  switch(scene.key){
+    case "chest": {
+      drawPerson(280,300,1.2,"#e0b088","#5c4632",true);
+      drawPerson(540,320,0.9,"#d8a878","#8a8a8a",false);
+      const locked = interaction && interaction.locked;
+      drawChest(400,330,1.15,locked);
+      break;
+    }
+    case "alms": {
+      drawPerson(260,300,1.2,"#e0b088","#2c5a36",false);
+      drawPerson(560,330,0.95,"#c8a880","#7a6a5a",true);
+      const given = interaction && interaction.given;
+      drawBowl(400,320,1.2,given);
+      if(given){
+        ctx.fillStyle="#3a2a1e";
+        ctx.font="14px sans-serif";
+        ctx.textAlign="center";
+      }
+      break;
+    }
+    case "heal": {
+      drawPerson(560,300,1.15,"#e0b088","#2c5a36",false);
+      const wp = interaction ? interaction.progress : 0;
+      drawBird(300,330,2.1,wp);
+      if(interaction && interaction.holding){
+        ctx.strokeStyle = "#e0483e";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(300,330,55,-Math.PI/2,-Math.PI/2 + wp*Math.PI*2);
+        ctx.stroke();
+      }
+      break;
+    }
+    case "plant": {
+      drawPerson(600,300,1.1,"#e0b088","#2c5a36",false);
+      drawSoilPatch(300,360,60);
+      if(!interaction) interaction = {seedX:520,seedY:250,planted:false,dragging:false};
+      if(!interaction.planted){
+        drawSeed(interaction.seedX, interaction.seedY, 1.4);
+      } else {
+        ctx.fillStyle = "#2c5a36";
+        ctx.beginPath();
+        ctx.moveTo(300,360);
+        ctx.quadraticCurveTo(310,320,300,300);
+        ctx.lineWidth=4;
+        ctx.strokeStyle="#2c5a36";
+        ctx.stroke();
+      }
+      break;
+    }
+    case "growGood":
+    case "growBad": {
+      const isBad = scene.key === "growBad";
+      drawPerson(isBad?580:220,300,1.1,"#e0b088", isBad?"#8a3a2a":"#2c5a36", isBad);
+      drawSoilPatch(400,380,70);
+      const t = interaction ? interaction.taps : 0;
+      const target = scene.target;
+      const growScale = 0.4 + Math.min(t/target,1) * (isBad?1.0:0.75);
+      drawWatermelon(400,330,growScale,false);
+      break;
+    }
+    case "cutGood":
+    case "cutBad": {
+      const isBad = scene.key === "cutBad";
+      drawPerson(isBad?580:220,300,1.1,"#e0b088", isBad?"#8a3a2a":"#2c5a36", isBad);
+      const cutDone = interaction && interaction.cut;
+      drawWatermelon(400,320, isBad?1.15:0.95, cutDone, cutDone ? (isBad?"mud":"gold") : null);
+      const knifeAngle = interaction && interaction.knifeSwing ? interaction.knifeSwing : -0.5;
+      if(!cutDone){
+        drawKnife(400,220,1,knifeAngle);
+      }
+      break;
+    }
+    case "catchBird": {
+      drawPerson(560,320,1.15,"#c8a878","#8a3a2a",true);
+      if(!interaction) interaction = {birdX:260,birdY:250,caught:false,dragging:false};
+      if(!interaction.caught){
+        drawBird(interaction.birdX, interaction.birdY, 1.6);
+      } else {
+        drawBird(560,270,1.4);
+      }
+      break;
+    }
+  }
+}
+
+/* ============ per-scene interaction wiring ============ */
+function setupInteraction(){
+  clearInteraction();
+  canvas.onpointerdown = null;
+  canvas.onpointermove = null;
+  canvas.onpointerup = null;
+
+  if(stageIndex === -1 || stageIndex >= SCENES.length){
+    return; // no gameplay interaction on intro/ending
+  }
+
+  const scene = SCENES[stageIndex];
+
+  if(scene.type === "tap"){
+    setupTap(scene);
+  } else if(scene.type === "hold"){
+    setupHold(scene);
+  } else if(scene.type === "drag"){
+    setupDrag(scene);
+  } else if(scene.type === "mash"){
+    setupMash(scene);
+  }
+}
+
+function goNextAfterDelay(delay){
+  advancing = true;
+  setTimeout(()=>{
+    advancing = false;
+    nextStage();
+  }, delay);
+}
+
+function setupTap(scene){
+  let targetX, targetY, targetR;
+  if(scene.key === "chest"){ targetX=400; targetY=346; targetR=26; interaction={locked:false}; }
+  else if(scene.key === "alms"){ targetX=400; targetY=330; targetR=30; interaction={given:false}; }
+  else if(scene.key === "cutGood" || scene.key === "cutBad"){ targetX=400; targetY=220; targetR=34; interaction={cut:false,knifeSwing:-0.5}; }
+
+  canvas.onpointerdown = function(e){
+    if(advancing) return;
+    const p = getCanvasPos(e);
+    if(dist(p.x,p.y,targetX,targetY) <= targetR + 12){
+      handleTapHit(scene);
+    }
+  };
+}
+
+function handleTapHit(scene){
+  if(scene.key === "chest"){
+    interaction.locked = true;
+    renderScene();
+    goNextAfterDelay(650);
+  } else if(scene.key === "alms"){
+    interaction.given = true;
+    renderScene();
+    goNextAfterDelay(650);
+  } else if(scene.key === "cutGood" || scene.key === "cutBad"){
+    if(interaction.cut) return;
+    interaction.cut = true;
+    const color = scene.key === "cutGood" ? "#f2c94c" : "#3a2e22";
+    spawnParticles(400,300,color,scene.key==="cutGood"?18:22);
+    if(raf===null) raf = requestAnimationFrame(loopParticlesOnly);
+    goNextAfterDelay(1400);
+  }
+}
+
+function setupHold(scene){
+  interaction = {progress:0, holding:false};
+  const targetX = 300, targetY = 330, targetR = 55;
+  let holdTimer = null;
+
+  function startHold(){
+    interaction.holding = true;
+    const stepMs = 40;
+    holdTimer = setInterval(()=>{
+      interaction.progress += stepMs/1800;
+      if(interaction.progress >= 1){
+        interaction.progress = 1;
+        clearInterval(holdTimer);
+        interaction.holding = false;
+        renderScene();
+        goNextAfterDelay(500);
+      } else {
+        renderScene();
+      }
+    }, stepMs);
+  }
+  function stopHold(){
+    if(!interaction.holding) return;
+    interaction.holding = false;
+    if(holdTimer) clearInterval(holdTimer);
+    // small forgiveness: don't reset fully, decay slightly
+    renderScene();
+  }
+
+  canvas.onpointerdown = function(e){
+    if(advancing) return;
+    const p = getCanvasPos(e);
+    if(dist(p.x,p.y,targetX,targetY) <= targetR){
+      startHold();
+    }
+  };
+  canvas.onpointerup = function(){ stopHold(); };
+  canvas.onpointerleave = function(){ stopHold(); };
+}
+
+function setupDrag(scene){
+  if(scene.key === "plant"){
+    interaction = {seedX:520,seedY:250,planted:false,dragging:false};
+    const soilX=300, soilY=360, soilR=60;
+    const seedStartX=520, seedStartY=250;
+
+    canvas.onpointerdown = function(e){
+      if(advancing) return;
+      const p = getCanvasPos(e);
+      if(!interaction.planted && dist(p.x,p.y,interaction.seedX,interaction.seedY) <= 26){
+        interaction.dragging = true;
+      }
+    };
+    canvas.onpointermove = function(e){
+      if(!interaction.dragging) return;
+      const p = getCanvasPos(e);
+      interaction.seedX = p.x;
+      interaction.seedY = p.y;
+      renderScene();
+    };
+    canvas.onpointerup = function(e){
+      if(!interaction.dragging) return;
+      interaction.dragging = false;
+      const p = getCanvasPos(e);
+      if(dist(p.x,p.y,soilX,soilY) <= soilR + 20){
+        interaction.planted = true;
+        interaction.seedX = soilX;
+        interaction.seedY = soilY;
+        renderScene();
+        goNextAfterDelay(700);
+      } else {
+        interaction.seedX = seedStartX;
+        interaction.seedY = seedStartY;
+        renderScene();
+      }
+    };
+  } else if(scene.key === "catchBird"){
+    interaction = {birdX:260,birdY:250,caught:false,dragging:false};
+    const handX=560, handY=330, handR=55;
+    const birdStartX=260, birdStartY=250;
+
+    canvas.onpointerdown = function(e){
+      if(advancing) return;
+      const p = getCanvasPos(e);
+      if(!interaction.caught && dist(p.x,p.y,interaction.birdX,interaction.birdY) <= 32){
+        interaction.dragging = true;
+      }
+    };
+    canvas.onpointermove = function(e){
+      if(!interaction.dragging) return;
+      const p = getCanvasPos(e);
+      interaction.birdX = p.x;
+      interaction.birdY = p.y;
+      renderScene();
+    };
+    canvas.onpointerup = function(e){
+      if(!interaction.dragging) return;
+      interaction.dragging = false;
+      const p = getCanvasPos(e);
+      if(dist(p.x,p.y,handX,handY) <= handR){
+        interaction.caught = true;
+        renderScene();
+        goNextAfterDelay(700);
+      } else {
+        interaction.birdX = birdStartX;
+        interaction.birdY = birdStartY;
+        renderScene();
+      }
+    };
+  }
+}
+
+function setupMash(scene){
+  interaction = {taps:0};
+  const targetX=400, targetY=330, targetR=60;
+
+  canvas.onpointerdown = function(e){
+    if(advancing) return;
+    const p = getCanvasPos(e);
+    const r = targetR * (0.4 + Math.min(interaction.taps/scene.target,1));
+    if(dist(p.x,p.y,targetX,targetY) <= r + 14){
+      interaction.taps++;
+      renderScene();
+      if(interaction.taps >= scene.target){
+        goNextAfterDelay(500);
+      }
+    }
+  };
+}
+
+/* ============ narration + instruction text ============ */
+function updateTexts(){
+  if(stageIndex === -1){
+    narrationBox.textContent = STR[lang].introNarr;
+    instructionBox.textContent = STR[lang].introInstr;
+    speak(STR[lang].introNarr);
+  } else if(stageIndex >= 0 && stageIndex < SCENES.length){
+    const s = SCENES[stageIndex];
+    narrationBox.textContent = s.narr[lang];
+    instructionBox.textContent = s.instr[lang];
+    speak(s.narr[lang]);
+  } else {
+    narrationBox.textContent = ENDING.narr[lang];
+    instructionBox.textContent = "";
+    speak(ENDING.narr[lang]);
+  }
+}
+
+function updateMainButton(){
+  if(stageIndex === -1){
+    mainBtn.textContent = STR[lang].startBtn;
+    mainBtn.classList.remove("hidden");
+  } else if(stageIndex >= SCENES.length){
+    mainBtn.textContent = STR[lang].replayBtn;
+    mainBtn.classList.remove("hidden");
+  } else {
+    mainBtn.classList.add("hidden");
+  }
+}
+
+/* ============ stage transitions ============ */
+function nextStage(){
+  particles = [];
+  stopSpeak();
+  if(stageIndex === -1){
+    stageIndex = 0;
+  } else if(stageIndex < SCENES.length - 1){
+    stageIndex++;
+  } else {
+    stageIndex = SCENES.length; // ending
+  }
+  updateDots();
+  updateTexts();
+  updateMainButton();
+  setupInteraction();
+  renderScene();
+  requestResize();
+}
+
+function restart(){
+  particles = [];
+  stopSpeak();
+  stageIndex = -1;
+  updateDots();
+  updateTexts();
+  updateMainButton();
+  setupInteraction();
+  renderScene();
+  requestResize();
+}
+
+/* ============ main button click ============ */
+mainBtn.addEventListener("click", function(){
+  if(stageIndex === -1){
+    nextStage();
+  } else if(stageIndex >= SCENES.length){
+    restart();
+  }
+});
+
+/* ============ lang / mute controls ============ */
+function applyLangUI(){
+  langBtn.textContent = STR[lang].langBtnLabel;
+  titleEl.textContent = STR[lang].title;
+  footerEl.textContent = STR[lang].footer;
+  updateTexts();
+  updateMainButton();
+}
+langBtn.addEventListener("click", function(){
+  lang = lang === "id" ? "en" : "id";
+  localStorage.setItem("semangkaEmas_lang", lang);
+  applyLangUI();
+});
+muteBtn.addEventListener("click", function(){
+  muted = !muted;
+  localStorage.setItem("semangkaEmas_muted", muted ? "1":"0");
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+  if(muted) stopSpeak();
+  else updateTexts();
+});
+
+/* ============ URL lang param ============ */
+(function checkUrlLang(){
+  const params = new URLSearchParams(window.location.search);
+  const urlLang = params.get("lang");
+  if(urlLang === "en" || urlLang === "id"){
+    lang = urlLang;
+    localStorage.setItem("semangkaEmas_lang", lang);
+  }
+})();
+
+/* ============ iframe auto-resize ============ */
+function requestResize(){
+  requestAnimationFrame(()=>{
+    const h = document.getElementById("wrap").getBoundingClientRect().height;
+    try{
+      window.parent.postMessage({ type:"semangka-emas-resize", height: Math.ceil(h) + 20 }, "*");
+    }catch(e){}
+  });
+}
+window.addEventListener("resize", requestResize);
+
+/* ============ init ============ */
+muteBtn.textContent = muted ? "🔇" : "🔊";
+buildDots();
+applyLangUI();
+updateDots();
+setupInteraction();
+renderScene();
+requestResize();
+setTimeout(requestResize, 300);
+
+})();
+</script>
+</body>
+</html>
