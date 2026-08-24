@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ki Ageng Mangir</title>
+<style>
+  :root{
+    --bg:#241708;
+    --panel:#33220f;
+    --panel2:#3f2a13;
+    --gold:#d9a53a;
+    --gold-dark:#a97a1f;
+    --cream:#f4e6c8;
+    --maroon:#7a1f1f;
+    --stone:#6b6258;
+    --shadow:rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--bg);
+    color:var(--cream);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:820px;
+    margin:0 auto;
+    padding:14px 12px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .topbar{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    gap:8px;
+  }
+  h1{
+    font-size:1.2rem;
+    margin:0;
+    color:var(--gold);
+    letter-spacing:0.5px;
+    text-shadow:0 2px 4px var(--shadow);
+  }
+  .icon-btn{
+    background:var(--panel2);
+    border:1px solid var(--gold-dark);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:0.85rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:background .2s;
+  }
+  .icon-btn:hover{background:var(--gold-dark);}
+  .icon-btn:active{transform:scale(0.96);}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:var(--panel);
+    border-radius:14px;
+    border:2px solid var(--gold-dark);
+    box-shadow:0 8px 24px var(--shadow);
+    padding:10px;
+  }
+  #canvas{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:8px;
+    background:linear-gradient(#4a3620,#2e2010);
+    touch-action:none;
+    cursor:pointer;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin:10px 0 4px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#5c4a2e;
+    transition:background .25s, transform .25s;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.25);}
+  .dot.done{background:var(--gold-dark);}
+
+  #instruction{
+    width:100%;
+    min-height:44px;
+    text-align:center;
+    font-size:0.95rem;
+    color:var(--cream);
+    background:var(--panel2);
+    border-radius:10px;
+    padding:8px 14px;
+    margin-top:6px;
+    line-height:1.4;
+    border:1px solid #5c3f1c;
+  }
+  #narration{
+    width:100%;
+    text-align:center;
+    font-size:0.88rem;
+    color:#d8c9a3;
+    padding:8px 6px 2px;
+    line-height:1.5;
+    min-height:20px;
+  }
+
+  .controls-row{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+  }
+  #startBtn, #replayBtn{
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#2b1a05;
+    border:none;
+    font-weight:700;
+    padding:12px 26px;
+    border-radius:30px;
+    font-size:1rem;
+    cursor:pointer;
+    box-shadow:0 4px 10px var(--shadow);
+  }
+  #startBtn:active,#replayBtn:active{transform:scale(0.97);}
+
+  #overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(20,12,4,0.88);
+    border-radius:8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    gap:14px;
+  }
+  #overlay h2{color:var(--gold);margin:0;font-size:1.3rem;}
+  #overlay p{color:var(--cream);font-size:0.9rem;max-width:480px;margin:0;}
+  .hidden{display:none !important;}
+
+  footer{
+    margin-top:16px;
+    font-size:0.72rem;
+    color:#8a7452;
+    text-align:center;
+  }
+
+  .progressbar-bg{
+    position:absolute;
+    background:rgba(0,0,0,0.4);
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--gold-dark);
+  }
+  .progressbar-fill{
+    background:var(--gold);
+    height:100%;
+    width:0%;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1 id="titleText">Ki Ageng Mangir</h1>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="langBtn">EN</button>
+      <button class="icon-btn" id="muteBtn">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="canvas" width="800" height="450"></canvas>
+    <div id="overlay">
+      <h2 id="overlayTitle">Ki Ageng Mangir</h2>
+      <p id="overlayDesc">Cerita rakyat dari Yogyakarta tentang seorang penguasa sakti yang angkuh, dan kisah cinta yang berakhir tragis.</p>
+      <button id="startBtn">Mulai Cerita</button>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+  <div id="instruction"></div>
+  <div id="narration"></div>
+
+  <div class="controls-row hidden" id="endControls">
+    <button id="replayBtn">Ulangi Cerita</button>
+  </div>
+
+  <footer id="footerText">Kisah rakyat Nusantara — dongeng interaktif untuk anak-anak</footer>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const stageWrap = document.getElementById('stage-wrap');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const replayBtn = document.getElementById('replayBtn');
+  const endControls = document.getElementById('endControls');
+  const dotsEl = document.getElementById('dots');
+  const instructionEl = document.getElementById('instruction');
+  const narrationEl = document.getElementById('narration');
+  const langBtn = document.getElementById('langBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const titleText = document.getElementById('titleText');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayDesc = document.getElementById('overlayDesc');
+  const footerText = document.getElementById('footerText');
+
+  // ---------- language & mute state ----------
+  const params = new URLSearchParams(window.location.search);
+  let lang = localStorage.getItem('kam_lang') || (params.get('lang') === 'en' ? 'en' : 'id');
+  let muted = localStorage.getItem('kam_muted') === 'true';
+
+  function saveLang(){ localStorage.setItem('kam_lang', lang); }
+  function saveMute(){ localStorage.setItem('kam_muted', muted); }
+
+  const UI = {
+    id:{
+      title:"Ki Ageng Mangir",
+      overlayTitle:"Ki Ageng Mangir",
+      overlayDesc:"Cerita rakyat dari Yogyakarta tentang seorang penguasa sakti yang angkuh, dan kisah cinta yang berakhir tragis.",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      footer:"Kisah rakyat Nusantara — dongeng interaktif untuk anak-anak",
+      mute:"🔊",
+      muteOff:"🔇"
+    },
+    en:{
+      title:"Ki Ageng Mangir",
+      overlayTitle:"Ki Ageng Mangir",
+      overlayDesc:"A Yogyakarta folktale about a powerful but arrogant lord, and a love story with a tragic end.",
+      start:"Start Story",
+      replay:"Replay Story",
+      footer:"Indonesian folklore — an interactive tale for children",
+      mute:"🔊",
+      muteOff:"🔇"
+    }
+  };
+
+  function applyUIStrings(){
+    const t = UI[lang];
+    titleText.textContent = t.title;
+    overlayTitle.textContent = t.overlayTitle;
+    overlayDesc.textContent = t.overlayDesc;
+    startBtn.textContent = t.start;
+    replayBtn.textContent = t.replay;
+    footerText.textContent = t.footer;
+    langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+    muteBtn.textContent = muted ? t.muteOff : t.mute;
+  }
+  applyUIStrings();
+
+  langBtn.addEventListener('click', ()=>{
+    lang = lang === 'id' ? 'en' : 'id';
+    saveLang();
+    applyUIStrings();
+    if(currentSceneIndex >= 0){
+      renderInstruction();
+      speakCurrentNarration();
+      draw();
+    }
+  });
+
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    saveMute();
+    applyUIStrings();
+    if(muted){ window.speechSynthesis.cancel(); }
+    else { speakCurrentNarration(); }
+  });
+
+  // ---------- speech ----------
+  let voicesReady = false;
+  let idVoice = null, enVoice = null;
+  function loadVoices(){
+    const voices = window.speechSynthesis.getVoices();
+    if(!voices.length) return;
+    idVoice = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('id')) || null;
+    enVoice = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('en')) || null;
+    voicesReady = true;
+  }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text){
+    if(muted || !('speechSynthesis' in window) || !text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+    if(lang === 'id' && idVoice) u.voice = idVoice;
+    if(lang === 'en' && enVoice) u.voice = enVoice;
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function speakCurrentNarration(){
+    if(currentSceneIndex < 0 || currentSceneIndex >= scenes.length) return;
+    const s = scenes[currentSceneIndex];
+    speak(s.narration[lang]);
+  }
+
+  // ---------- resize / postMessage ----------
+  function notifyResize(){
+    const rect = stageWrap.getBoundingClientRect();
+    const appRect = document.getElementById('app').getBoundingClientRect();
+    const height = Math.ceil(appRect.bottom - appRect.top) + 20;
+    window.parent.postMessage({ type:'kam-resize', height: height }, '*');
+  }
+
+  // ---------- scene management ----------
+  let currentSceneIndex = -1;
+  let advancing = false; // guard flag
+  let holdState = { active:false, progress:0, target:null, raf:null };
+  let dragState = { active:false, x:0, y:0, obj:null };
+
+  function W(){ return 800; }
+  function H(){ return 450; }
+
+  function px(logicalX){
+    const rect = canvas.getBoundingClientRect();
+    return rect.left + (logicalX / 800) * rect.width;
+  }
+  function py(logicalY){
+    const rect = canvas.getBoundingClientRect();
+    return rect.top + (logicalY / 450) * rect.height;
+  }
+
+  function getCanvasCoords(evt){
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX; clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX; clientY = evt.clientY;
+    }
+    const x = (clientX - rect.left) / rect.width * 800;
+    const y = (clientY - rect.top) / rect.height * 450;
+    return {x,y};
+  }
+
+  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
+
+  // ---------- drawing helpers ----------
+  function clear(){
+    ctx.clearRect(0,0,800,450);
+    const grad = ctx.createLinearGradient(0,0,0,450);
+    grad.addColorStop(0,'#5a4326');
+    grad.addColorStop(1,'#241708');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,800,450);
+    // ground
+    ctx.fillStyle = '#3b2c17';
+    ctx.fillRect(0,380,800,70);
+  }
+
+  function drawPerson(x,y,scale,skin,cloth,accent,facing){
+    facing = facing || 1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale*facing, scale);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0, 108, 30, 8, 0, 0, Math.PI*2);
+    ctx.fill();
+    // legs
+    ctx.fillStyle = '#2a2015';
+    ctx.fillRect(-14, 60, 12, 45);
+    ctx.fillRect(2, 60, 12, 45);
+    // body / clothing
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(-22,10);
+    ctx.lineTo(22,10);
+    ctx.lineTo(18,70);
+    ctx.lineTo(-18,70);
+    ctx.closePath();
+    ctx.fill();
+    // sash accent
+    ctx.fillStyle = accent;
+    ctx.fillRect(-22,38,44,8);
+    // arms
+    ctx.fillStyle = skin;
+    ctx.fillRect(-30,14,10,42);
+    ctx.fillRect(20,14,10,42);
+    // neck
+    ctx.fillRect(-6,-2,12,14);
+    // head
+    ctx.beginPath();
+    ctx.arc(0,-18,20,0,Math.PI*2);
+    ctx.fill();
+    // headwear (blangkon) simple
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.ellipse(0,-30,22,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSpear(x,y,scale,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    if(glow){
+      ctx.shadowColor = '#ffe27a';
+      ctx.shadowBlur = 25;
+    }
+    ctx.strokeStyle = '#8a5a2b';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(0,-90);
+    ctx.lineTo(0,60);
+    ctx.stroke();
+    ctx.fillStyle = glow ? '#ffe27a' : '#cfd6d9';
+    ctx.beginPath();
+    ctx.moveTo(0,-110);
+    ctx.lineTo(-10,-88);
+    ctx.lineTo(10,-88);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStone(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#5c574e';
+    ctx.beginPath();
+    ctx.ellipse(0,0,55,32,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#77716a';
+    ctx.beginPath();
+    ctx.ellipse(-10,-6,20,10,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTarub(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#7a5a30';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(-90,40); ctx.lineTo(-90,-40);
+    ctx.moveTo(90,40); ctx.lineTo(90,-40);
+    ctx.stroke();
+    ctx.fillStyle = '#c9a15a';
+    ctx.beginPath();
+    ctx.moveTo(-100,-40);
+    ctx.lineTo(100,-40);
+    ctx.lineTo(80,-70);
+    ctx.lineTo(-80,-70);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRings(x,y,scale){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#ffd76b';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(-14,0,16,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(14,0,16,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSelendang(x,y,scale,t){
+    // dancer scarf motion
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ctx.strokeStyle = '#c94b4b';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(-10,20);
+    ctx.quadraticCurveTo(-40 + Math.sin(t)*20, 0, -60+Math.sin(t*1.3)*15, -30);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(10,20);
+    ctx.quadraticCurveTo(40 - Math.sin(t)*20, 0, 60-Math.sin(t*1.3)*15, -30);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawProgressBarDOM(id, xPct, yPct, wPx, hPx){
+    let el = document.getElementById(id);
+    if(!el){
+      el = document.createElement('div');
+      el.id = id;
+      el.className = 'progressbar-bg';
+      const fill = document.createElement('div');
+      fill.className = 'progressbar-fill';
+      fill.id = id+'-fill';
+      el.appendChild(fill);
+      stageWrap.appendChild(el);
+    }
+    const rect = canvas.getBoundingClientRect();
+    const wrapRect = stageWrap.getBoundingClientRect();
+    el.style.left = (rect.left - wrapRect.left + xPct*rect.width - wPx/2) + 'px';
+    el.style.top = (rect.top - wrapRect.top + yPct*rect.height) + 'px';
+    el.style.width = wPx + 'px';
+    el.style.height = hPx + 'px';
+    return document.getElementById(id+'-fill');
+  }
+  function removeProgressBar(id){
+    const el = document.getElementById(id);
+    if(el) el.remove();
+  }
+
+  // ---------- scenes ----------
+  const scenes = [
+    { // 0 intro - Ki Ageng Mangir & spear
+      narration:{
+        id:"Di tanah Mangir, Yogyakarta, hiduplah Ki Ageng Mangir, penguasa yang tampan, gagah, dan sakti mandraguna. Ia memiliki tombak pusaka bernama Baru Klinthing.",
+        en:"In the land of Mangir, Yogyakarta, there lived Ki Ageng Mangir, a handsome and powerful ruler. He owned a sacred spear named Baru Klinthing."
+      },
+      instruction:{
+        id:"Ketuk tombak Baru Klinthing untuk melihat kesaktiannya.",
+        en:"Tap the Baru Klinthing spear to see its power."
+      },
+      spearX:560, spearY:250, spearGlow:false,
+      draw(){
+        clear();
+        drawPerson(300,270,1.1,'#c68642','#7a1f1f','#d9a53a',1);
+        drawSpear(this.spearX,this.spearY,1.0,this.spearGlow);
+      },
+      handleTap(x,y){
+        if(dist(x,this.spearX,y,this.spearY) < 60 || dist(x,y,this.spearX,this.spearY) < 60){
+          this.spearGlow = true;
+          draw();
+          setTimeout(()=>goNext(), 900);
+        }
+      }
+    },
+    { // 1 utusan mataram, ki ageng menolak
+      narration:{
+        id:"Panembahan Senopati dari Mataram berkali-kali mengutus orang agar Ki Ageng Mangir mau tunduk. Namun Ki Ageng Mangir menganggap tanah Mangir bebas merdeka, dan ia menolak dengan tegas.",
+        en:"Panembahan Senopati of Mataram repeatedly sent envoys asking Ki Ageng Mangir to submit. But Ki Ageng Mangir believed Mangir was a free land, and firmly refused."
+      },
+      instruction:{
+        id:"Ketuk Ki Ageng Mangir untuk melihat ia menolak tunduk pada Mataram.",
+        en:"Tap Ki Ageng Mangir to see him refuse to submit to Mataram."
+      },
+      refused:false,
+      draw(){
+        clear();
+        // small envoy figure
+        drawPerson(620,290,0.8,'#c68642','#4a3b2a','#a97a1f',-1);
+        drawPerson(300,270,1.1,'#c68642','#7a1f1f','#d9a53a', this.refused ? -1 : 1);
+      },
+      handleTap(x,y){
+        if(dist(x,y,300,270) < 70){
+          this.refused = true;
+          draw();
+          setTimeout(()=>goNext(), 900);
+        }
+      }
+    },
+    { // 2 ledhek dance - press and hold
+      narration:{
+        id:"Panembahan Senopati mengutus putrinya, Putri Pembayun, menyamar sebagai ledhek penari keliling. Ki Ageng Mangir yang gemar menonton ledhek pun terpikat oleh tariannya.",
+        en:"Panembahan Senopati sent his daughter, Princess Pembayun, disguised as a traveling ledhek dancer. Ki Ageng Mangir, who loved watching such dancers, was captivated by her."
+      },
+      instruction:{
+        id:"Tekan dan tahan penari ledhek untuk menyaksikan tariannya.",
+        en:"Press and hold the ledhek dancer to watch her dance."
+      },
+      danceX:420, danceY:260, holding:false, t:0,
+      draw(){
+        clear();
+        drawPerson(220,280,1.0,'#c68642','#7a1f1f','#d9a53a',1);
+        ctx.save();
+        ctx.translate(this.danceX + Math.sin(this.t*2)*8, this.danceY);
+        drawPerson(0,0,0.95,'#e0b080','#c94b4b','#ffd76b',-1);
+        ctx.restore();
+        drawSelendang(this.danceX, this.danceY, 0.95, this.t);
+      }
+    },
+    { // 3 wedding rings
+      narration:{
+        id:"Semakin lama, Ki Ageng Mangir semakin jatuh cinta. Ia pun meminta ledhek itu, yang sebenarnya Putri Pembayun, untuk menjadi istrinya. Mereka pun menikah.",
+        en:"The longer he watched, the deeper Ki Ageng Mangir fell in love. He asked the dancer — who was truly Princess Pembayun — to become his wife. They were married."
+      },
+      instruction:{
+        id:"Ketuk cincin pernikahan untuk menyatukan mereka.",
+        en:"Tap the wedding rings to unite them."
+      },
+      joined:false,
+      draw(){
+        clear();
+        drawPerson(280,280,1.0,'#c68642','#7a1f1f','#d9a53a',1);
+        drawPerson(500,280,1.0,'#e0b080','#c94b4b','#ffd76b',-1);
+        drawRings(390,300,1.4);
+      },
+      handleTap(x,y){
+        if(dist(x,y,390,300) < 60){
+          this.joined = true;
+          setTimeout(()=>goNext(), 700);
+        }
+      }
+    },
+    { // 4 reveal
+      narration:{
+        id:"Tak lama kemudian, Pembayun mengandung. Namun ia merasa ada yang mengganjal hatinya. Ia pun berterus terang kepada suaminya siapa dirinya sebenarnya, putri dari Panembahan Senopati.",
+        en:"Soon after, Pembayun became pregnant. But something weighed on her heart. She confessed to her husband who she truly was — the daughter of Panembahan Senopati."
+      },
+      instruction:{
+        id:"Ketuk Putri Pembayun untuk mendengar pengakuannya.",
+        en:"Tap Princess Pembayun to hear her confession."
+      },
+      revealed:false,
+      draw(){
+        clear();
+        drawPerson(280,280,1.0,'#c68642','#7a1f1f','#d9a53a', this.revealed ? -1 : 1);
+        drawPerson(500,280,1.0,'#e0b080','#c94b4b','#ffd76b',-1);
+      },
+      handleTap(x,y){
+        if(dist(x,y,500,280) < 70){
+          this.revealed = true;
+          draw();
+          setTimeout(()=>goNext(), 900);
+        }
+      }
+    },
+    { // 5 drag spear out of tarub
+      narration:{
+        id:"Demi cintanya kepada Pembayun, Ki Ageng Mangir bersedia menghadap Panembahan Senopati ke Mataram. Sebuah tarub pendek didirikan, sengaja dibuat agar tombak Baru Klinthing tak bisa dibawa masuk.",
+        en:"For his love of Pembayun, Ki Ageng Mangir agreed to meet Panembahan Senopati in Mataram. A short shelter was built, deliberately so his spear Baru Klinthing could not be brought inside."
+      },
+      instruction:{
+        id:"Seret tombak Baru Klinthing keluar dari tarub.",
+        en:"Drag the Baru Klinthing spear outside the shelter."
+      },
+      spearX:400, spearY:280, targetX:680, targetY:280, done:false,
+      draw(){
+        clear();
+        drawTarub(400,260,1.2);
+        drawPerson(320,300,0.9,'#c68642','#7a1f1f','#d9a53a',1);
+        drawPerson(470,300,0.9,'#e0b080','#c94b4b','#ffd76b',-1);
+        // target marker
+        ctx.save();
+        ctx.strokeStyle = 'rgba(217,165,58,0.6)';
+        ctx.setLineDash([6,6]);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(this.targetX,this.targetY,40,0,Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+        drawSpear(this.spearX,this.spearY,0.9,this.done);
+      }
+    },
+    { // 6 watu gilang tragedy
+      narration:{
+        id:"Sesampainya di Mataram, Ki Ageng Mangir bersujud sungkem kepada mertuanya. Namun Panembahan Senopati membenturkan kepalanya ke batu Watu Gilang. Ki Ageng Mangir pun tewas seketika.",
+        en:"Upon arriving in Mataram, Ki Ageng Mangir bowed respectfully to his father-in-law. But Panembahan Senopati struck his head against the Watu Gilang stone. Ki Ageng Mangir died instantly."
+      },
+      instruction:{
+        id:"Ketuk batu Watu Gilang untuk melanjutkan cerita.",
+        en:"Tap the Watu Gilang stone to continue the story."
+      },
+      done:false,
+      draw(){
+        clear();
+        drawStone(430,300,1.3);
+        drawPerson(430, this.done ? 330 : 250, 0.9,'#c68642','#7a1f1f','#d9a53a', -1);
+        if(!this.done){
+          ctx.save();
+          ctx.translate(430,250);
+          ctx.rotate(-0.4);
+          ctx.translate(-430,-250);
+          ctx.restore();
+        }
+        drawPerson(600,290,0.9,'#c9925c','#4a3b2a','#a97a1f',-1);
+      },
+      handleTap(x,y){
+        if(dist(x,y,430,300) < 65){
+          this.done = true;
+          draw();
+          setTimeout(()=>goNext(), 1100);
+        }
+      }
+    },
+    { // 7 ending
+      narration:{
+        id:"Untuk mengenang Ki Ageng Mangir, tempat tinggalnya dinamakan Desa Mangir, di Kecamatan Pajangan, Kabupaten Bantul, Yogyakarta, hingga hari ini.",
+        en:"To honor his memory, his home was named Mangir Village, in Pajangan District, Bantul Regency, Yogyakarta, a name that endures to this day."
+      },
+      instruction:{
+        id:"Ketuk tombol \"Ulangi Cerita\" di bawah untuk mendengarkan kisah ini lagi.",
+        en:"Tap the \"Replay Story\" button below to hear this tale again."
+      },
+      draw(){
+        clear();
+        drawStone(400,300,1.1);
+        ctx.save();
+        ctx.fillStyle = '#d9a53a';
+        ctx.font = 'bold 26px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(lang === 'id' ? 'Desa Mangir' : 'Mangir Village', 400, 150);
+        ctx.restore();
+      }
+    }
+  ];
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
+    scenes.forEach((_,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.id = 'dot-'+i;
+      dotsEl.appendChild(d);
+    });
+  }
+  function updateDots(){
+    scenes.forEach((_,i)=>{
+      const d = document.getElementById('dot-'+i);
+      d.classList.remove('active','done');
+      if(i < currentSceneIndex) d.classList.add('done');
+      if(i === currentSceneIndex) d.classList.add('active');
+    });
+  }
+
+  function renderInstruction(){
+    const s = scenes[currentSceneIndex];
+    instructionEl.textContent = s.instruction[lang];
+    narrationEl.textContent = s.narration[lang];
+  }
+
+  function draw(){
+    const s = scenes[currentSceneIndex];
+    if(s && s.draw) s.draw.call(s);
+  }
+
+  function cleanupSceneExtras(){
+    removeProgressBar('holdbar');
+    holdState = { active:false, progress:0, target:null, raf:null };
+    dragState = { active:false, x:0, y:0, obj:null };
+  }
+
+  function goNext(){
+    if(advancing) return;
+    advancing = true;
+    cleanupSceneExtras();
+    currentSceneIndex++;
+    if(currentSceneIndex >= scenes.length){
+      // safety fallback, should not normally happen
+      endControls.classList.remove('hidden');
+      advancing = false;
+      return;
+    }
+    updateDots();
+    renderInstruction();
+    draw();
+    speakCurrentNarration();
+    if(currentSceneIndex === scenes.length - 1){
+      // final scene reached: reveal replay control
+      endControls.classList.remove('hidden');
+    }
+    advancing = false;
+  }
+
+  function startStory(){
+    overlay.classList.add('hidden');
+    endControls.classList.add('hidden');
+    currentSceneIndex = 0;
+    buildDots();
+    updateDots();
+    renderInstruction();
+    draw();
+    speakCurrentNarration();
+    setTimeout(notifyResize, 50);
+  }
+
+  startBtn.addEventListener('click', startStory);
+  replayBtn.addEventListener('click', startStory);
+
+  // ---------- interaction handling ----------
+  function onPointerDown(evt){
+    if(currentSceneIndex < 0 || currentSceneIndex >= scenes.length) return;
+    const {x,y} = getCanvasCoords(evt);
+    const s = scenes[currentSceneIndex];
+
+    // scene 2: press-and-hold dance
+    if(currentSceneIndex === 2 && !advancing){
+      if(dist(x,y,s.danceX,s.danceY) < 70){
+        startHold();
+        return;
+      }
+    }
+    // scene 5: drag spear
+    if(currentSceneIndex === 5 && !advancing){
+      if(dist(x,y,s.spearX,s.spearY) < 60){
+        dragState.active = true;
+        return;
+      }
+    }
+    // generic tap handlers
+    if(s.handleTap && !advancing){
+      s.handleTap(x,y);
+    }
+  }
+
+  function onPointerMove(evt){
+    if(currentSceneIndex !== 5 || !dragState.active) return;
+    const {x,y} = getCanvasCoords(evt);
+    const s = scenes[currentSceneIndex];
+    s.spearX = Math.max(30, Math.min(770, x));
+    s.spearY = Math.max(30, Math.min(420, y));
+    draw();
+  }
+
+  function onPointerUp(evt){
+    if(currentSceneIndex === 5 && dragState.active){
+      dragState.active = false;
+      const s = scenes[currentSceneIndex];
+      if(dist(s.spearX,s.spearY,s.targetX,s.targetY) < 55 && !s.done){
+        s.done = true;
+        s.spearX = s.targetX; s.spearY = s.targetY;
+        draw();
+        setTimeout(()=>goNext(), 800);
+      }
+    }
+    stopHold();
+  }
+
+  function startHold(){
+    if(holdState.active) return;
+    holdState.active = true;
+    holdState.progress = 0;
+    const s = scenes[2];
+    const fill = drawProgressBarDOM('holdbar', 0.5, 0.72, 200, 14);
+    let lastTime = performance.now();
+    function step(now){
+      if(!holdState.active) return;
+      const dt = now - lastTime;
+      lastTime = now;
+      holdState.progress += dt / 2200; // ~2.2s to complete
+      s.t += dt/300;
+      draw();
+      if(fill) fill.style.width = Math.min(100, holdState.progress*100) + '%';
+      if(holdState.progress >= 1){
+        holdState.active = false;
+        removeProgressBar('holdbar');
+        setTimeout(()=>goNext(), 400);
+        return;
+      }
+      holdState.raf = requestAnimationFrame(step);
+    }
+    holdState.raf = requestAnimationFrame(step);
+  }
+  function stopHold(){
+    if(currentSceneIndex === 2 && holdState.active && holdState.progress < 1){
+      holdState.active = false;
+      if(holdState.raf) cancelAnimationFrame(holdState.raf);
+      removeProgressBar('holdbar');
+    }
+  }
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); onPointerDown(e); }, {passive:false});
+  canvas.addEventListener('touchmove', function(e){ e.preventDefault(); onPointerMove(e); }, {passive:false});
+  canvas.addEventListener('touchend', function(e){ e.preventDefault(); onPointerUp(e); }, {passive:false});
+
+  window.addEventListener('resize', ()=>{
+    if(currentSceneIndex >= 0){ draw(); }
+    notifyResize();
+  });
+
+  // initial paint (idle background behind overlay)
+  clear();
+  setTimeout(notifyResize, 100);
+})();
+</script>
+</body>
+</html>
