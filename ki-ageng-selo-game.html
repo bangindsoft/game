@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ki Ageng Selo: Sang Penangkap Petir</title>
+<style>
+  :root{
+    --bg1:#1b1330; --bg2:#2c1f4a; --gold:#e8b23d; --gold-dark:#a97a1f;
+    --paper:#fbf3e0; --ink:#2a1f14; --accent:#3f7d4f; --accent2:#c74b3c;
+    --stone:#6b6157; --sky1:#3a5a8c; --sky2:#0e1b33;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    color:var(--paper);
+    display:flex; justify-content:center; padding:14px 10px 20px;
+  }
+  #wrap{ width:100%; max-width:720px; }
+  #titleBar{
+    text-align:center; margin-bottom:10px;
+  }
+  #titleBar h1{
+    font-size:1.25rem; margin:0 0 4px; color:var(--gold);
+    letter-spacing:0.5px; text-shadow:0 2px 6px rgba(0,0,0,0.4);
+  }
+  #titleBar p{ margin:0; font-size:0.78rem; color:#cbbfe0; }
+  #topControls{
+    display:flex; justify-content:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;
+  }
+  .ctrlBtn{
+    background:rgba(255,255,255,0.08); border:1px solid rgba(232,178,61,0.5);
+    color:var(--paper); border-radius:20px; padding:6px 14px; font-size:0.78rem;
+    cursor:pointer; display:flex; align-items:center; gap:5px; transition:background .15s;
+  }
+  .ctrlBtn:hover{ background:rgba(232,178,61,0.2); }
+  .ctrlBtn.active{ background:var(--gold); color:#221a0a; font-weight:600; }
+  #stage{
+    position:relative; width:100%; border-radius:14px; overflow:hidden;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+    box-shadow:0 8px 28px rgba(0,0,0,0.45); border:2px solid rgba(232,178,61,0.35);
+  }
+  #gameCanvas{ display:block; width:100%; height:auto; touch-action:none; }
+  #dots{
+    display:flex; justify-content:center; gap:6px; margin:10px 0 6px;
+  }
+  .dot{
+    width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.25);
+    transition:all .2s;
+  }
+  .dot.done{ background:var(--gold); }
+  .dot.current{ background:var(--gold); box-shadow:0 0 0 3px rgba(232,178,61,0.3); transform:scale(1.2); }
+  #narrationBox{
+    background:rgba(0,0,0,0.28); border-left:3px solid var(--gold);
+    border-radius:8px; padding:10px 14px; margin-top:8px; min-height:52px;
+    font-size:0.88rem; line-height:1.45; color:#f3ead3;
+  }
+  #instructionBox{
+    text-align:center; font-size:0.82rem; color:var(--gold); margin-top:6px;
+    min-height:18px; font-weight:600;
+  }
+  #bottomControls{
+    display:flex; justify-content:center; gap:10px; margin-top:12px; flex-wrap:wrap;
+  }
+  .mainBtn{
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    border:none; color:#241a08; font-weight:700; padding:9px 22px;
+    border-radius:24px; font-size:0.88rem; cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.35);
+  }
+  .mainBtn:active{ transform:translateY(1px); }
+  .mainBtn.secondary{
+    background:transparent; border:1.5px solid var(--gold); color:var(--gold);
+    box-shadow:none;
+  }
+  .inCanvasBtn{
+    position:absolute; padding:8px 16px; border-radius:20px; border:none;
+    font-weight:700; cursor:pointer; font-size:0.85rem;
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark)); color:#241a08;
+    box-shadow:0 3px 8px rgba(0,0,0,0.4);
+  }
+  #footer{
+    text-align:center; font-size:0.68rem; color:#8f83ab; margin-top:14px; line-height:1.5;
+  }
+  @media (max-width:420px){
+    #titleBar h1{font-size:1.05rem;}
+    #narrationBox{font-size:0.82rem;}
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="titleBar">
+    <h1 id="mainTitle">Ki Ageng Selo: Sang Penangkap Petir</h1>
+    <p id="mainSubtitle">Cerita Rakyat Jawa Tengah</p>
+  </div>
+
+  <div id="topControls">
+    <button class="ctrlBtn" id="langBtn" type="button">🌐 <span id="langLabel">English</span></button>
+    <button class="ctrlBtn" id="muteBtn" type="button">🔊 <span id="muteLabel">Suara Aktif</span></button>
+  </div>
+
+  <div id="stage">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  </div>
+
+  <div id="dots"></div>
+  <div id="narrationBox" id="narrationBox"></div>
+  <div id="instructionBox"></div>
+
+  <div id="bottomControls">
+    <button class="mainBtn" id="startBtn" type="button">Mulai Cerita</button>
+    <button class="mainBtn secondary" id="replayBtn" type="button" style="display:none;">Ulangi Cerita</button>
+  </div>
+
+  <div id="footer">
+    Kisah rakyat turun-temurun dari Jawa Tengah, disajikan ulang secara interaktif.<br>
+    Traditional folktale from Central Java, retold as an interactive experience.
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- STATE ---------------- */
+const params = new URLSearchParams(location.search);
+let lang = params.get('lang') === 'en' ? 'en' : 'id';
+let muted = localStorage.getItem('kas_muted') === '1';
+let currentScene = 0; // 0 = title/before start
+const TOTAL_SCENES = 8;
+let sceneState = {};
+let animFrame = null;
+let lastTs = 0;
+let globalTime = 0;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 450;
+
+/* ---------------- TEXT ---------------- */
+const T = {
+  id:{
+    title:"Ki Ageng Selo: Sang Penangkap Petir",
+    subtitle:"Cerita Rakyat Jawa Tengah",
+    start:"Mulai Cerita",
+    replay:"Ulangi Cerita",
+    muteOn:"Suara Aktif",
+    muteOff:"Suara Nonaktif",
+    langLabel:"English",
+    footer1:"Kisah rakyat turun-temurun dari Jawa Tengah, disajikan ulang secara interaktif.",
+    footer2:"",
+    continueBtn:"Lanjut",
+    catchBtn:"Tangkap!",
+    scenes:[
+      {
+        n:"Di Desa Selo, Kabupaten Grobogan, Jawa Tengah, hiduplah seorang petani sederhana bernama Ki Ageng Selo. Ia dikenal rendah hati, rajin bekerja, dan selalu bersyukur atas hasil panennya.",
+        i:"Ketuk tombol \u201CLanjut\u201D untuk melanjutkan kisah."
+      },
+      {
+        n:"Setiap hari Ki Ageng Selo merawat sawahnya dengan tekun. Hasil panennya selalu ia bagikan kepada tetangga yang membutuhkan.",
+        i:"Ketuk tanaman padi berulang kali untuk membantu memanen."
+      },
+      {
+        n:"Suatu hari, badai petir yang dahsyat menyerang desa. Petir menyambar-nyambar, mengancam rumah-rumah warga.",
+        i:"Tekan dan tahan atap rumah untuk melindunginya dari sambaran petir."
+      },
+      {
+        n:"Warga desa ketakutan dan berlarian mencari perlindungan. Ki Ageng Selo bergegas menenangkan mereka satu per satu.",
+        i:"Ketuk setiap warga secara berurutan dari kiri ke kanan untuk menenangkan mereka."
+      },
+      {
+        n:"Dengan tekad yang kuat, Ki Ageng Selo melangkah menuju tengah sawah untuk menghadapi petir yang mengamuk.",
+        i:"Seret sosok Ki Ageng Selo di sepanjang jalan menuju sawah."
+      },
+      {
+        n:"Ki Ageng Selo berdiri tenang menunggu petir menyambar. Ia harus menangkapnya tepat pada saat yang tepat.",
+        i:"Ketuk tombol \u201CTangkap!\u201D tepat saat penunjuk berada di area bercahaya."
+      },
+      {
+        n:"Petir yang tertangkap berubah menjadi benda kecil berkilauan seperti batu permata di tangan Ki Ageng Selo.",
+        i:"Ketuk benda berkilau itu untuk melihatnya lebih dekat."
+      },
+      {
+        n:"Sejak saat itu desa tak lagi dilanda petir dahsyat. Warga hidup rukun mengikuti ajaran Ki Ageng Selo.",
+        i:"Pilih salah satu ajaran Ki Ageng Selo untuk mendengar pesannya."
+      }
+    ],
+    choiceA_title:"Kerja Keras & Tekad",
+    choiceB_title:"Menjaga Alam & Kebersamaan",
+    choiceA_msg:"Ki Ageng Selo mengajarkan bahwa dengan kerja keras dan tekad yang kuat, segala rintangan sebesar apa pun dapat diatasi.",
+    choiceB_msg:"Ki Ageng Selo mengajarkan bahwa alam yang dijaga dan kebersamaan warga desa akan selalu membawa kedamaian dan kesejahteraan.",
+    ending:"Kisah Ki Ageng Selo mengajarkan kita tentang kerja keras, ketenangan batin, dan kepedulian terhadap sesama serta alam sekitar. Nilai-nilai ini tetap relevan hingga kini.",
+    endingTitle:"Tamat"
+  },
+  en:{
+    title:"Ki Ageng Selo: The Lightning Catcher",
+    subtitle:"Folktale from Central Java",
+    start:"Start Story",
+    replay:"Replay Story",
+    muteOn:"Sound On",
+    muteOff:"Sound Off",
+    langLabel:"Indonesia",
+    footer1:"A traditional folktale from Central Java, retold as an interactive experience.",
+    footer2:"",
+    continueBtn:"Continue",
+    catchBtn:"Catch!",
+    scenes:[
+      {
+        n:"In Selo Village, Grobogan Regency, Central Java, there lived a humble farmer named Ki Ageng Selo. He was known for his modesty, hard work, and gratitude for every harvest.",
+        i:"Tap the \u201CContinue\u201D button to proceed with the story."
+      },
+      {
+        n:"Every day Ki Ageng Selo tended his rice field diligently. He always shared his harvest with neighbors in need.",
+        i:"Tap the rice plants repeatedly to help harvest them."
+      },
+      {
+        n:"One day, a fierce thunderstorm struck the village. Lightning flashed again and again, threatening the villagers' homes.",
+        i:"Press and hold the roof to shield it from the lightning strikes."
+      },
+      {
+        n:"The villagers panicked and ran for shelter. Ki Ageng Selo hurried to calm them one by one.",
+        i:"Tap each villager in order from left to right to calm them down."
+      },
+      {
+        n:"With firm resolve, Ki Ageng Selo walked toward the middle of the rice field to face the raging lightning.",
+        i:"Drag Ki Ageng Selo along the path toward the rice field."
+      },
+      {
+        n:"Ki Ageng Selo stood calmly, waiting for the lightning to strike. He had to catch it at exactly the right moment.",
+        i:"Tap the \u201CCatch!\u201D button right when the marker is in the glowing zone."
+      },
+      {
+        n:"The captured lightning turned into a small, glittering gem-like object in Ki Ageng Selo's hand.",
+        i:"Tap the glittering object to look at it closely."
+      },
+      {
+        n:"From that day on, the village was never struck by fierce lightning again. The villagers lived in harmony, following Ki Ageng Selo's teachings.",
+        i:"Choose one of Ki Ageng Selo's teachings to hear its message."
+      }
+    ],
+    choiceA_title:"Hard Work & Resolve",
+    choiceB_title:"Caring for Nature & Unity",
+    choiceA_msg:"Ki Ageng Selo taught that with hard work and firm resolve, even the greatest obstacles can be overcome.",
+    choiceB_msg:"Ki Ageng Selo taught that a well-cared-for nature and a united village will always bring peace and prosperity.",
+    ending:"The story of Ki Ageng Selo teaches us about hard work, inner calm, and care for others and the surrounding nature. These values remain relevant today.",
+    endingTitle:"The End"
+  }
+};
+
+/* ---------------- SPEECH ---------------- */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices(); }
+loadVoices();
+if (typeof speechSynthesis !== 'undefined'){
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(l){
+  const wantLang = l === 'id' ? 'id' : 'en';
+  let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(wantLang));
+  return v || null;
+}
+function speak(text){
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if (muted || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  const v = pickVoice(lang);
+  if (v) u.voice = v;
+  u.rate = 0.95; u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+
+/* ---------------- UI HELPERS ---------------- */
+const narrationBox = document.getElementById('narrationBox');
+const instructionBox = document.getElementById('instructionBox');
+const dotsEl = document.getElementById('dots');
+const startBtn = document.getElementById('startBtn');
+const replayBtn = document.getElementById('replayBtn');
+const langBtn = document.getElementById('langBtn');
+const langLabel = document.getElementById('langLabel');
+const muteBtn = document.getElementById('muteBtn');
+const muteLabel = document.getElementById('muteLabel');
+const mainTitle = document.getElementById('mainTitle');
+const mainSubtitle = document.getElementById('mainSubtitle');
+
+function buildDots(){
+  dotsEl.innerHTML = '';
+  for (let i=1;i<=TOTAL_SCENES;i++){
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot'+i;
+    dotsEl.appendChild(d);
+  }
+}
+function updateDots(){
+  for (let i=1;i<=TOTAL_SCENES;i++){
+    const d = document.getElementById('dot'+i);
+    if (!d) continue;
+    d.classList.remove('done','current');
+    if (i < currentScene) d.classList.add('done');
+    else if (i === currentScene) d.classList.add('current');
+  }
+}
+function updateTexts(){
+  const L = T[lang];
+  mainTitle.textContent = L.title;
+  mainSubtitle.textContent = L.subtitle;
+  document.title = L.title;
+  startBtn.textContent = L.start;
+  replayBtn.textContent = L.replay;
+  langLabel.textContent = L.langLabel;
+  muteLabel.textContent = muted ? L.muteOff : L.muteOn;
+  muteBtn.querySelector('span')===null;
+  document.querySelector('#muteBtn').firstChild.textContent = muted ? '🔇 ' : '🔊 ';
+}
+function setNarration(idx){
+  const L = T[lang];
+  if (idx >=1 && idx<=TOTAL_SCENES){
+    narrationBox.textContent = L.scenes[idx-1].n;
+    instructionBox.textContent = L.scenes[idx-1].i;
+    speak(L.scenes[idx-1].n);
+  }
+}
+
+langBtn.addEventListener('click', ()=>{
+  lang = lang === 'id' ? 'en' : 'id';
+  const url = new URL(location.href);
+  url.searchParams.set('lang', lang);
+  history.replaceState(null,'',url.toString());
+  updateTexts();
+  if (currentScene>=1 && currentScene<=TOTAL_SCENES){
+    setNarration(currentScene);
+  }
+  render();
+});
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('kas_muted', muted ? '1':'0');
+  updateTexts();
+  if (muted) speechSynthesis.cancel();
+});
+
+/* ---------------- CANVAS DRAW HELPERS ---------------- */
+function clear(){
+  ctx.clearRect(0,0,W,H);
+}
+function skyGradient(stormy){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  if (stormy){
+    g.addColorStop(0,'#26314a');
+    g.addColorStop(1,'#0c1220');
+  } else {
+    g.addColorStop(0,'#5f8fc9');
+    g.addColorStop(0.6,'#a9c8e0');
+    g.addColorStop(1,'#e7ddb8');
+  }
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+}
+function drawMountains(){
+  ctx.fillStyle = 'rgba(70,90,60,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(0,260);
+  ctx.lineTo(120,180);
+  ctx.lineTo(230,250);
+  ctx.lineTo(360,160);
+  ctx.lineTo(500,250);
+  ctx.lineTo(650,190);
+  ctx.lineTo(800,255);
+  ctx.lineTo(800,320);
+  ctx.lineTo(0,320);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawGroundField(y0){
+  ctx.fillStyle = '#7fae4a';
+  ctx.fillRect(0,y0,W,H-y0);
+  // paddy rows
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  for (let y=y0+10;y<H;y+=16){
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(W,y);
+    ctx.stroke();
+  }
+}
+function drawRicePlant(x,y,scale,cut){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale, cut ? scale*0.35 : scale);
+  ctx.strokeStyle = cut ? '#c9a24a' : '#3f7d2f';
+  ctx.lineWidth = 3;
+  for (let i=-2;i<=2;i++){
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(i*3, -18, i*6, cut? -6: -34);
+    ctx.stroke();
+  }
+  if (!cut){
+    ctx.fillStyle = '#e8c65a';
+    ctx.beginPath();
+    ctx.ellipse(0,-34,6,10,0,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawHut(x,y,scale,damaged,glowShield){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // stilts
+  ctx.fillStyle = '#5a4530';
+  ctx.fillRect(-30,10,6,26);
+  ctx.fillRect(24,10,6,26);
+  // body
+  ctx.fillStyle = '#caa26a';
+  ctx.fillRect(-34,-10,68,26);
+  ctx.fillStyle = '#8c6a3f';
+  ctx.fillRect(-34,-10,68,6);
+  // roof
+  ctx.fillStyle = damaged ? '#5a4636' : '#7a4a2e';
+  ctx.beginPath();
+  ctx.moveTo(-44,-10);
+  ctx.lineTo(0,-52);
+  ctx.lineTo(44,-10);
+  ctx.closePath();
+  ctx.fill();
+  if (damaged){
+    ctx.strokeStyle = '#2a1c10';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-6,-40); ctx.lineTo(6,-24); ctx.lineTo(-4,-14);
+    ctx.stroke();
+  }
+  if (glowShield){
+    ctx.save();
+    ctx.globalAlpha = 0.35 + 0.15*Math.sin(globalTime/120);
+    ctx.strokeStyle = '#e8b23d';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.ellipse(0,-15,58,48,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawVillagerFigure(x,y,scale,color,scared,calmed){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const wobble = scared && !calmed ? Math.sin(globalTime/80)*4 : 0;
+  ctx.rotate(wobble*Math.PI/180);
+  // legs
+  ctx.strokeStyle = '#3a2c1e';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(-4,20); ctx.lineTo(-6,34); ctx.moveTo(4,20); ctx.lineTo(6,34); ctx.stroke();
+  // body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,-4);
+  ctx.lineTo(-12,22);
+  ctx.lineTo(12,22);
+  ctx.closePath();
+  ctx.fill();
+  // arms
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 5;
+  if (scared && !calmed){
+    ctx.beginPath(); ctx.moveTo(-8,2); ctx.lineTo(-18,-10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,2); ctx.lineTo(18,-10); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-8,4); ctx.lineTo(-14,16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,4); ctx.lineTo(14,16); ctx.stroke();
+  }
+  // head
+  ctx.fillStyle = '#e8c19a';
+  ctx.beginPath();
+  ctx.arc(0,-14,10,0,Math.PI*2);
+  ctx.fill();
+  if (calmed){
+    ctx.strokeStyle = '#3a2c1e';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0,-11,4,0,Math.PI,false);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawKiAgengSelo(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // legs
+  ctx.strokeStyle = '#3a2c1e';
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(-5,24); ctx.lineTo(-8,42); ctx.moveTo(5,24); ctx.lineTo(8,42); ctx.stroke();
+  // body/robe
+  ctx.fillStyle = '#3f7d4f';
+  ctx.beginPath();
+  ctx.moveTo(0,-6);
+  ctx.lineTo(-16,26);
+  ctx.lineTo(16,26);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#e8b23d';
+  ctx.fillRect(-16,10,32,4);
+  // arms
+  ctx.strokeStyle = '#3f7d4f';
+  ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-10,2); ctx.lineTo(-20,18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(10,2); ctx.lineTo(20,18); ctx.stroke();
+  // head
+  ctx.fillStyle = '#e8c19a';
+  ctx.beginPath();
+  ctx.arc(0,-16,11,0,Math.PI*2);
+  ctx.fill();
+  // blangkon (headwear)
+  ctx.fillStyle = '#5a3a2a';
+  ctx.beginPath();
+  ctx.ellipse(0,-26,13,8,0,Math.PI,0);
+  ctx.fill();
+  ctx.fillRect(-13,-26,26,5);
+  ctx.restore();
+}
+function drawLightningBolt(x,y,scale,alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha===undefined?1:alpha;
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#fff7c9';
+  ctx.shadowColor = '#fff2a0';
+  ctx.shadowBlur = 18;
+  ctx.beginPath();
+  ctx.moveTo(6,-40);
+  ctx.lineTo(-10,0);
+  ctx.lineTo(2,0);
+  ctx.lineTo(-6,40);
+  ctx.lineTo(14,-6);
+  ctx.lineTo(0,-6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+function drawGem(x,y,scale,glow){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const pulse = 0.5+0.5*Math.sin(globalTime/150);
+  if (glow){
+    ctx.save();
+    ctx.globalAlpha = 0.25+0.25*pulse;
+    ctx.fillStyle = '#fff2a0';
+    ctx.beginPath();
+    ctx.arc(0,0,34+6*pulse,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#7ed6e8';
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0,-20);
+  ctx.lineTo(16,-4);
+  ctx.lineTo(9,18);
+  ctx.lineTo(-9,18);
+  ctx.lineTo(-16,-4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+/* ---------------- SCENE INTERACTIONS ---------------- */
+// Utility: convert pointer event to canvas coords
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  return { x: cx * (W/rect.width), y: cy * (H/rect.height) };
+}
+
+let pointerHandlers = { down:null, move:null, up:null };
+function clearPointerHandlers(){
+  canvas.onpointerdown = null;
+  canvas.onpointermove = null;
+  canvas.onpointerup = null;
+  canvas.onpointerleave = null;
+}
+
+function completeCurrentScene(){
+  setTimeout(()=>{ goToScene(currentScene+1); }, 900);
+}
+
+/* Scene 1: intro - just continue button (drawn on canvas) */
+function setupScene1(){
+  sceneState = {};
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    const p = getPos(e);
+    if (sceneState.btnRect && inRect(p, sceneState.btnRect)){
+      completeCurrentScene();
+      canvas.onpointerdown = null;
+    }
+  };
+}
+function drawScene1(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  for (let i=0;i<6;i++) drawRicePlant(90+i*110,360,1.3,false);
+  drawKiAgengSelo(400,250,1.6);
+  drawButtonOnCanvas('btnRect', 400, 400, T[lang].continueBtn);
+}
+
+/* Scene 2: harvest - rapid tap */
+function setupScene2(){
+  sceneState = { plants:[], hits:0, target:10 };
+  for (let i=0;i<6;i++){
+    sceneState.plants.push({x:110+i*115, y:340, cut:false});
+  }
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    const p = getPos(e);
+    let didHit = false;
+    sceneState.plants.forEach(pl=>{
+      if (!pl.cut && Math.hypot(p.x-pl.x, p.y-(pl.y-20)) < 45){
+        pl.hitCount = (pl.hitCount||0)+1;
+        didHit = true;
+        if (pl.hitCount >= 2){ pl.cut = true; sceneState.hits++; }
+      }
+    });
+    if (didHit){
+      if (sceneState.hits >= sceneState.plants.length){
+        clearPointerHandlers();
+        completeCurrentScene();
+      }
+    }
+  };
+}
+function drawScene2(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  sceneState.plants.forEach(pl=>{
+    drawRicePlant(pl.x, pl.y, 1.5, pl.cut);
+  });
+  drawKiAgengSelo(700,260,1.3);
+  drawProgressBar(sceneState.hits, sceneState.plants.length);
+}
+
+/* Scene 3: storm - press and hold to shield house */
+function setupScene3(){
+  sceneState = { progress:0, holding:false, strikeFlash:0, done:false };
+  clearPointerHandlers();
+  const hutHit = (p)=> Math.hypot(p.x-400, p.y-260) < 90;
+  canvas.onpointerdown = (e)=>{
+    const p = getPos(e);
+    if (hutHit(p)) sceneState.holding = true;
+  };
+  canvas.onpointerup = ()=>{ sceneState.holding = false; };
+  canvas.onpointerleave = ()=>{ sceneState.holding = false; };
+}
+function drawScene3(){
+  skyGradient(true);
+  // occasional flash
+  if (Math.random() < 0.02) sceneState.strikeFlash = 6;
+  if (sceneState.strikeFlash > 0){
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(0,0,W,H);
+    sceneState.strikeFlash--;
+  }
+  drawMountains();
+  drawGroundField(300);
+  drawLightningBolt(150,80,1.4, 0.5+0.5*Math.sin(globalTime/90));
+  drawLightningBolt(650,60,1.1, 0.5+0.5*Math.cos(globalTime/110));
+  drawHut(400,260,1.7, sceneState.progress<100, sceneState.progress>10);
+  if (!sceneState.done){
+    if (sceneState.holding){
+      sceneState.progress = Math.min(100, sceneState.progress + 1.1);
+    } else {
+      sceneState.progress = Math.max(0, sceneState.progress - 0.6);
+    }
+    if (sceneState.progress >= 100){
+      sceneState.done = true;
+      clearPointerHandlers();
+      completeCurrentScene();
+    }
+  }
+  drawProgressBar(sceneState.progress, 100, true);
+}
+
+/* Scene 4: sequential tap villagers */
+function setupScene4(){
+  sceneState = {
+    villagers:[
+      {x:180,y:300,color:'#c74b3c',calmed:false},
+      {x:400,y:300,color:'#3f7d4f',calmed:false},
+      {x:620,y:300,color:'#4b6fc7',calmed:false}
+    ],
+    nextIndex:0
+  };
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    const p = getPos(e);
+    const v = sceneState.villagers[sceneState.nextIndex];
+    if (v && Math.hypot(p.x-v.x, p.y-(v.y-10)) < 45){
+      v.calmed = true;
+      sceneState.nextIndex++;
+      if (sceneState.nextIndex >= sceneState.villagers.length){
+        clearPointerHandlers();
+        completeCurrentScene();
+      }
+    }
+  };
+}
+function drawScene4(){
+  skyGradient(true);
+  drawMountains();
+  drawGroundField(300);
+  sceneState.villagers.forEach((v,i)=>{
+    drawVillagerFigure(v.x, v.y, 1.7, v.color, true, v.calmed);
+    if (i === sceneState.nextIndex && !v.calmed){
+      ctx.save();
+      ctx.globalAlpha = 0.5+0.4*Math.sin(globalTime/150);
+      ctx.strokeStyle = '#e8b23d';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(v.x, v.y-6, 40, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  });
+  drawKiAgengSelo(400,120,1.2);
+}
+
+/* Scene 5: drag Ki Ageng Selo to field */
+function setupScene5(){
+  sceneState = { x:120, y:260, dragging:false, targetX:660, done:false };
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    const p = getPos(e);
+    if (Math.hypot(p.x-sceneState.x, p.y-sceneState.y) < 60) sceneState.dragging = true;
+  };
+  canvas.onpointermove = (e)=>{
+    if (!sceneState.dragging) return;
+    const p = getPos(e);
+    sceneState.x = Math.max(100, Math.min(680, p.x));
+  };
+  canvas.onpointerup = ()=>{
+    sceneState.dragging = false;
+    if (!sceneState.done && sceneState.x >= sceneState.targetX - 30){
+      sceneState.done = true;
+      clearPointerHandlers();
+      completeCurrentScene();
+    }
+  };
+  canvas.onpointerleave = ()=>{ sceneState.dragging = false; };
+}
+function drawScene5(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  // path
+  ctx.strokeStyle = 'rgba(200,170,110,0.6)';
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  ctx.moveTo(90,270);
+  ctx.lineTo(700,270);
+  ctx.stroke();
+  // target flag
+  ctx.fillStyle = '#e8b23d';
+  ctx.fillRect(696,220,4,50);
+  ctx.beginPath();
+  ctx.moveTo(700,222);
+  ctx.lineTo(724,232);
+  ctx.lineTo(700,242);
+  ctx.closePath();
+  ctx.fill();
+  drawKiAgengSelo(sceneState.x, sceneState.y, 1.6);
+}
+
+/* Scene 6: timing bar catch lightning */
+function setupScene6(){
+  sceneState = { pos:0, dir:1, zoneStart:0.62, zoneEnd:0.82, done:false, flashSuccess:0 };
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    if (sceneState.done) return;
+    const p = getPos(e);
+    if (sceneState.catchBtnRect && inRect(p, sceneState.catchBtnRect)){
+      if (sceneState.pos >= sceneState.zoneStart && sceneState.pos <= sceneState.zoneEnd){
+        sceneState.done = true;
+        sceneState.flashSuccess = 30;
+        clearPointerHandlers();
+        completeCurrentScene();
+      } else {
+        sceneState.shake = 10;
+      }
+    }
+  };
+}
+function drawScene6(){
+  skyGradient(true);
+  drawMountains();
+  drawGroundField(300);
+  if (!sceneState.done){
+    sceneState.pos += 0.012*sceneState.dir;
+    if (sceneState.pos >= 1){ sceneState.pos = 1; sceneState.dir = -1; }
+    if (sceneState.pos <= 0){ sceneState.pos = 0; sceneState.dir = 1; }
+  }
+  drawLightningBolt(400, 90 + sceneState.pos*40, 1.6 + (sceneState.done?0.6:0), sceneState.done ? Math.max(0,sceneState.flashSuccess/30) : 1);
+  drawKiAgengSelo(400, 300, 1.7);
+  // timing bar
+  const barX=180, barY=400, barW=440, barH=18;
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  roundRect(barX,barY,barW,barH,9); ctx.fill();
+  ctx.fillStyle = 'rgba(232,178,61,0.55)';
+  roundRect(barX+barW*sceneState.zoneStart, barY, barW*(sceneState.zoneEnd-sceneState.zoneStart), barH, 9); ctx.fill();
+  const mx = barX + barW*sceneState.pos;
+  ctx.fillStyle = '#fff7c9';
+  ctx.beginPath();
+  ctx.arc(mx, barY+barH/2, 10, 0, Math.PI*2);
+  ctx.fill();
+  let shakeOffset = 0;
+  if (sceneState.shake > 0){ shakeOffset = Math.sin(sceneState.shake)*4; sceneState.shake--; }
+  drawButtonOnCanvas('catchBtnRect', 400+shakeOffset, 350, T[lang].catchBtn);
+}
+
+/* Scene 7: tap gem */
+function setupScene7(){
+  sceneState = { revealed:false, done:false };
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    if (sceneState.done) return;
+    const p = getPos(e);
+    if (Math.hypot(p.x-400, p.y-230) < 60){
+      sceneState.revealed = true;
+      sceneState.done = true;
+      clearPointerHandlers();
+      completeCurrentScene();
+    }
+  };
+}
+function drawScene7(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  drawKiAgengSelo(400,320,1.7);
+  drawGem(400,230, sceneState.revealed?2.1:1.6, true);
+  if (!sceneState.revealed){
+    ctx.save();
+    ctx.globalAlpha = 0.6+0.3*Math.sin(globalTime/200);
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(400,230,44,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* Scene 8: branching choice */
+function setupScene8(){
+  sceneState = { chosen:null };
+  clearPointerHandlers();
+  canvas.onpointerdown = (e)=>{
+    const p = getPos(e);
+    if (sceneState.done) return;
+    if (sceneState.btnA && inRect(p, sceneState.btnA)){
+      chooseTeaching('A');
+    } else if (sceneState.btnB && inRect(p, sceneState.btnB)){
+      chooseTeaching('B');
+    }
+  };
+}
+function chooseTeaching(which){
+  sceneState.chosen = which;
+  sceneState.done = true;
+  clearPointerHandlers();
+  const L = T[lang];
+  const msg = which === 'A' ? L.choiceA_msg : L.choiceB_msg;
+  narrationBox.textContent = msg;
+  instructionBox.textContent = '';
+  speak(msg);
+  setTimeout(()=>{ showEnding(); }, 3800);
+}
+function drawScene8(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  drawVillagerFigure(280,300,1.5,'#c74b3c',false,true);
+  drawVillagerFigure(520,300,1.5,'#4b6fc7',false,true);
+  drawKiAgengSelo(400,270,1.6);
+  if (!sceneState.done){
+    drawButtonOnCanvas('btnA', 230, 400, T[lang].choiceA_title, 190);
+    drawButtonOnCanvas('btnB', 570, 400, T[lang].choiceB_title, 220);
+  } else {
+    drawGem(400,150,1.4,true);
+  }
+}
+
+/* ---------------- SHARED CANVAS WIDGETS ---------------- */
+function drawButtonOnCanvas(key, cx, cy, label, minWidth){
+  ctx.font = '600 20px Segoe UI, sans-serif';
+  const textW = ctx.measureText(label).width;
+  const w = Math.max(minWidth||150, textW+48);
+  const h = 44;
+  const x = cx - w/2, y = cy - h/2;
+  ctx.fillStyle = '#e8b23d';
+  roundRect(x,y,w,h,22);
+  ctx.fill();
+  ctx.fillStyle = '#241a08';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, cx, cy+1);
+  sceneState[key] = {x,y,w,h};
+}
+function inRect(p, r){
+  return p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h;
+}
+function drawProgressBar(val, max, isHold){
+  const barX=250, barY=420, barW=300, barH=14;
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  roundRect(barX,barY,barW,barH,7); ctx.fill();
+  ctx.fillStyle = isHold ? '#c74b3c' : '#3f7d4f';
+  const ratio = Math.max(0,Math.min(1, val/max));
+  roundRect(barX,barY,barW*ratio,barH,7); ctx.fill();
+}
+
+/* ---------------- SCENE REGISTRY ---------------- */
+const SCENES = {
+  1:{ setup:setupScene1, draw:drawScene1 },
+  2:{ setup:setupScene2, draw:drawScene2 },
+  3:{ setup:setupScene3, draw:drawScene3 },
+  4:{ setup:setupScene4, draw:drawScene4 },
+  5:{ setup:setupScene5, draw:drawScene5 },
+  6:{ setup:setupScene6, draw:drawScene6 },
+  7:{ setup:setupScene7, draw:drawScene7 },
+  8:{ setup:setupScene8, draw:drawScene8 }
+};
+
+function goToScene(n){
+  if (n > TOTAL_SCENES){
+    showEnding();
+    return;
+  }
+  currentScene = n;
+  updateDots();
+  setNarration(n);
+  SCENES[n].setup();
+}
+
+/* ---------------- ENDING ---------------- */
+function showEnding(){
+  currentScene = TOTAL_SCENES+1;
+  clearPointerHandlers();
+  const L = T[lang];
+  narrationBox.textContent = L.ending;
+  instructionBox.textContent = '';
+  speak(L.ending);
+  updateDotsAllDone();
+  replayBtn.style.display = 'inline-block';
+  startBtn.style.display = 'none';
+  sceneState = { endingShown:true };
+}
+function updateDotsAllDone(){
+  for (let i=1;i<=TOTAL_SCENES;i++){
+    const d = document.getElementById('dot'+i);
+    if (d){ d.classList.add('done'); d.classList.remove('current'); }
+  }
+}
+function drawEnding(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  for (let i=0;i<4;i++) drawRicePlant(150+i*160,360,1.3,false);
+  drawVillagerFigure(240,300,1.4,'#c74b3c',false,true);
+  drawVillagerFigure(560,300,1.4,'#4b6fc7',false,true);
+  drawKiAgengSelo(400,270,1.7);
+  drawGem(400,150,1.3,true);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  roundRect(280,40,240,44,22); ctx.fill();
+  ctx.fillStyle = '#e8b23d';
+  ctx.font = '700 22px Segoe UI, sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(T[lang].endingTitle, 400, 63);
+}
+
+/* ---------------- MAIN LOOP ---------------- */
+function render(ts){
+  globalTime = ts||0;
+  clear();
+  if (currentScene === 0){
+    drawScene1TitleIdle();
+  } else if (currentScene >=1 && currentScene <= TOTAL_SCENES){
+    SCENES[currentScene].draw();
+  } else {
+    drawEnding();
+  }
+  animFrame = requestAnimationFrame(render);
+}
+function drawScene1TitleIdle(){
+  skyGradient(false);
+  drawMountains();
+  drawGroundField(300);
+  for (let i=0;i<6;i++) drawRicePlant(90+i*110,360,1.3,false);
+  drawKiAgengSelo(400,260,1.8);
+}
+
+/* ---------------- START / REPLAY ---------------- */
+startBtn.addEventListener('click', ()=>{
+  startBtn.style.display = 'none';
+  goToScene(1);
+});
+replayBtn.addEventListener('click', ()=>{
+  replayBtn.style.display = 'none';
+  startBtn.style.display = 'inline-block';
+  currentScene = 0;
+  buildDots();
+  narrationBox.textContent = '';
+  instructionBox.textContent = '';
+  speechSynthesis.cancel();
+});
+
+/* ---------------- IFRAME AUTO-RESIZE ---------------- */
+function sendHeight(){
+  const h = document.getElementById('wrap').getBoundingClientRect().height;
+  try{
+    window.parent.postMessage({ type:'kiagengselo-resize', height: Math.ceil(h)+20 }, '*');
+  }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+if (window.ResizeObserver){
+  new ResizeObserver(sendHeight).observe(document.getElementById('wrap'));
+}
+
+/* ---------------- INIT ---------------- */
+buildDots();
+updateTexts();
+render();
+setTimeout(sendHeight, 300);
+setInterval(sendHeight, 1500);
+
+})();
+</script>
+</body>
+</html>
