@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raja Subrata - Cerita Rakyat Jawa Tengah</title>
+<style>
+  :root{
+    --gold:#d4af37;
+    --gold-light:#f0d878;
+    --maroon:#5c1521;
+    --maroon-dark:#3a0d15;
+    --cream:#f7ecd2;
+    --teak:#6b4226;
+    --ink:#2a1810;
+    --green:#3f5d3a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg,#efe1bd 0%, #e4cd9a 100%);
+    color: var(--ink);
+    display:flex;
+    justify-content:center;
+    padding: 10px 8px 16px;
+  }
+  #app{
+    width:100%;
+    max-width:720px;
+    background: var(--cream);
+    border-radius:16px;
+    box-shadow: 0 6px 24px rgba(58,13,21,0.25);
+    overflow:hidden;
+    border: 3px solid var(--gold);
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: linear-gradient(90deg, var(--maroon-dark), var(--maroon));
+    padding: 10px 14px;
+    color: var(--gold-light);
+  }
+  #topbar h1{
+    font-size: 16px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  #topbar .sub{
+    font-size:10px;
+    opacity:0.85;
+    font-weight:400;
+    margin-top:2px;
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+  }
+  .ctrl-btn{
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid var(--gold);
+    color: var(--gold-light);
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-weight:600;
+    transition: background 0.15s;
+  }
+  .ctrl-btn:hover{ background: rgba(255,255,255,0.22); }
+  .ctrl-btn:active{ transform: scale(0.96); }
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background: #000;
+  }
+  #stage{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#000;
+  }
+  #overlay-layer{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .overlay-btn{
+    position:absolute;
+    pointer-events:auto;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background: linear-gradient(180deg, var(--gold-light), var(--gold));
+    color: var(--maroon-dark);
+    border:none;
+    border-radius:14px;
+    padding:14px 28px;
+    font-size:17px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+    letter-spacing:0.3px;
+  }
+  .overlay-btn:active{ transform:translate(-50%,-50%) scale(0.96); }
+
+  #next-btn{
+    position:absolute;
+    right:14px;
+    bottom:14px;
+    pointer-events:auto;
+    background: linear-gradient(180deg, var(--gold-light), var(--gold));
+    color: var(--maroon-dark);
+    border:none;
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    font-size:22px;
+    font-weight:900;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(212,175,55,0.55);}
+    50%{ box-shadow:0 0 0 10px rgba(212,175,55,0);}
+  }
+
+  #instruction-bar{
+    background: linear-gradient(90deg,#f0d878,#d4af37);
+    color: var(--maroon-dark);
+    font-size:13.5px;
+    font-weight:700;
+    padding:9px 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border-bottom:2px solid var(--maroon);
+    min-height:18px;
+  }
+  #instruction-bar .icon{ font-size:16px; flex-shrink:0; }
+
+  #narration-box{
+    background: var(--cream);
+    padding: 12px 16px 6px;
+    font-size:14.5px;
+    line-height:1.5;
+    min-height:44px;
+    border-bottom: 1px solid #d9c48f;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding: 10px 10px 14px;
+    background: var(--cream);
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background: #d9c48f;
+    transition: all 0.25s;
+  }
+  .dot.active{ background: var(--maroon); transform:scale(1.3); }
+  .dot.done{ background: var(--gold); }
+
+  #choice-row{
+    position:absolute;
+    left:0;right:0;
+    bottom:16px;
+    display:none;
+    justify-content:center;
+    gap:12px;
+    pointer-events:auto;
+    padding: 0 12px;
+  }
+  .choice-btn{
+    background: linear-gradient(180deg,#fff,#f0e2bd);
+    border:2px solid var(--maroon);
+    color: var(--maroon-dark);
+    padding:10px 14px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,0.25);
+    max-width:47%;
+  }
+  .choice-btn:active{ transform:scale(0.96); }
+
+  #hold-btn{
+    position:absolute;
+    left:50%;
+    bottom:20px;
+    transform:translateX(-50%);
+    pointer-events:auto;
+    display:none;
+    width:210px;
+    height:52px;
+    border-radius:26px;
+    background: rgba(58,13,21,0.85);
+    border:2px solid var(--gold);
+    overflow:hidden;
+  }
+  #hold-fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background: linear-gradient(90deg,var(--gold),var(--gold-light));
+  }
+  #hold-label{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--gold-light);
+    font-weight:800;
+    font-size:14px;
+    mix-blend-mode:difference;
+  }
+
+  footer{
+    text-align:center;
+    font-size:10.5px;
+    color:#8a6d3b;
+    padding:8px 10px 12px;
+    background:var(--cream);
+    letter-spacing:0.2px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div>
+      <h1 id="title-text">Raja Subrata</h1>
+      <div class="sub" id="subtitle-text">Cerita Rakyat Jawa Tengah</div>
+    </div>
+    <div id="controls">
+      <button class="ctrl-btn" id="lang-btn" type="button">EN</button>
+      <button class="ctrl-btn" id="mute-btn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="stage" width="800" height="520"></canvas>
+    <div id="overlay-layer">
+      <button class="overlay-btn" id="start-btn" type="button">▶ Mulai Cerita</button>
+      <button id="next-btn" type="button">➜</button>
+      <div id="choice-row"></div>
+      <div id="hold-btn">
+        <div id="hold-fill"></div>
+        <div id="hold-label"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="instruction-bar"><span class="icon">👉</span><span id="instruction-text"></span></div>
+  <div id="narration-box" id="narration-text"><span id="narration-text"></span></div>
+  <div id="dots"></div>
+  <footer id="footer-text">Kisah Rakyat Nusantara • Kearifan Jawa Tengah</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ i18n ============ */
+const urlLang = new URLSearchParams(location.search).get('lang');
+let LANG = (urlLang === 'en') ? 'en' : 'id';
+
+const UI = {
+  id:{ title:"Raja Subrata", subtitle:"Cerita Rakyat Jawa Tengah",
+       start:"▶ Mulai Cerita", replay:"↻ Ulangi Cerita",
+       footer:"Kisah Rakyat Nusantara • Kearifan Jawa Tengah" },
+  en:{ title:"King Subrata", subtitle:"Folktale from Central Java",
+       start:"▶ Start Story", replay:"↻ Replay Story",
+       footer:"Nusantara Folktales • Wisdom of Central Java" }
+};
+
+const SCENES = [
+{
+  key:"intro",
+  title:{id:"Kerajaan Banjarharja", en:"The Kingdom of Banjarharja"},
+  narration:{
+    id:"Pada zaman dahulu, di negeri Banjarharja, bertakhtalah seorang raja bernama Subrata. Ia dikenal bijaksana dan rendah hati, selalu memikirkan kesejahteraan rakyatnya, didampingi permaisuri Dewi Susilawati dan kedua putranya.",
+    en:"Long ago, in the land of Banjarharja, there reigned a king named Subrata. He was known for his wisdom and humility, always caring for his people's welfare, alongside his queen Dewi Susilawati and their two young princes."
+  },
+  instruction:{ id:"Ketuk singgasana Raja Subrata untuk memulai kisahnya.", en:"Tap King Subrata's throne to begin the story." },
+  type:"tap-single"
+},
+{
+  key:"drought",
+  title:{id:"Kekeringan Melanda", en:"Drought Strikes"},
+  narration:{
+    id:"Suatu tahun, kekeringan panjang melanda kerajaan. Sumur-sumur mengering, tanaman layu, dan rakyat mulai putus asa mencari air.",
+    en:"One year, a long drought struck the kingdom. Wells ran dry, crops withered, and the people grew desperate for water."
+  },
+  instruction:{ id:"Ketuk tiga sumur yang mengering untuk melihat parahnya kekeringan.", en:"Tap the three dried-up wells to see how severe the drought has become." },
+  type:"tap-multi", targets:3
+},
+{
+  key:"forest",
+  title:{id:"Mencari Sumber Air", en:"Searching for Water"},
+  narration:{
+    id:"Raja Subrata sendiri pergi menyusuri hutan mencari sumber air baru bagi rakyatnya, melangkah dari satu batu ke batu lain menembus rimba.",
+    en:"King Subrata himself journeyed through the forest in search of a new water source for his people, stepping carefully from stone to stone."
+  },
+  instruction:{ id:"Ketuk batu pijakan secara berurutan dari kiri ke kanan.", en:"Tap the stepping stones in order from left to right." },
+  type:"tap-sequence", targets:3
+},
+{
+  key:"pond",
+  title:{id:"Penjaga Kolam Ajaib", en:"Guardian of the Magic Pond"},
+  narration:{
+    id:"Di tengah hutan, ia menemukan sebuah kolam jernih. Tiba-tiba muncul seorang wanita penjaga kolam yang bersedia memberi air, asalkan Raja Subrata bersumpah menjaga kelestariannya.",
+    en:"Deep in the forest, he found a clear pond. Suddenly a guardian woman appeared, willing to grant the water — if King Subrata would vow to protect the pond forever."
+  },
+  instruction:{ id:"Tekan dan tahan tombol \"Sumpah Raja\" hingga penuh.", en:"Press and hold the \"King's Vow\" button until it fills up." },
+  type:"hold", holdLabel:{id:"SUMPAH RAJA", en:"KING'S VOW"}
+},
+{
+  key:"envy",
+  title:{id:"Kecemburuan Ki Tua", en:"Ki Tua's Envy"},
+  narration:{
+    id:"Di istana, Patih Jaya bekerja dengan jujur dan tekun sehingga dipercaya penuh oleh raja. Namun di balik tiang, Ki Tua sang juru tenung diam-diam memendam iri hati.",
+    en:"Back at the palace, the honest and diligent Patih Jaya earned the king's full trust. But behind a pillar, the royal soothsayer Ki Tua quietly seethed with envy."
+  },
+  instruction:{ id:"Cari dan ketuk sosok Ki Tua yang bersembunyi di balik tiang.", en:"Find and tap Ki Tua, who is hiding behind the pillar." },
+  type:"tap-single"
+},
+{
+  key:"slander",
+  title:{id:"Hasutan Berbisa", en:"Whispers of Slander"},
+  narration:{
+    id:"Ki Tua mulai membisikkan fitnah keji tentang Patih Jaya dan sang permaisuri kepada raja. Gelembung-gelembung dusta melayang mendekati telinga raja.",
+    en:"Ki Tua began whispering vicious lies about Patih Jaya and the queen into the king's ear. Bubbles of falsehood floated closer and closer to the king."
+  },
+  instruction:{ id:"Ketuk cepat gelembung fitnah sebelum mencapai telinga raja!", en:"Quickly tap the bubbles of slander before they reach the king's ear!" },
+  type:"mash", targets:8
+},
+{
+  key:"investigate",
+  title:{id:"Penyelidikan Mantri Susatya", en:"Mantri Susatya's Investigation"},
+  narration:{
+    id:"Untunglah Mantri Susatya berpikir jernih dan tidak mudah percaya hasutan. Ia menyelidiki istana dengan teliti, mencari bukti nyata sebelum menuduh siapa pun.",
+    en:"Fortunately, Mantri Susatya thought clearly and would not be easily swayed. He carefully investigated the palace, seeking real evidence before accusing anyone."
+  },
+  instruction:{ id:"Ketuk tiga petunjuk tersembunyi di ruangan untuk mengungkap kebenaran.", en:"Tap the three hidden clues in the room to uncover the truth." },
+  type:"tap-multi", targets:3
+},
+{
+  key:"choice",
+  title:{id:"Keadilan Sang Raja", en:"The King's Justice"},
+  narration:{
+    id:"Bukti-bukti pun terkumpul. Kini Raja Subrata harus memutuskan: percaya begitu saja pada hasutan, atau memeriksa bukti dengan kepala dingin terlebih dahulu.",
+    en:"The evidence was gathered. Now King Subrata had to decide: believe the accusations blindly, or examine the evidence with a calm mind first."
+  },
+  instruction:{ id:"Pilih tindakan yang tepat bagi seorang raja yang bijaksana.", en:"Choose the right action for a wise king to take." },
+  type:"choice",
+  choices:[
+    { label:{id:"Percaya hasutan", en:"Believe the rumors"}, correct:false,
+      feedback:{id:"Raja hampir saja menghukum orang tak bersalah karena tergesa-gesa. Untung ia berpikir ulang.",
+                en:"The king nearly punished an innocent person by acting too hastily. Fortunately, he thought again."} },
+    { label:{id:"Periksa bukti dahulu", en:"Examine the evidence first"}, correct:true,
+      feedback:{id:"Raja Subrata memilih bijaksana: menyelidiki dahulu sebelum menuduh.",
+                en:"King Subrata chose wisely: investigate first before accusing."} }
+  ]
+},
+{
+  key:"ending",
+  title:{id:"Kemakmuran Kembali", en:"Prosperity Returns"},
+  narration:{
+    id:"Berkat bukti nyata, Ki Tua dan kaki tangannya akhirnya tertangkap dan diadili. Hujan pun turun, kolam tetap lestari, dan Kerajaan Banjarharja kembali makmur di bawah pimpinan Raja Subrata yang bijaksana. Pesan cerita: percayalah kepada Tuhan Yang Maha Kuasa, jangan mudah terhasut, dan selalu selidiki kebenaran sebelum menuduh.",
+    en:"Thanks to the real evidence, Ki Tua and his accomplices were finally caught and brought to justice. The rains returned, the pond remained protected, and the Kingdom of Banjarharja flourished once more under wise King Subrata. Moral: trust in God Almighty, do not be easily provoked, and always seek the truth before making accusations."
+  },
+  instruction:{ id:"Ketuk tombol Ulangi Cerita jika ingin mendengarkan kisah ini lagi.", en:"Tap the Replay Story button if you'd like to hear this tale again." },
+  type:"end"
+}
+];
+
+/* ============ DOM refs ============ */
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const overlayLayer = document.getElementById('overlay-layer');
+const startBtn = document.getElementById('start-btn');
+const nextBtn = document.getElementById('next-btn');
+const choiceRow = document.getElementById('choice-row');
+const holdBtn = document.getElementById('hold-btn');
+const holdFill = document.getElementById('hold-fill');
+const holdLabel = document.getElementById('hold-label');
+const instructionText = document.getElementById('instruction-text');
+const narrationText = document.getElementById('narration-text');
+const dotsEl = document.getElementById('dots');
+const muteBtn = document.getElementById('mute-btn');
+const langBtn = document.getElementById('lang-btn');
+const titleText = document.getElementById('title-text');
+const subtitleText = document.getElementById('subtitle-text');
+const footerText = document.getElementById('footer-text');
+
+const LOGICAL_W = 800, LOGICAL_H = 520;
+
+/* ============ state ============ */
+let sceneIndex = -1;
+let muted = localStorage.getItem('rajasubrata_muted') === '1';
+let started = false;
+let tapProgress = {}; // per scene interaction progress
+let bubbles = [];
+let mashCount = 0;
+let holdActive = false;
+let holdProgress = 0;
+let sequenceNext = 0;
+let clueHits = [];
+let animT = 0;
+let sceneComplete = false;
+let rafId = null;
+
+function t(obj){ return obj[LANG]; }
+
+/* ============ TTS ============ */
+function speak(text){
+  if(muted) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG === 'en' ? 'en-US' : 'id-ID';
+    u.rate = 0.94;
+    u.pitch = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(LANG === 'en' ? 'en' : 'id'));
+    if(match) u.voice = match;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function stopSpeak(){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+
+/* ============ resize / iframe autofit ============ */
+function fitCanvas(){
+  const wrapWidth = canvas.parentElement.clientWidth;
+  const scale = wrapWidth / LOGICAL_W;
+  canvas.style.height = (LOGICAL_H * scale) + 'px';
+  postHeight();
+}
+function postHeight(){
+  const h = document.getElementById('app').offsetHeight;
+  try{ window.parent.postMessage({ type:'resize', height: h, source:'rajasubrata' }, '*'); }catch(e){}
+}
+window.addEventListener('resize', fitCanvas);
+new ResizeObserver(postHeight).observe(document.getElementById('app'));
+
+/* set actual canvas resolution for crisp drawing */
+function setupCanvasRes(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = LOGICAL_W * dpr;
+  canvas.height = LOGICAL_H * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+setupCanvasRes();
+fitCanvas();
+
+/* pointer coord mapping */
+function getLogicalXY(evt){
+  const rect = canvas.getBoundingClientRect();
+  const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+  const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+  const x = (cx - rect.left) / rect.width * LOGICAL_W;
+  const y = (cy - rect.top) / rect.height * LOGICAL_H;
+  return {x,y};
+}
+
+/* ============ generic drawing helpers ============ */
+function bgGradient(colorTop, colorBottom){
+  const g = ctx.createLinearGradient(0,0,0,LOGICAL_H);
+  g.addColorStop(0,colorTop);
+  g.addColorStop(1,colorBottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+}
+
+function drawGround(color, y){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0,y);
+  ctx.lineTo(LOGICAL_W,y);
+  ctx.lineTo(LOGICAL_W,LOGICAL_H);
+  ctx.lineTo(0,LOGICAL_H);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawPillar(x,y,h){
+  ctx.fillStyle = '#caa35d';
+  ctx.fillRect(x-14,y-h,28,h);
+  ctx.fillStyle = '#8a6d3b';
+  ctx.fillRect(x-18,y-h-10,36,10);
+  ctx.fillRect(x-18,y-8,36,10);
+  // batik-ish diamond pattern
+  ctx.fillStyle = 'rgba(92,21,33,0.25)';
+  for(let i=0;i<Math.floor(h/26);i++){
+    const yy = y-h+16+i*26;
+    ctx.beginPath();
+    ctx.moveTo(x,yy-6); ctx.lineTo(x+8,yy); ctx.lineTo(x,yy+6); ctx.lineTo(x-8,yy);
+    ctx.closePath(); ctx.fill();
+  }
+}
+
+function drawFigure(x,y,scale,opts){
+  opts = opts || {};
+  const robe = opts.robe || '#8b1e2e';
+  const robe2 = opts.robe2 || '#5c1521';
+  const skin = opts.skin || '#e0ab74';
+  const accessory = opts.accessory || 'none';
+  const flip = opts.flip ? -1 : 1;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale*flip, scale);
+
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath(); ctx.ellipse(0,4,26,7,0,0,Math.PI*2); ctx.fill();
+
+  // robe body
+  ctx.fillStyle = robe;
+  ctx.beginPath();
+  ctx.moveTo(-22,0);
+  ctx.quadraticCurveTo(-26,-55,-10,-70);
+  ctx.lineTo(10,-70);
+  ctx.quadraticCurveTo(26,-55,22,0);
+  ctx.closePath();
+  ctx.fill();
+
+  // sash
+  ctx.fillStyle = robe2;
+  ctx.fillRect(-22,-38,44,10);
+
+  // arms
+  ctx.strokeStyle = robe;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-16,-58); ctx.lineTo(-30,-30);
+  ctx.moveTo(16,-58); ctx.lineTo(30,-30);
+  ctx.stroke();
+
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(0,-84,15,0,Math.PI*2);
+  ctx.fill();
+
+  // headwear
+  if(accessory === 'crown'){
+    ctx.fillStyle = '#d4af37';
+    ctx.beginPath();
+    ctx.moveTo(-15,-96); ctx.lineTo(-10,-112); ctx.lineTo(-4,-98);
+    ctx.lineTo(0,-114); ctx.lineTo(4,-98); ctx.lineTo(10,-112); ctx.lineTo(15,-96);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#a9822b'; ctx.lineWidth=1.5; ctx.stroke();
+  } else if(accessory === 'blangkon'){
+    ctx.fillStyle = '#3a2a1c';
+    ctx.beginPath(); ctx.ellipse(0,-98,17,10,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5c4530';
+    ctx.beginPath(); ctx.moveTo(10,-92); ctx.lineTo(20,-84); ctx.lineTo(8,-86); ctx.closePath(); ctx.fill();
+  } else if(accessory === 'tiara'){
+    ctx.fillStyle = '#f0d878';
+    ctx.beginPath(); ctx.ellipse(0,-99,16,4,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-104,4,0,Math.PI*2); ctx.fill();
+  } else if(accessory === 'hood'){
+    ctx.fillStyle = robe2;
+    ctx.beginPath();
+    ctx.moveTo(-17,-84); ctx.quadraticCurveTo(-20,-108,0,-108);
+    ctx.quadraticCurveTo(20,-108,17,-84);
+    ctx.quadraticCurveTo(0,-96,-17,-84);
+    ctx.fill();
+  } else if(accessory === 'cap'){
+    ctx.fillStyle = '#294d3a';
+    ctx.beginPath(); ctx.ellipse(0,-99,15,7,0,Math.PI,0); ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawWell(x,y,dry){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = '#8a6d3b';
+  ctx.beginPath(); ctx.ellipse(0,0,32,12,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = dry ? '#5c4a2a' : '#3a6fa0';
+  ctx.beginPath(); ctx.ellipse(0,-2,24,8,0,0,Math.PI*2); ctx.fill();
+  if(dry){
+    ctx.strokeStyle = '#3a2a1c'; ctx.lineWidth=1.5;
+    for(let i=-16;i<18;i+=8){
+      ctx.beginPath(); ctx.moveTo(i,-6); ctx.lineTo(i+4,2); ctx.stroke();
+    }
+  }
+  ctx.fillStyle = '#a9822b';
+  ctx.fillRect(-30,-4,6,-30);
+  ctx.fillRect(24,-4,6,-30);
+  ctx.strokeStyle='#8a6d3b'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-27,-32); ctx.lineTo(27,-32); ctx.stroke();
+  ctx.restore();
+}
+
+function drawTree(x,y,withered){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.strokeStyle = withered? '#6b4226':'#4a3220';
+  ctx.lineWidth=8; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-46); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-30); ctx.lineTo(-16,-52); ctx.moveTo(0,-34); ctx.lineTo(16,-56);
+  ctx.lineWidth=5; ctx.stroke();
+  if(withered){
+    ctx.fillStyle = '#8a6d3b';
+    [[-16,-52],[16,-56],[0,-64]].forEach(p=>{
+      ctx.beginPath(); ctx.arc(p[0],p[1],7,0,Math.PI*2); ctx.fill();
+    });
+  } else {
+    ctx.fillStyle = '#3f5d3a';
+    [[-16,-52],[16,-56],[0,-64],[-8,-70],[10,-68]].forEach(p=>{
+      ctx.beginPath(); ctx.arc(p[0],p[1],14,0,Math.PI*2); ctx.fill();
+    });
+  }
+  ctx.restore();
+}
+
+function drawStone(x,y,active,highlight){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = highlight ? '#d4af37' : '#8a8a7a';
+  ctx.beginPath(); ctx.ellipse(0,0,26,13,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#5c5c4a'; ctx.lineWidth=2; ctx.stroke();
+  if(active){
+    ctx.strokeStyle='rgba(212,175,55,0.8)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.ellipse(0,0,31,17,0,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPond(x,y,r,t){
+  ctx.save();
+  ctx.translate(x,y);
+  const g = ctx.createRadialGradient(0,0,4,0,0,r);
+  g.addColorStop(0,'#bfe9f5');
+  g.addColorStop(1,'#3a90b0');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(0,0,r,r*0.42,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=2;
+  for(let i=0;i<3;i++){
+    const rippleR = Math.max(4, r*0.6-(i*30));
+    ctx.beginPath();
+    ctx.ellipse(0,-6+i*8+Math.sin(t/500+i)*2, rippleR, r*0.16, 0, 0.2, Math.PI-0.2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCloud(x,y,s){
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  [[-18,0],[0,-8],[18,0],[9,4],[-9,4]].forEach(p=>{
+    ctx.beginPath(); ctx.arc(x+p[0]*s,y+p[1]*s,14*s,0,Math.PI*2); ctx.fill();
+  });
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+/* ============ scene renderers ============ */
+const targetsCache = {}; // per scene click targets for hit-testing
+
+function renderIntro(t){
+  bgGradient('#7a2233','#3a0d15');
+  drawGround('#5c3d24', 380);
+  // pillars
+  drawPillar(90,420,220);
+  drawPillar(710,420,220);
+  // throne back
+  ctx.fillStyle='#8b1e2e';
+  roundRect(320,150,160,230,14); ctx.fill();
+  ctx.strokeStyle='#d4af37'; ctx.lineWidth=6; roundRect(320,150,160,230,14); ctx.stroke();
+  // king on throne
+  drawFigure(400,382,1.1,{robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+  // queen
+  drawFigure(300,392,0.85,{robe:'#c95d7c',robe2:'#8b1e2e',accessory:'tiara'});
+  // princes
+  drawFigure(500,398,0.6,{robe:'#4a6fa5',robe2:'#2e4a70',accessory:'blangkon'});
+  drawFigure(560,400,0.55,{robe:'#4a9a6f',robe2:'#2e6b45',accessory:'blangkon'});
+
+  targetsCache.intro = [{x:400,y:340,r:40}];
+  const glow = 0.5+0.5*Math.sin(t/300);
+  ctx.save();
+  ctx.globalAlpha = 0.35+0.25*glow;
+  ctx.strokeStyle='#f0d878'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.arc(400,340,44,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+function renderDrought(t){
+  bgGradient('#f0c96a','#d99a4e');
+  drawGround('#c9a35c', 400);
+  // sun
+  ctx.fillStyle='#ffec9e';
+  ctx.beginPath(); ctx.arc(680,80,50,0,Math.PI*2); ctx.fill();
+  drawTree(140,410,true);
+  drawTree(660,415,true);
+  const wells = [[220,430],[400,450],[580,430]];
+  targetsCache.drought = wells.map(w=>({x:w[0],y:w[1]-10,r:40}));
+  wells.forEach((w,i)=>{
+    drawWell(w[0],w[1],true);
+    if(!tapProgress.drought || !tapProgress.drought.has(i)){
+      ctx.save();
+      ctx.globalAlpha = 0.4+0.3*Math.sin(t/250+i);
+      ctx.strokeStyle='#8b1e2e'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(w[0],w[1]-6,44,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  });
+  // cracked ground lines
+  ctx.strokeStyle='rgba(90,60,20,0.4)'; ctx.lineWidth=2;
+  for(let i=0;i<6;i++){
+    const bx = 60+i*130;
+    ctx.beginPath(); ctx.moveTo(bx,460); ctx.lineTo(bx+30,500); ctx.lineTo(bx-10,510); ctx.stroke();
+  }
+}
+
+function renderForest(t){
+  bgGradient('#2e4a2e','#1c3320');
+  drawGround('#3a2a1c', 400);
+  for(let i=0;i<6;i++) drawTree(40+i*140, 420-((i%2)*20), false);
+  const stones = [[180,440],[400,460],[620,440]];
+  targetsCache.forest = stones.map(s=>({x:s[0],y:s[1],r:36}));
+  stones.forEach((s,i)=>{
+    const done = sequenceNext > i;
+    const isNext = sequenceNext === i;
+    drawStone(s[0],s[1],isNext,isNext);
+    if(done){
+      ctx.fillStyle='rgba(212,175,55,0.9)';
+      ctx.beginPath(); ctx.arc(s[0],s[1]-20,6,0,Math.PI*2); ctx.fill();
+    }
+  });
+  // king walking near current stone
+  const kx = sequenceNext < 3 ? stones[Math.min(sequenceNext,2)][0] : stones[2][0];
+  drawFigure(kx, (sequenceNext<3?stones[Math.min(sequenceNext,2)][1]:stones[2][1])-4, 0.85, {robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+}
+
+function renderPond(t){
+  bgGradient('#274a5e','#0f2430');
+  drawGround('#2a3f2a', 420);
+  drawPond(430,420,150,t);
+  drawFigure(230,430,0.95,{robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+  const shimmer = 0.5+0.5*Math.sin(t/260);
+  ctx.save(); ctx.globalAlpha = 0.75+0.2*shimmer;
+  drawFigure(470,400,0.85,{robe:'#eaf3ff',robe2:'#bcd9ee',skin:'#f5e3c7',accessory:'tiara',flip:true});
+  ctx.restore();
+}
+
+function renderEnvy(t){
+  bgGradient('#5c3040','#2e1622');
+  drawGround('#4a3220', 400);
+  drawPillar(430,430,240);
+  // patih jaya at desk working
+  drawFigure(180,420,0.85,{robe:'#3a6fa5',robe2:'#254a70',accessory:'blangkon'});
+  ctx.fillStyle='#a9822b'; ctx.fillRect(140,410,90,14);
+  // ki tua hidden behind pillar (peeking)
+  targetsCache.envy = [{x:470,y:400,r:34}];
+  const peek = 8+4*Math.sin(t/300);
+  drawFigure(470+peek,400,0.8,{robe:'#294d3a',robe2:'#16301f',skin:'#c9a06a',accessory:'cap'});
+}
+
+function renderSlander(t){
+  bgGradient('#7a2233','#3a0d15');
+  drawGround('#5c3d24', 380);
+  drawFigure(340,392,1.0,{robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+  drawFigure(560,398,0.85,{robe:'#294d3a',robe2:'#16301f',skin:'#c9a06a',accessory:'cap'});
+  // bubbles
+  bubbles.forEach(b=>{
+    ctx.save();
+    ctx.globalAlpha = b.alpha;
+    ctx.fillStyle = 'rgba(120,20,30,0.75)';
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#f0d878'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#f0d878'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('!', b.x, b.y);
+    ctx.restore();
+  });
+}
+
+function renderInvestigate(t){
+  bgGradient('#3a2a1c','#1c130c');
+  drawGround('#2a1e14', 400);
+  drawFigure(400,430,0.9,{robe:'#2e7a6f',robe2:'#1c4a45',accessory:'blangkon'});
+  const clues = [[150,380],[650,360],[400,460]];
+  const labels = ['👣','✉️','💰'];
+  targetsCache.investigate = clues.map(c=>({x:c[0],y:c[1],r:34}));
+  clues.forEach((c,i)=>{
+    const found = tapProgress.investigate && tapProgress.investigate.has(i);
+    ctx.save();
+    ctx.fillStyle = found ? 'rgba(212,175,55,0.9)' : 'rgba(255,255,255,0.12)';
+    ctx.beginPath(); ctx.arc(c[0],c[1],28,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = found? '#8b1e2e' : '#d4af37'; ctx.lineWidth=2; ctx.stroke();
+    ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.globalAlpha = found ? 1 : 0.55+0.3*Math.sin(t/300+i);
+    ctx.fillText(labels[i], c[0], c[1]);
+    ctx.restore();
+  });
+}
+
+function renderChoice(t){
+  bgGradient('#7a2233','#3a0d15');
+  drawGround('#5c3d24', 380);
+  drawFigure(400,392,1.05,{robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  roundRect(230,120,340,70,10); ctx.fill();
+  ctx.fillStyle='#f0d878'; ctx.font='16px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(LANG==='en' ? '"What should I do?"' : '"Apa yang harus kulakukan?"', 400, 160);
+  ctx.restore();
+}
+
+function renderEnding(t){
+  bgGradient('#3a6fa0','#8fd0c9');
+  drawGround('#3f5d3a', 420);
+  drawCloud(140,80,1.1); drawCloud(620,60,0.9);
+  // rain drops
+  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2;
+  for(let i=0;i<20;i++){
+    const rx = (i*43 + (t/12)%800) % 800;
+    const ry = (i*31 + (t/6)) % 420;
+    ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx-6,ry+14); ctx.stroke();
+  }
+  drawPond(650,430,90,t);
+  drawTree(120,430,false);
+  drawTree(220,440,false);
+  drawFigure(400,420,1.0,{robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+  drawFigure(320,430,0.8,{robe:'#c95d7c',robe2:'#8b1e2e',accessory:'tiara'});
+  drawFigure(470,432,0.75,{robe:'#3a6fa5',robe2:'#254a70',accessory:'blangkon'});
+}
+
+/* ============ scene render dispatcher ============ */
+const renderers = {
+  intro: renderIntro, drought: renderDrought, forest: renderForest,
+  pond: renderPond, envy: renderEnvy, slander: renderSlander,
+  investigate: renderInvestigate, choice: renderChoice, ending: renderEnding
+};
+
+/* ============ UI update helpers ============ */
+function updateDots(){
+  dotsEl.innerHTML='';
+  SCENES.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===sceneIndex?' active':(i<sceneIndex?' done':''));
+    dotsEl.appendChild(d);
+  });
+}
+
+function updateTextPanels(){
+  const sc = SCENES[sceneIndex];
+  if(!sc) return;
+  narrationText.textContent = t(sc.narration);
+  instructionText.textContent = sc.type === 'end' ? t(sc.instruction) : t(sc.instruction);
+}
+
+function setInstructionVisible(v){
+  document.getElementById('instruction-bar').style.visibility = v ? 'visible' : 'hidden';
+}
+
+/* ============ scene lifecycle ============ */
+function enterScene(idx){
+  sceneIndex = idx;
+  sceneComplete = false;
+  tapProgress[SCENES[idx].key] = new Set();
+  sequenceNext = 0;
+  bubbles = [];
+  mashCount = 0;
+  holdActive = false; holdProgress = 0;
+  nextBtn.style.display = 'none';
+  choiceRow.style.display = 'none';
+  holdBtn.style.display = 'none';
+  choiceRow.innerHTML = '';
+
+  updateDots();
+  updateTextPanels();
+  speak(t(SCENES[idx].narration));
+
+  const sc = SCENES[idx];
+  if(sc.type === 'hold'){
+    holdBtn.style.display = 'block';
+    holdLabel.textContent = t(sc.holdLabel);
+    holdFill.style.width = '0%';
+  }
+  if(sc.type === 'choice'){
+    choiceRow.style.display = 'flex';
+    sc.choices.forEach((c,ci)=>{
+      const b = document.createElement('button');
+      b.className='choice-btn';
+      b.textContent = t(c.label);
+      b.addEventListener('click', ()=>handleChoice(ci));
+      choiceRow.appendChild(b);
+    });
+  }
+  if(sc.type === 'mash'){
+    spawnBubbleWave();
+  }
+  if(sc.type === 'end'){
+    startBtn.textContent = UI[LANG].replay;
+    startBtn.style.display = 'block';
+    startBtn.dataset.mode = 'replay';
+  }
+}
+
+function completeScene(){
+  if(sceneComplete) return;
+  sceneComplete = true;
+  const sc = SCENES[sceneIndex];
+  if(sc.type !== 'end' && sc.type !== 'choice'){
+    nextBtn.style.display = 'flex';
+  }
+}
+
+function goNext(){
+  stopSpeak();
+  if(sceneIndex < SCENES.length - 1){
+    enterScene(sceneIndex + 1);
+  }
+}
+
+function handleChoice(ci){
+  const sc = SCENES[sceneIndex];
+  const choice = sc.choices[ci];
+  choiceRow.style.display = 'none';
+  stopSpeak();
+  narrationText.textContent = t(choice.feedback);
+  speak(t(choice.feedback));
+  if(choice.correct){
+    setTimeout(()=>{ goNext(); }, 2600);
+  } else {
+    setTimeout(()=>{
+      // re-show choices to try again
+      choiceRow.style.display = 'flex';
+      narrationText.textContent = t(sc.narration);
+    }, 2600);
+  }
+}
+
+/* ============ bubble mash logic ============ */
+function spawnBubbleWave(){
+  bubbles = [];
+  for(let i=0;i<SCENES.find(s=>s.key==='slander').targets;i++){
+    bubbles.push({
+      id:i,
+      x: 560 + (Math.random()*40-20),
+      y: 440 + Math.random()*40,
+      r: 16,
+      vx: -(1.2 + Math.random()*0.8),
+      vy: -(0.3 + Math.random()*0.4),
+      alpha: 1,
+      popped:false,
+      spawnDelay: i*550
+    });
+  }
+}
+
+/* ============ interaction handling ============ */
+function handlePointerDown(evt){
+  if(!started) return;
+  const sc = SCENES[sceneIndex];
+  if(!sc || sceneComplete) return;
+  const {x,y} = getLogicalXY(evt);
+
+  if(sc.type === 'tap-single'){
+    const list = targetsCache[sc.key] || [];
+    for(const tg of list){
+      if(Math.hypot(x-tg.x,y-tg.y) < tg.r){
+        completeScene();
+        return;
+      }
+    }
+  } else if(sc.type === 'tap-multi'){
+    const list = targetsCache[sc.key] || [];
+    const set = tapProgress[sc.key];
+    list.forEach((tg,i)=>{
+      if(!set.has(i) && Math.hypot(x-tg.x,y-tg.y) < tg.r){
+        set.add(i);
+      }
+    });
+    if(set.size >= sc.targets) completeScene();
+  } else if(sc.type === 'tap-sequence'){
+    const list = targetsCache[sc.key] || [];
+    const tg = list[sequenceNext];
+    if(tg && Math.hypot(x-tg.x,y-tg.y) < tg.r){
+      sequenceNext++;
+      if(sequenceNext >= sc.targets) completeScene();
+    }
+  } else if(sc.type === 'mash'){
+    for(const b of bubbles){
+      if(!b.popped && b.spawnDelay<=0 && Math.hypot(x-b.x,y-b.y) < b.r+6){
+        b.popped = true;
+        mashCount++;
+        if(mashCount >= sc.targets) completeScene();
+        break;
+      }
+    }
+  }
+}
+
+canvas.addEventListener('pointerdown', handlePointerDown);
+
+/* hold-to-vow interaction */
+let holdTimer = null;
+function startHold(){
+  const sc = SCENES[sceneIndex];
+  if(!sc || sc.type !== 'hold' || sceneComplete) return;
+  holdActive = true;
+}
+function endHold(){
+  holdActive = false;
+}
+holdBtn.addEventListener('pointerdown', (e)=>{ e.preventDefault(); startHold(); });
+window.addEventListener('pointerup', endHold);
+holdBtn.addEventListener('pointerleave', endHold);
+
+/* ============ main animation loop ============ */
+let lastT = performance.now();
+function loop(now){
+  const dt = now - lastT; lastT = now;
+  animT = now;
+  ctx.clearRect(0,0,LOGICAL_W,LOGICAL_H);
+
+  if(sceneIndex >= 0){
+    const sc = SCENES[sceneIndex];
+    const renderer = renderers[sc.key];
+    if(renderer) renderer(now);
+
+    // update hold progress
+    if(sc.type === 'hold' && !sceneComplete){
+      if(holdActive){
+        holdProgress = Math.min(100, holdProgress + dt/18);
+        if(holdProgress >= 100){
+          completeScene();
+        }
+      } else {
+        holdProgress = Math.max(0, holdProgress - dt/30);
+      }
+      holdFill.style.width = holdProgress + '%';
+    }
+
+    // update bubbles
+    if(sc.type === 'mash' && !sceneComplete){
+      bubbles.forEach(b=>{
+        if(b.spawnDelay>0){ b.spawnDelay -= dt; return; }
+        if(b.popped){
+          b.alpha -= dt/300;
+          return;
+        }
+        b.x += b.vx; b.y += b.vy;
+        if(Math.hypot(b.x-340,b.y-392) < 40){
+          b.popped = true; // reached king, treat as missed but remove
+          b.alpha = 0;
+        }
+      });
+      // respawn a bit if all handled but not complete and none active
+      const remaining = bubbles.filter(b=>!b.popped);
+      if(remaining.length === 0 && mashCount < sc.targets){
+        spawnBubbleWave();
+      }
+    }
+  } else {
+    // idle title screen art
+    bgGradient('#7a2233','#3a0d15');
+    drawGround('#5c3d24', 400);
+    drawFigure(400,410,1.15,{robe:'#8b1e2e',robe2:'#5c1521',accessory:'crown'});
+  }
+
+  rafId = requestAnimationFrame(loop);
+}
+rafId = requestAnimationFrame(loop);
+
+/* watch for scene completion to reveal choice/end buttons already handled */
+
+/* ============ next button ============ */
+nextBtn.addEventListener('click', goNext);
+
+/* ============ start / replay ============ */
+startBtn.addEventListener('click', ()=>{
+  started = true;
+  startBtn.style.display = 'none';
+  if(startBtn.dataset.mode === 'replay'){
+    startBtn.dataset.mode = '';
+    startBtn.textContent = UI[LANG].start;
+  }
+  enterScene(0);
+});
+
+/* ============ mute toggle ============ */
+function refreshMuteBtn(){
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+}
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('rajasubrata_muted', muted ? '1':'0');
+  refreshMuteBtn();
+  if(muted) stopSpeak();
+});
+refreshMuteBtn();
+
+/* ============ language toggle ============ */
+function applyStaticText(){
+  titleText.textContent = UI[LANG].title;
+  subtitleText.textContent = UI[LANG].subtitle;
+  footerText.textContent = UI[LANG].footer;
+  langBtn.textContent = LANG === 'id' ? 'EN' : 'ID';
+  startBtn.textContent = (startBtn.dataset.mode === 'replay') ? UI[LANG].replay : UI[LANG].start;
+  document.documentElement.lang = LANG;
+  if(sceneIndex >= 0) updateTextPanels();
+  if(sceneIndex >= 0 && SCENES[sceneIndex].type === 'choice' && choiceRow.style.display !== 'none'){
+    // refresh choice labels
+    const sc = SCENES[sceneIndex];
+    choiceRow.innerHTML='';
+    sc.choices.forEach((c,ci)=>{
+      const b = document.createElement('button');
+      b.className='choice-btn';
+      b.textContent = t(c.label);
+      b.addEventListener('click', ()=>handleChoice(ci));
+      choiceRow.appendChild(b);
+    });
+  }
+  if(sceneIndex >=0 && SCENES[sceneIndex].type === 'hold'){
+    holdLabel.textContent = t(SCENES[sceneIndex].holdLabel);
+  }
+}
+langBtn.addEventListener('click', ()=>{
+  LANG = LANG === 'id' ? 'en' : 'id';
+  stopSpeak();
+  applyStaticText();
+});
+applyStaticText();
+
+/* voices sometimes load async */
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = function(){};
+}
+
+/* initial resize ping */
+setTimeout(postHeight, 200);
+setTimeout(postHeight, 800);
+
+})();
+</script>
+</body>
+</html>
