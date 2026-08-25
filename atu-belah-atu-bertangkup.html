@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atu Belah Atu Bertangkup - Cerita Rakyat Aceh</title>
+<style>
+  :root{
+    --forest-dark:#1b2e1f;
+    --forest-mid:#2f4a33;
+    --forest-light:#4c7a4f;
+    --gold:#e8b64c;
+    --gold-glow:#ffd97a;
+    --stone:#7c7873;
+    --stone-dark:#4f4c48;
+    --cream:#f4ecd8;
+    --accent:#c0392b;
+    --panel-bg:#22301f;
+    --text-light:#f4ecd8;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(180deg,#0f1a10,#1b2e1f);
+    color:var(--text-light);
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:820px;
+    margin:0 auto;
+    padding:10px 10px 6px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .topbar{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+    gap:8px;
+  }
+  .title{
+    font-size:15px;
+    font-weight:700;
+    color:var(--gold);
+    letter-spacing:.3px;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+  .controls{
+    display:flex;
+    gap:6px;
+  }
+  .iconbtn{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(232,182,76,.4);
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:background .15s;
+  }
+  .iconbtn:hover{background:rgba(255,255,255,.16);}
+  .iconbtn:active{transform:scale(.96);}
+
+  #canvasWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:8/5;
+    background:linear-gradient(180deg,#274a2b 0%,#1b2e1f 100%);
+    border-radius:14px;
+    overflow:hidden;
+    border:3px solid #3a2a18;
+    box-shadow:0 6px 18px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.25);
+    touch-action:none;
+  }
+  #game{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  #startOverlay, #endOverlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,rgba(10,15,10,.88),rgba(10,15,10,.94));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    z-index:5;
+  }
+  #startOverlay h1, #endOverlay h1{
+    color:var(--gold);
+    font-size:clamp(18px,4vw,28px);
+    margin:0 0 10px;
+    text-shadow:0 2px 6px rgba(0,0,0,.6);
+  }
+  #startOverlay p, #endOverlay p{
+    color:var(--cream);
+    max-width:520px;
+    font-size:clamp(12px,2.6vw,14px);
+    line-height:1.5;
+    margin:0 0 18px;
+    opacity:.9;
+  }
+  .bigbtn{
+    background:linear-gradient(180deg,var(--gold-glow),var(--gold));
+    color:#3a2a10;
+    border:none;
+    border-radius:30px;
+    padding:12px 28px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,.4);
+    transition:transform .15s;
+  }
+  .bigbtn:hover{transform:translateY(-2px);}
+  .bigbtn:active{transform:scale(.96);}
+
+  #dots{
+    display:flex;
+    gap:6px;
+    margin:10px 0 8px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+    transition:background .2s, transform .2s;
+  }
+  .dot.active{background:var(--gold);transform:scale(1.3);}
+  .dot.done{background:var(--forest-light);}
+
+  #narrationPanel{
+    width:100%;
+    background:var(--panel-bg);
+    border:1px solid rgba(232,182,76,.25);
+    border-radius:12px;
+    padding:12px 16px;
+    min-height:70px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  #narrationText{
+    font-size:14px;
+    line-height:1.55;
+    color:var(--cream);
+  }
+  #instructionText{
+    font-size:13px;
+    color:var(--gold);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  #instructionText:before{
+    content:"👉";
+  }
+
+  footer{
+    margin-top:14px;
+    font-size:11px;
+    color:rgba(244,236,216,.4);
+    text-align:center;
+    padding-bottom:6px;
+  }
+
+  .langswitch{
+    font-size:12px;
+    font-weight:700;
+  }
+
+  @media (max-width:480px){
+    .title{font-size:13px;}
+    .iconbtn{padding:5px 8px;font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title" id="titleText">Atu Belah Atu Bertangkup</div>
+    <div class="controls">
+      <button class="iconbtn langswitch" id="langBtn">EN</button>
+      <button class="iconbtn" id="muteBtn">🔊</button>
+    </div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="game"></canvas>
+    <div id="startOverlay">
+      <h1 id="startTitle">Atu Belah Atu Bertangkup</h1>
+      <p id="startDesc">Cerita rakyat dari Aceh tentang batu ajaib, keserakahan, dan keikhlasan seorang anak.</p>
+      <button class="bigbtn" id="startBtn">▶ Mulai Cerita</button>
+    </div>
+    <div id="endOverlay" style="display:none;">
+      <h1 id="endTitle">Selesai!</h1>
+      <p id="endDesc">Terima kasih telah mengikuti kisah Mak Intan dan Amat.</p>
+      <button class="bigbtn" id="replayBtn">↻ Ulangi Cerita</button>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="narrationPanel">
+    <div id="narrationText"></div>
+    <div id="instructionText"></div>
+  </div>
+
+  <footer id="footerText">Kisah rakyat Nusantara &middot; Dongeng interaktif</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ i18n ============ */
+const params = new URLSearchParams(location.search);
+let lang = (params.get('lang') === 'en') ? 'en' : (localStorage.getItem('abab_lang') || 'id');
+
+const UI = {
+  id:{
+    title:"Atu Belah Atu Bertangkup",
+    startTitle:"Atu Belah Atu Bertangkup",
+    startDesc:"Cerita rakyat dari Aceh tentang batu ajaib, keserakahan, dan keikhlasan seorang anak. Ketuk tombol di bawah untuk memulai.",
+    startBtn:"▶ Mulai Cerita",
+    endTitle:"Selesai!",
+    endDesc:"Terima kasih telah mengikuti kisah Mak Intan dan Amat. Keserakahan membawa petaka, keikhlasan membawa kebahagiaan.",
+    replayBtn:"↻ Ulangi Cerita",
+    footer:"Kisah rakyat Nusantara · Dongeng interaktif",
+    langBtnLabel:"EN"
+  },
+  en:{
+    title:"The Split Stone (Atu Belah Atu Bertangkup)",
+    startTitle:"The Split Stone",
+    startDesc:"A folktale from Aceh about a magic stone, greed, and a child's sincerity. Tap the button below to begin.",
+    startBtn:"▶ Start Story",
+    endTitle:"The End!",
+    endDesc:"Thank you for following the story of Mak Intan and Amat. Greed brings misfortune, sincerity brings happiness.",
+    replayBtn:"↻ Replay Story",
+    footer:"Indonesian folktales · Interactive story",
+    langBtnLabel:"ID"
+  }
+};
+
+function applyStaticUI(){
+  const t = UI[lang];
+  document.getElementById('titleText').textContent = t.title;
+  document.getElementById('startTitle').textContent = t.startTitle;
+  document.getElementById('startDesc').textContent = t.startDesc;
+  document.getElementById('startBtn').textContent = t.startBtn;
+  document.getElementById('endTitle').textContent = t.endTitle;
+  document.getElementById('endDesc').textContent = t.endDesc;
+  document.getElementById('replayBtn').textContent = t.replayBtn;
+  document.getElementById('footerText').textContent = t.footer;
+  document.getElementById('langBtn').textContent = t.langBtnLabel;
+  document.documentElement.lang = lang;
+}
+applyStaticUI();
+
+document.getElementById('langBtn').addEventListener('click', ()=>{
+  lang = (lang === 'id') ? 'en' : 'id';
+  localStorage.setItem('abab_lang', lang);
+  applyStaticUI();
+  updateNarration();
+  buildDots();
+});
+
+/* ============ Mute ============ */
+let muted = (localStorage.getItem('abab_muted') === '1');
+function updateMuteBtn(){
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+}
+updateMuteBtn();
+document.getElementById('muteBtn').addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('abab_muted', muted ? '1':'0');
+  updateMuteBtn();
+  if(muted && window.speechSynthesis) speechSynthesis.cancel();
+  else speakCurrent();
+});
+
+/* ============ Speech ============ */
+let voicesCache = [];
+function loadVoices(){ voicesCache = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+if(window.speechSynthesis){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(l){
+  if(!voicesCache || !voicesCache.length) return null;
+  const wantId = l === 'id';
+  let v = voicesCache.find(v => wantId ? v.lang.toLowerCase().startsWith('id') : v.lang.toLowerCase().startsWith('en'));
+  return v || null;
+}
+function speak(text){
+  if(!window.speechSynthesis || muted || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === 'id' ? 'id-ID' : 'en-US';
+  const v = pickVoice(lang);
+  if(v) u.voice = v;
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+function speakCurrent(){
+  const sc = scenes[currentIndex];
+  if(sc) speak(sc.narration[lang]);
+}
+
+/* ============ Canvas setup ============ */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvasWrap');
+const BASE_W = 800, BASE_H = 500;
+let scaleRatio = 1;
+
+function resizeCanvas(){
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  scaleRatio = rect.width / BASE_W;
+  ctx.scale(scaleRatio, scaleRatio);
+  postResize();
+}
+window.addEventListener('resize', resizeCanvas);
+
+function postResize(){
+  try{
+    const h = document.getElementById('app').getBoundingClientRect().height + 20;
+    window.parent.postMessage({type:'abab-resize', height: Math.ceil(h)}, '*');
+  }catch(e){}
+}
+
+/* ============ Pointer helpers ============ */
+function getPos(evt){
+  const rect = canvas.getBoundingClientRect();
+  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  return {
+    x: (clientX - rect.left) * (BASE_W / rect.width),
+    y: (clientY - rect.top) * (BASE_H / rect.height)
+  };
+}
+let pointerDown = false;
+canvas.addEventListener('pointerdown', e=>{
+  pointerDown = true;
+  const p = getPos(e);
+  const sc = scenes[currentIndex];
+  if(sc && sc.onDown) sc.onDown(p.x,p.y);
+});
+canvas.addEventListener('pointermove', e=>{
+  const p = getPos(e);
+  const sc = scenes[currentIndex];
+  if(sc && sc.onMove) sc.onMove(p.x,p.y,pointerDown);
+});
+window.addEventListener('pointerup', e=>{
+  pointerDown = false;
+  const sc = scenes[currentIndex];
+  if(sc && sc.onUp) sc.onUp();
+});
+
+/* ============ Utility drawing ============ */
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function drawButton(btn){
+  ctx.save();
+  ctx.globalAlpha = btn.disabled ? 0.4 : 1;
+  ctx.fillStyle = btn.color || '#e8b64c';
+  roundRect(btn.x,btn.y,btn.w,btn.h,btn.h/2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.25)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = btn.textColor || '#3a2a10';
+  ctx.font = 'bold 16px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(btn.label, btn.x+btn.w/2, btn.y+btn.h/2+1);
+  ctx.restore();
+}
+function hitButton(btn,x,y){
+  return btn && !btn.disabled && x>=btn.x && x<=btn.x+btn.w && y>=btn.y && y<=btn.y+btn.h;
+}
+function drawProgressBar(x,y,w,h,pct,color){
+  ctx.save();
+  roundRect(x,y,w,h,h/2);
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.fill();
+  const fw = Math.max(h, w*Math.min(1,pct));
+  roundRect(x,y,fw,h,h/2);
+  ctx.fillStyle = color || '#e8b64c';
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.3)';
+  ctx.lineWidth=1.5;
+  roundRect(x,y,w,h,h/2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* Forest background */
+function drawForestBg(t){
+  const g = ctx.createLinearGradient(0,0,0,BASE_H);
+  g.addColorStop(0,'#3b5c3e');
+  g.addColorStop(1,'#1b2e1f');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,BASE_W,BASE_H);
+  // ground
+  ctx.fillStyle = '#2a3f24';
+  ctx.beginPath();
+  ctx.ellipse(BASE_W/2, BASE_H+40, BASE_W*0.75, 120, 0, 0, Math.PI*2);
+  ctx.fill();
+  // trees (procedural)
+  const treeXs = [60,140,690,740,20,760];
+  treeXs.forEach((tx,i)=>{
+    const sway = Math.sin(t/900 + i)*3;
+    drawTree(tx + sway, 70 + (i%2)*10, 0.8 + (i%3)*0.15);
+  });
+}
+function drawTree(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#3d2a18';
+  ctx.fillRect(-8,60,16,90);
+  ctx.fillStyle = '#2f5c34';
+  ctx.beginPath();
+  ctx.ellipse(0,40,50,60,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#376b3d';
+  ctx.beginPath();
+  ctx.ellipse(-20,20,32,38,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(25,15,30,36,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* Person figure: Mak Intan (adult) or Amat (child) */
+function drawPerson(x,y,scale,opts){
+  opts = opts || {};
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const bob = opts.bob || 0;
+  ctx.translate(0, Math.sin(bob)*2);
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.beginPath();
+  ctx.ellipse(0,72,26,8,0,0,Math.PI*2);
+  ctx.fill();
+  // body (kebaya-like)
+  ctx.fillStyle = opts.bodyColor || '#8a4b3b';
+  roundRect(-18,10,36,55,14);
+  ctx.fill();
+  // sash
+  ctx.fillStyle = opts.sashColor || '#c0392b';
+  ctx.fillRect(-18,38,36,8);
+  // arms
+  ctx.strokeStyle = opts.bodyColor || '#8a4b3b';
+  ctx.lineWidth = 10;
+  ctx.lineCap='round';
+  const armSwing = opts.armSwing || 0;
+  ctx.beginPath();
+  ctx.moveTo(-16,20); ctx.lineTo(-30,42+armSwing);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(16,20); ctx.lineTo(30,42-armSwing);
+  ctx.stroke();
+  // head
+  ctx.fillStyle = '#e8b98a';
+  ctx.beginPath();
+  ctx.arc(0,-6,17,0,Math.PI*2);
+  ctx.fill();
+  // hair / head covering
+  ctx.fillStyle = opts.hairColor || '#2b1b12';
+  ctx.beginPath();
+  ctx.arc(0,-10,18,Math.PI, Math.PI*2);
+  ctx.fill();
+  if(opts.headscarf){
+    ctx.fillStyle = opts.scarfColor || '#d98c3f';
+    ctx.beginPath();
+    ctx.arc(0,-9,19,Math.PI*0.9,Math.PI*2.1);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(14,-4); ctx.lineTo(26,14); ctx.lineTo(16,10); ctx.closePath();
+    ctx.fill();
+  }
+  // face
+  ctx.fillStyle='#2b1b12';
+  ctx.beginPath(); ctx.arc(-5,-6,1.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,-6,1.6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#8a4b3b';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.arc(0,-1,4,0.15*Math.PI,0.85*Math.PI);
+  ctx.stroke();
+  // legs
+  ctx.strokeStyle = opts.bodyColor || '#8a4b3b';
+  ctx.lineWidth=11;
+  ctx.beginPath();
+  ctx.moveTo(-8,62); ctx.lineTo(-10,78);
+  ctx.moveTo(8,62); ctx.lineTo(10,78);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* Stone (Atu) */
+function drawStone(x,y,scale,openAmt,glow){
+  // openAmt: 0 closed .. 1 fully open (split apart)
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const gap = openAmt * 46;
+  if(glow>0){
+    const grad = ctx.createRadialGradient(0,0,10,0,0,120);
+    grad.addColorStop(0, `rgba(255,217,122,${0.55*glow})`);
+    grad.addColorStop(1, 'rgba(255,217,122,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0,0,120,0,Math.PI*2);
+    ctx.fill();
+  }
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath();
+  ctx.ellipse(0,78,90,16,0,0,Math.PI*2);
+  ctx.fill();
+
+  function half(sign){
+    ctx.save();
+    ctx.translate(sign*gap,0);
+    ctx.beginPath();
+    ctx.moveTo(sign*-70,70);
+    ctx.lineTo(sign*-78,10);
+    ctx.lineTo(sign*-40,-60);
+    ctx.lineTo(sign*10,-72);
+    ctx.lineTo(sign*10,70);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(sign*-78,-72,sign*10,70);
+    g.addColorStop(0,'#8f8b84');
+    g.addColorStop(1,'#57534d');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle='#3a3733';
+    ctx.lineWidth=3;
+    ctx.stroke();
+    // cracks/texture
+    ctx.strokeStyle='rgba(0,0,0,.15)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(sign*-50,0); ctx.lineTo(sign*-20,-20);
+    ctx.moveTo(sign*-40,30); ctx.lineTo(sign*-10,20);
+    ctx.stroke();
+    ctx.restore();
+  }
+  half(-1); half(1);
+
+  if(openAmt>0.05){
+    const grad2 = ctx.createLinearGradient(-30,-60,30,60);
+    grad2.addColorStop(0,'#fff3c4');
+    grad2.addColorStop(1,'#e8b64c');
+    ctx.fillStyle = grad2;
+    ctx.globalAlpha = Math.min(1,openAmt*1.4);
+    roundRect(-gap+8,-60,gap*2-16,132,10);
+    ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
+function drawGem(x,y,size,color){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.beginPath();
+  ctx.moveTo(0,-size); ctx.lineTo(size*0.8,0); ctx.lineTo(0,size); ctx.lineTo(-size*0.8,0);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.6)';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  ctx.restore();
+}
+function drawGoldPile(x,y,size){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle='#e8b64c';
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.arc(Math.cos(i*1.3)*size*0.4, Math.sin(i*1.3)*size*0.25, size*0.35,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawWoodBundle(x,y,size){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(-0.1);
+  for(let i=-2;i<=2;i++){
+    ctx.fillStyle = i%2===0? '#7a5230':'#6b471f';
+    roundRect(-size, i*size*0.28-3, size*2, size*0.24, 4);
+    ctx.fill();
+  }
+  ctx.strokeStyle='#3a2a12';
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-size*0.6,-size*0.7); ctx.lineTo(size*0.6,size*0.7);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawGardenPatch(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle='#5a3d22';
+  roundRect(-45,-6,90,30,6);
+  ctx.fill();
+  for(let i=-3;i<=3;i++){
+    ctx.fillStyle = '#4f8a3f';
+    ctx.beginPath();
+    ctx.ellipse(i*12, -8, 8,14,0,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawFootprint(x,y,size){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.beginPath();
+  ctx.ellipse(0,0,size*0.5,size*0.8,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============ Particles (sparkle) ============ */
+let particles = [];
+function spawnSparkles(x,y,n,color){
+  for(let i=0;i<n;i++){
+    particles.push({
+      x,y,
+      vx:(Math.random()-0.5)*3,
+      vy:-Math.random()*3-1,
+      life:1,
+      color: color || '#ffd97a',
+      size: 2+Math.random()*3
+    });
+  }
+}
+function updateParticles(dt){
+  particles.forEach(p=>{
+    p.x += p.vx; p.y += p.vy; p.vy += 0.06*dt/16;
+    p.life -= 0.015*dt/16;
+  });
+  particles = particles.filter(p=>p.life>0);
+}
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.save();
+    ctx.globalAlpha = Math.max(0,p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+/* ============ Scene definitions ============ */
+let currentIndex = 0;
+let started = false;
+let lastTime = 0;
+
+function nextScene(){
+  if(currentIndex < scenes.length-1){
+    currentIndex++;
+    enterScene();
+  } else {
+    finishStory();
+  }
+}
+
+function enterScene(){
+  const sc = scenes[currentIndex];
+  if(sc.init) sc.init();
+  updateNarration();
+  buildDots();
+  speakCurrent();
+}
+
+function updateNarration(){
+  const sc = scenes[currentIndex];
+  document.getElementById('narrationText').textContent = sc.narration[lang];
+  document.getElementById('instructionText').textContent = sc.instruction[lang];
+}
+
+function buildDots(){
+  const dotsEl = document.getElementById('dots');
+  dotsEl.innerHTML = '';
+  scenes.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===currentIndex ? ' active' : (i<currentIndex ? ' done':''));
+    dotsEl.appendChild(d);
+  });
+}
+
+function finishStory(){
+  document.getElementById('endOverlay').style.display = 'flex';
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  speak(UI[lang].endDesc);
+  postResize();
+}
+
+/* ---- Scene 1: Mencari kayu bakar (mash) ---- */
+const scene1 = {
+  narration:{
+    id:"Di sebuah desa kecil di Aceh, hiduplah Mak Intan bersama anaknya, Amat. Suatu hari, Mak Intan pergi ke hutan untuk mencari kayu bakar.",
+    en:"In a small village in Aceh lived Mak Intan with her son, Amat. One day, Mak Intan went into the forest to gather firewood."
+  },
+  instruction:{
+    id:"Ketuk tumpukan kayu berulang kali untuk mengumpulkannya.",
+    en:"Tap the pile of wood repeatedly to collect it."
+  },
+  state:{},
+  init(){
+    this.state = { taps:0, target:8, done:false, shake:0, personBob:0 };
+  },
+  onDown(x,y){
+    if(this.state.done) return;
+    const dx = x-560, dy=y-360;
+    if(dx*dx+dy*dy < 60*60){
+      this.state.taps++;
+      this.state.shake = 6;
+      spawnSparkles(560,360,4,'#c98d4d');
+      if(this.state.taps >= this.state.target){
+        this.state.done = true;
+        setTimeout(nextScene, 700);
+      }
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    drawPerson(240,330,1.1,{bob:t/300});
+    const s = this.state;
+    ctx.save();
+    if(s.shake>0){ ctx.translate((Math.random()-0.5)*s.shake,(Math.random()-0.5)*s.shake); s.shake*=0.85; }
+    drawWoodBundle(560,360,30 + Math.min(s.taps,s.target)*3);
+    ctx.restore();
+    drawProgressBar(320,60,160,16, s.taps/s.target, '#c98d4d');
+    ctx.save();
+    ctx.fillStyle='#f4ecd8'; ctx.font='13px Segoe UI'; ctx.textAlign='center';
+    ctx.fillText(lang==='id'?'Kayu terkumpul':'Wood collected', 400, 52);
+    ctx.restore();
+  }
+};
+
+/* ---- Scene 2: Batu ajaib terbuka (tap 3x) ---- */
+const scene2 = {
+  narration:{
+    id:"Tiba-tiba terdengar suara gemuruh dari sebuah batu besar di tengah hutan. Mak Intan penasaran dan mendekat perlahan.",
+    en:"Suddenly a rumbling sound came from a huge stone in the forest. Curious, Mak Intan slowly approached."
+  },
+  instruction:{
+    id:"Ketuk batu besar itu untuk mendekat dan membukanya.",
+    en:"Tap the huge stone to approach and open it."
+  },
+  state:{},
+  init(){
+    this.state = { taps:0, target:3, personX:260, openAmt:0, glow:0, done:false };
+  },
+  onDown(x,y){
+    if(this.state.done) return;
+    const dx=x-480, dy=y-280;
+    if(dx*dx+dy*dy < 110*110){
+      this.state.taps++;
+      this.state.personX += 40;
+      spawnSparkles(480,280,10,'#ffd97a');
+      if(this.state.taps>=this.state.target){
+        this.state.done = true;
+        this.animOpen();
+      }
+    }
+  },
+  animOpen(){
+    const s = this.state;
+    const step = ()=>{
+      s.openAmt = Math.min(1, s.openAmt+0.035);
+      s.glow = Math.min(1, s.glow+0.035);
+      if(s.openAmt<1) requestAnimationFrame(step);
+      else setTimeout(nextScene, 900);
+    };
+    step();
+  },
+  draw(t){
+    drawForestBg(t);
+    const s = this.state;
+    drawStone(480,280,1.15, s.openAmt, s.glow + 0.15*Math.sin(t/300));
+    drawPerson(Math.min(s.personX,340),330,1.1,{bob:t/260});
+    updateParticles(16); drawParticles();
+    if(!s.done){
+      ctx.save();
+      ctx.fillStyle='rgba(255,255,255,.85)';
+      ctx.font='12px Segoe UI'; ctx.textAlign='center';
+      ctx.fillText((lang==='id'?'Ketuk ':'Tap ') + s.taps + '/' + s.target, 480, 400);
+      ctx.restore();
+    }
+  }
+};
+
+/* ---- Scene 3: Ambil harta pertama (drag & drop) ---- */
+const scene3 = {
+  narration:{
+    id:"Di dalam batu, Mak Intan melihat ruangan penuh emas dan permata. Ia mengambil secukupnya sebelum batu menutup kembali.",
+    en:"Inside the stone, Mak Intan saw a room full of gold and jewels. She took just enough before the stone closed again."
+  },
+  instruction:{
+    id:"Seret emas dan permata ke dalam kantong Mak Intan.",
+    en:"Drag the gold and jewels into Mak Intan's bag."
+  },
+  state:{},
+  init(){
+    this.state = {
+      items:[
+        {x:300,y:220,type:'gem',color:'#e0483e',taken:false},
+        {x:420,y:190,type:'gold',taken:false},
+        {x:500,y:240,type:'gem',color:'#4c9be0',taken:false},
+        {x:380,y:280,type:'gold',taken:false}
+      ],
+      bag:{x:660,y:340,r:55},
+      dragging:null,
+      collected:0
+    };
+  },
+  onDown(x,y){
+    const s = this.state;
+    for(const it of s.items){
+      if(it.taken) continue;
+      const dx=x-it.x, dy=y-it.y;
+      if(dx*dx+dy*dy < 30*30){ s.dragging = it; break; }
+    }
+  },
+  onMove(x,y,down){
+    if(!down) return;
+    const s = this.state;
+    if(s.dragging){ s.dragging.x = x; s.dragging.y = y; }
+  },
+  onUp(){
+    const s = this.state;
+    if(s.dragging){
+      const dx = s.dragging.x - s.bag.x, dy = s.dragging.y - s.bag.y;
+      if(dx*dx+dy*dy < s.bag.r*s.bag.r){
+        s.dragging.taken = true;
+        s.collected++;
+        spawnSparkles(s.bag.x,s.bag.y,8,'#ffd97a');
+        if(s.collected >= s.items.length){
+          setTimeout(nextScene, 700);
+        }
+      }
+      s.dragging = null;
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    // glow interior
+    const grad = ctx.createRadialGradient(400,250,20,400,250,320);
+    grad.addColorStop(0,'rgba(255,230,150,.25)');
+    grad.addColorStop(1,'rgba(255,230,150,0)');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,BASE_W,BASE_H);
+
+    const s = this.state;
+    // bag
+    ctx.save();
+    ctx.fillStyle='#6b3d22';
+    ctx.beginPath();
+    ctx.ellipse(s.bag.x, s.bag.y+20, 55, 40, 0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='#3a2a12'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle='#f4ecd8'; ctx.font='12px Segoe UI'; ctx.textAlign='center';
+    ctx.fillText(lang==='id'?'Kantong':'Bag', s.bag.x, s.bag.y+70);
+    ctx.restore();
+
+    drawPerson(660,240,0.9,{bob:t/300});
+
+    s.items.forEach(it=>{
+      if(it.taken) return;
+      if(it.type==='gem') drawGem(it.x,it.y,16,it.color);
+      else drawGoldPile(it.x,it.y,22);
+    });
+    updateParticles(16); drawParticles();
+
+    ctx.save();
+    ctx.fillStyle='#f4ecd8'; ctx.font='13px Segoe UI'; ctx.textAlign='center';
+    ctx.fillText((lang==='id'?'Terkumpul: ':'Collected: ')+s.collected+'/'+s.items.length, 400, 40);
+    ctx.restore();
+  }
+};
+
+/* ---- Scene 4: transisi tombol lanjut ---- */
+const scene4 = {
+  narration:{
+    id:"Dengan harta itu, Mak Intan dan Amat hidup berkecukupan. Namun beberapa bulan kemudian, Mak Intan kembali ke hutan dan menemukan batu ajaib itu terbuka lagi.",
+    en:"With that treasure, Mak Intan and Amat lived comfortably. But a few months later, Mak Intan returned to the forest and found the magic stone open again."
+  },
+  instruction:{
+    id:"Ketuk tombol 'Lanjut' untuk melanjutkan cerita.",
+    en:"Tap the 'Continue' button to move the story forward."
+  },
+  state:{},
+  init(){
+    this.state = { btn:{x:330,y:400,w:140,h:44,label: lang==='id'?'Lanjut ▶':'Continue ▶'} };
+  },
+  onDown(x,y){
+    if(hitButton(this.state.btn,x,y)) nextScene();
+  },
+  draw(t){
+    drawForestBg(t);
+    drawPerson(280,300,1.2,{bob:t/280, sashColor:'#c0392b'});
+    drawStone(560,300,0.9,1,0.2+0.1*Math.sin(t/400));
+    this.state.btn.label = lang==='id'?'Lanjut ▶':'Continue ▶';
+    drawButton(this.state.btn);
+  }
+};
+
+/* ---- Scene 5: Keserakahan (mash/rapid tap timed) ---- */
+const scene5 = {
+  narration:{
+    id:"Kali ini Mak Intan menjadi serakah. Ia ingin mengambil emas dan permata sebanyak-banyaknya!",
+    en:"This time Mak Intan became greedy. She wanted to grab as much gold and jewels as possible!"
+  },
+  instruction:{
+    id:"Ketuk layar secepat mungkin untuk mengumpulkan harta sebanyak mungkin sebelum waktu habis!",
+    en:"Tap the screen as fast as you can to collect as much treasure as possible before time runs out!"
+  },
+  state:{},
+  init(){
+    this.state = { count:0, timeLeft:5000, started:false, done:false };
+  },
+  onDown(x,y){
+    const s = this.state;
+    if(s.done) return;
+    if(!s.started){ s.started = true; }
+    s.count++;
+    spawnSparkles(400+ (Math.random()-0.5)*200, 260+(Math.random()-0.5)*100, 6, '#ffd97a');
+  },
+  update(dt){
+    const s = this.state;
+    if(s.started && !s.done){
+      s.timeLeft -= dt;
+      if(s.timeLeft <= 0){
+        s.timeLeft = 0;
+        s.done = true;
+        setTimeout(nextScene, 900);
+      }
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    const s = this.state;
+    drawStone(400,290,1.2,1,0.35);
+    drawPerson(400,300,0.9,{bob:t/150});
+    for(let i=0;i<6;i++){
+      const ang = i*1.1 + t/600;
+      drawGoldPile(400+Math.cos(ang)*90, 280+Math.sin(ang)*50, 16);
+    }
+    updateParticles(16); drawParticles();
+
+    drawProgressBar(300,60,200,18, s.started? (s.timeLeft/5000):1, '#e0483e');
+    ctx.save();
+    ctx.fillStyle='#f4ecd8'; ctx.font='bold 16px Segoe UI'; ctx.textAlign='center';
+    ctx.fillText((lang==='id'?'Harta: ':'Treasure: ')+s.count, 400, 40);
+    if(!s.started){
+      ctx.font='13px Segoe UI';
+      ctx.fillText(lang==='id'?'Ketuk untuk mulai!':'Tap to start!', 400, 440);
+    }
+    ctx.restore();
+  }
+};
+
+/* ---- Scene 6: Batu menutup - terjebak (press & hold) ---- */
+const scene6 = {
+  narration:{
+    id:"Batu itu mulai bergerak menutup. Kantong Mak Intan yang terlalu penuh membuatnya sulit bergerak!",
+    en:"The stone began to close. Mak Intan's overloaded bag made it hard for her to move!"
+  },
+  instruction:{
+    id:"Tekan dan tahan tombol 'Kabur!' untuk mencoba melarikan diri.",
+    en:"Press and hold the 'Escape!' button to try to get away."
+  },
+  state:{},
+  init(){
+    this.state = {
+      btn:{x:330,y:400,w:140,h:46,label:lang==='id'?'Kabur!':'Escape!'},
+      holding:false, progress:0, closeAmt:0, trapped:false
+    };
+  },
+  onDown(x,y){
+    if(hitButton(this.state.btn,x,y) && !this.state.trapped) this.state.holding = true;
+  },
+  onUp(){ this.state.holding = false; },
+  update(dt){
+    const s = this.state;
+    if(s.trapped) return;
+    if(s.holding) s.progress = Math.min(1, s.progress + dt/2200);
+    s.closeAmt = Math.min(1, s.closeAmt + dt/2600);
+    if(s.closeAmt>=1 && !s.trapped){
+      s.trapped = true;
+      setTimeout(nextScene, 1100);
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    const s = this.state;
+    const openAmt = 1 - s.closeAmt;
+    drawStone(480,280,1.15, Math.max(0,openAmt), 0.25);
+    const px = 480 - s.closeAmt*40;
+    drawPerson(px,300,0.95,{bob:t/180});
+    if(!s.trapped){
+      this.state.btn.label = lang==='id'?'Kabur!':'Escape!';
+      drawButton(this.state.btn);
+      drawProgressBar(300,70,200,14, s.progress, '#4c9be0');
+    } else {
+      ctx.save();
+      ctx.fillStyle='#f4ecd8'; ctx.font='bold 15px Segoe UI'; ctx.textAlign='center';
+      ctx.fillText(lang==='id'? 'Mak Intan terjebak di dalam batu...' : 'Mak Intan is trapped inside the stone...', 480, 420);
+      ctx.restore();
+    }
+  }
+};
+
+/* ---- Scene 7: Amat mencari jejak (sequential tap) ---- */
+const scene7 = {
+  narration:{
+    id:"Amat khawatir karena ibunya belum pulang. Ia pergi ke hutan dan menemukan barang-barang ibunya tercecer di dekat batu.",
+    en:"Amat worried because his mother hadn't returned. He went into the forest and found her belongings scattered near the stone."
+  },
+  instruction:{
+    id:"Ketuk barang-barang milik ibu secara berurutan: kayu bakar, lalu emas, lalu jejak kaki.",
+    en:"Tap his mother's belongings in order: the firewood, then the gold, then the footprint."
+  },
+  state:{},
+  init(){
+    this.state = {
+      seq:[
+        {x:260,y:340,type:'wood',order:0},
+        {x:420,y:230,type:'gold',order:1},
+        {x:560,y:360,type:'foot',order:2}
+      ],
+      nextOrder:0,
+      wrongFlash:0
+    };
+  },
+  onDown(x,y){
+    const s = this.state;
+    for(const it of s.seq){
+      if(it.done) continue;
+      const dx=x-it.x, dy=y-it.y;
+      if(dx*dx+dy*dy < 34*34){
+        if(it.order === s.nextOrder){
+          it.done = true;
+          s.nextOrder++;
+          spawnSparkles(it.x,it.y,6,'#ffd97a');
+          if(s.nextOrder >= s.seq.length) setTimeout(nextScene, 700);
+        } else {
+          s.wrongFlash = 10;
+        }
+        break;
+      }
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    drawStone(700,300,0.7,0,0);
+    drawPerson(120,320,1.0,{bob:t/280, hairColor:'#2b1b12', bodyColor:'#4c7a4f'});
+    const s = this.state;
+    ctx.save();
+    if(s.wrongFlash>0){ s.wrongFlash--; }
+    s.seq.forEach(it=>{
+      if(it.done){ ctx.globalAlpha=0.25; } else { ctx.globalAlpha=1; }
+      if(it.type==='wood') drawWoodBundle(it.x,it.y,22);
+      else if(it.type==='gold') drawGoldPile(it.x,it.y,20);
+      else drawFootprint(it.x,it.y,18);
+      ctx.globalAlpha=1;
+      if(!it.done){
+        ctx.fillStyle='rgba(255,255,255,.8)';
+        ctx.font='bold 13px Segoe UI'; ctx.textAlign='center';
+        ctx.fillText(it.order+1, it.x, it.y-30);
+      }
+    });
+    ctx.restore();
+    updateParticles(16); drawParticles();
+  }
+};
+
+/* ---- Scene 8: Amat coba membuka batu (press & hold, fails) ---- */
+const scene8 = {
+  narration:{
+    id:"Amat berusaha membuka batu itu sekuat tenaga, namun batu itu tidak bergerak sama sekali. Ia pun duduk dan menangis di dekat batu.",
+    en:"Amat tried with all his strength to open the stone, but it wouldn't budge at all. He sat down and cried near the stone."
+  },
+  instruction:{
+    id:"Tekan dan tahan batu untuk mendorongnya.",
+    en:"Press and hold the stone to push it."
+  },
+  state:{},
+  init(){
+    this.state = { holding:false, progress:0, failed:false };
+  },
+  onDown(x,y){
+    const dx=x-480, dy=y-290;
+    if(dx*dx+dy*dy < 130*130 && !this.state.failed) this.state.holding = true;
+  },
+  onUp(){ this.state.holding = false; },
+  update(dt){
+    const s = this.state;
+    if(s.failed) return;
+    if(s.holding) s.progress = Math.min(1, s.progress + dt/1800);
+    else s.progress = Math.max(0, s.progress - dt/1200);
+    if(s.progress>=1 && !s.failed){
+      s.failed = true;
+      setTimeout(nextScene, 1300);
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    const s = this.state;
+    const shake = s.holding ? (Math.random()-0.5)*4 : 0;
+    ctx.save();
+    ctx.translate(shake,0);
+    drawStone(480,290,1.15,0,0.05);
+    ctx.restore();
+    drawPerson(480,340,0.85,{bob:t/220, hairColor:'#2b1b12', bodyColor:'#4c7a4f'});
+    drawProgressBar(300,70,200,14, s.progress, '#7c7873');
+    ctx.save();
+    ctx.fillStyle='#f4ecd8'; ctx.font='13px Segoe UI'; ctx.textAlign='center';
+    if(s.failed){
+      ctx.fillText(lang==='id'?'Batu itu tidak bergerak...':'The stone does not move...', 480, 420);
+    }
+    ctx.restore();
+  }
+};
+
+/* ---- Scene 9: Mimpi & pilihan moral ---- */
+const scene9 = {
+  narration:{
+    id:"Malam itu Amat bermimpi bertemu orang tua bijaksana. \u201cJika kamu ingin ibumu bebas, persembahkan sesuatu yang paling berharga bagimu kepada batu itu,\u201d katanya.",
+    en:"That night, Amat dreamed of a wise old man. \u201cIf you want your mother freed, offer the stone something most precious to you,\u201d he said."
+  },
+  instruction:{
+    id:"Pilih benda yang paling berharga bagi Amat.",
+    en:"Choose the thing most precious to Amat."
+  },
+  state:{},
+  init(){
+    this.state = {
+      wrongMsg:0,
+      options:[
+        {x:130,y:330,w:150,h:100,label:lang==='id'?'Kebun Kecil':'Small Garden', key:'garden', correct:true},
+        {x:325,y:330,w:150,h:100,label:lang==='id'?'Baju Baru':'New Clothes', key:'clothes', correct:false},
+        {x:520,y:330,w:150,h:100,label:lang==='id'?'Mainan':'Toy', key:'toy', correct:false}
+      ]
+    };
+  },
+  onDown(x,y){
+    const s = this.state;
+    for(const o of s.options){
+      if(x>=o.x && x<=o.x+o.w && y>=o.y && y<=o.y+o.h){
+        if(o.correct){
+          spawnSparkles(o.x+o.w/2,o.y+o.h/2,12,'#ffd97a');
+          setTimeout(nextScene, 700);
+        } else {
+          s.wrongMsg = 90;
+        }
+        break;
+      }
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    drawPerson(400,200,1.0,{bob:t/300, hairColor:'#2b1b12', bodyColor:'#4c7a4f'});
+    const s = this.state;
+    s.options.forEach((o,i)=>{
+      ctx.save();
+      ctx.fillStyle = 'rgba(244,236,216,.12)';
+      roundRect(o.x,o.y,o.w,o.h,12);
+      ctx.fill();
+      ctx.strokeStyle='rgba(232,182,76,.6)';
+      ctx.lineWidth=2;
+      roundRect(o.x,o.y,o.w,o.h,12);
+      ctx.stroke();
+      const cx = o.x+o.w/2, cy = o.y+38;
+      if(o.key==='garden') drawGardenPatch(cx,cy,0.8);
+      else if(o.key==='clothes'){
+        ctx.fillStyle='#4c9be0';
+        roundRect(cx-20,cy-20,40,40,8); ctx.fill();
+      } else {
+        ctx.fillStyle='#e0483e';
+        ctx.beginPath(); ctx.arc(cx,cy,20,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle='#f4ecd8'; ctx.font='13px Segoe UI'; ctx.textAlign='center';
+      ctx.fillText(o.label, cx, o.y+o.h-14);
+      ctx.restore();
+    });
+    updateParticles(16); drawParticles();
+    if(s.wrongMsg>0){
+      s.wrongMsg--;
+      ctx.save();
+      ctx.fillStyle='#ffb3a0'; ctx.font='13px Segoe UI'; ctx.textAlign='center';
+      ctx.fillText(lang==='id'?'Rasanya itu belum yang paling tulus... coba pilih lagi.':'That doesn\'t feel like the most sincere choice... try again.', 400, 460);
+      ctx.restore();
+    }
+  }
+};
+
+/* ---- Scene 10: Persembahan kebun (drag) ---- */
+const scene10 = {
+  narration:{
+    id:"Amat memutuskan mempersembahkan kebun kecil miliknya, satu-satunya sumber penghidupan mereka, dengan hati yang tulus.",
+    en:"Amat decided to offer his small garden, their only source of livelihood, with a sincere heart."
+  },
+  instruction:{
+    id:"Seret gambar kebun ke arah batu untuk mempersembahkannya.",
+    en:"Drag the garden toward the stone to offer it."
+  },
+  state:{},
+  init(){
+    this.state = { garden:{x:200,y:380}, dragging:false, offered:false, stoneZone:{x:560,y:300,r:90} };
+  },
+  onDown(x,y){
+    const g = this.state.garden;
+    const dx=x-g.x, dy=y-g.y;
+    if(dx*dx+dy*dy < 60*60) this.state.dragging = true;
+  },
+  onMove(x,y,down){
+    if(down && this.state.dragging){ this.state.garden.x=x; this.state.garden.y=y; }
+  },
+  onUp(){
+    const s = this.state;
+    if(s.dragging){
+      const dx = s.garden.x - s.stoneZone.x, dy = s.garden.y - s.stoneZone.y;
+      if(dx*dx+dy*dy < s.stoneZone.r*s.stoneZone.r){
+        s.offered = true;
+        spawnSparkles(s.stoneZone.x,s.stoneZone.y,16,'#ffd97a');
+        setTimeout(nextScene, 900);
+      }
+      s.dragging = false;
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    drawStone(560,300,1.05,0,0.15+0.1*Math.sin(t/350));
+    if(!this.state.offered){
+      drawGardenPatch(this.state.garden.x,this.state.garden.y,1.0);
+    }
+    drawPerson(200,420,0.9,{bob:t/280, hairColor:'#2b1b12', bodyColor:'#4c7a4f'});
+    updateParticles(16); drawParticles();
+  }
+};
+
+/* ---- Scene 11: Ending - Mak Intan bebas ---- */
+const scene11 = {
+  narration:{
+    id:"Batu itu bergetar dan terbelah. Mak Intan pun keluar dengan selamat! Amat dan ibunya berpelukan penuh bahagia, dan sejak itu mereka tak pernah serakah lagi.",
+    en:"The stone trembled and split open. Mak Intan came out safely! Amat and his mother embraced with joy, and from then on, they were never greedy again."
+  },
+  instruction:{
+    id:"Ketuk untuk memeluk ibu.",
+    en:"Tap to hug your mother."
+  },
+  state:{},
+  init(){
+    this.state = { openAmt:0, hugged:false, animating:true };
+    const step = ()=>{
+      this.state.openAmt = Math.min(1, this.state.openAmt+0.03);
+      if(this.state.openAmt<1) requestAnimationFrame(step);
+    };
+    step();
+  },
+  onDown(x,y){
+    if(this.state.hugged) return;
+    const dx=x-400,dy=y-300;
+    if(dx*dx+dy*dy < 160*160){
+      this.state.hugged = true;
+      spawnSparkles(400,300,24,'#ffd97a');
+      setTimeout(finishStory, 1400);
+    }
+  },
+  draw(t){
+    drawForestBg(t);
+    const s = this.state;
+    drawStone(400,280,1.1,s.openAmt,0.4);
+    if(s.openAmt>0.7){
+      const hugOffset = s.hugged ? 0 : 20;
+      drawPerson(400-hugOffset,300,0.95,{bob:t/260, bodyColor:'#8a4b3b'});
+      drawPerson(400+hugOffset,320,0.75,{bob:t/230, hairColor:'#2b1b12', bodyColor:'#4c7a4f'});
+    }
+    updateParticles(16); drawParticles();
+  }
+};
+
+const scenes = [scene1,scene2,scene3,scene4,scene5,scene6,scene7,scene8,scene9,scene10,scene11];
+
+/* ============ Main loop ============ */
+function loop(ts){
+  if(!lastTime) lastTime = ts;
+  const dt = Math.min(50, ts - lastTime);
+  lastTime = ts;
+  ctx.clearRect(0,0,BASE_W,BASE_H);
+  if(started){
+    const sc = scenes[currentIndex];
+    if(sc.update) sc.update(dt);
+    if(sc.draw) sc.draw(ts);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ============ Start / Replay ============ */
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  document.getElementById('startOverlay').style.display = 'none';
+  started = true;
+  currentIndex = 0;
+  enterScene();
+});
+document.getElementById('replayBtn').addEventListener('click', ()=>{
+  document.getElementById('endOverlay').style.display = 'none';
+  currentIndex = 0;
+  particles = [];
+  enterScene();
+});
+
+buildDots();
+window.addEventListener('load', resizeCanvas);
+setTimeout(resizeCanvas, 50);
+new ResizeObserver(()=>{resizeCanvas();}).observe(wrap);
+new ResizeObserver(()=>{postResize();}).observe(document.getElementById('app'));
+
+})();
+</script>
+</body>
+</html>
