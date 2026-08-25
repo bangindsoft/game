@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asal Usul Dukuh Klotok</title>
+<style>
+  :root{
+    --bg1:#0e2a1a; --bg2:#1c4028; --gold:#e0b94a; --gold2:#f4d47c;
+    --water:#4fb0d6; --wood:#5b3a29; --leaf:#3f7d43; --leaf2:#5aa15c;
+    --sky1:#284b3a; --sky2:#0a1810; --text:#f4ecd8; --muted:#b9c9b6;
+    --panel:#132417ee; --accent:#c96b3b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 60%,#0a1810);
+    color:var(--text);
+    display:flex;flex-direction:column;align-items:center;
+    padding:14px 12px 20px;
+    min-height:100vh;
+  }
+  .wrap{width:100%;max-width:640px;display:flex;flex-direction:column;align-items:center;}
+  h1{
+    font-size:1.3rem;margin:2px 0 10px;text-align:center;color:var(--gold2);
+    text-shadow:0 2px 6px rgba(0,0,0,.5);letter-spacing:.5px;
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    width:100%;margin-bottom:8px;gap:8px;
+  }
+  .dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:1;}
+  .dot{width:9px;height:9px;border-radius:50%;background:#3d5a44;border:1px solid #6a8f6f;transition:.25s;}
+  .dot.active{background:var(--gold);border-color:var(--gold2);box-shadow:0 0 6px var(--gold);}
+  .dot.done{background:var(--leaf2);border-color:var(--gold);}
+  .iconbtn{
+    background:var(--panel);border:1px solid #4a6a4f;color:var(--text);
+    border-radius:8px;width:38px;height:34px;font-size:16px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .iconbtn:active{transform:scale(.92);}
+  .stage{
+    position:relative;width:100%;border-radius:14px;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 20%,#2b4c33,#0c1b11 85%);
+    border:1px solid #3f5c45;box-shadow:0 6px 22px rgba(0,0,0,.45);
+    touch-action:manipulation;
+  }
+  canvas{display:block;width:100%;height:auto;cursor:pointer;}
+  .narration{
+    width:100%;min-height:56px;margin-top:10px;padding:12px 14px;
+    background:var(--panel);border:1px solid #4a6a4f;border-radius:10px;
+    font-size:.95rem;line-height:1.5;color:var(--text);text-align:center;
+  }
+  .instruction{
+    margin-top:8px;font-size:.82rem;color:var(--gold2);text-align:center;
+    min-height:18px;font-style:italic;
+  }
+  .controls{
+    display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center;
+  }
+  button.main{
+    background:linear-gradient(180deg,var(--accent),#a4552c);
+    color:#fff;border:none;border-radius:10px;padding:10px 22px;
+    font-size:.95rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 #7a3c1f;
+  }
+  button.main:active{transform:translateY(2px);box-shadow:0 1px 0 #7a3c1f;}
+  button.secondary{
+    background:transparent;border:1px solid var(--gold);color:var(--gold2);
+    border-radius:10px;padding:10px 18px;font-size:.9rem;cursor:pointer;
+  }
+  .langtoggle{
+    background:var(--panel);border:1px solid #4a6a4f;color:var(--gold2);
+    border-radius:8px;padding:6px 10px;font-size:.78rem;cursor:pointer;
+  }
+  .badge{
+    position:absolute;top:8px;left:8px;background:rgba(0,0,0,.35);
+    border-radius:20px;padding:3px 10px;font-size:.7rem;color:var(--muted);
+  }
+  .progressbar-wrap{
+    position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+    width:70%;height:10px;background:rgba(0,0,0,.4);border-radius:6px;
+    overflow:hidden;border:1px solid rgba(255,255,255,.2);display:none;
+  }
+  .progressbar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold2));}
+  footer{
+    margin-top:14px;font-size:.72rem;color:#7d9480;text-align:center;line-height:1.5;
+  }
+  .overlay{
+    position:absolute;inset:0;background:rgba(6,14,9,.88);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:20px;gap:14px;
+  }
+  .overlay h2{color:var(--gold2);margin:0;font-size:1.15rem;}
+  .overlay p{color:var(--muted);font-size:.85rem;max-width:380px;margin:0;}
+  .choicebtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="titleText">Asal Usul Dukuh Klotok</h1>
+  <div class="topbar">
+    <button class="iconbtn" id="muteBtn" title="Mute/Unmute">🔊</button>
+    <div class="dots" id="dots"></div>
+    <button class="langtoggle" id="langBtn">EN</button>
+  </div>
+  <div class="stage" id="stage">
+    <span class="badge" id="sceneBadge">Cerita Rakyat Jawa Tengah</span>
+    <canvas id="canvas" width="640" height="420"></canvas>
+    <div class="progressbar-wrap" id="pbarWrap"><div class="progressbar-fill" id="pbarFill"></div></div>
+    <div class="overlay" id="overlay">
+      <h2 id="overTitle">Asal Usul Dukuh Klotok</h2>
+      <p id="overDesc">Sebuah legenda dari Kabupaten Pati, Jawa Tengah, tentang Mbah Klotok dan asal mula sebuah dukuh yang subur dan makmur.</p>
+      <button class="main" id="startBtn">▶ Mulai Cerita</button>
+    </div>
+  </div>
+  <div class="narration" id="narration">Tekan mulai untuk memulai cerita.</div>
+  <div class="instruction" id="instruction"></div>
+  <div class="controls" id="controls"></div>
+  <footer id="footerText">Kisah rakyat turun-temurun · Dituturkan ulang untuk hiburan dan pembelajaran budaya</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= LANG ================= */
+const params = new URLSearchParams(location.search);
+let lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+const T = {
+  id:{
+    title:"Asal Usul Dukuh Klotok",
+    badge:"Cerita Rakyat Jawa Tengah",
+    overTitle:"Asal Usul Dukuh Klotok",
+    overDesc:"Sebuah legenda dari Kabupaten Pati, Jawa Tengah, tentang Mbah Klotok dan asal mula sebuah dukuh yang subur dan makmur.",
+    startBtn:"▶ Mulai Cerita",
+    replayBtn:"↺ Ulangi Cerita",
+    nextBtn:"Lanjut →",
+    footer:"Kisah rakyat turun-temurun · Dituturkan ulang untuk hiburan dan pembelajaran budaya",
+    scenes:[
+      {
+        narr:"Pada zaman dahulu, di sebuah hutan lebat di Kabupaten Pati, tinggallah seorang pertapa sakti bernama Mbah Klotok. Ia dikenal bijaksana dan suka menolong warga sekitar.",
+        instr:"Ketuk sosok Mbah Klotok di tengah hutan untuk mengenalnya.",
+        hint:"Ketuk pertapa"
+      },
+      {
+        narr:"Suatu hari, Mbah Klotok mendapat wangsit bahwa daerah ini akan menjadi ramai dan makmur — jika ia mau menjalani ritual berat: berpuasa dan bertapa selama 40 hari 40 malam.",
+        instr:"Tekan dan tahan pada tubuh Mbah Klotok untuk membantunya menjalani tapa hingga selesai.",
+        hint:"Tahan untuk bertapa"
+      },
+      {
+        narr:"Pada malam ke-40, langit bercahaya. Seekor burung besar berwarna emas terbang melintasi hutan lalu hinggap di sebuah pohon besar, mengeluarkan suara merdu sebagai pertanda berkah.",
+        instr:"Ketuk pohon besar saat burung emas hinggap di dahannya.",
+        hint:"Ketuk pohon saat burung hinggap"
+      },
+      {
+        narr:"Yakin dengan pertanda itu, Mbah Klotok mengajak warga membuka hutan. Mereka bergotong royong membersihkan lahan agar bisa dijadikan pemukiman.",
+        instr:"Ketuk berulang kali pada semak dan pohon kecil untuk membuka lahan bersama warga.",
+        hint:"Ketuk cepat berulang kali"
+      },
+      {
+        narr:"Di bawah pohon tempat burung emas hinggap, terdengar suara gemericik air. Mbah Klotok menemukan sebuah sumber mata air baru yang jernih dan segar.",
+        instr:"Ketuk tanah yang bergetar untuk menggali dan menemukan sumber mata air.",
+        hint:"Ketuk tanah untuk menggali"
+      },
+      {
+        narr:"Suara gemericik air itu berbunyi 'klotok...klotok...klotok'. Karena suara itulah, warga mulai menyebut daerah ini dengan nama Klotok.",
+        instr:"Ketuk tiap tetes air sesuai urutan kemunculannya untuk mendengar bunyi 'klotok'.",
+        hint:"Ketuk tetesan air secara berurutan"
+      },
+      {
+        narr:"Mbah Klotok berpesan kepada warga tentang cara hidup selaras dengan alam agar berkah ini tetap lestari untuk anak cucu.",
+        instr:"Pilih pesan yang menurutmu paling sesuai dengan ajaran Mbah Klotok.",
+        hint:"Pilih salah satu pilihan"
+      },
+      {
+        narr:"Warga hidup rukun, tanahnya subur, sumber airnya tak pernah kering. Dukuh Klotok tumbuh menjadi permukiman yang makmur, dan nama Mbah Klotok terus dikenang.",
+        instr:"Ketuk layar untuk melihat dukuh yang telah berkembang.",
+        hint:"Ketuk untuk melanjutkan"
+      }
+    ],
+    choices:["Menjaga kelestarian alam","Bekerja keras bersama warga"],
+    choiceResult:[
+      "Warga sepakat: alam adalah sumber kehidupan yang harus dijaga bersama, turun-temurun.",
+      "Warga sepakat: gotong royong dan kerja keras adalah kunci kemakmuran dukuh ini."
+    ],
+    ending:"Hingga akhir hayatnya, Mbah Klotok dihormati sebagai leluhur yang berjasa. Setiap tahun warga Dukuh Klotok mengadakan upacara adat untuk mengenangnya — tanda syukur atas alam yang subur dan air yang tak pernah surut.",
+    moral:"Pesan cerita: hormatilah alam, jagalah gotong royong, dan hargai jasa para leluhur."
+  },
+  en:{
+    title:"The Origin of Dukuh Klotok",
+    badge:"Folktale from Central Java",
+    overTitle:"The Origin of Dukuh Klotok",
+    overDesc:"A legend from Pati Regency, Central Java, about Mbah Klotok and the founding of a fertile, prosperous hamlet.",
+    startBtn:"▶ Start Story",
+    replayBtn:"↺ Replay Story",
+    nextBtn:"Next →",
+    footer:"A folk tale passed down through generations · Retold for cultural learning and entertainment",
+    scenes:[
+      {
+        narr:"Long ago, in a dense forest in Pati Regency, there lived a wise hermit named Mbah Klotok. He was known for his wisdom and for helping the villagers nearby.",
+        instr:"Tap the figure of Mbah Klotok in the forest to meet him.",
+        hint:"Tap the hermit"
+      },
+      {
+        narr:"One day, Mbah Klotok received a mystical sign that this land would become lively and prosperous — if he completed a great ritual: fasting and meditating for 40 days and 40 nights.",
+        instr:"Press and hold on Mbah Klotok to help him complete the meditation ritual.",
+        hint:"Hold to meditate"
+      },
+      {
+        narr:"On the 40th night, the sky glowed. A large golden bird flew across the forest and landed on a great tree, singing a beautiful sound as a sign of blessing.",
+        instr:"Tap the great tree the moment the golden bird lands on its branch.",
+        hint:"Tap the tree when the bird lands"
+      },
+      {
+        narr:"Convinced by the sign, Mbah Klotok invited the villagers to clear the forest. Together they worked to prepare the land for a settlement.",
+        instr:"Tap repeatedly on the bushes and small trees to help clear the land with the villagers.",
+        hint:"Tap rapidly and repeatedly"
+      },
+      {
+        narr:"Beneath the tree where the golden bird had landed, a trickling sound was heard. Mbah Klotok discovered a new spring of clear, fresh water.",
+        instr:"Tap the trembling ground to dig and uncover the spring.",
+        hint:"Tap the ground to dig"
+      },
+      {
+        narr:"The trickling water made a sound: 'klotok...klotok...klotok'. Because of that sound, the villagers began calling the place Klotok.",
+        instr:"Tap each water droplet in the order it appears to hear the 'klotok' sound.",
+        hint:"Tap the droplets in order"
+      },
+      {
+        narr:"Mbah Klotok taught the villagers how to live in harmony with nature so this blessing would last for generations to come.",
+        instr:"Choose the message you feel best fits Mbah Klotok's teaching.",
+        hint:"Pick one option"
+      },
+      {
+        narr:"The villagers lived in harmony, the soil was fertile, and the spring never ran dry. Dukuh Klotok grew into a prosperous settlement, and Mbah Klotok's name lived on.",
+        instr:"Tap the screen to see the hamlet as it flourished.",
+        hint:"Tap to continue"
+      }
+    ],
+    choices:["Preserve nature's balance","Work hard together with the villagers"],
+    choiceResult:[
+      "The villagers agreed: nature is a source of life that must be protected together, for generations.",
+      "The villagers agreed: cooperation and hard work are the keys to this hamlet's prosperity."
+    ],
+    ending:"Until the end of his life, Mbah Klotok was honored as a revered ancestor. Every year, the people of Dukuh Klotok hold a traditional ceremony in his memory — a gesture of gratitude for the fertile land and the spring that never runs dry.",
+    moral:"Moral of the story: respect nature, cherish cooperation, and honor the legacy of our ancestors."
+  }
+};
+
+/* ================= DOM ================= */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const narrationEl = document.getElementById('narration');
+const instructionEl = document.getElementById('instruction');
+const controlsEl = document.getElementById('controls');
+const dotsEl = document.getElementById('dots');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+const muteBtn = document.getElementById('muteBtn');
+const langBtn = document.getElementById('langBtn');
+const pbarWrap = document.getElementById('pbarWrap');
+const pbarFill = document.getElementById('pbarFill');
+const stage = document.getElementById('stage');
+
+const TOTAL_SCENES = 8; // narrative scenes (index 0..7)
+
+/* ================= STATE ================= */
+let state = {
+  scene: -1, // -1 = intro overlay
+  muted: localStorage.getItem('klotok_muted') === '1',
+  holdProgress: 0,
+  holdActive:false,
+  holdRAF:null,
+  birdLanded:false,
+  birdTimer:null,
+  clearCount:0,
+  clearTarget:16,
+  dropIndex:0,
+  dropSeq:[0,1,2],
+  chosen:-1,
+  villageBuilt:false,
+  animFrame:null,
+  t:0
+};
+
+function L(){ return T[lang]; }
+
+/* ================= INIT UI TEXT ================= */
+function applyStaticText(){
+  document.getElementById('titleText').textContent = L().title;
+  document.getElementById('sceneBadge').textContent = L().badge;
+  document.getElementById('overTitle').textContent = L().overTitle;
+  document.getElementById('overDesc').textContent = L().overDesc;
+  startBtn.textContent = L().startBtn;
+  document.getElementById('footerText').textContent = L().footer;
+  langBtn.textContent = lang === 'id' ? 'EN' : 'ID';
+  document.title = L().title;
+}
+applyStaticText();
+muteBtn.textContent = state.muted ? '🔇' : '🔊';
+
+/* ================= DOTS ================= */
+function buildDots(){
+  dotsEl.innerHTML = '';
+  for(let i=0;i<TOTAL_SCENES;i++){
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot'+i;
+    dotsEl.appendChild(d);
+  }
+}
+buildDots();
+function updateDots(){
+  for(let i=0;i<TOTAL_SCENES;i++){
+    const d = document.getElementById('dot'+i);
+    if(!d) continue;
+    d.className = 'dot' + (i===state.scene ? ' active' : (i<state.scene ? ' done':''));
+  }
+}
+
+/* ================= SPEECH ================= */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis ? speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(){
+  if(!voices || !voices.length) return null;
+  const wantLang = lang === 'id' ? 'id' : 'en';
+  let v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(wantLang));
+  if(!v && wantLang==='id') v = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+  return v || voices[0] || null;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if(state.muted) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice();
+  if(v) u.voice = v;
+  u.lang = lang==='id' ? 'id-ID' : 'en-US';
+  u.rate = 0.92;
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+muteBtn.addEventListener('click', ()=>{
+  state.muted = !state.muted;
+  localStorage.setItem('klotok_muted', state.muted ? '1':'0');
+  muteBtn.textContent = state.muted ? '🔇':'🔊';
+  if(state.muted) speechSynthesis.cancel();
+  else if(state.scene>=0) speak(L().scenes[state.scene].narr);
+});
+
+/* ================= LANG TOGGLE ================= */
+langBtn.addEventListener('click', ()=>{
+  lang = lang==='id' ? 'en':'id';
+  const url = new URL(location.href);
+  url.searchParams.set('lang', lang);
+  history.replaceState(null,'',url);
+  applyStaticText();
+  if(state.scene>=0){
+    renderNarration();
+    drawScene();
+    speak(L().scenes[state.scene].narr);
+  }
+});
+
+/* ================= CANVAS RESPONSIVE ================= */
+function resizeCanvas(){
+  canvas.width = 640;
+  canvas.height = 420;
+  drawScene();
+  sendResize();
+}
+function sendResize(){
+  try{
+    const h = document.body.scrollHeight;
+    window.parent.postMessage({type:'klotok-resize', height:h}, '*');
+  }catch(e){}
+}
+window.addEventListener('load', ()=>{ resizeCanvas(); sendResize(); });
+window.addEventListener('resize', sendResize);
+
+/* ================= PALETTE HELPERS ================= */
+function rand(a,b){return a+Math.random()*(b-a);}
+
+/* ================= SCENE DRAWING ================= */
+function bgGradient(){
+  const g = ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0,'#20402b');
+  g.addColorStop(1,'#0a1810');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function drawTree(x,y,scale,swayPhase){
+  const sway = Math.sin((state.t*0.001)+ (swayPhase||0)) * 3;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // trunk
+  ctx.fillStyle = '#4a3220';
+  ctx.beginPath();
+  ctx.moveTo(-8,0); ctx.lineTo(-6,-70); ctx.lineTo(6,-70); ctx.lineTo(8,0);
+  ctx.closePath(); ctx.fill();
+  // canopy layers
+  ctx.fillStyle = '#3f7d43';
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.ellipse(sway*(i+1)*0.3, -80-i*28, 55-i*8, 34-i*4, 0,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#5aa15c';
+  ctx.beginPath();
+  ctx.ellipse(sway*0.6,-96,38,24,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawGround(){
+  ctx.fillStyle = '#213d24';
+  ctx.beginPath();
+  ctx.moveTo(0,canvas.height);
+  ctx.lineTo(0,320);
+  ctx.quadraticCurveTo(canvas.width/2,290,canvas.width,320);
+  ctx.lineTo(canvas.width,canvas.height);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawHermit(x,y,scale,glow){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  if(glow){
+    const g = ctx.createRadialGradient(0,-40,5,0,-40,90);
+    g.addColorStop(0,'rgba(224,185,74,0.55)');
+    g.addColorStop(1,'rgba(224,185,74,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(0,-40,90,0,Math.PI*2); ctx.fill();
+  }
+  // robe
+  ctx.fillStyle = '#8a6d3b';
+  ctx.beginPath();
+  ctx.moveTo(-22,10); ctx.quadraticCurveTo(-30,-40,-14,-58);
+  ctx.lineTo(14,-58); ctx.quadraticCurveTo(30,-40,22,10);
+  ctx.closePath(); ctx.fill();
+  // shawl
+  ctx.fillStyle = '#c9a24a';
+  ctx.beginPath();
+  ctx.moveTo(-14,-56); ctx.lineTo(14,-56); ctx.lineTo(8,-30); ctx.lineTo(-8,-30);
+  ctx.closePath(); ctx.fill();
+  // head
+  ctx.fillStyle = '#caa06b';
+  ctx.beginPath(); ctx.arc(0,-70,14,0,Math.PI*2); ctx.fill();
+  // hair/beard
+  ctx.fillStyle = '#e9e4d8';
+  ctx.beginPath();
+  ctx.moveTo(-10,-64); ctx.quadraticCurveTo(0,-40,10,-64);
+  ctx.quadraticCurveTo(4,-56,0,-58); ctx.quadraticCurveTo(-4,-56,-10,-64);
+  ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-78,15,Math.PI,Math.PI*2); ctx.fill();
+  // arms folded
+  ctx.strokeStyle = '#8a6d3b'; ctx.lineWidth = 8; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-20,-30); ctx.lineTo(0,-20); ctx.lineTo(20,-30); ctx.stroke();
+  ctx.restore();
+}
+
+function drawBird(x,y,scale,flap){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  const wingA = Math.sin(flap*0.02)*0.6;
+  ctx.fillStyle = '#f4c542';
+  ctx.beginPath(); ctx.ellipse(0,0,16,10,0,0,Math.PI*2); ctx.fill();
+  ctx.save(); ctx.rotate(wingA);
+  ctx.fillStyle = '#e0b94a';
+  ctx.beginPath(); ctx.ellipse(-6,-2,14,6,0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.save(); ctx.rotate(-wingA);
+  ctx.beginPath(); ctx.ellipse(6,-2,14,6,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#f4c542';
+  ctx.beginPath(); ctx.arc(15,-4,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#c96b3b';
+  ctx.beginPath(); ctx.moveTo(21,-4); ctx.lineTo(28,-2); ctx.lineTo(21,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#7a3c1f';
+  ctx.beginPath(); ctx.moveTo(-16,2); ctx.lineTo(-26,8); ctx.lineTo(-16,10); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawDroplet(x,y,scale,glow,label){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  if(glow){
+    const g = ctx.createRadialGradient(0,0,2,0,0,40);
+    g.addColorStop(0,'rgba(79,176,214,0.6)');
+    g.addColorStop(1,'rgba(79,176,214,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,40,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#4fb0d6';
+  ctx.beginPath();
+  ctx.moveTo(0,-20);
+  ctx.quadraticCurveTo(16,4,0,20);
+  ctx.quadraticCurveTo(-16,4,0,-20);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.ellipse(-4,-4,4,7,0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawHouse(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y); ctx.scale(scale,scale);
+  ctx.fillStyle = '#6b4a2f';
+  ctx.fillRect(-20,-10,40,30);
+  ctx.fillStyle = '#a4552c';
+  ctx.beginPath(); ctx.moveTo(-26,-10); ctx.lineTo(0,-34); ctx.lineTo(26,-10); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3a2617';
+  ctx.fillRect(-6,4,12,16);
+  ctx.restore();
+}
+
+/* ---- Scene renderers ---- */
+function drawScene(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  bgGradient();
+  const w = canvas.width, h = canvas.height;
+
+  if(state.scene===-1){ drawGround(); drawTree(120,340,1,0); drawTree(520,350,1.1,1); return; }
+
+  switch(state.scene){
+    case 0:{ // hutan & Mbah Klotok
+      drawGround();
+      drawTree(90,330,0.9,0.2); drawTree(560,340,1,1.4);
+      drawTree(480,300,0.6,2);
+      drawHermit(w/2,340,1.15,true);
+      break;}
+    case 1:{ // ritual hold
+      drawGround();
+      drawTree(80,330,0.85,0.3); drawTree(560,330,0.9,1.1);
+      const pulse = 1 + Math.sin(state.t*0.006)*0.04*(state.holdActive?3:1);
+      drawHermit(w/2,340,1.15*pulse, true);
+      // meditation particles
+      ctx.save();
+      for(let i=0;i<6;i++){
+        const ang = (state.t*0.0015)+i*(Math.PI*2/6);
+        const r = 60+ (state.holdActive? state.holdProgress*0.4:0);
+        const px = w/2 + Math.cos(ang)*r;
+        const py = 260 + Math.sin(ang)*r*0.5;
+        ctx.fillStyle = 'rgba(244,212,124,0.7)';
+        ctx.beginPath(); ctx.arc(px,py,3,0,Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+      break;}
+    case 2:{ // vision bird lands on tree
+      drawGround();
+      drawTree(w/2,320,1.4,0);
+      drawTree(100,340,0.7,1.3);
+      if(!state.birdLanded){
+        const bx = 60 + (state.t%3000)/3000 * (w-120);
+        drawBird(bx, 140 + Math.sin(state.t*0.005)*20, 1.6, state.t);
+      } else {
+        drawBird(w/2, 210, 1.9, state.t);
+      }
+      break;}
+    case 3:{ // membuka hutan (clear land)
+      drawGround();
+      state.bushes.forEach(b=>{
+        if(b.cleared) return;
+        drawTree(b.x,b.y,b.s,b.phase);
+      });
+      break;}
+    case 4:{ // sumber mata air (dig)
+      drawGround();
+      drawTree(70,330,0.8,0.4); drawTree(570,330,0.85,1.7);
+      // ground crack shimmer
+      const shake = state.digging ? Math.sin(state.t*0.05)*3 : 0;
+      ctx.save();
+      ctx.translate(w/2+shake,340);
+      ctx.fillStyle='rgba(79,176,214,0.25)';
+      ctx.beginPath(); ctx.ellipse(0,0,50,14,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#8a6d3b'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-30,-4); ctx.lineTo(-6,6); ctx.lineTo(10,-6); ctx.lineTo(30,4); ctx.stroke();
+      ctx.restore();
+      if(state.springFound){
+        for(let i=0;i<8;i++){
+          const yy = 330 - ((state.t*0.15+i*20)%140);
+          ctx.fillStyle='rgba(79,176,214,0.7)';
+          ctx.beginPath(); ctx.arc(w/2 + Math.sin((state.t*0.01)+i)*10, yy, 3,0,Math.PI*2); ctx.fill();
+        }
+      }
+      break;}
+    case 5:{ // droplets sequence
+      drawGround();
+      drawTree(60,340,0.7,0.2); drawTree(580,340,0.75,1.9);
+      const positions = [[180,220],[320,180],[460,230]];
+      positions.forEach((p,i)=>{
+        const done = i < state.dropIndex;
+        const isNext = i === state.dropIndex;
+        drawDroplet(p[0],p[1], done?0.9:(isNext?1.15:0.85), isNext, i);
+        if(done){
+          ctx.fillStyle='#f4d47c'; ctx.font='bold 16px sans-serif'; ctx.textAlign='center';
+          ctx.fillText('klotok', p[0], p[1]-30);
+        }
+      });
+      break;}
+    case 6:{ // moral choice
+      drawGround();
+      drawHermit(w/2,340,1.1,true);
+      drawTree(100,330,0.8,0.5); drawTree(540,330,0.85,1.2);
+      break;}
+    case 7:{ // ending village
+      drawGround();
+      drawHouse(140,330,1); drawHouse(260,340,0.9); drawHouse(400,335,1);
+      drawHouse(520,325,0.85);
+      drawTree(60,320,0.7,0.2); drawTree(600,330,0.8,1.5);
+      drawDroplet(330,300,0.7,false,0);
+      // sun
+      ctx.save();
+      const g = ctx.createRadialGradient(w/2,70,4,w/2,70,60);
+      g.addColorStop(0,'rgba(244,212,124,0.9)'); g.addColorStop(1,'rgba(244,212,124,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(w/2,70,60,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      break;}
+  }
+}
+
+/* ================= ANIMATION LOOP ================= */
+function loop(ts){
+  state.t = ts||0;
+  drawScene();
+  state.animFrame = requestAnimationFrame(loop);
+}
+function startLoop(){ if(!state.animFrame) state.animFrame = requestAnimationFrame(loop); }
+
+/* ================= NARRATION / INSTRUCTION RENDER ================= */
+function renderNarration(){
+  const sc = L().scenes[state.scene];
+  narrationEl.textContent = sc.narr;
+  instructionEl.textContent = '👉 ' + sc.instr;
+}
+
+/* ================= SCENE FLOW CONTROL ================= */
+function goToScene(idx){
+  clearTimers();
+  state.scene = idx;
+  state.holdProgress = 0; state.holdActive=false;
+  pbarWrap.style.display='none';
+  updateDots();
+  renderNarration();
+  controlsEl.innerHTML='';
+  speak(L().scenes[idx].narr);
+  setupSceneInteraction();
+  drawScene();
+  sendResize();
+}
+
+function clearTimers(){
+  if(state.birdTimer){ clearTimeout(state.birdTimer); state.birdTimer=null; }
+  if(state.holdRAF){ cancelAnimationFrame(state.holdRAF); state.holdRAF=null; }
+}
+
+function advance(){
+  if(state.scene < TOTAL_SCENES-1){
+    goToScene(state.scene+1);
+  } else {
+    showEnding();
+  }
+}
+
+/* ---- per-scene interaction setup ---- */
+function setupSceneInteraction(){
+  canvas.onmousedown=null; canvas.onmouseup=null; canvas.onmouseleave=null;
+  canvas.ontouchstart=null; canvas.ontouchend=null;
+  canvas.onclick=null;
+
+  switch(state.scene){
+    case 0: // tap hermit
+      canvas.onclick = (e)=>{
+        const p = getPos(e);
+        if(dist(p.x,p.y, canvas.width/2,300) < 90) advance();
+      };
+      break;
+    case 1: // press and hold
+      pbarWrap.style.display='block';
+      bindHold();
+      break;
+    case 2: // tap tree when bird lands
+      state.birdLanded=false;
+      state.birdTimer = setTimeout(()=>{ state.birdLanded=true; speak(lang==='id'?'Kini burung emas telah hinggap di pohon!':'Now the golden bird has landed on the tree!'); }, 2600);
+      canvas.onclick = (e)=>{
+        if(!state.birdLanded) return;
+        const p = getPos(e);
+        if(dist(p.x,p.y, canvas.width/2,260) < 120) advance();
+      };
+      break;
+    case 3: // mash to clear bushes
+      state.bushes = [];
+      const bushSpots = [[100,300],[180,340],[260,300],[340,340],[420,300],[500,340],[560,300],[150,260],[300,260],[450,260]];
+      bushSpots.forEach((s,i)=>{ state.bushes.push({x:s[0],y:s[1],s:0.5+Math.random()*0.3,phase:i,cleared:false}); });
+      state.clearCount = 0; state.clearTarget = state.bushes.length;
+      canvas.onclick = (e)=>{
+        const p = getPos(e);
+        for(const b of state.bushes){
+          if(!b.cleared && dist(p.x,p.y,b.x,b.y-40)<45){
+            b.cleared = true; state.clearCount++;
+            if(state.clearCount>=state.clearTarget) setTimeout(advance,400);
+            return;
+          }
+        }
+      };
+      break;
+    case 4: // dig ground
+      state.digging=false; state.springFound=false;
+      canvas.onclick = (e)=>{
+        const p = getPos(e);
+        if(dist(p.x,p.y,canvas.width/2,340)<70 && !state.springFound){
+          state.digging=true;
+          setTimeout(()=>{ state.springFound=true; speak(lang==='id'?'Sumber mata air ditemukan!':'The spring has been found!'); setTimeout(advance,1400); },900);
+        }
+      };
+      break;
+    case 5: // sequential droplets
+      state.dropIndex = 0;
+      canvas.onclick = (e)=>{
+        const p = getPos(e);
+        const positions = [[180,220],[320,180],[460,230]];
+        const target = positions[state.dropIndex];
+        if(target && dist(p.x,p.y,target[0],target[1])<45){
+          state.dropIndex++;
+          if(state.dropIndex>=positions.length) setTimeout(advance,500);
+        }
+      };
+      break;
+    case 6: // choice buttons
+      renderChoiceButtons();
+      break;
+    case 7: // tap to finish
+      canvas.onclick = ()=>{ showEnding(); };
+      break;
+  }
+}
+
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+  let cx,cy;
+  if(e.touches && e.touches.length){ cx=e.touches[0].clientX; cy=e.touches[0].clientY; }
+  else { cx=e.clientX; cy=e.clientY; }
+  return {x:(cx-rect.left)*scaleX, y:(cy-rect.top)*scaleY};
+}
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+/* ---- press and hold for ritual ---- */
+function bindHold(){
+  function step(){
+    if(state.holdActive){
+      state.holdProgress += 1.1;
+      pbarFill.style.width = Math.min(100,state.holdProgress)+'%';
+      if(state.holdProgress>=100){
+        state.holdActive=false;
+        pbarFill.style.width='100%';
+        state.holdRAF=null;
+        setTimeout(advance,500);
+        return;
+      }
+    }
+    state.holdRAF = requestAnimationFrame(step);
+  }
+  function start(e){ if(e.cancelable) e.preventDefault(); state.holdActive=true; }
+  function stop(){ state.holdActive=false; }
+  // assign directly (not addEventListener) so re-entering this scene never stacks duplicate handlers
+  canvas.onmousedown = start;
+  canvas.onmouseup = stop;
+  canvas.onmouseleave = stop;
+  canvas.ontouchstart = start;
+  canvas.ontouchend = stop;
+  step();
+}
+
+/* ---- moral choice buttons ---- */
+function renderChoiceButtons(){
+  controlsEl.innerHTML='';
+  L().choices.forEach((c,i)=>{
+    const b = document.createElement('button');
+    b.className='main';
+    b.textContent=c;
+    b.style.fontSize='.82rem';
+    b.onclick=()=>{
+      state.chosen=i;
+      narrationEl.textContent = L().choiceResult[i];
+      controlsEl.innerHTML='';
+      const next = document.createElement('button');
+      next.className='secondary';
+      next.textContent = L().nextBtn;
+      next.onclick = ()=>advance();
+      controlsEl.appendChild(next);
+      speak(L().choiceResult[i]);
+    };
+    controlsEl.appendChild(b);
+  });
+}
+
+/* ================= START / ENDING ================= */
+startBtn.addEventListener('click', ()=>{
+  overlay.style.display='none';
+  startLoop();
+  goToScene(0);
+});
+
+function showEnding(){
+  clearTimers();
+  canvas.onclick=null;
+  drawScene();
+  narrationEl.textContent = L().ending;
+  instructionEl.textContent = L().moral;
+  updateDots();
+  document.querySelectorAll('.dot').forEach(d=>d.classList.add('done'));
+  speak(L().ending);
+  controlsEl.innerHTML='';
+  const replay = document.createElement('button');
+  replay.className='main';
+  replay.textContent = L().replayBtn;
+  replay.onclick = ()=>{
+    state.scene=-1; state.chosen=-1;
+    overlay.style.display='flex';
+    updateDots();
+    narrationEl.textContent = lang==='id' ? 'Tekan mulai untuk memulai cerita.' : 'Press start to begin the story.';
+    instructionEl.textContent='';
+    drawScene();
+  };
+  controlsEl.appendChild(replay);
+  sendResize();
+}
+
+/* ================= INITIAL PAINT ================= */
+resizeCanvas();
+})();
+</script>
+</body>
+</html>
