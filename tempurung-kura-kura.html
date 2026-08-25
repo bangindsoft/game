@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tempurung Kura-kura (Bruek Kura)</title>
+<style>
+  :root{
+    --sea-deep:#04314d;
+    --sea-mid:#0a5c85;
+    --sea-light:#1a8cb8;
+    --sand:#e8c48a;
+    --gold:#f2c94c;
+    --gold-dark:#b8860b;
+    --wood:#7a4a2b;
+    --wood-dark:#5a3620;
+    --ink:#0b2233;
+    --paper:#fdf6e3;
+    --danger:#c0392b;
+    --good:#2e8b57;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+  #app{
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+    background:linear-gradient(180deg,#eaf6fb 0%, #d7ecf3 100%);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 6px 24px rgba(0,0,0,.18);
+    position:relative;
+  }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    background:linear-gradient(180deg,var(--sea-deep),#03253c);
+    color:#fff;
+  }
+  #topbar .title{
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.3px;
+  }
+  #topbar .title small{
+    display:block;
+    font-weight:400;
+    font-size:11px;
+    opacity:.75;
+  }
+  .iconbtn{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);
+    color:#fff;
+    border-radius:10px;
+    padding:6px 10px;
+    cursor:pointer;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .15s ease;
+  }
+  .iconbtn:hover{background:rgba(255,255,255,.22);}
+  .iconbtn.active{background:var(--gold);color:#3a2a00;border-color:var(--gold-dark);}
+  #controls-right{display:flex;gap:8px;}
+
+  #stage-wrap{
+    position:relative;
+    width:100%;
+    background:linear-gradient(180deg,#bfe3f0 0%, #8fcbdd 40%, var(--sea-mid) 100%);
+  }
+  canvas#game{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+  }
+
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    padding:10px 8px 2px;
+    background:#eaf6fb;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#c6dce6;
+    transition:all .25s ease;
+  }
+  .dot.active{background:var(--gold-dark);transform:scale(1.25);}
+  .dot.done{background:var(--good);}
+
+  #narration-box{
+    background:var(--paper);
+    padding:12px 16px 16px;
+    min-height:64px;
+    border-top:2px solid #e3d3a3;
+  }
+  #instruction{
+    color:var(--danger);
+    font-weight:700;
+    font-size:14px;
+    margin:0 0 6px;
+    min-height:18px;
+  }
+  #narration{
+    color:var(--ink);
+    font-size:14px;
+    line-height:1.5;
+    margin:0;
+  }
+
+  #bottombar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 16px 16px;
+    background:var(--paper);
+  }
+  #actions{display:flex;gap:8px;}
+  .btn{
+    border:none;
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    color:#fff;
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    color:#3a2a00;
+    box-shadow:0 3px 0 #8a6300;
+    transition:transform .1s ease;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6300;}
+  .btn.secondary{
+    background:linear-gradient(180deg,#6ea8c9,#3f7fa3);
+    color:#fff;
+    box-shadow:0 3px 0 #2b5a75;
+  }
+  #footer-credit{
+    font-size:11px;
+    color:#8a7a55;
+    text-align:center;
+    padding:6px 10px 12px;
+    background:var(--paper);
+  }
+
+  #overlay-msg{
+    position:absolute;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(11,34,51,.88);
+    color:#fdf6e3;
+    padding:14px 22px;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    text-align:center;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .25s ease;
+    max-width:80%;
+  }
+  #overlay-msg.show{opacity:1;}
+
+  .progressbar-wrap{
+    position:absolute;
+    left:50%;bottom:14%;
+    transform:translateX(-50%);
+    width:60%;
+    max-width:260px;
+    height:14px;
+    background:rgba(255,255,255,.35);
+    border:2px solid rgba(255,255,255,.6);
+    border-radius:8px;
+    overflow:hidden;
+    display:none;
+  }
+  .progressbar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--gold-dark));
+  }
+
+  @media (max-width:420px){
+    #topbar .title{font-size:13px;}
+    .iconbtn{padding:5px 8px;font-size:12px;}
+    #narration{font-size:13px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="title" id="title-text">Tempurung Kura-kura<small id="subtitle-text">Cerita Rakyat Aceh</small></div>
+    <div id="controls-right">
+      <button class="iconbtn" id="lang-btn" type="button">EN</button>
+      <button class="iconbtn" id="mute-btn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage-wrap">
+    <canvas id="game" width="700" height="440"></canvas>
+    <div class="progressbar-wrap" id="progressbar-wrap"><div class="progressbar-fill" id="progressbar-fill"></div></div>
+    <div id="overlay-msg"></div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="narration-box">
+    <p id="instruction"></p>
+    <p id="narration"></p>
+  </div>
+
+  <div id="bottombar">
+    <div id="actions">
+      <button class="btn" id="start-btn" type="button">Mulai Cerita</button>
+      <button class="btn secondary" id="replay-btn" type="button" style="display:none;">Ulangi Cerita</button>
+    </div>
+  </div>
+  <div id="footer-credit">Kisah rakyat turun-temurun dari Aceh, Indonesia</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Language & text ---------------- */
+  var LANG = (function(){
+    try{
+      var params = new URLSearchParams(window.location.search);
+      if(params.get('lang') === 'en') return 'en';
+    }catch(e){}
+    return 'id';
+  })();
+
+  var TXT = {
+    id:{
+      title:"Tempurung Kura-kura",
+      subtitle:"Cerita Rakyat Aceh (Bruek Kura)",
+      start:"Mulai Cerita",
+      replay:"Ulangi Cerita",
+      footer:"Kisah rakyat turun-temurun dari Aceh, Indonesia",
+      scenes:[
+        {
+          name:"melaut",
+          narration:"Di sebuah desa pesisir Aceh, Pak Mat sang nelayan tua pergi melaut seperti biasa. Ia melemparkan jaringnya ke laut yang tenang.",
+          instruction:"Ketuk jaring untuk melemparkannya ke laut",
+          type:"tap"
+        },
+        {
+          name:"menarik",
+          narration:"Jaring terasa berat sekali. Pak Mat menarik jaring itu dengan sekuat tenaga, penasaran apa yang terjerat di dalamnya.",
+          instruction:"Tekan dan tahan jaring untuk menariknya naik ke perahu",
+          type:"hold"
+        },
+        {
+          name:"lepas-kura",
+          narration:"Ternyata bukan ikan, melainkan seekor kura-kura bertempurung emas yang terjerat! Pak Mat merasa kasihan dan ingin melepaskannya kembali ke laut.",
+          instruction:"Ketuk kura-kura untuk melepaskannya dengan lembut ke laut",
+          type:"tap-turtle"
+        },
+        {
+          name:"tempurung-muncul",
+          narration:"Kura-kura ajaib itu berbicara berterima kasih, lalu menghilang. Dari gelembung air muncullah sebuah tempurung berkilauan sebagai hadiah untuk Pak Mat.",
+          instruction:"Seret tempurung yang mengambang ke atas perahu",
+          type:"drag"
+        },
+        {
+          name:"rezeki",
+          narration:"Di rumah, Pak Mat dan istrinya Mak Salmah mencoba tempurung itu. Ajaib! Tempurung itu mengeluarkan cahaya dan makanan lezat setiap kali disentuh.",
+          instruction:"Ketuk tempurung berulang kali agar mengeluarkan makanan",
+          type:"mash"
+        },
+        {
+          name:"saudagar",
+          narration:"Kabar tempurung ajaib tersebar ke seluruh desa. Seorang saudagar kaya datang, memaksa membeli tempurung itu dengan harga berapa pun.",
+          instruction:"Ketuk tombol 'Tolak dengan Sopan' untuk menolak tawaran saudagar",
+          type:"choice"
+        },
+        {
+          name:"pencurian",
+          narration:"Sang saudagar marah dan mengancam. Malam harinya, ia menyusup diam-diam ke rumah Pak Mat untuk mencuri tempurung ajaib itu.",
+          instruction:"Ketuk bayangan pencuri saat ia muncul di jendela",
+          type:"sequence"
+        },
+        {
+          name:"kutukan",
+          narration:"Saat saudagar mencoba memakai tempurung itu, tempurung mengeluarkan asap hitam pekat yang berubah menjadi angin dahsyat!",
+          instruction:"Ketuk layar berulang kali untuk meniupkan angin yang mengusir saudagar",
+          type:"mash-wind"
+        },
+        {
+          name:"selesai",
+          narration:"Angin kencang menerbangkan saudagar serakah itu hingga jatuh ke laut. Tempurung ajaib kembali dengan sendirinya ke rumah Pak Mat. Sejak saat itu, keluarga Pak Mat hidup damai dan selalu bersyukur atas rezeki yang mereka terima.",
+          instruction:"Ketuk tempurung untuk mengakhiri cerita",
+          type:"end"
+        }
+      ]
+    },
+    en:{
+      title:"The Turtle's Shell",
+      subtitle:"Folktale from Aceh, Indonesia (Bruek Kura)",
+      start:"Start Story",
+      replay:"Replay Story",
+      footer:"A traditional folktale passed down in Aceh, Indonesia",
+      scenes:[
+        {
+          name:"fishing",
+          narration:"In a small coastal village in Aceh, old fisherman Pak Mat went out to sea as usual. He cast his net into the calm water.",
+          instruction:"Tap the net to cast it into the sea",
+          type:"tap"
+        },
+        {
+          name:"pulling",
+          narration:"The net felt unusually heavy. Pak Mat pulled it with all his strength, curious about what had been caught inside.",
+          instruction:"Press and hold the net to pull it up onto the boat",
+          type:"hold"
+        },
+        {
+          name:"release-turtle",
+          narration:"It wasn't a fish at all, but a turtle with a golden shell tangled in the net! Pak Mat felt sorry for it and wanted to set it free.",
+          instruction:"Tap the turtle to gently release it back into the sea",
+          type:"tap-turtle"
+        },
+        {
+          name:"shell-appears",
+          narration:"The magical turtle spoke to thank him, then vanished. From the bubbling water rose a shimmering shell, a gift for Pak Mat.",
+          instruction:"Drag the floating shell onto the boat",
+          type:"drag"
+        },
+        {
+          name:"blessing",
+          narration:"At home, Pak Mat and his wife Mak Salmah tried the shell. Magically, it glowed and produced delicious food every time it was touched.",
+          instruction:"Tap the shell repeatedly to make it produce food",
+          type:"mash"
+        },
+        {
+          name:"merchant",
+          narration:"News of the magic shell spread across the village. A wealthy merchant arrived, insisting on buying the shell for any price.",
+          instruction:"Tap the 'Politely Refuse' button to turn down the merchant",
+          type:"choice"
+        },
+        {
+          name:"theft",
+          narration:"The merchant grew angry and threatened Pak Mat. That night, he sneaked into the house to steal the magical shell.",
+          instruction:"Tap the thief's shadow when it appears at the window",
+          type:"sequence"
+        },
+        {
+          name:"curse",
+          narration:"As the merchant tried to use the shell, it unleashed thick black smoke that transformed into a powerful gust of wind!",
+          instruction:"Tap the screen repeatedly to blow up a wind that drives the merchant away",
+          type:"mash-wind"
+        },
+        {
+          name:"ending",
+          narration:"The fierce wind swept the greedy merchant away and dropped him into the sea. The magic shell returned home on its own. From then on, Pak Mat's family lived in peace, always grateful for the fortune they received.",
+          instruction:"Tap the shell to finish the story",
+          type:"end"
+        }
+      ]
+    }
+  };
+
+  /* ---------------- DOM refs ---------------- */
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var titleText = document.getElementById('title-text');
+  var subtitleText = document.getElementById('subtitle-text');
+  var narrationEl = document.getElementById('narration');
+  var instructionEl = document.getElementById('instruction');
+  var startBtn = document.getElementById('start-btn');
+  var replayBtn = document.getElementById('replay-btn');
+  var langBtn = document.getElementById('lang-btn');
+  var muteBtn = document.getElementById('mute-btn');
+  var dotsWrap = document.getElementById('dots');
+  var overlayMsg = document.getElementById('overlay-msg');
+  var pbWrap = document.getElementById('progressbar-wrap');
+  var pbFill = document.getElementById('progressbar-fill');
+
+  var W = canvas.width, H = canvas.height;
+
+  /* ---------------- State ---------------- */
+  var state = {
+    sceneIdx: -1, // -1 = title screen
+    started: false,
+    muted: false,
+    holdProgress: 0,
+    holdActive: false,
+    mashCount: 0,
+    mashTarget: 6,
+    windMash: 0,
+    windTarget: 10,
+    dragging:false,
+    shellPos:{x:0,y:0},
+    shellHome:{x:0,y:0},
+    shellDock:{x:0,y:0},
+    shellPlaced:false,
+    sequenceStep:0,
+    thiefVisible:false,
+    thiefTimer:null,
+    thiefWindow:{x:0,y:0,r:0},
+    turtleReleased:false,
+    endDone:false,
+    time:0
+  };
+
+  try{
+    var savedMute = localStorage.getItem('tk_bruek_kura_muted');
+    if(savedMute === '1') state.muted = true;
+  }catch(e){}
+
+  function T(){ return TXT[LANG]; }
+
+  /* ---------------- Speech ---------------- */
+  var voices = [];
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  }
+  if(window.speechSynthesis){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if(!voices || !voices.length) return null;
+    var targetLang = LANG === 'id' ? 'id' : 'en';
+    var v = voices.find(function(v){ return v.lang && v.lang.toLowerCase().indexOf(targetLang) === 0; });
+    return v || null;
+  }
+  function speak(text){
+    if(state.muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice();
+    if(v) u.voice = v;
+    u.lang = LANG === 'id' ? 'id-ID' : 'en-US';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
+  function stopSpeak(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  /* ---------------- Dots ---------------- */
+  function buildDots(){
+    dotsWrap.innerHTML = '';
+    var total = T().scenes.length;
+    for(var i=0;i<total;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.dataset.idx = i;
+      dotsWrap.appendChild(d);
+    }
+  }
+  function updateDots(){
+    var dots = dotsWrap.querySelectorAll('.dot');
+    dots.forEach(function(d,i){
+      d.classList.remove('active','done');
+      if(i < state.sceneIdx) d.classList.add('done');
+      else if(i === state.sceneIdx) d.classList.add('active');
+    });
+  }
+
+  /* ---------------- Overlay ---------------- */
+  var overlayTimer = null;
+  function showOverlay(text, duration){
+    overlayMsg.textContent = text;
+    overlayMsg.classList.add('show');
+    if(overlayTimer) clearTimeout(overlayTimer);
+    overlayTimer = setTimeout(function(){
+      overlayMsg.classList.remove('show');
+    }, duration || 1400);
+  }
+
+  /* ---------------- Drawing helpers ---------------- */
+  function clear(){
+    ctx.clearRect(0,0,W,H);
+  }
+  function drawSky(horizonY, warm){
+    var g = ctx.createLinearGradient(0,0,0,horizonY);
+    if(warm){
+      g.addColorStop(0,'#ffd9a0');
+      g.addColorStop(1,'#ffb27a');
+    } else {
+      g.addColorStop(0,'#bfe3f0');
+      g.addColorStop(1,'#8fcbdd');
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,horizonY);
+  }
+  function drawSea(horizonY, t, deep){
+    var g = ctx.createLinearGradient(0,horizonY,0,H);
+    g.addColorStop(0, deep ? '#0a5c85' : '#1a8cb8');
+    g.addColorStop(1, '#04314d');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,horizonY,W,H-horizonY);
+    // waves
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    for(var i=0;i<5;i++){
+      var y = horizonY + 20 + i*38;
+      ctx.beginPath();
+      for(var x=0;x<=W;x+=14){
+        var wave = Math.sin((x*0.04)+(t*0.002)+i)*4;
+        if(x===0) ctx.moveTo(x, y+wave);
+        else ctx.lineTo(x, y+wave);
+      }
+      ctx.stroke();
+    }
+  }
+  function drawBoat(cx, cy, scale){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale, scale);
+    // hull
+    ctx.fillStyle = '#7a4a2b';
+    ctx.beginPath();
+    ctx.moveTo(-110,0);
+    ctx.quadraticCurveTo(-120,40,-60,46);
+    ctx.lineTo(60,46);
+    ctx.quadraticCurveTo(120,40,110,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5a3620';
+    ctx.fillRect(-95,-8,190,14);
+    // mast
+    ctx.strokeStyle = '#4a2f18';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(0,-8);
+    ctx.lineTo(0,-95);
+    ctx.stroke();
+    // sail
+    ctx.fillStyle = '#f2e6c9';
+    ctx.beginPath();
+    ctx.moveTo(2,-92);
+    ctx.quadraticCurveTo(65,-60,4,-14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#d8c69a';
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawFisherman(cx, cy, scale, armUp){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale,scale);
+    // legs
+    ctx.fillStyle = '#3d5a6b';
+    ctx.fillRect(-8,10,7,22);
+    ctx.fillRect(2,10,7,22);
+    // body
+    ctx.fillStyle = '#c9a86a';
+    ctx.beginPath();
+    ctx.moveTo(-14,10);
+    ctx.lineTo(14,10);
+    ctx.lineTo(11,-24);
+    ctx.lineTo(-11,-24);
+    ctx.closePath();
+    ctx.fill();
+    // head
+    ctx.fillStyle = '#e8bd8c';
+    ctx.beginPath();
+    ctx.arc(0,-34,11,0,Math.PI*2);
+    ctx.fill();
+    // hat (rounded conical, Aceh-style headscarf)
+    ctx.fillStyle = '#8a3b3b';
+    ctx.beginPath();
+    ctx.moveTo(-13,-38);
+    ctx.quadraticCurveTo(0,-58,13,-38);
+    ctx.quadraticCurveTo(0,-46,-13,-38);
+    ctx.closePath();
+    ctx.fill();
+    // arm
+    ctx.strokeStyle = '#c9a86a';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(10,-18);
+    if(armUp){
+      ctx.lineTo(34,-42);
+    } else {
+      ctx.lineTo(26,4);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  function drawNet(cx, cy, scale, spread){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 1.4;
+    var r = 46*scale*(spread||1);
+    for(var i=0;i<10;i++){
+      var a = (i/10)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r*0.55+10);
+      ctx.stroke();
+    }
+    for(var ring=1;ring<=3;ring++){
+      ctx.beginPath();
+      ctx.ellipse(0, 10, r*ring/3, r*0.55*ring/3, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawTurtle(cx, cy, scale, golden){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale,scale);
+    // flippers
+    ctx.fillStyle = golden ? '#caa23a' : '#4c7a3a';
+    ctx.beginPath(); ctx.ellipse(-30,10,14,7,0.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(30,10,14,7,-0.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-22,-24,10,6,-0.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(22,-24,10,6,0.5,0,Math.PI*2); ctx.fill();
+    // shell
+    var shellGrad = ctx.createRadialGradient(-10,-10,5,0,0,42);
+    if(golden){
+      shellGrad.addColorStop(0,'#fff2b0');
+      shellGrad.addColorStop(0.5,'#f2c94c');
+      shellGrad.addColorStop(1,'#b8860b');
+    } else {
+      shellGrad.addColorStop(0,'#8fbf6a');
+      shellGrad.addColorStop(1,'#3f6b2e');
+    }
+    ctx.fillStyle = shellGrad;
+    ctx.beginPath();
+    ctx.ellipse(0,0,40,32,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = golden ? '#8a6300' : '#2b4a1f';
+    ctx.lineWidth = 1.5;
+    // hexagon pattern hints
+    for(var i=-1;i<=1;i++){
+      ctx.beginPath();
+      ctx.ellipse(i*16,0,16,13,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    // head
+    ctx.fillStyle = golden ? '#e8bd8c' : '#6a9450';
+    ctx.beginPath();
+    ctx.ellipse(0,-38,9,8,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#0b2233';
+    ctx.beginPath(); ctx.arc(-3,-40,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(3,-40,1.6,0,Math.PI*2); ctx.fill();
+    if(golden){
+      ctx.save();
+      ctx.globalAlpha = 0.5 + 0.3*Math.sin(state.time*0.004);
+      ctx.strokeStyle = '#fff2b0';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.ellipse(0,0,46,38,0,0,Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function drawShell(cx, cy, scale, glow){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale,scale);
+    if(glow){
+      ctx.save();
+      ctx.globalAlpha = 0.55 + 0.35*Math.sin(state.time*0.006);
+      var g = ctx.createRadialGradient(0,0,5,0,0,60);
+      g.addColorStop(0,'rgba(255,242,176,0.9)');
+      g.addColorStop(1,'rgba(255,242,176,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0,0,60,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    var shellGrad = ctx.createRadialGradient(-8,-8,4,0,0,38);
+    shellGrad.addColorStop(0,'#fff2b0');
+    shellGrad.addColorStop(0.5,'#f2c94c');
+    shellGrad.addColorStop(1,'#b8860b');
+    ctx.fillStyle = shellGrad;
+    ctx.beginPath();
+    ctx.ellipse(0,0,36,28,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#8a6300';
+    ctx.lineWidth = 1.5;
+    for(var i=-1;i<=1;i++){
+      ctx.beginPath();
+      ctx.ellipse(i*14,0,14,11,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawBubbles(cx, cy, t, count){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    for(var i=0;i<count;i++){
+      var phase = (t*0.05 + i*40) % 200;
+      var x = cx + Math.sin(i*2 + t*0.01)*20;
+      var y = cy - phase;
+      var r = 3 + (i%3);
+      ctx.globalAlpha = 1 - phase/200;
+      ctx.beginPath();
+      ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawHouseInterior(){
+    // wooden wall background
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#5a3620');
+    g.addColorStop(1,'#3d2416');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    // floor
+    ctx.fillStyle = '#7a4a2b';
+    ctx.fillRect(0,H-90,W,90);
+    // plank lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    for(var x=0;x<W;x+=40){
+      ctx.beginPath(); ctx.moveTo(x,H-90); ctx.lineTo(x,H); ctx.stroke();
+    }
+    // window
+    ctx.fillStyle = '#0a1f2e';
+    ctx.fillRect(W-150, 40, 100, 110);
+    ctx.strokeStyle = '#3d2416';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(W-150,40,100,110);
+    ctx.beginPath();
+    ctx.moveTo(W-100,40); ctx.lineTo(W-100,150);
+    ctx.moveTo(W-150,95); ctx.lineTo(W-50,95);
+    ctx.stroke();
+    // small stars
+    ctx.fillStyle='#f2e6c9';
+    for(var i=0;i<6;i++){
+      var sx = W-140+ (i*15)%90;
+      var sy = 55 + (i*23)%80;
+      ctx.beginPath(); ctx.arc(sx,sy,1.4,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function drawPersonSimple(cx,cy,scale,colorBody,hat){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#3d2416';
+    ctx.fillRect(-8,10,7,22);
+    ctx.fillRect(2,10,7,22);
+    ctx.fillStyle = colorBody;
+    ctx.beginPath();
+    ctx.moveTo(-15,10); ctx.lineTo(15,10); ctx.lineTo(11,-26); ctx.lineTo(-11,-26);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e8bd8c';
+    ctx.beginPath(); ctx.arc(0,-36,11,0,Math.PI*2); ctx.fill();
+    if(hat==='scarf'){
+      ctx.fillStyle = '#8a3b3b';
+      ctx.beginPath();
+      ctx.moveTo(-13,-40); ctx.quadraticCurveTo(0,-58,13,-40);
+      ctx.quadraticCurveTo(0,-48,-13,-40); ctx.closePath(); ctx.fill();
+    } else if(hat==='merchant'){
+      ctx.fillStyle = '#2b2b2b';
+      ctx.beginPath();
+      ctx.ellipse(0,-46,16,6,0,0,Math.PI*2); ctx.fill();
+      ctx.fillRect(-9,-58,18,14);
+    }
+    ctx.restore();
+  }
+  function drawFood(cx,cy,scale){
+    // simple plate with rice/fruits
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(scale,scale);
+    ctx.fillStyle = '#f5f0e6';
+    ctx.beginPath(); ctx.ellipse(0,10,34,10,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e8d9a0';
+    ctx.beginPath(); ctx.ellipse(0,4,18,10,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath(); ctx.arc(-14,0,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e0a11a';
+    ctx.beginPath(); ctx.arc(14,-2,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7ab648';
+    ctx.beginPath(); ctx.arc(2,-8,6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawSmoke(cx,cy,t,intensity){
+    ctx.save();
+    for(var i=0;i<8;i++){
+      var phase = (t*0.06 + i*30) % 220;
+      var x = cx + Math.sin(i*1.7 + t*0.008)*30*intensity;
+      var y = cy - phase*0.8;
+      var r = 10 + i*2;
+      ctx.globalAlpha = Math.max(0,(1-phase/220))*0.55;
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawWindLines(t, strength){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 2;
+    for(var i=0;i<12;i++){
+      var y = 30 + i*32;
+      var offset = (t*(1.5+strength*0.4) + i*40) % (W+120) - 60;
+      ctx.beginPath();
+      ctx.moveTo(offset, y);
+      ctx.lineTo(offset+40,y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* ---------------- Interaction target registry ---------------- */
+  var hitTargets = []; // {x,y,r,onTap}
+
+  function clearTargets(){ hitTargets = []; }
+  function addTarget(x,y,r,fn){ hitTargets.push({x:x,y:y,r:r,fn:fn}); }
+
+  function getCanvasPos(evt){
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if(evt.touches && evt.touches.length){
+      clientX = evt.touches[0].clientX;
+      clientY = evt.touches[0].clientY;
+    } else if(evt.changedTouches && evt.changedTouches.length){
+      clientX = evt.changedTouches[0].clientX;
+      clientY = evt.changedTouches[0].clientY;
+    } else {
+      clientX = evt.clientX;
+      clientY = evt.clientY;
+    }
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function hitTest(pos){
+    for(var i=hitTargets.length-1;i>=0;i--){
+      var t = hitTargets[i];
+      var dx = pos.x - t.x, dy = pos.y - t.y;
+      if(dx*dx+dy*dy <= t.r*t.r) return t;
+    }
+    return null;
+  }
+
+  /* ---------------- Scene setup ---------------- */
+  function currentSceneData(){
+    return T().scenes[state.sceneIdx];
+  }
+
+  function setInstructionAndNarration(){
+    var sc = currentSceneData();
+    instructionEl.textContent = sc.instruction;
+    narrationEl.textContent = sc.narration;
+  }
+
+  function goToScene(idx){
+    stopSpeak();
+    state.sceneIdx = idx;
+    state.holdProgress = 0;
+    state.holdActive = false;
+    state.mashCount = 0;
+    state.windMash = 0;
+    state.dragging = false;
+    state.shellPlaced = false;
+    state.sequenceStep = 0;
+    state.thiefVisible = false;
+    state.turtleReleased = false;
+    state.endDone = false;
+    pbWrap.style.display = 'none';
+    pbFill.style.width = '0%';
+    if(state.thiefTimer){ clearTimeout(state.thiefTimer); state.thiefTimer = null; }
+
+    updateDots();
+    setInstructionAndNarration();
+    speak(currentSceneData().narration + ' ' + currentSceneData().instruction);
+    setupSceneTargets();
+  }
+
+  function nextScene(){
+    if(state.sceneIdx < T().scenes.length - 1){
+      goToScene(state.sceneIdx + 1);
+    } else {
+      finishStory();
+    }
+  }
+
+  function finishStory(){
+    stopSpeak();
+    replayBtn.style.display = 'inline-block';
+    startBtn.style.display = 'none';
+  }
+
+  /* ---------------- Scene target setup (per scene type) ---------------- */
+  function setupSceneTargets(){
+    clearTargets();
+    var sc = currentSceneData();
+    if(sc.type === 'tap'){
+      addTarget(W*0.5, H*0.55, 70, function(){
+        showOverlay(LANG==='id' ? 'Jaring dilemparkan!' : 'Net cast!');
+        setTimeout(nextScene, 700);
+      });
+    } else if(sc.type === 'hold'){
+      pbWrap.style.display = 'block';
+      addTarget(W*0.5, H*0.55, 80, null); // handled via press events
+    } else if(sc.type === 'tap-turtle'){
+      addTarget(W*0.5, H*0.5, 65, function(){
+        state.turtleReleased = true;
+        showOverlay(LANG==='id' ? 'Kura-kura kembali ke laut...' : 'The turtle swims free...');
+        setTimeout(nextScene, 1000);
+      });
+    } else if(sc.type === 'drag'){
+      state.shellHome = {x: W*0.72, y: H*0.62};
+      state.shellDock = {x: W*0.42, y: H*0.42};
+      state.shellPos = {x: state.shellHome.x, y: state.shellHome.y};
+    } else if(sc.type === 'mash'){
+      state.mashTarget = 6;
+      addTarget(W*0.5, H*0.5, 60, function(){
+        state.mashCount++;
+        if(state.mashCount >= state.mashTarget){
+          showOverlay(LANG==='id' ? 'Makanan berlimpah muncul!' : 'Food appears in abundance!');
+          setTimeout(nextScene, 1000);
+        }
+      });
+    } else if(sc.type === 'choice'){
+      addTarget(W*0.32, H*0.78, 70, function(){
+        showOverlay(LANG==='id' ? 'Pak Mat menolak dengan sopan.' : 'Pak Mat politely refuses.');
+        setTimeout(nextScene, 900);
+      });
+      addTarget(W*0.68, H*0.78, 70, function(){
+        showOverlay(LANG==='id' ? 'Coba ketuk "Tolak dengan Sopan"' : 'Try tapping "Politely Refuse"');
+      });
+    } else if(sc.type === 'sequence'){
+      state.thiefWindow = {x:W-100, y:95, r:55};
+      scheduleThief();
+    } else if(sc.type === 'mash-wind'){
+      state.windTarget = 10;
+      addTarget(W*0.5, H*0.5, 200, function(){
+        state.windMash++;
+        if(state.windMash >= state.windTarget){
+          showOverlay(LANG==='id' ? 'Saudagar tertiup jauh ke laut!' : 'The merchant is blown far into the sea!');
+          setTimeout(nextScene, 1200);
+        }
+      });
+    } else if(sc.type === 'end'){
+      addTarget(W*0.5, H*0.55, 70, function(){
+        if(!state.endDone){
+          state.endDone = true;
+          finishStory();
+        }
+      });
+    }
+  }
+
+  function scheduleThief(){
+    state.thiefVisible = false;
+    state.thiefTimer = setTimeout(function(){
+      state.thiefVisible = true;
+      clearTargets();
+      addTarget(state.thiefWindow.x, state.thiefWindow.y, state.thiefWindow.r, function(){
+        state.sequenceStep++;
+        state.thiefVisible = false;
+        showOverlay(LANG==='id' ? 'Pencuri terlihat!' : 'The thief is spotted!');
+        setTimeout(nextScene, 900);
+      });
+    }, 1400);
+  }
+
+  /* ---------------- Draw per scene ---------------- */
+  function draw(){
+    clear();
+    if(state.sceneIdx === -1){
+      drawTitleScene();
+    } else {
+      var sc = currentSceneData();
+      switch(sc.type){
+        case 'tap': drawFishingScene(false); break;
+        case 'hold': drawFishingScene(true); break;
+        case 'tap-turtle': drawTurtleScene(); break;
+        case 'drag': drawShellAppearScene(); break;
+        case 'mash': drawHomeMashScene(); break;
+        case 'choice': drawMerchantChoiceScene(); break;
+        case 'sequence': drawTheftScene(); break;
+        case 'mash-wind': drawWindScene(); break;
+        case 'end': drawEndingScene(); break;
+      }
+    }
+  }
+
+  function drawTitleScene(){
+    drawSky(H*0.55,false);
+    drawSea(H*0.55, state.time, false);
+    drawBoat(W*0.5,H*0.62,1.1);
+    drawFisherman(W*0.42,H*0.56,1.0,false);
+    drawTurtle(W*0.72,H*0.78,0.7,true);
+    ctx.save();
+    ctx.fillStyle='rgba(4,49,77,0.35)';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  function drawFishingScene(holding){
+    drawSky(H*0.45,false);
+    drawSea(H*0.45, state.time, false);
+    drawBoat(W*0.5,H*0.55,1.05);
+    drawFisherman(W*0.38,H*0.5,1.0, holding && state.holdActive);
+    var netSpread = holding ? 1.6 - state.holdProgress*0.6 : 1.3;
+    drawNet(W*0.6,H*0.72,1.0, netSpread);
+    if(holding){
+      // subtle turtle hint below water
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      drawTurtle(W*0.6, H*0.85, 0.6, true);
+      ctx.restore();
+    }
+  }
+
+  function drawTurtleScene(){
+    drawSky(H*0.4,false);
+    drawSea(H*0.4, state.time, false);
+    drawBoat(W*0.3,H*0.42,0.9);
+    drawFisherman(W*0.22,H*0.4,0.85,false);
+    var bob = Math.sin(state.time*0.003)*4;
+    var pos = state.turtleReleased ? {x:W*0.5, y:H*0.85} : {x:W*0.5, y:H*0.5+bob};
+    drawTurtle(pos.x,pos.y, state.turtleReleased?0.5:0.9, true);
+  }
+
+  function drawShellAppearScene(){
+    drawSky(H*0.4,false);
+    drawSea(H*0.4, state.time, false);
+    drawBoat(state.shellDock.x - W*0.02, state.shellDock.y + H*0.18, 0.85);
+    drawBubbles(state.shellHome.x, state.shellHome.y+10, state.time, 6);
+    var pos = state.dragging || state.shellPlaced ? state.shellPos : state.shellHome;
+    var bob = state.shellPlaced ? 0 : Math.sin(state.time*0.004)*5;
+    drawShell(pos.x, pos.y+bob, 1.0, true);
+    // dock hint circle
+    if(!state.shellPlaced){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.setLineDash([6,6]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(state.shellDock.x, state.shellDock.y, 44, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
+  function drawHomeMashScene(){
+    drawHouseInterior();
+    drawPersonSimple(W*0.24,H*0.72,1.0,'#c9a86a','scarf');
+    drawPersonSimple(W*0.5+120,H*0.72,0.95,'#a4657a',null);
+    var glowPulse = 1 + Math.sin(state.time*0.01)*0.05;
+    drawShell(W*0.5, H*0.68, glowPulse, true);
+    if(state.mashCount > 0){
+      var progress = Math.min(1, state.mashCount / state.mashTarget);
+      ctx.save();
+      ctx.globalAlpha = progress;
+      drawFood(W*0.5, H*0.5 - progress*30, 0.8+progress*0.4);
+      ctx.restore();
+    }
+  }
+
+  function drawMerchantChoiceScene(){
+    drawHouseInterior();
+    drawPersonSimple(W*0.28,H*0.72,1.0,'#c9a86a','scarf');
+    drawPersonSimple(W*0.68,H*0.72,1.05,'#333','merchant');
+    drawShell(W*0.28, H*0.55, 0.8, true);
+    // choice buttons drawn on canvas
+    drawChoiceButton(W*0.32,H*0.78, LANG==='id' ? 'Tolak dengan Sopan' : 'Politely Refuse', true);
+    drawChoiceButton(W*0.68,H*0.78, LANG==='id' ? 'Jual Tempurung' : 'Sell the Shell', false);
+  }
+
+  function drawChoiceButton(cx,cy,label,good){
+    ctx.save();
+    ctx.translate(cx,cy);
+    var w=150,h=40;
+    ctx.fillStyle = good ? 'rgba(46,139,87,0.9)' : 'rgba(192,57,43,0.55)';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    roundRect(-w/2,-h/2,w,h,10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label,0,1);
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawTheftScene(){
+    drawHouseInterior();
+    // sleeping figures
+    ctx.save();
+    ctx.fillStyle = '#c9a86a';
+    ctx.beginPath(); ctx.ellipse(W*0.3,H*0.78,50,16,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W*0.3-45,H*0.78,12,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    drawShell(W*0.3, H*0.62, 0.75, true);
+    // window
+    if(state.thiefVisible){
+      ctx.save();
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.ellipse(state.thiefWindow.x, state.thiefWindow.y+10, 22, 34, 0,0,Math.PI*2);
+      ctx.fill();
+      // eyes glint
+      ctx.fillStyle = '#f2c94c';
+      ctx.beginPath(); ctx.arc(state.thiefWindow.x-6,state.thiefWindow.y,2.4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(state.thiefWindow.x+6,state.thiefWindow.y,2.4,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawWindScene(){
+    drawHouseInterior();
+    var strength = state.windMash / state.windTarget;
+    drawShell(W*0.3, H*0.62, 0.85, true);
+    drawSmoke(W*0.3, H*0.55, state.time, 0.6+strength);
+    drawPersonSimple(W*0.66 + strength*90, H*0.72 - strength*40, Math.max(0.3,1.0-strength*0.7), '#333','merchant');
+    drawWindLines(state.time, strength);
+  }
+
+  function drawEndingScene(){
+    drawSky(H*0.45,true);
+    drawSea(H*0.45, state.time, false);
+    drawBoat(W*0.68,H*0.55,0.95);
+    drawFisherman(W*0.6,H*0.5,0.9,false);
+    drawPersonSimple(W*0.78,H*0.52,0.85,'#a4657a',null);
+    var bob = Math.sin(state.time*0.003)*4;
+    drawShell(W*0.35, H*0.66+bob, 1.1, true);
+  }
+
+  /* ---------------- Animation loop ---------------- */
+  function loop(ts){
+    state.time = ts || 0;
+    draw();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ---------------- Input handling ---------------- */
+  var pressTimer = null;
+
+  function handlePointerDown(evt){
+    if(state.sceneIdx === -1) return;
+    var pos = getCanvasPos(evt);
+    var sc = currentSceneData();
+
+    if(sc.type === 'hold'){
+      var t = hitTargets[0];
+      if(t){
+        var dx=pos.x-t.x, dy=pos.y-t.y;
+        if(dx*dx+dy*dy <= t.r*t.r){
+          state.holdActive = true;
+          startHold();
+        }
+      }
+      return;
+    }
+
+    if(sc.type === 'drag'){
+      var dx = pos.x - state.shellHome.x, dy = pos.y - state.shellHome.y;
+      var homePos = state.dragging || state.shellPlaced ? state.shellPos : state.shellHome;
+      var ddx = pos.x - homePos.x, ddy = pos.y - homePos.y;
+      if(Math.sqrt(ddx*ddx+ddy*ddy) <= 45){
+        state.dragging = true;
+        state.shellPos = {x:pos.x,y:pos.y};
+      }
+      return;
+    }
+
+    var hit = hitTest(pos);
+    if(hit && hit.fn) hit.fn();
+    evt.preventDefault && evt.preventDefault();
+  }
+
+  function handlePointerMove(evt){
+    if(state.sceneIdx === -1) return;
+    var sc = currentSceneData();
+    if(sc.type === 'drag' && state.dragging){
+      var pos = getCanvasPos(evt);
+      state.shellPos = {x:pos.x, y:pos.y};
+    }
+  }
+
+  function handlePointerUp(evt){
+    if(state.sceneIdx === -1) return;
+    var sc = currentSceneData();
+    if(sc.type === 'hold'){
+      state.holdActive = false;
+      stopHold();
+    }
+    if(sc.type === 'drag' && state.dragging){
+      state.dragging = false;
+      var d = Math.hypot(state.shellPos.x-state.shellDock.x, state.shellPos.y-state.shellDock.y);
+      if(d < 60){
+        state.shellPos = {x:state.shellDock.x, y:state.shellDock.y};
+        state.shellPlaced = true;
+        showOverlay(LANG==='id' ? 'Tempurung diamankan di perahu!' : 'Shell secured on the boat!');
+        setTimeout(nextScene, 900);
+      } else {
+        state.shellPos = {x:state.shellHome.x, y:state.shellHome.y};
+      }
+    }
+  }
+
+  function startHold(){
+    if(pressTimer) clearInterval(pressTimer);
+    pressTimer = setInterval(function(){
+      if(!state.holdActive) { clearInterval(pressTimer); return; }
+      state.holdProgress = Math.min(1, state.holdProgress + 0.04);
+      pbFill.style.width = (state.holdProgress*100) + '%';
+      if(state.holdProgress >= 1){
+        clearInterval(pressTimer);
+        showOverlay(LANG==='id' ? 'Jaring berhasil ditarik!' : 'Net pulled up!');
+        setTimeout(nextScene, 700);
+      }
+    }, 60);
+  }
+  function stopHold(){
+    if(pressTimer){ clearInterval(pressTimer); pressTimer=null; }
+    if(state.holdProgress < 1){
+      state.holdProgress = Math.max(0, state.holdProgress - 0.15);
+      pbFill.style.width = (state.holdProgress*100) + '%';
+    }
+  }
+
+  canvas.addEventListener('mousedown', handlePointerDown);
+  canvas.addEventListener('mousemove', handlePointerMove);
+  window.addEventListener('mouseup', handlePointerUp);
+  canvas.addEventListener('touchstart', function(e){ handlePointerDown(e); }, {passive:false});
+  canvas.addEventListener('touchmove', function(e){ handlePointerMove(e); e.preventDefault(); }, {passive:false});
+  canvas.addEventListener('touchend', function(e){ handlePointerUp(e); }, {passive:false});
+
+  /* ---------------- UI wiring ---------------- */
+  function applyLangUI(){
+    titleText.childNodes[0].nodeValue = T().title;
+    subtitleText.textContent = T().subtitle;
+    startBtn.textContent = T().start;
+    replayBtn.textContent = T().replay;
+    document.getElementById('footer-credit').textContent = T().footer;
+    langBtn.textContent = LANG === 'id' ? 'EN' : 'ID';
+    document.documentElement.lang = LANG;
+    buildDots();
+    if(state.sceneIdx >= 0){
+      updateDots();
+      setInstructionAndNarration();
+    }
+  }
+
+  langBtn.addEventListener('click', function(){
+    LANG = LANG === 'id' ? 'en' : 'id';
+    try{
+      var url = new URL(window.location.href);
+      url.searchParams.set('lang', LANG);
+      window.history.replaceState(null,'',url.toString());
+    }catch(e){}
+    applyLangUI();
+    if(state.sceneIdx >= 0){
+      speak(currentSceneData().narration + ' ' + currentSceneData().instruction);
+    }
+  });
+
+  function updateMuteUI(){
+    muteBtn.textContent = state.muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('active', state.muted);
+  }
+  muteBtn.addEventListener('click', function(){
+    state.muted = !state.muted;
+    try{ localStorage.setItem('tk_bruek_kura_muted', state.muted ? '1':'0'); }catch(e){}
+    updateMuteUI();
+    if(state.muted) stopSpeak();
+    else if(state.sceneIdx >= 0) speak(currentSceneData().narration + ' ' + currentSceneData().instruction);
+  });
+
+  startBtn.addEventListener('click', function(){
+    startBtn.style.display = 'none';
+    goToScene(0);
+  });
+
+  replayBtn.addEventListener('click', function(){
+    replayBtn.style.display = 'none';
+    startBtn.style.display = 'inline-block';
+    state.sceneIdx = -1;
+    updateDots();
+    instructionEl.textContent = '';
+    narrationEl.textContent = LANG === 'id'
+      ? 'Ketuk "Mulai Cerita" untuk memulai kembali petualangan Pak Mat dan tempurung kura-kura ajaib.'
+      : 'Tap "Start Story" to begin Pak Mat\'s adventure with the magical turtle shell again.';
+    stopSpeak();
+  });
+
+  /* ---------------- iframe auto-resize ---------------- */
+  function sendHeight(){
+    var h = document.getElementById('app').offsetHeight;
+    try{
+      window.parent.postMessage({ type:'bruek-kura-resize', height:h }, '*');
+    }catch(e){}
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  setInterval(sendHeight, 800);
+
+  /* ---------------- init ---------------- */
+  applyLangUI();
+  updateMuteUI();
+  narrationEl.textContent = LANG === 'id'
+    ? 'Sebuah dongeng dari Aceh tentang nelayan tua, kura-kura ajaib, dan tempurung emas penuh berkah. Ketuk "Mulai Cerita" untuk memulai.'
+    : 'A folktale from Aceh about an old fisherman, a magical turtle, and a blessed golden shell. Tap "Start Story" to begin.';
+
+})();
+</script>
+</body>
+</html>
