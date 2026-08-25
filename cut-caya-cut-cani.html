@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cut Caya dan Cut Cani</title>
+<style>
+  :root{
+    --paper:#fbf3e3;
+    --ink:#3b2a1a;
+    --gold:#c9962c;
+    --green:#4c7a3d;
+    --sky1:#ffe8b8;
+    --sky2:#ffcf8f;
+    --accent:#a6453a;
+    --caya:#5f8f5a;
+    --cani:#b5567a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 10px 18px;
+  }
+  #wrap{
+    width:100%;
+    max-width:720px;
+  }
+  #topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-size:1.25rem;
+    margin:0;
+    color:var(--accent);
+    letter-spacing:.3px;
+  }
+  #controls{
+    display:flex;
+    gap:6px;
+  }
+  button.iconbtn{
+    background:var(--paper);
+    border:2px solid var(--gold);
+    color:var(--ink);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:.85rem;
+    cursor:pointer;
+    font-weight:600;
+  }
+  button.iconbtn:hover{background:#f4e2bd;}
+  #stage{
+    position:relative;
+    width:100%;
+    border-radius:14px;
+    overflow:hidden;
+    border:3px solid var(--gold);
+    background:linear-gradient(180deg,var(--sky1),var(--sky2));
+    box-shadow:0 4px 14px rgba(0,0,0,.15);
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:manipulation;
+  }
+  #hint{
+    position:absolute;
+    top:10px;
+    left:10px;
+    right:10px;
+    text-align:center;
+    background:rgba(59,42,26,.72);
+    color:#fff8ea;
+    padding:7px 10px;
+    border-radius:20px;
+    font-size:.82rem;
+    font-weight:600;
+    pointer-events:none;
+    transition:opacity .3s;
+  }
+  #progressWrap{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    width:60%;
+    max-width:260px;
+    height:12px;
+    background:rgba(255,255,255,.5);
+    border-radius:8px;
+    overflow:hidden;
+    border:2px solid rgba(59,42,26,.4);
+    display:none;
+  }
+  #progressBar{
+    height:100%;
+    width:0%;
+    background:var(--accent);
+    transition:width .05s linear;
+  }
+  #overlayBtn{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:var(--accent);
+    color:#fff8ea;
+    border:none;
+    border-radius:12px;
+    padding:14px 26px;
+    font-size:1.05rem;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,.25);
+    display:none;
+  }
+  #choiceWrap{
+    position:absolute;
+    left:50%;
+    bottom:16px;
+    transform:translateX(-50%);
+    display:none;
+    gap:10px;
+  }
+  .choiceBtn{
+    background:#fff8ea;
+    border:2px solid var(--accent);
+    color:var(--accent);
+    border-radius:10px;
+    padding:10px 16px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+  .choiceBtn:hover{background:var(--accent);color:#fff8ea;}
+  #narrationBox{
+    margin-top:10px;
+    background:#fff8ea;
+    border:2px solid var(--gold);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:.95rem;
+    line-height:1.5;
+    min-height:56px;
+  }
+  #instructionText{
+    font-weight:700;
+    color:var(--accent);
+    margin-bottom:4px;
+    font-size:.88rem;
+  }
+  #dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin-top:10px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#dcc79a;
+    transition:background .25s, transform .25s;
+  }
+  .dot.active{background:var(--accent);transform:scale(1.25);}
+  .dot.done{background:var(--green);}
+  #bottomRow{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  button.mainbtn{
+    background:var(--green);
+    color:#fff8ea;
+    border:none;
+    border-radius:10px;
+    padding:10px 20px;
+    font-weight:700;
+    font-size:.95rem;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,.18);
+  }
+  button.mainbtn:hover{filter:brightness(1.08);}
+  button.mainbtn.secondary{background:var(--accent);}
+  footer{
+    margin-top:14px;
+    font-size:.72rem;
+    color:#8a7457;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="topbar">
+    <h1 id="gameTitle">Cut Caya dan Cut Cani</h1>
+    <div id="controls">
+      <button class="iconbtn" id="langBtn" type="button">EN</button>
+      <button class="iconbtn" id="muteBtn" type="button">🔊</button>
+    </div>
+  </div>
+
+  <div id="stage">
+    <canvas id="game" width="800" height="500"></canvas>
+    <div id="hint"></div>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <button id="overlayBtn" type="button"></button>
+    <div id="choiceWrap">
+      <button class="choiceBtn" id="choiceA" type="button"></button>
+    </div>
+  </div>
+
+  <div id="narrationBox">
+    <div id="instructionText"></div>
+    <div id="narrationText">Memuat cerita…</div>
+  </div>
+
+  <div id="dots"></div>
+
+  <div id="bottomRow">
+    <button class="mainbtn" id="startBtn" type="button">Mulai Cerita</button>
+    <button class="mainbtn secondary" id="replayBtn" type="button" style="display:none;">Ulangi Cerita</button>
+  </div>
+
+  <footer id="footerText">Cerita Rakyat Aceh — Kisah tentang ketulusan hati.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ LANGUAGE ============ */
+var params = new URLSearchParams(window.location.search);
+var lang = params.get('lang') === 'en' ? 'en' : 'id';
+
+var UI = {
+  id:{
+    title:"Cut Caya dan Cut Cani",
+    start:"Mulai Cerita",
+    replay:"Ulangi Cerita",
+    footer:"Cerita Rakyat Aceh — Kisah tentang ketulusan hati.",
+    loading:"Memuat cerita…"
+  },
+  en:{
+    title:"Cut Caya and Cut Cani",
+    start:"Start Story",
+    replay:"Replay Story",
+    footer:"A Folktale from Aceh — A tale about sincerity of heart.",
+    loading:"Loading story…"
+  }
+};
+
+/* ============ AUDIO / SPEECH ============ */
+var MUTE_KEY = "ccc_aceh_mute";
+var muted = localStorage.getItem(MUTE_KEY) === "1";
+var synth = window.speechSynthesis;
+
+function updateMuteBtn(){
+  document.getElementById('muteBtn').textContent = muted ? "🔇" : "🔊";
+}
+updateMuteBtn();
+
+function speak(text){
+  if(!synth) return;
+  synth.cancel();
+  if(muted || !text) return;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === 'en' ? 'en-US' : 'id-ID';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  synth.speak(u);
+}
+
+document.getElementById('muteBtn').addEventListener('click', function(){
+  muted = !muted;
+  localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
+  updateMuteBtn();
+  if(muted && synth) synth.cancel();
+  else speakCurrentScene();
+});
+
+document.getElementById('langBtn').addEventListener('click', function(){
+  lang = lang === 'id' ? 'en' : 'id';
+  document.getElementById('langBtn').textContent = lang === 'id' ? 'EN' : 'ID';
+  applyStaticText();
+  if(started){
+    renderScene(true);
+  }
+});
+document.getElementById('langBtn').textContent = lang === 'id' ? 'EN' : 'ID';
+
+function applyStaticText(){
+  var t = UI[lang];
+  document.getElementById('gameTitle').textContent = t.title;
+  document.title = t.title;
+  document.getElementById('startBtn').textContent = t.start;
+  document.getElementById('replayBtn').textContent = t.replay;
+  document.getElementById('footerText').textContent = t.footer;
+  document.getElementById('narrationText').textContent = t.loading;
+}
+applyStaticText();
+
+/* ============ CANVAS SETUP ============ */
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var CW = 800, CH = 500;
+
+function resizeCanvasForDPR(){
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = CW * dpr;
+  canvas.height = CH * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+resizeCanvasForDPR();
+
+/* ============ IFRAME AUTO-RESIZE ============ */
+function sendHeight(){
+  var h = document.getElementById('wrap').getBoundingClientRect().height;
+  try{
+    window.parent.postMessage({type:'ccc-aceh-resize', height: Math.ceil(h) + 24}, '*');
+  }catch(e){}
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+
+/* ============ DRAWING HELPERS ============ */
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawSky(){
+  var g = ctx.createLinearGradient(0,0,0,CH);
+  g.addColorStop(0,'#ffe6ad');
+  g.addColorStop(1,'#ffd08a');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,CW,CH);
+  // sun
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.arc(670,80,46,0,Math.PI*2); ctx.fill();
+  // clouds
+  ctx.fillStyle = 'rgba(255,255,255,.7)';
+  [[120,60,30],[160,70,22],[95,75,20]].forEach(function(c){
+    ctx.beginPath(); ctx.arc(c[0],c[1],c[2],0,Math.PI*2); ctx.fill();
+  });
+}
+
+function drawHills(groundY){
+  ctx.fillStyle = '#8fae6a';
+  ctx.beginPath();
+  ctx.moveTo(0,groundY);
+  ctx.quadraticCurveTo(150,groundY-60,320,groundY-10);
+  ctx.quadraticCurveTo(500,groundY-70,800,groundY-15);
+  ctx.lineTo(800,groundY+20);
+  ctx.lineTo(0,groundY+20);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawGround(groundY){
+  ctx.fillStyle = '#c9a15c';
+  ctx.fillRect(0,groundY,CW,CH-groundY);
+  ctx.fillStyle = '#b98f49';
+  for(var i=0;i<CW;i+=40){
+    ctx.fillRect(i, groundY+10, 22, 3);
+  }
+}
+
+function drawHut(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  // stilts
+  ctx.fillStyle = '#7a5230';
+  ctx.fillRect(-60,20,10,50);
+  ctx.fillRect(50,20,10,50);
+  // body
+  ctx.fillStyle = '#c9915a';
+  rr(-70,-30,140,55,4); ctx.fill();
+  // roof
+  ctx.fillStyle = '#6b4226';
+  ctx.beginPath();
+  ctx.moveTo(-90,-30);
+  ctx.lineTo(0,-90);
+  ctx.lineTo(90,-30);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#8a5a34';
+  ctx.beginPath();
+  ctx.moveTo(-80,-32);
+  ctx.lineTo(0,-84);
+  ctx.lineTo(80,-32);
+  ctx.lineTo(80,-24);
+  ctx.lineTo(0,-74);
+  ctx.lineTo(-80,-24);
+  ctx.closePath();
+  ctx.fill();
+  // door
+  ctx.fillStyle = '#4a2f1c';
+  rr(-14,-8,28,33,3); ctx.fill();
+  // window
+  ctx.fillStyle = '#eecf8b';
+  rr(-52,-18,20,20,2); ctx.fill();
+  rr(32,-18,20,20,2); ctx.fill();
+  ctx.restore();
+}
+
+function drawTree(x,y,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#6b4226';
+  ctx.fillRect(-8,-10,16,60);
+  ctx.fillStyle = '#4c7a3d';
+  ctx.beginPath(); ctx.arc(0,-45,42,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#5c8f49';
+  ctx.beginPath(); ctx.arc(-22,-25,26,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(24,-25,26,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawGirl(x,y,scale,type,mood){
+  // type: 'caya' (simple, green/earth tones) or 'cani' (fancier, pink/purple, jewelry)
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  var body = type === 'caya' ? '#5f8f5a' : '#b5567a';
+  var bodyDark = type === 'caya' ? '#436b3d' : '#8a3a58';
+  var skin = '#e8b98c';
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,.15)';
+  ctx.beginPath(); ctx.ellipse(0,64,26,7,0,0,Math.PI*2); ctx.fill();
+  // dress
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-22,60);
+  ctx.quadraticCurveTo(-30,10,-14,-15);
+  ctx.lineTo(14,-15);
+  ctx.quadraticCurveTo(30,10,22,60);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = bodyDark;
+  rr(-24,52,48,10,4); ctx.fill();
+  // arms
+  ctx.strokeStyle = skin;
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-14,-6); ctx.lineTo(-30,20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(14,-6); ctx.lineTo(30,20); ctx.stroke();
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(0,-32,17,0,Math.PI*2); ctx.fill();
+  // hijab/hair covering
+  ctx.fillStyle = type === 'caya' ? '#3b5c33' : '#6a2f45';
+  ctx.beginPath();
+  ctx.moveTo(-19,-30);
+  ctx.quadraticCurveTo(-22,-52,0,-52);
+  ctx.quadraticCurveTo(22,-52,19,-30);
+  ctx.quadraticCurveTo(20,-14,10,-8);
+  ctx.quadraticCurveTo(16,-30,0,-36);
+  ctx.quadraticCurveTo(-16,-30,-10,-8);
+  ctx.quadraticCurveTo(-22,-14,-19,-30);
+  ctx.closePath();
+  ctx.fill();
+  // face
+  ctx.fillStyle = '#3b2a1a';
+  if(mood === 'sad'){
+    ctx.beginPath(); ctx.arc(-6,-30,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-30,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-22,5,Math.PI*1.15,Math.PI*1.85); ctx.stroke();
+  } else if(mood === 'proud' || mood === 'smug'){
+    ctx.beginPath(); ctx.arc(-6,-31,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-31,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-6,-24); ctx.lineTo(6,-26); ctx.lineWidth=1.5; ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(-6,-31,1.6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-31,1.6,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(0,-27,5,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  }
+  // jewelry for Cani
+  if(type === 'cani'){
+    ctx.fillStyle = '#e8c25a';
+    ctx.beginPath(); ctx.arc(0,-16,3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#e8c25a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0,-20,5,0,Math.PI); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawOldMan(x,y,scale,mood){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = 'rgba(0,0,0,.15)';
+  ctx.beginPath(); ctx.ellipse(0,64,26,7,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#8a7457';
+  ctx.beginPath();
+  ctx.moveTo(-20,60); ctx.quadraticCurveTo(-26,10,-12,-14);
+  ctx.lineTo(12,-14); ctx.quadraticCurveTo(26,10,20,60);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#e0b98c'; ctx.lineWidth = 8; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-12,-4); ctx.lineTo(-26,18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(12,-4); ctx.lineTo(26,18); ctx.stroke();
+  ctx.fillStyle = '#e0b98c';
+  ctx.beginPath(); ctx.arc(0,-30,16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#efe3d0';
+  ctx.beginPath(); ctx.arc(0,-40,14,Math.PI,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#efe3d0';
+  ctx.beginPath(); ctx.moveTo(0,-8); ctx.quadraticCurveTo(6,2,0,10); ctx.quadraticCurveTo(-6,2,0,-8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3b2a1a';
+  ctx.beginPath(); ctx.arc(-5,-30,1.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,-30,1.4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawField(x,y,w,h,progress){
+  // progress 0..1 grows crops
+  ctx.save();
+  ctx.fillStyle = '#7a5230';
+  rr(x,y,w,h,6); ctx.fill();
+  var cols = 6, rows = 2;
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var px = x + 18 + c*((w-36)/(cols-1));
+      var py = y + h - 12 - r*22;
+      var grow = Math.max(0, Math.min(1, progress*cols*rows - (r*cols+c)));
+      if(grow<=0) continue;
+      ctx.strokeStyle = '#4c7a3d';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(px,py);
+      ctx.lineTo(px, py - 22*grow);
+      ctx.stroke();
+      ctx.fillStyle = '#e8c25a';
+      ctx.beginPath();
+      ctx.arc(px, py - 22*grow, 4*grow+2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawMirror(x,y,scale,glow){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  if(glow){
+    ctx.shadowColor = '#fff2b0';
+    ctx.shadowBlur = 26;
+  }
+  ctx.fillStyle = '#c9962c';
+  ctx.beginPath(); ctx.ellipse(0,-10,32,42,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#dff3ff';
+  ctx.beginPath(); ctx.ellipse(0,-10,24,34,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#c9962c';
+  ctx.fillRect(-5,30,10,26);
+  ctx.fillRect(-16,54,32,8);
+  ctx.restore();
+}
+
+function drawSeedBox(x,y,scale,open){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(scale,scale);
+  ctx.fillStyle = '#7a5230';
+  rr(-26,-6,52,30,4); ctx.fill();
+  if(open){
+    ctx.fillStyle = '#4c3018';
+    rr(-22,-10,44,10,3); ctx.fill();
+    ctx.fillStyle = '#e8c25a';
+    [[-10,-8],[0,-10],[10,-8],[-4,-6],[6,-5]].forEach(function(p){
+      ctx.beginPath(); ctx.arc(p[0],p[1],2.3,0,Math.PI*2); ctx.fill();
+    });
+  } else {
+    ctx.fillStyle = '#5c3a20';
+    rr(-27,-14,54,10,3); ctx.fill();
+  }
+  ctx.strokeStyle = '#4c3018'; ctx.lineWidth=2;
+  rr(-26,-6,52,30,4); ctx.stroke();
+  ctx.restore();
+}
+
+function drawBed(x,y,w,h){
+  ctx.fillStyle = '#8a5a34';
+  rr(x,y,w,h,6); ctx.fill();
+  ctx.fillStyle = '#efe3d0';
+  rr(x+8,y+8,w-16,h-24,4); ctx.fill();
+  ctx.fillStyle = '#c9a15c';
+  rr(x+8,y+h-20,w-16,14,4); ctx.fill();
+}
+
+function clearStage(){
+  ctx.clearRect(0,0,CW,CH);
+}
+
+/* ============ SCENE ENGINE ============ */
+var currentIndex = -1;
+var started = false;
+var animId = null;
+var pressTimer = null;
+var pressStart = 0;
+var pressActive = false;
+var tapCount = 0;
+var dragState = null;
+
+var progressWrap = document.getElementById('progressWrap');
+var progressBar = document.getElementById('progressBar');
+var hint = document.getElementById('hint');
+var overlayBtn = document.getElementById('overlayBtn');
+var choiceWrap = document.getElementById('choiceWrap');
+var choiceA = document.getElementById('choiceA');
+var narrationText = document.getElementById('narrationText');
+var instructionText = document.getElementById('instructionText');
+
+var scenes = [
+  {
+    id:'intro',
+    narr:{
+      id:"Di sebuah desa di Aceh, hiduplah Cut Caya dan Cut Cani, dua kakak beradik anak Pak Ali si petani. Cut Caya baik hati dan rajin, sedangkan Cut Cani gemar berdandan dan bersikap sombong.",
+      en:"In a village in Aceh lived Cut Caya and Cut Cani, two sisters, daughters of a farmer named Pak Ali. Cut Caya was kind and hardworking, while Cut Cani loved to primp and act proud."
+    },
+    instr:{id:"Ketuk Cut Caya, sang kakak yang baik hati, untuk memulai kisahnya.", en:"Tap Cut Caya, the kind elder sister, to begin the story."},
+    setup:function(s){
+      s.hitCaya = {x:280,y:300,r:70};
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawHut(620,300,1.1);
+      drawTree(90,330,1);
+      drawGirl(280,320,1.15,'caya','happy');
+      drawGirl(430,330,1,'cani','smug');
+    },
+    onClick:function(s,x,y){
+      var d = Math.hypot(x-s.hitCaya.x,y-s.hitCaya.y+40);
+      if(d < s.hitCaya.r) completeScene();
+    }
+  },
+  {
+    id:'ladang',
+    narr:{
+      id:"Cut Caya rajin membantu ayahnya di ladang setiap hari, memanen hasil bumi dengan penuh semangat tanpa pernah mengeluh.",
+      en:"Cut Caya diligently helped her father in the field every day, harvesting the crops with great spirit and never complaining."
+    },
+    instr:{id:"Ketuk ladang berulang kali untuk membantu Cut Caya memanen!", en:"Tap the field repeatedly to help Cut Caya harvest!"},
+    needsTaps:14,
+    setup:function(s){
+      s.taps = 0;
+      s.fieldRect = {x:260,y:340,w:280,h:90};
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawHut(680,300,0.9);
+      drawField(s.fieldRect.x,s.fieldRect.y,s.fieldRect.w,s.fieldRect.h, s.taps/scenes[1].needsTaps);
+      drawGirl(230,330,1,'caya','happy');
+      progressWrap.style.display='block';
+      progressBar.style.width = Math.min(100,(s.taps/scenes[1].needsTaps)*100)+'%';
+    },
+    onClick:function(s,x,y){
+      var f = s.fieldRect;
+      if(x>=f.x-10 && x<=f.x+f.w+10 && y>=f.y-20 && y<=f.y+f.h+10){
+        s.taps++;
+        progressBar.style.width = Math.min(100,(s.taps/scenes[1].needsTaps)*100)+'%';
+        renderScene(false);
+        if(s.taps >= scenes[1].needsTaps){
+          setTimeout(completeScene, 260);
+        }
+      }
+    }
+  },
+  {
+    id:'cermin_dandan',
+    narr:{
+      id:"Sementara itu, Cut Cani lebih suka menghabiskan waktu berdandan dan bercermin daripada membantu orang tuanya.",
+      en:"Meanwhile, Cut Cani preferred to spend her time primping in front of the mirror rather than helping her parents."
+    },
+    instr:{id:"Tekan dan tahan cermin agar Cut Cani selesai berdandan.", en:"Press and hold the mirror so Cut Cani finishes primping."},
+    holdDuration:1800,
+    setup:function(s){
+      s.hold = 0;
+      s.mirrorPos = {x:520,y:300,r:55};
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawHut(150,300,0.9);
+      drawGirl(400,330,1.1,'cani','smug');
+      drawMirror(s.mirrorPos.x,s.mirrorPos.y,1.1,false);
+      progressWrap.style.display='block';
+      progressBar.style.width = Math.min(100,(s.hold/scenes[2].holdDuration)*100)+'%';
+    },
+    onPressStart:function(s,x,y){
+      var m = s.mirrorPos;
+      if(Math.hypot(x-m.x,y-m.y) < m.r) return true;
+      return false;
+    },
+    onPressTick:function(s,dt){
+      s.hold += dt;
+      progressBar.style.width = Math.min(100,(s.hold/scenes[2].holdDuration)*100)+'%';
+      if(s.hold >= scenes[2].holdDuration){
+        completeScene();
+      }
+    }
+  },
+  {
+    id:'ayah_sakit',
+    narr:{
+      id:"Beberapa bulan kemudian, Pak Ali jatuh sakit. Cut Caya bekerja keras mengurus ladang dan rumah, sementara Cut Cani tetap acuh tak acuh.",
+      en:"A few months later, Pak Ali fell ill. Cut Caya worked hard to manage the field and home, while Cut Cani remained indifferent."
+    },
+    instr:{id:"Ketuk Pak Ali di ranjangnya untuk mendengar pesannya.", en:"Tap Pak Ali on his bed to hear his message."},
+    setup:function(s){
+      s.bed = {x:300,y:300,w:220,h:100};
+      s.hitOldMan = {x:400,y:320,r:70};
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawBed(s.bed.x,s.bed.y,s.bed.w,s.bed.h);
+      drawOldMan(400,330,0.95,'sad');
+      drawGirl(560,340,0.85,'caya','sad');
+    },
+    onClick:function(s,x,y){
+      var d = Math.hypot(x-s.hitOldMan.x,y-s.hitOldMan.y+30);
+      if(d < s.hitOldMan.r) completeScene();
+    }
+  },
+  {
+    id:'warisan',
+    narr:{
+      id:"Pak Ali memberikan kotak berisi benih ajaib kepada Cut Caya, dan cermin antik kepada Cut Cani, sebagai pesan terakhirnya.",
+      en:"Pak Ali gave a box of magical seeds to Cut Caya, and an antique mirror to Cut Cani, as his final message."
+    },
+    instr:{id:"Seret kotak benih ke Cut Caya, lalu seret cermin ke Cut Cani.", en:"Drag the seed box to Cut Caya, then drag the mirror to Cut Cani."},
+    setup:function(s){
+      s.box = {x:340,y:180,r:36,placed:false, home:{x:340,y:180}};
+      s.mirror = {x:460,y:180,r:36,placed:false, home:{x:460,y:180}};
+      s.targetCaya = {x:250,y:340,r:60};
+      s.targetCani = {x:560,y:340,r:60};
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawOldMan(400,150,0.7,'sad');
+      drawGirl(250,360,1,'caya','sad');
+      drawGirl(560,360,1,'cani','sad');
+      if(!s.box.placed) drawSeedBox(s.box.x,s.box.y,1,false);
+      else drawSeedBox(s.targetCaya.x, s.targetCaya.y-70, 1, true);
+      if(!s.mirror.placed) drawMirror(s.mirror.x,s.mirror.y,0.8,false);
+      else drawMirror(s.targetCani.x, s.targetCani.y-80, 0.8, false);
+    },
+    onDragStart:function(s,x,y){
+      if(!s.box.placed && Math.hypot(x-s.box.x,y-s.box.y) < s.box.r) return 'box';
+      if(!s.mirror.placed && Math.hypot(x-s.mirror.x,y-s.mirror.y) < s.mirror.r) return 'mirror';
+      return null;
+    },
+    onDragMove:function(s,which,x,y){
+      if(which==='box'){ s.box.x=x; s.box.y=y; }
+      if(which==='mirror'){ s.mirror.x=x; s.mirror.y=y; }
+    },
+    onDragEnd:function(s,which,x,y){
+      if(which==='box'){
+        if(Math.hypot(x-s.targetCaya.x,y-s.targetCaya.y) < s.targetCaya.r){
+          s.box.placed = true;
+        } else { s.box.x=s.box.home.x; s.box.y=s.box.home.y; }
+      }
+      if(which==='mirror'){
+        if(Math.hypot(x-s.targetCani.x,y-s.targetCani.y) < s.targetCani.r){
+          s.mirror.placed = true;
+        } else { s.mirror.x=s.mirror.home.x; s.mirror.y=s.mirror.home.y; }
+      }
+      if(s.box.placed && s.mirror.placed){
+        setTimeout(completeScene, 400);
+      }
+    }
+  },
+  {
+    id:'menanam',
+    narr:{
+      id:"Cut Caya menanam benih ajaib itu dengan hati yang tulus. Tanaman tumbuh subur dan hasilnya melimpah, membawa kehidupan yang lebih baik.",
+      en:"Cut Caya planted the magical seeds with a sincere heart. The plants grew lush and abundant, bringing a better life."
+    },
+    instr:{id:"Tekan dan tahan tanah untuk menanam benih dengan tulus.", en:"Press and hold the soil to plant the seeds sincerely."},
+    holdDuration:2000,
+    setup:function(s){
+      s.hold = 0;
+      s.spot = {x:400,y:370,r:70};
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawField(300,350,200,80, s.hold/scenes[5].holdDuration);
+      drawGirl(400,300,1,'caya','happy');
+      progressWrap.style.display='block';
+      progressBar.style.width = Math.min(100,(s.hold/scenes[5].holdDuration)*100)+'%';
+    },
+    onPressStart:function(s,x,y){
+      var p = s.spot;
+      if(Math.hypot(x-p.x,y-p.y) < p.r) return true;
+      return false;
+    },
+    onPressTick:function(s,dt){
+      s.hold += dt;
+      progressBar.style.width = Math.min(100,(s.hold/scenes[5].holdDuration)*100)+'%';
+      if(s.hold >= scenes[5].holdDuration){
+        completeScene();
+      }
+    }
+  },
+  {
+    id:'cermin_marah',
+    narr:{
+      id:"Cut Cani semakin terobsesi dengan cerminnya, hingga suatu hari cermin itu berbicara dan menegurnya. Cut Cani marah dan melempar cermin itu.",
+      en:"Cut Cani grew ever more obsessed with her mirror, until one day it spoke and rebuked her. Cut Cani grew furious and threw the mirror away."
+    },
+    instr:{id:"Ketuk cermin berulang-ulang saat Cut Cani marah mendengar teguran itu!", en:"Tap the mirror repeatedly as Cut Cani grows angry hearing the rebuke!"},
+    needsTaps:10,
+    setup:function(s){
+      s.taps = 0;
+      s.mirrorPos = {x:400,y:300,r:55};
+      s.thrown = false;
+    },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawGirl(400,380,1.1,'cani', s.taps>4 ? 'sad':'smug');
+      if(!s.thrown){
+        var shake = s.taps>0 ? Math.sin(Date.now()/40)*s.taps*0.6 : 0;
+        drawMirror(s.mirrorPos.x+shake,s.mirrorPos.y,1.1,s.taps>6);
+      }
+      progressWrap.style.display='block';
+      progressBar.style.width = Math.min(100,(s.taps/scenes[6].needsTaps)*100)+'%';
+    },
+    onClick:function(s,x,y){
+      if(s.thrown) return;
+      var m = s.mirrorPos;
+      if(Math.hypot(x-m.x,y-m.y) < m.r){
+        s.taps++;
+        progressBar.style.width = Math.min(100,(s.taps/scenes[6].needsTaps)*100)+'%';
+        renderScene(false);
+        if(s.taps >= scenes[6].needsTaps){
+          s.thrown = true;
+          setTimeout(completeScene, 400);
+        }
+      }
+    }
+  },
+  {
+    id:'penyesalan',
+    narr:{
+      id:"Dijauhi orang-orang, Cut Cani sadar akan kesalahannya. Ia mendatangi Cut Caya dan meminta maaf dengan tulus, dan sang kakak pun memaafkannya.",
+      en:"Shunned by everyone, Cut Cani realized her mistakes. She came to Cut Caya and sincerely asked for forgiveness, and her sister forgave her."
+    },
+    instr:{id:"Ketuk tombol 'Peluk & Maafkan' untuk mempersatukan kedua saudara.", en:"Tap the 'Hug & Forgive' button to reunite the two sisters."},
+    setup:function(s){ s.hugged = false; },
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      if(!s.hugged){
+        drawGirl(320,350,1,'caya','happy');
+        drawGirl(480,350,1,'cani','sad');
+      } else {
+        drawGirl(380,350,1,'caya','happy');
+        drawGirl(420,350,1,'cani','happy');
+      }
+      choiceWrap.style.display='flex';
+      choiceA.textContent = lang==='id' ? 'Peluk & Maafkan' : 'Hug & Forgive';
+    },
+    onChoiceA:function(s){
+      if(s.hugged) return;
+      s.hugged = true;
+      renderScene(false);
+      setTimeout(completeScene, 700);
+    }
+  },
+  {
+    id:'akhir',
+    narr:{
+      id:"Malam itu, Cut Caya bermimpi bertemu ayahnya yang tersenyum bangga. Sejak saat itu, Cut Caya dan Cut Cani hidup rukun, saling membantu, dan penuh kebahagiaan.",
+      en:"That night, Cut Caya dreamed of meeting her father, who smiled proudly. From then on, Cut Caya and Cut Cani lived in harmony, helping each other, and full of happiness."
+    },
+    instr:{id:"Kisah selesai. Ketuk 'Ulangi Cerita' untuk mengalaminya lagi.", en:"The story is complete. Tap 'Replay Story' to experience it again."},
+    setup:function(s){},
+    draw:function(s){
+      drawSky(); drawHills(360); drawGround(360);
+      drawHut(630,300,1);
+      drawTree(120,330,1);
+      drawGirl(300,340,1.05,'caya','happy');
+      drawGirl(460,340,1.05,'cani','happy');
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      drawOldMan(400,150,0.6,'happy');
+      ctx.restore();
+      showReplay();
+    },
+    isFinal:true
+  }
+];
+
+function showReplay(){
+  document.getElementById('replayBtn').style.display = 'inline-block';
+  document.getElementById('startBtn').style.display = 'none';
+}
+
+/* ============ SCENE FLOW ============ */
+function buildDots(){
+  var dotsWrap = document.getElementById('dots');
+  dotsWrap.innerHTML = '';
+  scenes.forEach(function(s, i){
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.idx = i;
+    dotsWrap.appendChild(d);
+  });
+}
+buildDots();
+
+function updateDots(){
+  var dots = document.querySelectorAll('.dot');
+  dots.forEach(function(d,i){
+    d.classList.remove('active','done');
+    if(i < currentIndex) d.classList.add('done');
+    else if(i === currentIndex) d.classList.add('active');
+  });
+}
+
+function resetSceneUI(){
+  progressWrap.style.display = 'none';
+  progressBar.style.width = '0%';
+  overlayBtn.style.display = 'none';
+  choiceWrap.style.display = 'none';
+  pressActive = false;
+  clearInterval(pressTimer);
+}
+
+function renderScene(withNarration){
+  var s = scenes[currentIndex];
+  clearStage();
+  s.draw(s);
+  instructionText.textContent = s.instr[lang];
+  if(withNarration){
+    narrationText.textContent = s.narr[lang];
+    speak(s.narr[lang]);
+  }
+  updateDots();
+  sendHeight();
+}
+
+function goToScene(i){
+  resetSceneUI();
+  currentIndex = i;
+  var s = scenes[currentIndex];
+  s.taps = 0;
+  if(s.setup) s.setup(s);
+  renderScene(true);
+}
+
+function completeScene(){
+  if(currentIndex < scenes.length - 1){
+    goToScene(currentIndex + 1);
+  }
+}
+
+function speakCurrentScene(){
+  if(currentIndex >= 0 && currentIndex < scenes.length){
+    speak(scenes[currentIndex].narr[lang]);
+  }
+}
+
+/* ============ INPUT HANDLING ============ */
+function getPos(evt){
+  var rect = canvas.getBoundingClientRect();
+  var clientX, clientY;
+  if(evt.touches && evt.touches.length){
+    clientX = evt.touches[0].clientX;
+    clientY = evt.touches[0].clientY;
+  } else if(evt.changedTouches && evt.changedTouches.length){
+    clientX = evt.changedTouches[0].clientX;
+    clientY = evt.changedTouches[0].clientY;
+  } else {
+    clientX = evt.clientX;
+    clientY = evt.clientY;
+  }
+  var scaleX = CW / rect.width;
+  var scaleY = CH / rect.height;
+  return { x:(clientX - rect.left) * scaleX, y:(clientY - rect.top) * scaleY };
+}
+
+var lastPressTs = 0;
+function handleDown(evt){
+  if(!started || currentIndex < 0) return;
+  var s = scenes[currentIndex];
+  var pos = getPos(evt);
+
+  if(s.onDragStart){
+    var which = s.onDragStart(s,pos.x,pos.y);
+    if(which){
+      dragState = which;
+      evt.preventDefault();
+    }
+    return;
+  }
+
+  if(s.onPressStart){
+    if(s.onPressStart(s,pos.x,pos.y)){
+      pressActive = true;
+      lastPressTs = performance.now();
+      clearInterval(pressTimer);
+      pressTimer = setInterval(function(){
+        var now = performance.now();
+        var dt = now - lastPressTs;
+        lastPressTs = now;
+        if(pressActive && s.onPressTick) s.onPressTick(s,dt);
+        renderScene(false);
+      }, 40);
+      evt.preventDefault();
+    }
+    return;
+  }
+
+  if(s.onClick){
+    s.onClick(s,pos.x,pos.y);
+  }
+}
+
+function handleMove(evt){
+  if(!started || currentIndex < 0 || !dragState) return;
+  var s = scenes[currentIndex];
+  var pos = getPos(evt);
+  if(s.onDragMove) s.onDragMove(s,dragState,pos.x,pos.y);
+  renderScene(false);
+  evt.preventDefault();
+}
+
+function handleUp(evt){
+  if(!started || currentIndex < 0) return;
+  var s = scenes[currentIndex];
+  if(pressActive){
+    pressActive = false;
+    clearInterval(pressTimer);
+    if(s.hold !== undefined && s.hold < (s.holdDuration||0)){
+      // reset partial hold slightly so it doesn't feel stuck (soft decay)
+    }
+  }
+  if(dragState){
+    var pos = getPos(evt);
+    if(s.onDragEnd) s.onDragEnd(s,dragState,pos.x,pos.y);
+    dragState = null;
+    renderScene(false);
+  }
+}
+
+canvas.addEventListener('mousedown', handleDown);
+canvas.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleUp);
+canvas.addEventListener('touchstart', handleDown, {passive:false});
+canvas.addEventListener('touchmove', handleMove, {passive:false});
+canvas.addEventListener('touchend', handleUp, {passive:false});
+
+choiceA.addEventListener('click', function(){
+  var s = scenes[currentIndex];
+  if(s.onChoiceA) s.onChoiceA(s);
+});
+
+/* ============ START / REPLAY ============ */
+function startGame(){
+  started = true;
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('replayBtn').style.display = 'none';
+  goToScene(0);
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('replayBtn').addEventListener('click', function(){
+  document.getElementById('replayBtn').style.display = 'none';
+  document.getElementById('startBtn').style.display = 'inline-block';
+  startGame();
+});
+
+/* ============ INITIAL RENDER (idle preview) ============ */
+(function initialPreview(){
+  clearStage();
+  drawSky(); drawHills(360); drawGround(360);
+  drawHut(620,300,1.1);
+  drawTree(90,330,1);
+  drawGirl(280,320,1.15,'caya','happy');
+  drawGirl(430,330,1,'cani','smug');
+  sendHeight();
+})();
+
+window.addEventListener('beforeunload', function(){ if(synth) synth.cancel(); });
+
+})();
+</script>
+</body>
+</html>
